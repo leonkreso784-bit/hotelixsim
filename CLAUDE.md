@@ -16,9 +16,11 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
 ## Stanje (2026-10-04)
 - **Početak nove sesije:** pročitaj [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md) — tamo je redoslijed rada.
 - GitHub: `leonkreso784-bit/hotelixsim` (privatni), spojen kao `origin` (04.10.). Samo dokumenti, još nema koda.
-- Arhitektura: **Rust (jezgra + backend) + TypeScript (sučelje)** — nacrt v1 u [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md),
-  rasprava u [docs/RASPRAVA_ARHITEKTURE.md](docs/RASPRAVA_ARHITEKTURE.md). Rok demoa 10.10. je pomaknut: demo se gradi
-  na odobrenoj arhitekturi. [docs/PLAN.md](docs/PLAN.md) je zastario dok se ne uskladi.
+- Arhitektura: **Rust (jezgra + backend) + TypeScript (sučelje)** — **v2** u [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md),
+  rasprava u [docs/RASPRAVA_ARHITEKTURE.md](docs/RASPRAVA_ARHITEKTURE.md). Dizajn igre i opseg demoa:
+  [docs/DEMO.md](docs/DEMO.md) (nacrt, čeka Leonovu provjeru domene). Plan: [docs/PLAN.md](docs/PLAN.md) (usklađen 04.10.).
+- **Sve se gradi i pokazuje lokalno; Railway tek za pilot** (Leon, 04.10.). Istraživanja: `docs/istrazivanje/`.
+- **Radi bez pitanja** (Leon, 04.10.): pretpostavke zapiši u dokument; push/deploy i dalje samo uz izričit OK.
 
 ## Tko je Leon i kako radimo — POČNI OVDJE
 Moja memorija je vezana uz Sokratov folder pa se **ovdje ne učitava sama**. Pročitaj na početku sesije (samo čitanje):

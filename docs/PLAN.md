@@ -1,34 +1,37 @@
 # HotelixSim — plan
 
-**Status:** 🟩 AKTIVAN · **Otvoren:** 2026-10-03 · Što gradimo: [VIZIJA.md](./VIZIJA.md)
+**Status:** 🟩 AKTIVAN · **Otvoren:** 2026-10-03 · **Usklađen:** 2026-10-04 (arhitektura v2, DEMO.md)
+Što gradimo: [VIZIJA.md](./VIZIJA.md) · kako: [ARHITEKTURA.md](./ARHITEKTURA.md) · demo: [DEMO.md](./DEMO.md)
 
 > Faza ima ime, ne slovo. Svaka faza ima uvjet „gotovo kad…" izražen kroz ono što **čovjek može napraviti**,
-> nikad kroz „test je zelen". Arhitektura se bira na početku faze PROTOTIP, ne prije.
+> nikad kroz „test je zelen". Stari plan (Python prototip do 10.10.) je napušten 04.10.: demo se gradi na pravoj
+> arhitekturi i ne baca se.
 
 ## Faze
 
-| faza | rok | gotovo kad… |
-|---|---|---|
-| **PROTOTIP** | idući tjedan (~10.10.2026) | …profesor na mobitelu dobije hotel, vidi pet faktora, riješi 3–4 situacije s ponuđenim odgovorima, **jednu napiše svojim riječima i dobije pravu AI ocjenu s objašnjenjem**, pa se vidi na ljestvici s tri lažna igrača |
-| **PREZENTACIJA** | ~mjesec dana (početak studenog) | …stoji prezentacija s četiri teme (vizija i osi situacija · fer start i relativna ocjena · živi demo · što tražimo od fakulteta) i bolji igriv demo: tri fer hotela A/B/C, izbornik radnji, slobodan potez, lik u situaciji, relativna ocjena |
-| **PILOT** | poslije profesorovog „da" | …grupa studenata igra istu sezonu na zajedničkom satu, a profesor vidi relativni napredak svakog hotela |
-| **VIZIJA** | — | međusobni utjecaj, profesorova ploča, više hotela ([VIZIJA.md](./VIZIJA.md) §8) |
+| faza | gotovo kad… |
+|---|---|
+| **TEMELJI** | …arhitektura i dizajn igre su zapisani i Leon ih je pregledao. Arhitektura v2 ✅ (04.10.) · DEMO.md nacrt ✅ (04.10.), čeka Leonovu provjeru domene |
+| **DEMO** (lokalno) | …profesor na Leonovom računalu otvori poveznicu, dobije hotel, odigra lipanj i srpanj (situacije, razgovor s likom, slobodan odgovor s AI ocjenom, izbornik radnji), zatvori mjesec i vidi napredak uz tri robota, te u profesorovom pogledu vidi **zašto** je hotel tu gdje jest ([DEMO.md](./DEMO.md) §1.5) |
+| **PREZENTACIJA** | …stoji prezentacija (vizija i osi situacija · fer start i relativna ocjena · živi demo · što tražimo od fakulteta) i profesori su dobili [pitanja](./PITANJA_ZA_PROFESORE.md) |
+| **PILOT** | …poslije profesorovog „da": grupa igra sezonu po kalendaru na Railwayu, s pravom prijavom, a profesor vidi relativni napredak svakog hotela |
+| **VIZIJA** | međusobni utjecaj, profesorova ploča, više hotela ([VIZIJA.md](./VIZIJA.md) §8) |
 
-## PROTOTIP — što je unutra, a što namjerno nije
+## DEMO — redoslijed gradnje
 
-- **Unutra:** stranica koja izgleda kao igra · hotel s pet faktora · situacije unaprijed napisane (po osima) ·
-  izbor odgovora → posljedica na faktore · izbornik radnji · ljestvica s tri lažna igrača i relativnom ocjenom ·
-  **jedan pravi AI trenutak** (slobodan odgovor → AI ocjena + objašnjenje).
-- **Namjerno nije:** prijava, baza, zajednički sat, AI koji smišlja situacije, likovi, međusobni utjecaj.
-- **Jedino tehničko pravilo već sad:** AI ključ živi samo na poslužitelju — prototip zato ima mali poslužiteljski
-  dio za taj jedan poziv.
+Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; Railway tek u PILOTU.**
+
+1. Kostur od kraja do kraja: workspace, CI, prazna jezgra → API → lokalni Postgres → jedan ekran.
+2. Jezgra + alat za balans: stvarni sloj, indeksi, mehanike, obračun, kocka. Provjere iz DEMO §11 (točke 1–6).
+3. Dnevnik, runde (demo način: gumb) i red poslova.
+4. AI sloj: presuda, likovi, mentor (situacije iz predložaka); provjera DEMO §11, točka 7.
+5. Sučelje igrača (mobitel prvi) i gost preko poveznice.
+6. Profesorov pogled (trag promjena, presude s kriterijima).
 
 ## Otvoreno za Leona
 
-1. **Backend:** Python (FastAPI ili drugo) — bira se na početku PROTOTIPA, uz kratku usporedbu.
-2. **AI pružatelj** za demo (besplatni ključ) i gdje živi poslužiteljski dio prototipa.
-3. **Vrijeme:** što znači „trajanje 1–7 dana" — stvarni kalendarski dani ili nešto drugo.
-4. **Pet faktora i brojke:** kako se mjeri svaki faktor i kako se računa „ista početna ukupna ocjena".
-5. **Profesor:** ime i uloga (suautor?); podaci za realnost (sezonalnost, tipične brojke hotela).
-6. **GitHub repo** `hotelixsim` (privatni) — još nije napravljen; prvi posao nove sesije. ~~Ime~~ → **HotelixSim** (Leon, 04.10.).
-7. **Prijava u inkubator** (rok 16.11.) i prezentacija dekanu — nosi li se Sokrat ili simulacija.
+1. **AI pružatelj za demo:** koje besplatne ključeve imaš. Do odgovora se gradi uz lažnog pružatelja iza porta
+   (ARHITEKTURA §10.1), pa ništa ne čeka.
+2. **Provjera domene u DEMO.md:** šest najnesigurnijih pretpostavki na kraju dokumenta.
+3. **Profesori:** pregled [PITANJA_ZA_PROFESORE.md](./PITANJA_ZA_PROFESORE.md) prije slanja.
+4. **Prijava u inkubator** (rok 16.11.) i prezentacija dekanu: nosi li se Sokrat ili simulacija.
