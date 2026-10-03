@@ -14,10 +14,11 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
   izvorna ideja: [docs/izvor/HOTEL_SIM_2026-08-22.md](docs/izvor/HOTEL_SIM_2026-08-22.md)
 
 ## Stanje (2026-10-04)
-- **Prvi posao nove sesije:** napraviti privatni GitHub repo `hotelixsim`, spojiti ga s lokalnim gitom i pushati
-  (uz Leonov OK). GitHub MCP čita token iz Windows varijable `GITHUB_PERSONAL_ACCESS_TOKEN` (postavljena 03.10.).
-- Lokalni repozitorij, samo dokumenti. **Arhitektura nije odabrana** (Python backend — FastAPI ili drugo — otvoreno).
-- Sljedeće: faza **PROTOTIP** (rok ~10.10.) — prvo kratka usporedba stacka i Leonova presuda, tek onda kod.
+- **Početak nove sesije:** pročitaj [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md) — tamo je redoslijed rada.
+- GitHub: `leonkreso784-bit/hotelixsim` (privatni), spojen kao `origin` (04.10.). Samo dokumenti, još nema koda.
+- Arhitektura: **Rust (jezgra + backend) + TypeScript (sučelje)** — nacrt v1 u [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md),
+  rasprava u [docs/RASPRAVA_ARHITEKTURE.md](docs/RASPRAVA_ARHITEKTURE.md). Rok demoa 10.10. je pomaknut: demo se gradi
+  na odobrenoj arhitekturi. [docs/PLAN.md](docs/PLAN.md) je zastario dok se ne uskladi.
 
 ## Tko je Leon i kako radimo — POČNI OVDJE
 Moja memorija je vezana uz Sokratov folder pa se **ovdje ne učitava sama**. Pročitaj na početku sesije (samo čitanje):
