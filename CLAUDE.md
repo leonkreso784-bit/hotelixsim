@@ -1,8 +1,9 @@
-# CLAUDE.md — hotel.sim
+# CLAUDE.md — HotelixSim
 
 > Učitava se svaku sesiju. Drži ga kratkim: samo trenutno stanje, pravila i pokazivači.
 
 ## Što je projekt
+**Ime: HotelixSim** (Leon, 2026-10-04). ⚠️ Nikad skraćeno na „Hotelix" — to je postojeći hotelski softver; `hotelixsim.com` je bio slobodan 04.10.
 Simulacija vođenja hotela za učenje (FMTU Opatija, Hospitality Management). Student dobije hotel, rješava situacije
 i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**. Vlasnik i jedini autor: **Leon Kreso**.
 **Zaseban projekt** — nema veze s kodom Sokrat Studyja (`Documents\sokratstudy.*`) i ne dira ga (ADR-040 u Sokratu).
