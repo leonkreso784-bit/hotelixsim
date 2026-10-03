@@ -1,4 +1,4 @@
-# hotel.sim
+# Xenokrat
 
 Simulacija vođenja hotela za učenje — student dobije hotel, rješava situacije uz AI, a ocjenjuje se koliko je
 hotel unaprijedio u odnosu na početak.

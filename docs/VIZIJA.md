@@ -1,4 +1,4 @@
-# hotel.sim — vizija
+# Xenokrat — vizija
 
 > **Izvor:** Leonov opis i ankete u sesiji planiranja 2026-10-03 (Sokratova sesija). Ovo je **vizija i dogovor**,
 > ne arhitektura — tehnički izbori (backend, baza, AI pružatelj) **nisu doneseni**.

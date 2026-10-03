@@ -1,4 +1,4 @@
-# hotel.sim — plan
+# Xenokrat — plan
 
 **Status:** 🟩 AKTIVAN · **Otvoren:** 2026-10-03 · Što gradimo: [VIZIJA.md](./VIZIJA.md)
 
@@ -30,5 +30,5 @@
 3. **Vrijeme:** što znači „trajanje 1–7 dana" — stvarni kalendarski dani ili nešto drugo.
 4. **Šest faktora i brojke:** kako se mjeri svaki faktor i kako se računa „ista početna ukupna ocjena".
 5. **Profesor:** ime i uloga (suautor?); podaci za realnost (sezonalnost, tipične brojke hotela).
-6. **Ime proizvoda** (radno: hotel.sim) i **GitHub repo** (privatni; još nije napravljen).
+6. **Ime proizvoda** (radno: Xenokrat) i **GitHub repo** (privatni; još nije napravljen).
 7. **Prijava u inkubator** (rok 16.11.) i prezentacija dekanu — nosi li se Sokrat ili simulacija.

@@ -1,8 +1,9 @@
-# CLAUDE.md — hotel.sim
+# CLAUDE.md — Xenokrat
 
 > Učitava se svaku sesiju. Drži ga kratkim: samo trenutno stanje, pravila i pokazivači.
 
 ## Što je projekt
+**Ime: Xenokrat** — *xenia* (grčki: gostoprimstvo) + *-krat* (kao Sokrat; *kratos* = upravljanje): „onaj koji upravlja gostoprimstvom". Ksenokrat je bio i stvarni filozof, Platonov učenik. Leon izabrao 2026-10-03.
 Simulacija vođenja hotela za učenje (FMTU Opatija, Hospitality Management). Student dobije hotel, rješava situacije
 i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**. Vlasnik i jedini autor: **Leon Kreso**.
 **Zaseban projekt** — nema veze s kodom Sokrat Studyja (`Documents\sokratstudy.*`) i ne dira ga (ADR-040 u Sokratu).
