@@ -107,5 +107,33 @@ Ispravak:
 - **Upit 1 (Leon, 04.10.):** AI ostaje sastavni dio simulacije, barem za demo. Što se događa kad se AI isključi
   definira se kasnije, prema tome što profesori žele. → Pitanje je dodano u
   [PITANJA_ZA_PROFESORE.md](./PITANJA_ZA_PROFESORE.md) (pitanje 22).
-- **Upit 2:** čeka. Dodano i kao pitanje profesorima (pitanje 14); do njihovog odgovora vrijedi preporuka.
-- **Upit 3:** čeka.
+- **Upit 2 (Leon, 04.10.):** prihvaćena preporuka. Student o drugima vidi ukupnu ocjenu i pet indeksa kroz runde,
+  bez stvarnih brojki i odluka. Vrijedi dok profesori ne odgovore na pitanje 14 (i imena ili anonimno).
+- **Upit 3:** ugrađeno u nacrt v2 (krug 2).
+
+---
+
+## Krug 2 · 2026-10-04 · Nacrt v2
+
+Krug 1 je ugrađen u [ARHITEKTURA.md](./ARHITEKTURA.md). Gdje je što:
+
+| točka | gdje |
+|---|---|
+| 1. Ispravka presude (prozor za pregled, zaključana runda, kompenzacija) | §8.1, §8.3 (korak 6) |
+| 2. Puni snimak pravila, iskreno obećanje o starim sezonama | §7.2, §17 |
+| 3. Pravednost profila (alat za balans, prag) i AI-ja (rubrika, ljudsko mjerilo) | §7.8, §10.3 |
+| 4. Red poslova (transakcija, zakup, izbor probnim testom) | §9.4 |
+| 5. Što tko vidi, pravilo simetrije | §12, §7.5 (faza 4) |
+| 6. Slobodan potez kao zasebna naredba | §8.5 |
+| Rust: determinizam iz dizajna, prekoračenje, zabrana `HashMap` | §5.1, §7.2, §18 |
+| Lokalno pa Railway kao jedan servis | §14, §20 |
+
+**Novo iz istraživanja** ([istrazivanje/RUST_ALATI_2026-10.md](./istrazivanje/RUST_ALATI_2026-10.md)):
+
+- Gotovi Rust redovi poslova su ili RC ili na SQLx 0.8, a SQLx 0.8 i 0.9 ne dijele transakciju. Zato je vlastiti
+  mali red najvjerojatniji ishod probnog testa (§9.4).
+- `rand` izričito dopušta promjenu niza brojeva u manjoj verziji, pa je vlastita kocka (§7.2) potvrđena.
+- utoipa 6 zna dati OpenAPI 3.2, a TS generator čita samo 3.0 i 3.1. Izlaz se zato drži na 3.1.
+
+**Leon, 04.10.:** sve se gradi lokalno, Railway je za kraj. Leon je rekao da radim dalje bez pitanja, pa v2 ide u
+gradnju kao radna verzija. Primjedbe se upisuju ovdje kao krug 3.

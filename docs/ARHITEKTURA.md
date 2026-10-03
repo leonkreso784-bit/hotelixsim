@@ -1,7 +1,9 @@
 # HotelixSim — arhitektura sustava
 
-> **Status:** NACRT v1 (2026-10-04), čeka Leonov pregled. Ništa nije konačno dok Leon ne potvrdi.
-> Domena (§1) i jezici (Rust + TypeScript, §5) dogovoreni su u razgovoru 04.10.; ostalo je prijedlog.
+> **Status:** NACRT v2 (2026-10-04). Ugrađen krug 1 rasprave ([RASPRAVA_ARHITEKTURE.md](./RASPRAVA_ARHITEKTURE.md)):
+> ispravka presude (§8), puni snimak pravila (§7.2, §17), pravednost profila i AI-ja (§7.8, §10.3), red poslova
+> (§9.4), što tko vidi (§12, §7.5), slobodan potez (§8.5), obrazloženje za Rust (§5, §18), lokalno pa Railway (§14).
+> Domena (§1) i jezici (Rust + TypeScript, §5) dogovoreni su 04.10.; ostalo je prijedlog dok Leon ne potvrdi.
 > Vizija proizvoda: [VIZIJA.md](./VIZIJA.md) · plan: [PLAN.md](./PLAN.md).
 
 ## Sadržaj
@@ -227,8 +229,13 @@ U pilotu mogu raditi i kao jedan proces; razdvajaju se kad zatreba, bez promjene
 | | Rust | TypeScript |
 |---|---|---|
 | **Što** | jezgra simulacije, backend, rad s bazom, AI sloj, alat za balans | web sučelje; kasnije mobilna aplikacija |
-| **Zašto** | determinizam po konstrukciji; prevoditelj kao najstroža ograda za kod koji piše AI; ista jezgra radi na poslužitelju, u alatu za balans, u pregledniku (WASM) i na mobitelu; brzina za masovne simulacije | ekosustav za sučelja nema premca; isti jezik za web i za React Native |
+| **Zašto** | prevoditelj kao najstroža ograda za kod koji piše AI; brzina za masovne simulacije (alat za balans vrti tisuće sezona); ista jezgra radi na poslužitelju, u alatu za balans, u pregledniku (WASM) i na mobitelu | ekosustav za sučelja nema premca; isti jezik za web i za React Native |
 | **Veza** | opisuje API (OpenAPI) | iz tog opisa automatski dobiva tipove i klijenta |
+
+**Što Rust ne daje:** determinizam. On dolazi iz **dizajna** (§7.2) i jednako bi se morao graditi u bilo kojem
+jeziku. Rust tu pomaže samo alatima koji pravila provjeravaju umjesto čovjeka: provjera prekoračenja broja i zabrana
+nesigurnih tipova kroz clippy. Sam jezik ne jamči ništa. Brojevi i verzije alata provjereni su 04.10.:
+[istrazivanje/RUST_ALATI_2026-10.md](./istrazivanje/RUST_ALATI_2026-10.md).
 
 ### 5.2 Rust strana
 
@@ -236,11 +243,11 @@ U pilotu mogu raditi i kao jedan proces; razdvajaju se kad zatreba, bez promjene
 |---|---|---|
 | jezik | Rust, izdanje 2024, stabilni kanal | `#![forbid(unsafe_code)]` u svim našim paketima |
 | asinkronost | **Tokio** | standard za Rust poslužitelje |
-| web okvir | **Axum** (+ `tower-http`) | malen, sastavljiv, iz Tokio obitelji |
-| OpenAPI | **utoipa** | opis API-ja iz Rust tipova i rukovatelja |
+| web okvir | **Axum 0.8** (+ `tower-http`) | malen, sastavljiv, iz Tokio obitelji |
+| OpenAPI | **utoipa 6** + `utoipa-axum` | opis API-ja iz Rust tipova i rukovatelja; izlaz mora biti OpenAPI **3.1** (TS generator ne čita 3.2) |
 | JSON Schema | **schemars** | sheme za sadržaj i za strukturirani AI izlaz |
 | serijalizacija | **serde** / `serde_json` | |
-| baza | **SQLx** + PostgreSQL | SQL koji se provjerava pri prevođenju; migracije u repozitoriju |
+| baza | **SQLx 0.9** + PostgreSQL | SQL koji se provjerava pri prevođenju (`.sqlx/` u gitu, build bez baze s `SQLX_OFFLINE`); migracije u repozitoriju. Sve što dijeli transakciju s nama mora biti na **istoj** verziji SQLx-a (§9.4) |
 | HTTP klijent | **reqwest** | pozivi AI pružatelja |
 | greške | **thiserror** (knjižnice) · **anyhow** (rubovi programa) | |
 | zapisi | **tracing** | strukturirani zapisi, povezani po zahtjevu i po poslu |
@@ -269,7 +276,7 @@ U pilotu mogu raditi i kao jedan proces; razdvajaju se kad zatreba, bez promjene
 | područje | izbor |
 |---|---|
 | baza | PostgreSQL (aktualna glavna verzija) |
-| hosting | **Railway** (backend + Postgres); statično sučelje — Railway ili CDN, odluka u §14 |
+| hosting | razvoj i demo **lokalno**; na kraju **Railway** (jedan servis + Postgres), §14 |
 | CI | GitHub Actions |
 | greške u produkciji | Sentry (Rust i TypeScript) |
 | prijava | **otvoreno** (§12) |
@@ -340,15 +347,22 @@ resolve(stanja svih hotela, događaji runde, katalog, kocka) → nova stanja + p
 ### 7.2 Determinizam — kako se jamči
 
 - **Cijeli brojevi:** novac u centima (`i64`), postoci u baznim bodovima. Nema decimalnih brojeva u jezgri.
-- **Vlastita kocka** (poznati algoritam, npr. PCG ili SplitMix, s testnim vektorima) — ne ovisi o verziji vanjske
-  biblioteke koja bi mogla promijeniti niz brojeva.
+- **Bez prekoračenja:** `overflow-checks = true` i u produkcijskom profilu (Rust ga po zadanom tamo isključuje pa bi se
+  broj tiho „prevrnuo"), a jezgra računa izričito provjerenim operacijama (`checked_*`, `saturating_*`).
+- **Bez nasumičnog redoslijeda:** `HashMap` i `HashSet` zabranjeni su u jezgri (clippy `disallowed-types`), umjesto
+  njih `BTreeMap`/`BTreeSet`. Zabrana nije dogovor nego provjera koja ruši build.
+- **Vlastita kocka** (poznati algoritam, npr. PCG ili SplitMix, sa „zlatnim" testnim vektorima: sjeme → poznati niz).
+  Ne ovisi o vanjskoj biblioteci: `rand` izričito dopušta da nova manja verzija promijeni niz brojeva, a `StdRng`
+  nije prenosiv uopće. Bez `f32`/`f64` i `usize` u ishodima.
 - **Neovisni tokovi kocke:** svako bacanje dobiva sjeme izvedeno iz `(igra, runda, hotel, svrha)`. Dodavanje novog
   bacanja na jednom mjestu **ne pomiče** sva ostala — stare sezone ostaju iste.
 - **Određen redoslijed:** događaji se primjenjuju po rednom broju u dnevniku, hoteli po identifikatoru. Nikad po
   vremenu dolaska ni redoslijedu iz mape.
 - **Bez sata:** vrijeme ulazi samo kao podatak (broj runde, rok), nikad kao `now()`.
-- **Verzija pravila:** uz svaku igru zapisuje se `RulesetId`. Ponovni obračun koristi ista pravila, osim kad se
-  namjerno isprobavaju nova (alat za balans).
+- **Puni snimak pravila, ne samo oznaka:** pri stvaranju igre u dnevnik ide `GameCreated` s **cijelim** snimkom:
+  katalog, koeficijenti, profili, postavke, verzija jezgre, AI model i verzija uputa. `RulesetId` je samo otisak
+  tog snimka. Ponovni obračun koristi isti snimak, osim kad se namjerno isprobavaju nova pravila (alat za balans).
+- **Pravila se ne mijenjaju usred sezone**, osim izričitom migracijom koja je i sama događaj u dnevniku.
 
 ### 7.3 Stanje hotela
 
@@ -372,7 +386,7 @@ resolve(stanja svih hotela, događaji runde, katalog, kocka) → nova stanja + p
 | 1. Prikupljanje | Svi događaji runde iz dnevnika, u određenom redoslijedu. |
 | 2. Odluke | Odgovori, radnje i presude → mehanike → promjene i tragovi. |
 | 3. Protok vremena | Sezonalnost, redovni troškovi, prirodno trošenje opreme i morala. |
-| 4. Tržište | Potražnja → popunjenost i prihod. **Danas po hotelu; sutra zajednički bazen** (međusobni utjecaj). |
+| 4. Tržište | Potražnja → popunjenost i prihod. **Danas po hotelu; sutra zajednički bazen** (međusobni utjecaj). Za bazen vrijedi **pravilo simetrije**: ako dvama jednakim hotelima zamijeniš oznake, ishodi se samo zamijene (automatski test). Izjednačenja se dijele jednako, ostatak kockom iz sjemena runde, nikad po oznaci hotela. |
 | 5. Splet okolnosti | Okidači čitaju tragove i stanje, bacaju kocku → utori za iduće runde. |
 | 6. Indeksi i ocjena | Novih pet indeksa i relativni napredak. |
 | 7. Objašnjenje | Popis svih promjena s uzrocima → profesorov uvid i mentorov ulaz. |
@@ -388,6 +402,17 @@ težini) · **utori iz spleta okolnosti** · **profesorove postavke** (AI uklju�
 Sučelje `ScoringRule` s jednom zadanom implementacijom (npr. ponderirani zbroj pomaka indeksa u odnosu na start,
 normaliziran po početnom potencijalu). Formula je **pitanje za profesora** (§19); zamjenjiva bez promjene ostatka.
 
+### 7.8 Pravednost profila — mjeri se, ne pretpostavlja
+
+**Fer znači jednake mogućnosti napretka, a ne jednak početni zbroj.** Hotel s financijama 20 nije na istom mjestu
+kao hotel s financijama 55, pa ocjena mjeri napredak u odnosu na **prostor za rast**.
+
+- **Alat za balans** (`crates/balance`) vrti jezgru bez baze i ekrana: za svaki profil (A, B, C) i isti skup
+  strategija mjeri raspodjelu relativne ocjene kroz tisuće sezona.
+- Profili su prihvatljivi ako je **razlika medijana manja od praga** i **nijedan profil ne pobjeđuje pod svim
+  strategijama**. Isti alat traži i **dominantne strategije** (jednu kombinaciju poteza koja svugdje pobjeđuje).
+- Prag se utvrđuje nakon prvih mjerenja, s profesorom. Dok ga nema, profili su zapisana pretpostavka.
+
 ---
 
 ## 8 · Tok jedne runde i greške
@@ -395,10 +420,15 @@ normaliziran po početnom potencijalu). Formula je **pitanje za profesora** (§1
 ### 8.1 Stanja runde
 
 ```text
-ZAKAZANA ──(početak po kalendaru)──► OTVORENA ──(rok)──► ZATVARANJE ──(sve presude ili istek)──► OBRAČUN ──► OBRAČUNATA
+ZAKAZANA ──(početak po kalendaru)──► OTVORENA ──(rok)──► ZATVARANJE ──(sve presude ili istek)──► OBRAČUN
+   ──► OBRAČUNATA (prozor za pregled) ──(otvaranje iduće runde)──► ZAKLJUČANA
 ```
 
 Prijelaze radi `worker` kao poslove; svaki prijelaz je događaj u dnevniku.
+
+- **Prozor za pregled:** od obračuna do otvaranja iduće runde. Ispravka presude u tom prozoru znači **puni ponovni
+  obračun** runde.
+- **Zaključana runda:** povijest se više ne prepisuje. Ispravka postaje **kompenzacija** (§8.3, korak 6).
 
 ### 8.2 Životni ciklus situacije
 
@@ -418,8 +448,13 @@ Sadržaj se stvara **unaprijed** (prije vremena objave), pa spor AI ne kasni stu
    Nevaljano → ponovni pokušaj (ograničen broj).
 4. Valjano → `VerdictRecorded` u dnevnik, s verzijom upute i modela.
 5. Ako presude nema do kraja zatvaranja → presuda „neutralna" po **unaprijed zapisanom pravilu** i oznaka „na
-   pregled profesoru". Profesor može upisati presudu → `VerdictOverridden` → **ponovni obračun** te runde
-   (moguć jer je sve u dnevniku).
+   pregled profesoru". Profesor može upisati presudu → `VerdictOverridden`.
+6. Što ispravka presude pokrene ovisi o stanju runde:
+   - **runda u prozoru za pregled** → ponovni obračun te runde (moguć jer je sve u dnevniku);
+   - **runda zaključana** → `CompensationScheduled`: jezgra izračuna razliku između stvarnog ishoda i ishoda s
+     ispravnom presudom i primijeni je u **sljedećem** obračunu, samo na tom hotelu. Situacije koje su u
+     međuvremenu nastale ostaju, jer je student na njih odgovorio s informacijama koje je tada imao.
+     Kad dođe zajedničko tržište, kompenzacija **nikad ne preraspodjeljuje tuđe goste**.
 
 ### 8.4 Greške i otpornost
 
@@ -432,6 +467,23 @@ Sadržaj se stvara **unaprijed** (prije vremena objave), pa spor AI ne kasni stu
 | Dvostruki klik / ponovljeni zahtjev | Svaka naredba nosi ključ idempotentnosti; drugi put se vraća prvi rezultat. |
 | Dva obračuna iste igre istovremeno | Postgres zaključavanje po igri; drugi čeka ili odustaje. |
 | Student pošalje nakon roka | Odbijeno s jasnom porukom; rok je provjeren na poslužitelju. |
+
+### 8.5 Slobodan potez
+
+Slobodan potez je **zasebna naredba** (`POST /v1/hotels/{id}/actions`), a ne odgovor na situaciju.
+
+1. Student opiše potez tekstom → `FreeActionSubmitted` u dnevnik.
+2. AI ga svrsta u mehaniku iz **cijelog** kataloga (s parametrima i rubrikom izvedivosti) ili ga označi kao
+   **nepoznat**.
+3. Nepoznat potez **nema brojčani učinak**: student dobije objašnjenje, a potez ide na popis kandidata za nove
+   mehanike (profesor i autor ga vide).
+4. Svrstan potez ide kroz istu provjeru kao presuda (§8.3, korak 3) i obračunava se u fazi 2 (§7.5).
+
+**Sloboda je u izrazu, ne u posljedicama.** Kad bi AI smio izmišljati posljedice, pali bi K1 i K2. Katalog zato
+raste iz stvarnih poteza studenata.
+
+**Bez AI-ja** (zasad samo zapisano, odluka s profesorima, pitanje 22): situacije iz predložaka, likovi s napisanim
+dijalozima, mentor s napisanim objašnjenjima; što sa slobodnim tekstom — otvoreno.
 
 ---
 
@@ -469,9 +521,16 @@ grade ponovno iz dnevnika.
 
 ### 9.4 Red poslova
 
-Tablica `jobs` u Postgresu, preuzimanje s `FOR UPDATE SKIP LOCKED`, ključ jedinstvenosti po poslu
-(npr. `resolve:<game>:<round>`), ponovni pokušaji s odgodom. Razmotrena gotova biblioteka (apalis); vlastita
-tablica je malena i potpuno pod našom kontrolom.
+Red je u Postgresu jer se **odgovor i posao upisuju u istoj transakciji**, pa stanje „odgovor spremljen, posao ne"
+ne može nastati. Pouzdanost je pravi posao, ne samo tablica:
+
+- preuzimanje s `FOR UPDATE SKIP LOCKED` i **vremenskim zakupom**: posao koji radnik ne završi u roku vraća se u red;
+- ključ jedinstvenosti po poslu (npr. `resolve:<game>:<round>`), ograničen broj ponovnih pokušaja s odgodom;
+- **prije upisa rezultata provjerava se stanje runde**: zakašnjela AI presuda za već zatvorenu rundu ne upisuje se
+  tiho, nego ide pravilom iz §8.3.
+
+**Izbor izvedbe** (vlastita tablica, apalis ili pgmq) radi se **probnim testom** s ovim scenarijima: pad procesa
+usred posla, zaglavljen posao, zakašnjeli AI rezultat i dvostruko preuzimanje. Ne bira se po mišljenju.
 
 ### 9.5 Sadržaj
 
@@ -481,7 +540,8 @@ tablica je malena i potpuno pod našom kontrolom.
 
 ### 9.6 Migracije i kopije
 
-SQLx migracije u repozitoriju. Dnevne kopije baze (Railway) + periodični izvoz dnevnika (on je izvor istine).
+SQLx migracije u repozitoriju. Na Railwayu (kad dođe): dnevne kopije baze + periodični izvoz dnevnika (on je izvor
+istine).
 
 ---
 
@@ -514,8 +574,17 @@ trait AiPort {
 
 ### 10.3 Provjera kvalitete AI-ja
 
-Skup primjera slobodnih odgovora s očekivanom mehanikom i rasponom kvalitete. Pokreće se pri svakoj promjeni upute
-ili modela; rezultat se uspoređuje s prethodnim.
+Pravednost AI-ja je zaseban problem od pravednosti profila (§7.8):
+
+- **Rubrika:** svaka situacija ima rubriku s kriterijima za ocjene 1–5. Ponuđeni odgovori ocijenjeni su po **istoj**
+  rubrici, pa su slobodan tekst i opcije na istoj ljestvici.
+- **Obrazložena ocjena:** uz ocjenu AI mora navesti koje kriterije rubrike odgovor ispunjava. Presuda bez toga je
+  nevaljana (§8.3, korak 3).
+- **Ljudsko mjerilo:** postoji skup odgovora koje su ocijenili ljudi, s očekivanom mehanikom i ocjenom. Model ide u
+  igru tek kad se s njima slaže iznad praga. Skup se pokreće pri svakoj promjeni upute ili modela i uspoređuje s
+  prethodnim rezultatom.
+- **Zaključano za sezonu:** model i upute ulaze u snimak pravila (§7.2) i ne mijenjaju se usred sezone.
+- **Prigovor:** student može uložiti prigovor profesoru. Ispravka ide pravilom iz §8.3 (korak 6).
 
 ---
 
@@ -549,6 +618,9 @@ Okvirni resursi:
 - **Prava** su u našem backendu, u sloju `app`: uloga u organizaciji (student / profesor / administrator) i
   pripadnost igri ili hotelu. Svaki slučaj upotrebe provjerava pravo prije rada; za svaku ulogu postoje testovi.
   Baza ne nosi poslovna prava (bez RLS-a) — jedno mjesto istine.
+- **Što student vidi o drugima (Leon, 04.10.):** ukupnu ocjenu i pet indeksa kroz runde. Tuđe stvarne brojke,
+  odluke, tekstovi i tragovi su privatni. Vrijedi dok profesori ne odgovore (pitanje 14, i imena ili anonimno).
+  Pravilo se provodi u sloju `app` i ima test po ulozi: API nikad ne vraća tuđe privatne podatke.
 
 ---
 
@@ -566,11 +638,20 @@ Okvirni resursi:
 
 ## 14 · Infrastruktura i isporuka
 
-- **Railway:** servis `api` + servis `worker` (ista slika, drugi način rada) + PostgreSQL; okoline **staging** i
-  **produkcija**; regija u EU.
-- **Slika:** Docker u više koraka (cargo-chef za brzo ponovno prevođenje) → mala slika s jednom izvršnom datotekom.
+**Redoslijed (Leon, 04.10.): sve se gradi i pokazuje lokalno, a Railway dolazi na kraju.** Ništa u kodu ne smije
+ovisiti o Railwayu. Postavke dolaze iz varijabli okoline, pa je isporuka zaseban, završni korak.
+
+- **Lokalno:** jedan proces (`api` + `worker` zajedno) + **nativni PostgreSQL na Windowsu** (Dockera nema). Ista baza
+  služi SQLx-u za provjeru upita pri prevođenju (`cargo sqlx prepare`). Sučelje se vrti preko Vite razvojnog
+  poslužitelja.
+- **Na kraju — Railway:** pilot ide kao **jedan servis** (API i pozadinski poslovi u istom procesu) + službeni
+  PostgreSQL (bez dodatnih ekstenzija), samo produkcija. Staging ostaje lokalno. Kad opterećenje to zatraži, isti
+  program se pokreće kao dva servisa (`api`, `worker`) bez promjene koda. Regija u EU. Stvarnu potrošnju mjerimo u
+  prvom mjesecu.
+- **Slika (za Railway):** vlastiti Dockerfile u više koraka (cargo-chef ili cache mountovi, pinirana verzija Rusta,
+  `SQLX_OFFLINE=true`), jer Railwayev zadani builder ne dokumentira rad s Cargo workspaceom.
 - **Sučelje:** statične datoteke — Railway ili CDN (Cloudflare Pages / Vercel); odlučuje se pri prvoj isporuci.
-- **Tajne:** samo varijable okoline na Railwayu; `.env` nikad u gitu.
+- **Tajne:** lokalno `.env` (nikad u gitu), na Railwayu varijable okoline.
 - **Promatranje:** strukturirani zapisi (tracing), Sentry za greške, `/v1/health`.
 - **CI (GitHub Actions) na svakom pushu:** rustfmt · clippy · `cargo test` · cargo-deny · testovi determinizma ·
   provjera usklađenosti OpenAPI ↔ klijent · TypeScript provjera tipova, Biome, Vitest · Playwright na mobilnim profilima.
@@ -613,7 +694,11 @@ Okvirni resursi:
 |---|---|---|
 | **Mobilna aplikacija** | `apps/mobile` (Expo) nad istim API-jem | sve u Rustu |
 | **Platforma s više simulatora** | novi `sim-*` paket + `content/*`; platforma koristi naš API ili ugrađuje sučelje | `engine`, dnevnik, runde, prijava, AI sloj |
-| **Simulator raste** | nove mehanike (kod + test), novi podaci; zajedničko tržište u fazi 4 obračuna | stare sezone se i dalje ponovno izračunaju (verzija pravila) |
+| **Simulator raste** | nove mehanike (kod + test), novi podaci; zajedničko tržište u fazi 4 obračuna | završene sezone: rezultati i objašnjenja spremljeni trajno; ponovni obračun moguć **svojom** verzijom jezgre (vidi ispod) |
+
+**Iskreno obećanje o starim sezonama:** sezona je ponovljiva s verzijom s kojom je igrana. Ne obećavam iste brojke
+stare sezone na novoj jezgri. Zato se svako izdanje backenda označava u gitu, slika kontejnera se čuva, a puni snimak
+pravila je u dnevniku (§7.2).
 | **Timovi** | upravitelj dobiva više korisnika + pravila tko odlučuje | jezgra (ona ne zna tko je kliknuo) |
 | **Vizualni 3D hotel** | Unity / Unreal / Bevy kao novo sučelje nad API-jem (ili jezgra kao knjižnica) | jezgra |
 | **Drugi AI pružatelj** | postavka | sve |
@@ -625,7 +710,7 @@ Okvirni resursi:
 
 | alternativa | zašto ne |
 |---|---|
-| **TypeScript svugdje** | najslabija jamstva za K1 (decimalni brojevi, greške tek pri pokretanju) |
+| **TypeScript svugdje** | Determinizam bi se mogao izgraditi i ovdje (`bigint`, isti dizajn kao §7.2), pa to nije razlog za odbacivanje. Razlozi su drugi: slabija ograda za kod koji piše AI (tipovi se brišu pri pokretanju, `any` propušta), sporije masovne simulacije i manje alata koji provjeravaju pravila jezgre umjesto čovjeka. |
 | **Python (FastAPI)** | spor za masovne simulacije, slaba jamstva tipova, jezgra samo na poslužitelju |
 | **Go** | slab za modeliranje domene (nema pravih `enum` tipova); jezgra samo na poslužitelju |
 | **Elixir** | izvrstan za igre koje žive u vremenu, ali dinamički tipovi i treći jezik; za našu skalu Tokio + red poslova dovoljni |
@@ -668,7 +753,7 @@ Okvirni resursi:
 
 Detalji idu u plan izgradnje nakon odobrenja ovog dokumenta.
 
-1. **Kostur od kraja do kraja:** workspace, CI, prazna jezgra → API → jedan ekran → staging na Railwayu.
+1. **Kostur od kraja do kraja, lokalno:** workspace, CI, prazna jezgra → API → lokalni Postgres → jedan ekran.
    Dokazuje da su sve veze žive prije nego išta raste.
 2. **Jezgra + alat za balans:** stanje, indeksi, mehanike, obračun, kocka — **bez baze i bez ekrana**. Prvi dokaz
    pravednosti A/B/C masovnim simulacijama.
@@ -676,3 +761,4 @@ Detalji idu u plan izgradnje nakon odobrenja ovog dokumenta.
 4. **AI sloj** (presuda prvo, zatim situacije, likovi, mentor) s rezervama.
 5. **Sučelje studenta** (mobitel).
 6. **Profesorov dio** → **demo za profesora**.
+7. **Isporuka na Railway** (jedan servis + Postgres) — tek na kraju, uz Leonov OK.
