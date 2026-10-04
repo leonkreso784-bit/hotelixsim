@@ -14,6 +14,8 @@
 
 Napisati plan `docs/plan/<datum>-jezgra.md` (`superpowers:writing-plans`, zaglavlje `**Status:** 🟩 AKTIVAN`) i
 krenuti u gradnju kroz `superpowers:subagent-driven-development` na novoj grani ([AGENTI.md](./workflow/AGENTI.md)).
+**Rok demoa ~14.10.** — plan bira samo ono što treba put iz DEMO §1.5 (lipanj i srpanj); ostalo je drugi val
+([ADR-012](./records/DECISIONS.md#adr-012)). Temelji se ne režu.
 
 - **Task 1 = ojačati brane determinizma** prije ijedne linije jezgre ([ADR-009](./records/DECISIONS.md#adr-009)):
   dopušteni popis ovisnosti u `check-core-deps.mjs`, `RandomState` u oba `clippy.toml`, `forbid` + zabrana

@@ -20,7 +20,8 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
   sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)).
 - **Sljedeće:** plan „jezgra i alat za balans" (DEMO korak 2, [ROADMAP](docs/plan/ROADMAP.md)); Task 1 = ojačati
   brane determinizma ([ADR-009](docs/records/DECISIONS.md#adr-009)). Spec: [DEMO.md](docs/product/DEMO.md) §2–§12.
-- **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, rokovi)
+  **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
+- **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
   i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
