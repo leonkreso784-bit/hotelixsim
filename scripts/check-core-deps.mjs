@@ -11,7 +11,9 @@ const CORE = ["engine", "sim-hotel"];
 const ALLOWED = new Set(["engine", "sim-hotel"]);
 
 let found = 0;
-for (const pkg of CORE) {
+
+// Skup imena paketa u stablu ovisnosti (normalne i build ovisnosti, svi targeti, sve značajke).
+function tree(pkg) {
   let out;
   try {
     out = execFileSync(
@@ -46,6 +48,11 @@ for (const pkg of CORE) {
     console.error(`cargo tree nije vratio ni sam paket ${pkg}: izlaz se ne može protumačiti`);
     process.exit(2);
   }
+  return names;
+}
+
+for (const pkg of CORE) {
+  const names = tree(pkg);
   for (const name of names) {
     if (!ALLOWED.has(name)) {
       console.error(`NIJE DOPUŠTENO: ${pkg} ovisi o ${name}`);
@@ -53,6 +60,21 @@ for (const pkg of CORE) {
     }
   }
   console.log(`${pkg}: provjereno ${names.size} paketa`);
+}
+
+// `game` je čist sloj iznad jezgre (ADR-015): smije serde i uuid, ali nikad bazu, mrežu ni async izvođač.
+const PURE = {
+  game: ["tokio", "sqlx", "sqlx-core", "sqlx-postgres", "axum", "hyper", "reqwest", "mio", "socket2"],
+};
+for (const [pkg, banned] of Object.entries(PURE)) {
+  const names = tree(pkg);
+  for (const b of banned) {
+    if (names.has(b)) {
+      console.error(`NIJE DOPUŠTENO: ${pkg} ovisi o ${b}`);
+      found += 1;
+    }
+  }
+  console.log(`${pkg}: provjereno ${names.size} paketa (čist sloj)`);
 }
 
 // Float literal sa sufiksom (`2.5f64`, `1f32`) prolazi sve clippy brane; hvata ga samo pretraga izvora.
@@ -65,7 +87,7 @@ function walkRs(dir, out = []) {
   }
   return out;
 }
-for (const crate of ["crates/engine", "crates/sim-hotel"]) {
+for (const crate of ["crates/engine", "crates/sim-hotel", "crates/game"]) {
   for (const f of walkRs(join(crate, "src"))) {
     readFileSync(f, "utf8")
       .split(/\r?\n/)
