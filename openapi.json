@@ -1,0 +1,171 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "HotelixSim API",
+    "description": "",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/demo/profiles/{profile}/indices": {
+      "get": {
+        "summary": "Početni indeksi profila (DEMO §5).",
+        "operationId": "profile_indices",
+        "parameters": [
+          {
+            "name": "profile",
+            "in": "path",
+            "description": "Profil hotela: A, B ili C",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Početni indeksi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicesBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nepoznat profil",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "summary": "Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Sve radi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Baza nije dostupna",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DatabaseState": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "error"
+        ]
+      },
+      "HealthBody": {
+        "type": "object",
+        "required": [
+          "database"
+        ],
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseState"
+          },
+          "events": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "IndexEntry": {
+        "type": "object",
+        "required": [
+          "code",
+          "hundredths"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Kod indeksa: G, R, Z, O ili F."
+          },
+          "hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Vrijednost u stotinkama: 0–10000 znači 0,00–100,00.",
+            "minimum": 0
+          }
+        }
+      },
+      "IndicesBody": {
+        "type": "object",
+        "required": [
+          "profile",
+          "indices"
+        ],
+        "properties": {
+          "indices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEntry"
+            }
+          },
+          "profile": {
+            "type": "string"
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

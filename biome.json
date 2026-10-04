@@ -1,0 +1,6 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "files": { "includes": ["**", "!**/schema.d.ts", "!**/dist", "!**/target", "!openapi.json", "!.sqlx"] },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 110 },
+  "linter": { "enabled": true, "rules": { "preset": "recommended" } }
+}

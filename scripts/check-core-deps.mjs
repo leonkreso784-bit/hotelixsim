@@ -5,7 +5,16 @@ import { execFileSync } from "node:child_process";
 
 const CORE = ["engine", "sim-hotel"];
 const FORBIDDEN = new Set([
-  "tokio", "sqlx", "reqwest", "rand", "rand_core", "getrandom", "chrono", "time", "axum", "hyper",
+  "tokio",
+  "sqlx",
+  "reqwest",
+  "rand",
+  "rand_core",
+  "getrandom",
+  "chrono",
+  "time",
+  "axum",
+  "hyper",
 ]);
 
 let found = 0;
@@ -15,8 +24,18 @@ for (const pkg of CORE) {
     out = execFileSync(
       "cargo",
       [
-        "tree", "-p", pkg, "-e", "normal,build", "--target", "all", "--all-features",
-        "--prefix", "none", "--format", "{p}",
+        "tree",
+        "-p",
+        pkg,
+        "-e",
+        "normal,build",
+        "--target",
+        "all",
+        "--all-features",
+        "--prefix",
+        "none",
+        "--format",
+        "{p}",
       ],
       { encoding: "utf8" },
     );
@@ -24,7 +43,12 @@ for (const pkg of CORE) {
     console.error(`cargo tree nije uspio za ${pkg}: ${err.message}`);
     process.exit(2);
   }
-  const names = new Set(out.split(/\r?\n/).filter(Boolean).map((line) => line.split(" ")[0]));
+  const names = new Set(
+    out
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => line.split(" ")[0]),
+  );
   if (!names.has(pkg)) {
     console.error(`cargo tree nije vratio ni sam paket ${pkg}: izlaz se ne može protumačiti`);
     process.exit(2);

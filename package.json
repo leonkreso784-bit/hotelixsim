@@ -1,0 +1,20 @@
+{
+  "name": "hotelixsim",
+  "private": true,
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "gen:openapi": "node scripts/gen-openapi.mjs",
+    "gen:api": "node scripts/pnpm.mjs gen:openapi && node scripts/pnpm.mjs --filter @hotelixsim/api-client gen",
+    "check:api": "node scripts/pnpm.mjs gen:api && git diff --exit-code -- openapi.json packages/api-client/src/schema.d.ts",
+    "lint": "biome check .",
+    "typecheck": "node scripts/pnpm.mjs -r typecheck",
+    "test": "node scripts/pnpm.mjs -r test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "typescript": "5.9.3"
+  }
+}
