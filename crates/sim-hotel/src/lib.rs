@@ -16,7 +16,9 @@ pub mod month;
 pub mod plan;
 pub mod profile;
 pub mod resolve;
+pub mod robots;
 pub mod score;
+pub mod season;
 pub mod state;
 
 pub use catalog::{
@@ -39,5 +41,7 @@ pub use profile::Profile;
 pub use resolve::{
     GuestOutcome, MoneyOutcome, MonthReport, PeopleOutcome, ResolveError, resolve_month,
 };
+pub use robots::Strategy;
 pub use score::{gain_bp, progress_pts};
+pub use season::{SeasonResult, run_season, run_season_with};
 pub use state::{GroupBlock, HotelState, Pending, turnover_bp};

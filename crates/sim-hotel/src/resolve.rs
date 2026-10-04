@@ -63,6 +63,8 @@ pub enum ResolveError {
     Plan(PlanError),
     Catalog(CatalogError),
     Mechanic(MechanicError),
+    /// Izbor odgovora ne postoji (prazan popis ili indeks izvan popisa).
+    BadChoice,
 }
 
 impl From<CalcError> for ResolveError {
