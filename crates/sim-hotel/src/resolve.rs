@@ -7,7 +7,7 @@ use engine::calc::{self as c, Calc, CalcError};
 use crate::catalog::{Catalog, CatalogError, CategorySpec, LevelEffect, TrainingEffect};
 use crate::explain::{Explain, Line, Lines, explain};
 use crate::market::{MarketOutcome, market};
-use crate::mechanic::{MechanicError, SituationOutcome};
+use crate::mechanic::{Effects, MechanicError, SituationOutcome, effects};
 use crate::month::Month;
 use crate::plan::{Maintenance, MonthPlan, PlanError, Training};
 use crate::state::{HotelState, Pending, turnover_bp};
@@ -163,6 +163,7 @@ struct PeopleIn<'a> {
     days: u8,
     wage_pct: u16,
     pend: &'a Pending,
+    sit_morale: i128,
 }
 
 fn people(i: &PeopleIn, cat: &Catalog) -> Calc<PeopleStep> {
@@ -184,6 +185,7 @@ fn people(i: &PeopleIn, cat: &Catalog) -> Calc<PeopleStep> {
         wage_gain,
         neg(c::div_round(penalty, 2)?)?,
         w(i.pend.morale_pts),
+        i.sit_morale,
         release_morale,
     ])?
     .clamp(0, 10_000);
@@ -249,6 +251,7 @@ struct MoneyIn<'a> {
     hires: u16,
     departures: u16,
     days: u8,
+    sit_cost: i128,
 }
 
 fn money(i: &MoneyIn, cat: &Catalog) -> Calc<MoneyStep> {
@@ -287,6 +290,7 @@ fn money(i: &MoneyIn, cat: &Catalog) -> Calc<MoneyStep> {
         w(i.plan.marketing_cents),
         w(i.state.fixed_cents),
         reply_cost,
+        i.sit_cost,
     ])?;
     let gop = c::sub(c::add(rooms_revenue, other)?, costs)?;
     let capex = if i.plan.renovation {
@@ -348,6 +352,9 @@ struct GuestIn<'a> {
     penalty: i128,
     morale: i128,
     experience: i128,
+    sit_equipment: i128,
+    sit_satisfaction: i128,
+    sit_rating: i128,
 }
 
 fn guests(i: &GuestIn, cat: &Catalog) -> Calc<GuestStep> {
@@ -367,6 +374,7 @@ fn guests(i: &GuestIn, cat: &Catalog) -> Calc<GuestStep> {
         equipment_load,
         maintenance_eff,
         renovation_equipment,
+        i.sit_equipment,
     ])?
     .clamp(0, 10_000);
     let quality = c::div_round(
@@ -393,8 +401,13 @@ fn guests(i: &GuestIn, cat: &Catalog) -> Calc<GuestStep> {
     )?;
     let sat_now = w(i.state.satisfaction_pts);
     let satisfaction_gain = c::div_round(c::mul(5_000, c::sub(sat_target, sat_now)?)?, 10_000)?;
-    let satisfaction =
-        c::sum(&[sat_now, satisfaction_gain, renovation_satisfaction])?.clamp(0, 10_000);
+    let satisfaction = c::sum(&[
+        sat_now,
+        satisfaction_gain,
+        renovation_satisfaction,
+        i.sit_satisfaction,
+    ])?
+    .clamp(0, 10_000);
     let rating_target = c::div_round(c::add(14_000, satisfaction)?, 25)?;
     let rating_now = w(i.state.rating);
     let rating_gain = c::div_round(c::mul(2_500, c::sub(rating_target, rating_now)?)?, 10_000)?;
@@ -403,7 +416,7 @@ fn guests(i: &GuestIn, cat: &Catalog) -> Calc<GuestStep> {
     } else {
         0
     };
-    let rating = c::sum(&[rating_now, rating_gain, reply_rating])?.clamp(100, 1_000);
+    let rating = c::sum(&[rating_now, rating_gain, reply_rating, i.sit_rating])?.clamp(100, 1_000);
     Ok(GuestStep {
         out: GuestOutcome {
             quality_pts: c::narrow(quality)?,
@@ -434,15 +447,36 @@ pub fn resolve_month(
     cat: &Catalog,
 ) -> Result<MonthReport, ResolveError> {
     plan.validate(state, month, cat)?;
-    if !situations.is_empty() {
-        return Err(MechanicError::NotYetSupported.into());
-    }
     let days = month.days();
     let pend = state.pending.clone();
     let spec = cat.category(state.category)?;
 
+    let mut sits: Vec<(String, Effects)> = Vec::with_capacity(situations.len());
+    let mut new_groups = Vec::new();
+    let (mut sat, mut morale, mut rating, mut equip, mut cost, mut extra): (
+        i128,
+        i128,
+        i128,
+        i128,
+        i128,
+        i128,
+    ) = (0, 0, 0, 0, 0, 0);
+    for o in situations {
+        let e = effects(o, month, cat, state.category)?;
+        sat = c::add(sat, w(e.satisfaction_pts))?;
+        morale = c::add(morale, w(e.morale_pts))?;
+        rating = c::add(rating, w(e.rating))?;
+        equip = c::add(equip, w(e.equipment_pts))?;
+        cost = c::add(cost, w(e.cost_cents))?;
+        extra = c::add(extra, w(e.extra_wage_cents))?;
+        new_groups.extend(e.groups.iter().cloned());
+        sits.push((o.code.clone(), e));
+    }
+
     let st = staffing(state, plan)?;
     let mut s = st.state;
+    s.groups.extend(new_groups);
+    s.extra_wage_cents = c::narrow(c::add(w(s.extra_wage_cents), extra)?)?;
     let mkt = market(&s, month, plan, st.staff, cat)?;
     s.groups.retain(|g| g.month != month);
 
@@ -456,6 +490,7 @@ pub fn resolve_month(
             days,
             wage_pct: plan.wage_pct,
             pend: &pend,
+            sit_morale: morale,
         },
         cat,
     )?;
@@ -469,6 +504,7 @@ pub fn resolve_month(
             hires: st.hires,
             departures: pe.out.departures,
             days,
+            sit_cost: cost,
         },
         cat,
     )?;
@@ -482,6 +518,9 @@ pub fn resolve_month(
             penalty: pe.penalty,
             morale: pe.morale,
             experience: pe.experience,
+            sit_equipment: equip,
+            sit_satisfaction: sat,
+            sit_rating: rating,
         },
         cat,
     )?;
@@ -497,6 +536,8 @@ pub fn resolve_month(
             people: &pe,
             money: &mo,
             guests: &gu,
+            situations: &sits,
+            sit_extra_wage: extra,
         },
     )?;
 

@@ -25,7 +25,7 @@ pub use explain::{Cause, Line, Unit, Var};
 pub use index::{Index, IndexSet, IndexValue, NamedIndices};
 pub use market::{MarketOutcome, market};
 pub use mechanic::{
-    Effects, Mechanic, MechanicError, OfferedAnswer, SituationOutcome, SituationTemplate,
+    Effects, Mechanic, MechanicError, OfferedAnswer, SituationOutcome, SituationTemplate, effects,
 };
 pub use month::{Month, MonthTable};
 pub use plan::{Maintenance, MonthPlan, PlanError, Training};

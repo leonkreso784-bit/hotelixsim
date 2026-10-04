@@ -3,6 +3,7 @@
 use engine::calc::{self, self as c, Calc};
 
 use crate::market::MarketOutcome;
+use crate::mechanic::Effects;
 use crate::plan::MonthPlan;
 use crate::resolve::{GuestStep, MoneyStep, PeopleStep, neg, w};
 use crate::state::{HotelState, Pending};
@@ -90,6 +91,9 @@ pub(crate) struct Explain<'a> {
     pub(crate) people: &'a PeopleStep,
     pub(crate) money: &'a MoneyStep,
     pub(crate) guests: &'a GuestStep,
+    pub(crate) situations: &'a [(String, Effects)],
+    /// Zbroj novih trajnih povišica iz situacija (u `mo.wage`, ali se objašnjava zasebno).
+    pub(crate) sit_extra_wage: i128,
 }
 
 pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
@@ -129,7 +133,12 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     l.push(Var::Revenue, Cause::Groups, w(m.group_revenue_cents), cents)?;
     l.push(Var::Revenue, Cause::OtherRevenue, mo.other, cents)?;
     // Troškovi
-    l.push(Var::Costs, Cause::Wage, mo.wage, cents)?;
+    l.push(
+        Var::Costs,
+        Cause::Wage,
+        c::sub(mo.wage, e.sit_extra_wage)?,
+        cents,
+    )?;
     l.push(Var::Costs, Cause::Hires, mo.hire_cost, cents)?;
     l.push(Var::Costs, Cause::Training, mo.training_cost, cents)?;
     l.push(Var::Costs, Cause::Baseline, mo.cpor_total, cents)?;
@@ -231,5 +240,15 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
         g.reply_rating,
         Unit::RatingHundredths,
     )?;
+    // Situacije: svaka dobiva retke za varijable na koje djeluje
+    for (code, fx) in e.situations {
+        let cause = || Cause::Situation(code.clone());
+        l.push(Var::Costs, cause(), w(fx.cost_cents), cents)?;
+        l.push(Var::Costs, cause(), w(fx.extra_wage_cents), cents)?;
+        l.push(Var::Morale, cause(), w(fx.morale_pts), pts)?;
+        l.push(Var::Equipment, cause(), w(fx.equipment_pts), pts)?;
+        l.push(Var::Satisfaction, cause(), w(fx.satisfaction_pts), pts)?;
+        l.push(Var::Rating, cause(), w(fx.rating), Unit::RatingHundredths)?;
+    }
     Ok(())
 }

@@ -127,3 +127,47 @@ pub fn test_catalog() -> Catalog {
 pub fn state_c() -> HotelState {
     HotelState::from_profile(&profile_c()).expect("profil C je valjan")
 }
+
+/// Retci objašnjenja moraju stvarno objasniti promjenu (nema odsječenja u ovim scenarijima).
+pub fn assert_lines_explain(r: &MonthReport) {
+    let total = |v: Var| {
+        r.lines
+            .iter()
+            .filter(|l| l.var == v)
+            .map(|l| l.amount)
+            .sum::<i64>()
+    };
+    let (b, a) = (&r.before, &r.after);
+    assert_eq!(total(Var::Costs), r.money.costs_cents);
+    assert_eq!(
+        total(Var::Revenue),
+        r.money.rooms_revenue_cents + r.money.other_revenue_cents
+    );
+    assert_eq!(total(Var::Cash), a.cash_cents - b.cash_cents);
+    assert_eq!(
+        total(Var::Experience),
+        i64::from(a.experience_pts - b.experience_pts)
+    );
+    assert_eq!(
+        total(Var::Equipment),
+        i64::from(a.equipment_pts - b.equipment_pts)
+    );
+    assert_eq!(
+        total(Var::Satisfaction),
+        i64::from(a.satisfaction_pts - b.satisfaction_pts)
+    );
+    assert_eq!(
+        total(Var::Rating),
+        i64::from(a.rating) - i64::from(b.rating)
+    );
+    let morale_baseline: i64 = r
+        .lines
+        .iter()
+        .filter(|l| l.var == Var::Morale && l.cause == Cause::Baseline)
+        .map(|l| l.amount)
+        .sum();
+    assert_eq!(morale_baseline, i64::from(a.morale_pts - b.morale_pts));
+    let staff_change =
+        i64::from(r.people.hires) - i64::from(r.people.released) + i64::from(r.people.departures);
+    assert_eq!(total(Var::Staff), staff_change);
+}
