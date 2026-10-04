@@ -2,7 +2,7 @@
 
 > **Nacrt za Leonovu provjeru — on je mjerilo za rubrike (DEMO „Za Leonovu provjeru" t. 5).**
 > Ništa ovdje nije potvrđeno. Brojke su [PROC] osim ako piše drukčije. Oblik je isti kao S1–S4 u
-> [DEMO.md](../DEMO.md) §7. Datoteka DEMO.md nije mijenjana.
+> [DEMO.md](DEMO.md) §7. Datoteka DEMO.md nije mijenjana.
 
 ## Kako čitati
 

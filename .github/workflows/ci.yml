@@ -46,6 +46,8 @@ jobs:
         with: { node-version: 24 }
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check:docs
+      - run: pnpm test:docs
       - run: pnpm check:api
         env: { SQLX_OFFLINE: "true" }
       - run: pnpm lint

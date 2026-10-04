@@ -1,0 +1,9 @@
+{
+  "since": "2026-10-03",
+  "plan_path": "docs/plan/ROADMAP.md",
+  "closed_phases": [],
+  "phase_tag": "^(Kostur \\d+/\\d+)",
+  "owner_name": "leon",
+  "test_path_contains": ["/tests/"],
+  "test_path_exclude": ["/fixtures/"]
+}

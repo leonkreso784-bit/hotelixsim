@@ -4,7 +4,7 @@
 > ispravka presude (§8), puni snimak pravila (§7.2, §17), pravednost profila i AI-ja (§7.8, §10.3), red poslova
 > (§9.4), što tko vidi (§12, §7.5), slobodan potez (§8.5), obrazloženje za Rust (§5, §18), lokalno pa Railway (§14).
 > Domena (§1) i jezici (Rust + TypeScript, §5) dogovoreni su 04.10.; ostalo je prijedlog dok Leon ne potvrdi.
-> Vizija proizvoda: [VIZIJA.md](./VIZIJA.md) · plan: [PLAN.md](./PLAN.md).
+> Vizija proizvoda: [VIZIJA.md](../product/VIZIJA.md) · plan: [ROADMAP.md](../plan/ROADMAP.md).
 
 ## Sadržaj
 
@@ -235,7 +235,7 @@ U pilotu mogu raditi i kao jedan proces; razdvajaju se kad zatreba, bez promjene
 **Što Rust ne daje:** determinizam. On dolazi iz **dizajna** (§7.2) i jednako bi se morao graditi u bilo kojem
 jeziku. Rust tu pomaže samo alatima koji pravila provjeravaju umjesto čovjeka: provjera prekoračenja broja i zabrana
 nesigurnih tipova kroz clippy. Sam jezik ne jamči ništa. Brojevi i verzije alata provjereni su 04.10.:
-[istrazivanje/RUST_ALATI_2026-10.md](./istrazivanje/RUST_ALATI_2026-10.md).
+[research/RUST_ALATI_2026-10.md](../research/RUST_ALATI_2026-10.md).
 
 ### 5.2 Rust strana
 

@@ -9,6 +9,8 @@
     "gen:openapi": "node scripts/gen-openapi.mjs",
     "gen:api": "node scripts/pnpm.mjs gen:openapi && node scripts/pnpm.mjs --filter @hotelixsim/api-client gen",
     "check:api": "node scripts/pnpm.mjs gen:api && git diff --exit-code -- openapi.json packages/api-client/src/schema.d.ts",
+    "check:docs": "node scripts/check-docs.mjs",
+    "test:docs": "node --test scripts/check-docs.test.mjs",
     "lint": "biome check .",
     "typecheck": "node scripts/pnpm.mjs -r typecheck",
     "test": "node scripts/pnpm.mjs -r test"

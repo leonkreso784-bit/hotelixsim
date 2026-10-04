@@ -106,7 +106,7 @@ Ispravak:
 
 - **Upit 1 (Leon, 04.10.):** AI ostaje sastavni dio simulacije, barem za demo. Što se događa kad se AI isključi
   definira se kasnije, prema tome što profesori žele. → Pitanje je dodano u
-  [PITANJA_ZA_PROFESORE.md](./PITANJA_ZA_PROFESORE.md) (pitanje 22).
+  [PITANJA_ZA_PROFESORE.md](../product/PITANJA_ZA_PROFESORE.md) (pitanje 22).
 - **Upit 2 (Leon, 04.10.):** prihvaćena preporuka. Student o drugima vidi ukupnu ocjenu i pet indeksa kroz runde,
   bez stvarnih brojki i odluka. Vrijedi dok profesori ne odgovore na pitanje 14 (i imena ili anonimno).
 - **Upit 3:** ugrađeno u nacrt v2 (krug 2).
@@ -128,7 +128,7 @@ Krug 1 je ugrađen u [ARHITEKTURA.md](./ARHITEKTURA.md). Gdje je što:
 | Rust: determinizam iz dizajna, prekoračenje, zabrana `HashMap` | §5.1, §7.2, §18 |
 | Lokalno pa Railway kao jedan servis | §14, §20 |
 
-**Novo iz istraživanja** ([istrazivanje/RUST_ALATI_2026-10.md](./istrazivanje/RUST_ALATI_2026-10.md)):
+**Novo iz istraživanja** ([research/RUST_ALATI_2026-10.md](../research/RUST_ALATI_2026-10.md)):
 
 - Gotovi Rust redovi poslova su ili RC ili na SQLx 0.8, a SQLx 0.8 i 0.9 ne dijele transakciju. Zato je vlastiti
   mali red najvjerojatniji ishod probnog testa (§9.4).

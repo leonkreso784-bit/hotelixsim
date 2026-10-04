@@ -3,10 +3,10 @@
 Simulacija vođenja hotela za učenje — student dobije hotel, rješava situacije uz AI, a ocjenjuje se koliko je
 hotel unaprijedio u odnosu na početak.
 
-- Vizija: [docs/VIZIJA.md](docs/VIZIJA.md)
-- Plan: [docs/PLAN.md](docs/PLAN.md)
-- Arhitektura: [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md)
-- Demo (specifikacija): [docs/DEMO.md](docs/DEMO.md)
+- Vizija: [docs/product/VIZIJA.md](docs/product/VIZIJA.md)
+- Plan: [docs/plan/ROADMAP.md](docs/plan/ROADMAP.md)
+- Arhitektura: [docs/architecture/ARHITEKTURA.md](docs/architecture/ARHITEKTURA.md)
+- Demo (specifikacija): [docs/product/DEMO.md](docs/product/DEMO.md)
 
 Privatno · autor: Leon Kreso.
 

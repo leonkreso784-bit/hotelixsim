@@ -1,5 +1,5 @@
 //! Kocka: SplitMix64 (Vigna), neovisni tokovi iz sjemena. Ne ovisi o vanjskoj biblioteci, jer `rand`
-//! dopušta da nova manja verzija promijeni niz brojeva (istrazivanje/RUST_ALATI_2026-10.md).
+//! dopušta da nova manja verzija promijeni niz brojeva (docs/research/RUST_ALATI_2026-10.md).
 //! Sva `wrapping_*` aritmetika ovdje je namjerna: dio je definicije algoritma.
 
 const GOLDEN_GAMMA: u64 = 0x9E37_79B9_7F4A_7C15;

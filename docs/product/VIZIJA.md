@@ -2,8 +2,8 @@
 
 > **Izvor:** Leonov opis i ankete u sesiji planiranja 2026-10-03 (Sokratova sesija). Ovo je **vizija i dogovor**,
 > ne arhitektura — tehnički izbori u trenutku pisanja **nisu bili doneseni**.
-> *Ažurirano 04.10.: arhitektura je donesena — Rust (jezgra + backend) + TypeScript (sučelje), vidi [ARHITEKTURA.md](./ARHITEKTURA.md); AI pružatelj je još otvoren.*
-> Izvorna ideja iz kolovoza (runde, revenue management, AI gost): [izvor/HOTEL_SIM_2026-08-22.md](./izvor/HOTEL_SIM_2026-08-22.md).
+> *Ažurirano 04.10.: arhitektura je donesena — Rust (jezgra + backend) + TypeScript (sučelje), vidi [ARHITEKTURA.md](../architecture/ARHITEKTURA.md); AI pružatelj je još otvoren.*
+> Izvorna ideja iz kolovoza (runde, revenue management, AI gost): [archive/HOTEL_SIM_2026-08-22.md](../archive/HOTEL_SIM_2026-08-22.md).
 > Gdje se ova vizija razlikuje od izvorne ideje, **vrijedi ova**.
 
 ## 1 · Što je
@@ -70,7 +70,7 @@ AI za pilot plaćamo mi (za demo postoje besplatni API ključevi, Leon 03.10.); 
 - **Prvi korisnik je profesor s FMTU-a** koji je zainteresiran, ali **prvo želi vidjeti demo**.
 - Pilot = **vođena prezentacija + jedan igriv hotel s tri lažna igrača**. Jezik: **hrvatski**, s tekstom odvojenim tako
   da engleski kasnije ne traži prepravak.
-  *(04.10.: u [PLAN.md](./PLAN.md) se ovo zove **DEMO** (lokalno, za profesora); **PILOT** je kasnija faza — grupa studenata na Railwayu.)*
+  *(04.10.: u [ROADMAP.md](../plan/ROADMAP.md) se ovo zove **DEMO** (lokalno, za profesora); **PILOT** je kasnija faza — grupa studenata na Railwayu.)*
 
 ## 8 · Što je izvan pilota (vizija)
 

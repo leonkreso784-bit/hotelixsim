@@ -1,9 +1,9 @@
 # HotelixSim — demo: opseg i dizajn igre
 
-> **Status:** NACRT (2026-10-04). Arhitektura: [ARHITEKTURA.md](./ARHITEKTURA.md) v2.
+> **Status:** NACRT (2026-10-04). Arhitektura: [ARHITEKTURA.md](../architecture/ARHITEKTURA.md) v2.
 > **Sve brojke i pravila ovdje su zapisane pretpostavke** dok profesori ne odgovore
 > ([PITANJA_ZA_PROFESORE.md](./PITANJA_ZA_PROFESORE.md)) i dok ih alat za balans ne izmjeri.
-> Oznake: **[IZVOR]** brojka iz istraživanja ([istrazivanje/](./istrazivanje/)) · **[PROC]** procjena, kalibrira se.
+> Oznake: **[IZVOR]** brojka iz istraživanja ([research/](../research/)) · **[PROC]** procjena, kalibrira se.
 > Leon (student hotelijerstva) je stručnjak za domenu: svaka stavka ovdje je za njegovu provjeru.
 >
 > U dokumentu su brojke pisane decimalno radi čitljivosti. Jezgra ih računa cijelim brojevima (novac u centima,
@@ -121,7 +121,7 @@ varijabli, a svaka ima jasan uzrok**.
 | | sobe izvan funkcije | broj | zbog kvarova; smanjuje prodaju |
 | **cijena i prodaja** | cijena (odluka) | € po noćenju | igrač postavlja za mjesec |
 | | prodane sobe-noći | broj | rezultat tržišta (§3) |
-| | popunjenost · ADR · RevPAR | % · € · € | izvedeno, formule iz [istrazivanje](./istrazivanje/HOTELSKI_POKAZATELJI.md) |
+| | popunjenost · ADR · RevPAR | % · € · € | izvedeno, formule iz [istrazivanje](../research/HOTELSKI_POKAZATELJI.md) |
 | | grupe | sobe-noći, cijena | iz prihvaćenih ponuda agencija |
 | **novac** | prihod soba · ostali prihod | € | ostali prihod (hrana, piće, usluge) = 30 % prihoda soba [PROC] |
 | | trošak rada · CPOR · održavanje · marketing · fiksni | € | CPOR = varijabilni trošak po prodanoj sobi |

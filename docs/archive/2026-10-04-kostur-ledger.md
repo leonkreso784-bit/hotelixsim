@@ -1,5 +1,7 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-04-kostur.md
 
+> **✅ ISPUNJEN 2026-10-04** — radni ledger plana [2026-10-04-kostur.md](2026-10-04-kostur.md); odgođeni nalazi su u [BACKLOG.md](../records/BACKLOG.md). Putanje ispod su one od prije preslagivanja dokumentacije.
+
 Spec: docs/ARHITEKTURA.md v2, docs/DEMO.md §4–§5, docs/istrazivanje/RUST_ALATI_2026-10.md (dostupno).
 Grana: gradnja/kostur (od main @ 75ecef3).
 
