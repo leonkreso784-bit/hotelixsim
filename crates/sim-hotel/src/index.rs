@@ -58,7 +58,21 @@ impl IndexValue {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IndexSet([IndexValue; 5]);
 
+/// Imenovani oblik za pozivatelje koji ne smiju pogriješiti redoslijed (G, R, Z, O, F).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NamedIndices {
+    pub guests: u16,
+    pub reviews: u16,
+    pub staff: u16,
+    pub operations: u16,
+    pub finance: u16,
+}
+
 impl IndexSet {
+    pub fn from_named(v: NamedIndices) -> Option<Self> {
+        Self::from_hundredths([v.guests, v.reviews, v.staff, v.operations, v.finance])
+    }
+
     /// Vrijednosti u redoslijedu `Index::ALL` (G, R, Z, O, F).
     pub fn from_hundredths(values: [u16; 5]) -> Option<Self> {
         let mut out = [IndexValue(0); 5];

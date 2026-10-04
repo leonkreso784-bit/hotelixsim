@@ -1,0 +1,158 @@
+[
+  {
+    "code": "S1",
+    "month": "jun",
+    "title": "Klima u sobi obitelji s djecom",
+    "answers": [
+      {
+        "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+        "quality": 5,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 12000 },
+          { "type": "EquipmentRepair", "urgent": true }
+        ]
+      },
+      {
+        "label": "Ispričati se, premjestiti obitelj i poslati tehničara",
+        "quality": 3,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 0 },
+          { "type": "EquipmentRepair", "urgent": true }
+        ]
+      },
+      {
+        "label": "Vratiti novac za cijeli boravak",
+        "quality": 1,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 94500 },
+          { "type": "EquipmentRepair", "urgent": false }
+        ]
+      },
+      {
+        "label": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+        "quality": 1,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 0 },
+          { "type": "EquipmentRepair", "urgent": false }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "S2",
+    "month": "jul",
+    "title": "Šef kuhinje traži povišicu ili odlazi",
+    "answers": [
+      {
+        "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+        "quality": 5,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus_cents": 200000 }]
+      },
+      {
+        "label": "Bonus na kraju sezone ako ostane, bez razgovora",
+        "quality": 2,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 300000 }]
+      },
+      {
+        "label": "Odmah dati 20 %",
+        "quality": 1,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 20, "bonus_cents": 0 }]
+      },
+      {
+        "label": "Odbiti: „nitko nije nezamjenjiv\"",
+        "quality": 1,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }]
+      }
+    ]
+  },
+  {
+    "code": "S3",
+    "month": "jun",
+    "title": "Agencija nudi grupu od 25 soba za 7 noći (nacrt)",
+    "answers": [
+      {
+        "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+        "quality": 5,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2000,
+            "month": "sep"
+          }
+        ]
+      },
+      {
+        "label": "Prihvatiti uz 15 % popusta i depozit",
+        "quality": 3,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 1500,
+            "month": "aug"
+          }
+        ]
+      },
+      {
+        "label": "Prihvatiti ponudu kako je",
+        "quality": 1,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2500,
+            "month": "aug"
+          }
+        ]
+      },
+      {
+        "label": "Odbiti",
+        "quality": 2,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": false,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2500,
+            "month": "aug"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "S4",
+    "month": "aug",
+    "title": "Najava restrikcija vode zbog suše (nacrt)",
+    "answers": [
+      {
+        "label": "Voda i hlađenje za goste i osoblje, iskrena obavijest unaprijed, štednja u praonici i bazenu, cisterna kao rezerva, kraće smjene",
+        "quality": 5,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 300000 }]
+      },
+      {
+        "label": "Obavijest gostima i štednja u praonici",
+        "quality": 3,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      },
+      {
+        "label": "Noću zatvoriti tuševe i bazen bez objašnjenja",
+        "quality": 1,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      },
+      {
+        "label": "Ne poduzimati ništa dok ograničenja ne počnu",
+        "quality": 1,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      }
+    ]
+  }
+]

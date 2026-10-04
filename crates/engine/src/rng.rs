@@ -35,6 +35,9 @@ impl Rng {
     }
 
     /// Neovisan tok izveden iz sjemena igre i oznaka, npr. `(runda, hotel, label("trigger:T1"))`.
+    ///
+    /// `derive(seed, &[])` NIJE `from_seed(seed)`: izvedeni tok počinje od `mix64(seed)`,
+    /// pa su prostori stanja različiti — za tokove igre uvijek koristi `derive`.
     pub fn derive(seed: u64, labels: &[u64]) -> Self {
         let state = labels.iter().fold(mix64(seed), |s, l| mix64(s ^ l));
         Self { state }

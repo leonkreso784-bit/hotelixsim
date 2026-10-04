@@ -1,8 +1,14 @@
 disallowed-types = [
   { path = "std::collections::HashMap", reason = "nasumičan redoslijed ruši determinizam (ARHITEKTURA §7.2)", replacement = "std::collections::BTreeMap" },
   { path = "std::collections::HashSet", reason = "nasumičan redoslijed ruši determinizam (ARHITEKTURA §7.2)", replacement = "std::collections::BTreeSet" },
+  { path = "std::hash::RandomState", reason = "nasumično sjeme hashera (ARHITEKTURA §7.2)" },
+  { path = "std::hash::DefaultHasher", reason = "izlaz nije stabilan među verzijama Rusta" },
+  { path = "f32", reason = "jezgra računa cijelim brojevima (DEMO §12)" },
+  { path = "f64", reason = "jezgra računa cijelim brojevima (DEMO §12)" },
 ]
 disallowed-methods = [
   { path = "std::time::SystemTime::now", reason = "jezgra ne čita sat (ARHITEKTURA §7.2)" },
   { path = "std::time::Instant::now", reason = "jezgra ne čita sat (ARHITEKTURA §7.2)" },
+  { path = "std::env::var", reason = "jezgra ne čita okolinu" },
+  { path = "std::env::var_os", reason = "jezgra ne čita okolinu" },
 ]

@@ -142,28 +142,26 @@ varijabli, a svaka ima jasan uzrok**.
 
 Profili A i B su u §5. Svi kreću 1. lipnja.
 
-| varijabla | C | izvor |
+Brojke žive u `content/hotel/*.json` (kalibrirane alatom za balans); ovdje je samo smjer.
+
+| varijabla | smjer za C | izvor |
 |---|---|---|
-| cijena (referentna za mjesec) | VI 135 · VII 165 · VIII 175 · IX 135 € | [PROC] iz LRH prosjeka 132 € i sezonskog hoda |
-| bazna popunjenost uz referentnu cijenu | VI 72 · VII 78 · VIII 83 · IX 73 % | [IZVOR] DZS 2025., hoteli u Hrvatskoj |
-| stalni / sezonci | 30 / 20 | [PROC] ≈ 0,4 zaposlena po sobi kao LRH [IZVOR] |
-| prosječni trošak zaposlenog | 2 200 € mjesečno | [PROC] iz LRH 22,1 mil. € / 835 zaposlenih [IZVOR] |
-| plaća u odnosu na tržište | 100 % | |
-| moral · iskustvo | 55 · 60 | [PROC] |
-| CPOR | 22 € | [PROC] |
-| fiksni troškovi | 120 000 € mjesečno | [PROC] energija, osiguranje, uprava, najam opreme |
-| stanje opreme | 60 | [PROC] |
-| zadovoljstvo gostiju · ocjena portala | 70 · 8,4 | [PROC] |
-| blagajna | 300 000 € | [PROC] |
+| cijena (referentna za mjesec) | raste od lipnja do kolovoza, rujan kao lipanj | [PROC] iz LRH prosjeka 132 € i sezonskog hoda |
+| bazna popunjenost uz referentnu cijenu | VI, VII, IX kao prosjek hrvatskih hotela; VIII rasprodan: potražnja veća od broja soba (4* u Opatiji u vrhuncu, ADR-014) | [IZVOR] DZS 2025. · [PROC] za VIII |
+| stalni / sezonci | stalna jezgra + sezonci koji prate potražnju (plan sezonaca po mjesecu u katalogu) | [PROC] oko LRH-ovih ≈ 0,4 zaposlena po sobi [IZVOR], više u vrhuncu |
+| prosječni trošak zaposlenog | jedan iznos za kategoriju | [PROC] iz LRH 22,1 mil. € / 835 zaposlenih [IZVOR] |
+| plaća u odnosu na tržište | tržišna | |
+| moral · iskustvo | srednje | [PROC] |
+| CPOR | jedan iznos za kategoriju | [PROC] |
+| fiksni troškovi | toliki da sezonska marža bude u cilju (§11) | [PROC] energija, osiguranje, uprava, najam opreme |
+| stanje opreme | iznad praga gašenja soba | [PROC] |
+| zadovoljstvo gostiju · ocjena portala | ocjena je neutralna za potražnju (§3.1) | [PROC] |
+| blagajna | dovoljna za sezonu bez kredita | [PROC] |
 
-**Provjera računom (profil C, bez odluka igrača):**
-lipanj ≈ 2 590 prodanih soba-noći, prihod ≈ 455 000 €, GOP marža ≈ 37 %;
-kolovoz ≈ 3 090 soba-noći, prihod ≈ 702 000 €, GOP marža ≈ 57 %.
-Lipanj je blizu europskog mjerila (HotStats ≈ 45 % u vrhuncu) [IZVOR]. **Kolovoz je previsok:** stvarni hotel u
-vrhuncu ima više sezonaca i veće fiksne troškove. Kalibracija: sezonski hod broja sezonaca i fiksnih troškova, tako
-da godišnja GOP marža bude 30–40 % [PROC]. To je prvi zadatak alata za balans.
-
-Vrijednosti iz §2.1 su prvi pokušaj. Alat za balans ih podesi tako da profil C kreće s **50 u svakom indeksu** (§4).
+**Cilj kalibracije (ADR-013):** profil C bez odluka igrača ima sezonsku (VI–IX) GOP maržu 35–45 % i nijedan mjesec
+iznad 50 %; kolovoz je rasprodan (potražnja veća od broja soba), pa grupa iz S3 istiskuje individualne goste i u
+kolovozu donosi manje GOP-a nego u lipnju (ADR-014). Profil C kreće s **50 u svakom
+indeksu** (§4) jer su indeksi centrirani na njega. Izmjereni rezultat je u `docs/research/KALIBRACIJA_*.md`.
 
 ---
 
@@ -248,7 +246,7 @@ kao neuspjeh. To je isto načelo kao STR-ov RGI [IZVOR].
 ```text
 GOPPAR_indeks = 50 + 50 × (GOPPAR / GOPPAR_ref(mj) − 1),  ograničeno 0–100
                 GOPPAR_ref = GOPPAR profila C bez ijedne odluke u tom mjesecu (računa jezgra)
-likvidnost    = blagajna / (2 × (fiksni + trošak_rada)) × 100,  ograničeno 0–100
+likvidnost    = blagajna / (2 × (fiksni + trošak_rada)) × 100,  najmanje 0 (bez gornje granice — ADR-014)
 ```
 
 ---
@@ -264,12 +262,14 @@ za balans (§11), ne pretpostavlja se.
 | **B** „Profitabilni, ali zapušteni" | zdrave financije i mirni ljudi, ali stara oprema i slabije recenzije | 45 | 35 | 55 | 40 | 75 |
 | **C** „Prosječni" | ništa ne gori, ništa ne blista | 50 | 50 | 50 | 50 | 50 |
 
-Kako se razlikuju u stvarnom sloju (smjer, točne brojke podesi alat):
+Kako se razlikuju u stvarnom sloju. Brojke žive u `content/hotel/*.json` (kalibrirane alatom za balans); ovdje je
+samo smjer.
 
-- **A:** ocjena portala ≈ 9,1, zadovoljstvo ≈ 78, moral ≈ 35, opterećenje iznad 1,8, blagajna ≈ 120 000 €, fiksni
+- **A:** viša ocjena portala i zadovoljstvo od C, niži moral, opterećenje iznad 1,8, malo novca u blagajni, fiksni
   troškovi viši (kredit za prošlu obnovu).
-- **B:** ocjena ≈ 8,0, oprema ≈ 40, iskustvo ≈ 55, blagajna ≈ 600 000 €, plaća 97 % tržišne, ali stabilan tim.
-- **C:** vrijednosti iz §2.1.
+- **B:** niža ocjena i zadovoljstvo od C, stara oprema, nešto manje iskustva, puno novca u blagajni, niži fiksni
+  troškovi, plaća malo ispod tržišne, ali stabilan tim (moral iznad C).
+- **C:** smjer iz §2.1.
 
 Svaki profil ima **očitu prvu ideju koja je samo djelomično dobra**. A bi htio dići plaće, ali nema novca. B bi htio
 obnovu, ali ona troši likvidnost i djeluje tek idući mjesec. To je namjerno: igra nagrađuje redoslijed odluka.
@@ -286,7 +286,7 @@ Mehanike su kod, a brojke su podaci u katalogu (ARHITEKTURA §7.4). Sve granice 
 |---|---|---|---|
 | `SetPrice` | cijena za mjesec | 60–150 % referentne | `f_cijena`, `vrijednost` |
 | `SetMarketing` | marketing | 0–40 000 € | `f_marketing` |
-| `HireSeasonal` / `ReleaseSeasonal` | sezonci | 0–40 ukupno, najviše ±10 mjesečno | kapacitet, opterećenje; zapošljavanje 1 500 € i pad iskustva; puštanje −3 moral |
+| `HireSeasonal` / `ReleaseSeasonal` | sezonci | 0–50 ukupno, najviše ±10 mjesečno | kapacitet, opterećenje; zapošljavanje 1 500 € i pad iskustva; puštanje −3 moral |
 | `SetWage` | plaća u odnosu na tržište | 90–115 %, korak 1 % | `cilj_morala`, trošak rada |
 | `Training` | obuka | 0 / 5 000 / 10 000 € | iskustvo +4 / +7 i moral +2 **idući** mjesec |
 | `Maintenance` | održavanje | odgođeno 3 000 · redovno 15 000 · pojačano 30 000 € | oprema +0 / +4 / +8; odgođeno ostavlja trag `DeferredMaintenance` |
@@ -371,7 +371,7 @@ Agencija nudi 25 soba na 7 noći **u kolovozu** (175 soba-noći) uz 25 % popusta
 
 | # | kriterij |
 |---|---|
-| 1 | Prepoznaje da je kolovoz vrh sezone (bazna popunjenost 83 %), pa grupa istiskuje skuplje goste |
+| 1 | Prepoznaje da je kolovoz vrh sezone (hotel je rasprodan), pa grupa istiskuje skuplje goste |
 | 2 | Uspoređuje vrijednost grupe s vrijednošću istisnutih individualnih gostiju |
 | 3 | Protuponuda: manji popust, manje soba ili pomak na lipanj ili rujan |
 | 4 | Uvjeti: depozit, rok otkaza, rok za puštanje neprodanih soba |
@@ -491,7 +491,9 @@ Za alat za balans postoji i četvrta strategija, **Nasumični**, s odlukama iz k
 Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 
 1. **Početak:** profil C kreće s 50 (±1) u svakom indeksu; A i B imaju ciljane vrijednosti iz §5 (±2).
-2. **Ekonomija:** profil C bez odluka ima GOP maržu 30–40 % kroz sezonu (§2.1, provjera računom).
+2. **Ekonomija:** profil C bez odluka ima sezonsku (VI–IX) GOP maržu 35–45 %, nijedan mjesec iznad 50 %, a grupa
+   iz S3 u kolovozu istiskuje individualne goste (§2.1, ADR-013), a njezino prihvaćanje „kako je ponuđeno" donosi u
+   kolovozu manje GOP-a nego u lipnju (§7, ADR-014).
 3. **Pravednost profila:** 3 profila × 4 strategije × 1 000 sjemena. Razlika medijana napretka između profila manja
    je od praga (prijedlog: 5 bodova), a nijedan profil ne pobjeđuje pod svim strategijama.
 4. **Nema dominantne radnje:** nijedna pojedinačna radnja na krajnjoj vrijednosti (npr. marketing 40 000 €) ne daje
@@ -507,7 +509,7 @@ Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 
 Brojke u §2–§4 pisane su decimalno radi čitljivosti. Ovdje je pravilo kako ih jezgra stvarno računa (ARHITEKTURA §7.2:
 bez `f32`/`f64`). **Svaka stavka P1–P32 je [PRETPOSTAVKA]** (Leon: „radi bez pitanja"); razlog je uz nju. Ne mijenja
-nijednu formulu ni brojku iz §2–§11, samo kaže u čemu se računa i gdje se zaokružuje.
+nijednu formulu ni brojku iz §2–§11, samo kaže u čemu se računa i gdje se zaokružuje. P1–P32 su implementirana u `engine::calc` i `crates/sim-hotel`.
 
 ### 12.1 Opća pravila
 
@@ -532,7 +534,7 @@ Tzv. „p. b." iz §6.2 čitamo kao **postotni bod** = 500 baznih bodova za „5
 | P8 | cijena (odluka) | `i64`, centi; **korak 1 €** (`cijena % 100 == 0`) | bez zaokruživanja; ulaz se odbija ako nije cijeli euro | Jednostavno za studenta; cijena 135 € = `13500`. `cijena_ref > 0` provjerava katalog (P5) |
 | P9 | broj soba (ukupno, izvan funkcije), dani `D` | `u16`, `u8` | izvan funkcije = `div_round(4000 − oprema, 400)`, zatim `0..=sobe_ukupno` | Tvrdih „120" nema u kodu: `sobe_ukupno` je parametar kataloga (u demou 120, §3.1). `D` dolazi iz kalendara mjeseca (30/31) |
 | P10 | sobe-noći (raspoloživo, potražnja, prodano, grupe) | `u32` | potražnja: **jedno** `div_round` na cijelom umnošku `120·D·bazna·f_c·f_u·f_m / 10¹⁶` (sve u bp), zatim `max(0)` | Najveći umnožak ≈ 10²⁰ → `i128`. Bez međuzaokruživanja faktora |
-| P11 | bazna popunjenost | `u16`, bp (72 % = 7 200) | nema; podatak iz kataloga | |
+| P11 | bazna popunjenost | `u16`, bp (72 % = 7 200); smije biti > 10 000 (rasprodan kolovoz, ADR-014), katalog provjerava 1–20 000 | nema; podatak iz kataloga | |
 | P12 | `f_cijena` | `i32`, bp | `10 000 + ε_bp·(cijena − ref)/ref` jednim `div_round`, zatim clamp **3 000–16 000** (0,3–1,6) | `ε_bp = −8 000` za 4*. `ref > 0` (P5). Clamp je kao u §3.1 |
 | P13 | `f_ugled`, `f_marketing` | `i32`, bp | `f_ugled = 10 000 + div_round(54·(ocjena_st − 840), 10)`, najmanje 0; `f_marketing = 10 000 + div_round(1 500·M, M + 1 500 000)` | 0,0054 po bodu ljestvice 0–100 = 54 bp; 10·ocjena = `ocjena_st/10`, pa se **ne množi dvaput**. `M ≥ 0` pa je nazivnik ≥ 1 500 000 centi (0 se ne pojavljuje) |
 | P14 | `kapacitet_osoblja` | `u32` | `zaposleni·D·24/10` **cjelobrojno dolje** (jedina iznimka od P1) | Tvrdo ograničenje ne smije se prekoračiti zaokruživanjem prema gore |
@@ -551,7 +553,7 @@ Tzv. „p. b." iz §6.2 čitamo kao **postotni bod** = 500 baznih bodova za „5
 | P27 | kamata na minus | `i64`, centi | nakon `blagajna += GOP − kapitalna`: ako `blagajna < 0` → `blagajna −= div_round(−blagajna, 100)` (1 % od iznosa u minusu, **jednom mjesečno**, bez kamate na kamatu u istom mjesecu) | Kamata se **ne ubraja u GOP** (GOP je operativni rezultat). 1 %/mj = 100 bp |
 | P28 | `GOPPAR` | `i64`, centi po raspoloživoj sobi-noći | `div_round(GOP, sobe_ukupno·D)`; **nazivnik su sve sobe, uključujući one izvan funkcije** | STR definicija (raspoložive sobe); kvar tako kažnjava F, što je željeno. Naziv „raspoloživo" u §3.1 znači nešto drugo (soba bez izvanfunkcije), zato je ovdje izričito |
 | P29 | `GOPPAR_ref(mj)` | `i64`, centi, izračunat pri izgradnji kataloga | isti izraz kao P28 za profil C bez odluka | **Zaštita:** nazivnik u indeksu je `max(GOPPAR_ref, 1 000)` (najmanje 10,00 € po sobi-noći), jer referenca može biti ≤ 0 u slabom mjesecu |
-| P30 | indeksi G, R, Z, O, F | `i32`, stotinke boda, clamp 0–10 000 | jedan `div_round` po indeksu na kraju. R: `div_round((ocjena_st − 700)·10 000, 280)`. Z: zadržavanje `= 10 000 − div_round(25·fluk_bp, 2)`, zatim `div_round(6 000·moral + 4 000·zadržavanje, 10 000)`. F: `GOPPAR_indeks = 5 000 + div_round(5 000·(GOPPAR − ref), max(ref, 1 000))`; `likvidnost = clamp(div_round(5 000·blagajna, fiksni + trošak_rada))`, negativna blagajna → 0 | Težine su bp (O: 4 500/3 000/2 500; F: 7 000/3 000). Z: 12,5 po 1 % = 25/2 stotinke po bp. `fiksni > 0` (P5) pa je nazivnik likvidnosti > 0 |
+| P30 | indeksi G, R, Z, O, F | `i32`, stotinke boda; sirove vrijednosti nisu ograničene (sirovi F nema gornju granicu, R može biti negativan), clamp 0–10 000 vrijedi za centrirani indeks (§4) | jedan `div_round` po indeksu na kraju. R: `div_round((ocjena_st − 700)·10 000, 280)`. Z: zadržavanje `= 10 000 − div_round(25·fluk_bp, 2)`, zatim `div_round(6 000·moral + 4 000·zadržavanje, 10 000)`. F: `GOPPAR_indeks = 5 000 + div_round(5 000·(GOPPAR − ref), max(ref, 1 000))`; `likvidnost = div_round(5 000·blagajna, fiksni + trošak_rada)`, bez gornje granice (ADR-014); negativna blagajna → 0 | Težine su bp (O: 4 500/3 000/2 500; F: 7 000/3 000). Z: 12,5 po 1 % = 25/2 stotinke po bp. `fiksni > 0` (P5) pa je nazivnik likvidnosti > 0 |
 | P31 | `g_i` i `napredak` | `g_i` `i32` bp (−10 000..10 000); `napredak` `i32` stotinke boda | `g_i = div_round(10 000·(kraj − start), 10 000 − start)` ako `kraj ≥ start`, inače `... / start`; `napredak = div_round(Σ g_i, 5)` (w = 2 000 bp svaki) | **Zaštita:** `start = 10 000` i `kraj = 10 000` → **g = 0** (prostora za rast nema). `start = 0` može ući samo u prvu granu (nazivnik 10 000); druga grana (`/ start`) nastupa samo ako je `kraj < start`, pa je `start ≥ 1`. Zadnji korak zaokružuje se jednom, ne po indeksu |
 | P32 | recenzije (broj novih), situacije `q` | `u32`; `u8` 1–5 | broj recenzija (kad se definira): `div_round(prodano·stopa_bp, 10 000)` | §2 ne daje formulu za broj recenzija; ovo je samo pravilo za kasniju. `q` izvan 1–5 odbija se pri učitavanju presude |
 
@@ -567,7 +569,7 @@ Tzv. „p. b." iz §6.2 čitamo kao **postotni bod** = 500 baznih bodova za „5
 
 1. ~~Elastičnost cijene~~ → riješeno 04.10.: po kategoriji (§2.0), Leon „otprilike da".
 2. ~~Referentne cijene po mjesecima~~ → riješeno 04.10. (§2.0). Otvoreno ostaje: ostali prihod 30 % prihoda soba.
-3. Trošak zaposlenog 2 200 € mjesečno i omjer 30 stalnih prema 20 sezonaca.
+3. Trošak zaposlenog 2 200 € mjesečno i omjer stalnih i sezonaca po mjesecu (`content/hotel/catalog.json`, `seasonal_plan`).
 4. Lekcija u S3: 25 % popusta grupi u kolovozu. Je li to realna ponuda agencije?
 5. Kriteriji rubrika u S1–S4. To je tvoje područje i ondje si ti mjerilo.
 6. Priče profila A i B (§5). Prepoznaješ li takve hotele iz prakse?

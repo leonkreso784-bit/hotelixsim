@@ -1,0 +1,53 @@
+{
+  "categories": {
+    "4": {
+      "price_ref_cents": { "jun": 13500, "jul": 16500, "aug": 17500, "sep": 13500 },
+      "base_occupancy_bp": { "jun": 7200, "jul": 7800, "aug": 10600, "sep": 7300 },
+      "seasonal_plan": { "jun": 28, "jul": 34, "aug": 44, "sep": 34 },
+      "elasticity_bp": -8000,
+      "wage_cents": 220000,
+      "cpor_cents": 2200
+    }
+  },
+  "reference_profiles": { "4": "C" },
+  "economy": {
+    "other_revenue_bp": 3000,
+    "hire_cents": 150000,
+    "interest_bp": 100,
+    "marketing_half_cents": 1500000,
+    "marketing_max_bp": 1500,
+    "goppar_floor_cents": 1000
+  },
+  "actions": {
+    "maintenance_deferred": { "cost_cents": 300000, "equipment_pts": 0 },
+    "maintenance_regular": { "cost_cents": 1500000, "equipment_pts": 400 },
+    "maintenance_intensive": { "cost_cents": 3000000, "equipment_pts": 800 },
+    "training_basic": { "cost_cents": 500000, "experience_pts": 400, "morale_pts": 200 },
+    "training_full": { "cost_cents": 1000000, "experience_pts": 700, "morale_pts": 200 },
+    "renovation_cents": 15000000,
+    "renovation_equipment_pts": 2500,
+    "renovation_satisfaction_pts": 300,
+    "reply_cents": 150000,
+    "reply_rating": 5,
+    "price_min_pct": 60,
+    "price_max_pct": 150,
+    "marketing_max_cents": 4000000,
+    "seasonal_max": 50,
+    "seasonal_step": 10,
+    "wage_min_pct": 90,
+    "wage_max_pct": 115,
+    "release_morale_pts": -300
+  },
+  "mechanics": {
+    "recovery_pts_per_q": 200,
+    "retention_pts_per_q": 300,
+    "crisis_pts_per_q": 300,
+    "repair_urgent_cents": 25000,
+    "repair_temporary_cents": 8000,
+    "repair_temporary_equipment_pts": -100,
+    "satisfaction_bound_pts": 800,
+    "morale_bound_pts": 800,
+    "rating_bound": 15,
+    "group_good_quality_cut_bp": 500
+  }
+}

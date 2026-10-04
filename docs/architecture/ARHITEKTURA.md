@@ -302,7 +302,7 @@ hotelixsim/
 │  ├─ balance/                 alat: masovne simulacije i ponovni obračun s novim pravilima
 │  └─ wasm/                    (kasnije) jezgra za preglednik
 ├─ content/
-│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON + JSON Schema)
+│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON; JSON Schema je u drugom valu)
 ├─ prompts/                    upute za AI, verzionirane
 ├─ apps/
 │  └─ web/                     React sučelje (student + profesor)
@@ -312,6 +312,8 @@ hotelixsim/
 ├─ openapi.json                GENERIRANO, u repozitoriju (da se vidi svaka promjena API-ja)
 └─ docs/
 ```
+
+Postoje: `engine`, `sim-hotel`, `content`, `app`, `store`, `api`, `server`, `balance` i `content/hotel/`; ostalo je plan.
 
 ### 6.2 Smjer ovisnosti — pravilo koje se ne krši
 
