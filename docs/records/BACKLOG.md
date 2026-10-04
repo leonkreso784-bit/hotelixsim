@@ -28,7 +28,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [jezgra] **`margin_bp` tiho vraća 0 kad je prihod ≤ 0;** testovi pokrivaju samo granu §11.1 u `failures`, nema testa izlaznog koda `--check`; tolerancija §11.1 tvrdo u kodu, `_cat` neiskorišten. (Task 10)
 - [jezgra] **Linije objašnjenja nisu zbrojive za ekran profesora:** moral miješa cilj i stvarno, nema `Cause::Bound` retka za granice (clamp), komponente cilja zadovoljstva nedostaju. Riješiti prije plana ekrana. (Završni pregled)
 - [jezgra] **`RefTable` ne bilježi svoju kategoriju** — pozivatelj mora paziti da je tablica prave kategorije. (Završni pregled)
-- [jezgra] **`wage_cents % 100` nije provjereno** — `div_floor` tiho gubi centе. (Završni pregled)
+- [jezgra] **`wage_cents % 100` nije provjereno** — `div_floor` tiho gubi cente. (Završni pregled)
 - [jezgra] **`price_min_pct > 0` nije provjereno** u katalogu. (Završni pregled)
 - [jezgra] **Provjera pravednosti je zapravo jedan robot** dok ne postoje okidači iz §9: 3 od 4 strategije su determinističke. (Završni pregled)
 
