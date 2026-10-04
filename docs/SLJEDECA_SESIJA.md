@@ -2,6 +2,22 @@
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
+## Prompt za početak (Leon zalijepi nakon `/clear`)
+
+```text
+/newsession
+
+Danas radimo DEMO korak 3: plan „dnevnik, runde i red poslova" (vidi docs/SLJEDECA_SESIJA.md).
+Rok demoa je ~14.10., pa plan gradi samo ono što treba profesorovih 15 minuta (DEMO §1.5): lipanj i srpanj,
+igrač + 3 robota, rundu zatvara gumb, gost preko poveznice. Situacije u ovom koraku dobivaju odgovor iz
+ponuđenih (AI presuda je korak 4).
+
+Redoslijed: provjeri stanje (git, baza, CI, check:docs, balance --check), napiši plan kroz writing-plans,
+pa gradi kroz subagent-driven-development na novoj grani, s pregledom nakon svakog taska i završnim pregledom
+na najjačem modelu. Radi bez pitanja, pretpostavke zapiši kao ADR 🟨; proizvodne odluke daj mi kao anketu
+sa svim opcijama; push samo uz moj OK. Neovisne poslove pokreći kao paralelne agente.
+```
+
 ## Gdje smo
 
 Jezgra igre i alat za balans su gotovi, spojeni u `main` i pushani ([CHANGELOG 0.2.0](./records/CHANGELOG.md)).
