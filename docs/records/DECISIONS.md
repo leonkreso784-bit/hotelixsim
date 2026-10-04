@@ -7,7 +7,7 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ## ADR-014 — Kolovoz rasprodan (lekcija S3) i blagajna bez gornje granice u financijama
 **Datum:** 2026-10-04 · **Status:** ✅ ODLUČENO (Leon, anketa) · **Vezano:** mijenja [ADR-013](#adr-013) t. 1 (formula F) i
-kalibraciju · **Plan:** [2026-10-04-jezgra.md](../plan/2026-10-04-jezgra.md) Task 13 i 14
+kalibraciju · **Plan:** [2026-10-04-jezgra.md](../archive/2026-10-04-jezgra.md) Task 13 i 14
 
 **Kontekst.** Završni pregled jezgre izmjerio je dvije strukturne greške. (1) Lekcija S3 radi naopako: prihvatiti grupu
 od 175 soba-noći uz 25 % popusta u kolovozu donosi profilu C +25 598 € GOP-a, a u lipnju +19 184 € — kolovoz nije pun pa
@@ -27,7 +27,7 @@ tablice od srpnja i početni F profila B mijenjaju se. DEMO §4 i §12 (P30) se 
 
 ## ADR-013 — Pretpostavke jezgre: centrirani indeksi, sezonci po planu, redoslijed obračuna, drugi val
 **Datum:** 2026-10-04 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-012](#adr-012),
-[ADR-009](#adr-009) · **Plan:** [2026-10-04-jezgra.md](../plan/2026-10-04-jezgra.md) · **Model:** `scripts/oracle-jezgra.mjs`
+[ADR-009](#adr-009) · **Plan:** [2026-10-04-jezgra.md](../archive/2026-10-04-jezgra.md) · **Model:** `scripts/oracle-jezgra.mjs`
 
 **Kontekst.** Revizija 04.10. našla je rupe u [DEMO.md](../product/DEMO.md) (BACKLOG „Rupe u specu"): profil C po §4
 ne kreće s 50 (G 70, Z 54, O 70), prosječan hotel bez odluka kroz sezonu gubi R i dobiva F (samo zato što ocjena

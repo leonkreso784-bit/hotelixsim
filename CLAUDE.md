@@ -16,10 +16,10 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
 ## Stanje
 - **Sesija počinje** s `/clear` → `/newsession` (čita [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)), **završava**
   s `/kraj` (dnevnik, ADR-ovi, predaja, `check:docs`, commit).
-- **Gotovo:** kostur od kraja do kraja ([CHANGELOG 0.1.0](docs/records/CHANGELOG.md)); dokumentacija po Sokratovom
-  sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)).
-- **Aktivni plan:** [jezgra i alat za balans](docs/plan/2026-10-04-jezgra.md) (DEMO korak 2), gradnja na grani
-  `gradnja/jezgra`; pretpostavke u [ADR-013](docs/records/DECISIONS.md#adr-013). Spec: [DEMO.md](docs/product/DEMO.md) §2–§12.
+- **Gotovo:** kostur od kraja do kraja i jezgra s alatom za balans ([CHANGELOG](docs/records/CHANGELOG.md)); dokumentacija po
+  Sokratovom sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)). Pretpostavke jezgre: [ADR-013](docs/records/DECISIONS.md#adr-013),
+  [ADR-014](docs/records/DECISIONS.md#adr-014). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
+- **Sljedeće:** DEMO korak 3 — plan „dnevnik, runde i red poslova" ([ROADMAP](docs/plan/ROADMAP.md)); aktivnog plana još nema.
   **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
   i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).

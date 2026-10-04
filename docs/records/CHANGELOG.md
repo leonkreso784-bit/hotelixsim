@@ -2,6 +2,26 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [0.2.0] — 2026-10-04 — Jezgra igre i alat za balans
+
+Verzija bez git taga. Plan: [archive/2026-10-04-jezgra.md](../archive/2026-10-04-jezgra.md).
+
+### Dodano
+
+- `engine::calc`: cjelobrojni račun s jednim zaokruživanjem (polovica od nule) i greškom umjesto prelijevanja.
+- `sim-hotel`: katalog s provjerom, stanje hotela, plan mjeseca s granicama, obračun mjeseca u fazama (tržište → ljudi →
+  novac → oprema i gosti) s objašnjenjem svake promjene, mehanike situacija S1–S4, pet indeksa centriranih na
+  referentni hotel, relativna ocjena, četiri robota i sezona hotela.
+- `content`: katalog, profili A/B/C i situacije u `content/hotel/*.json`, strogo provjereni pri učitavanju.
+- `balance`: alat koji provjerava DEMO §11 (početak, ekonomija, pravednost, nema dominantne radnje, ponovljivost) i
+  lekciju S3; korak u CI-ju.
+- Brane determinizma: dopušteni popis ovisnosti jezgre, `forbid` clippy pravila, mutacijske probe u CI-ju.
+
+### Gdje se vidi
+
+Lokalno: `cargo run -p balance --release -- --seeds 1000 --check` (tablica na hrvatskom) i `cargo test --workspace`.
+Ekrana za ovo još nema.
+
 ## [0.1.0] — 2026-10-04 — Kostur od kraja do kraja
 
 Verzija bez git taga.
