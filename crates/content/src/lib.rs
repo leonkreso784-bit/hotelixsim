@@ -4,7 +4,8 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use sim_hotel::{
     ActionSpec, Catalog, Category, CategorySpec, Economy, LevelEffect, Mechanic, MechanicSpec,
     Month, MonthTable, OfferedAnswer, Profile, ProfileSpec, SituationTemplate, TrainingEffect,
@@ -17,7 +18,7 @@ pub enum ContentError {
     Invalid(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Content {
     pub catalog: Catalog,
     pub situations: Vec<SituationTemplate>,
@@ -28,7 +29,7 @@ pub fn repo_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/hotel")
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MonthsDto<T> {
     jun: T,
@@ -43,7 +44,7 @@ impl<T> MonthsDto<T> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CategoryDto {
     price_ref_cents: MonthsDto<i64>,
@@ -54,7 +55,7 @@ struct CategoryDto {
     cpor_cents: i64,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct EconomyDto {
     other_revenue_bp: u16,
@@ -65,14 +66,14 @@ struct EconomyDto {
     goppar_floor_cents: i64,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LevelDto {
     cost_cents: i64,
     equipment_pts: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct TrainingDto {
     cost_cents: i64,
@@ -80,7 +81,7 @@ struct TrainingDto {
     morale_pts: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ActionsDto {
     maintenance_deferred: LevelDto,
@@ -103,7 +104,7 @@ struct ActionsDto {
     release_morale_pts: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MechanicsDto {
     recovery_pts_per_q: i32,
@@ -118,7 +119,7 @@ struct MechanicsDto {
     group_good_quality_cut_bp: u16,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CatalogDto {
     categories: BTreeMap<String, CategoryDto>,
@@ -128,7 +129,7 @@ struct CatalogDto {
     mechanics: MechanicsDto,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ProfileDto {
     category: String,
@@ -146,7 +147,7 @@ struct ProfileDto {
     load_hundredths: u16,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", deny_unknown_fields)]
 enum MechanicDto {
     ServiceRecovery {
@@ -171,7 +172,7 @@ enum MechanicDto {
     },
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct AnswerDto {
     label: String,
@@ -179,12 +180,13 @@ struct AnswerDto {
     mechanics: Vec<MechanicDto>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SituationDto {
     code: String,
     month: String,
     title: String,
+    unanswered: Vec<MechanicDto>,
     answers: Vec<AnswerDto>,
 }
 
@@ -395,29 +397,69 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
                 quality: a.quality,
             });
         }
+        if s.unanswered.is_empty() {
+            return invalid(format!("{ctx}: nema ishoda neodgovorene situacije"));
+        }
+        let unanswered = s
+            .unanswered
+            .into_iter()
+            .map(|m| build_mechanic(m, &ctx))
+            .collect::<Result<Vec<_>, _>>()?;
         out.push(SituationTemplate {
             month: month(&s.month, &ctx)?,
             code: s.code,
             title: s.title,
             answers,
+            unanswered,
         });
     }
     out.sort_by_key(|s| s.month); // stabilno: unutar mjeseca ostaje redoslijed iz datoteke
     Ok(out)
 }
 
+/// Puni snimak pravila (ARHITEKTURA §7.2): stablo DTO-a iz `content/hotel/*.json`. Ulazi cijeli u `GameCreated`,
+/// a obračun igre gradi katalog iz njega, nikad iz trenutnih datoteka.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Snapshot {
+    catalog: CatalogDto,
+    profiles: BTreeMap<String, ProfileDto>,
+    situations: Vec<SituationDto>,
+}
+
+impl Snapshot {
+    /// Pročita `catalog.json`, `profiles.json` i `situations.json` iz `dir`.
+    pub fn read(dir: &Path) -> Result<Snapshot, ContentError> {
+        Ok(Snapshot {
+            catalog: read(dir, "catalog.json")?,
+            profiles: read(dir, "profiles.json")?,
+            situations: read(dir, "situations.json")?,
+        })
+    }
+
+    /// Pretvori snimak u tipove jezgre i provjeri katalog.
+    pub fn build(&self) -> Result<Content, ContentError> {
+        let s = self.clone();
+        let catalog = build_catalog(s.catalog, s.profiles)?;
+        let situations = build_situations(s.situations)?;
+        catalog
+            .validate()
+            .map_err(|e| ContentError::Invalid(format!("katalog: {e:?}")))?;
+        Ok(Content {
+            catalog,
+            situations,
+        })
+    }
+
+    /// Otisak pravila (`RulesetId`): SHA-256 kanonskog JSON-a tipiziranog snimka. Mape su `BTreeMap`, polja struktura
+    /// imaju stalan redoslijed, pa je izlaz isti na svakom računalu i ne ovisi o redoslijedu ključeva u izvoru.
+    pub fn fingerprint(&self) -> String {
+        let bytes = serde_json::to_vec(self).expect("snimak se uvijek serijalizira");
+        format!("sha256:{:x}", Sha256::digest(&bytes))
+    }
+}
+
 /// Učita `catalog.json`, `profiles.json` i `situations.json` iz `dir` i provjeri ih.
 pub fn load(dir: &Path) -> Result<Content, ContentError> {
-    let catalog_dto: CatalogDto = read(dir, "catalog.json")?;
-    let profiles: BTreeMap<String, ProfileDto> = read(dir, "profiles.json")?;
-    let situations: Vec<SituationDto> = read(dir, "situations.json")?;
-    let catalog = build_catalog(catalog_dto, profiles)?;
-    let situations = build_situations(situations)?;
-    catalog
-        .validate()
-        .map_err(|e| ContentError::Invalid(format!("katalog: {e:?}")))?;
-    Ok(Content {
-        catalog,
-        situations,
-    })
+    Snapshot::read(dir)?.build()
 }

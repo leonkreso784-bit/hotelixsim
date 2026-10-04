@@ -41,7 +41,10 @@ pub use profile::Profile;
 pub use resolve::{
     GuestOutcome, MoneyOutcome, MonthReport, PeopleOutcome, ResolveError, resolve_month,
 };
-pub use robots::Strategy;
+pub use robots::{Strategy, euro_bounds, seasonal_range};
 pub use score::{gain_bp, progress_pts};
 pub use season::{SeasonResult, run_season, run_season_with};
 pub use state::{GroupBlock, HotelState, Pending, turnover_bp};
+
+/// Verzija jezgre koja ulazi u GameCreated (ARHITEKTURA §7.2).
+pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");

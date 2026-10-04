@@ -135,6 +135,7 @@ fn season_is_reproducible() {
         month: Month::Jun,
         title: "Klima".into(),
         answers: s1(),
+        unanswered: vec![],
     }];
     for st in Strategy::ALL {
         let a = run_season(Profile::A, st, 99, &cat, &sits, &refs).unwrap();

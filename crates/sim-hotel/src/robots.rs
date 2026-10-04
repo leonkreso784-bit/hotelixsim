@@ -34,7 +34,8 @@ fn uniform(rng: &mut Rng, lo: u64, hi: u64) -> Result<u64, ResolveError> {
 }
 
 /// Najmanji i najveći cijeli euro koji prolaze provjeru granica plana.
-fn euro_bounds(reference: i128, min_pct: i128, max_pct: i128) -> Calc<(i128, i128)> {
+/// Najmanji i najveći cijeli euro koji prolaze provjeru granica plana (koristi `game` za granice plana).
+pub fn euro_bounds(reference: i128, min_pct: i128, max_pct: i128) -> Calc<(i128, i128)> {
     let lo = c::div_floor(c::add(c::mul(min_pct, reference)?, 9_999)?, 10_000)?;
     let hi = c::div_floor(c::mul(max_pct, reference)?, 10_000)?;
     Ok((lo, hi))
@@ -50,7 +51,8 @@ fn price_for_pct(pct: i128, reference: i128, min_pct: i128, max_pct: i128) -> Ca
 }
 
 /// Sezonci u dopuštenom rasponu: 0..=najviše i ±korak od današnjeg (`max` pa `min`, nikad panika).
-fn seasonal_range(state: &HotelState, cat: &Catalog) -> (u16, u16) {
+/// Dopušteni raspon sezonaca za sljedeći plan (koristi `game` za granice plana).
+pub fn seasonal_range(state: &HotelState, cat: &Catalog) -> (u16, u16) {
     let a = &cat.actions;
     let lo = state.seasonal.saturating_sub(a.seasonal_step);
     let hi = state

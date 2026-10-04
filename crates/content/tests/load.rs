@@ -5,6 +5,7 @@ fn repo_content_loads_and_validates() {
     assert_eq!(c.catalog.profiles.len(), 3);
     let codes: Vec<&str> = c.situations.iter().map(|s| s.code.as_str()).collect();
     assert_eq!(codes, ["S1", "S3", "S2", "S4"]); // redoslijed: po mjesecu, pa po datoteci
+    assert!(c.situations.iter().all(|s| !s.unanswered.is_empty()));
     assert!(c.situations.iter().all(|s| s.answers.len() == 4 && s.answers.iter().all(|a| (1..=5).contains(&a.quality))));
 }
 
@@ -94,7 +95,7 @@ impl Drop for TempContent {
 fn situation_without_answers_is_rejected() {
     let t = TempContent::new(
         "ea",
-        r#"[{"code": "SX", "month": "jun", "title": "t", "answers": []}]"#,
+        r#"[{"code": "SX", "month": "jun", "title": "t", "answers": [], "unanswered": []}]"#,
     );
     let err = content::load(&t.0).unwrap_err();
     assert!(
