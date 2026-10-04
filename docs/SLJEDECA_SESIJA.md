@@ -15,7 +15,7 @@
 
 ## 2 · Gdje smo (04.10. navečer)
 
-**Gotovo i spojeno lokalno u `main`** (push na GitHub čeka Leonov OK — vidi §5):
+**Gotovo, spojeno u `main` i pushano na GitHub** (04.10., Leonov OK; CI rezultat — vidi §5):
 
 - Arhitektura v2, `DEMO.md` (dizajn igre + kategorije hotela), tri istraživanja u `docs/istrazivanje/`.
 - **Kostur od kraja do kraja** po planu `docs/superpowers/plans/2026-10-04-kostur.md`, 8 taskova, svaki s pregledom,
@@ -73,8 +73,9 @@ Svaka ima cijenu ako je kriva; sve su u gitu i mogu se vratiti.
 
 ## 5 · Otvoreno za Leona (pitaj na početku, kratko)
 
-1. **Push na GitHub** — `main` je ispred `origin/main` za više commitova. Treba izričit OK. Prvi push pokreće CI
-   (prvi put ikad) — gledati rezultat.
+1. **CI na GitHubu** — `main` je pushan 04.10. (Leonov OK), pa je CI prvi put pokrenut. Rezultat nismo vidjeli
+   (repo je privatan, `gh` nije instaliran, GitHub MCP nije radio). Pitaj Leona da otvori karticu **Actions** na
+   GitHubu ili mu daj upute; ako je crveno, prvo popravi CI. Svaki idući push i dalje traži njegov izričit OK.
 2. **Pitanja o domeni iz DEMO.md** (kraj dokumenta), prije gradnje jezgre:
    - 3: 30 stalnih + 20 sezonaca na 120 soba (4*) i trošak zaposlenog ~2 200 €/mj — realno?
    - 4: 25 % popusta agenciji za grupu u kolovozu — realna ponuda?
