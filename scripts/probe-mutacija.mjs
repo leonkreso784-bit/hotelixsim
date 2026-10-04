@@ -59,7 +59,21 @@ const MUTACIJE = [
     datoteka: HOTEL_LIB,
     nadi: "pub mod index;",
     zamijeni: "pub mod index;\npub fn probe(a: f64, b: f64) -> f64 { a + b }",
-    ocekuj: /disallowed type|float/,
+    ocekuj: /float_arithmetic|floating-point arithmetic/,
+  },
+  {
+    ime: "f64 kao tip (bez aritmetike)",
+    datoteka: HOTEL_LIB,
+    nadi: "pub mod index;",
+    zamijeni: "pub mod index;\npub fn probe(a: f64) -> f64 { a }",
+    ocekuj: /disallowed type/,
+  },
+  {
+    ime: "f32 kao tip (bez aritmetike)",
+    datoteka: ENGINE_LIB,
+    nadi: "pub mod rng;",
+    zamijeni: "pub mod rng;\npub fn probe(a: f32) -> f32 { a }",
+    ocekuj: /disallowed type/,
   },
   {
     ime: "as pretvorba",
