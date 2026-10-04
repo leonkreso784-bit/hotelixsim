@@ -5,6 +5,8 @@ hotel unaprijedio u odnosu na početak.
 
 - Vizija: [docs/VIZIJA.md](docs/VIZIJA.md)
 - Plan: [docs/PLAN.md](docs/PLAN.md)
+- Arhitektura: [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md)
+- Demo (specifikacija): [docs/DEMO.md](docs/DEMO.md)
 
 Privatno · autor: Leon Kreso.
 

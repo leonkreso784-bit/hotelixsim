@@ -5,7 +5,7 @@
 ## Ukratko o projektu
 
 HotelixSim je simulacija vođenja hotela za studente. Svaki student dobije hotel i vodi ga kroz sezonu. Sezona je
-podijeljena u runde, npr. tjedan po tjedan. Tijekom runde stižu situacije, poput nezadovoljnog gosta, kvara,
+podijeljena u runde (u demou je runda jedan mjesec; za pilot je ritam otvoren, vidi pitanje 3). Tijekom runde stižu situacije, poput nezadovoljnog gosta, kvara,
 problema s osobljem ili prilike na tržištu. Student na njih odgovara izborom ponuđenog odgovora ili svojim riječima,
 a umjetna inteligencija (AI) procjenjuje njegov odgovor. Na kraju runde svim se hotelima istovremeno izračunaju
 posljedice odluka.
@@ -26,7 +26,7 @@ Bez ovih odgovora ne možemo dovršiti temelje igre.
    aktivnost?
 2. **Igra li svaki student sam ili u timu?** Ako u timu: koliko članova i trebaju li članovi imati uloge
    (npr. direktor, financije, ljudski resursi)?
-3. **Koliko traje igra?** Koliko tjedana i koliko rundi? Je li Vam tjedna runda prirodan ritam?
+3. **Koliko traje igra?** Koliko tjedana i koliko rundi? Je li Vam tjedna runda prirodan ritam (u demou je runda mjesec)?
 4. **Ulazi li rezultat u ocjenu kolegija**, i ako da, kako?
 5. **Što je za Vas „dobar hotelski menadžer"?** Koje znanje i vještine igra mora nagraditi, a koje navike kazniti?
 6. **Koje hotelske pokazatelje studenti moraju vidjeti i razumjeti** (npr. popunjenost, prosječna cijena sobe,

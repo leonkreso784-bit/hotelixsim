@@ -68,7 +68,7 @@ Sve ostalo su slojevi oko nje koji se mogu mijenjati bez diranja srca. Svaki dio
 
 | tema | odluka |
 |---|---|
-| **Vrijeme** | **Runde** (npr. tjedan). Tijekom runde student igra kad hoće; na kraju runde obračun svima istovremeno. |
+| **Vrijeme** | **Runde** (demo: mjesec, DEMO §1.2; pilot: otvoreno, pitanje profesorima). Tijekom runde student igra kad hoće; na kraju runde obračun svima istovremeno. |
 | **Brojke** | **Pravila odlučuju, AI prevodi.** Za slobodan tekst AI vraća strukturiranu presudu; brojke računa jezgra po pravilima s granicama. |
 | **Model hotela** | **Dva sloja.** Stvarne hotelske brojke → pet indeksa 0–100 koji se ocjenjuju. Svi hoteli kreću s istim zbrojem, drukčije raspoređenim. |
 | **Situacije** | Raspored (fer, po pravilima) → sadržaj (AI ili predložak; mehanika iz kataloga) → posljedice po pravilima. |
@@ -160,8 +160,8 @@ Isti pojam znači istu stvar u razgovoru, dokumentima, kodu i bazi. U kodu se pi
 |---|---|---|
 | **Organizacija** | `Organization` | Fakultet ili institucija; vlasnik igara. |
 | **Igra** | `Game` | Jedna sezona jedne grupe: postavke, hoteli, raspored rundi, **sjeme**, verzija pravila. |
-| **Runda** | `Round` | Vremenski prozor (npr. tjedan) sa stanjima: zakazana → otvorena → zatvaranje → obračun → obračunata. |
-| **Hotel** | `Hotel` | Ono što se vodi. Ima profil i stanje. |
+| **Runda** | `Round` | Vremenski prozor (demo: mjesec; pilot: otvoreno) sa stanjima: zakazana → otvorena → zatvaranje → obračun → obračunata. |
+| **Hotel** | `Hotel` | Ono što se vodi. Ima kategoriju (3*/4*/5*, podatak; DEMO §2.0), profil i stanje. |
 | **Profil** | `HotelProfile` | Početni raspored snaga (A/B/C); svi profili imaju istu ukupnu početnu ocjenu. |
 | **Upravitelj** | `Manager` | Tko vodi hotel. Danas jedna osoba; kasnije možda tim. |
 | **Stanje** | `HotelState` | Stvarni sloj + izvedeni indeksi + tragovi. Uvijek rezultat obračuna, nikad ručna izmjena. |
@@ -366,6 +366,7 @@ resolve(stanja svih hotela, događaji runde, katalog, kocka) → nova stanja + p
 
 ### 7.3 Stanje hotela
 
+- **Kategorija** (3*/4*/5*): podatak hotela koji bira referentne vrijednosti (cijena, elastičnost…) iz kataloga; vidi DEMO §2.0.
 - **Stvarni sloj:** sobe, popunjenost, ADR, prihodi i troškovi, broj zaposlenih, moral, fluktuacija, stanje opreme,
   ocjena na portalima, sigurnosni incidenti… (točan popis: s profesorom).
 - **Indeksi (5):** svaki je čista funkcija stvarnog sloja s koeficijentima iz kataloga.
@@ -738,7 +739,7 @@ pravila je u dnevniku (§7.2).
 **Pitanja za profesora:**
 
 1. Pojedinac ili timovi? Ako timovi — koliki i s kojim ulogama?
-2. Koliko traje igra: broj rundi i trajanje runde (tjedan?).
+2. Koliko traje igra: broj rundi i trajanje runde (demo je mjesec; za pilot tjedan?).
 3. Koliko studenata u grupi?
 4. Koje stvarne hotelske pokazatelje želi da studenti vide i kako ih vrednuje (formule za indekse)?
 5. Kako se relativna ocjena pretvara u ocjenu na kolegiju (ako uopće)?

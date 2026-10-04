@@ -52,19 +52,26 @@ spojena i smije se obrisati (`git branch -d`).
      početak lipnja izlazi G=70, R=50, Z≈54, O=70, F≈55 (zbroj ≈299, ne 250 iz DEMO:257). Samo je F relativan
      (prema GOPPAR_ref); G, Z, O su apsolutni, iako §2.0 kaže „prema referentnom hotelu iste kategorije".
      Odluči: centrirati formule na referentni hotel ili promijeniti početne vrijednosti — i zapiši kao pretpostavku.
+     **Gotova analiza opcija s brojkama:** `docs/istrazivanje/KALIBRACIJA_2026-10-04.md` (preporuka: centriranje
+     `50 + (x − x_ref)`, blagajna C 230k, sezonci po mjesecu, fiksni 130k → sezonska marža ≈38,8 %; cilj prepisati
+     kao sezonski VI–IX 35–45 %). Prijedlog, nije odlučeno — provjeri skriptu prije nego preuzmeš brojke.
    - **Kalibracija:** provjera u §2.1 izostavlja zadano redovno održavanje 15 000 €. S njim: lipanj 33,6 %,
      srpanj 50,4 %, kolovoz 55,5 %, rujan 34,3 %, sezona ≈45 % (DEMO:161 „lipanj blizu HotStats ≈45 %" ne stoji).
      Cilj 30–40 % je godišnji (DEMO:163), a demo ima četiri sezonska mjeseca — odluči s čime se uspoređuje.
    - **Cjelobrojni račun nema pravila zaokruživanja** (DEMO:9-10 kaže samo centi i bazni bodovi): kazna
      opterećenja (oblik 1,8→2,4), potražnja i f-faktori (floor/round na sobe-noći), fluktuacija (3,75 % od 50 ljudi),
      nazivnik GOPPAR-a, jedinica pohrane zadovoljstva/morala/opreme/ocjene, „p. b." vs postotak. Zlatne vrijednosti
-     ovise o tome → pravila u plan prije prvog testa.
+     ovise o tome → pravila u plan prije prvog testa. **Nacrt pravila je u DEMO.md §12** (P1–P32, sve pretpostavke;
+     najrizičnije P21 stepenica odlazaka, P28/P29 nazivnik GOPPAR-a, P17 linearna kazna opterećenja).
    - Nedefinirano manje: početni F (GOPPAR traži mjesec), „mješavina" iskustva, cijena automatske zamjene,
      trošak sezonca, obuka „moral +2", dijeljenje s nulom u g_i, tvrdo 120 soba u §3.1.
    - Za robote/balans (§11.3) fale ponuđeni odgovori i rubrike za S1b i S5–S8 (§7 „pišu se poslije") → task sadržaja.
+     **Nacrt:** `docs/nacrt/SITUACIJE_S1b_S5-S8.md` (za Leonovu provjeru; rubrike su njegove).
 1. **Napiši plan** (`superpowers:writing-plans`) iz `DEMO.md` §2–§11. **Task 1 plana je OBAVEZNO ojačavanje brana
    determinizma**, prije ijedne linije jezgre (završni pregled kostura, Final #3 — brane su slabije od ARHITEKTURA
-   §6.2/§7.2):
+   §6.2/§7.2). **Pokus izvedivosti je gotov:** `docs/istrazivanje/BRANE_DETERMINIZMA_2026-10-04.md` (što radi, što
+   ne — npr. `IndexMap` sa zadanim hasherom prolazi clippy, brani ga samo dopušteni popis ovisnosti; `forbid` drži
+   samo pod `cargo clippy`; skica skripte mutacija, ~2 s):
    - `check-core-deps.mjs`: dopušteni popis (allowlist) umjesto zabranjenog `FORBIDDEN` (redci 7–18) — jezgra
      (`CORE = engine, sim-hotel`) smije ovisiti samo jedna o drugoj i o izričito odobrenim paketima (danas bi prošao
      `indexmap` s nasumičnim sjemenom). Unaprijed odluči ide li budući `content` crate (JSON) pod branu:
@@ -79,8 +86,8 @@ spojena i smije se obrisati (`git branch -d`).
 2. Ulazi za dizajn jezgre (iz završnog pregleda): imenovana i ograničavajuća izgradnja `IndexSet` (danas pozicijski
    `[IndexValue; 5]`, `index.rs:59`), profili u `content/hotel/` (mapa još ne postoji) s A/B/C kao testnim
    proročanstvom, kategorija hotela (DEMO §2.0) kao podatak. Odgođeni nalazi su u ledgeru **kronološki po taskovima**
-   (34 × `minor (deferred)` + redak „Ruling: ostali minori" ~11 stavki) — pri pisanju plana grupiraj ih po temi
-   (brane · rng/indeksi · baza/`events` · API · klijent · i18n/ekran · CI) i svaku grupu dodijeli tasku ili kasnijem planu.
+   — **već grupirani po temi i označeni** u `docs/superpowers/plans/2026-10-04-kostur-odgodeni-nalazi.md` (47 stavki:
+   jezgra 15 · dnevnik 9 · ekrani 7 · prije Railwaya 10 · možda nikad 5 · riješeno 1); plan uzima oznaku [jezgra].
    **API dio je izvan opsega jezgre** (ARHITEKTURA §20.2: „bez baze i bez ekrana") — ruta profila (`api/src/demo.rs`)
    zove `sim-hotel` mimo `app`, enum kodovi u OpenAPI-ju (danas `String`) → zaseban, označen task na kraju plana ili
    plan „dnevnik/runde". Zdravlje već ide kroz `app`.
@@ -144,4 +151,7 @@ Svaka ima cijenu ako je kriva; sve su u gitu i mogu se vratiti.
   Leon voli vidjeti puno agenata koji rade istodobno — neovisne poslove pokreći paralelno, u jednoj poruci.
 - Ostala sitna proturječja dokumenata (VIZIJA:4 „tehnički izbori nisu doneseni", VIZIJA:70 „pilot" = danas DEMO,
   runda tjedan/mjesec u PITANJA i ARHITEKTURA, kategorija hotela nije u ARHITEKTURA, `kostur.md:9` „Windows servis"):
-  vidi commitove nakon predaje — usklađivanje je pokrenuto 04.10.
+  usklađeno 04.10. (commit „Revizija: …"). Ured je 04.10. popravljen: stolice okrenute dolje stajale su red iznad
+  stola pa su dva lika „radila za jednim računalom"; sad 61 računalo = 61 stolica, kopija starog rasporeda
+  `backup-2026-10-04/layout-prije-popravka-stolica.json`. Moji subagenti nemaju ime pa sjednu na najbliže slobodno
+  mjesto uz glavnog agenta (ne dobiju vlastiti stol).
