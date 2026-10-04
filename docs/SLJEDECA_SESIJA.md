@@ -1,6 +1,7 @@
 # Sljedeća sesija — HotelixSim: jezgra igre i alat za balans
 
-> Zapisano 2026-10-04 na kraju sesije. Radimo u **Claude Code terminalu** (Windows: Git Bash + PowerShell).
+> Zapisano 2026-10-04 na kraju sesije. Radimo u **Claude Code dodatku za VS Code** (panel, ne terminal — Leon 04.10.;
+> Windows: Git Bash + PowerShell). Slike Leon šalje s `Ctrl + V` u panel.
 > Repo: `C:\Users\leonk\Documents\hotelixsim` · GitHub: `leonkreso784-bit/hotelixsim` (privatni).
 
 ## 1 · Prvo pročitaj — samo ovo i ciljano
