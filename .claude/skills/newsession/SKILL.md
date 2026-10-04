@@ -21,7 +21,7 @@ prijašnja sesija znala, bez da Leon išta objašnjava.
 ## 2 · Provjeri stanje (Git Bash, jedna naredba)
 
 ```bash
-cd /c/Users/leonk/Documents/hotelixsim && git status -sb | head -3 && git log --oneline -8 && bash scripts/baza.sh status
+cd /c/Users/leonk/Documents/hotelixsim && git status -sb | head -3 && git log --oneline -8 && echo "--- nepushano:" && git log origin/main..main --oneline; bash scripts/baza.sh status
 ```
 
 - Ako baza ne radi (nakon restarta računala): `bash scripts/baza.sh start` i potvrdi izlaz.
@@ -33,8 +33,9 @@ U jednoj poruci, najviše ~12 redaka:
 
 1. **Gdje smo** — 2–3 rečenice iz predaje (što je gotovo, gdje se vidi: lokalno / GitHub).
 2. **Što danas radimo** — cilj iz predaje §3, prvi konkretan korak.
-3. **Otvorena pitanja** iz predaje — postavi ih kroz `AskUserQuestion` (preporučena opcija prva, svaka s
-   obrazloženjem); pitanja o domeni koja traže brojke postavi u tekstu, numerirano, da može odgovoriti kratko.
+3. **Otvorena pitanja** iz predaje — na kraju poruke. `AskUserQuestion` samo za proizvodnu odluku s pravim
+   opcijama (preporučena prva, svaka s obrazloženjem); radnje, brojke i činjenice koje samo on zna pitaj u tekstu,
+   numerirano, da može odgovoriti kratko. Arhitektura nikad kroz anketu.
 
 Zatim radi po predaji. Pravila iz `CLAUDE.md` vrijede: radi bez pitanja za tok rada, **push i deploy samo uz
 izričit OK**, nikad „gotovo" bez viđenog izlaza.

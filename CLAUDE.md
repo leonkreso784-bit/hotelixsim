@@ -16,7 +16,8 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
 ## Stanje (2026-10-04)
 - **Početak nove sesije:** pročitaj [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md) — tamo je redoslijed rada.
   Leon to pokreće s `/clear` pa `/newsession` (`.claude/skills/newsession/`). Na kraju sesije osvježi tu predaju.
-- GitHub: `leonkreso784-bit/hotelixsim` (privatni), spojen kao `origin`. Kostur pushan 04.10.; prvi CI rezultat još nije viđen.
+- GitHub: `leonkreso784-bit/hotelixsim` (privatni), spojen kao `origin`. Kostur pushan 04.10.; prvi CI rezultat još nije
+  viđen. Commitovi predaje nakon toga čekaju Leonov OK za push (`git log origin/main..main`).
 - **Kostur od kraja do kraja je gotov** (04.10., plan `docs/superpowers/plans/2026-10-04-kostur.md` + ledger s
   odlukama). Pokretanje: README → „Lokalni razvoj". Baza: zaseban klaster na **5433**, nakon restarta
   `bash scripts/baza.sh start` (sistemski PostgreSQL na 5432 se ne dira). pnpm samo kao `corepack pnpm`.
@@ -31,11 +32,13 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
 Moja memorija je vezana uz Sokratov folder pa se **ovdje ne učitava sama**. Pročitaj na početku sesije (samo čitanje):
 `C:\Users\leonk\.claude\projects\c--Users-leonk-Documents-sokratstudy-dev\memory\` →
 `tko-je-leon.md` · `komunikacija-s-leonom.md` · `temelji-prije-brzine.md` · `windows-git-bash-zamke.md` ·
-`hotelsim-projekt.md` (sažetak ovog projekta i odbijena imena). Ne prepisuj ih ovamo — ondje su izvor.
+`hotelsim-projekt.md` (samo odbijena imena; ostalo je zastarjelo od 04.10. — vrijede ovaj repo i `docs/`).
+Ne prepisuj ih ovamo — ondje su izvor.
 
 ## Pravila rada s Leonom (prenesena iz Sokrata)
 - Odgovaraj na **hrvatskom**, kratko, bez žargona kad pita nešto obično.
-- **Odluke kroz anketu** (AskUserQuestion): preporučena opcija prva, svaka s obrazloženjem, bez lažnih dilema.
+- **Anketa (AskUserQuestion) samo za jednostavne proizvodne odluke s pravim opcijama**: preporučena prva, svaka s
+  obrazloženjem, bez lažnih dilema. Arhitektura ide kroz dokument i raspravu; brojke i činjenice pitaj tekstom.
 - **Push i deploy samo uz Leonov izričit OK** — odobrenje jedne radnje ne proteže se na sljedeću.
 - Uz svako „gotovo" reci **gdje se vidi** (lokalno / preview / produkcija).
 - **Nikad „zeleno" prije nego si vidio izlaz**; „jesi siguran?" = novi prolaz provjere.
