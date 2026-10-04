@@ -142,28 +142,25 @@ varijabli, a svaka ima jasan uzrok**.
 
 Profili A i B su u §5. Svi kreću 1. lipnja.
 
-| varijabla | C | izvor |
+Brojke žive u `content/hotel/*.json` (kalibrirane alatom za balans); ovdje je samo smjer.
+
+| varijabla | smjer za C | izvor |
 |---|---|---|
-| cijena (referentna za mjesec) | VI 135 · VII 165 · VIII 175 · IX 135 € | [PROC] iz LRH prosjeka 132 € i sezonskog hoda |
-| bazna popunjenost uz referentnu cijenu | VI 72 · VII 78 · VIII 83 · IX 73 % | [IZVOR] DZS 2025., hoteli u Hrvatskoj |
-| stalni / sezonci | 30 / 20 | [PROC] ≈ 0,4 zaposlena po sobi kao LRH [IZVOR] |
-| prosječni trošak zaposlenog | 2 200 € mjesečno | [PROC] iz LRH 22,1 mil. € / 835 zaposlenih [IZVOR] |
-| plaća u odnosu na tržište | 100 % | |
-| moral · iskustvo | 55 · 60 | [PROC] |
-| CPOR | 22 € | [PROC] |
-| fiksni troškovi | 120 000 € mjesečno | [PROC] energija, osiguranje, uprava, najam opreme |
-| stanje opreme | 60 | [PROC] |
-| zadovoljstvo gostiju · ocjena portala | 70 · 8,4 | [PROC] |
-| blagajna | 300 000 € | [PROC] |
+| cijena (referentna za mjesec) | raste od lipnja do kolovoza, rujan kao lipanj | [PROC] iz LRH prosjeka 132 € i sezonskog hoda |
+| bazna popunjenost uz referentnu cijenu | VI, VII, IX kao prosjek hrvatskih hotela; VIII puniji (4* u Opatiji u vrhuncu) | [IZVOR] DZS 2025. · [PROC] za VIII |
+| stalni / sezonci | stalna jezgra + sezonci koji prate potražnju (plan sezonaca po mjesecu u katalogu) | [PROC] oko LRH-ovih ≈ 0,4 zaposlena po sobi [IZVOR], više u vrhuncu |
+| prosječni trošak zaposlenog | jedan iznos za kategoriju | [PROC] iz LRH 22,1 mil. € / 835 zaposlenih [IZVOR] |
+| plaća u odnosu na tržište | tržišna | |
+| moral · iskustvo | srednje | [PROC] |
+| CPOR | jedan iznos za kategoriju | [PROC] |
+| fiksni troškovi | toliki da sezonska marža bude u cilju (§11) | [PROC] energija, osiguranje, uprava, najam opreme |
+| stanje opreme | iznad praga gašenja soba | [PROC] |
+| zadovoljstvo gostiju · ocjena portala | ocjena je neutralna za potražnju (§3.1) | [PROC] |
+| blagajna | dovoljna za sezonu bez kredita | [PROC] |
 
-**Provjera računom (profil C, bez odluka igrača):**
-lipanj ≈ 2 590 prodanih soba-noći, prihod ≈ 455 000 €, GOP marža ≈ 37 %;
-kolovoz ≈ 3 090 soba-noći, prihod ≈ 702 000 €, GOP marža ≈ 57 %.
-Lipanj je blizu europskog mjerila (HotStats ≈ 45 % u vrhuncu) [IZVOR]. **Kolovoz je previsok:** stvarni hotel u
-vrhuncu ima više sezonaca i veće fiksne troškove. Kalibracija: sezonski hod broja sezonaca i fiksnih troškova, tako
-da godišnja GOP marža bude 30–40 % [PROC]. To je prvi zadatak alata za balans.
-
-Vrijednosti iz §2.1 su prvi pokušaj. Alat za balans ih podesi tako da profil C kreće s **50 u svakom indeksu** (§4).
+**Cilj kalibracije (ADR-013):** profil C bez odluka igrača ima sezonsku (VI–IX) GOP maržu 35–45 % i nijedan mjesec
+iznad 50 %; kolovoz je dovoljno pun da grupa iz S3 istisne individualne goste. Profil C kreće s **50 u svakom
+indeksu** (§4) jer su indeksi centrirani na njega. Izmjereni rezultat je u `docs/research/KALIBRACIJA_*.md`.
 
 ---
 
@@ -264,12 +261,14 @@ za balans (§11), ne pretpostavlja se.
 | **B** „Profitabilni, ali zapušteni" | zdrave financije i mirni ljudi, ali stara oprema i slabije recenzije | 45 | 35 | 55 | 40 | 75 |
 | **C** „Prosječni" | ništa ne gori, ništa ne blista | 50 | 50 | 50 | 50 | 50 |
 
-Kako se razlikuju u stvarnom sloju (smjer, točne brojke podesi alat):
+Kako se razlikuju u stvarnom sloju. Brojke žive u `content/hotel/*.json` (kalibrirane alatom za balans); ovdje je
+samo smjer.
 
-- **A:** ocjena portala ≈ 9,1, zadovoljstvo ≈ 78, moral ≈ 35, opterećenje iznad 1,8, blagajna ≈ 120 000 €, fiksni
+- **A:** viša ocjena portala i zadovoljstvo od C, niži moral, opterećenje iznad 1,8, malo novca u blagajni, fiksni
   troškovi viši (kredit za prošlu obnovu).
-- **B:** ocjena ≈ 8,0, oprema ≈ 40, iskustvo ≈ 55, blagajna ≈ 600 000 €, plaća 97 % tržišne, ali stabilan tim.
-- **C:** vrijednosti iz §2.1.
+- **B:** niža ocjena i zadovoljstvo od C, stara oprema, nešto manje iskustva, puno novca u blagajni, niži fiksni
+  troškovi, plaća malo ispod tržišne, ali stabilan tim (moral iznad C).
+- **C:** smjer iz §2.1.
 
 Svaki profil ima **očitu prvu ideju koja je samo djelomično dobra**. A bi htio dići plaće, ali nema novca. B bi htio
 obnovu, ali ona troši likvidnost i djeluje tek idući mjesec. To je namjerno: igra nagrađuje redoslijed odluka.
@@ -491,7 +490,8 @@ Za alat za balans postoji i četvrta strategija, **Nasumični**, s odlukama iz k
 Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 
 1. **Početak:** profil C kreće s 50 (±1) u svakom indeksu; A i B imaju ciljane vrijednosti iz §5 (±2).
-2. **Ekonomija:** profil C bez odluka ima GOP maržu 30–40 % kroz sezonu (§2.1, provjera računom).
+2. **Ekonomija:** profil C bez odluka ima sezonsku (VI–IX) GOP maržu 35–45 %, nijedan mjesec iznad 50 %, a grupa
+   iz S3 u kolovozu istiskuje individualne goste (§2.1, ADR-013).
 3. **Pravednost profila:** 3 profila × 4 strategije × 1 000 sjemena. Razlika medijana napretka između profila manja
    je od praga (prijedlog: 5 bodova), a nijedan profil ne pobjeđuje pod svim strategijama.
 4. **Nema dominantne radnje:** nijedna pojedinačna radnja na krajnjoj vrijednosti (npr. marketing 40 000 €) ne daje

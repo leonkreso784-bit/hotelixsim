@@ -93,3 +93,91 @@ Za jedan parametar [IZR]: sezonska marža 40 % traži fiksne 149 000 €/mj ili 
 3. **Cilj:** napisati kao **„sezonska (VI–IX) GOP marža 35–45 %, nijedan mjesec iznad ≈ 50 %"** [PRET, bez izvora za Jadran]; godišnji cilj 30–40 % maknuti dok demo ne simulira zatvorene mjesece. Leonu je to pitanje za provjeru stručnjaka (profesori ili STR/HUT podaci), jer u istraživanju nema izvora.
 
 Otvoreno za Leona: (a) je li 30 % ostalog prihoda previsok i treba li trošak hrane i pića; (b) udio rada 24 % je i dalje ispod 35 % iz izvora — za 35 % trebalo bi ≈ 89 zaposlenih konstantno (marža ≈ 30 %, opterećenje ≈ 1), što mijenja značenje praga 1,8.
+
+---
+
+## Rezultat kalibracije (alat za balans, jezgra 11/12)
+
+> Mijenjani su samo podaci u `content/hotel/catalog.json` i `content/hotel/profiles.json`; formule, testni katalog i
+> `scripts/oracle-jezgra.mjs` nisu dirani. Mjereno: `cargo run -q -p balance --release -- --seeds 1000 --check` → sve
+> provjere DEMO §11 prolaze (izlaz 0).
+
+### Što je promijenjeno i zašto
+
+| podatak | prije → poslije | zašto |
+|---|---|---|
+| plan sezonaca VI/VII/VIII/IX | 20/20/20/20 → **28/34/40/30** | osoblje prati potražnju (preporuka §3.2); 40 je najviše što plan dopušta, a skok VIII→IX je točno jedan korak (10) |
+| bazna popunjenost VIII | 83 % → **95,5 %** | bez toga grupa iz S3 ne istiskuje nikoga (vidi „Za Leona" ispod) |
+| fiksni troškovi C | 120 000 → **150 000 €** | spušta sezonsku maržu u 35–45 % i drži kolovoz ispod 50 % |
+| sezonci C (početak) | 20 → **28** | = plan lipnja, inače lipanj plaća zapošljavanje (ADR-013) |
+| sezonci A i B (početak) | 20 → **28** | isto; s 20 su A i B u lipnju plaćali 8 zapošljavanja koje C nema, pa je pravednost (§11.3) padala na 12,9 boda |
+| A zadovoljstvo | 78 → **80** | G točno 60 (G = zadovoljstvo centrirano na C) |
+| A moral | 42 → **40** | Z 29,75 (cilj 30); moral ≈ 35 iz §5 dao bi Z ≈ 23 |
+| A opterećenje (početak) | 1,95 → **1,83** | O 49,25 (cilj 50), i dalje „iznad 1,8" kako traži §5 |
+| A fiksni | 150 000 → **177 000 €** | F 35,09 (cilj 35); 27 000 € iznad C = rata kredita za prošlu obnovu |
+| B zadovoljstvo | 70 → **65** | G 45 (cilj 45); jedino zadovoljstvo hrani G, pa ga se ne može postići drugim poljem |
+| B fiksni | 90 000 → **112 500 €** | F 74,99 (cilj 75); 37 500 € ispod C (stari, otplaćeni hotel bez kredita) |
+
+Nepromijenjeno: cijene, popunjenost VI/VII/IX (DZS), trošak zaposlenog, CPOR, ostali prihod, mehanike, A ocjena 9,1 i
+blagajna 120 000 €, B ocjena 8,0, oprema 40, iskustvo 55, blagajna 600 000 €, plaća 97 %.
+
+### Izlaz alata (`render`, 1 000 sjemena)
+
+```text
+== Početak (§11.1): G R Z O F ==
+  A: 60.00  75.00  29.75  49.25  35.09
+  B: 45.00  35.71  54.05  39.50  74.99
+  C: 50.00  50.00  50.00  50.00  50.00
+== Ekonomija referentnog hotela (§11.2), marža GOP-a ==
+  jun: 22.48 %
+  jul: 38.65 %
+  aug: 49.12 %
+  sep: 22.24 %
+  sezona VI–IX: 35.90 %
+  kolovoz: grupa istiskuje individualne goste: da
+== Medijan napretka po profilu i strategiji (§11.3), bodova ==
+  A stedisa    -10.62
+  A brizni     8.16
+  A lovac      -4.99
+  A nasumicni  -3.88
+  B stedisa    -18.27
+  B brizni     8.22
+  B lovac      -5.96
+  B nasumicni  -6.69
+  C stedisa    -12.02
+  C brizni     13.93
+  C lovac      -4.04
+  C nasumicni  -2.76
+  profil A (sve strategije): -4.99
+  profil B (sve strategije): -5.96
+  profil C (sve strategije): -4.04
+== Probe krajnjih radnji (§11.4), napredak A / B / C ==
+  cijena 60 %              A=-24.95  B=-17.08  C=-16.81
+  cijena 150 %             A=-10.81  B=-19.35  C=-12.53
+  marketing 40 000 EUR     A=-0.56  B=-6.92  C=0.28
+  sezonci +korak           A=-3.07  B=-8.73  C=-3.26
+  sezonci 0                A=-26.50  B=-31.45  C=-24.07
+  plaća 115                A=4.90  B=2.99  C=6.32
+  plaća 90                 A=-9.42  B=-12.85  C=-8.87
+  obuka Full               A=2.02  B=-3.80  C=3.30
+  održavanje Intensive     A=2.09  B=-3.68  C=3.17
+  održavanje Deferred      A=-4.69  B=-12.22  C=-3.94
+  odgovaranje da           A=0.27  B=-5.68  C=1.90
+  obnova u lipnju          A=7.63  B=1.49  C=10.12
+== Ponovljivost (§11.5): da ==
+Sve provjere prolaze.
+```
+
+### Za Leonovu provjeru
+
+1. **Kolovoz 95,5 % umjesto dogovorenih najviše 95 %.** Istiskivanje traži potražnju > 3 720 − 175 = 3 545
+   soba-noći. Referentni C do kolovoza blago gubi ocjenu (8,40 → 8,37, jer mu je cilj zadovoljstva ≈ 67–68, a kreće s
+   70), pa je f_ugled 0,9984. Uz 95 % potražnja je 3 528 i grupa ne istiskuje nikoga; najmanja vrijednost koja radi je
+   ≈ 95,5 % (potražnja 3 547). Istiskivanje je pritom **tanko**: samo ≈ 2 soba-noći kod pasivnog C (kod igrača s boljom
+   ocjenom ili marketingom više). Za vidljiviju lekciju: 96 % daje ≈ 20 soba-noći (marža VIII 49,3 %).
+2. **Lipanj i rujan ≈ 22 %, kolovoz ≈ 49 %.** Sezona je 35,9 %, blizu donje granice 35 %. Raspon po mjesecima ostaje
+   (nalaz 1 u §3.2): drži ga sezonski hod cijene i popunjenosti uz stalne troškove. Ako želiš sezonu bliže sredini
+   cilja, najjeftinije je podići srpanj (sada 78 %, a kolovoz 95,5 % — taj skok je velik).
+3. **Pravednost prolazi, dominacija je blizu:** medijani profila −4,99 / −5,96 / −4,04 (razlika 1,92, prag 5). Nijedna
+   proba nije dominantna, ali „obnova u lipnju" je najbolja za A i C; od dominacije je dijeli samo B (kod B je bolja
+   „plaća 115").
