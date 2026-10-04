@@ -8,7 +8,9 @@
 
 pub mod catalog;
 pub mod index;
+pub mod market;
 pub mod month;
+pub mod plan;
 pub mod profile;
 pub mod state;
 
@@ -17,6 +19,8 @@ pub use catalog::{
     ProfileSpec, TrainingEffect,
 };
 pub use index::{Index, IndexSet, IndexValue, NamedIndices};
+pub use market::{MarketOutcome, market};
 pub use month::{Month, MonthTable};
+pub use plan::{Maintenance, MonthPlan, PlanError, Training};
 pub use profile::Profile;
 pub use state::{GroupBlock, HotelState, Pending, turnover_bp};
