@@ -98,3 +98,33 @@ fn range_rejects_empty() {
 fn chance_bp_rejects_over_100_percent() {
     Rng::from_seed(1).chance_bp(10_001);
 }
+
+#[test]
+fn derived_streams_differ_by_label_order_and_seed() {
+    let t1 = label("trigger:T1");
+    let t2 = label("trigger:T2");
+    let first = |mut r: Rng| r.next_u64();
+    assert_ne!(
+        first(Rng::derive(7, &[1, t1])),
+        first(Rng::derive(7, &[1, t2]))
+    );
+    assert_ne!(
+        first(Rng::derive(7, &[1, t1])),
+        first(Rng::derive(7, &[t1, 1]))
+    );
+    assert_ne!(
+        first(Rng::derive(7, &[1, t1])),
+        first(Rng::derive(8, &[1, t1]))
+    );
+}
+
+#[test]
+fn range_rejection_branch_keeps_values_in_bounds() {
+    // raspon blizu 2^63 odbacuje gotovo polovicu izvlačenja, pa se grana odbacivanja stvarno izvršava
+    let mut rng = Rng::from_seed(42);
+    let hi = (1_u64 << 63) + 1;
+    for _ in 0..1_000 {
+        let v = rng.range(0, hi);
+        assert!(v < hi);
+    }
+}
