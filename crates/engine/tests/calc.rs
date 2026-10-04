@@ -35,6 +35,9 @@ fn div_round_reports_overflow_instead_of_wrapping() {
 fn div_floor_rounds_down_for_staff_capacity() {
     assert_eq!(calc::div_floor(50 * 30 * 24, 10), Ok(3_600));
     assert_eq!(calc::div_floor(19, 10), Ok(1));
+    assert_eq!(calc::div_floor(-1, 10), Ok(-1));
+    assert_eq!(calc::div_floor(-20, 10), Ok(-2));
+    assert_eq!(calc::div_floor(-21, 10), Ok(-3));
     assert_eq!(calc::div_floor(5, 0), Err(CalcError::BadDivisor));
 }
 

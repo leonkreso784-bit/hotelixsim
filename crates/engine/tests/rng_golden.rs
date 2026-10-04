@@ -119,12 +119,24 @@ fn derived_streams_differ_by_label_order_and_seed() {
 }
 
 #[test]
-fn range_rejection_branch_keeps_values_in_bounds() {
+fn range_near_2_pow_63_rejects_draws_and_returns_modulo_of_accepted_ones() {
     // raspon blizu 2^63 odbacuje gotovo polovicu izvlačenja, pa se grana odbacivanja stvarno izvršava
     let mut rng = Rng::from_seed(42);
+    let mut raw = Rng::from_seed(42);
     let hi = (1_u64 << 63) + 1;
+    let threshold = hi.wrapping_neg() % hi;
+    let mut consumed = 0_u32;
     for _ in 0..1_000 {
         let v = rng.range(0, hi);
         assert!(v < hi);
+        let expected = loop {
+            let r = raw.next_u64();
+            consumed += 1;
+            if r >= threshold {
+                break r % hi;
+            }
+        };
+        assert_eq!(v, expected);
     }
+    assert!(consumed > 1_000, "nijedno izvlačenje nije odbačeno");
 }
