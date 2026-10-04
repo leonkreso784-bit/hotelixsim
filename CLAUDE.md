@@ -15,6 +15,7 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
 
 ## Stanje (2026-10-04)
 - **Početak nove sesije:** pročitaj [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md) — tamo je redoslijed rada.
+  Leon to pokreće s `/clear` pa `/newsession` (`.claude/skills/newsession/`). Na kraju sesije osvježi tu predaju.
 - GitHub: `leonkreso784-bit/hotelixsim` (privatni), spojen kao `origin`. Lokalni `main` je ispred `origin` — push čeka OK.
 - **Kostur od kraja do kraja je gotov** (04.10., plan `docs/superpowers/plans/2026-10-04-kostur.md` + ledger s
   odlukama). Pokretanje: README → „Lokalni razvoj". Baza: zaseban klaster na **5433**, nakon restarta
