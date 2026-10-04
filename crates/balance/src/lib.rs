@@ -152,7 +152,7 @@ impl Probe {
             Probe::Price150 => "cijena 150 %",
             Probe::Marketing => "marketing 40 000 EUR",
             Probe::SeasonalUp => "sezonci +korak",
-            Probe::SeasonalZero => "sezonci 0",
+            Probe::SeasonalZero => "sezonci −korak svaki mjesec",
             Probe::Wage115 => "plaća 115",
             Probe::Wage90 => "plaća 90",
             Probe::TrainingFull => "obuka Full",

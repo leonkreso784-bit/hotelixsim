@@ -156,7 +156,7 @@ blagajna 120 000 €, B ocjena 8,0, oprema 40, iskustvo 55, blagajna 600 000 €
   cijena 150 %             A=-10.81  B=-19.35  C=-12.53
   marketing 40 000 EUR     A=-0.56  B=-6.92  C=0.28
   sezonci +korak           A=-3.07  B=-8.73  C=-3.26
-  sezonci 0                A=-26.50  B=-31.45  C=-24.07
+  sezonci −korak svaki mjesec A=-26.50  B=-31.45  C=-24.07
   plaća 115                A=4.90  B=2.99  C=6.32
   plaća 90                 A=-9.42  B=-12.85  C=-8.87
   obuka Full               A=2.02  B=-3.80  C=3.30
