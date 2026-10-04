@@ -181,3 +181,20 @@ Sve provjere prolaze.
 3. **Pravednost prolazi, dominacija je blizu:** medijani profila −4,99 / −5,96 / −4,04 (razlika 1,92, prag 5). Nijedna
    proba nije dominantna, ali „obnova u lipnju" je najbolja za A i C; od dominacije je dijeli samo B (kod B je bolja
    „plaća 115").
+4. **Lekcija S3 je danas OBRNUTA (završni pregled).** DEMO §7 uči „ista ponuda je dobra u lipnju, a loša u kolovozu".
+   Mjerenje (`balance`, referentni C, zadani plan, 175 soba-noći uz −25 %, mjesečni GOP s grupom minus bez nje) kaže
+   suprotno: prihvaćanje u **kolovozu dobiva +25 598 €**, u **lipnju +19 184 €**. Kod A je kolovoz +8 336 €, kod B
+   +26 009 € (B pritom ne istiskuje nijednog gosta). Provjera istiskivanja prolazi na ≈ 2 soba-noći, što je premalo da
+   bi mijenjalo račun: prodana soba-noć po −25 % u kolovozu još uvijek donosi više od marginalnog troška. Dok se to ne
+   promijeni, student koji uvijek prihvaća ponudu „kako je" dobiva bolji rezultat u kolovozu nego u lipnju, a to je
+   upravo ono što lekcija tvrdi da je pogreška. Odluka je Leonova; poluge:
+   - viša popunjenost u kolovozu (sada 95,5 %; 96 % daje ≈ 20 istisnutih soba-noći, vidi točku 1),
+   - manji popust u ponudi (25 % je preduboko samo ako je kolovoz pun),
+   - niži ostali prihod grupe i/ili dodatni trošak grupe (hrana, osoblje, čišćenje) — danas grupa donosi samo sobe,
+   - kolovoz u kojem je kapacitet zaista tijesan (istiskivanje u stotinama soba-noći, ne u dvije).
+   Alat sada ispisuje oba iznosa u retku „S3 grupa, dobit GOP-a od prihvaćanja" (samo izvještaj, bez praga).
+5. **Obnova je praktički besplatna (završni pregled).** Do rujna svi profili imaju dovoljno gotovine da se likvidnost
+   (Z i F) zaglavi na 100, a investicija (capex) i kamate su izvan GOP-a, pa GOPPAR ne vidi 150 000 € obnove.
+   Izmjereno: F **raste** s obnovom (A 42,72 → 43,62; B 61,26 → 62,26; C 50,00 → 50,95), a napredak je A −1,05 → +7,63,
+   B −7,21 → +1,49, C −0,26 → +10,12. Poluga nije cijena obnove nego formula likvidnosti/F (pitanje za ADR): treba
+   da potrošena gotovina i otplata ulaze u F i prije nego što se zaglavi na 100.
