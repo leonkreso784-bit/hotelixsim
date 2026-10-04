@@ -3,9 +3,9 @@
 
 use engine::calc;
 use sim_hotel::{
-    Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Month, MonthPlan,
-    Profile, RefTable, ResolveError, SituationOutcome, SituationTemplate, Strategy, Training,
-    effects, resolve_month, run_season, run_season_with, start_indices,
+    Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Mechanic, Month,
+    MonthPlan, Profile, RefTable, ResolveError, SituationOutcome, SituationTemplate, Strategy,
+    Training, effects, resolve_month, run_season, run_season_with, start_indices,
 };
 
 pub struct Options {
@@ -18,10 +18,19 @@ pub struct Report {
     pub reference_margin_bp: Vec<(Month, i32)>,
     pub reference_season_margin_bp: i32,
     pub august_displacement: bool,
+    /// Samo izvještaj, bez praga: dobit GOP-a (centi) od prihvaćanja grupe iz S3 u kolovozu i u lipnju
+    /// (GOP s grupom − GOP bez nje, ostalo jednako, zadani plan, referentni profil). `None` bez S3.
+    pub s3_gop_gain_cents: Option<S3Gain>,
     pub medians: Vec<(Profile, Strategy, i32)>,
     pub profile_medians: Vec<(Profile, i32)>,
     pub probes: Vec<(String, Vec<(Profile, i32)>)>,
     pub reproducible: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct S3Gain {
+    pub august_cents: i64,
+    pub june_cents: i64,
 }
 
 const REPRO_SEED: u64 = 7;
@@ -61,13 +70,14 @@ fn reference_profile(cat: &Catalog) -> Result<Profile, ResolveError> {
         })
 }
 
-type RefMargins = (Vec<(Month, i32)>, i32, HotelState);
+type RefMargins = (Vec<(Month, i32)>, i32, HotelState, HotelState);
 
-/// Marže referentnog profila uz zadani plan, bez situacija; i stanje prije kolovoza.
+/// Marže referentnog profila uz zadani plan, bez situacija; i stanja prije lipnja i prije kolovoza.
 fn reference_margins(cat: &Catalog) -> Result<RefMargins, ResolveError> {
     let mut state = HotelState::from_profile(cat.profile(reference_profile(cat)?)?)?;
     let mut out = Vec::new();
     let (mut gop, mut rev) = (0i128, 0i128);
+    let before_jun = state.clone();
     let mut before_aug = state.clone();
     for m in Month::SEASON {
         if m == Month::Aug {
@@ -82,7 +92,86 @@ fn reference_margins(cat: &Catalog) -> Result<RefMargins, ResolveError> {
         rev += v;
         state = r.after;
     }
-    Ok((out, margin_bp(gop, rev)?, before_aug))
+    Ok((out, margin_bp(gop, rev)?, before_jun, before_aug))
+}
+
+/// Grupa iz S3 koja se prodaje u kolovozu (prvi ponuđeni odgovor s takvom grupom).
+fn s3_august_mechanic(s3: &SituationTemplate) -> Option<Mechanic> {
+    s3.answers
+        .iter()
+        .flat_map(|a| a.mechanics.iter())
+        .find(|m| {
+            matches!(
+                m,
+                Mechanic::GroupBooking {
+                    accept: true,
+                    month: Month::Aug,
+                    ..
+                }
+            )
+        })
+        .cloned()
+}
+
+/// Ponuda „kako je" iz S3: prihvaćena kolovoška grupa s najvećim popustom (mjerilo dobiti).
+fn s3_offer_mechanic(s3: &SituationTemplate) -> Option<Mechanic> {
+    s3.answers
+        .iter()
+        .flat_map(|a| a.mechanics.iter())
+        .filter(|m| {
+            matches!(
+                m,
+                Mechanic::GroupBooking {
+                    accept: true,
+                    month: Month::Aug,
+                    ..
+                }
+            )
+        })
+        .max_by_key(|m| match m {
+            Mechanic::GroupBooking { discount_bp, .. } => *discount_bp,
+            _ => 0,
+        })
+        .cloned()
+}
+
+/// Ista grupa, ali prodaje se u mjesecu `target`; blok kako ga daje `effects` u mjesecu situacije.
+fn s3_group(
+    cat: &Catalog,
+    s3: &SituationTemplate,
+    mech: &Mechanic,
+    target: Month,
+    category: Category,
+) -> Result<Option<sim_hotel::GroupBlock>, ResolveError> {
+    let Mechanic::GroupBooking {
+        accept,
+        rooms,
+        nights,
+        discount_bp,
+        ..
+    } = mech
+    else {
+        return Ok(None);
+    };
+    let moved = Mechanic::GroupBooking {
+        accept: *accept,
+        rooms: *rooms,
+        nights: *nights,
+        discount_bp: *discount_bp,
+        month: target,
+    };
+    let quality = s3
+        .answers
+        .iter()
+        .find(|a| a.mechanics.contains(mech))
+        .map_or(3, |a| a.quality);
+    let o = SituationOutcome {
+        code: s3.code.clone(),
+        mechanics: vec![moved],
+        quality,
+    };
+    let e = effects(&o, s3.month, cat, category).map_err(ResolveError::Mechanic)?;
+    Ok(e.groups.into_iter().find(|g| g.month == target))
 }
 
 /// Grupa iz S3 u kolovozu istiskuje individualne goste (ADR-013 posljedice).
@@ -94,16 +183,10 @@ fn august_displacement(
     let Some(s3) = situations.iter().find(|t| t.code == "S3") else {
         return Ok(false);
     };
-    let mut group = None;
-    for a in &s3.answers {
-        let o = SituationOutcome::from_answer(&s3.code, a);
-        let e = effects(&o, s3.month, cat, before_aug.category).map_err(ResolveError::Mechanic)?;
-        group = e.groups.into_iter().find(|g| g.month == Month::Aug);
-        if group.is_some() {
-            break;
-        }
-    }
-    let Some(group) = group else {
+    let Some(mech) = s3_august_mechanic(s3) else {
+        return Ok(false);
+    };
+    let Some(group) = s3_group(cat, s3, &mech, Month::Aug, before_aug.category)? else {
         return Ok(false);
     };
     let plan = MonthPlan::default_for(before_aug, Month::Aug, cat)?;
@@ -112,6 +195,50 @@ fn august_displacement(
     with_state.groups.push(group);
     let with = resolve_month(&with_state, Month::Aug, &plan, &[], cat)?;
     Ok(with.market.individual_sold < without.market.individual_sold)
+}
+
+/// GOP s grupom − GOP bez nje u mjesecu `month`, iz stanja `before`, uz zadani plan.
+fn group_gop_gain(
+    cat: &Catalog,
+    s3: &SituationTemplate,
+    mech: &Mechanic,
+    month: Month,
+    before: &HotelState,
+) -> Result<i64, ResolveError> {
+    let Some(group) = s3_group(cat, s3, mech, month, before.category)? else {
+        return Ok(0);
+    };
+    let plan = MonthPlan::default_for(before, month, cat)?;
+    let without = resolve_month(before, month, &plan, &[], cat)?;
+    let mut with_state = before.clone();
+    with_state.groups.push(group);
+    let with = resolve_month(&with_state, month, &plan, &[], cat)?;
+    calc::narrow(
+        calc::sub(
+            i128::from(with.money.gop_cents),
+            i128::from(without.money.gop_cents),
+        )
+        .map_err(calc_err)?,
+    )
+    .map_err(calc_err)
+}
+
+fn s3_gop_gain(
+    cat: &Catalog,
+    situations: &[SituationTemplate],
+    before_jun: &HotelState,
+    before_aug: &HotelState,
+) -> Result<Option<S3Gain>, ResolveError> {
+    let Some(s3) = situations.iter().find(|t| t.code == "S3") else {
+        return Ok(None);
+    };
+    let Some(mech) = s3_offer_mechanic(s3) else {
+        return Ok(None);
+    };
+    Ok(Some(S3Gain {
+        august_cents: group_gop_gain(cat, s3, &mech, Month::Aug, before_aug)?,
+        june_cents: group_gop_gain(cat, s3, &mech, Month::Jun, before_jun)?,
+    }))
 }
 
 #[derive(Clone, Copy)]
@@ -275,8 +402,10 @@ pub fn run(content: &content::Content, opts: &Options) -> Result<Report, Resolve
         starts.push((p, start_indices(&state, cat, refs_for(p)?)?));
     }
 
-    let (reference_margin_bp, reference_season_margin_bp, before_aug) = reference_margins(cat)?;
+    let (reference_margin_bp, reference_season_margin_bp, before_jun, before_aug) =
+        reference_margins(cat)?;
     let august_displacement = august_displacement(cat, situations, &before_aug)?;
+    let s3_gop_gain_cents = s3_gop_gain(cat, situations, &before_jun, &before_aug)?;
 
     let mut medians = Vec::new();
     let mut per_profile: Vec<(Profile, Vec<i32>)> =
@@ -317,6 +446,7 @@ pub fn run(content: &content::Content, opts: &Options) -> Result<Report, Resolve
         reference_margin_bp,
         reference_season_margin_bp,
         august_displacement,
+        s3_gop_gain_cents,
         medians,
         profile_medians,
         probes,
@@ -437,6 +567,20 @@ fn hundredths(v: i32) -> String {
     format!("{sign}{}.{:02}", v.abs() / 100, v.abs() % 100)
 }
 
+fn euros(cents: i64) -> String {
+    let sign = if cents < 0 { "-" } else { "" };
+    let abs = cents.abs();
+    let whole = (abs / 100).to_string();
+    let mut grouped = String::new();
+    for (i, ch) in whole.chars().enumerate() {
+        if i > 0 && (whole.len() - i) % 3 == 0 {
+            grouped.push(' ');
+        }
+        grouped.push(ch);
+    }
+    format!("{sign}{grouped} EUR")
+}
+
 pub fn render(report: &Report) -> String {
     let mut s = String::new();
     s.push_str("== Početak (§11.1): G R Z O F ==\n");
@@ -460,6 +604,18 @@ pub fn render(report: &Report) -> String {
             "ne"
         }
     ));
+    match &report.s3_gop_gain_cents {
+        Some(g) => s.push_str(&format!(
+            "  S3 grupa, dobit GOP-a od prihvaćanja: kolovoz {}, lipanj {} (samo izvještaj)
+",
+            euros(g.august_cents),
+            euros(g.june_cents)
+        )),
+        None => s.push_str(
+            "  S3 grupa, dobit GOP-a od prihvaćanja: nema grupe u kolovozu
+",
+        ),
+    }
     s.push_str("== Medijan napretka po profilu i strategiji (§11.3), bodova ==\n");
     for (p, st, v) in &report.medians {
         s.push_str(&format!(

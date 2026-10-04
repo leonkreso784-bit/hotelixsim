@@ -22,3 +22,14 @@ fn failures_name_the_broken_check() {
     let f = balance::failures(&r, &c.catalog);
     assert!(f.iter().any(|m| m.contains("§11.1")), "{f:?}");
 }
+
+#[test]
+fn s3_gop_gain_is_reported_for_august_and_june() {
+    let c = content::load(&content::repo_dir()).unwrap();
+    let r = balance::run(&c, &balance::Options { seeds: 1 }).unwrap();
+    let g = r.s3_gop_gain_cents.expect("S3 ima grupu u kolovozu");
+    assert_ne!(g.august_cents, 0);
+    assert_ne!(g.june_cents, 0);
+    let text = balance::render(&r);
+    assert!(text.contains("S3 grupa, dobit GOP-a"), "{text}");
+}
