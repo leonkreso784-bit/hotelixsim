@@ -32,8 +32,8 @@ Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; 
 ## Gdje smo
 
 **TEMELJI** su napisani, ali arhitektura v2 i domena u DEMO.md još čekaju Leonovu potvrdu (ADR-003, BACKLOG).
-**DEMO:** korak 1 ✅; sljedeći je korak 2 — plan „jezgra i alat za balans" nastaje u `plan/`, Task 1 su brane
-determinizma ([ADR-009](../records/DECISIONS.md#adr-009)). Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
+**DEMO:** korak 1 ✅; korak 2 je u gradnji po planu [2026-10-04-jezgra.md](2026-10-04-jezgra.md) (Task 1 su brane
+determinizma, [ADR-009](../records/DECISIONS.md#adr-009)). Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
 [ADR-012](../records/DECISIONS.md#adr-012); pitanja profesorima idu tijekom tjedna 5.–11.10.; prijava u inkubator 16.11.
 
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".

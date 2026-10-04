@@ -18,8 +18,8 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
   s `/kraj` (dnevnik, ADR-ovi, predaja, `check:docs`, commit).
 - **Gotovo:** kostur od kraja do kraja ([CHANGELOG 0.1.0](docs/records/CHANGELOG.md)); dokumentacija po Sokratovom
   sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)).
-- **Sljedeće:** plan „jezgra i alat za balans" (DEMO korak 2, [ROADMAP](docs/plan/ROADMAP.md)); Task 1 = ojačati
-  brane determinizma ([ADR-009](docs/records/DECISIONS.md#adr-009)). Spec: [DEMO.md](docs/product/DEMO.md) §2–§12.
+- **Aktivni plan:** [jezgra i alat za balans](docs/plan/2026-10-04-jezgra.md) (DEMO korak 2), gradnja na grani
+  `gradnja/jezgra`; pretpostavke u [ADR-013](docs/records/DECISIONS.md#adr-013). Spec: [DEMO.md](docs/product/DEMO.md) §2–§12.
   **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
   i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).
