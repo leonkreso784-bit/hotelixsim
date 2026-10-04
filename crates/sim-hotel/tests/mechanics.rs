@@ -293,3 +293,66 @@ fn direct_cost_for_robots() {
         0
     );
 }
+
+fn bad_mechanics() -> Vec<(&'static str, Mechanic)> {
+    vec![
+        (
+            "compensation_cents",
+            Mechanic::ServiceRecovery {
+                compensation_cents: -1,
+            },
+        ),
+        (
+            "bonus_cents",
+            Mechanic::StaffRetention {
+                raise_one_pct: 0,
+                bonus_cents: -1,
+            },
+        ),
+        (
+            "raise_one_pct",
+            Mechanic::StaffRetention {
+                raise_one_pct: 101,
+                bonus_cents: 0,
+            },
+        ),
+        (
+            "backup_cents",
+            Mechanic::CrisisCommunication { backup_cents: -1 },
+        ),
+        (
+            "discount_bp",
+            Mechanic::GroupBooking {
+                accept: true,
+                rooms: 25,
+                nights: 7,
+                discount_bp: 10_001,
+                month: Month::Aug,
+            },
+        ),
+    ]
+}
+
+#[test]
+fn bad_parameters_rejected_with_field_name() {
+    let cat = test_catalog();
+    for (field, mech) in bad_mechanics() {
+        let r = effects(&out("X", 3, vec![mech]), Month::Jun, &cat, Category::Four);
+        assert_eq!(r, Err(MechanicError::BadParameter(field)), "{field}");
+    }
+}
+
+#[test]
+fn resolve_month_propagates_bad_parameter() {
+    let cat = test_catalog();
+    let s = state_c();
+    let plan = MonthPlan::default_for(&s, Month::Jun, &cat).unwrap();
+    for (field, mech) in bad_mechanics() {
+        let r = resolve_month(&s, Month::Jun, &plan, &[out("X", 3, vec![mech])], &cat);
+        assert_eq!(
+            r.err(),
+            Some(ResolveError::Mechanic(MechanicError::BadParameter(field))),
+            "{field}"
+        );
+    }
+}

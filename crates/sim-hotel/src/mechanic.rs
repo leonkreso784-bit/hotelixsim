@@ -69,6 +69,8 @@ pub enum MechanicError {
     BadQuality(u8),
     GroupInPast,
     BadGroup,
+    /// Parametar mehanike izvan dopuštenog raspona; nosi ime polja.
+    BadParameter(&'static str),
     Calc(CalcError),
 }
 
@@ -137,6 +139,9 @@ pub fn effects(
     for mech in &outcome.mechanics {
         match mech {
             Mechanic::ServiceRecovery { compensation_cents } => {
+                if *compensation_cents < 0 {
+                    return Err(MechanicError::BadParameter("compensation_cents"));
+                }
                 sat = c::add(sat, c::mul(w(m.recovery_pts_per_q), q3)?)?;
                 cost = c::add(cost, w(*compensation_cents))?;
             }
@@ -152,6 +157,12 @@ pub fn effects(
                 raise_one_pct,
                 bonus_cents,
             } => {
+                if *bonus_cents < 0 {
+                    return Err(MechanicError::BadParameter("bonus_cents"));
+                }
+                if *raise_one_pct > 100 {
+                    return Err(MechanicError::BadParameter("raise_one_pct"));
+                }
                 let spec = cat
                     .category(category)
                     .map_err(|_| MechanicError::Calc(CalcError::BadDivisor))?;
@@ -169,6 +180,9 @@ pub fn effects(
                 discount_bp,
                 month: target,
             } => {
+                if *discount_bp > 10_000 {
+                    return Err(MechanicError::BadParameter("discount_bp"));
+                }
                 if !*accept {
                     continue;
                 }
@@ -202,6 +216,9 @@ pub fn effects(
                 });
             }
             Mechanic::CrisisCommunication { backup_cents } => {
+                if *backup_cents < 0 {
+                    return Err(MechanicError::BadParameter("backup_cents"));
+                }
                 sat = c::add(sat, c::mul(w(m.crisis_pts_per_q), q3)?)?;
                 cost = c::add(cost, w(*backup_cents))?;
             }
