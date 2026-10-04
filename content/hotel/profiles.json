@@ -1,0 +1,47 @@
+{
+  "A": {
+    "category": "4",
+    "rooms": 120,
+    "permanent": 30,
+    "seasonal": 20,
+    "wage_pct": 100,
+    "morale_pts": 4200,
+    "experience_pts": 6000,
+    "equipment_pts": 6000,
+    "satisfaction_pts": 7800,
+    "rating": 910,
+    "cash_cents": 12000000,
+    "fixed_cents": 15000000,
+    "load_hundredths": 195
+  },
+  "B": {
+    "category": "4",
+    "rooms": 120,
+    "permanent": 30,
+    "seasonal": 20,
+    "wage_pct": 97,
+    "morale_pts": 5800,
+    "experience_pts": 5500,
+    "equipment_pts": 4000,
+    "satisfaction_pts": 7000,
+    "rating": 800,
+    "cash_cents": 60000000,
+    "fixed_cents": 9000000,
+    "load_hundredths": 173
+  },
+  "C": {
+    "category": "4",
+    "rooms": 120,
+    "permanent": 30,
+    "seasonal": 20,
+    "wage_pct": 100,
+    "morale_pts": 5500,
+    "experience_pts": 6000,
+    "equipment_pts": 6000,
+    "satisfaction_pts": 7000,
+    "rating": 840,
+    "cash_cents": 30000000,
+    "fixed_cents": 12000000,
+    "load_hundredths": 173
+  }
+}

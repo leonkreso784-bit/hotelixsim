@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/engine", "crates/sim-hotel", "crates/app", "crates/store", "crates/api", "crates/server"]
+members = ["crates/engine", "crates/sim-hotel", "crates/app", "crates/store", "crates/api", "crates/server", "crates/content"]
 
 [workspace.package]
 edition = "2024"
@@ -13,6 +13,7 @@ sim-hotel = { path = "crates/sim-hotel" }
 app = { path = "crates/app" }
 store = { path = "crates/store" }
 api = { path = "crates/api" }
+content = { path = "crates/content" }
 anyhow = "1"
 axum = "0.8.9"
 http-body-util = "0.1"
