@@ -1,0 +1,8 @@
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "nasumičan redoslijed ruši determinizam (ARHITEKTURA §7.2)", replacement = "std::collections::BTreeMap" },
+  { path = "std::collections::HashSet", reason = "nasumičan redoslijed ruši determinizam (ARHITEKTURA §7.2)", replacement = "std::collections::BTreeSet" },
+]
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "jezgra ne čita sat (ARHITEKTURA §7.2)" },
+  { path = "std::time::Instant::now", reason = "jezgra ne čita sat (ARHITEKTURA §7.2)" },
+]

@@ -1,0 +1,37 @@
+[workspace]
+resolver = "3"
+members = ["crates/engine", "crates/sim-hotel"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.98"
+publish = false
+
+[workspace.dependencies]
+engine = { path = "crates/engine" }
+sim-hotel = { path = "crates/sim-hotel" }
+app = { path = "crates/app" }
+store = { path = "crates/store" }
+api = { path = "crates/api" }
+anyhow = "1"
+axum = "0.8.9"
+http-body-util = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "postgres", "macros", "migrate"] }
+thiserror = "2.0.21"
+tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "net", "signal"] }
+tower = { version = "0.5.3", features = ["util"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+utoipa = "6.0.0"
+utoipa-axum = "0.3.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+
+[profile.release]
+overflow-checks = true

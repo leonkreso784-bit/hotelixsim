@@ -1,0 +1,5 @@
+* text=auto
+openapi.json text eol=lf
+packages/api-client/src/schema.d.ts text eol=lf
+*.rs text eol=lf
+*.sql text eol=lf
