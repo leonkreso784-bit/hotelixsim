@@ -370,7 +370,7 @@ Agencija nudi 25 soba na 7 noći **u kolovozu** (175 soba-noći) uz 25 % popusta
 
 | # | kriterij |
 |---|---|
-| 1 | Prepoznaje da je kolovoz vrh sezone (bazna popunjenost 83 %), pa grupa istiskuje skuplje goste |
+| 1 | Prepoznaje da je kolovoz vrh sezone (hotel je gotovo pun), pa grupa istiskuje skuplje goste |
 | 2 | Uspoređuje vrijednost grupe s vrijednošću istisnutih individualnih gostiju |
 | 3 | Protuponuda: manji popust, manje soba ili pomak na lipanj ili rujan |
 | 4 | Uvjeti: depozit, rok otkaza, rok za puštanje neprodanih soba |
@@ -567,7 +567,7 @@ Tzv. „p. b." iz §6.2 čitamo kao **postotni bod** = 500 baznih bodova za „5
 
 1. ~~Elastičnost cijene~~ → riješeno 04.10.: po kategoriji (§2.0), Leon „otprilike da".
 2. ~~Referentne cijene po mjesecima~~ → riješeno 04.10. (§2.0). Otvoreno ostaje: ostali prihod 30 % prihoda soba.
-3. Trošak zaposlenog 2 200 € mjesečno i omjer 30 stalnih prema 20 sezonaca.
+3. Trošak zaposlenog 2 200 € mjesečno i omjer stalnih i sezonaca po mjesecu (`content/hotel/catalog.json`, `seasonal_plan`).
 4. Lekcija u S3: 25 % popusta grupi u kolovozu. Je li to realna ponuda agencije?
 5. Kriteriji rubrika u S1–S4. To je tvoje područje i ondje si ti mjerilo.
 6. Priče profila A i B (§5). Prepoznaješ li takve hotele iz prakse?
