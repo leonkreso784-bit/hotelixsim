@@ -20,7 +20,14 @@ fn next_u64_matches_reference_seed_1234567() {
 fn next_u64_matches_reference_seed_0() {
     let mut rng = Rng::from_seed(0);
     let got: Vec<u64> = (0..3).map(|_| rng.next_u64()).collect();
-    assert_eq!(got, [16_294_208_416_658_607_535, 7_960_286_522_194_355_700, 487_617_019_471_545_679]);
+    assert_eq!(
+        got,
+        [
+            16_294_208_416_658_607_535,
+            7_960_286_522_194_355_700,
+            487_617_019_471_545_679
+        ]
+    );
 }
 
 #[test]
@@ -33,7 +40,14 @@ fn label_is_fnv1a_64() {
 fn derive_matches_reference() {
     let mut rng = Rng::derive(42, &[3, 7, label("trigger:T1")]);
     let got: Vec<u64> = (0..3).map(|_| rng.next_u64()).collect();
-    assert_eq!(got, [15_554_128_182_792_330_207, 9_332_619_251_129_265_620, 12_170_803_838_678_117_234]);
+    assert_eq!(
+        got,
+        [
+            15_554_128_182_792_330_207,
+            9_332_619_251_129_265_620,
+            12_170_803_838_678_117_234
+        ]
+    );
 }
 
 #[test]

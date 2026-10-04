@@ -49,7 +49,12 @@ mod tests {
     #[test]
     fn every_profile_totals_250() {
         for p in Profile::ALL {
-            assert_eq!(p.starting_indices().total_hundredths(), 25_000, "profil {}", p.code());
+            assert_eq!(
+                p.starting_indices().total_hundredths(),
+                25_000,
+                "profil {}",
+                p.code()
+            );
         }
     }
 

@@ -18,7 +18,9 @@ fn mix64(x: u64) -> u64 {
 
 /// FNV-1a 64 nad UTF-8 bajtovima; služi za stabilne oznake tokova (npr. `label("trigger:T1")`).
 pub fn label(s: &str) -> u64 {
-    s.bytes().fold(FNV_OFFSET, |h, b| (h ^ u64::from(b)).wrapping_mul(FNV_PRIME))
+    s.bytes().fold(FNV_OFFSET, |h, b| {
+        (h ^ u64::from(b)).wrapping_mul(FNV_PRIME)
+    })
 }
 
 /// Ponovljiva kocka. Isto sjeme i iste oznake daju isti niz na svakom računalu.

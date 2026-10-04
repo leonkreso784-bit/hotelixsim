@@ -10,7 +10,13 @@ pub enum Index {
 }
 
 impl Index {
-    pub const ALL: [Index; 5] = [Index::Guests, Index::Reviews, Index::Staff, Index::Operations, Index::Finance];
+    pub const ALL: [Index; 5] = [
+        Index::Guests,
+        Index::Reviews,
+        Index::Staff,
+        Index::Operations,
+        Index::Finance,
+    ];
 
     /// Stabilan kod za API i prijevode; nikad se ne mijenja.
     pub fn code(self) -> &'static str {
