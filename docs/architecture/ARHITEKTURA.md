@@ -293,16 +293,16 @@ hotelixsim/
 ├─ crates/
 │  ├─ engine/                  generičko: kocka, dnevnik, životni ciklus runde, sučelje simulacije
 │  ├─ sim-hotel/               hotelska domena: stanje, indeksi, mehanike, okidači, raspored, ocjena
-│  ├─ content/                 učitavanje i provjera kataloga; otisak verzije pravila
+│  ├─ content/                 učitavanje i provjera kataloga; otisak verzije pravila  (postoji)
 │  ├─ app/                     slučajevi upotrebe + „portovi" (sučelja prema bazi i AI-ju)
 │  ├─ store/                   PostgreSQL: dnevnik, projekcije, red poslova, platformske tablice
 │  ├─ ai/                      AI pružatelji, upute (promptovi), provjera izlaza
 │  ├─ api/                     Axum rukovatelji, prijava, OpenAPI
 │  ├─ server/                  izvršna datoteka: sastavlja sve; načini serve / work / migrate
-│  ├─ balance/                 alat: masovne simulacije i ponovni obračun s novim pravilima
+│  ├─ balance/                 alat: masovne simulacije i ponovni obračun s novim pravilima  (postoji)
 │  └─ wasm/                    (kasnije) jezgra za preglednik
 ├─ content/
-│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON + JSON Schema)
+│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON; JSON Schema je u drugom valu)  (postoji)
 ├─ prompts/                    upute za AI, verzionirane
 ├─ apps/
 │  └─ web/                     React sučelje (student + profesor)

@@ -2,26 +2,32 @@
 
 Ovo je JEDINO mjesto za ono što nije riješeno: odgođeni nalazi pregleda, otvorena pitanja i tehnički dug. Plan ne nosi tuđe stavke — plan uzima stavke odavde po oznaci; kad se stavka riješi, briše se (povijest je u gitu i `PROGRESS.md`).
 
-Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor.
+Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[drugi val]` opseg poslije demoa · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor.
 Izvor „L37" = redak u [ledgeru kostura](../archive/2026-10-04-kostur-ledger.md); „Task N #k" = nalaz pregleda tog taska.
 
 ## Odgođeni nalazi — [jezgra]
 
-- [jezgra] **`deny` umjesto `forbid` za clippy brane** — `#![deny]` u `lib.rs` lokalni `allow` zaobilazi. (Task 1 #3, L37)
-- [jezgra] **Mutacijski dokaz brana nepotpun** — mutacijom je provjeren samo `HashMap` u `engine`; faltaju `disallowed-methods`, HashSet, sat, float/arith i `clippy.toml` za `sim-hotel`. (Task 1 #4, L38)
-- [jezgra] **Ojačati brane determinizma (Final #3)** — allowlist ovisnosti (indexmap), `RandomState` u oba `clippy.toml`, forbid + `as_conversions`, zabrana f32/f64, `env::var`, skripta mutacija u CI-u. **Obavezan Task 1 plana, prije ijedne linije jezgre.** (L95, [SLJEDECA_SESIJA](../SLJEDECA_SESIJA.md) §3.1)
-- [jezgra] **Test `derive_streams_are_independent` je gotovo prazan** — dodati `assert_ne` za T1≠T2, redoslijed oznaka, drugo sjeme. (Task 2 #1, L42)
-- [jezgra] **Grana odbacivanja u `range` se ne izvršava** — mali rasponi u testovima je ne pogađaju. (Task 2 #2, L43)
-- [jezgra] **Doc za `derive(seed, &[])` vs `from_seed`** — različiti prostori stanja, treba zapisati. (Task 2 #3, L44)
-- [jezgra] **Nema testa da `position()` odgovara `Index::ALL`.** (Task 3 #1, L47)
-- [jezgra] **Profili A i B testirani samo točkasto** — pinati pune vektore; uskladiti s rupom „profil C ne kreće s 50". (Task 3 #2, L48)
-- [jezgra] **Test odbijanja u `from_hundredths`** provjerava samo zadnje mjesto. (Task 3 #3, L49)
-- [jezgra] **Imenovana i ograničavajuća izgradnja `IndexSet`** — danas pozicijski `[IndexValue; 5]`. (Final minori, L96)
-- [jezgra] **Profili u `content/hotel/` kao testno proročanstvo** — kategorija hotela kao podatak. (Final minori, L96)
-- [jezgra] **`.gitattributes`: LF za `Cargo.lock`, `Cargo.toml`, `*.mjs`** — danas nisu pinirani. (Task 1 #5, L39)
-- [jezgra] **`.sqlx/*.json` nije piniran na LF.** (Task 4 #5, L57)
-- [jezgra] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)
-- [jezgra] **`cargo-deny-action@v2` koristi vlastiti Rust, a repo `rust-toolchain` 1.98.1** — provjeriti na prvom CI-u. (Task 8 #3, L88)
+Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; svaki je mali.
+
+**Brane i kocka (`engine`)**
+- [jezgra] **`derive_streams_are_independent` je još slab** — provjerava samo tok T1; dodati `assert_ne` T1≠T2, redoslijed oznaka, drugo sjeme. (Task 2 #1, L42)
+- [jezgra] **Grana odbacivanja u `range` se ne izvršava** — mali rasponi je ne pogađaju; trebaju izvor koji je izaziva. (Task 2 #2, L43)
+- [jezgra] **`div_round` javlja `Overflow` za |a| > i128::MAX/2** iako rezultat stane (sigurno, izvan raspona igre); dopisati doc o rasponu i testove (veliki a koji taman stane, `add(magnitude, b)`). (Task 2)
+- [jezgra] **Probe mutacija:** nema baznog prolaza prije mutacija (CI ga pokriva clippyjem); neprobane stavke `DefaultHasher`, `Instant::now`, `env::var_os`, `default_numeric_fallback`; float-sufiks grep ne gleda `tests/`; nema obrade Ctrl-C (lokalno može ostaviti mutiran `lib.rs`). (Task 1)
+
+**Domena (`sim-hotel`, `content`)**
+- [jezgra] **Nema testa da `Index::position()` odgovara `Index::ALL`** — postoji samo test kodova. (Task 3 #1, L47)
+- [jezgra] **Provjera kataloga:** poruke granica imenuju samo jedno polje (`price_min/max`, `wage_min/max`); `validate` ne pokriva `marketing_max_cents`, `seasonal_step/max`, `marketing_max_bp`, `interest_bp`, `seasonal_plan`, `load` — dodati kad postanu nazivnici; nema testa za `OutOfRange` ni za referentni profil krive kategorije. (Task 3)
+- [jezgra] **Test fluktuacije nema slučaj polovice** (npr. moral 5 990 → 302). (Task 3)
+- [jezgra] **Nedostajuća kategorija javlja se kao `CalcError::BadDivisor`** (`market.rs`, `mechanic.rs`) — nema bolje varijante. (Task 4, Task 6)
+- [jezgra] **`plan::default_for` ograničava na `seasonal_max` nakon ±koraka;** `market` ne provjerava plan (negativan marketing → `BadDivisor`), pozivatelj mora zvati `validate` — dokumentirati. (Task 4)
+- [jezgra] **Kazna opterećenja duplicirana** (`indices.rs`, `resolve.rs`) — izdvojiti `load_penalty()`; `indices.rs` `try_into` daje pogrešnu varijantu greške ako `SEASON` promijeni duljinu (nedostižno). (Task 7)
+- [jezgra] **Retci `Staff/Turnover` nose +departures** (zamijenjeni, broj ljudi se ne mijenja) pa zbroj redaka ≠ promjena broja — razmotriti zaseban `Cause` ili znak za ekran profesora. (Task 5)
+- [jezgra] **Mehanike:** granica ocjene bez testa (nijedna mehanika ne mijenja ocjenu), oprema bez granice; nema testa granice morala, `BadGroup` ni greške u drugoj od više situacija; TDD crveni korak preskočen u Tasku 6. (Task 6)
+- [jezgra] **Učitavanje sadržaja:** privremene mape u testovima se ne brišu ako test padne (nema `Drop` čuvara); nema provjere dupliciranih kodova situacija ni praznih odgovora, a duplicirani ključevi u mapama = zadnji pobjeđuje. (Task 8)
+
+**Alat za balans (`balance`)**
+- [jezgra] **`margin_bp` tiho vraća 0 kad je prihod ≤ 0;** `--seeds 0` se prihvaća; testovi pokrivaju samo granu §11.1 u `failures`, nema testa izlaznog koda `--check`; tolerancija §11.1 tvrdo u kodu, `_cat` neiskorišten. (Task 10)
 
 ## Odgođeni nalazi — [dnevnik]
 
@@ -79,18 +85,30 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Pitanja za profesore** — Leon ih šalje tijekom tjedna 5.–11.10.; pregled prije slanja. Odgovor: [PITANJA_ZA_PROFESORE](../product/PITANJA_ZA_PROFESORE.md).
 - [leon] **Inkubator** — prijava do **16.11.**: nosi li se Sokrat ili simulacija. Odgovor: [ROADMAP](../plan/ROADMAP.md).
 - [leon] **Potvrda ARHITEKTURE v2** — ROADMAP kaže „Leon ih je pregledao", a ARHITEKTURA kaže „prijedlog dok Leon ne potvrdi"; potvrditi ili ostaviti raspravu otvorenom, pa uskladiti oba. Odgovor: [ARHITEKTURA](../architecture/ARHITEKTURA.md).
+- [leon] **S3: lekcija je tanka** — istiskivanje u kolovozu ≈ 2 sobe-noći uz popunjenost 95,5 %; 96 % daje ≈ 20 (marža kolovoza ≈ 49,3 %) ili blaži skok srpanj→kolovoz. Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru".
+- [leon] **Sezonska marža 35,9 % blizu donje granice (35 %)**, lipanj i rujan ≈ 22 %. Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md).
+- [leon] **„Obnova u lipnju" je najbolja proba za A i C** — gotovo dominantna radnja (A +7,63, C +10,12). Treba li je poskupiti ili ograničiti? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md).
+- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike.
+- [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS.md#adr-013).
 
-## Rupe u specu DEMO.md (ulaz za plan jezgre)
+## Drugi val (poslije demoa)
 
-Revizija 04.10., račun ponovljen neovisno, nalazi potvrđeni. Rješavaju se u planu jezgre prije prvog testa; pretpostavke zapisati u dokument.
+Opseg koji [ADR-013](DECISIONS.md#adr-013) t. 8 odgađa iza demoa; spec je u [DEMO.md](../product/DEMO.md).
 
-- [jezgra] **Profil C ne kreće s 50** — iz DEMO §2.1 i §4 za početak lipnja izlazi G=70, R=50, Z≈54, O=70, F≈55 (zbroj ≈299, ne 250). Samo je F relativan; G, Z, O su apsolutni, iako §2.0 kaže „prema referentnom hotelu". Odlučiti: centrirati formule na referentni hotel ili promijeniti početne vrijednosti. Analiza opcija: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) (preporuka `50 + (x − x_ref)`; prijedlog, provjeriti skriptu prije preuzimanja brojki). (DEMO §5, §2.1)
-- [jezgra] **Kalibracija bez redovnog održavanja 15 000 €** — s njim: lipanj 33,6 %, srpanj 50,4 %, kolovoz 55,5 %, rujan 34,3 %, sezona ≈45 %. Cilj 30–40 % je godišnji, a demo ima četiri sezonska mjeseca; odlučiti s čime se uspoređuje (KALIBRACIJA predlaže sezonski VI–IX 35–45 %). ([KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md))
-- [jezgra] **Cjelobrojni račun bez pravila zaokruživanja** — kazna opterećenja, potražnja i f-faktori, fluktuacija, nazivnik GOPPAR-a, jedinice pohrane, „p. b." vs postotak. Zlatne vrijednosti ovise o tome. Nacrt pravila P1–P32 u [DEMO](../product/DEMO.md) §12; najrizičnije P21 (stepenica odlazaka), P28/P29 (nazivnik GOPPAR-a), P17 (linearna kazna opterećenja). (DEMO §12)
-- [jezgra] **Nedefinirano manje** — početni F (GOPPAR traži mjesec), „mješavina" iskustva, cijena automatske zamjene, trošak sezonca, obuka „moral +2", dijeljenje s nulom u g_i, tvrdo 120 soba u §3.1. (DEMO §3.1)
-- [jezgra] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
+- [drugi val] **Splet okolnosti i tragovi (§9)** — odluke ostavljaju tragove koji se kasnije vraćaju.
+- [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
+- [drugi val] **Naplata otvorenih tragova na kraju sezone.**
+- [drugi val] **Različit učinak S4 po stanju hotela.**
+- [drugi val] **Tablice za 3* i 5*** — danas postoji samo 4*.
+- [drugi val] **JSON Schema kataloga** — danas samo provjera u kodu.
+
+## Rupe u specu DEMO.md
+
+Presuđene pretpostavkama u [ADR-013](DECISIONS.md#adr-013) (profil C na 50, sezonska marža, pravila zaokruživanja P1–P32, nedefinirano manje); pretpostavke čekaju Leonov pregled (vidi „Otvoreno za Leona").
 
 ## CI i alati
 
 - [ci] **Node 20 akcije zastarjele** — podići `actions/checkout@v4` i `actions/setup-node@v4` na novije verzije u nekom tasku CI-ja. (prvi CI 04.10., run 37167540215)
 - [ci] **`ubuntu-latest` prelazi na Ubuntu 26 od 19.10.** — provjeriti da poslovi `rust` i `web` prolaze, po potrebi pinirati sliku. (isto upozorenje CI-ja)
+- [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)
+- [ci] **`cargo-deny-action@v2` koristi vlastiti Rust, a repo `rust-toolchain` 1.98.1** — provjeriti na prvom CI-u. (Task 8 #3, L88)

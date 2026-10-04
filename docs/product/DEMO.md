@@ -507,7 +507,7 @@ Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 
 Brojke u §2–§4 pisane su decimalno radi čitljivosti. Ovdje je pravilo kako ih jezgra stvarno računa (ARHITEKTURA §7.2:
 bez `f32`/`f64`). **Svaka stavka P1–P32 je [PRETPOSTAVKA]** (Leon: „radi bez pitanja"); razlog je uz nju. Ne mijenja
-nijednu formulu ni brojku iz §2–§11, samo kaže u čemu se računa i gdje se zaokružuje.
+nijednu formulu ni brojku iz §2–§11, samo kaže u čemu se računa i gdje se zaokružuje. P1–P32 su implementirana u `engine::calc` i `crates/sim-hotel`.
 
 ### 12.1 Opća pravila
 
