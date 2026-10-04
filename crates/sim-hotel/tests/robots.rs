@@ -87,18 +87,14 @@ fn robots_choose_answers_by_their_rule() {
     let mut rng = Rng::from_seed(3);
     let answers = s1();
     let pick = |st: Strategy, rng: &mut Rng| {
-        st.choose(&answers, &cat, Category::Four, rng)
-            .unwrap()
-            .label
-            .clone()
+        let i = st.choose(&answers, &cat, Category::Four, rng).unwrap();
+        answers[i].label.clone()
     };
     assert_eq!(pick(Strategy::Saver, &mut rng), "q1"); // 8 000 centi, najjeftiniji
-    assert!(std::ptr::eq(
-        Strategy::Saver
-            .choose(&answers, &cat, Category::Four, &mut rng)
-            .unwrap(),
-        &answers[3]
-    ));
+    assert_eq!(
+        Strategy::Saver.choose(&answers, &cat, Category::Four, &mut rng),
+        Ok(3)
+    );
     assert_eq!(pick(Strategy::Caring, &mut rng), "q5");
     assert_eq!(pick(Strategy::OccupancyHunter, &mut rng), "q3"); // srednji po q: [q1, q1, q3, q5][2]
 }
@@ -124,13 +120,10 @@ fn hunter_accepts_group_on_agency_terms() {
         g(2, false, 2_500, Month::Aug),
     ];
     let mut rng = Rng::from_seed(0);
-    assert_eq!(
-        Strategy::OccupancyHunter
-            .choose(&answers, &cat, Category::Four, &mut rng)
-            .unwrap()
-            .label,
-        "1-2500"
-    );
+    let i = Strategy::OccupancyHunter
+        .choose(&answers, &cat, Category::Four, &mut rng)
+        .unwrap();
+    assert_eq!(answers[i].label, "1-2500");
 }
 
 #[test]
@@ -157,7 +150,6 @@ fn passive_profile_c_season_scores_zero() {
     let refs = RefTable::compute(&cat, Category::Four).unwrap();
     let r = run_season_with(
         Profile::C,
-        0,
         &cat,
         &[],
         &refs,
@@ -167,4 +159,42 @@ fn passive_profile_c_season_scores_zero() {
     .unwrap();
     assert_eq!(r.start, IndexSet::from_hundredths([5_000; 5]).unwrap());
     assert_eq!(r.progress_pts, 0);
+    assert_eq!(r.months.len(), 4);
+}
+
+#[test]
+fn fixed_robot_plans_are_valid_from_every_profile() {
+    let cat = test_catalog();
+    for p in [Profile::A, Profile::B, Profile::C] {
+        let s = HotelState::from_profile(cat.profile(p).unwrap()).unwrap();
+        for st in [Strategy::Saver, Strategy::Caring, Strategy::OccupancyHunter] {
+            let mut rng = Rng::from_seed(1);
+            for m in Month::SEASON {
+                let plan = st.plan(&s, m, &cat, &mut rng).unwrap();
+                assert_eq!(plan.validate(&s, m, &cat), Ok(()), "{p:?} {st:?} {m:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn choose_on_empty_answers_is_an_error() {
+    let cat = test_catalog();
+    let mut rng = Rng::from_seed(0);
+    for st in Strategy::ALL {
+        assert_eq!(
+            st.choose(&[], &cat, Category::Four, &mut rng),
+            Err(ResolveError::BadChoice),
+            "{st:?}"
+        );
+    }
+}
+
+#[test]
+fn random_seasons_differ_between_seeds() {
+    let cat = test_catalog();
+    let refs = RefTable::compute(&cat, Category::Four).unwrap();
+    let a = run_season(Profile::C, Strategy::Random, 1, &cat, &[], &refs).unwrap();
+    let b = run_season(Profile::C, Strategy::Random, 2, &cat, &[], &refs).unwrap();
+    assert_ne!(a, b);
 }

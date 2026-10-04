@@ -188,61 +188,57 @@ impl Strategy {
         Ok(plan)
     }
 
-    pub fn choose<'a>(
+    /// Indeks odabranog odgovora u `answers`.
+    pub fn choose(
         self,
-        answers: &'a [OfferedAnswer],
+        answers: &[OfferedAnswer],
         cat: &Catalog,
         category: Category,
         rng: &mut Rng,
-    ) -> Result<&'a OfferedAnswer, ResolveError> {
+    ) -> Result<usize, ResolveError> {
         if answers.is_empty() {
             return Err(ResolveError::BadChoice);
         }
         match self {
             Strategy::Saver => {
-                let mut best: Option<(&OfferedAnswer, i128)> = None;
-                for a in answers {
+                let mut best: Option<(usize, i128, u8)> = None;
+                for (i, a) in answers.iter().enumerate() {
                     let cost = direct_cost(a, cat, category)?;
-                    let better = match best {
-                        None => true,
-                        Some((b, bc)) => (cost, a.quality) < (bc, b.quality),
-                    };
-                    if better {
-                        best = Some((a, cost));
+                    if best.is_none_or(|(_, bc, bq)| (cost, a.quality) < (bc, bq)) {
+                        best = Some((i, cost, a.quality));
                     }
                 }
-                best.map(|(a, _)| a).ok_or(ResolveError::BadChoice)
+                best.map(|(i, _, _)| i).ok_or(ResolveError::BadChoice)
             }
             Strategy::Caring => {
-                let mut best: Option<&OfferedAnswer> = None;
-                for a in answers {
-                    if best.is_none_or(|b| a.quality > b.quality) {
-                        best = Some(a);
+                let mut best: Option<(usize, u8)> = None;
+                for (i, a) in answers.iter().enumerate() {
+                    if best.is_none_or(|(_, bq)| a.quality > bq) {
+                        best = Some((i, a.quality));
                     }
                 }
-                best.ok_or(ResolveError::BadChoice)
+                best.map(|(i, _)| i).ok_or(ResolveError::BadChoice)
             }
             Strategy::OccupancyHunter => {
-                let mut best: Option<(&OfferedAnswer, u16)> = None;
-                for a in answers {
+                let mut best: Option<(usize, u16)> = None;
+                for (i, a) in answers.iter().enumerate() {
                     if let Some(d) = accepted_discount(a)
                         && best.is_none_or(|(_, bd)| d > bd)
                     {
-                        best = Some((a, d));
+                        best = Some((i, d));
                     }
                 }
-                if let Some((a, _)) = best {
-                    return Ok(a);
+                if let Some((i, _)) = best {
+                    return Ok(i);
                 }
-                let mut sorted: Vec<&OfferedAnswer> = answers.iter().collect();
-                sorted.sort_by_key(|a| a.quality);
-                let mid = sorted.len().checked_div(2).unwrap_or(0);
-                sorted.get(mid).copied().ok_or(ResolveError::BadChoice)
+                let mut order: Vec<usize> = (0..answers.len()).collect();
+                order.sort_by_key(|&i| answers.get(i).map_or(0, |a| a.quality));
+                let mid = order.len().checked_div(2).unwrap_or(0);
+                order.get(mid).copied().ok_or(ResolveError::BadChoice)
             }
             Strategy::Random => {
                 let n = u64::try_from(answers.len()).map_err(|_| overflow())?;
-                let i = usize::try_from(rng.range(0, n)).map_err(|_| overflow())?;
-                answers.get(i).ok_or(ResolveError::BadChoice)
+                usize::try_from(rng.range(0, n)).map_err(|_| overflow())
             }
         }
     }

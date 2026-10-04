@@ -37,7 +37,6 @@ pub fn run_season(
     let category = cat.profile(profile)?.category;
     run_season_with(
         profile,
-        seed,
         cat,
         situations,
         refs,
@@ -47,20 +46,14 @@ pub fn run_season(
         },
         &mut |t| {
             let mut rng = Rng::derive(seed, &[position(t.month)?, label(&t.code)]);
-            let a = strategy.choose(&t.answers, cat, category, &mut rng)?;
-            t.answers
-                .iter()
-                .position(|x| std::ptr::eq(x, a))
-                .ok_or(ResolveError::BadChoice)
+            strategy.choose(&t.answers, cat, category, &mut rng)
         },
     )
 }
 
-/// Sezona s vlastitim planerom i izborom odgovora. `seed` nosi pozivatelj kroz svoje funkcije
-/// (kocke se izvode u `run_season`); ovdje služi samo za potpis jednak robotskom pozivu.
+/// Sezona s vlastitim planerom i izborom odgovora; slučajnost, ako je ima, nose same funkcije.
 pub fn run_season_with(
     profile: Profile,
-    _seed: u64,
     cat: &Catalog,
     situations: &[SituationTemplate],
     refs: &RefTable,
