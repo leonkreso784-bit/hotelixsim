@@ -9,6 +9,50 @@ fn default(s: &HotelState, m: Month) -> MonthPlan {
     MonthPlan::default_for(s, m, &test_catalog()).unwrap()
 }
 
+/// Retci objašnjenja moraju stvarno objasniti promjenu (nema odsječenja u ovim scenarijima).
+fn assert_lines_explain(r: &MonthReport) {
+    let total = |v: Var| {
+        r.lines
+            .iter()
+            .filter(|l| l.var == v)
+            .map(|l| l.amount)
+            .sum::<i64>()
+    };
+    let (b, a) = (&r.before, &r.after);
+    assert_eq!(total(Var::Costs), r.money.costs_cents);
+    assert_eq!(
+        total(Var::Revenue),
+        r.money.rooms_revenue_cents + r.money.other_revenue_cents
+    );
+    assert_eq!(total(Var::Cash), a.cash_cents - b.cash_cents);
+    assert_eq!(
+        total(Var::Experience),
+        i64::from(a.experience_pts - b.experience_pts)
+    );
+    assert_eq!(
+        total(Var::Equipment),
+        i64::from(a.equipment_pts - b.equipment_pts)
+    );
+    assert_eq!(
+        total(Var::Satisfaction),
+        i64::from(a.satisfaction_pts - b.satisfaction_pts)
+    );
+    assert_eq!(
+        total(Var::Rating),
+        i64::from(a.rating) - i64::from(b.rating)
+    );
+    let morale_baseline: i64 = r
+        .lines
+        .iter()
+        .filter(|l| l.var == Var::Morale && l.cause == Cause::Baseline)
+        .map(|l| l.amount)
+        .sum();
+    assert_eq!(morale_baseline, i64::from(a.morale_pts - b.morale_pts));
+    let staff_change =
+        i64::from(r.people.hires) - i64::from(r.people.released) + i64::from(r.people.departures);
+    assert_eq!(total(Var::Staff), staff_change);
+}
+
 #[test]
 fn profile_c_june_default() {
     let s = state_c();
@@ -183,6 +227,7 @@ fn negative_cash_pays_interest() {
         (r.after.cash_cents, r.money.goppar_cents),
         (-23_747_928, -6_392)
     );
+    assert_lines_explain(&r);
 }
 
 #[test]
@@ -209,6 +254,7 @@ fn training_and_renovation_act_next_month() {
         (29_487_200, 6_000, 6_140)
     );
     assert!(june.after.renovated);
+    assert_lines_explain(&june);
     let july = run(&june.after, Month::Jul, &default(&june.after, Month::Jul));
     assert_eq!(
         (
@@ -231,6 +277,7 @@ fn training_and_renovation_act_next_month() {
         (5_455, 6_674, 8_400, 7_469, 844, 60_512_200)
     );
     assert_eq!(a.pending, Pending::default());
+    assert_lines_explain(&july);
 }
 
 #[test]
@@ -324,6 +371,7 @@ fn releasing_seasonals_in_august_overloads_staff() {
         ),
         (4_510, 6_033, 5_900, 6_377, 834, 55_467_600)
     );
+    assert_lines_explain(&r);
 }
 
 #[test]
@@ -334,44 +382,7 @@ fn every_changed_variable_has_a_cause_and_money_lines_add_up() {
     plan.renovation = true;
     plan.training = Training::Full;
     let r = run(&s, Month::Jun, &plan);
-    let total = |v: Var| {
-        r.lines
-            .iter()
-            .filter(|l| l.var == v)
-            .map(|l| l.amount)
-            .sum::<i64>()
-    };
-    assert_eq!(total(Var::Costs), r.money.costs_cents);
-    assert_eq!(
-        total(Var::Revenue),
-        r.money.rooms_revenue_cents + r.money.other_revenue_cents
-    );
-    assert_eq!(total(Var::Cash), r.after.cash_cents - r.before.cash_cents);
-    let changed = [
-        (Var::Morale, r.before.morale_pts != r.after.morale_pts),
-        (
-            Var::Experience,
-            r.before.experience_pts != r.after.experience_pts,
-        ),
-        (
-            Var::Equipment,
-            r.before.equipment_pts != r.after.equipment_pts,
-        ),
-        (
-            Var::Satisfaction,
-            r.before.satisfaction_pts != r.after.satisfaction_pts,
-        ),
-        (Var::Rating, r.before.rating != r.after.rating),
-        (Var::Cash, r.before.cash_cents != r.after.cash_cents),
-    ];
-    for (v, did) in changed {
-        if did {
-            assert!(
-                r.lines.iter().any(|l| l.var == v),
-                "{v:?} se promijenio bez uzroka"
-            );
-        }
-    }
+    assert_lines_explain(&r);
 }
 
 #[test]
@@ -383,4 +394,19 @@ fn invalid_plan_is_rejected_before_any_calculation() {
         resolve_month(&s, Month::Jun, &plan, &[], &test_catalog()),
         Err(ResolveError::Plan(PlanError::WageOutOfRange))
     );
+}
+
+#[test]
+fn extra_wage_and_group_block_lines_explain() {
+    let mut s = state_c();
+    s.extra_wage_cents = 17_600;
+    s.groups.push(GroupBlock {
+        month: Month::Jun,
+        room_nights: 175,
+        price_cents: 10_125,
+    });
+    let r = run(&s, Month::Jun, &default(&s, Month::Jun));
+    assert!(r.market.group_sold > 0);
+    assert!(r.money.labor_cents > 0);
+    assert_lines_explain(&r);
 }
