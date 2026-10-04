@@ -66,7 +66,7 @@ impl HotelState {
         })
     }
 
-    /// Granice drži plan (najviše 40 sezonaca), zato je zbroj bez prelijevanja.
+    /// Granice drži plan (najviše `seasonal_max` sezonaca iz kataloga), zato je zbroj bez prelijevanja.
     pub fn staff(&self) -> u16 {
         self.permanent.saturating_add(self.seasonal)
     }

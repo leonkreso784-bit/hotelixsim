@@ -35,6 +35,21 @@ fn catalog_rejects_zero_reference_price() {
     assert!(matches!(cat.validate(), Err(CatalogError::NotPositive(_))));
 }
 
+/// ADR-014 t. 1: rasprodan kolovoz traži baznu popunjenost iznad 100 %; granica provjere je 20 000 bp.
+#[test]
+fn catalog_allows_occupancy_above_rooms_up_to_twice() {
+    let mut cat = test_catalog();
+    let spec = cat.categories.get_mut(&Category::Four).unwrap();
+    spec.base_occupancy_bp.0[2] = 20_000;
+    assert_eq!(cat.validate(), Ok(()));
+    cat.categories
+        .get_mut(&Category::Four)
+        .unwrap()
+        .base_occupancy_bp
+        .0[2] = 20_001;
+    assert!(matches!(cat.validate(), Err(CatalogError::OutOfRange(_))));
+}
+
 #[test]
 fn catalog_rejects_profile_without_category_tables() {
     let mut cat = test_catalog();

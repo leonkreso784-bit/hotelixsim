@@ -172,6 +172,8 @@ impl Catalog {
     }
 
     /// Provjera P5: odbija katalog koji bi dao dijeljenje nulom, nepozitivne cijene ili skale izvan 0..=10 000.
+    /// Iznimka je bazna popunjenost: smije do 20 000 bp, jer potražnja u vrhu sezone smije biti veća od broja
+    /// soba (ADR-014 t. 1, kolovoz rasprodan); prodaju i dalje ograničavaju raspoložive sobe i osoblje.
     pub fn validate(&self) -> Result<(), CatalogError> {
         for (cat, spec) in &self.categories {
             let c = cat.code();
@@ -184,7 +186,7 @@ impl Catalog {
                 within(
                     i64::from(spec.base_occupancy_bp.get(m)),
                     1,
-                    10_000,
+                    20_000,
                     &format!("categories.{c}.base_occupancy_bp.{mc}"),
                 )?;
             }
