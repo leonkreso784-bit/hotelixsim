@@ -30,7 +30,8 @@ impl Profile {
         }
     }
 
-    /// Ciljane početne vrijednosti u stotinkama, redoslijed G, R, Z, O, F.
+    /// Ciljane početne vrijednosti u stotinkama, redoslijed G, R, Z, O, F (DEMO §5).
+    /// To su CILJANE vrijednosti, ne izračunate: testno proročanstvo za §11.1 (stvarni sloj ih mora pogoditi).
     pub fn starting_indices(self) -> IndexSet {
         let values = match self {
             Profile::A => [6_000, 7_500, 3_000, 5_000, 3_500],

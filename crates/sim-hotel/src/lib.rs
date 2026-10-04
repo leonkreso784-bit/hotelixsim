@@ -6,8 +6,17 @@
     clippy::default_numeric_fallback
 )]
 
+pub mod catalog;
 pub mod index;
+pub mod month;
 pub mod profile;
+pub mod state;
 
-pub use index::{Index, IndexSet, IndexValue};
+pub use catalog::{
+    ActionSpec, Catalog, CatalogError, Category, CategorySpec, Economy, LevelEffect, MechanicSpec,
+    ProfileSpec, TrainingEffect,
+};
+pub use index::{Index, IndexSet, IndexValue, NamedIndices};
+pub use month::{Month, MonthTable};
 pub use profile::Profile;
+pub use state::{GroupBlock, HotelState, Pending, turnover_bp};
