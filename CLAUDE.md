@@ -22,7 +22,8 @@ po `sokratstudy.f6/docs/plan/ZAVRSNICA.md` pa ide u održavanje).
 - **Kostur od kraja do kraja je gotov** (04.10., plan `docs/superpowers/plans/2026-10-04-kostur.md` + ledger s
   odlukama). Pokretanje: README → „Lokalni razvoj". Baza: zaseban klaster na **5433**, nakon restarta
   `bash scripts/baza.sh start` (sistemski PostgreSQL na 5432 se ne dira). pnpm samo kao `corepack pnpm`.
-- Sljedeće: plan „jezgra i alat za balans"; **Task 1 = ojačati brane determinizma** (vidi SLJEDECA_SESIJA §3).
+- Sljedeće: **1) preslagivanje dokumentacije po Sokratovom sustavu** (Leon 04.10., SLJEDECA_SESIJA §2b), zatim
+  **2) plan „jezgra i alat za balans"**, Task 1 = ojačati brane determinizma (§3).
 - Arhitektura: **Rust (jezgra + backend) + TypeScript (sučelje)** — **v2** u [docs/ARHITEKTURA.md](docs/ARHITEKTURA.md),
   rasprava u [docs/RASPRAVA_ARHITEKTURE.md](docs/RASPRAVA_ARHITEKTURE.md). Dizajn igre i opseg demoa:
   [docs/DEMO.md](docs/DEMO.md) (nacrt, čeka Leonovu provjeru domene). Plan: [docs/PLAN.md](docs/PLAN.md) (usklađen 04.10.).

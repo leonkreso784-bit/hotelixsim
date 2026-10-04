@@ -1,4 +1,4 @@
-# Sljedeća sesija — HotelixSim: jezgra igre i alat za balans
+# Sljedeća sesija — HotelixSim: preslagivanje dokumentacije, pa jezgra igre
 
 > Zapisano 2026-10-04 na kraju sesije. Radimo u **Claude Code dodatku za VS Code** (panel, ne terminal — Leon 04.10.;
 > Windows: Git Bash + PowerShell). Slike Leon šalje s `Ctrl + V` u panel.
@@ -33,20 +33,67 @@
   - Testovi: Rust 28, sučelje 10. Lokalni prolaz od kraja do kraja dokazan (zdravlje 200, profil D → 404,
     kriva lozinka baze → 503 bez pada, Vite proxy).
 
-**Ponovna provjera 04.10. (druga sesija, četiri agenta, samo čitanje):** lokalno sve iste naredbe kao CI izlaze s 0
-— fmt, clippy `-D warnings`, brana ovisnosti, `cargo test` (28), `cargo deny`, `sqlx prepare --check`,
-`pnpm check:api` (openapi svjež), lint, typecheck, test (10). Čitanjem CI-ja: vjerojatno zeleno; najveći rizik je
-da `setup-rust-toolchain` sam postavlja `RUSTFLAGS="-D warnings"` (lokalno clippy s istom zastavicom prolazi, pa je
-rizik mali) i sporost (`cargo install sqlx-cli` bez cachea, ~5–10 min).
-
-**Git:** `main`, ispred `origin/main` su samo commitovi predaje (push čeka Leonov OK). Grana `gradnja/kostur` je
+**Ponovna provjera 04.10. (druga sesija):** lokalno sve iste naredbe kao CI izlaze s 0; CI na GitHubu zelen
+(§5.1). **Git:** `main` = `origin/main` na kraju sesije (sve pushano uz Leonov OK). Grana `gradnja/kostur` je
 spojena i smije se obrisati (`git branch -d`).
 
 **Lokalna baza:** zaseban PostgreSQL 16 klaster u `C:\Users\leonk\AppData\Local\hotelixsim\pgdata`, **priključak 5433**
 (sistemski PostgreSQL na 5432 se ne dira — Leon ne zna njegovu lozinku). **Ne pali se sam nakon restarta:**
 `bash scripts/baza.sh start`. Pokretanje svega: README → „Lokalni razvoj".
 
-## 3 · Cilj sljedeće sesije: plan „jezgra i alat za balans" (PLAN.md, DEMO korak 2)
+## 2b · PRVI POSAO: preslagivanje dokumentacije po Sokratovom sustavu (prije plana jezgre)
+
+**Leon 04.10.:** *„ne sviđa mi se kako imamo dokumentaciju posloženu, moramo imat isti pristup kao i u Sokrat Studyju
+pošto će ovo biti veliki razvoj, mislim da dokumentacije ne idu dobro kroz sesiju."* Na prijedlog ispod: *„kasnije
+da"* → **odobreno, radi se na početku sljedeće sesije**, prije §3.
+
+**Dijagnoza (popis 04.10., 20 .md):** ista činjenica živi na 3–6 mjesta (stanje CI-ja, push, baza 5433, pravila rada,
+popis Leonovih memorija, domenska pitanja) pa sesija ažurira neka, a ostala zastare. Nema indeksa, nema dnevnika
+sesija, nema numeriranih odluka (CLAUDE.md citira „ADR-040" iz Sokrata), `SLJEDECA_SESIJA` se prepisuje i gubi
+povijest, a miješa uputu, stanje, plan, odluke, pitanja i pravila. Mrtve poveznice: samo 2, u `izvor/` (iz Sokrata).
+
+**Ciljni raspored (Sokrat 1:1, mape po ULOZI dokumenta; `git mv` da ostane povijest, sve poveznice ispraviti):**
+
+| Kamo | Što | Iz čega |
+|---|---|---|
+| `CLAUDE.md` | pravila + TRENUTNO stanje + pokazivači; **budžet znakova** (prijedlog 12 000) | sadašnji, očišćen od ponavljanja |
+| `docs/README.md` | **jedini indeks**: tablica mapa, „gdje što ide", svaki .md s jednom rečenicom; pravila: jedna činjenica jedno mjesto, duplikat se briše | novo |
+| `docs/SLJEDECA_SESIJA.md` | **samo** cilj sljedeće sesije, prvi korak, otvorena pitanja (kratko) — ostaje U REPOU (poboljšanje nad Sokratom, koji predaju drži u memoriji pa ona zastari) | ova datoteka, skraćena |
+| `docs/product/` | ŠTO gradimo: `VIZIJA`, `DEMO`, `SITUACIJE_S1b_S5-S8` (nacrt), `PITANJA_ZA_PROFESORE` — bez dnevničkih datuma (≤3 ISO datuma po datoteci) | docs/, nacrt/ |
+| `docs/architecture/` | KAKO je građeno: `ARHITEKTURA`, `RASPRAVA_ARHITEKTURE` | docs/ |
+| `docs/plan/` | `ROADMAP.md` (faze, iz `PLAN.md`) + **najviše jedan** aktivni plan (zaglavlje `**Status:** 🟩 AKTIVAN`) | PLAN.md |
+| `docs/workflow/` | KAKO radimo: lokalni razvoj, rad s agentima (SDD, model po poslu, paralelni agenti, ledger se kopira iz `.superpowers/sdd/`), pravila rada | README, CLAUDE, ova datoteka §6 |
+| `docs/records/` | POVIJEST, nikad izvor istine: `PROGRESS.md` (dnevnik sesija, najnoviji na vrhu, `## YYYY-MM-DD — naslov`), `CHANGELOG.md` (isporuke), `DECISIONS.md` (`## ADR-001 — naslov` + Datum/Status/Vezano/Kontekst/Odluka/Posljedice, najnoviji na vrhu), `BACKLOG.md` (47 odgođenih nalaza + otvoreno) | git log 03.–04.10., §4 ove datoteke, ARHITEKTURA odluke, odgodeni-nalazi |
+| `docs/research/` | 5 istraživanja | istrazivanje/ |
+| `docs/archive/` | gotovo, s pečatom `✅ ISPUNJEN datum`: plan kostura + ledger, izvorna ideja | superpowers/plans/, izvor/ |
+
+Prve odluke za `DECISIONS.md` (iz git loga i ovih dokumenata): ime HotelixSim · zaseban projekt (ADR-040 u Sokratu) ·
+Rust + TypeScript (ARHITEKTURA v2) · sve lokalno, Railway tek za pilot · baza na 5433 · radi bez pitanja / push samo
+uz OK · arhitektura kroz dokument, ne ankete · brane determinizma kao Task 1 · ankete samo za proizvodne odluke ·
+rad u VS Code panelu. Svaka s datumom i Leonovim citatom gdje postoji.
+
+**Brane u kodu (kao Sokratov `scripts/check-docs.js`, 359 r., + `tests/unit/check-docs-gate.test.js`):**
+`scripts/check-docs.mjs` pada na: mrtvu relativnu `.md` poveznicu · `.md` pod `docs/` koji nije u `docs/README.md` ·
+>1 aktivni plan u `docs/plan/` (ROADMAP se ne broji) · >3 ISO datuma u `docs/product/**` · CLAUDE.md iznad budžeta.
+Vlastiti test (svaka provjera mora pasti na namjerno pokvarenom primjeru) + korak u CI-ju + `pnpm check:docs`.
+Kasnije možda i `check:state` (tvrdnje o stanju u CLAUDE.md/plan provjerava s gitom — Sokrat `scripts/check-state.js`).
+
+**Komande:** `/newsession` (postoji) čita CLAUDE.md → `docs/SLJEDECA_SESIJA.md` → git; **nova `/kraj`**: upiše
+PROGRESS (+ CHANGELOG ako isporuka), ADR za svaku odluku, ažurira plan/arhivira gotovo, skrati „Stanje" u CLAUDE.md,
+prepiše SLJEDECA_SESIJA, pokrene `check:docs`, commit. Sokrat kraj radi ručno — zato mu predaja zastari.
+
+**SOKRATIS:** dodaj `.sokratis/profile.json` s `"plan_path": "docs/plan/ROADMAP.md"` (ostalo su zadane konvencije
+= gornji raspored) da Leon prati i HotelixSim. Pravila zdravlja i pragovi: `C:\Users\leonk\Documents\sokratis\crates\sokratis-core\src\docs.rs`
+i `profile.rs` (dnevnik zaostaje ≥2 dana iza koda = upozorenje; svaki dan kad se piše kod → unos u PROGRESS).
+
+**Uzorak za čitanje (samo čitanje):** Sokratov `docs/README.md`, `docs/records/DECISIONS.md` (format ADR),
+`docs/records/PROGRESS.md` (format unosa), `scripts/check-docs.js` — u `C:\Users\leonk\Documents\sokratstudy.f6`
+(⚠️ `.dev` je 86 commita iza `origin/main`; aktualno stablo je `f6`). Bolji primjer malog projekta: `sokratis/docs/README.md`.
+
+**Gotovo kad:** `pnpm check:docs` zelen i u CI-ju; svaki .md je u indeksu; nijedna činjenica o stanju nije na dva
+mjesta (grep: 5433, „CI", „push"); svježa sesija nakon `/newsession` zna sve bez ove dugačke datoteke.
+
+## 3 · DRUGI POSAO: plan „jezgra i alat za balans" (PLAN.md, DEMO korak 2)
 
 0. **Prije plana — rupe u specu DEMO.md** (revizija 04.10., račun ponovljen neovisno, oba POTVRĐENA):
    - **Profil C ne kreće s 50.** §5 (DEMO:264) i §2.1 (DEMO:165) traže 50 u svakom indeksu, ali iz §2.1 i §4 za
