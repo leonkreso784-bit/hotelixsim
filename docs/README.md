@@ -72,8 +72,7 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
-
-Aktivnog plana trenutno nema; sljedeći je „dnevnik, runde i red poslova" (DEMO korak 3) i nastaje ovdje.
+| [2026-10-05-dnevnik-runde.md](./plan/2026-10-05-dnevnik-runde.md) | 🟩 plan u gradnji — „dnevnik, runde i red poslova" (DEMO korak 3, 12 taskova, [ADR-015](./records/DECISIONS.md#adr-015)) |
 
 ## `workflow/` — kako radimo
 
