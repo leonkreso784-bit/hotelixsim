@@ -1,0 +1,14 @@
+export const hr = {
+  "app.title": "HotelixSim",
+  "status.loading": "Učitavam…",
+  "status.db.ok": "Baza: spojena",
+  "status.db.error": "Baza: nije dostupna",
+  "status.api.error": "Poslužitelj nije dostupan",
+  "status.events": "Događaja u dnevniku",
+  "profile.heading": "Početni indeksi — profil",
+  "index.G": "Zadovoljstvo gostiju",
+  "index.R": "Recenzije",
+  "index.Z": "Zaposlenici",
+  "index.O": "Operativa",
+  "index.F": "Financije",
+} as const;
