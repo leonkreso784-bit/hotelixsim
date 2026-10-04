@@ -96,13 +96,15 @@ Otvoreno za Leona: (a) je li 30 % ostalog prihoda previsok i treba li trošak hr
 
 ---
 
-## Rezultat kalibracije (alat za balans, jezgra 11/12)
+## Rezultat kalibracije (alat za balans)
 
 > Mijenjani su samo podaci u `content/hotel/catalog.json` i `content/hotel/profiles.json`; formule, testni katalog i
-> `scripts/oracle-jezgra.mjs` nisu dirani. Mjereno: `cargo run -q -p balance --release -- --seeds 1000 --check` → sve
-> provjere DEMO §11 prolaze (izlaz 0).
+> `scripts/oracle-jezgra.mjs` nisu dirani. Jedina izmjena koda u jezgri je granica provjere kataloga za baznu
+> popunjenost (1–10 000 → 1–20 000 bp), jer ADR-014 traži potražnju veću od broja soba. Mjereno:
+> `cargo run -q -p balance --release -- --seeds 1000 --check` → sve provjere DEMO §11 i nova provjera §7 S3 prolaze
+> (izlaz 0).
 
-### Što je promijenjeno i zašto
+### Kalibracija 1 (jezgra 11/12): što je promijenjeno i zašto
 
 | podatak | prije → poslije | zašto |
 |---|---|---|
@@ -121,80 +123,127 @@ Otvoreno za Leona: (a) je li 30 % ostalog prihoda previsok i treba li trošak hr
 Nepromijenjeno: cijene, popunjenost VI/VII/IX (DZS), trošak zaposlenog, CPOR, ostali prihod, mehanike, A ocjena 9,1 i
 blagajna 120 000 €, B ocjena 8,0, oprema 40, iskustvo 55, blagajna 600 000 €, plaća 97 %.
 
+### Kalibracija 2: kolovoz rasprodan, likvidnost bez gornje granice (ADR-014, jezgra 13/14)
+
+Polazno stanje poslije jezgre 13 (likvidnost bez granice, podaci iz kalibracije 1): padala su tri kriterija. B je
+kretao s F 83,08 (cilj 75), razlika medijana profila bila je 16,6 boda (A −13,19, B +3,41, C −6,22), a B je imao
+najveći medijan pod svim strategijama. Lekcija S3 bila je obrnuta (kolovoz +25 598 €, lipanj +19 184 €).
+
+| podatak | prije → poslije | zašto |
+|---|---|---|
+| bazna popunjenost VIII | 95,5 % → **106 %** | ADR-014 t. 1: potražnja veća od broja soba. Potražnja referentnog C je 3 937 soba-noći prema 3 720 raspoloživih, pa grupa istiskuje punih 175 soba-noći. Lekcija se okreće već na 100 % (kolovoz −8 720 €); 106 % ostavlja rezervu za pad ocjene |
+| plan sezonaca VIII / IX | 40 / 30 → **44 / 34** | rasprodan kolovoz dizao je maržu VIII na 51,0 %; četiri sezonca više (≈ 8 800 €) daju 49,3 %. Rujan je 34 jer plan smije pasti najviše 10 mjesečno |
+| najviše sezonaca (`seasonal_max`) | 40 → **50** | bez toga plan od 44 nije dopušten; igrač u kolovozu može zaposliti više |
+| B fiksni | 112 500 → **145 000 €** | glavni kompromis, vidi točku 3 ispod. Uz likvidnost bez granice svaki euro nižih fiksnih troškova svaki mjesec ulazi u blagajnu, pa F profila B raste sam od sebe |
+| B blagajna | 600 000 → **678 000 €** | F 74,98 (cilj 75) uz više fiksne troškove |
+| B stalni | 30 → **28** | s 30 stalnih B pobjeđuje i pod „lovcem na popunjenost"; s 28 ga lovac preoptereti (opterećenje iznad 1,8) |
+| B plaća | 97 → **95 %** | i dalje „malo ispod tržišne"; moral B-a sad kroz sezonu polako klizi prema nižem cilju ako igrač ništa ne radi |
+| A fiksni | 177 000 → **170 000 €** | viši od C (kredit za prošlu obnovu), ali manje, jer svaki euro razlike sad kroz sezonu ruši F |
+| A blagajna | 120 000 → **37 000 €** | F 34,98 (cilj 35): „malo novca" je sad razina blagajne, a ne razlika u fiksnim troškovima |
+| A stalni | 30 → **28** | prezaposleni ljudi: manje ljudi na istom poslu |
+| A iskustvo / oprema | 60 / 60 → **70 / 75** | ugled A dolazi od dobrog proizvoda (oprema iz obnove za koju još plaća kredit, iskusni ljudi). Viši cilj zadovoljstva usporava pad G i R kroz sezonu |
+| A opterećenje (početak) | 1,83 → **2,20** | uz bolju opremu i iskustvo drži O na 49,75 (cilj 50); i dalje „iznad 1,8" kako traži §5 |
+
+Nepromijenjeno: cijene, popunjenost VI/VII/IX, plan sezonaca VI/VII, trošak zaposlenog, CPOR, ostali prihod, sve
+mehanike i sve vrijednosti profila C; A zadovoljstvo, ocjena i moral; B zadovoljstvo, ocjena, moral, iskustvo, oprema.
+
+**Lekcija S3 (provjera §7, isti odgovor „kako je ponuđeno": 25 soba × 7 noći, −25 %, referentni C, zadani plan):**
+
+| | kolovoz | lipanj |
+|---|---|---|
+| prije (kolovoz 95,5 %) | +25 598 € | +19 184 € |
+| poslije (kolovoz 106 %) | **−9 953 €** | +19 184 € |
+
+U kolovozu grupa sad zauzima sobe koje bi platili individualni gosti po punoj cijeni, pa prihvaćanje gubi gotovo
+10 000 € GOP-a; u lipnju puni prazne sobe. Provjera u alatu za balans pada ako kolovoz donese koliko i lipanj ili više.
+
+**Obnova u lipnju (proba, zadani plan, srednji odgovor na situacije), napredak bez obnove → s obnovom:**
+
+| | A | B | C |
+|---|---|---|---|
+| kalibracija 1 (likvidnost do 100) | −1,05 → +7,63 | −7,21 → +1,49 | −0,26 → +10,12 |
+| jezgra 13 (bez granice, stari podaci) | −8,35 → −3,46 | +14,87 → +14,04 | +0,30 → +7,57 |
+| **kalibracija 2** | **−0,39 → +5,02** | **−3,03 → +2,03** | **−0,90 → +6,21** |
+| F na kraju sezone, bez → s obnovom | 29,53 → 23,39 | 77,72 → 70,83 | 48,59 → 42,09 |
+
+Obnova više nije besplatna: od 150 000 € F pada za 6–7 bodova do kraja sezone (prije je rastao). Ukupni učinak je i
+dalje pozitivan (+5,1 do +7,1), jer oprema (+25) i zadovoljstvo (+3) dižu O, G i R. Obnova je najbolja proba za A i
+C, ali nije dominantna: za B je bolja „plaća 115" (+3,41 prema +2,03).
+
 ### Izlaz alata (`render`, 1 000 sjemena)
 
 ```text
 == Početak (§11.1): G R Z O F ==
-  A: 60.00  75.00  29.75  49.25  35.09
-  B: 45.00  35.71  54.05  39.50  74.99
+  A: 60.00  75.00  29.75  49.75  34.98
+  B: 45.00  35.71  54.05  39.50  74.98
   C: 50.00  50.00  50.00  50.00  50.00
 == Ekonomija referentnog hotela (§11.2), marža GOP-a ==
   jun: 22.48 %
   jul: 38.65 %
-  aug: 49.12 %
-  sep: 22.24 %
-  sezona VI–IX: 35.90 %
+  aug: 49.29 %
+  sep: 20.33 %
+  sezona VI–IX: 35.81 %
   kolovoz: grupa istiskuje individualne goste: da
+  S3 grupa, dobit GOP-a od prihvaćanja: kolovoz -9 953 EUR, lipanj 19 184 EUR (§7: kolovoz < lipanj)
 == Medijan napretka po profilu i strategiji (§11.3), bodova ==
-  A stedisa    -10.62
-  A brizni     8.16
-  A lovac      -4.99
-  A nasumicni  -3.88
-  B stedisa    -18.27
-  B brizni     8.22
-  B lovac      -5.96
-  B nasumicni  -6.69
-  C stedisa    -12.02
-  C brizni     13.93
-  C lovac      -4.04
-  C nasumicni  -2.76
-  profil A (sve strategije): -4.99
-  profil B (sve strategije): -5.96
-  profil C (sve strategije): -4.04
+  A stedisa    -4.93
+  A brizni     14.41
+  A lovac      -7.86
+  A nasumicni  -5.09
+  B stedisa    -2.56
+  B brizni     25.70
+  B lovac      -5.90
+  B nasumicni  -3.21
+  C stedisa    -7.54
+  C brizni     20.86
+  C lovac      -4.32
+  C nasumicni  -3.06
+  profil A (sve strategije): -4.93
+  profil B (sve strategije): -2.56
+  profil C (sve strategije): -4.32
 == Probe krajnjih radnji (§11.4), napredak A / B / C ==
-  cijena 60 %              A=-24.95  B=-17.08  C=-16.81
-  cijena 150 %             A=-10.81  B=-19.35  C=-12.53
-  marketing 40 000 EUR     A=-0.56  B=-6.92  C=0.28
-  sezonci +korak           A=-3.07  B=-8.73  C=-3.26
-  sezonci −korak svaki mjesec A=-26.50  B=-31.45  C=-24.07
-  plaća 115                A=4.90  B=2.99  C=6.32
-  plaća 90                 A=-9.42  B=-12.85  C=-8.87
-  obuka Full               A=2.02  B=-3.80  C=3.30
-  održavanje Intensive     A=2.09  B=-3.68  C=3.17
-  održavanje Deferred      A=-4.69  B=-12.22  C=-3.94
-  odgovaranje da           A=0.27  B=-5.68  C=1.90
-  obnova u lipnju          A=7.63  B=1.49  C=10.12
+  cijena 60 %              A=-18.29  B=-23.83  C=-17.78
+  cijena 150 %             A=-14.05  B=-18.38  C=-14.85
+  marketing 40 000 EUR     A=0.44  B=-2.73  C=-0.55
+  sezonci +korak           A=-13.62  B=-12.06  C=-10.95
+  sezonci −korak svaki mjesec A=-30.35  B=-19.50  C=-17.85
+  plaća 115                A=0.29  B=3.41  C=2.53
+  plaća 90                 A=-5.76  B=-3.84  C=-6.82
+  obuka Full               A=-0.18  B=-2.64  C=1.24
+  održavanje Intensive     A=-0.26  B=-2.17  C=1.14
+  održavanje Deferred      A=-1.64  B=-4.46  C=-3.64
+  odgovaranje da           A=1.10  B=-1.39  C=1.03
+  obnova u lipnju          A=5.02  B=2.03  C=6.21
 == Ponovljivost (§11.5): da ==
 Sve provjere prolaze.
 ```
 
 ### Za Leonovu provjeru
 
-1. **Kolovoz 95,5 % umjesto dogovorenih najviše 95 %.** Istiskivanje traži potražnju > 3 720 − 175 = 3 545
-   soba-noći. Referentni C do kolovoza blago gubi ocjenu (8,40 → 8,37, jer mu je cilj zadovoljstva ≈ 67–68, a kreće s
-   70), pa je f_ugled 0,9984. Uz 95 % potražnja je 3 528 i grupa ne istiskuje nikoga; najmanja vrijednost koja radi je
-   ≈ 95,5 % (potražnja 3 547). Istiskivanje je pritom **tanko**: samo ≈ 2 soba-noći kod pasivnog C (kod igrača s boljom
-   ocjenom ili marketingom više). Za vidljiviju lekciju: 96 % daje ≈ 20 soba-noći (marža VIII 49,3 %).
-2. **Lipanj i rujan ≈ 22 %, kolovoz ≈ 49 %.** Sezona je 35,9 %, blizu donje granice 35 %. Raspon po mjesecima ostaje
-   (nalaz 1 u §3.2): drži ga sezonski hod cijene i popunjenosti uz stalne troškove. Ako želiš sezonu bliže sredini
-   cilja, najjeftinije je podići srpanj (sada 78 %, a kolovoz 95,5 % — taj skok je velik).
-3. **Pravednost prolazi, dominacija je blizu:** medijani profila −4,99 / −5,96 / −4,04 (razlika 1,92, prag 5). Nijedna
-   proba nije dominantna, ali „obnova u lipnju" je najbolja za A i C; od dominacije je dijeli samo B (kod B je bolja
-   „plaća 115").
-4. **Lekcija S3 je danas OBRNUTA (završni pregled).** DEMO §7 uči „ista ponuda je dobra u lipnju, a loša u kolovozu".
-   Mjerenje (`balance`, referentni C, zadani plan, 175 soba-noći uz −25 %, mjesečni GOP s grupom minus bez nje) kaže
-   suprotno: prihvaćanje u **kolovozu dobiva +25 598 €**, u **lipnju +19 184 €**. Kod A je kolovoz +8 336 €, kod B
-   +26 009 € (B pritom ne istiskuje nijednog gosta). Provjera istiskivanja prolazi na ≈ 2 soba-noći, što je premalo da
-   bi mijenjalo račun: prodana soba-noć po −25 % u kolovozu još uvijek donosi više od marginalnog troška. Dok se to ne
-   promijeni, student koji uvijek prihvaća ponudu „kako je" dobiva bolji rezultat u kolovozu nego u lipnju, a to je
-   upravo ono što lekcija tvrdi da je pogreška. Odluka je Leonova; poluge:
-   - viša popunjenost u kolovozu (sada 95,5 %; 96 % daje ≈ 20 istisnutih soba-noći, vidi točku 1),
-   - manji popust u ponudi (25 % je preduboko samo ako je kolovoz pun),
-   - niži ostali prihod grupe i/ili dodatni trošak grupe (hrana, osoblje, čišćenje) — danas grupa donosi samo sobe,
-   - kolovoz u kojem je kapacitet zaista tijesan (istiskivanje u stotinama soba-noći, ne u dvije).
-   Alat sada ispisuje oba iznosa u retku „S3 grupa, dobit GOP-a od prihvaćanja" (samo izvještaj, bez praga).
-5. **Obnova je praktički besplatna (završni pregled).** Do rujna svi profili imaju dovoljno gotovine da se likvidnost
-   (Z i F) zaglavi na 100, a investicija (capex) i kamate su izvan GOP-a, pa GOPPAR ne vidi 150 000 € obnove.
-   Izmjereno: F **raste** s obnovom (A 42,72 → 43,62; B 61,26 → 62,26; C 50,00 → 50,95), a napredak je A −1,05 → +7,63,
-   B −7,21 → +1,49, C −0,26 → +10,12. Poluga nije cijena obnove nego formula likvidnosti/F (pitanje za ADR): treba
-   da potrošena gotovina i otplata ulaze u F i prije nego što se zaglavi na 100.
+1. **Kolovoz je rasprodan (106 %).** Referentni C ima potražnju 3 937 soba-noći za 3 720 soba i prodaje sve. Kod B
+   (ocjena 8,0) potražnja je ≈ 3 867, pa grupa kod njega istiskuje samo dio od 175 soba-noći, kod A (ocjena 9,1) sve.
+   To je namjerno: što je hotel traženiji, to je grupa s popustom skuplja.
+2. **Marža: lipanj 22,5 %, srpanj 38,7 %, kolovoz 49,3 %, rujan 20,3 %, sezona 35,8 %.** Sezona je blizu donje granice
+   35 %; rujan je pao (22,2 → 20,3 %) jer plan smije pustiti najviše 10 sezonaca, pa rujan nosi 34 umjesto 30.
+3. **B ima fiksne troškove samo 3 % niže od C (145 000 prema 150 000 €).** §5 kaže „niži fiksni troškovi". S
+   likvidnošću bez granice razlika u fiksnim troškovima svaki mjesec ulazi u blagajnu i F profila B raste sam od sebe;
+   ocjena napretka to još pojača, jer B kreće s F 75 i gore ima samo 25 bodova prostora. Izmjereno (sve ostalo kao
+   sada, blagajna B svaki put postavljena na F 75):
+
+   | B fiksni | medijan A / B / C | razlika | provjere |
+   |---|---|---|---|
+   | 112 500 € (kalibracija 1) | −4,93 / +3,76 / −4,32 | 8,69 | B najbolji pod svim strategijama, obnova dominantna |
+   | 130 000 € | −4,93 / +3,26 / −4,32 | 8,19 | B najbolji pod svim strategijama |
+   | 140 000 € | −4,93 / −0,69 / −4,32 | 4,24 | prolazi, tijesno |
+   | **145 000 €** | **−4,93 / −2,56 / −4,32** | **2,37** | **prolazi** |
+   | 150 000 € (= C) | −4,93 / −4,34 / −4,32 | 0,61 | prolazi, ali B više nije „niži" |
+
+   Ako priča traži jasno niže fiksne troškove za B, to se ne može samo podacima: trebala bi promjena formule F ili
+   ocjene napretka, a to je nova odluka.
+4. **A dobiva dio napretka od početnog opterećenja.** A kreće s opterećenjem 2,20 (stanje prije sezone), a s planom
+   sezonaca u lipnju radi na ≈ 1,6, pa kazna opterećenja u O nestane sama od sebe. Sa starim podacima A (30 stalnih,
+   oprema i iskustvo 60, opterećenje 1,83) A pada na medijan −12,96 i razlika profila je 10,4 boda: A-ov ugled (G 60,
+   R 75) kroz sezonu klizi prema razini C, a likvidnost bez granice više ne vraća F kao prije. Prepoznaješ li hotel
+   koji je ugledan zbog dobre opreme i iskusnih ljudi, ali ih je premalo?
+5. **Obnova je najbolja proba za A i C** (vidi tablicu gore): sad košta 6–7 bodova F, ali se u istoj sezoni isplati.
+   Je li to namjera (obnova od 150 000 € kao dobra odluka već u prvoj sezoni) ili treba skuplja ili slabija obnova?
