@@ -573,7 +573,7 @@ fn euros(cents: i64) -> String {
     let whole = (abs / 100).to_string();
     let mut grouped = String::new();
     for (i, ch) in whole.chars().enumerate() {
-        if i > 0 && (whole.len() - i) % 3 == 0 {
+        if i > 0 && (whole.len() - i).is_multiple_of(3) {
             grouped.push(' ');
         }
         grouped.push(ch);

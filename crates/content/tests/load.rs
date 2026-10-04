@@ -72,10 +72,8 @@ struct TempContent(std::path::PathBuf);
 
 impl TempContent {
     fn new(tag: &str, situations: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!(
-            "hotelixsim-content-{tag}-{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("hotelixsim-content-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let guard = TempContent(dir);
         for f in ["catalog.json", "profiles.json"] {
