@@ -3,3 +3,7 @@ openapi.json text eol=lf
 packages/api-client/src/schema.d.ts text eol=lf
 *.rs text eol=lf
 *.sql text eol=lf
+*.sh text eol=lf
+.env.example text eol=lf
+*.mjs text eol=lf
+.sqlx/*.json text eol=lf

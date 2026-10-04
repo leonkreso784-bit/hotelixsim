@@ -13,22 +13,23 @@ Privatno · autor: Leon Kreso.
 Treba: Rust 1.98 (rustup sam povuče verziju iz `rust-toolchain.toml`), Node 24, PostgreSQL 16 (samo programi; baza
 radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432).
 
-1. Jednom: izradi lokalnu bazu. U Git Bashu, iz korijena projekta (zamijeni `<korisnik>` svojim Windows imenom):
+1. Jednom: izradi lokalnu bazu. U Git Bashu, iz korijena projekta (ništa ne treba zamjenjivati, `$USERNAME` je tvoje Windows ime):
    ```bash
    PGBIN="/c/Program Files/PostgreSQL/16/bin"
-   mkdir -p /c/Users/<korisnik>/AppData/Local/hotelixsim
-   echo hotelixsim_lokalno > /c/Users/<korisnik>/AppData/Local/hotelixsim/pwfile.txt
-   "$PGBIN/initdb.exe" -D C:/Users/<korisnik>/AppData/Local/hotelixsim/pgdata -U hotelixsim \
-     --pwfile=C:/Users/<korisnik>/AppData/Local/hotelixsim/pwfile.txt -A scram-sha-256 -E UTF8 --locale=C
+   D="C:/Users/$USERNAME/AppData/Local/hotelixsim"
+   mkdir -p "$D"
+   echo hotelixsim_lokalno > "$D/pwfile.txt"
+   "$PGBIN/initdb.exe" -D "$D/pgdata" -U hotelixsim --pwfile="$D/pwfile.txt" -A scram-sha-256 -E UTF8 --locale=C
    bash scripts/baza.sh start
    PGPASSWORD=hotelixsim_lokalno "$PGBIN/createdb.exe" -h localhost -p 5433 -U hotelixsim hotelixsim
-   rm /c/Users/<korisnik>/AppData/Local/hotelixsim/pwfile.txt
+   rm "$D/pwfile.txt"
    ```
    Svaki dan (nakon ponovnog pokretanja računala): samo `bash scripts/baza.sh start`
    (`bash scripts/baza.sh status` pokazuje radi li; `bash scripts/baza.sh stop` je gasi).
 2. Jednom: `cp .env.example .env` i `corepack pnpm install`.
-3. API (Git Bash): `set -a; source .env; set +a; cargo run -p server -- migrate; cargo run -p server -- serve`
-4. Sučelje: `corepack pnpm --filter @hotelixsim/web dev` → <http://localhost:5173>
+3. API (Git Bash, prvi terminal): `set -a; source .env; set +a; cargo run -p server -- migrate && cargo run -p server -- serve`
+   `serve` radi u prvom planu i drži terminal zauzetim dok ga ne zaustaviš (Ctrl+C).
+4. Sučelje (drugi terminal): `corepack pnpm --filter @hotelixsim/web dev` → <http://localhost:5173>
 5. Provjere prije commita: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,
    `corepack pnpm typecheck`, `corepack pnpm test`.
