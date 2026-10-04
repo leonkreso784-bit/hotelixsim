@@ -106,9 +106,9 @@ Ispravak:
 
 - **Upit 1 (Leon, 04.10.):** AI ostaje sastavni dio simulacije, barem za demo. Što se događa kad se AI isključi
   definira se kasnije, prema tome što profesori žele. → Pitanje je dodano u
-  [PITANJA_ZA_PROFESORE.md](../product/PITANJA_ZA_PROFESORE.md) (pitanje 22).
+  [PITANJA_ZA_PROFESORE.md](../product/PITANJA_ZA_PROFESORE.md) (pitanje 15).
 - **Upit 2 (Leon, 04.10.):** prihvaćena preporuka. Student o drugima vidi ukupnu ocjenu i pet indeksa kroz runde,
-  bez stvarnih brojki i odluka. Vrijedi dok profesori ne odgovore na pitanje 14 (i imena ili anonimno).
+  bez stvarnih brojki i odluka. Vrijedi dok profesori ne odgovore na pitanje 9 (i imena ili anonimno).
 - **Upit 3:** ugrađeno u nacrt v2 (krug 2).
 
 ---

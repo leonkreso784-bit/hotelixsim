@@ -1,88 +1,102 @@
 # HotelixSim — pitanja za profesore
 
-> **Nacrt (2026-10-04).** Leon ga pregledava prije nego što ode profesorima.
-
-## Ukratko o projektu
-
-HotelixSim je simulacija vođenja hotela za studente. Svaki student dobije hotel i vodi ga kroz sezonu. Sezona je
-podijeljena u runde (u demou je runda jedan mjesec; za pilot je ritam otvoren, vidi pitanje 3). Tijekom runde stižu situacije, poput nezadovoljnog gosta, kvara,
-problema s osobljem ili prilike na tržištu. Student na njih odgovara izborom ponuđenog odgovora ili svojim riječima,
-a umjetna inteligencija (AI) procjenjuje njegov odgovor. Na kraju runde svim se hotelima istovremeno izračunaju
-posljedice odluka.
-
-Ne pobjeđuje onaj tko najviše zaradi, nego onaj tko je **svoj hotel najviše unaprijedio u odnosu na početak**.
-Svi hoteli kreću jednako jaki, ali s drukčije raspoređenim snagama: jedan ima odlične recenzije i loše financije,
-drugi obrnuto i tako dalje.
-
-Da bi igra služila Vašem kolegiju, a ne samo nama, trebaju nam Vaši odgovori na pitanja u nastavku.
+> **Spremno za slanje** nakon Leonova pregleda. Šalje se sve od „Poštovani" do potpisa; bilješka „Za nas" na dnu
+> se ne šalje.
 
 ---
 
-## ★ Najprije — za prvi razgovor
+Poštovani,
 
-Bez ovih odgovora ne možemo dovršiti temelje igre.
+zovem se Leon Kreso i student sam Hospitality Managementa na FMTU-u. Izrađujem HotelixSim, simulaciju vođenja hotela
+za studente: svaki student dobije hotel, kroz sezonu rješava situacije iz prakse i donosi odluke, a umjetna
+inteligencija (AI) glumi goste i zaposlenike i procjenjuje odgovore. Ne pobjeđuje onaj tko najviše zaradi, nego onaj
+tko je svoj hotel najviše unaprijedio u odnosu na početak. Demo je u izradi i rado bih Vam ga pokazao za desetak dana,
+a prije toga bih volio čuti Vaše mišljenje, kako bi igra stvarno služila nastavi.
 
-1. **Na kojem kolegiju i na kojoj godini studija** biste koristili igru? Bila bi obavezan dio kolegija ili dodatna
+Pitanja su poredana po važnosti. Dovoljni su i kratki odgovori, a i odgovor na samo dio pitanja puno mi pomaže.
+
+## Kolegij i ocjena
+
+1. Na kojem kolegiju i na kojoj godini studija biste koristili igru? Bi li bila obavezan dio kolegija ili dodatna
    aktivnost?
-2. **Igra li svaki student sam ili u timu?** Ako u timu: koliko članova i trebaju li članovi imati uloge
-   (npr. direktor, financije, ljudski resursi)?
-3. **Koliko traje igra?** Koliko tjedana i koliko rundi? Je li Vam tjedna runda prirodan ritam (u demou je runda mjesec)?
-4. **Ulazi li rezultat u ocjenu kolegija**, i ako da, kako?
-5. **Što je za Vas „dobar hotelski menadžer"?** Koje znanje i vještine igra mora nagraditi, a koje navike kazniti?
-6. **Koje hotelske pokazatelje studenti moraju vidjeti i razumjeti** (npr. popunjenost, prosječna cijena sobe,
-   prihod po raspoloživoj sobi, troškovi rada, fluktuacija osoblja, ocjene gostiju)?
-7. **Što biste morali vidjeti u demou** da kažete „ovo želim na svom kolegiju"?
+2. Bi li rezultat iz igre ulazio u ocjenu kolegija, i ako da, kako?
+3. Što biste morali vidjeti u demou da kažete „ovo želim na svom kolegiju"?
+
+## Tijek igre
+
+4. Bi li svaki student igrao sam ili u timu? Ako u timu, koliko članova i trebaju li imati uloge (npr. direktor,
+   financije, ljudski resursi)?
+5. Koliko bi igra trajala i koliko rundi bi imala? U demou je jedna runda jedan mjesec sezone (lipanj–rujan), a za
+   nastavu se pitamo bi li runda mogla trajati tjedan dana.
+
+## Što igra treba nagraditi
+
+6. Što je za Vas dobar hotelski menadžer? Koje znanje i vještine igra mora nagraditi, a koje navike kazniti?
+7. Koje hotelske pokazatelje studenti moraju vidjeti i razumjeti (npr. popunjenost, prosječna cijena sobe, prihod po
+   raspoloživoj sobi, troškovi rada, fluktuacija osoblja, ocjene gostiju)?
+8. Napredak mjerimo u pet jednako važnih područja: zadovoljstvo gostiju, recenzije, zadovoljstvo zaposlenika,
+   operativa i financije. Biste li neko područje vrednovali više, i nedostaje li neko?
+9. Pretpostavili smo da student o drugima vidi samo ljestvicu (ukupnu ocjenu i pet područja), a ne njihove odluke i
+   brojke. Odgovara li Vam to, i treba li ljestvica biti s imenima ili anonimna?
+
+## Brojke u igri
+
+U demou student vodi hotel s četiri zvjezdice i 120 soba na Opatijskoj rivijeri, otvoren od lipnja do rujna.
+Ove tri brojke nismo mogli provjeriti u izvorima:
+
+10. Prihod od hrane, pića i ostalih usluga računamo kao 30 % prihoda od soba. Je li to realno za takav hotel?
+11. Ukupni trošak poslodavca po zaposlenom računamo 2 200 € mjesečno, a hotel ima 30 stalnih i 20 sezonskih
+    radnika. Jesu li te brojke blizu stvarnosti, i koliko sezonaca biste očekivali u vrhuncu sezone?
+12. U jednoj situaciji agencija nudi grupu od 25 soba na 7 noći u kolovozu, uz 25 % popusta na redovnu cijenu
+    (175 € → oko 131 €). Je li takva ponuda realna, i koliki popust agencije stvarno traže u vrhuncu sezone?
+
+## Situacije i umjetna inteligencija
+
+13. Možete li opisati nekoliko stvarnih situacija iz prakse koje biste htjeli vidjeti u igri? Biste li htjeli
+    pregledati kriterije po kojima se ocjenjuju odgovori, ili čak biti suautor situacija?
+14. Odgovor koji student napiše svojim riječima AI procjenjuje prema unaprijed zadanim kriterijima, a posljedice u
+    brojkama uvijek računaju pravila igre, ne AI. Pod kojim uvjetima biste vjerovali takvoj procjeni?
+15. Profesor će moći isključiti AI za svoju grupu, pa situacije dolaze iz pripremljenih predložaka. Što tada s
+    odgovorima koje student piše svojim riječima: da ih Vi ocjenjujete ručno ili da se tada ne koriste?
+
+## Ako stignete
+
+16. Je li hotel iz demoa (četiri zvjezdice, 120 soba, Opatijska rivijera, sezonski) dobar primjer za studente, ili
+    biste radije drukčiji (veličina, kategorija, cjelogodišnji)?
+17. Situacije pokrivaju osoblje, recenzije, financije, nabavu, održavanje i sigurnost. Koja su područja najvažnija
+    za Vaš kolegij, i nedostaje li neko?
+18. Imate li stvarne podatke koje smijemo koristiti (sezonalnost, tipični troškovi, cijene, popunjenost hotela u
+    regiji)?
+19. Koliko studenata ima jedna grupa, i trebaju li se različite grupe natjecati međusobno?
+20. Bi li se igralo na nastavi, kod kuće ili oboje, i koliko vremena tjedno student smije potrošiti na igru?
+21. Nakon svake runde AI mentor studentu objasni što je bilo dobro, a što loše. Koliko detaljno to treba biti, i
+    smije li mentor savjetovati i prije odluke?
+22. Planiramo da profesor pokreće i završava igru, bira koliko situacija stiže i koliko su zahtjevne, može svima
+    zadati istu situaciju i vidi zašto je svaki hotel tamo gdje jest. Nedostaje li Vam nešto, i trebate li vidjeti
+    sve odluke i obrazloženja svakog studenta?
+23. Pretpostavili smo da student koji smatra da je nepravedno ocijenjen može uložiti prigovor Vama, a Vi možete
+    ispraviti ocjenu. Je li to u redu?
+24. Koliko vremena tjedno biste mogli posvetiti vođenju igre?
+25. Igra je na hrvatskom, a pripremljena je i za prijevod. Treba li engleska verzija, npr. za Erasmus studente?
+26. Tko na fakultetu još mora odobriti korištenje (katedra, dekanat, informatička služba), i treba li se prijavljivati
+    fakultetskim AAI@EduHr računom?
+27. Koliko dugo se smiju čuvati podaci studenata nakon kolegija, i treba li posebna suglasnost studenata?
+28. Kada bi mogao biti prvi probni semestar, i s kojom grupom?
+
+Hvala Vam na vremenu! Ako Vam je lakše razgovarati nego pisati, rado ću doći na konzultacije.
+
+Srdačan pozdrav,
+Leon Kreso
 
 ---
 
-## Studenti i tijek igre
+## Za nas (ne šalje se)
 
-8. Koliko studenata ima jedna grupa? Igra li više grupa istovremeno, i trebaju li se grupe natjecati međusobno?
-9. Igra li se na nastavi, kod kuće ili oboje?
-10. Koliko vremena tjedno student treba ili smije potrošiti na igru?
-11. Trebaju li studenti dobivati obavijest na mobitel kad stigne nova situacija?
-
-## Ocjenjivanje i natjecanje
-
-12. Ocjenjujemo **napredak u odnosu na početno stanje**, a ne zaradu. Slažete li se s tim načelom?
-13. Ocjena se gradi iz pet područja: **zadovoljstvo gostiju, recenzije, zadovoljstvo zaposlenika, operativna
-    učinkovitost i financije.** Jesu li sva jednako važna? Nedostaje li neko?
-14. **Što student smije vidjeti o drugima?** Prijedlog: ljestvicu s ukupnom ocjenom i napretkom u pet područja,
-    bez tuđih odluka i detaljnih brojki. Treba li ljestvica biti s imenima ili anonimna?
-15. Ako student smatra da je nepravedno ocijenjen, smije li uložiti prigovor, i tko o njemu odlučuje?
-
-## Sadržaj i realnost
-
-16. Kakav hotel studenti vode: veličina (broj soba), kategorija (zvjezdice), lokacija (npr. Kvarner), sezonski
-    ili cjelogodišnji?
-17. Koja su područja najvažnija za Vaš kolegij: osoblje, recenzije, financije, nabava, održavanje, sigurnost?
-    Nedostaje li neko?
-18. Imate li **stvarne podatke** koje smijemo koristiti (sezonalnost, tipični troškovi, cijene, popunjenost
-    hotela u regiji)?
-19. Možete li nam opisati **nekoliko stvarnih situacija iz prakse** koje biste htjeli vidjeti u igri?
-20. Želite li biti **suautor** situacija i pravila igre? Ako da, koliko vremena biste mogli uložiti?
-
-## Umjetna inteligencija (AI)
-
-21. Kakav je Vaš stav prema tome da AI procjenjuje odgovore koje student napiše svojim riječima? Pod kojim uvjetima
-    biste mu vjerovali?
-22. Želite li moći **isključiti AI** za svoju grupu? Ako je isključen, trebate li Vi ručno ocjenjivati slobodne
-    odgovore ili da se tada slobodni odgovori ne koriste?
-23. Želite li sami birati **koliko situacija** stiže po rundi i **koliko su zahtjevne**?
-24. Nakon svake situacije AI studentu objasni što je bilo dobro, a što loše. Koliko detaljno to treba biti?
-    Smije li AI savjetovati i **prije** odluke, ili samo nakon nje?
-25. Igra je na hrvatskom. Treba li i engleska verzija (npr. za Erasmus studente)?
-
-## Uloga profesora
-
-26. Što želite kontrolirati tijekom igre: pokretanje i završetak, iznenadne događaje za sve („šokove"), količinu
-    i težinu situacija?
-27. Što želite vidjeti o svakom studentu: samo rezultat ili i sve njegove odluke i obrazloženja?
-28. Koliko vremena tjedno možete posvetiti vođenju igre?
-
-## Praktično i formalno
-
-29. Kako se studenti prijavljuju: **fakultetskim AAI@EduHr računom** ili običnom e-poštom?
-30. Koliko dugo se smiju čuvati podaci studenata nakon kolegija? Treba li posebna suglasnost studenata?
-31. Tko još mora odobriti korištenje (katedra, dekanat, informatička služba)?
-32. Kada bi bio pilot (koji semestar) i s kojom grupom?
+- **Kamo idu odgovori:** 10–12 → [DEMO](./DEMO.md) „Za Leonovu provjeru" (točke 2–4) i [BACKLOG](../records/BACKLOG.md)
+  „Otvoreno za Leona"; 8 → DEMO §8 (težine); 9 → [ARHITEKTURA](../architecture/ARHITEKTURA.md) §12; 15 → ARHITEKTURA
+  §8 („Bez AI-ja"); 4, 5, 26, 27 → ARHITEKTURA §1 i §19.
+- **Brojevi su promijenjeni.** Stare reference treba uskladiti: DEMO §8 „pitanje 13" → sada **8**; ARHITEKTURA §12 i
+  [RASPRAVA](../architecture/RASPRAVA_ARHITEKTURE.md) „pitanje 14" → sada **9**; ARHITEKTURA §8 i RASPRAVA
+  „pitanje 22" → sada **15**.
+- **Prije slanja (samo Leon):** godina studija uz potpis; kome se šalje (pojedinačno — tada „Vi" velikim slovom —
+  ili zajednički, tada „vi"); spominje li se profesor koji je već zainteresiran.

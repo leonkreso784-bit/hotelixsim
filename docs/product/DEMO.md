@@ -437,7 +437,7 @@ napredak = 100 × Σ w_i × g_i                  w_i = 0,2 za svih pet indeksa �
 
 - Hotel A s recenzijama 75 i hotel B s recenzijama 35 tako su usporedivi: +5 bodova A-u vrijedi 0,2 prostora, a B-u
   0,08.
-- Težine w su pitanje za profesore (pitanje 13). Do odgovora su jednake [PROC].
+- Težine w su pitanje za profesore (pitanje 8). Do odgovora su jednake [PROC].
 - **Zatvaranje sezone:** nakon rujna se **naplate otvoreni tragovi**. Na primjer, odgođeno održavanje spušta opremu
   kao da je kvar nastupio. Bez toga bi se isplatilo „rezati sve u zadnjem mjesecu".
 - Ljestvica prikazuje napredak nakon svake runde (ARHITEKTURA §12: ostali vide ukupnu ocjenu i pet indeksa).

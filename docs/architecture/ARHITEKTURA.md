@@ -483,7 +483,7 @@ Slobodan potez je **zasebna naredba** (`POST /v1/hotels/{id}/actions`), a ne odg
 **Sloboda je u izrazu, ne u posljedicama.** Kad bi AI smio izmišljati posljedice, pali bi K1 i K2. Katalog zato
 raste iz stvarnih poteza studenata.
 
-**Bez AI-ja** (zasad samo zapisano, odluka s profesorima, pitanje 22): situacije iz predložaka, likovi s napisanim
+**Bez AI-ja** (zasad samo zapisano, odluka s profesorima, pitanje 15): situacije iz predložaka, likovi s napisanim
 dijalozima, mentor s napisanim objašnjenjima; što sa slobodnim tekstom — otvoreno.
 
 ---
@@ -620,7 +620,7 @@ Okvirni resursi:
   pripadnost igri ili hotelu. Svaki slučaj upotrebe provjerava pravo prije rada; za svaku ulogu postoje testovi.
   Baza ne nosi poslovna prava (bez RLS-a) — jedno mjesto istine.
 - **Što student vidi o drugima (Leon, 04.10.):** ukupnu ocjenu i pet indeksa kroz runde. Tuđe stvarne brojke,
-  odluke, tekstovi i tragovi su privatni. Vrijedi dok profesori ne odgovore (pitanje 14, i imena ili anonimno).
+  odluke, tekstovi i tragovi su privatni. Vrijedi dok profesori ne odgovore (pitanje 9, i imena ili anonimno).
   Pravilo se provodi u sloju `app` i ima test po ulozi: API nikad ne vraća tuđe privatne podatke.
 
 ---
