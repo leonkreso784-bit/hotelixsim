@@ -52,7 +52,8 @@ promjena nosi uzrok). Arhitektura toga nije bila zapisana; ovo su pretpostavke s
 12. **Server pri startu učitava i provjerava sadržaj** (`HOTELIXSIM_CONTENT`, zadano `content/hotel`) i ne kreće s
     pokvarenim katalogom; **migracije se pri startu ne pokreću** (`migrate` ostaje zasebna naredba, kasnije korak
     isporuke na Railwayu), jer automatska migracija s više procesa vodi u utrku.
-13. **Profil: sva četiri hotela dobivaju isti profil, izabran iz sjemena** (ljestvica tako uspoređuje samo odluke).
+13. **Profil: hoteli kreću s različitim profilima** (Leon 05.10., anketa): igrač dobiva profil iz sjemena, tri robota
+    dobivaju A, B i C u rasporedu iz sjemena. Demo tako pokazuje bit ocjene — napredak od vlastitog početka, ne zarada.
     Imena: „Tvoj hotel", „Štediša", „Brižni", „Lovac na popunjenost".
 14. **Pravo pristupa u `app`**: član igre = gost koji vodi hotel u njoj; vlasnik vidi stvarne brojke, plan, situacije i
     feed; član vidi tuđe samo kroz ocjenu i pet indeksa; ostali 403, bez kolačića 401. Test po ulozi.

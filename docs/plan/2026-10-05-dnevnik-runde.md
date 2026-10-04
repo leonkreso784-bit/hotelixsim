@@ -900,8 +900,10 @@ for (const [pkg, banned] of Object.entries(PURE)) {
     `pub struct PlanLimits { pub price_min_cents: i64, pub price_max_cents: i64, pub marketing_max_cents: i64,
     pub seasonal_min: u16, pub seasonal_max: u16, pub wage_min_pct: u16, pub wage_max_pct: u16,
     pub renovation_available: bool }` i `plan_limits(&HotelState, Month, &Catalog) -> Result<PlanLimits, GameError>`.
-  - Pravila nove igre (ADR-015 t. 13): profil = `[A, B, C][Rng::derive(seed, &[label("game:profile")]).range(0, 3)]`,
-    **isti za sva četiri hotela**; slotovi: 1 čovjek „Tvoj hotel", 2 robot `stedisa` „Štediša", 3 robot `brizni`
+  - Pravila nove igre (ADR-015 t. 13, Leon 05.10.: **različiti profili**): igrač dobiva
+    `profile_at(Rng::derive(seed, &[label("game:profile")]).range(0, 3))`; roboti (slotovi 2–4) dobivaju
+    `profile_at(rot + slot)` uz `rot = Rng::derive(seed, &[label("game:robot-profiles")]).range(0, 3)`, pa su među
+    robotima **sva tri profila** A, B, C (`profile_at(n)`: `n % 3` → 0 A, 1 B, 2 C); slotovi: 1 čovjek „Tvoj hotel", 2 robot `stedisa` „Štediša", 3 robot `brizni`
     „Brižni", 4 robot `lovac` „Lovac na popunjenost"; mjeseci `[Jun, Jul]`.
   - Kocka robota: plan `Rng::derive(seed, &[label("game:robot-plan"), mjesec.position(), slot])`, odgovor
     `Rng::derive(seed, &[label("game:robot-answer"), mjesec.position(), slot, label(šifra)])` (sve `u64`).
@@ -956,7 +958,10 @@ fn new_game_writes_created_then_robot_moves_for_june() {
     let GameEvent::GameCreated(c) = &log[0].event else { panic!() };
     assert_eq!(c.ruleset_id, c.snapshot.fingerprint());
     assert_eq!(c.months, [MonthCode::Jun, MonthCode::Jul]);
-    assert!(c.hotels.iter().all(|h| h.profile == c.hotels[0].profile), "isti profil za sve");
+    let mut robot_profiles: Vec<&str> = c.hotels[1..].iter().map(|h| h.profile.as_str()).collect();
+    robot_profiles.sort_unstable();
+    assert_eq!(robot_profiles, ["A", "B", "C"], "roboti pokrivaju sva tri profila");
+    assert!(["A", "B", "C"].contains(&c.hotels[0].profile.as_str()));
     assert_eq!(c.hotels[0].controller, Controller::Human { guest_id: GUEST });
 }
 
@@ -1277,12 +1282,15 @@ pub fn new_game(
     guest: GuestId,
     hotel_ids: [HotelId; 4],
 ) -> Result<Vec<(Actor, GameEvent)>, GameError> {
-    let pick = Rng::derive(seed, &[label("game:profile")]).range(0, 3);
-    let profile = match pick {
-        0 => Profile::A,
-        1 => Profile::B,
-        _ => Profile::C,
-    };
+    fn profile_at(n: u64) -> Profile {
+        match n % 3 {
+            0 => Profile::A,
+            1 => Profile::B,
+            _ => Profile::C,
+        }
+    }
+    let profile = profile_at(Rng::derive(seed, &[label("game:profile")]).range(0, 3));
+    let rot = Rng::derive(seed, &[label("game:robot-profiles")]).range(0, 3);
     let [h1, h2, h3, h4] = hotel_ids;
     let mut hotels = vec![HotelSetup {
         hotel_id: h1,
@@ -1296,7 +1304,7 @@ pub fn new_game(
             hotel_id: id,
             slot,
             name: name.into(),
-            profile: profile.code().into(),
+            profile: profile_at(rot + u64::from(slot)).code().into(),
             controller: Controller::Robot { strategy: code.into() },
         });
     }
