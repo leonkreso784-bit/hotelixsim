@@ -18,8 +18,8 @@ pub struct Report {
     pub reference_margin_bp: Vec<(Month, i32)>,
     pub reference_season_margin_bp: i32,
     pub august_displacement: bool,
-    /// Samo izvještaj, bez praga: dobit GOP-a (centi) od prihvaćanja grupe iz S3 u kolovozu i u lipnju
-    /// (GOP s grupom − GOP bez nje, ostalo jednako, zadani plan, referentni profil). `None` bez S3.
+    /// Dobit GOP-a (centi) od prihvaćanja ponude iz S3 „kako je ponuđeno" u kolovozu i u lipnju (GOP s grupom −
+    /// GOP bez nje, ostalo jednako, zadani plan, referentni profil). Provjera §7: kolovoz < lipanj. `None` bez S3.
     pub s3_gop_gain_cents: Option<S3Gain>,
     pub medians: Vec<(Profile, Strategy, i32)>,
     pub profile_medians: Vec<(Profile, i32)>,
@@ -95,25 +95,8 @@ fn reference_margins(cat: &Catalog) -> Result<RefMargins, ResolveError> {
     Ok((out, margin_bp(gop, rev)?, before_jun, before_aug))
 }
 
-/// Grupa iz S3 koja se prodaje u kolovozu (prvi ponuđeni odgovor s takvom grupom).
-fn s3_august_mechanic(s3: &SituationTemplate) -> Option<Mechanic> {
-    s3.answers
-        .iter()
-        .flat_map(|a| a.mechanics.iter())
-        .find(|m| {
-            matches!(
-                m,
-                Mechanic::GroupBooking {
-                    accept: true,
-                    month: Month::Aug,
-                    ..
-                }
-            )
-        })
-        .cloned()
-}
-
-/// Ponuda „kako je" iz S3: prihvaćena kolovoška grupa s najvećim popustom (mjerilo dobiti).
+/// Ponuda „kako je ponuđeno" iz S3 (ADR-014): prihvaćena kolovoška grupa s najvećim popustom, tj. bez
+/// pregovora (25 soba × 7 noći uz −25 %). Istu ponudu koriste i provjera istiskivanja i dobit GOP-a.
 fn s3_offer_mechanic(s3: &SituationTemplate) -> Option<Mechanic> {
     s3.answers
         .iter()
@@ -183,7 +166,7 @@ fn august_displacement(
     let Some(s3) = situations.iter().find(|t| t.code == "S3") else {
         return Ok(false);
     };
-    let Some(mech) = s3_august_mechanic(s3) else {
+    let Some(mech) = s3_offer_mechanic(s3) else {
         return Ok(false);
     };
     let Some(group) = s3_group(cat, s3, &mech, Month::Aug, before_aug.category)? else {
@@ -503,6 +486,17 @@ pub fn failures(report: &Report, _cat: &Catalog) -> Vec<String> {
         f.push("§11.2 istiskivanje: grupa u kolovozu ne smanjuje individualne goste".to_string());
     }
 
+    // §7 S3 (ADR-014): ista ponuda je dobra u lipnju, a loša u rasprodanom kolovozu
+    match &report.s3_gop_gain_cents {
+        Some(g) if g.august_cents >= g.june_cents => f.push(format!(
+            "§7 S3: prihvaćanje grupe u kolovozu donosi {} GOP-a, a u lipnju {} (kolovoz mora biti manji)",
+            euros(g.august_cents),
+            euros(g.june_cents)
+        )),
+        Some(_) => {}
+        None => f.push("§7 S3: nema ponude grupe za kolovoz, lekcija se ne može provjeriti".to_string()),
+    }
+
     // §11.3 pravednost
     let hi = report.profile_medians.iter().map(|(_, v)| *v).max();
     let lo = report.profile_medians.iter().map(|(_, v)| *v).min();
@@ -606,15 +600,11 @@ pub fn render(report: &Report) -> String {
     ));
     match &report.s3_gop_gain_cents {
         Some(g) => s.push_str(&format!(
-            "  S3 grupa, dobit GOP-a od prihvaćanja: kolovoz {}, lipanj {} (samo izvještaj)
-",
+            "  S3 grupa, dobit GOP-a od prihvaćanja: kolovoz {}, lipanj {} (§7: kolovoz < lipanj)\n",
             euros(g.august_cents),
             euros(g.june_cents)
         )),
-        None => s.push_str(
-            "  S3 grupa, dobit GOP-a od prihvaćanja: nema grupe u kolovozu
-",
-        ),
+        None => s.push_str("  S3 grupa, dobit GOP-a od prihvaćanja: nema grupe u kolovozu\n"),
     }
     s.push_str("== Medijan napretka po profilu i strategiji (§11.3), bodova ==\n");
     for (p, st, v) in &report.medians {
