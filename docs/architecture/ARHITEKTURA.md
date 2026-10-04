@@ -293,16 +293,16 @@ hotelixsim/
 ├─ crates/
 │  ├─ engine/                  generičko: kocka, dnevnik, životni ciklus runde, sučelje simulacije
 │  ├─ sim-hotel/               hotelska domena: stanje, indeksi, mehanike, okidači, raspored, ocjena
-│  ├─ content/                 učitavanje i provjera kataloga; otisak verzije pravila  (postoji)
+│  ├─ content/                 učitavanje i provjera kataloga; otisak verzije pravila
 │  ├─ app/                     slučajevi upotrebe + „portovi" (sučelja prema bazi i AI-ju)
 │  ├─ store/                   PostgreSQL: dnevnik, projekcije, red poslova, platformske tablice
 │  ├─ ai/                      AI pružatelji, upute (promptovi), provjera izlaza
 │  ├─ api/                     Axum rukovatelji, prijava, OpenAPI
 │  ├─ server/                  izvršna datoteka: sastavlja sve; načini serve / work / migrate
-│  ├─ balance/                 alat: masovne simulacije i ponovni obračun s novim pravilima  (postoji)
+│  ├─ balance/                 alat: masovne simulacije i ponovni obračun s novim pravilima
 │  └─ wasm/                    (kasnije) jezgra za preglednik
 ├─ content/
-│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON; JSON Schema je u drugom valu)  (postoji)
+│  └─ hotel/                   katalog, predlošci, profili A/B/C, koeficijenti (JSON; JSON Schema je u drugom valu)
 ├─ prompts/                    upute za AI, verzionirane
 ├─ apps/
 │  └─ web/                     React sučelje (student + profesor)
@@ -312,6 +312,8 @@ hotelixsim/
 ├─ openapi.json                GENERIRANO, u repozitoriju (da se vidi svaka promjena API-ja)
 └─ docs/
 ```
+
+Postoje: `engine`, `sim-hotel`, `content`, `app`, `store`, `api`, `server`, `balance` i `content/hotel/`; ostalo je plan.
 
 ### 6.2 Smjer ovisnosti — pravilo koje se ne krši
 

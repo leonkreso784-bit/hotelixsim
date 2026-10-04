@@ -10,8 +10,6 @@ Izvor „L37" = redak u [ledgeru kostura](../archive/2026-10-04-kostur-ledger.md
 Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; svaki je mali.
 
 **Brane i kocka (`engine`)**
-- [jezgra] **`derive_streams_are_independent` je još slab** — provjerava samo tok T1; dodati `assert_ne` T1≠T2, redoslijed oznaka, drugo sjeme. (Task 2 #1, L42)
-- [jezgra] **Grana odbacivanja u `range` se ne izvršava** — mali rasponi je ne pogađaju; trebaju izvor koji je izaziva. (Task 2 #2, L43)
 - [jezgra] **`div_round` javlja `Overflow` za |a| > i128::MAX/2** iako rezultat stane (sigurno, izvan raspona igre); dopisati doc o rasponu i testove (veliki a koji taman stane, `add(magnitude, b)`). (Task 2)
 - [jezgra] **Probe mutacija:** nema baznog prolaza prije mutacija (CI ga pokriva clippyjem); neprobane stavke `DefaultHasher`, `Instant::now`, `env::var_os`, `default_numeric_fallback`; float-sufiks grep ne gleda `tests/`; nema obrade Ctrl-C (lokalno može ostaviti mutiran `lib.rs`). (Task 1)
 
@@ -86,9 +84,9 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Inkubator** — prijava do **16.11.**: nosi li se Sokrat ili simulacija. Odgovor: [ROADMAP](../plan/ROADMAP.md).
 - [leon] **Potvrda ARHITEKTURE v2** — ROADMAP kaže „Leon ih je pregledao", a ARHITEKTURA kaže „prijedlog dok Leon ne potvrdi"; potvrditi ili ostaviti raspravu otvorenom, pa uskladiti oba. Odgovor: [ARHITEKTURA](../architecture/ARHITEKTURA.md).
 - [leon] **S3: lekcija je tanka** — istiskivanje u kolovozu ≈ 2 sobe-noći uz popunjenost 95,5 %; 96 % daje ≈ 20 (marža kolovoza ≈ 49,3 %) ili blaži skok srpanj→kolovoz. Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru".
-- [leon] **Sezonska marža 35,9 % blizu donje granice (35 %)**, lipanj i rujan ≈ 22 %. Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md).
+- [leon] **Sezonska marža 35,9 % blizu donje granice (35 %)**, lipanj i rujan ≈ 22 %. Odgovor: [ADR-013](DECISIONS.md#adr-013) t. 5 i [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md).
 - [leon] **„Obnova u lipnju" je najbolja proba za A i C** — gotovo dominantna radnja (A +7,63, C +10,12). Treba li je poskupiti ili ograničiti? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md).
-- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike.
+- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike. Odgovor: `content/hotel/situations.json`, [ADR-013](DECISIONS.md#adr-013) t. 7.
 - [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS.md#adr-013).
 
 ## Drugi val (poslije demoa)
