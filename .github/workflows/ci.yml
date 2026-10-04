@@ -30,6 +30,8 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: node scripts/check-core-deps.mjs
+      - run: node scripts/probe-mutacija.mjs
+      - run: git diff --exit-code
       - run: cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked
       # prepare --check traži bazu s primijenjenim migracijama
       - run: cargo sqlx migrate run --source crates/store/migrations
