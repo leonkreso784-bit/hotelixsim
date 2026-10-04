@@ -34,5 +34,5 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,
    `corepack pnpm typecheck`, `corepack pnpm test`.
 
-Nakon promjene SQL upita: `cargo sqlx prepare --workspace` i commitaj `.sqlx/`.
+Gradnja koristi spremljene podatke iz `.sqlx/` (`SQLX_OFFLINE=true` u `.env`), pa ne treba živu bazu. Nakon promjene SQL upita (baza mora raditi): `cargo sqlx prepare --workspace` i commitaj `.sqlx/`; alat se instalira jednom: `cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked`.
 Nakon promjene API-ja: `corepack pnpm gen:api` i commitaj `openapi.json` i `schema.d.ts`.
