@@ -90,6 +90,27 @@ timovi · obavijesti na mobitel · engleski (tekstovi su ipak u prijevodima, ARH
 **Hotel:** 4*, Opatijska rivijera, **120 soba**, otvoren sezonski. Mjerilo je Liburnia Riviera Hoteli 2024.:
 popunjenost 67 %, ADR 132 €, trošak osoblja oko 35 % prihoda [IZVOR].
 
+### 2.0 Kategorija (Leon, 04.10.)
+
+**Kategorija (3*, 4*, 5*) je svojstvo hotela, a ne snaga.** Mijenja cijene, očekivanja gostiju, osjetljivost na cijenu,
+broj zaposlenih po sobi i troškove. Sve brojke koje ovise o standardu su **tablice po kategoriji u katalogu**
+(podaci, ne kod). Svaki indeks se mjeri prema referentnom hotelu **iste kategorije** (§4), pa je hotel s 3* koji je
+dobar za svoj standard jednako dobar kao takav hotel s 5*. To je načelo iz VIZIJA §2: „zvjezdice ne znače da je
+netko jači, nego drugačiji standard".
+
+| kategorija | lipanj | srpanj | kolovoz | rujan | elastičnost ε |
+|---|---|---|---|---|---|
+| 3* | 95 € | 120 € | 130 € | 95 € | −1,0 |
+| **4*** | **135 €** | **165 €** | **175 €** | **135 €** | **−0,8** |
+| 5* | 220 € | 280 € | 300 € | 220 € | −0,5 |
+
+Leon je cijene i osjetljivost potvrdio kao „otprilike da" [PROC]. Poredak elastičnosti (jeftiniji hotel osjetljiviji)
+slaže se s istraživanjem: economy −0,31, luksuz −0,15 [IZVOR]. Ostale brojke po kategoriji (zaposleni po sobi,
+trošak zaposlenog, CPOR, fiksni troškovi, očekivana ocjena) dobivaju tablicu u planu jezgre; zasad su zadane samo za 4*.
+
+**U demou su svi hoteli 4*** (Leon, 04.10.). Jezgra podržava sve tri kategorije od početka, a miješane kategorije
+ulaze kad alat za balans pokaže da je mjerenje prema vlastitoj kategoriji fer.
+
 Pouka iz postojećih simulacija: previše varijabli prekida vezu između odluke i rezultata. Demo zato ima **malo
 varijabli, a svaka ima jasan uzrok**.
 
@@ -155,15 +176,15 @@ taj mjesec (§2.1).
 ```text
 raspoloživo     = (120 − sobe izvan funkcije) × D
 potražnja       = 120 × D × bazna_popunjenost(mj) × f_cijena × f_ugled × f_marketing
-f_cijena        = 1 + ε × (cijena / cijena_ref − 1)              ε = −0,8, ograničeno na 0,3–1,6
+f_cijena        = 1 + ε × (cijena / cijena_ref − 1)              ε i cijena_ref po kategoriji (§2.0), ograničeno na 0,3–1,6
 f_ugled         = 1 + 0,0054 × (10 × ocjena_portala − 84)
 f_marketing     = 1 + 0,15 × M / (M + 15 000 €)                   M = mjesečni marketing
 kapacitet_osoblja = zaposleni × D × 2,4
 prodano         = min(grupe + potražnja, raspoloživo, kapacitet_osoblja)
 ```
 
-- **Elastičnost ε = −0,8** je kalibracijska varijabla [PROC]. Izvor daje −0,14 do −0,31 za urbane hotele u SAD-u
-  [IZVOR], ali turistički 4* hotel uz jaku konkurenciju osjetljiviji je na cijenu. Linearni oblik je namjeran: lako se
+- **Elastičnost** (za 4* ε = −0,8, tablica u §2.0) je kalibracijska varijabla [PROC]. Izvor daje −0,14 do −0,31 za
+  urbane hotele u SAD-u [IZVOR], ali turistički hotel uz jaku konkurenciju osjetljiviji je na cijenu. Linearni oblik je namjeran: lako se
   objasni studentu i računa se cijelim brojevima.
 - **Ugled:** +1 bod ocjene na ljestvici 0–100 daje +0,54 % potražnje, prema Cornellovoj studiji [IZVOR]. Ocjena 8,4
   je neutralna.
@@ -483,8 +504,8 @@ Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 
 ## Za Leonovu provjeru — najnesigurnije pretpostavke
 
-1. Elastičnost cijene −0,8 (§3.1). Je li turistički gost na Kvarneru toliko osjetljiv na cijenu?
-2. Referentne cijene po mjesecima (§2.1) i ostali prihod 30 % prihoda soba.
+1. ~~Elastičnost cijene~~ → riješeno 04.10.: po kategoriji (§2.0), Leon „otprilike da".
+2. ~~Referentne cijene po mjesecima~~ → riješeno 04.10. (§2.0). Otvoreno ostaje: ostali prihod 30 % prihoda soba.
 3. Trošak zaposlenog 2 200 € mjesečno i omjer 30 stalnih prema 20 sezonaca.
 4. Lekcija u S3: 25 % popusta grupi u kolovozu. Je li to realna ponuda agencije?
 5. Kriteriji rubrika u S1–S4. To je tvoje područje i ondje si ti mjerilo.
