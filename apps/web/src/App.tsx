@@ -1,5 +1,5 @@
 import type { ApiClient } from "@hotelixsim/api-client";
-import { type MessageKey, t } from "@hotelixsim/i18n";
+import { indexLabel, t } from "@hotelixsim/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { formatIndex } from "./format";
 
@@ -38,18 +38,14 @@ export function App({ client }: { client: ApiClient }) {
               ? t("status.db.ok")
               : t("status.db.error")}
       </p>
-      {health.data?.events != null && (
-        <p>
-          {t("status.events")}: {health.data.events}
-        </p>
-      )}
-      <h2>
-        {t("profile.heading")} {PROFILE}
-      </h2>
+      {health.data?.events != null && <p>{t("status.events", { count: health.data.events })}</p>}
+      <h2>{t("profile.heading", { profile: PROFILE })}</h2>
+      {indices.isPending && <p>{t("status.indices.loading")}</p>}
+      {indices.isError && <p>{t("status.indices.error")}</p>}
       <ul>
         {indices.data?.indices.map((i) => (
           <li key={i.code}>
-            <span>{t(`index.${i.code}` as MessageKey)}</span> <strong>{formatIndex(i.hundredths)}</strong>
+            <span>{indexLabel(i.code)}</span> <strong>{formatIndex(i.hundredths)}</strong>
           </li>
         ))}
       </ul>

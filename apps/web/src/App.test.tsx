@@ -47,6 +47,7 @@ describe("App", () => {
       return jsonResponse(404, {});
     });
     expect(await screen.findByText("Baza: spojena")).toBeTruthy();
+    expect(await screen.findByText("Događaja u dnevniku: 0")).toBeTruthy();
     expect(await screen.findByText("Zadovoljstvo gostiju")).toBeTruthy();
     expect(screen.getByText("Financije")).toBeTruthy();
     expect(screen.getAllByText("50")).toHaveLength(5);
@@ -59,6 +60,16 @@ describe("App", () => {
       return jsonResponse(200, { profile: "C", indices: [] });
     });
     expect(await screen.findByText("Baza: nije dostupna")).toBeTruthy();
+  });
+
+  it("javlja nedostupne indekse kad indeksi vrate 500, a zdravlje je u redu", async () => {
+    renderWith(async (req) => {
+      const url = new URL(req.url);
+      if (url.pathname === "/v1/health") return jsonResponse(200, { database: "ok", events: 0 });
+      return jsonResponse(500, {});
+    });
+    expect(await screen.findByText("Baza: spojena")).toBeTruthy();
+    expect(await screen.findByText("Indeksi nisu dostupni")).toBeTruthy();
   });
 
   it("javlja nedostupan poslužitelj kad mreža padne", async () => {
