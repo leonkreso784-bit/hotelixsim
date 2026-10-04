@@ -22,10 +22,15 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [jezgra] **Kazna opterećenja duplicirana** (`indices.rs`, `resolve.rs`) — izdvojiti `load_penalty()`; `indices.rs` `try_into` daje pogrešnu varijantu greške ako `SEASON` promijeni duljinu (nedostižno). (Task 7)
 - [jezgra] **Retci `Staff/Turnover` nose +departures** (zamijenjeni, broj ljudi se ne mijenja) pa zbroj redaka ≠ promjena broja — razmotriti zaseban `Cause` ili znak za ekran profesora. (Task 5)
 - [jezgra] **Mehanike:** granica ocjene bez testa (nijedna mehanika ne mijenja ocjenu), oprema bez granice; nema testa granice morala, `BadGroup` ni greške u drugoj od više situacija; TDD crveni korak preskočen u Tasku 6. (Task 6)
-- [jezgra] **Učitavanje sadržaja:** privremene mape u testovima se ne brišu ako test padne (nema `Drop` čuvara); nema provjere dupliciranih kodova situacija ni praznih odgovora, a duplicirani ključevi u mapama = zadnji pobjeđuje. (Task 8)
+- [jezgra] **Učitavanje sadržaja:** duplicirani ključevi u mapama = zadnji pobjeđuje. (Task 8; privremene mape sada brišu `Drop` čuvari, a prazni odgovori i duplicirane šifre se odbijaju)
 
 **Alat za balans (`balance`)**
-- [jezgra] **`margin_bp` tiho vraća 0 kad je prihod ≤ 0;** `--seeds 0` se prihvaća; testovi pokrivaju samo granu §11.1 u `failures`, nema testa izlaznog koda `--check`; tolerancija §11.1 tvrdo u kodu, `_cat` neiskorišten. (Task 10)
+- [jezgra] **`margin_bp` tiho vraća 0 kad je prihod ≤ 0;** testovi pokrivaju samo granu §11.1 u `failures`, nema testa izlaznog koda `--check`; tolerancija §11.1 tvrdo u kodu, `_cat` neiskorišten. (Task 10)
+- [jezgra] **Linije objašnjenja nisu zbrojive za ekran profesora:** moral miješa cilj i stvarno, nema `Cause::Bound` retka za granice (clamp), komponente cilja zadovoljstva nedostaju. Riješiti prije plana ekrana. (Završni pregled)
+- [jezgra] **`RefTable` ne bilježi svoju kategoriju** — pozivatelj mora paziti da je tablica prave kategorije. (Završni pregled)
+- [jezgra] **`wage_cents % 100` nije provjereno** — `div_floor` tiho gubi centе. (Završni pregled)
+- [jezgra] **`price_min_pct > 0` nije provjereno** u katalogu. (Završni pregled)
+- [jezgra] **Provjera pravednosti je zapravo jedan robot** dok ne postoje okidači iz §9: 3 od 4 strategije su determinističke. (Završni pregled)
 
 ## Odgođeni nalazi — [dnevnik]
 
