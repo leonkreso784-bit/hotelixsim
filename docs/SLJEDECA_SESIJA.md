@@ -18,7 +18,7 @@
 
 ## 2 · Gdje smo (04.10. navečer)
 
-**Gotovo, spojeno u `main` i pushano na GitHub** (04.10., Leonov OK; CI rezultat — vidi §5):
+**Gotovo, spojeno u `main` i pushano na GitHub** (04.10., Leonov OK; CI zelen — vidi §5.1):
 
 - Arhitektura v2, `DEMO.md` (dizajn igre + kategorije hotela), tri istraživanja u `docs/istrazivanje/`.
 - **Kostur od kraja do kraja** po planu `docs/superpowers/plans/2026-10-04-kostur.md`, 8 taskova, svaki s pregledom,
@@ -28,7 +28,7 @@
     `api` (Axum 0.8 + utoipa 6, OpenAPI 3.1), `server` (serve | migrate | openapi).
   - `openapi.json` → generirani TS klijent `@hotelixsim/api-client` → `packages/i18n` → jedan React ekran `apps/web`.
   - Brane: clippy (HashMap/HashSet/sat, float/arith lintovi), `scripts/check-core-deps.mjs`, cargo-deny, CI datoteka
-    `.github/workflows/ci.yml` (pokrenuta pushem 04.10., rezultat nije viđen — §5.1).
+    `.github/workflows/ci.yml` (prvi CI 04.10. ZELEN — §5.1).
   - Testovi: Rust 28, sučelje 10. Lokalni prolaz od kraja do kraja dokazan (zdravlje 200, profil D → 404,
     kriva lozinka baze → 503 bez pada, Vite proxy).
 
@@ -115,10 +115,12 @@ Svaka ima cijenu ako je kriva; sve su u gitu i mogu se vratiti.
 
 ## 5 · Otvoreno za Leona (pitaj na početku, kratko)
 
-1. **CI na GitHubu** — `main` je pushan 04.10. (Leonov OK), pa je CI prvi put pokrenut. Rezultat nismo vidjeli
-   (repo je privatan, `gh` nije instaliran, GitHub MCP nije radio). Pitaj Leona da otvori karticu **Actions** na
-   GitHubu ili mu daj upute; ako je crveno, prvo popravi CI. Svaki idući push i dalje traži njegov izričit OK.
-   Uz to: **push commitova predaje** (`git log origin/main..main`) — tek na njegov OK.
+1. **CI na GitHubu — ZELEN** (viđeno 04.10., run 37167540215: `rust` 4m51s, `web` 1m44s). Upozorenje: Node 20
+   akcije (`checkout@v4`, `setup-node@v4`) su zastarjele → podići na novije verzije u nekom tasku CI-ja; `ubuntu-latest`
+   prelazi na Ubuntu 26 od 19.10. **CI se gleda sam:** `gh` JE instaliran i prijavljen, samo nije na PATH-u Bash
+   alata → `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim`. GitHub MCP pada jer
+   `GITHUB_PERSONAL_ACCESS_TOKEN` nije postavljen (prazno zaglavlje `Bearer`) — ne treba, `gh` je dovoljan.
+   **Push commitova predaje** (`git log origin/main..main`) — tek na Leonov izričit OK.
 2. **Pitanja o domeni** — popis 1:1 iz DEMO.md „Za Leonovu provjeru" (brojevi kao ondje). **Ne blokiraju kod**:
    brojke su podaci u katalogu, gradi s pretpostavkom i zamijeni kad odgovori.
    - 2 (ostatak): ostali prihod (hrana, piće, usluge) = 30 % prihoda soba — realno?
