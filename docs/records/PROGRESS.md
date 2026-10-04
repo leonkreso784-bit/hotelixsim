@@ -4,6 +4,15 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-04 — Jezgra igre i alat za balans (DEMO korak 2), rok demoa ~14.10.
+
+- Leon: rok demoa ~14.10., prvo profesorovih 15 minuta ([ADR-012](DECISIONS.md#adr-012)); pitanja za profesore pregledana i spremna za slanje (15 + 13).
+- Plan jezgre s 12 taskova + 2 nakon završnog pregleda (sad u [archive/](../archive/2026-10-04-jezgra.md), ledger uz njega). Pretpostavke [ADR-013](DECISIONS.md#adr-013) 🟨; zlatne vrijednosti iz neovisnog modela `scripts/oracle-jezgra.mjs`.
+- Izgrađeno kroz subagente (sonnet izvođači i pregledi, opus kalibracija i završni pregled), svaki task pregledan: brane determinizma s mutacijskim probama u CI-ju, `engine::calc`, obračun mjeseca, mehanike S1–S4, centrirani indeksi i ocjena, crate `content`, roboti, crate `balance`, kalibracija.
+- Završni pregled našao: lekcija S3 radi naopako, obnova besplatna. Leon (anketa): kolovoz rasprodan, likvidnost bez gornje granice ([ADR-014](DECISIONS.md#adr-014)). Sad S3: kolovoz −9 953 €, lipanj +19 184 €.
+- Provjereno: 106 testova, `balance --seeds 1000 --check` „Sve provjere prolaze", clippy, fmt, ovisnosti jezgre, mutacijske probe (0 proboja), check:docs, lint, check:api, typecheck, web test — sve EXIT=0, lokalno i na spojenom mainu. Spojeno u `main` i pushano (Leonov OK).
+- Otvoreno za Leona: [BACKLOG](BACKLOG.md) „Otvoreno za Leona" (sezonci 50, B fiksni, A opterećenje, obnova za A/C, S3/S4 odgovori, ADR-013).
+
 ## 2026-10-04 — Preslagivanje dokumentacije po Sokratovom sustavu (ADR-011)
 
 - Povod: Leon nije zadovoljan slaganjem dokumentacije („dokumentacije ne idu dobro kroz sesiju") pa dokumenti idu po ulozi u mape `product`, `architecture`, `plan`, `workflow`, `records`, `research`, `archive` ([ADR-011](DECISIONS.md#adr-011)). Premješteno s `git mv` (povijest ostaje), 33 relativne poveznice prepisane skriptom.
