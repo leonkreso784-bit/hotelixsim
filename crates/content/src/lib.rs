@@ -370,6 +370,12 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
     let mut out = Vec::new();
     for s in list {
         let ctx = format!("situacija {}", s.code);
+        if out.iter().any(|t: &SituationTemplate| t.code == s.code) {
+            return invalid(format!("{ctx}: šifra se ponavlja"));
+        }
+        if s.answers.is_empty() {
+            return invalid(format!("{ctx}: nema ponuđenih odgovora"));
+        }
         let mut answers = Vec::new();
         for a in s.answers {
             if !(1..=5).contains(&a.quality) {

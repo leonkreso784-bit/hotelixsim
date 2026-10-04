@@ -66,3 +66,55 @@ fn group_discount_over_100_percent_is_rejected() {
     );
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+/// Privremeni direktorij sadržaja; briše se i kad test padne.
+struct TempContent(std::path::PathBuf);
+
+impl TempContent {
+    fn new(tag: &str, situations: &str) -> Self {
+        let dir = std::env::temp_dir().join(format!(
+            "hotelixsim-content-{tag}-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let guard = TempContent(dir);
+        for f in ["catalog.json", "profiles.json"] {
+            std::fs::copy(content::repo_dir().join(f), guard.0.join(f)).unwrap();
+        }
+        std::fs::write(guard.0.join("situations.json"), situations).unwrap();
+        guard
+    }
+}
+
+impl Drop for TempContent {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+#[test]
+fn situation_without_answers_is_rejected() {
+    let t = TempContent::new(
+        "ea",
+        r#"[{"code": "SX", "month": "jun", "title": "t", "answers": []}]"#,
+    );
+    let err = content::load(&t.0).unwrap_err();
+    assert!(
+        matches!(&err, content::ContentError::Invalid(m) if m.contains("SX")),
+        "{err:?}"
+    );
+}
+
+#[test]
+fn duplicate_situation_code_is_rejected() {
+    let s = std::fs::read_to_string(content::repo_dir().join("situations.json")).unwrap();
+    let mut list: Vec<serde_json::Value> = serde_json::from_str(&s).unwrap();
+    let first = list.first().cloned().unwrap();
+    list.push(first);
+    let t = TempContent::new("dup", &serde_json::to_string(&list).unwrap());
+    let err = content::load(&t.0).unwrap_err();
+    assert!(
+        matches!(&err, content::ContentError::Invalid(m) if m.contains("S1")),
+        "{err:?}"
+    );
+}
