@@ -224,7 +224,7 @@ export function rawIndices(s, goppar, labor, refGoppar, cat = TEST_CAT) {
     0n,
     10000n,
   );
-  const liq = s.cash <= 0n ? 0n : clamp(divRound(5000n * s.cash, s.fixed + labor), 0n, 10000n);
+  const liq = s.cash <= 0n ? 0n : divRound(5000n * s.cash, s.fixed + labor);
   return {
     G: s.satisfaction,
     R: divRound((s.rating - 700n) * 10000n, 280n),

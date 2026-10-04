@@ -245,7 +245,7 @@ kao neuspjeh. To je isto načelo kao STR-ov RGI [IZVOR].
 ```text
 GOPPAR_indeks = 50 + 50 × (GOPPAR / GOPPAR_ref(mj) − 1),  ograničeno 0–100
                 GOPPAR_ref = GOPPAR profila C bez ijedne odluke u tom mjesecu (računa jezgra)
-likvidnost    = blagajna / (2 × (fiksni + trošak_rada)) × 100,  ograničeno 0–100
+likvidnost    = blagajna / (2 × (fiksni + trošak_rada)) × 100,  najmanje 0 (bez gornje granice — ADR-014)
 ```
 
 ---
@@ -551,7 +551,7 @@ Tzv. „p. b." iz §6.2 čitamo kao **postotni bod** = 500 baznih bodova za „5
 | P27 | kamata na minus | `i64`, centi | nakon `blagajna += GOP − kapitalna`: ako `blagajna < 0` → `blagajna −= div_round(−blagajna, 100)` (1 % od iznosa u minusu, **jednom mjesečno**, bez kamate na kamatu u istom mjesecu) | Kamata se **ne ubraja u GOP** (GOP je operativni rezultat). 1 %/mj = 100 bp |
 | P28 | `GOPPAR` | `i64`, centi po raspoloživoj sobi-noći | `div_round(GOP, sobe_ukupno·D)`; **nazivnik su sve sobe, uključujući one izvan funkcije** | STR definicija (raspoložive sobe); kvar tako kažnjava F, što je željeno. Naziv „raspoloživo" u §3.1 znači nešto drugo (soba bez izvanfunkcije), zato je ovdje izričito |
 | P29 | `GOPPAR_ref(mj)` | `i64`, centi, izračunat pri izgradnji kataloga | isti izraz kao P28 za profil C bez odluka | **Zaštita:** nazivnik u indeksu je `max(GOPPAR_ref, 1 000)` (najmanje 10,00 € po sobi-noći), jer referenca može biti ≤ 0 u slabom mjesecu |
-| P30 | indeksi G, R, Z, O, F | `i32`, stotinke boda, clamp 0–10 000 | jedan `div_round` po indeksu na kraju. R: `div_round((ocjena_st − 700)·10 000, 280)`. Z: zadržavanje `= 10 000 − div_round(25·fluk_bp, 2)`, zatim `div_round(6 000·moral + 4 000·zadržavanje, 10 000)`. F: `GOPPAR_indeks = 5 000 + div_round(5 000·(GOPPAR − ref), max(ref, 1 000))`; `likvidnost = clamp(div_round(5 000·blagajna, fiksni + trošak_rada))`, negativna blagajna → 0 | Težine su bp (O: 4 500/3 000/2 500; F: 7 000/3 000). Z: 12,5 po 1 % = 25/2 stotinke po bp. `fiksni > 0` (P5) pa je nazivnik likvidnosti > 0 |
+| P30 | indeksi G, R, Z, O, F | `i32`, stotinke boda, clamp 0–10 000 | jedan `div_round` po indeksu na kraju. R: `div_round((ocjena_st − 700)·10 000, 280)`. Z: zadržavanje `= 10 000 − div_round(25·fluk_bp, 2)`, zatim `div_round(6 000·moral + 4 000·zadržavanje, 10 000)`. F: `GOPPAR_indeks = 5 000 + div_round(5 000·(GOPPAR − ref), max(ref, 1 000))`; `likvidnost = div_round(5 000·blagajna, fiksni + trošak_rada)`, bez gornje granice (ADR-014); negativna blagajna → 0 | Težine su bp (O: 4 500/3 000/2 500; F: 7 000/3 000). Z: 12,5 po 1 % = 25/2 stotinke po bp. `fiksni > 0` (P5) pa je nazivnik likvidnosti > 0 |
 | P31 | `g_i` i `napredak` | `g_i` `i32` bp (−10 000..10 000); `napredak` `i32` stotinke boda | `g_i = div_round(10 000·(kraj − start), 10 000 − start)` ako `kraj ≥ start`, inače `... / start`; `napredak = div_round(Σ g_i, 5)` (w = 2 000 bp svaki) | **Zaštita:** `start = 10 000` i `kraj = 10 000` → **g = 0** (prostora za rast nema). `start = 0` može ući samo u prvu granu (nazivnik 10 000); druga grana (`/ start`) nastupa samo ako je `kraj < start`, pa je `start ≥ 1`. Zadnji korak zaokružuje se jednom, ne po indeksu |
 | P32 | recenzije (broj novih), situacije `q` | `u32`; `u8` 1–5 | broj recenzija (kad se definira): `div_round(prodano·stopa_bp, 10 000)` | §2 ne daje formulu za broj recenzija; ovo je samo pravilo za kasniju. `q` izvan 1–5 odbija se pri učitavanju presude |
 

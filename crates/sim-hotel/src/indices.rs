@@ -61,7 +61,9 @@ pub fn raw_indices(
         0
     } else {
         let denom = c::add(w(s.fixed_cents), w(labor_cents))?;
-        c::div_round(c::mul(5_000, w(s.cash_cents))?, denom)?.clamp(0, 10_000)
+        // Bez gornje granice (ADR-014): zasićenje na 100 skrivalo je potrošen novac (npr. obnovu).
+        // Granica 0–100 ostaje samo na konačnom centriranom indeksu.
+        c::div_round(c::mul(5_000, w(s.cash_cents))?, denom)?
     };
     let g = w(s.satisfaction_pts);
     let r = c::div_round(c::mul(c::sub(w(s.rating), 700)?, 10_000)?, 280)?;

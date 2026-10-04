@@ -29,21 +29,21 @@ fn reference_table_for_test_catalog() {
     assert_eq!(
         t.months.get(Month::Jul),
         RefPoint {
-            raw: raw(6_753, 4_893, 5_282, 6_862, 6_500),
+            raw: raw(6_753, 4_893, 5_282, 6_862, 8_394),
             goppar_cents: 8_340
         }
     );
     assert_eq!(
         t.months.get(Month::Aug),
         RefPoint {
-            raw: raw(6_591, 4_786, 4_939, 6_556, 6_500),
+            raw: raw(6_591, 4_786, 4_939, 6_556, 10_876),
             goppar_cents: 10_364
         }
     );
     assert_eq!(
         t.months.get(Month::Sep),
         RefPoint {
-            raw: raw(6_658, 4_714, 5_084, 7_068, 6_500),
+            raw: raw(6_658, 4_714, 5_084, 7_068, 11_868),
             goppar_cents: 4_283
         }
     );
@@ -63,7 +63,7 @@ fn starting_indices_of_profiles() {
     );
     assert_eq!(
         start(profile_b()),
-        five([5_000, 3_571, 5_405, 3_950, 6_620])
+        five([5_000, 3_571, 5_405, 3_950, 8_195])
     );
 }
 
@@ -137,4 +137,13 @@ fn liquidity_is_zero_when_cash_negative() {
     s.cash_cents = -1;
     let raw = raw_indices(&s, 4_163, 11_000_000, 4_163, &cat).unwrap();
     assert_eq!(raw.f, 3_500); // 0,7 × 50 + 0,3 × 0
+}
+
+#[test]
+fn liquidity_has_no_upper_bound_in_raw_f() {
+    let cat = test_catalog();
+    let mut s = state_c();
+    s.cash_cents = 300_000_000;
+    let raw = raw_indices(&s, 4_163, 11_000_000, 4_163, &cat).unwrap();
+    assert_eq!(raw.f, 23_065); // likvidnost 65 217, ADR-014
 }
