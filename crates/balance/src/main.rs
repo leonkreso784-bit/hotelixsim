@@ -9,6 +9,7 @@ fn main() -> ExitCode {
     while let Some(a) = args.next() {
         match a.as_str() {
             "--seeds" => match args.next().and_then(|v| v.parse().ok()) {
+                Some(0) => return usage("--seeds traži barem 1"),
                 Some(n) => seeds = n,
                 None => return usage("--seeds traži cijeli broj"),
             },

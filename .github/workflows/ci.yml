@@ -37,6 +37,7 @@ jobs:
       - run: cargo sqlx migrate run --source crates/store/migrations
       - run: cargo sqlx prepare --workspace --check
       - run: cargo test --workspace
+      - run: cargo run -q -p balance --release -- --seeds 100 --check
       - uses: EmbarkStudios/cargo-deny-action@v2
 
   web:
