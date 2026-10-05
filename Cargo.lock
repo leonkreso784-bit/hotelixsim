@@ -34,6 +34,8 @@ dependencies = [
  "http-body-util",
  "serde",
  "serde_json",
+ "sqlx",
+ "store",
  "tokio",
  "tower",
  "tracing",

@@ -18,6 +18,8 @@ tracing.workspace = true
 
 [dev-dependencies]
 content.workspace = true
+sqlx.workspace = true
+store.workspace = true
 http-body-util.workspace = true
 tokio.workspace = true
 tower.workspace = true

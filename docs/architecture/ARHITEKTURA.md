@@ -313,14 +313,16 @@ hotelixsim/
 └─ docs/
 ```
 
-Postoje: `engine`, `sim-hotel`, `content`, `app`, `store`, `api`, `server`, `balance` i `content/hotel/`; ostalo je plan.
+Postoje: `engine`, `sim-hotel`, `content`, `game`, `app`, `store`, `api`, `server`, `balance` i `content/hotel/`; ostalo je plan.
 
 ### 6.2 Smjer ovisnosti — pravilo koje se ne krši
 
 ```text
 engine ◄── sim-hotel ◄── content
-   ▲           ▲
-   └───────── app ◄── store
+   ▲           ▲            ▲
+   └───────── game ◄────────┘      (app ──► game ──► sim-hotel, content)
+                ▲
+               app ◄── store
                ▲  ◄── ai
                │
               api ◄── server ──► (store, ai, api)
@@ -503,12 +505,12 @@ events
   type          text             npr. ResponseSubmitted, VerdictRecorded, RoundResolved
   schema_ver    int              verzija oblika događaja
   payload       jsonb
-  actor         uuid / 'system'
+  actor         text             guest:<uuid> · robot:<strategija> · system (CHECK u bazi)
   recorded_at   timestamptz      samo informativno — jezgra ga ne čita
 ```
 
 - **Samo dopisivanje:** korisnik baze kojim radi aplikacija **nema prava** `UPDATE` ni `DELETE` nad tablicom.
-  To jamči baza, ne kod.
+  To jamči baza, ne kod. Za sada nepromjenjivost čuva okidač; uloga bez prava dolazi prije Railwaya.
 - **Verzije događaja:** kad se oblik promijeni, stari se događaji pri čitanju „podignu" na novu verziju; nikad se ne
   prepisuju.
 
@@ -534,6 +536,8 @@ ne može nastati. Pouzdanost je pravi posao, ne samo tablica:
 
 **Izbor izvedbe** (vlastita tablica, apalis ili pgmq) radi se **probnim testom** s ovim scenarijima: pad procesa
 usred posla, zaglavljen posao, zakašnjeli AI rezultat i dvostruko preuzimanje. Ne bira se po mišljenju.
+
+Za demo izabrana vlastita tablica `jobs` (ADR-015); probni test s apalis/pgmq i zakašnjeli AI rezultat su korak 4.
 
 ### 9.5 Sadržaj
 

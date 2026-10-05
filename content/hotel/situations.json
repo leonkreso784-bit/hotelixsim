@@ -3,7 +3,10 @@
     "code": "S1",
     "month": "jun",
     "title": "Klima u sobi obitelji s djecom",
-    "unanswered": [{ "type": "ServiceRecovery", "compensation_cents": 0 }, { "type": "EquipmentRepair", "urgent": false }],
+    "unanswered": [
+      { "type": "ServiceRecovery", "compensation_cents": 0 },
+      { "type": "EquipmentRepair", "urgent": false }
+    ],
     "answers": [
       {
         "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
@@ -71,7 +74,16 @@
     "code": "S3",
     "month": "jun",
     "title": "Agencija nudi grupu od 25 soba za 7 noći (nacrt)",
-    "unanswered": [{ "type": "GroupBooking", "accept": false, "rooms": 25, "nights": 7, "discount_bp": 2500, "month": "aug" }],
+    "unanswered": [
+      {
+        "type": "GroupBooking",
+        "accept": false,
+        "rooms": 25,
+        "nights": 7,
+        "discount_bp": 2500,
+        "month": "aug"
+      }
+    ],
     "answers": [
       {
         "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",

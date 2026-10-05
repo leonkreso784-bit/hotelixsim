@@ -34,8 +34,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [dnevnik]
 
-- [dnevnik] **`stream_sequence_is_unique` je preslab** — provjerava samo `is_err`, ne SQLSTATE 23505, ni da isti seq u drugom toku prolazi. (Task 4 #2, L54)
-- [dnevnik] **Oblik tablice `events`** — globalni redoslijed, tip `actor`, indeks na `game_id`; mora biti gotovo prije Railwaya. (Final minori, L96; SLJEDECA_SESIJA §3)
+- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); ponovni pokušaj s odgodom; probni test apalis/pgmq (ARHITEKTURA §9.4); zakašnjela AI presuda za zatvorenu rundu (§8.3).
 
 ## Odgođeni nalazi — [ekrani]
 
@@ -46,6 +45,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [ekrani] **Health redak bez `role="status"`/`aria-live`.** (Task 7 #4, L80)
 - [ekrani] **`t()` parametri nisu tipizirani po poruci** — krivo ime daje vidljiv `{placeholder}`. (Task 7 #5, L82)
 - [ekrani] **`vite build` u CI-ju.** (Final minori, L96)
+- [ekrani] Posao obračuna u statusu `failed` ostavlja rundu u „closing" zauvijek — ekran i profesor trebaju to vidjeti; SSE „runda je obračunata" umjesto ispitivanja (ARHITEKTURA §11).
 
 ## Odgođeni nalazi — [prije Railwaya]
 
@@ -57,6 +57,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [prije Railwaya] **SIGTERM (graceful shutdown).** (Final minori, L96)
 - [prije Railwaya] **Typed config** umjesto sirovih env varijabli. (Final minori, L96)
 - [prije Railwaya] **CI bez filtra, akcije po tagu a ne po SHA** — CI radi na push i pull_request; `permissions: contents: read` već postoji. (Task 8 #2, L87)
+- [prije Railwaya] Uloga baze bez prava UPDATE/DELETE nad `events` (okidač ostaje); kolačić `Secure` uz HTTPS; `content::repo_dir()` je put iz vremena prevođenja — na Railwayu `HOTELIXSIM_CONTENT`; zaseban način `work`.
 - [prije Railwaya] **`deny.toml` zabranjuje samo `openssl-sys`** — ne native-tls/openssl. (Task 8 #4, L89)
 - [prije Railwaya] **E2E „baza ne radi" dokazan krivom lozinkom, ne ugašenom bazom** — 3 s `acquire_timeout` nije izmjeren. (Task 8 #5, L90)
 
@@ -98,6 +99,7 @@ Opseg koji [ADR-013](DECISIONS.md#adr-013) t. 8 odgađa iza demoa; spec je u [DE
 - [drugi val] **Splet okolnosti i tragovi (§9)** — odluke ostavljaju tragove koji se kasnije vraćaju.
 - [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
 - [drugi val] **Naplata otvorenih tragova na kraju sezone.**
+- [drugi val] Limit 3 demo igre po IP-u na dan i brisanje gosta i igre nakon 7 dana (DEMO §1.4; Leon 05.10.).
 - [drugi val] **Različit učinak S4 po stanju hotela.**
 - [drugi val] **Tablice za 3* i 5*** — danas postoji samo 4*.
 - [drugi val] **JSON Schema kataloga** — danas samo provjera u kodu.
