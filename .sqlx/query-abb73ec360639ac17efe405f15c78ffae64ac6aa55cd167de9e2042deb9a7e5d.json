@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO jobs (job_key, kind, game_id, payload) VALUES ($1, $2, $3, $4) ON CONFLICT (job_key) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "abb73ec360639ac17efe405f15c78ffae64ac6aa55cd167de9e2042deb9a7e5d"
+}

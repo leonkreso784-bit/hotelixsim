@@ -1,4 +1,7 @@
-//! PostgreSQL: dnevnik događaja; kasnije projekcije i red poslova (ARHITEKTURA §9).
+//! PostgreSQL: dnevnik, gosti, red poslova (ARHITEKTURA §9).
+
+mod guests;
+mod log;
 
 use std::time::Duration;
 
@@ -8,7 +11,7 @@ use sqlx::postgres::PgPoolOptions;
 
 #[derive(Clone)]
 pub struct Store {
-    pool: PgPool,
+    pub(crate) pool: PgPool,
 }
 
 impl Store {
