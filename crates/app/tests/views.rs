@@ -141,3 +141,42 @@ async fn unknown_ids_and_profiles() {
         ErrorCode::UnknownProfile
     );
 }
+
+#[tokio::test]
+async fn latest_hotel_is_newest_game_where_guest_has_a_hotel() {
+    let (d, _) = setup();
+    let (c, first) = guest(&d).await;
+    let me = c.guest.unwrap();
+    let hotel_for = |guest_id| {
+        vec![NewHotel {
+            hotel_id: HotelId(uuid::Uuid::new_v4()),
+            slot: 1,
+            guest_id,
+        }]
+    };
+    let new_game = |created_by, hotels| NewGame {
+        game_id: GameId(uuid::Uuid::new_v4()),
+        created_by,
+        hotels,
+        events: vec![],
+    };
+    // Novija igra koju je stvorio netko drugi, ali u kojoj gost IMA hotel: ona je zadnja.
+    let other = GuestId(uuid::Uuid::new_v4());
+    let theirs = new_game(other, hotel_for(Some(me)));
+    let (theirs_id, theirs_hotel) = (theirs.game_id, theirs.hotels[0].hotel_id);
+    d.log.create_game(theirs).await.unwrap();
+    assert_eq!(
+        d.guests.latest_hotel_of(me).await.unwrap(),
+        Some((theirs_id, theirs_hotel))
+    );
+    // Još novija igra koju je gost stvorio, ali bez hotela za njega: preskače se.
+    d.log
+        .create_game(new_game(me, hotel_for(None)))
+        .await
+        .unwrap();
+    assert_eq!(
+        d.guests.latest_hotel_of(me).await.unwrap(),
+        Some((theirs_id, theirs_hotel))
+    );
+    assert_ne!(theirs_id, first.game_id);
+}

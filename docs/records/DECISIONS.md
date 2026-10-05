@@ -26,6 +26,11 @@ promjena nosi uzrok). Arhitektura toga nije bila zapisana; ovo su pretpostavke s
 3. **Pet događaja** (`GameCreated` s punim snimkom, sjemenom, verzijom jezgre i hotelima · `PlanSet` · `AnswerChosen` ·
    `RoundClosed` · `RoundResolved` s punim izvještajem po hotelu), `schema_ver = 1`. Obračun uvijek iz snimka u
    `GameCreated`, nikad iz trenutnih datoteka. `actor` je tekst: `guest:<uuid>` · `robot:<strategija>` · `system`.
+   **Pravilo oblika snimka:** otisak se danas računa iz TIPIZIRANOG snimka pri svakom foldu, pa promjena oblika
+   content DTO-a (novo, preimenovano ili uklonjeno polje) čini sve postojeće igre nečitljivima (`Corrupt`). Do ispravka
+   u koraku 4 vrijedi: nova polja DTO-a samo uz `#[serde(default)]`, a promjena oblika = nova verzija `GameCreated`
+   s podizanjem. Ispravak (prije prve promjene content DTO-a): otisak računati nad kanonskim `serde_json::Value`
+   spremljenog snimka, ne nad tipiziranim ponovnim zapisom (BACKLOG `[korak 4]`).
 4. **Jedan tok po igri `game:<id>`, a svaka naredba je jedna transakcija**: `pg_advisory_xact_lock` po igri → učitaj tok
    → odluči (čista funkcija) → upiši. `UNIQUE(stream, stream_seq)` ostaje zadnja brana. Odstupanje od „optimistička
    konkurentnost s ponavljanjem": zaključavanje uklanja petlje ponavljanja i utrku između provjere i upisa; cijena je

@@ -370,7 +370,7 @@ fn routes(g: &str, h: &str) -> Vec<(&'static str, String, Option<serde_json::Val
 async fn every_new_route_checks_access_in_order() {
     let (app, _, _) = app();
     let (tok, game, hotel) = demo(&app).await;
-    let (other_tok, other_game, other_hotel) = demo(&app).await;
+    let (_, other_game, other_hotel) = demo(&app).await;
     for (m, uri, body) in routes(&game, &hotel) {
         let r = call(&app, m, &uri, None, body).await;
         assert_problem(&r, 401, "guest_required");
@@ -385,14 +385,13 @@ async fn every_new_route_checks_access_in_order() {
         let r = call(&app, m, &uri, Some(&tok), body).await;
         assert_eq!(r.status.as_u16(), 403, "{m} {uri}");
     }
-    let _ = other_tok;
 }
 
 #[tokio::test]
 async fn bad_body_never_beats_access_checks() {
     let (app, _, mem) = app();
     let (tok, game, hotel) = demo(&app).await;
-    let (_, other_game, other_hotel) = demo(&app).await;
+    let (_, _, other_hotel) = demo(&app).await;
     let robot = robot_hotel(&mem, &game);
     let bad = [
         ("PUT", "plans/jun", json!({"nope": 1})),
@@ -426,7 +425,6 @@ async fn bad_body_never_beats_access_checks() {
             "invalid_body",
         );
     }
-    let _ = other_game;
 }
 
 #[tokio::test]

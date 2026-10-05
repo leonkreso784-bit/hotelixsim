@@ -38,7 +38,8 @@ pub struct DemoStarted {
     pub new_token: Option<String>,
 }
 
-/// `POST /v1/demo` (DEMO §1.4): gost (postojeći ili novi) i nova igra s tri robota u jednoj transakciji.
+/// `POST /v1/demo` (DEMO §1.4): gost (postojeći ili novi) i nova igra s tri robota. Igra se stvara u jednoj
+/// transakciji, ali gost se upisuje prije nje (dvije zasebne radnje; siroče gost je opisan u BACKLOG-u).
 pub async fn start_demo(deps: &Deps, token: Option<&str>) -> Result<DemoStarted, AppError> {
     let (guest, new_token) = match caller(deps, token).await?.guest {
         Some(g) => (g, None),

@@ -218,17 +218,13 @@ impl Guests for Memory {
         guest: GuestId,
     ) -> BoxFut<'_, Result<Option<(GameId, HotelId)>, StoreError>> {
         let m = self.lock();
-        let found = m
-            .games
-            .iter()
-            .rev()
-            .find(|(_, by)| *by == guest)
-            .and_then(|(game, _)| {
-                m.hotels
-                    .iter()
-                    .find(|(_, (g, owner))| g == game && *owner == Some(guest))
-                    .map(|(h, _)| (*game, *h))
-            });
+        // Kao u Postgresu: najnovija igra u kojoj gost IMA hotel (bez obzira tko ju je stvorio).
+        let found = m.games.iter().rev().find_map(|(game, _)| {
+            m.hotels
+                .iter()
+                .find(|(_, (g, owner))| g == game && *owner == Some(guest))
+                .map(|(h, _)| (*game, *h))
+        });
         ready(Ok(found))
     }
 }
