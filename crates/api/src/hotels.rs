@@ -25,7 +25,7 @@ pub async fn me_hotel(
 ) -> Result<Json<HotelBody>, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let v = app::my_hotel(&s.deps, &caller).await?;
-    Ok(Json(HotelBody::from(&v)))
+    Ok(Json(HotelBody::try_from(&v)?))
 }
 
 /// Hotel u igri u kojoj sudjeluješ; tuđi hotel bez stvarnih brojki.
@@ -47,5 +47,5 @@ pub async fn hotel(
 ) -> Result<Json<HotelBody>, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let v = app::hotel_view(&s.deps, &caller, parse_hotel(&id)?).await?;
-    Ok(Json(HotelBody::from(&v)))
+    Ok(Json(HotelBody::try_from(&v)?))
 }

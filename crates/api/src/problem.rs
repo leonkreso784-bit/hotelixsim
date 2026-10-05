@@ -93,7 +93,7 @@ impl ProblemCode {
     }
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct Problem {
     #[serde(rename = "type")]
     pub kind: &'static str,

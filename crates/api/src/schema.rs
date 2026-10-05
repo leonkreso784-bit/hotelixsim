@@ -32,6 +32,17 @@ impl From<game::dto::MonthCode> for MonthCode {
     }
 }
 
+impl From<MonthCode> for game::dto::MonthCode {
+    fn from(m: MonthCode) -> Self {
+        match m {
+            MonthCode::Jun => Self::Jun,
+            MonthCode::Jul => Self::Jul,
+            MonthCode::Aug => Self::Aug,
+            MonthCode::Sep => Self::Sep,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum IndexCode {
     G,
@@ -227,24 +238,32 @@ pub struct SeatBody {
     pub strategy: Option<StrategyCode>,
 }
 
-impl From<&Seat> for SeatBody {
-    fn from(s: &Seat) -> Self {
-        match s {
+/// Pokvaren dnevnik (nepoznat kod profila ili strategije) nije greška klijenta: 500 uz zapis u log.
+fn corrupt(what: &str, value: &str) -> Problem {
+    tracing::error!(%value, "{what} u dnevniku nije prepoznat");
+    Problem::new(StatusCode::INTERNAL_SERVER_ERROR, ProblemCode::Internal)
+}
+
+impl TryFrom<&Seat> for SeatBody {
+    type Error = Problem;
+
+    fn try_from(s: &Seat) -> Result<Self, Problem> {
+        Ok(match s {
             Seat::Human => SeatBody {
                 kind: SeatKind::Human,
                 strategy: None,
             },
             Seat::Robot { strategy } => SeatBody {
                 kind: SeatKind::Robot,
-                strategy: match strategy.as_str() {
-                    "stedisa" => Some(StrategyCode::Stedisa),
-                    "brizni" => Some(StrategyCode::Brizni),
-                    "lovac" => Some(StrategyCode::Lovac),
-                    "nasumicni" => Some(StrategyCode::Nasumicni),
-                    _ => None,
-                },
+                strategy: Some(match strategy.as_str() {
+                    "stedisa" => StrategyCode::Stedisa,
+                    "brizni" => StrategyCode::Brizni,
+                    "lovac" => StrategyCode::Lovac,
+                    "nasumicni" => StrategyCode::Nasumicni,
+                    other => return Err(corrupt("strategija robota", other)),
+                }),
             },
-        }
+        })
     }
 }
 
@@ -277,16 +296,18 @@ pub struct PublicHotelBody {
     pub months: Vec<MonthScoreBody>,
 }
 
-impl From<&PublicHotel> for PublicHotelBody {
-    fn from(h: &PublicHotel) -> Self {
-        PublicHotelBody {
+impl TryFrom<&PublicHotel> for PublicHotelBody {
+    type Error = Problem;
+
+    fn try_from(h: &PublicHotel) -> Result<Self, Problem> {
+        Ok(PublicHotelBody {
             hotel_id: h.hotel_id.0.to_string(),
             slot: h.slot,
             name: h.name.clone(),
-            seat: (&h.seat).into(),
+            seat: (&h.seat).try_into()?,
             start: entries(h.start),
             months: h.months.iter().map(MonthScoreBody::from).collect(),
-        }
+        })
     }
 }
 
@@ -394,14 +415,17 @@ pub struct PrivateHotelBody {
     pub plan: Option<PlanStateBody>,
 }
 
-impl From<&PrivateHotel> for PrivateHotelBody {
-    fn from(p: &PrivateHotel) -> Self {
-        PrivateHotelBody {
-            profile: ProfileCode::from_code(&p.profile).unwrap_or(ProfileCode::C),
+impl TryFrom<&PrivateHotel> for PrivateHotelBody {
+    type Error = Problem;
+
+    fn try_from(p: &PrivateHotel) -> Result<Self, Problem> {
+        Ok(PrivateHotelBody {
+            profile: ProfileCode::from_code(&p.profile)
+                .ok_or_else(|| corrupt("profil hotela", &p.profile))?,
             now: (&p.now).into(),
             last_month: p.last_month.as_ref().map(LastMonthBody::from),
             plan: p.plan.as_ref().map(PlanStateBody::from),
-        }
+        })
     }
 }
 
@@ -414,13 +438,19 @@ pub struct HotelBody {
     pub private: Option<PrivateHotelBody>,
 }
 
-impl From<&app::HotelView> for HotelBody {
-    fn from(v: &app::HotelView) -> Self {
-        HotelBody {
+impl TryFrom<&app::HotelView> for HotelBody {
+    type Error = Problem;
+
+    fn try_from(v: &app::HotelView) -> Result<Self, Problem> {
+        Ok(HotelBody {
             game_id: v.game_id.0.to_string(),
-            hotel: (&v.public).into(),
-            private: v.private.as_ref().map(PrivateHotelBody::from),
-        }
+            hotel: (&v.public).try_into()?,
+            private: v
+                .private
+                .as_ref()
+                .map(PrivateHotelBody::try_from)
+                .transpose()?,
+        })
     }
 }
 
@@ -443,15 +473,73 @@ pub fn parse_hotel(s: &str) -> Result<app::HotelId, Problem> {
 }
 
 pub fn parse_month(s: &str) -> Result<game::dto::MonthCode, Problem> {
-    use game::dto::MonthCode as M;
-    match s {
-        "jun" => Ok(M::Jun),
-        "jul" => Ok(M::Jul),
-        "aug" => Ok(M::Aug),
-        "sep" => Ok(M::Sep),
-        _ => Err(Problem::new(
-            StatusCode::NOT_FOUND,
-            ProblemCode::UnknownMonth,
-        )),
+    serde_json::from_value::<MonthCode>(serde_json::Value::String(s.to_owned()))
+        .map(Into::into)
+        .map_err(|_| Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownMonth))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use game::HotelId;
+
+    #[test]
+    fn unknown_robot_strategy_is_internal_problem() {
+        let bad = Seat::Robot {
+            strategy: "nepoznata".into(),
+        };
+        let e = SeatBody::try_from(&bad).err().expect("greška");
+        assert_eq!((e.status, e.code), (500, ProblemCode::Internal));
+        let ok = SeatBody::try_from(&Seat::Robot {
+            strategy: "lovac".into(),
+        })
+        .unwrap();
+        assert_eq!(ok.strategy, Some(StrategyCode::Lovac));
+    }
+
+    #[test]
+    fn unknown_profile_is_internal_problem() {
+        let p = PrivateHotel {
+            profile: "X".into(),
+            now: RealNumbers {
+                rooms: 0,
+                permanent: 0,
+                seasonal: 0,
+                wage_pct: 0,
+                morale_pts: 0,
+                experience_pts: 0,
+                equipment_pts: 0,
+                satisfaction_pts: 0,
+                rating: 0,
+                cash_cents: 0,
+                load_hundredths: 0,
+            },
+            last_month: None,
+            plan: None,
+        };
+        let e = PrivateHotelBody::try_from(&p).err().expect("greška");
+        assert_eq!((e.status, e.code), (500, ProblemCode::Internal));
+    }
+
+    #[test]
+    fn bad_robot_in_public_hotel_fails_whole_body() {
+        let h = PublicHotel {
+            hotel_id: HotelId(uuid::Uuid::nil()),
+            slot: 2,
+            name: "H".into(),
+            seat: Seat::Robot {
+                strategy: "x".into(),
+            },
+            start: [0; 5],
+            months: Vec::new(),
+        };
+        assert!(PublicHotelBody::try_from(&h).is_err());
+    }
+
+    #[test]
+    fn parse_month_accepts_only_lowercase_codes() {
+        assert_eq!(parse_month("jul").unwrap(), game::dto::MonthCode::Jul);
+        assert!(parse_month("Jul").is_err());
+        assert!(parse_month("x").is_err());
     }
 }
