@@ -6,8 +6,11 @@ pub mod command;
 pub mod dto;
 pub mod error;
 pub mod event;
+pub mod feed;
 mod game;
 pub mod ids;
+mod resolve;
+pub mod view;
 
 pub use actor::{Actor, strategy_from_code};
 pub use error::GameError;
