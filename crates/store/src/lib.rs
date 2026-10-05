@@ -1,6 +1,7 @@
 //! PostgreSQL: dnevnik, gosti, red poslova (ARHITEKTURA §9).
 
 mod guests;
+mod jobs;
 mod log;
 
 use std::time::Duration;
