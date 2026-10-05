@@ -72,7 +72,6 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
-| [2026-10-05-dnevnik-runde.md](./plan/2026-10-05-dnevnik-runde.md) | 🟩 plan u gradnji — „dnevnik, runde i red poslova" (DEMO korak 3, 12 taskova, [ADR-015](./records/DECISIONS.md#adr-015)) |
 
 ## `workflow/` — kako radimo
 
@@ -107,4 +106,6 @@
 | [2026-10-04-kostur-ledger.md](./archive/2026-10-04-kostur-ledger.md) | ✅ Radni ledger kostura: odluke i nalazi po taskovima |
 | [2026-10-04-jezgra.md](./archive/2026-10-04-jezgra.md) | ✅ Plan „jezgra i alat za balans" (14 taskova, zlatne vrijednosti iz `scripts/oracle-jezgra.mjs`) |
 | [2026-10-04-jezgra-ledger.md](./archive/2026-10-04-jezgra-ledger.md) | ✅ Radni ledger jezgre: odluke, nalazi pregleda, odgođene sitnice |
+| [2026-10-05-dnevnik-runde.md](./archive/2026-10-05-dnevnik-runde.md) | ✅ Plan „dnevnik, runde i red poslova" (12 taskova, DEMO korak 3) |
+| [2026-10-05-dnevnik-runde-ledger.md](./archive/2026-10-05-dnevnik-runde-ledger.md) | ✅ Radni ledger koraka 3: odluke, nalazi pregleda, sažetak završnog pregleda |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |

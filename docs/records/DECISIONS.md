@@ -5,9 +5,50 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-017 — Odluke voditelja gradnje u koraku 3 (red poslova, greške, putanje, javne funkcije)
+**Datum:** 2026-10-05 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-015](#adr-015), [ADR-016](#adr-016)
+
+**Kontekst.** Tijekom gradnje koraka 3 voditelj je presudio više tehničkih pitanja umjesto Leona. Svako je malo i
+mijenja se lokalno; zapisano da se ne izgube.
+**Odluka (pretpostavke):**
+- **Red poslova nosi identitet preuzimanja** (`JobClaim{id, attempts}`): `fail` i `finish` djeluju samo ako se poklapaju
+  i posao je `running`; istek zakupa na zadnjem pokušaju → `failed`. Razlog: zakašnjeli radnik ne smije pokvariti posao
+  koji je već preuzeo drugi. Cijena ako je krivo: jedan dodatni parametar u `jobs.rs`.
+- **Nepoznat profil ili strategija u API-ju = zabilježen 500**, ne tihi zamjenski izbor. Razlog: tihi izbor skriva
+  pokvaren dnevnik. Cijena: pokvarena igra se vidi odmah (što je i cilj).
+- **Provjere pristupa idu prije provjere tijela** (401 → 404 → 403 prije 422). Razlog: neprijavljen ne smije saznati
+  oblik tijela ni postojanje igre. Cijena: nijedna.
+- **Odgovor na situaciju nema mjesec u putanji**, jer su šifre situacija jedinstvene po igri. Ako sadržaj ikad ponovi
+  šifru kroz mjesece, mjesec mora ući u putanju (nova verzija rute). Cijena ako je krivo: promjena rute i klijenta.
+- **`sim_hotel::{euro_bounds, seasonal_range}` postaju javne** da ih `game` koristi umjesto kopije. Cijena: veće javno
+  sučelje jezgre.
+- **`crates/game` dobiva istu zabranu floatova, sata i `HashMap` kao jezgra** (`clippy.toml` + `check-core-deps`).
+  Razlog: obračun runde mora ostati ponovljiv. Cijena: stroža pravila pri pisanju.
+- **Pravilo oblika snimka** (nova polja content DTO-a samo uz `#[serde(default)]`; ispravak otiska nad kanonskim
+  `Value`) dokumentirano u [ADR-015](#adr-015) t. 3, a kodni ispravak je dug za korak 4 (BACKLOG `[korak 4]`).
+
+---
+
+## ADR-016 — Leonove proizvodne odluke za korak 3: gost, zatvaranje mjeseca, tko zatvara, profili
+**Datum:** 2026-10-05 · **Status:** ✅ ODLUČIO LEON (ankete 05.10.) · **Vezano:** [ADR-015](#adr-015), [ADR-012](#adr-012), DEMO §1
+
+**Odluka.**
+1. **Gost preko poveznice:** pozadina (kolačić, bez lozinke) sad u koraku 3, ekran u koraku 5; ograničenje po IP-u i
+   brisanje nakon 7 dana u drugom valu.
+2. **„Zatvori mjesec" uz neodgovorenu situaciju:** upozori, pa dopusti; neodgovorena = kvaliteta 1 (DEMO §1.2).
+3. **Tko zatvara mjesec u demu:** svatko u igri. Leon je dodao: „moze ovo sta si predozio ali uzmi u obzir da moramo
+   igricu napraviti kao bitlife slicnu tako imam neku viziju". Posljedica: plan se može mijenjati bilo kad, hotel ima
+   feed kao vremensku crtu, svaka promjena nosi uzrok.
+4. **Profili:** hoteli kreću s različitim profilima — igrač iz sjemena, roboti A, B, C.
+
+**Posljedice.** Pretpostavke koje to razrađuju su u [ADR-015](#adr-015) (t. 2, 10, 13, 14). Otvoreno za Leona ostaje
+samo ishod neodgovorenih situacija S1–S4 (nacrt) u BACKLOG-u.
+
+---
+
 ## ADR-015 — Dnevnik, runde i red poslova: arhitektonske pretpostavke koraka 3
 **Datum:** 2026-10-05 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-012](#adr-012),
-[ADR-013](#adr-013), ARHITEKTURA §6.2, §7.2, §8–§9, §11–§12 · **Plan:** [2026-10-05-dnevnik-runde.md](../plan/2026-10-05-dnevnik-runde.md)
+[ADR-013](#adr-013), ARHITEKTURA §6.2, §7.2, §8–§9, §11–§12 · **Plan:** [2026-10-05-dnevnik-runde.md](../archive/2026-10-05-dnevnik-runde.md)
 
 **Kontekst.** DEMO korak 3 pretvara jezgru u igru: gost, tri robota, runde koje zatvara gumb, obračun u redu poslova,
 sve kao dnevnik događaja. Leon je 05.10. odlučio proizvodno (gost samo kao pozadina; zatvaranje s neodgovorenom

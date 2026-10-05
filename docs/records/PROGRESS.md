@@ -4,6 +4,15 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-05 — Dnevnik, runde i red poslova (DEMO korak 3)
+
+- Plan s 12 taskova ([archive/](../archive/2026-10-05-dnevnik-runde.md), ledger uz njega) i pretpostavke [ADR-015](DECISIONS.md#adr-015) 🟨. Leon je kroz ankete odlučio gosta, zatvaranje s neodgovorenim, tko zatvara i profile ([ADR-016](DECISIONS.md#adr-016) ✅); tehničke presude voditelja su u [ADR-017](DECISIONS.md#adr-017) 🟨.
+- Izgrađeno kroz subagente na grani `gradnja/dnevnik-runde` (izvođač + pregled po tasku; popravni krugovi na taskovima 6, 9, 10, 12). Završni pregled na opusu: „spremno uz popravke" → jedan val popravaka (radnik preživi paniku, pravilo otiska snimka, BACKLOG) → ponovni pregled čist.
+- Što radi: cijela igra preko API-ja na pravom Postgresu — gost bez lozinke, igrač + 3 robota, lipanj i srpanj, „Zatvori mjesec" (202), radnik u serveru, ljestvica i feed hotela. Nepromjenjiv dnevnik (okidač u bazi), red poslova s `SKIP LOCKED`, novi crate `game`.
+- Provjereno: sve CI provjere lokalno zelene; E2E na Postgresu provjerava stvarne ishode; ručni prolaz curlom na pravom serveru. Spojeno u `main` (`894d023`) i pushano uz Leonov OK; CI run 37250763627: rust i web uspjeh. Ekrana još nema.
+- Otvoreno: prije prve promjene content DTO-a popraviti otisak snimka (BACKLOG `[korak 4]`); ishodi neodgovorenih S1–S4 su nacrt; ADR-015 i ADR-017 čekaju Leonov pregled.
+
+
 ## 2026-10-04 — Jezgra igre i alat za balans (DEMO korak 2), rok demoa ~14.10.
 
 - Leon: rok demoa ~14.10., prvo profesorovih 15 minuta ([ADR-012](DECISIONS.md#adr-012)); pitanja za profesore pregledana i spremna za slanje (15 + 13).

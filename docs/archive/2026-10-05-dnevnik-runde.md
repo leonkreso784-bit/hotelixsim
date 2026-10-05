@@ -1,6 +1,6 @@
 # Dnevnik, runde i red poslova — plan izgradnje
 
-**Status:** 🟩 AKTIVAN · **Otvoren:** 2026-10-05 · **Grana:** `gradnja/dnevnik-runde` · **Rok demoa:** ~14.10. ([ADR-012](../records/DECISIONS.md#adr-012))
+**Status:** ✅ ISPUNJEN 2026-10-05 · **Otvoren:** 2026-10-05 · **Grana:** `gradnja/dnevnik-runde` · **Rok demoa:** ~14.10. ([ADR-012](../records/DECISIONS.md#adr-012))
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

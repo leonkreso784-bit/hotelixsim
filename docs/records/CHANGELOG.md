@@ -2,6 +2,26 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [0.3.0] — 2026-10-05 — Dnevnik, runde i red poslova (DEMO korak 3)
+
+Verzija bez git taga. Plan: [archive/2026-10-05-dnevnik-runde.md](../archive/2026-10-05-dnevnik-runde.md).
+
+### Dodano
+
+- Cijela igra preko API-ja na pravom Postgresu: `POST /v1/demo` stvara gosta (kolačić `httpOnly`, bez lozinke) i igru s
+  igračem i tri robota (Štediša, Brižni, Lovac na popunjenost); profili: igrač iz sjemena, roboti A/B/C.
+- Lipanj: plan i odgovori na situacije; „Zatvori mjesec" vraća 202 (drugi klik 200), radnik u serveru obračuna za ~1 s;
+  zatim srpanj i zatvaranje; ljestvica i feed hotela (vremenska crta kao u BitLifeu, svaka promjena nosi uzrok).
+- Dnevnik događaja je nepromjenjiv (okidač u bazi, SQLSTATE 42501), jedan tok po igri, zaključavanje po igri; red
+  poslova `jobs` (`SKIP LOCKED`, zakup, identitet preuzimanja `JobClaim`); radnik preživljava paniku.
+- Novi crate `game` (događaji, projekcija, pravila runde, potezi robota); jezgra i dalje bez serdea.
+- E2E test na Postgresu provjerava stvarne ishode; ručni prolaz curlom na pravom serveru.
+
+### Gdje se vidi
+
+Lokalno: `corepack pnpm check:api`, `cargo test --workspace` i `cargo run -p server` (uz `bash scripts/baza.sh start`);
+CI na GitHubu zelen na `894d023`. Ekrana još nema (korak 5).
+
 ## [0.2.0] — 2026-10-04 — Jezgra igre i alat za balans
 
 Verzija bez git taga. Plan: [archive/2026-10-04-jezgra.md](../archive/2026-10-04-jezgra.md).

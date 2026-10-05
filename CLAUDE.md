@@ -16,15 +16,17 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
 ## Stanje
 - **Sesija počinje** s `/clear` → `/newsession` (čita [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)), **završava**
   s `/kraj` (dnevnik, ADR-ovi, predaja, `check:docs`, commit).
-- **Gotovo:** kostur od kraja do kraja i jezgra s alatom za balans ([CHANGELOG](docs/records/CHANGELOG.md)); dokumentacija po
-  Sokratovom sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)). Pretpostavke jezgre: [ADR-013](docs/records/DECISIONS.md#adr-013),
-  [ADR-014](docs/records/DECISIONS.md#adr-014). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
-- **Sljedeće:** DEMO korak 3 — plan [2026-10-05-dnevnik-runde.md](docs/plan/2026-10-05-dnevnik-runde.md) (12 taskova,
-  grana `gradnja/dnevnik-runde`; pretpostavke [ADR-015](docs/records/DECISIONS.md#adr-015) 🟨).
-  **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
+- **Gotovo:** kostur od kraja do kraja, jezgra s alatom za balans i DEMO korak 3 — cijela igra preko API-ja na pravom
+  Postgresu (gost, igrač + 3 robota, lipanj i srpanj, „Zatvori mjesec", radnik, ljestvica, feed) ([CHANGELOG](docs/records/CHANGELOG.md));
+  dokumentacija po Sokratovom sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)). Ekrana još nema.
+  Pretpostavke: [ADR-013](docs/records/DECISIONS.md#adr-013), [ADR-014](docs/records/DECISIONS.md#adr-014),
+  [ADR-015](docs/records/DECISIONS.md#adr-015). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
+- **Sljedeće:** DEMO korak 4 — AI sloj (presuda na slobodni odgovor, likovi, mentor); aktivnog plana još nema
+  ([ROADMAP](docs/plan/ROADMAP.md)). **Prvo** popraviti pravilo otiska snimka iz BACKLOG-a `[korak 4]` prije ikakve
+  promjene content DTO-a. **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
-  i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).
-- **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main`.
+  i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md), među njima ADR-015 i [ADR-017](docs/records/DECISIONS.md#adr-017).
+- **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main` (osim zadnjeg `/kraj` commita, korak 3 je na GitHubu).
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
   (`gh` je prijavljen, nije na PATH-u).
 - **Okolina:** VS Code panel ([ADR-010](docs/records/DECISIONS.md#adr-010)), Windows, Git Bash + PowerShell.

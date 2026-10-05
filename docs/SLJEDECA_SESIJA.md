@@ -1,4 +1,4 @@
-# Sljedeća sesija — plan „dnevnik, runde i red poslova" (DEMO korak 3)
+# Sljedeća sesija — plan „AI sloj" (DEMO korak 4)
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
@@ -7,10 +7,9 @@
 ```text
 /newsession
 
-Danas radimo DEMO korak 3: plan „dnevnik, runde i red poslova" (vidi docs/SLJEDECA_SESIJA.md).
-Rok demoa je ~14.10., pa plan gradi samo ono što treba profesorovih 15 minuta (DEMO §1.5): lipanj i srpanj,
-igrač + 3 robota, rundu zatvara gumb, gost preko poveznice. Situacije u ovom koraku dobivaju odgovor iz
-ponuđenih (AI presuda je korak 4).
+Danas radimo DEMO korak 4: plan „AI sloj" (vidi docs/SLJEDECA_SESIJA.md).
+Rok demoa je ~14.10., pa plan gradi samo ono što treba profesorovih 15 minuta (DEMO §1.5): presuda na slobodni
+odgovor za lipanj i srpanj, likovi, mentor. Najprije popravi pravilo otiska snimka (BACKLOG [korak 4]).
 
 Redoslijed: provjeri stanje (git, baza, CI, check:docs, balance --check), napiši plan kroz writing-plans,
 pa gradi kroz subagent-driven-development na novoj grani, s pregledom nakon svakog taska i završnim pregledom
@@ -18,35 +17,25 @@ na najjačem modelu. Radi bez pitanja, pretpostavke zapiši kao ADR 🟨; proizv
 sa svim opcijama; push samo uz moj OK. Neovisne poslove pokreći kao paralelne agente.
 ```
 
-## Gdje smo
-
-Jezgra igre i alat za balans su gotovi, spojeni u `main` i pushani ([CHANGELOG 0.2.0](./records/CHANGELOG.md)).
-Obračun mjeseca, mehanike S1–S4, pet indeksa, ocjena i roboti rade bez baze i ekrana; balans:
-`cargo run -p balance --release -- --seeds 1000 --check`. **Rok demoa ~14.10.** ([ADR-012](./records/DECISIONS.md#adr-012)) —
-ostaju koraci 3–6 (dnevnik i runde · AI sloj · ekrani igrača · profesorov pogled), pa svaki plan gradi samo put iz
-DEMO §1.5 (lipanj i srpanj).
-
-## Pročitaj (ciljano)
-
-1. [ARHITEKTURA.md](./architecture/ARHITEKTURA.md) §8 (tok runde: 8.1–8.5) i §9 (dnevnik 9.1, projekcije 9.2, red poslova 9.4).
-2. [DEMO.md](./product/DEMO.md) §1 (demo način: rundu zatvara gumb, gost preko poveznice, tri robota).
-3. [BACKLOG.md](./records/BACKLOG.md) — stavke `[dnevnik]` (oblik tablice `events`, `api` mimo `app`, enum kodovi u OpenAPI-ju).
-4. Postojeći kod: `crates/store` (tablica `events`, migracije), `crates/app` (portovi), `crates/api` (Axum + OpenAPI),
-   javno sučelje jezgre `sim_hotel::{resolve_month, run_season_with, Strategy, start_indices, month_indices}`.
-
 ## Cilj
 
-Napisati plan `docs/plan/<datum>-dnevnik-runde.md` (`superpowers:writing-plans`, zaglavlje `**Status:** 🟩 AKTIVAN`) i
-graditi kroz `superpowers:subagent-driven-development` na novoj grani ([AGENTI.md](./workflow/AGENTI.md)): igra (igrač + 3 robota)
-kao dnevnik događaja u Postgresu (`GameCreated` s punim snimkom kataloga, odluke, presude, `RoundClosed`), zatvaranje
-runde gumbom koje zove jezgru za sve hotele, projekcija stanja i indeksa, API rute koje treba ekran, gost preko poveznice.
-Situacije u ovom koraku dobivaju odgovor iz ponuđenih (AI presuda je korak 4).
+Napisati plan `docs/plan/<datum>-ai-sloj.md` (`superpowers:writing-plans`, zaglavlje `**Status:** 🟩 AKTIVAN`) i graditi
+ga kroz `superpowers:subagent-driven-development` na novoj grani ([AGENTI.md](./workflow/AGENTI.md)): AI iza porta
+(presuda na slobodni odgovor s rubrikom, likovi, mentor), zakašnjela presuda za zatvorenu rundu, provjera DEMO §11
+točka 7. **Prije svake promjene content DTO-a** (rubrike, likovi u `situations.json`) popraviti otisak snimka: računati ga
+nad kanonskim `serde_json::Value` spremljenog snimka, ne nad tipiziranim ponovnim zapisom.
 
-**Prvi korak:** `/newsession`, zatim `corepack pnpm check:docs` i `cargo run -p balance --release -- --seeds 100 --check`
-(oboje zeleno), pa ARHITEKTURA §9.1 i BACKLOG `[dnevnik]`.
+**Prvi korak:** `/newsession`, zatim `corepack pnpm check:docs`, `cargo run -p balance --release -- --seeds 100 --check`
+i CI (`gh run list`) — sve zeleno. Zatim pročitaj:
+
+1. [ROADMAP.md](./plan/ROADMAP.md) — korak 4.
+2. [ARHITEKTURA.md](./architecture/ARHITEKTURA.md) — odjeljci o AI sloju (port, §8.3 zakašnjela presuda, §9.4 red poslova).
+3. [DEMO.md](./product/DEMO.md) — dijelovi o AI-ju (presuda, likovi, mentor, §11 točka 7).
+4. [BACKLOG.md](./records/BACKLOG.md) — stavke `[korak 4]` (otisak snimka, `core_version`, `Idempotency-Key`, odgoda ponovnog pokušaja, apalis/pgmq).
 
 ## Otvoreno za Leona
 
-U [BACKLOG.md](./records/BACKLOG.md) → „Otvoreno za Leona" i u ADR-ovima sa statusom 🟨 ([DECISIONS.md](./records/DECISIONS.md)).
-Novo iz ove sesije: najviše sezonaca 50 umjesto 40, B ima samo 3 % niže fiksne troškove, A dobiva napredak od početnog
-opterećenja, obnova najbolja proba za A i C, ponuđeni odgovori S3/S4 su nacrt. Ništa od toga ne blokira korak 3.
+- Pregled ADR-015 (arhitektonske pretpostavke koraka 3) i [ADR-017](./records/DECISIONS.md#adr-017) (odluke voditelja gradnje), oba 🟨.
+- Ishodi neodgovorenih situacija S1–S4 su nacrt: npr. ignorirana ponuda grupi u S3 jednostavno propada bez kazne — je li to realno?
+- AI ključ za demo: koje ključeve ima (pružatelj, model) — vidi BACKLOG „Otvoreno za Leona".
+- Ostalo otvoreno: [BACKLOG.md](./records/BACKLOG.md) → „Otvoreno za Leona". Ništa od toga ne blokira početak koraka 4.
