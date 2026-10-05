@@ -110,7 +110,7 @@ async fn guest_plays_june_and_july_against_three_robots(pool: PgPool) {
     )
     .await;
     assert_eq!(s.body["items"][0]["code"], "S2", "{:?}", s.body);
-    call(
+    let jul_close = call(
         &app,
         "POST",
         &format!("/v1/games/{game}/rounds/jul/close"),
@@ -118,12 +118,45 @@ async fn guest_plays_june_and_july_against_three_robots(pool: PgPool) {
         None,
     )
     .await;
+    assert_eq!(jul_close.status.as_u16(), 202, "{:?}", jul_close.body);
     run_worker(&d).await;
     // ljestvica i feed
     let g = call(&app, "GET", &format!("/v1/games/{game}"), Some(&tok), None).await;
     assert!(g.body["current"].is_null(), "igra je gotova");
-    for h in g.body["hotels"].as_array().unwrap() {
-        assert_eq!(h["months"].as_array().unwrap().len(), 2, "{h}");
+    let hotels = g.body["hotels"].as_array().unwrap();
+    assert_eq!(hotels.len(), 4);
+    for h in hotels {
+        let months = h["months"].as_array().unwrap();
+        assert_eq!(months.len(), 2, "{h}");
+        assert_eq!(months[0]["month"], "jun");
+        assert_eq!(months[1]["month"], "jul");
+        for m in months {
+            assert_eq!(m["indices"].as_array().unwrap().len(), 5, "{h}");
+        }
+    }
+    // roboti s različitim strategijama moraju se razlikovati (nulti ili isti obračun bi pao)
+    for mi in 0..2 {
+        let distinct: std::collections::BTreeSet<String> = hotels
+            .iter()
+            .map(|h| {
+                format!(
+                    "{}|{}",
+                    h["months"][mi]["indices"], h["months"][mi]["progress_hundredths"]
+                )
+            })
+            .collect();
+        assert!(
+            distinct.len() >= 3,
+            "mjesec {mi}: hoteli su gotovo isti: {distinct:?}"
+        );
+        assert!(
+            hotels.iter().any(|h| h["months"][mi]["indices"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|i| i["hundredths"] != 0)),
+            "svi indeksi su nula u mjesecu {mi}"
+        );
     }
     let f = call(
         &app,
@@ -140,6 +173,98 @@ async fn guest_plays_june_and_july_against_three_robots(pool: PgPool) {
         .filter(|i| i["kind"] == "month_resolved")
         .count();
     assert_eq!(resolved, 2);
+    let items = f.body["items"].as_array().unwrap();
+    let months_resolved: Vec<&str> = items
+        .iter()
+        .filter(|i| i["kind"] == "month_resolved")
+        .map(|i| i["month"].as_str().unwrap())
+        .collect();
+    assert_eq!(months_resolved, ["jun", "jul"]);
+    // neodgovorene situacije: S3 u lipnju i S2 u srpnju
+    let ignored: Vec<(&str, &str)> = items
+        .iter()
+        .filter(|i| i["kind"] == "situation_ignored")
+        .map(|i| {
+            (
+                i["month"].as_str().unwrap(),
+                i["situation"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(ignored, [("jun", "S3"), ("jul", "S2")]);
+    // pohranjeni obračun igračeva hotela jednak je onome što API pokazuje, a plan i ishodi su njegovi
+    let stored: Vec<(String, serde_json::Value)> = sqlx::query_as(
+        "SELECT payload->>'month', payload FROM events WHERE type = 'RoundResolved' ORDER BY id",
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(stored.len(), 2);
+    for (mi, (month, payload)) in stored.iter().enumerate() {
+        let mine = payload["hotels"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|h| h["hotel_id"] == hotel.as_str())
+            .expect("igračev hotel u obračunu");
+        let api_hotel = hotels
+            .iter()
+            .find(|h| h["hotel_id"] == hotel.as_str())
+            .unwrap();
+        assert_eq!(api_hotel["months"][mi]["month"], month.as_str());
+        assert_eq!(
+            api_hotel["months"][mi]["progress_hundredths"],
+            mine["progress_hundredths"]
+        );
+        let api_idx: Vec<_> = api_hotel["months"][mi]["indices"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|i| i["hundredths"].clone())
+            .collect();
+        assert_eq!(json!(api_idx), mine["indices"]);
+        let un = mine["situations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["answer"].is_null())
+            .expect("neodgovorena situacija");
+        assert_eq!(un["quality"], 1);
+        assert_eq!(un["code"], if mi == 0 { "S3" } else { "S2" });
+        if mi == 0 {
+            assert_eq!(
+                mine["plan"]["marketing_cents"], 500_000,
+                "plan igrača je obračunat"
+            );
+            let s1 = mine["situations"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|s| s["code"] == "S1")
+                .unwrap();
+            assert_eq!(s1["answer"], 0);
+        }
+    }
+    // roboti su djelovali u oba mjeseca: PlanSet i AnswerChosen za svaku strategiju
+    for robot in ["stedisa", "brizni", "lovac"] {
+        for (kind, month) in [
+            ("PlanSet", "jun"),
+            ("PlanSet", "jul"),
+            ("AnswerChosen", "jun"),
+            ("AnswerChosen", "jul"),
+        ] {
+            let c: i64 = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM events WHERE type = $1 AND actor = $2 AND payload->>'month' = $3",
+            )
+            .bind(kind)
+            .bind(format!("robot:{robot}"))
+            .bind(month)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+            assert!(c >= 1, "{robot} nema {kind} za {month}");
+        }
+    }
     assert_problem(
         &call(
             &app,

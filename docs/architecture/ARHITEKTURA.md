@@ -320,7 +320,7 @@ Postoje: `engine`, `sim-hotel`, `content`, `game`, `app`, `store`, `api`, `serve
 ```text
 engine ◄── sim-hotel ◄── content
    ▲           ▲            ▲
-   └───────── game ◄────────┘      (app ──► game ──► sim-hotel, content)
+   └───────── game ◄────────┘      (app ──► game ──► engine, sim-hotel, content)
                 ▲
                app ◄── store
                ▲  ◄── ai
@@ -500,7 +500,7 @@ dijalozima, mentor s napisanim objašnjenjima; što sa slobodnim tekstom — otv
 events
   id            bigserial        globalni redni broj
   game_id       uuid
-  stream        text             npr. hotel:<id> ili game:<id>
+  stream        text             za sada jedan tok po igri: game:<id> (hotel:<id> je moguća kasnija podjela)
   stream_seq    int              redni broj unutar toka (jedinstven par stream + stream_seq)
   type          text             npr. ResponseSubmitted, VerdictRecorded, RoundResolved
   schema_ver    int              verzija oblika događaja
@@ -521,8 +521,9 @@ grade ponovno iz dnevnika.
 
 ### 9.3 Platformske tablice (obične)
 
-`organizations` · `users` · `memberships` (uloga u organizaciji) · `games` (postavke, sjeme, verzija pravila) ·
-`hotels` · `managers` (veza upravitelj ↔ korisnici; danas jedan) · `jobs` (red poslova) · `ai_usage` (trošak).
+Izgrađene su: `guests` · `games` (postavke, sjeme, verzija pravila) · `hotels` · `jobs` (red poslova) · `events` (§9.1).
+Planirane: `organizations` · `users` · `memberships` (uloga u organizaciji) · `managers` (veza upravitelj ↔ korisnici;
+danas jedan) · `ai_usage` (trošak).
 
 ### 9.4 Red poslova
 
@@ -530,8 +531,8 @@ Red je u Postgresu jer se **odgovor i posao upisuju u istoj transakciji**, pa st
 ne može nastati. Pouzdanost je pravi posao, ne samo tablica:
 
 - preuzimanje s `FOR UPDATE SKIP LOCKED` i **vremenskim zakupom**: posao koji radnik ne završi u roku vraća se u red;
-- ključ jedinstvenosti po poslu (npr. `resolve:<game>:<round>`), ograničen broj ponovnih pokušaja s odgodom;
-- **prije upisa rezultata provjerava se stanje runde**: zakašnjela AI presuda za već zatvorenu rundu ne upisuje se
+- ključ jedinstvenosti po poslu (npr. `resolve:<game>:<round>`), ograničen broj ponovnih pokušaja (za sada bez odgode; odgoda s povećanjem razmaka dolazi u koraku 4, ADR-015 t. 8);
+- **prije upisa rezultata provjerava se stanje runde** (korak 4, uz AI): zakašnjela AI presuda za već zatvorenu rundu ne upisuje se
   tiho, nego ide pravilom iz §8.3.
 
 **Izbor izvedbe** (vlastita tablica, apalis ili pgmq) radi se **probnim testom** s ovim scenarijima: pad procesa
