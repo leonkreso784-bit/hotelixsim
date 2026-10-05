@@ -1,7 +1,31 @@
 //! Slučajevi upotrebe i portovi (ARHITEKTURA §6.2). Ne zna za Postgres ni HTTP.
 
+pub mod demo;
+pub mod error;
+pub mod memory;
+pub mod ports;
+pub mod views;
+
+pub use demo::*;
+pub use error::*;
+pub use game::{GameId, GuestId, HotelId};
+pub use ports::*;
+pub use views::*;
+
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
+
+/// Sve što slučajevi upotrebe trebaju; sastavlja ga `server` (Postgres) ili `memory::deps` (testovi).
+#[derive(Clone)]
+pub struct Deps {
+    pub status: Arc<dyn SystemStatus>,
+    pub log: Arc<dyn EventLog>,
+    pub guests: Arc<dyn Guests>,
+    pub jobs: Arc<dyn JobQueue>,
+    pub ids: Arc<dyn Ids>,
+    pub snapshot: Arc<content::Snapshot>,
+}
 
 pub type BoxFut<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
