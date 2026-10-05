@@ -7,6 +7,8 @@ publish.workspace = true
 
 [dependencies]
 api.workspace = true
+app.workspace = true
+content.workspace = true
 store.workspace = true
 anyhow.workspace = true
 axum.workspace = true

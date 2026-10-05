@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/v1/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Novi gost (ako nema kolačić) i nova igra s tri robota (DEMO §1.4). */
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/demo/profiles/{profile}/indices": {
         parameters: {
             query?: never;
@@ -38,20 +55,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hotel u igri u kojoj sudjeluješ; tuđi hotel bez stvarnih brojki. */
+        get: operations["hotel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/hotel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca. */
+        get: operations["me_hotel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
         DatabaseState: "ok" | "error";
+        DemoBody: {
+            game_id: string;
+            hotel_id: string;
+        };
         HealthBody: {
             database: components["schemas"]["DatabaseState"];
-            /** Format: int64 */
-            events?: number | null;
+            /**
+             * Format: int64
+             * @description Broj događaja u dnevniku; `null` kad baza nije dostupna.
+             */
+            events: number | null;
         };
+        HotelBody: {
+            game_id: string;
+            hotel: components["schemas"]["PublicHotelBody"];
+            private: components["schemas"]["PrivateHotelBody"] | null;
+        };
+        /** @enum {string} */
+        IndexCode: "G" | "R" | "Z" | "O" | "F";
         IndexEntry: {
             /** @description Kod indeksa: G, R, Z, O ili F. */
-            code: string;
+            code: components["schemas"]["IndexCode"];
             /**
              * Format: int32
              * @description Vrijednost u stotinkama: 0–10000 znači 0,00–100,00.
@@ -60,15 +125,137 @@ export interface components {
         };
         IndicesBody: {
             indices: components["schemas"]["IndexEntry"][];
-            profile: string;
+            profile: components["schemas"]["ProfileCode"];
+        };
+        LastMonthBody: {
+            /** Format: int32 */
+            available: number;
+            /** Format: int64 */
+            gop_cents: number;
+            /** Format: int64 */
+            goppar_cents: number;
+            month: components["schemas"]["MonthCode"];
+            /** Format: int64 */
+            rooms_revenue_cents: number;
+            /** Format: int32 */
+            sold: number;
+        };
+        /** @enum {string} */
+        MaintenanceCode: "deferred" | "regular" | "intensive";
+        /** @enum {string} */
+        MonthCode: "jun" | "jul" | "aug" | "sep";
+        MonthScoreBody: {
+            indices: components["schemas"]["IndexEntry"][];
+            month: components["schemas"]["MonthCode"];
+            /**
+             * Format: int32
+             * @description Napredak u odnosu na početak, u stotinkama boda (10000 = +100).
+             */
+            progress_hundredths: number;
+        };
+        /** @description Plan mjeseca: tijelo zahtjeva i dio odgovora. */
+        PlanBody: {
+            maintenance: components["schemas"]["MaintenanceCode"];
+            /** Format: int64 */
+            marketing_cents: number;
+            /** Format: int64 */
+            price_cents: number;
+            renovation: boolean;
+            reply_reviews: boolean;
+            /** Format: int32 */
+            seasonal_target: number;
+            training: components["schemas"]["TrainingCode"];
+            /** Format: int32 */
+            wage_pct: number;
+        };
+        /** @description Granice izbornika radnji za ekran. */
+        PlanLimitsBody: {
+            /** Format: int64 */
+            marketing_max_cents: number;
+            /** Format: int64 */
+            price_max_cents: number;
+            /** Format: int64 */
+            price_min_cents: number;
+            renovation_available: boolean;
+            /** Format: int32 */
+            seasonal_max: number;
+            /** Format: int32 */
+            seasonal_min: number;
+            /** Format: int32 */
+            wage_max_pct: number;
+            /** Format: int32 */
+            wage_min_pct: number;
+        };
+        PlanStateBody: {
+            limits: components["schemas"]["PlanLimitsBody"];
+            month: components["schemas"]["MonthCode"];
+            plan: components["schemas"]["PlanBody"];
+        };
+        /** @description Samo za vlasnika hotela. */
+        PrivateHotelBody: {
+            last_month: components["schemas"]["LastMonthBody"] | null;
+            now: components["schemas"]["RealNumbersBody"];
+            plan: components["schemas"]["PlanStateBody"] | null;
+            profile: components["schemas"]["ProfileCode"];
         };
         Problem: {
-            code: string;
+            code: components["schemas"]["ProblemCode"];
             /** Format: int32 */
             status: number;
             title: string;
             type: string;
         };
+        /**
+         * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
+         * @enum {string}
+         */
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "round_not_open" | "already_answered" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        /** @enum {string} */
+        ProfileCode: "A" | "B" | "C";
+        /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
+        PublicHotelBody: {
+            hotel_id: string;
+            months: components["schemas"]["MonthScoreBody"][];
+            name: string;
+            seat: components["schemas"]["SeatBody"];
+            /** Format: int32 */
+            slot: number;
+            start: components["schemas"]["IndexEntry"][];
+        };
+        RealNumbersBody: {
+            /** Format: int64 */
+            cash_cents: number;
+            /** Format: int32 */
+            equipment_pts: number;
+            /** Format: int32 */
+            experience_pts: number;
+            /** Format: int32 */
+            load_hundredths: number;
+            /** Format: int32 */
+            morale_pts: number;
+            /** Format: int32 */
+            permanent: number;
+            /** Format: int32 */
+            rating: number;
+            /** Format: int32 */
+            rooms: number;
+            /** Format: int32 */
+            satisfaction_pts: number;
+            /** Format: int32 */
+            seasonal: number;
+            /** Format: int32 */
+            wage_pct: number;
+        };
+        SeatBody: {
+            kind: components["schemas"]["SeatKind"];
+            strategy: components["schemas"]["StrategyCode"] | null;
+        };
+        /** @enum {string} */
+        SeatKind: "human" | "robot";
+        /** @enum {string} */
+        StrategyCode: "stedisa" | "brizni" | "lovac" | "nasumicni";
+        /** @enum {string} */
+        TrainingCode: "none" | "basic" | "full";
     };
     responses: never;
     parameters: never;
@@ -78,6 +265,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Igra stvorena */
+            201: {
+                headers: {
+                    /** @description hotelixsim_guest (HttpOnly), samo za novog gosta */
+                    "set-cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoBody"];
+                };
+            };
+            /** @description Baza nije dostupna */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     profile_indices: {
         parameters: {
             query?: never;
@@ -135,6 +353,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthBody"];
+                };
+            };
+        };
+    };
+    hotel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identifikator hotela (uuid) */
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hotel */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelBody"];
+                };
+            };
+            /** @description Potreban je gost */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Nisi u ovoj igri */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Hotel ne postoji */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    me_hotel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Moj hotel */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HotelBody"];
+                };
+            };
+            /** @description Potreban je gost */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Nisi u ovoj igri */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Gost još nema igru */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

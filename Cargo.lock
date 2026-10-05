@@ -29,14 +29,17 @@ version = "0.1.0"
 dependencies = [
  "app",
  "axum",
+ "content",
+ "game",
  "http-body-util",
  "serde",
  "serde_json",
- "sim-hotel",
  "tokio",
  "tower",
+ "tracing",
  "utoipa",
  "utoipa-axum",
+ "uuid",
 ]
 
 [[package]]
@@ -1126,7 +1129,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "api",
+ "app",
  "axum",
+ "content",
  "store",
  "tokio",
  "tracing",

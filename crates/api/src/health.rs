@@ -16,6 +16,8 @@ pub enum DatabaseState {
 #[derive(Serialize, ToSchema)]
 pub struct HealthBody {
     pub database: DatabaseState,
+    /// Broj događaja u dnevniku; `null` kad baza nije dostupna.
+    #[schema(required = true)]
     pub events: Option<i64>,
 }
 
@@ -29,7 +31,7 @@ pub struct HealthBody {
     )
 )]
 pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
-    let h = app::check_health(state.status.as_ref()).await;
+    let h = app::check_health(state.deps.status.as_ref()).await;
     let (code, database) = match h.database {
         app::DbState::Ok => (StatusCode::OK, DatabaseState::Ok),
         app::DbState::Error => (StatusCode::SERVICE_UNAVAILABLE, DatabaseState::Error),

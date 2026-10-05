@@ -1,34 +1,49 @@
 //! HTTP sloj: Axum rukovatelji i OpenAPI opis (ARHITEKTURA §11). Tanak: logika je u `app` i jezgri.
 
+pub mod auth;
 mod demo;
 mod health;
-mod problem;
-
-use std::sync::Arc;
+mod hotels;
+pub mod problem;
+pub mod schema;
 
 use axum::Router;
+use axum::http::StatusCode;
+use problem::{Problem, ProblemCode};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub status: Arc<dyn app::SystemStatus>,
+    pub deps: app::Deps,
 }
 
 #[derive(OpenApi)]
-#[openapi(info(title = "HotelixSim API", version = "0.1.0"))]
+#[openapi(info(
+    title = "HotelixSim API",
+    version = "0.1.0",
+    description = "Simulacija vođenja hotela za učenje (FMTU Opatija). Igra je dnevnik događaja; ovaj API ga čita i piše.",
+    license(name = "Vlasnički — sva prava pridržana (Leon Kreso)")
+))]
 struct ApiDoc;
 
 fn parts() -> OpenApiRouter<AppState> {
     OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health::health))
         .routes(routes!(demo::profile_indices))
+        .routes(routes!(demo::start))
+        .routes(routes!(hotels::me_hotel))
+        .routes(routes!(hotels::hotel))
+}
+
+async fn unknown_route() -> Problem {
+    Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownRoute)
 }
 
 pub fn router(state: AppState) -> Router {
     let (router, _) = parts().split_for_parts();
-    router.with_state(state)
+    router.fallback(unknown_route).with_state(state)
 }
 
 pub fn openapi() -> utoipa::openapi::OpenApi {

@@ -2,13 +2,49 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HotelixSim API",
-    "description": "",
+    "description": "Simulacija vođenja hotela za učenje (FMTU Opatija). Igra je dnevnik događaja; ovaj API ga čita i piše.",
     "license": {
-      "name": ""
+      "name": "Vlasnički — sva prava pridržana (Leon Kreso)"
     },
     "version": "0.1.0"
   },
   "paths": {
+    "/v1/demo": {
+      "post": {
+        "summary": "Novi gost (ako nema kolačić) i nova igra s tri robota (DEMO §1.4).",
+        "operationId": "start",
+        "responses": {
+          "201": {
+            "description": "Igra stvorena",
+            "headers": {
+              "set-cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "hotelixsim_guest (HttpOnly), samo za novog gosta"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Baza nije dostupna",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/demo/profiles/{profile}/indices": {
       "get": {
         "summary": "Početni indeksi profila (DEMO §5).",
@@ -75,6 +111,113 @@
           }
         }
       }
+    },
+    "/v1/hotels/{hotel_id}": {
+      "get": {
+        "summary": "Hotel u igri u kojoj sudjeluješ; tuđi hotel bez stvarnih brojki.",
+        "operationId": "hotel",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Identifikator hotela (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hotel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Potreban je gost",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Nisi u ovoj igri",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hotel ne postoji",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/hotel": {
+      "get": {
+        "summary": "Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.",
+        "operationId": "me_hotel",
+        "responses": {
+          "200": {
+            "description": "Moj hotel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotelBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Potreban je gost",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Nisi u ovoj igri",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Gost još nema igru",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -86,10 +229,26 @@
           "error"
         ]
       },
+      "DemoBody": {
+        "type": "object",
+        "required": [
+          "game_id",
+          "hotel_id"
+        ],
+        "properties": {
+          "game_id": {
+            "type": "string"
+          },
+          "hotel_id": {
+            "type": "string"
+          }
+        }
+      },
       "HealthBody": {
         "type": "object",
         "required": [
-          "database"
+          "database",
+          "events"
         ],
         "properties": {
           "database": {
@@ -100,9 +259,47 @@
               "integer",
               "null"
             ],
-            "format": "int64"
+            "format": "int64",
+            "description": "Broj događaja u dnevniku; `null` kad baza nije dostupna."
           }
         }
+      },
+      "HotelBody": {
+        "type": "object",
+        "required": [
+          "game_id",
+          "hotel",
+          "private"
+        ],
+        "properties": {
+          "game_id": {
+            "type": "string"
+          },
+          "hotel": {
+            "$ref": "#/components/schemas/PublicHotelBody"
+          },
+          "private": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PrivateHotelBody",
+                "description": "Prazno za tuđi hotel."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "IndexCode": {
+        "type": "string",
+        "enum": [
+          "G",
+          "R",
+          "Z",
+          "O",
+          "F"
+        ]
       },
       "IndexEntry": {
         "type": "object",
@@ -112,7 +309,7 @@
         ],
         "properties": {
           "code": {
-            "type": "string",
+            "$ref": "#/components/schemas/IndexCode",
             "description": "Kod indeksa: G, R, Z, O ili F."
           },
           "hundredths": {
@@ -137,7 +334,242 @@
             }
           },
           "profile": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProfileCode"
+          }
+        }
+      },
+      "LastMonthBody": {
+        "type": "object",
+        "required": [
+          "month",
+          "sold",
+          "available",
+          "rooms_revenue_cents",
+          "gop_cents",
+          "goppar_cents"
+        ],
+        "properties": {
+          "available": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "gop_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "goppar_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "rooms_revenue_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sold": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "MaintenanceCode": {
+        "type": "string",
+        "enum": [
+          "deferred",
+          "regular",
+          "intensive"
+        ]
+      },
+      "MonthCode": {
+        "type": "string",
+        "enum": [
+          "jun",
+          "jul",
+          "aug",
+          "sep"
+        ]
+      },
+      "MonthScoreBody": {
+        "type": "object",
+        "required": [
+          "month",
+          "indices",
+          "progress_hundredths"
+        ],
+        "properties": {
+          "indices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEntry"
+            }
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "progress_hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Napredak u odnosu na početak, u stotinkama boda (10000 = +100)."
+          }
+        }
+      },
+      "PlanBody": {
+        "type": "object",
+        "description": "Plan mjeseca: tijelo zahtjeva i dio odgovora.",
+        "required": [
+          "price_cents",
+          "marketing_cents",
+          "seasonal_target",
+          "wage_pct",
+          "training",
+          "maintenance",
+          "renovation",
+          "reply_reviews"
+        ],
+        "properties": {
+          "maintenance": {
+            "$ref": "#/components/schemas/MaintenanceCode"
+          },
+          "marketing_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "renovation": {
+            "type": "boolean"
+          },
+          "reply_reviews": {
+            "type": "boolean"
+          },
+          "seasonal_target": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "training": {
+            "$ref": "#/components/schemas/TrainingCode"
+          },
+          "wage_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlanLimitsBody": {
+        "type": "object",
+        "description": "Granice izbornika radnji za ekran.",
+        "required": [
+          "price_min_cents",
+          "price_max_cents",
+          "marketing_max_cents",
+          "seasonal_min",
+          "seasonal_max",
+          "wage_min_pct",
+          "wage_max_pct",
+          "renovation_available"
+        ],
+        "properties": {
+          "marketing_max_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price_max_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price_min_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "renovation_available": {
+            "type": "boolean"
+          },
+          "seasonal_max": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_min": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "wage_max_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "wage_min_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "PlanStateBody": {
+        "type": "object",
+        "required": [
+          "month",
+          "plan",
+          "limits"
+        ],
+        "properties": {
+          "limits": {
+            "$ref": "#/components/schemas/PlanLimitsBody"
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanBody"
+          }
+        }
+      },
+      "PrivateHotelBody": {
+        "type": "object",
+        "description": "Samo za vlasnika hotela.",
+        "required": [
+          "profile",
+          "now",
+          "last_month",
+          "plan"
+        ],
+        "properties": {
+          "last_month": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LastMonthBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "now": {
+            "$ref": "#/components/schemas/RealNumbersBody"
+          },
+          "plan": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PlanStateBody",
+                "description": "Dok je trenutni mjesec otvoren."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileCode"
           }
         }
       },
@@ -151,7 +583,7 @@
         ],
         "properties": {
           "code": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProblemCode"
           },
           "status": {
             "type": "integer",
@@ -165,6 +597,197 @@
             "type": "string"
           }
         }
+      },
+      "ProblemCode": {
+        "type": "string",
+        "description": "Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).",
+        "enum": [
+          "guest_required",
+          "not_in_game",
+          "not_your_hotel",
+          "unknown_game",
+          "unknown_hotel",
+          "unknown_month",
+          "unknown_situation",
+          "unknown_answer",
+          "unknown_profile",
+          "round_not_open",
+          "already_answered",
+          "price_not_whole_euro",
+          "price_out_of_range",
+          "marketing_out_of_range",
+          "seasonal_out_of_range",
+          "seasonal_step_too_big",
+          "wage_out_of_range",
+          "renovation_twice",
+          "storage_unavailable",
+          "internal",
+          "unknown_route",
+          "invalid_body"
+        ]
+      },
+      "ProfileCode": {
+        "type": "string",
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "PublicHotelBody": {
+        "type": "object",
+        "description": "Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke.",
+        "required": [
+          "hotel_id",
+          "slot",
+          "name",
+          "seat",
+          "start",
+          "months"
+        ],
+        "properties": {
+          "hotel_id": {
+            "type": "string"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthScoreBody"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "seat": {
+            "$ref": "#/components/schemas/SeatBody"
+          },
+          "slot": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "start": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEntry"
+            }
+          }
+        }
+      },
+      "RealNumbersBody": {
+        "type": "object",
+        "required": [
+          "rooms",
+          "permanent",
+          "seasonal",
+          "wage_pct",
+          "morale_pts",
+          "experience_pts",
+          "equipment_pts",
+          "satisfaction_pts",
+          "rating",
+          "cash_cents",
+          "load_hundredths"
+        ],
+        "properties": {
+          "cash_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "equipment_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "experience_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "load_hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "morale_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "permanent": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "rooms": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "satisfaction_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seasonal": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "wage_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "SeatBody": {
+        "type": "object",
+        "required": [
+          "kind",
+          "strategy"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SeatKind"
+          },
+          "strategy": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/StrategyCode",
+                "description": "Samo za robota."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "SeatKind": {
+        "type": "string",
+        "enum": [
+          "human",
+          "robot"
+        ]
+      },
+      "StrategyCode": {
+        "type": "string",
+        "enum": [
+          "stedisa",
+          "brizni",
+          "lovac",
+          "nasumicni"
+        ]
+      },
+      "TrainingCode": {
+        "type": "string",
+        "enum": [
+          "none",
+          "basic",
+          "full"
+        ]
       }
     }
   }
