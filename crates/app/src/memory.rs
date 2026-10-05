@@ -249,7 +249,13 @@ impl JobQueue for Memory {
     }
 
     fn fail(&self, id: i64, _error: String) -> BoxFut<'_, Result<(), StoreError>> {
-        if let Some(j) = self.lock().jobs.iter_mut().find(|j| j.id == id) {
+        // samo posao koji radnik drži; gotov ili već neuspio posao se ne dira
+        if let Some(j) = self
+            .lock()
+            .jobs
+            .iter_mut()
+            .find(|j| j.id == id && j.status == JobStatus::Running)
+        {
             j.status = if j.attempts >= MAX_ATTEMPTS {
                 JobStatus::Failed
             } else {

@@ -1,14 +1,18 @@
 //! Slučajevi upotrebe i portovi (ARHITEKTURA §6.2). Ne zna za Postgres ni HTTP.
 
+pub mod commands;
 pub mod demo;
 pub mod error;
+pub mod jobs;
 pub mod memory;
 pub mod ports;
 pub mod views;
 
+pub use commands::*;
 pub use demo::*;
 pub use error::*;
 pub use game::{GameId, GuestId, HotelId};
+pub use jobs::*;
 pub use ports::*;
 pub use views::*;
 
