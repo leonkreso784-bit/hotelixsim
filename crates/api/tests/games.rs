@@ -345,3 +345,157 @@ async fn unknown_ids_are_404_and_anonymous_is_401() {
         "guest_required",
     );
 }
+
+const BIG: &str = "00000000-0000-0000-0000-000000009999";
+
+/// Svih sedam novih ruta: (metoda, putanja s {g} igrom ili {h} hotelom, ima li tijelo).
+fn routes(g: &str, h: &str) -> Vec<(&'static str, String, Option<serde_json::Value>)> {
+    let plan = json!({"price_cents": 1});
+    vec![
+        ("GET", format!("/v1/games/{g}"), None),
+        ("GET", format!("/v1/games/{g}/rounds/jun"), None),
+        ("PUT", format!("/v1/hotels/{h}/plans/jun"), Some(plan)),
+        ("GET", format!("/v1/hotels/{h}/situations"), None),
+        (
+            "POST",
+            format!("/v1/hotels/{h}/situations/S1/answer"),
+            Some(json!({"answer": 0})),
+        ),
+        ("POST", format!("/v1/games/{g}/rounds/jun/close"), None),
+        ("GET", format!("/v1/hotels/{h}/feed"), None),
+    ]
+}
+
+#[tokio::test]
+async fn every_new_route_checks_access_in_order() {
+    let (app, _, _) = app();
+    let (tok, game, hotel) = demo(&app).await;
+    let (other_tok, other_game, other_hotel) = demo(&app).await;
+    for (m, uri, body) in routes(&game, &hotel) {
+        let r = call(&app, m, &uri, None, body).await;
+        assert_problem(&r, 401, "guest_required");
+    }
+    for (m, uri, body) in routes(BIG, BIG) {
+        let r = call(&app, m, &uri, Some(&tok), body).await;
+        assert_eq!(r.status.as_u16(), 404, "{m} {uri}");
+        assert_eq!(r.ctype.as_deref(), Some("application/problem+json"));
+    }
+    // Tuđa igra i tuđi hotel (drugi gost) -> 403.
+    for (m, uri, body) in routes(&other_game, &other_hotel) {
+        let r = call(&app, m, &uri, Some(&tok), body).await;
+        assert_eq!(r.status.as_u16(), 403, "{m} {uri}");
+    }
+    let _ = other_tok;
+}
+
+#[tokio::test]
+async fn bad_body_never_beats_access_checks() {
+    let (app, _, mem) = app();
+    let (tok, game, hotel) = demo(&app).await;
+    let (_, other_game, other_hotel) = demo(&app).await;
+    let robot = robot_hotel(&mem, &game);
+    let bad = [
+        ("PUT", "plans/jun", json!({"nope": 1})),
+        ("POST", "situations/S1/answer", json!({"answer": "x"})),
+    ];
+    for (m, tail, body) in bad {
+        let u = |h: &str| format!("/v1/hotels/{h}/{tail}");
+        assert_problem(
+            &call(&app, m, &u(&hotel), None, Some(body.clone())).await,
+            401,
+            "guest_required",
+        );
+        assert_problem(
+            &call(&app, m, &u(BIG), Some(&tok), Some(body.clone())).await,
+            404,
+            "unknown_hotel",
+        );
+        assert_problem(
+            &call(&app, m, &u(&other_hotel), Some(&tok), Some(body.clone())).await,
+            403,
+            "not_in_game",
+        );
+        assert_problem(
+            &call(&app, m, &u(&robot), Some(&tok), Some(body.clone())).await,
+            403,
+            "not_your_hotel",
+        );
+        assert_problem(
+            &call(&app, m, &u(&hotel), Some(&tok), Some(body)).await,
+            422,
+            "invalid_body",
+        );
+    }
+    let _ = other_game;
+}
+
+#[tokio::test]
+async fn plan_for_scheduled_july_is_409() {
+    let (app, _, _) = app();
+    let (tok, _, hotel) = demo(&app).await;
+    let plan = call(&app, "GET", "/v1/me/hotel", Some(&tok), None)
+        .await
+        .body["private"]["plan"]["plan"]
+        .clone();
+    let uri = format!("/v1/hotels/{hotel}/plans/jul");
+    assert_problem(
+        &call(&app, "PUT", &uri, Some(&tok), Some(plan)).await,
+        409,
+        "round_not_open",
+    );
+}
+
+#[tokio::test]
+async fn close_after_resolved_is_200_and_stale_answer_is_rejected() {
+    let (app, d, _) = app();
+    let (tok, game, hotel) = demo(&app).await;
+    let close = format!("/v1/games/{game}/rounds/jun/close");
+    assert_eq!(
+        call(&app, "POST", &close, Some(&tok), None)
+            .await
+            .status
+            .as_u16(),
+        202
+    );
+    run_worker(&d).await;
+    let again = call(&app, "POST", &close, Some(&tok), None).await;
+    assert_eq!(
+        (again.status.as_u16(), &again.body["status"]),
+        (200, &json!("resolved"))
+    );
+    // Zastarjeli lipanjski ekran: odgovor na lipanjsku situaciju kad je srpanj otvoren.
+    let stale = format!("/v1/hotels/{hotel}/situations/S1/answer");
+    let r = call(&app, "POST", &stale, Some(&tok), Some(json!({"answer": 0}))).await;
+    assert_problem(&r, 409, "round_not_open");
+    let s = call(
+        &app,
+        "GET",
+        &format!("/v1/hotels/{hotel}/situations"),
+        Some(&tok),
+        None,
+    )
+    .await;
+    assert_eq!(s.body["month"], "jul");
+    assert!(
+        s.body["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|i| i["code"] != "S1")
+    );
+    let f = call(
+        &app,
+        "GET",
+        &format!("/v1/hotels/{hotel}/feed"),
+        Some(&tok),
+        None,
+    )
+    .await;
+    let chosen = f.body["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|i| i["kind"] == "answer_chosen")
+        .count();
+    assert_eq!(chosen, 0, "ništa nije zapisano");
+}

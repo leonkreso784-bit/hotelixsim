@@ -55,8 +55,28 @@ pub async fn hotel(
     Ok(Json(HotelBody::try_from(&v)?))
 }
 
-fn invalid_body() -> Problem {
-    Problem::new(StatusCode::UNPROCESSABLE_ENTITY, ProblemCode::InvalidBody)
+/// Tijelo se ocjenjuje tek nakon provjere gosta, hotela i vlasništva: anonimac, tuđi ili nepoznat hotel
+/// dobivaju 401/403/404 i uz loše tijelo, a 422 tek vlasnik hotela. Razlog odbijanja ide u log (bez tijela).
+async fn body_or_problem<T>(
+    s: &AppState,
+    caller: &app::Caller,
+    hotel: app::HotelId,
+    body: Result<Json<T>, JsonRejection>,
+) -> Result<T, Problem> {
+    match body {
+        Ok(Json(v)) => Ok(v),
+        Err(rejection) => {
+            let v = app::hotel_view(&s.deps, caller, hotel).await?;
+            if v.private.is_none() {
+                return Err(app::AppError::new(app::ErrorCode::NotYourHotel).into());
+            }
+            tracing::debug!(reason = %rejection, "tijelo zahtjeva odbijeno");
+            Err(Problem::new(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ProblemCode::InvalidBody,
+            ))
+        }
+    }
 }
 
 /// Plan za mjesec runde; zadnji zapisani plan vrijedi.
@@ -83,16 +103,11 @@ pub async fn put_plan(
     Path((id, month)): Path<(String, String)>,
     body: Result<Json<PlanBody>, JsonRejection>,
 ) -> Result<Json<PlanBody>, Problem> {
-    let Json(plan) = body.map_err(|_| invalid_body())?;
     let caller = app::caller(&s.deps, t.as_deref()).await?;
-    let saved = app::set_plan(
-        &s.deps,
-        &caller,
-        parse_hotel(&id)?,
-        parse_month(&month)?,
-        (&plan).into(),
-    )
-    .await?;
+    let hotel = parse_hotel(&id)?;
+    let month = parse_month(&month)?;
+    let plan = body_or_problem(&s, &caller, hotel, body).await?;
+    let saved = app::set_plan(&s.deps, &caller, hotel, month, (&plan).into()).await?;
     Ok(Json(PlanBody::from(&saved)))
 }
 
@@ -142,9 +157,10 @@ pub async fn answer(
     Path((id, code)): Path<(String, String)>,
     body: Result<Json<AnswerBody>, JsonRejection>,
 ) -> Result<Json<SituationsBody>, Problem> {
-    let Json(b) = body.map_err(|_| invalid_body())?;
     let caller = app::caller(&s.deps, t.as_deref()).await?;
-    let v = app::answer(&s.deps, &caller, parse_hotel(&id)?, &code, b.answer).await?;
+    let hotel = parse_hotel(&id)?;
+    let b = body_or_problem(&s, &caller, hotel, body).await?;
+    let v = app::answer(&s.deps, &caller, hotel, &code, b.answer).await?;
     Ok(Json(SituationsBody::try_from(&v)?))
 }
 
