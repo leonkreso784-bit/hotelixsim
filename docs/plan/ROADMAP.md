@@ -24,7 +24,8 @@ Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; 
 1. ✅ Kostur od kraja do kraja: workspace, CI, prazna jezgra → API → lokalni Postgres → jedan ekran
    ([CHANGELOG 0.1.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-04-kostur.md)).
 2. Jezgra + alat za balans: stvarni sloj, indeksi, mehanike, obračun, kocka. Provjere iz DEMO §11 (točke 1–6).
-3. Dnevnik, runde (demo način: gumb) i red poslova.
+3. Dnevnik, runde (demo način: gumb) i red poslova — plan [2026-10-05-dnevnik-runde.md](2026-10-05-dnevnik-runde.md)
+   ([ADR-015](../records/DECISIONS.md#adr-015)).
 4. AI sloj: presuda, likovi, mentor (situacije iz predložaka); provjera DEMO §11, točka 7.
 5. Sučelje igrača (mobitel prvi) i gost preko poveznice.
 6. Profesorov pogled (trag promjena, presude s kriterijima).
@@ -32,7 +33,7 @@ Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; 
 ## Gdje smo
 
 **TEMELJI** su napisani, ali arhitektura v2 i domena u DEMO.md još čekaju Leonovu potvrdu (ADR-003, BACKLOG).
-**DEMO:** korak 1 ✅; korak 2 ✅ (jezgra i alat za balans, plan u [archive/](../archive/2026-10-04-jezgra.md)); sljedeći je korak 3 (dnevnik, runde, red poslova). Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
+**DEMO:** korak 1 ✅; korak 2 ✅ (jezgra i alat za balans, plan u [archive/](../archive/2026-10-04-jezgra.md)); korak 3 (dnevnik, runde, red poslova) gradi se po planu [2026-10-05-dnevnik-runde.md](2026-10-05-dnevnik-runde.md). Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
 [ADR-012](../records/DECISIONS.md#adr-012); pitanja profesorima idu tijekom tjedna 5.–11.10.; prijava u inkubator 16.11.
 
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".

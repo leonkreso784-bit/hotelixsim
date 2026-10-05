@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE jobs SET status = 'failed', locked_until = NULL, updated_at = now(), last_error = COALESCE(last_error, 'istekao zakup nakon zadnjeg pokušaja') WHERE status = 'running' AND locked_until < now() AND attempts >= $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d88efd288133ed790d4678a217227663579b5dc57fbfc3a0abc084ce779a5de8"
+}

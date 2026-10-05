@@ -356,3 +356,28 @@ fn resolve_month_propagates_bad_parameter() {
         );
     }
 }
+
+#[test]
+fn unanswered_is_quality_one_with_template_mechanics() {
+    let cat = test_catalog();
+    let t = SituationTemplate {
+        code: "S1".into(),
+        month: Month::Jun,
+        title: "Klima".into(),
+        answers: vec![],
+        unanswered: vec![
+            Mechanic::ServiceRecovery {
+                compensation_cents: 0,
+            },
+            Mechanic::EquipmentRepair { urgent: false },
+        ],
+    };
+    let o = SituationOutcome::unanswered(&t);
+    assert_eq!(o.code, "S1");
+    assert_eq!(o.quality, 1);
+    assert_eq!(o.mechanics, t.unanswered);
+    let e = effects(&o, Month::Jun, &cat, Category::Four).unwrap();
+    // DEMO §6.2: zadovoljstvo Δ = 2 × (q − 3) bodova = −4,00 → −400 stotinki
+    assert_eq!(e.satisfaction_pts, cat.mechanics.recovery_pts_per_q * -2);
+    assert_eq!(e.satisfaction_pts, -400);
+}

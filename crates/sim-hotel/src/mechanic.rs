@@ -51,6 +51,9 @@ pub struct SituationTemplate {
     pub month: Month,
     pub title: String,
     pub answers: Vec<OfferedAnswer>,
+    /// Što se dogodi kad do zatvaranja runde nitko ne odgovori (DEMO §1.2): ove mehanike uz kvalitetu 1.
+    /// Ignoriranje je odluka; bez mehanika kvaliteta 1 ne bi imala učinka pa bi šutnja bila bolja od lošeg odgovora.
+    pub unanswered: Vec<Mechanic>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -110,6 +113,15 @@ impl Mechanic {
 }
 
 impl SituationOutcome {
+    /// Ishod neodgovorene situacije: mehanike `unanswered` iz predloška i kvaliteta 1 (najgori ishod rubrike).
+    pub fn unanswered(t: &SituationTemplate) -> SituationOutcome {
+        SituationOutcome {
+            code: t.code.clone(),
+            mechanics: t.unanswered.clone(),
+            quality: 1,
+        }
+    }
+
     pub fn from_answer(code: &str, a: &OfferedAnswer) -> SituationOutcome {
         SituationOutcome {
             code: code.to_string(),

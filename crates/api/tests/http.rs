@@ -1,4 +1,7 @@
+mod common;
 use std::sync::Arc;
+
+use common::app;
 
 use api::{AppState, openapi_json, router};
 use app::{BoxFut, StatusError, SystemStatus};
@@ -18,10 +21,9 @@ impl SystemStatus for Fake {
 }
 
 async fn get(status: Fake, uri: &str) -> (StatusCode, Option<String>, Value) {
-    let app = router(AppState {
-        status: Arc::new(status),
-    });
-    let res = app
+    let (_, mut d, _) = app();
+    d.status = Arc::new(status);
+    let res = router(AppState { deps: d })
         .oneshot(Request::get(uri).body(Body::empty()).unwrap())
         .await
         .unwrap();
@@ -76,11 +78,63 @@ async fn unknown_profile_is_404_problem_json() {
 }
 
 #[test]
-fn openapi_is_version_3_1_and_lists_paths() {
+fn openapi_documents_contract() {
     let doc: Value = serde_json::from_str(&openapi_json()).unwrap();
     assert_eq!(doc["openapi"], "3.1.0", "TS generator čita samo 3.0 i 3.1");
-    assert!(doc["paths"]["/v1/health"]["get"].is_object());
-    assert!(doc["paths"]["/v1/demo/profiles/{profile}/indices"]["get"].is_object());
+    assert!(
+        doc["info"]["description"]
+            .as_str()
+            .is_some_and(|s| !s.is_empty())
+    );
+    assert!(doc["info"]["license"]["name"].is_string());
+    for (path, method) in [
+        ("/v1/health", "get"),
+        ("/v1/demo", "post"),
+        ("/v1/me/hotel", "get"),
+        ("/v1/hotels/{hotel_id}", "get"),
+        ("/v1/demo/profiles/{profile}/indices", "get"),
+        ("/v1/games/{game_id}", "get"),
+        ("/v1/games/{game_id}/rounds/{month}", "get"),
+        ("/v1/games/{game_id}/rounds/{month}/close", "post"),
+        ("/v1/hotels/{hotel_id}/plans/{month}", "put"),
+        ("/v1/hotels/{hotel_id}/situations", "get"),
+        ("/v1/hotels/{hotel_id}/situations/{code}/answer", "post"),
+        ("/v1/hotels/{hotel_id}/feed", "get"),
+    ] {
+        assert!(doc["paths"][path][method].is_object(), "{method} {path}");
+    }
+    assert!(doc["paths"]["/v1/health"]["get"]["responses"]["503"].is_object());
+    let not_found = &doc["paths"]["/v1/hotels/{hotel_id}"]["get"]["responses"]["404"]["content"];
+    assert!(not_found["application/problem+json"].is_object());
+    let required = doc["components"]["schemas"]["HealthBody"]["required"]
+        .as_array()
+        .unwrap();
+    assert!(
+        required.contains(&json!("events")),
+        "events je obavezan (može biti null)"
+    );
+    let codes = doc["components"]["schemas"]["ProblemCode"]["enum"]
+        .as_array()
+        .unwrap();
+    for c in [
+        "unknown_route",
+        "invalid_body",
+        "guest_required",
+        "round_not_open",
+        "price_not_whole_euro",
+    ] {
+        assert!(codes.contains(&json!(c)), "{c}");
+    }
+    assert_eq!(codes.len(), 22);
+    let schemas = &doc["components"]["schemas"];
+    assert!(schemas["FeedItemBody"]["oneOf"].is_array());
+    assert_eq!(
+        schemas["RoundStatusCode"]["enum"],
+        json!(["scheduled", "open", "closing", "resolved"])
+    );
+    let close = &doc["paths"]["/v1/games/{game_id}/rounds/{month}/close"]["post"]["responses"];
+    assert!(close["202"].is_object() && close["200"].is_object());
+    assert!(doc["components"]["schemas"]["IndexCode"]["enum"].is_array());
 }
 
 #[test]

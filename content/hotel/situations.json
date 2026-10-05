@@ -3,6 +3,10 @@
     "code": "S1",
     "month": "jun",
     "title": "Klima u sobi obitelji s djecom",
+    "unanswered": [
+      { "type": "ServiceRecovery", "compensation_cents": 0 },
+      { "type": "EquipmentRepair", "urgent": false }
+    ],
     "answers": [
       {
         "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
@@ -42,6 +46,7 @@
     "code": "S2",
     "month": "jul",
     "title": "Šef kuhinje traži povišicu ili odlazi",
+    "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }],
     "answers": [
       {
         "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
@@ -69,6 +74,16 @@
     "code": "S3",
     "month": "jun",
     "title": "Agencija nudi grupu od 25 soba za 7 noći (nacrt)",
+    "unanswered": [
+      {
+        "type": "GroupBooking",
+        "accept": false,
+        "rooms": 25,
+        "nights": 7,
+        "discount_bp": 2500,
+        "month": "aug"
+      }
+    ],
     "answers": [
       {
         "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
@@ -132,6 +147,7 @@
     "code": "S4",
     "month": "aug",
     "title": "Najava restrikcija vode zbog suše (nacrt)",
+    "unanswered": [{ "type": "CrisisCommunication", "backup_cents": 0 }],
     "answers": [
       {
         "label": "Voda i hlađenje za goste i osoblje, iskrena obavijest unaprijed, štednja u praonici i bazenu, cisterna kao rezerva, kraće smjene",

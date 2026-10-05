@@ -1,22 +1,17 @@
-use axum::extract::Path;
+use axum::extract::{Path, State};
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Json, Response};
 use serde::Serialize;
-use sim_hotel::Profile;
 use utoipa::ToSchema;
 
+use crate::AppState;
+use crate::auth::{Token, set_cookie};
 use crate::problem::Problem;
-
-#[derive(Serialize, ToSchema)]
-pub struct IndexEntry {
-    /// Kod indeksa: G, R, Z, O ili F.
-    pub code: String,
-    /// Vrijednost u stotinkama: 0–10000 znači 0,00–100,00.
-    pub hundredths: u16,
-}
+use crate::schema::{DemoBody, IndexEntry, ProfileCode, entries};
 
 #[derive(Serialize, ToSchema)]
 pub struct IndicesBody {
-    pub profile: String,
+    pub profile: ProfileCode,
     pub indices: Vec<IndexEntry>,
 }
 
@@ -30,21 +25,40 @@ pub struct IndicesBody {
         (status = 404, description = "Nepoznat profil", body = Problem, content_type = "application/problem+json")
     )
 )]
-pub async fn profile_indices(Path(profile): Path<String>) -> Response {
-    let Some(p) = Profile::from_code(&profile) else {
-        return Problem::not_found("Nepoznat profil", "unknown_profile").into_response();
+pub async fn profile_indices(Path(profile): Path<String>) -> Result<Json<IndicesBody>, Problem> {
+    let v = app::profile_indices(&profile)?;
+    let profile = ProfileCode::from_code(&profile).ok_or_else(|| {
+        Problem::new(
+            StatusCode::NOT_FOUND,
+            crate::problem::ProblemCode::UnknownProfile,
+        )
+    })?;
+    Ok(Json(IndicesBody {
+        profile,
+        indices: entries(v),
+    }))
+}
+
+/// Novi gost (ako nema kolačić) i nova igra s tri robota (DEMO §1.4).
+#[utoipa::path(
+    post,
+    path = "/v1/demo",
+    responses(
+        (status = 201, description = "Igra stvorena", body = DemoBody,
+         headers(("set-cookie" = String, description = "hotelixsim_guest (HttpOnly), samo za novog gosta"))),
+        (status = 503, description = "Baza nije dostupna", body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn start(State(s): State<AppState>, Token(t): Token) -> Result<Response, Problem> {
+    let d = app::start_demo(&s.deps, t.as_deref()).await?;
+    let body = DemoBody {
+        game_id: d.game_id.0.to_string(),
+        hotel_id: d.hotel_id.0.to_string(),
     };
-    let indices = p
-        .starting_indices()
-        .iter()
-        .map(|(i, v)| IndexEntry {
-            code: i.code().to_owned(),
-            hundredths: v.hundredths(),
-        })
-        .collect();
-    Json(IndicesBody {
-        profile: p.code().to_owned(),
-        indices,
-    })
-    .into_response()
+    let mut res = (StatusCode::CREATED, Json(body)).into_response();
+    if let Some(tok) = d.new_token {
+        res.headers_mut()
+            .insert(header::SET_COOKIE, set_cookie(&tok));
+    }
+    Ok(res)
 }

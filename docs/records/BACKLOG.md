@@ -2,7 +2,7 @@
 
 Ovo je JEDINO mjesto za ono što nije riješeno: odgođeni nalazi pregleda, otvorena pitanja i tehnički dug. Plan ne nosi tuđe stavke — plan uzima stavke odavde po oznaci; kad se stavka riješi, briše se (povijest je u gitu i `PROGRESS.md`).
 
-Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[drugi val]` opseg poslije demoa · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor.
+Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[korak 4]` uzima plan koraka 4 (AI, sadržaj) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[drugi val]` opseg poslije demoa · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor.
 Izvor „L37" = redak u [ledgeru kostura](../archive/2026-10-04-kostur-ledger.md); „Task N #k" = nalaz pregleda tog taska.
 
 ## Odgođeni nalazi — [jezgra]
@@ -34,15 +34,24 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [dnevnik]
 
-- [dnevnik] **`stream_sequence_is_unique` je preslab** — provjerava samo `is_err`, ne SQLSTATE 23505, ni da isti seq u drugom toku prolazi. (Task 4 #2, L54)
-- [dnevnik] **Oblik tablice `events`** — globalni redoslijed, tip `actor`, indeks na `game_id`; mora biti gotovo prije Railwaya. (Final minori, L96; SLJEDECA_SESIJA §3)
-- [dnevnik] **`HealthBody.events` nije u `required`** — TS tip je `events?: number|null`. (Task 5 #1, L61)
-- [dnevnik] **OpenAPI `info` bez description i license.name.** (Task 5 #2, L62)
-- [dnevnik] **Nema fallback rute** — nepoznata ruta daje prazan 404, ne problem+json. (Task 5 #4, L64)
-- [dnevnik] **Test OpenAPI-ja ne tvrdi 503 ni problem+json za 404** — 503 je testiran samo lažnim portom. (Task 5 #6, L66)
-- [dnevnik] **`api` zove `sim-hotel` mimo `app`** (`api/src/demo.rs`) — zaseban označen task na kraju plana jezgre ili plan dnevnika. (Final minori, L96; SLJEDECA_SESIJA §3.2)
-- [dnevnik] **Enum kodovi u OpenAPI-ju** — danas `String`. (Final minori, L96)
-- [dnevnik] **`check:api` ne hvata nepraćenu generiranu datoteku** — dodati `git status --porcelain`. (Task 6 #2, L70)
+- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); ponovni pokušaj s odgodom; probni test apalis/pgmq (ARHITEKTURA §9.4); zakašnjela AI presuda za zatvorenu rundu (§8.3).
+- [dnevnik] **Siroče gost:** `start_demo` upisuje gosta pa igru u dvije zasebne radnje — ako `create_game` padne, ostaje gost bez igre; počistiti uz brisanje gostiju nakon 7 dana. (`app/src/demo.rs:41`)
+- [dnevnik] **`ErrorCode::ALL` i `as_str()` se ne koriste** (žičani kod daje serde `ProblemCode`) — dva izvora istine; test `ProblemCode::from(c)` = `c.as_str()` za sve ili brisanje. (`app/src/error.rs:42,84`; M1)
+- [dnevnik] **`parse_hotel`/`parse_game`/`parse_month` idu prije `caller.require()`** — anonimac s pokvarenim uuid-om dobiva 404 umjesto 401; bezopasno. (`api/src/hotels.rs:54,107`, `games.rs:222,247,274`; M2)
+- [dnevnik] **`check:api` pada na staged promjenama** (`git status --porcelain` vidi i staged) — gledati samo `??` i nestageano ili zapisati u README. (`scripts/check-clean.mjs:10`, bez try/catch; M5, T11)
+- [dnevnik] **`?` nakon `axum::serve` preskače `worker.abort()`.** (`server/src/main.rs`; T11)
+- [dnevnik] **Neodgovorene u odgovoru na „Zatvori mjesec"** (`unanswered: 0` jer runda nije `open`) — ekran mora upozoriti PRIJE klika. (`app/src/views.rs:187`; M4) Uz to `unanswered` je izveden na dva mjesta (`RoundView`, `schema::SituationsBody`) → jedno polje u `SituationsView`. (T10)
+- [dnevnik] **Ručni „ponovi obračun" za `failed` posao** (Leon/profesor); `COALESCE(last_error, …)` kod isteka na zadnjem pokušaju čuva stariju poruku. (`store/src/jobs.rs`; T6, T8)
+- [dnevnik] **`game` pomoćnici:** dupli blok čitanja `RoundResolved` u `state_at`/`latest_state` i 5× lookup `HotelResolution` → helper (T3, T4); `apply` ne provjerava poznatu situaciju/indeks odgovora/jedinstvenost slota u `created` i kod duplog odgovora prepiše prije greške (fold ionako pada); `robot_moves` ne provjerava da je mjesec `Open`. (T3)
+- [dnevnik] **`set_plan`/`answer` zovu `game_of_hotel` prije prava** (404 vs 403 otkriva postojanje uuid-a v4 — zanemarivo); `corrupt()` log bez id-a hotela; mapiranje strategija string-matchom paralelno s `game`. (T6, T9)
+- [dnevnik] **Testovi koji fale:** (a) `INDEX_ORDER` prati `Index::ALL` i JSON oblik `Controller` + `GameId::stream()` = `game:<uuid>`; (b) A/B/C samo za seed 42, determinizam `new_game`, `seasonal_min`, `renovation_available=false`; (c) feed „samo moje" bez simetričnog slučaja, srpanj samo brojem događaja, `private_hotel.now` nakon kraja igre, S3 linija neodgovorenog; (d) `Memory` paritet (duplikat `create_game`/`create_guest` tiho prepisuje, Postgres pada), semantika memory porta, zatvorena/završena igra, `token_hash`, potpunost `ErrorCode::ALL`; (e) grana dvostrukog pada (`fail` sam padne) i otpuštanje advisory locka nakon odbijanja, duple igre samo `is_err`; (f) konkurentnost `claim` s 2+ posla i N preuzimača; (g) kolačići (31/33 znaka, ne-hex, nepoznat token), `me/hotel` bez igre, popis ključeva tuđeg hotela, loša tijela 422 po polju, feed `by`/mjesec/redoslijed, `FeedItemBody` bez `discriminator` u OpenAPI-ju; (h) e2e: replay samo lipanj, pretpostavka jedne neodgovorene po mjesecu, robot provjere samo postojanje događaja; dva preklapajuća roundtrip testa u `content/tests/snapshot.rs`. (T1–T12)
+
+
+## Odgođeni nalazi — [korak 4]
+
+- [korak 4] **PRIJE prve promjene content DTO-a: otisak pravila nad kanonskim `serde_json::Value`** spremljenog snimka (ne nad tipiziranim ponovnim zapisom) i nova DTO polja samo uz `#[serde(default)]`; inače svaka postojeća igra postaje `Corrupt`/500. Vidi [ADR-015](DECISIONS.md#adr-015) t. 3. (`game/src/game.rs:70`, `content/src/lib.rs` `Snapshot`; završni pregled I2)
+- [korak 4] **`core_version` se zapisuje, ali se nikad ne provjerava** — promjena jezgre usred igre obračuna srpanj novim kodom (replay lipnja više nije bajt-isti). (`game/src/game.rs:69`; M3)
+- [korak 4] **Svako čitanje radi puni fold** (`Snapshot::build` klonira cijeli snimak, SHA-256, `RefTable::compute`) — zanemarivo za 4 hotela × 2 mjeseca; riješiti uz projekcije. (M6, T1)
 
 ## Odgođeni nalazi — [ekrani]
 
@@ -53,9 +62,11 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [ekrani] **Health redak bez `role="status"`/`aria-live`.** (Task 7 #4, L80)
 - [ekrani] **`t()` parametri nisu tipizirani po poruci** — krivo ime daje vidljiv `{placeholder}`. (Task 7 #5, L82)
 - [ekrani] **`vite build` u CI-ju.** (Final minori, L96)
+- [ekrani] Posao obračuna u statusu `failed` ostavlja rundu u „closing" zauvijek — ekran i profesor trebaju to vidjeti; SSE „runda je obračunata" umjesto ispitivanja (ARHITEKTURA §11).
 
 ## Odgođeni nalazi — [prije Railwaya]
 
+- [prije Railwaya] **Red poslova:** mogući deadlock u expiry `UPDATE` bez reda/`SKIP LOCKED` tek uz više radnika; seq overflow kao `sqlx::Error::Protocol`; dvostruke dev-ovisnosti u `store`. (T7, T8)
 - [prije Railwaya] **Nema testa za `connect_lazy` na nedostupnu bazu (~3 s) ni `migrate` na svježoj bazi.** (Task 4 #3, L55)
 - [prije Railwaya] **sqlx bez TLS značajke** — dodati `tls-rustls` (nikad native-tls/openssl). (Task 4 #4, L56)
 - [prije Railwaya] **`COUNT(*)` u zdravlju** je skup na velikoj tablici. (Final minori, L96)
@@ -64,6 +75,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [prije Railwaya] **SIGTERM (graceful shutdown).** (Final minori, L96)
 - [prije Railwaya] **Typed config** umjesto sirovih env varijabli. (Final minori, L96)
 - [prije Railwaya] **CI bez filtra, akcije po tagu a ne po SHA** — CI radi na push i pull_request; `permissions: contents: read` već postoji. (Task 8 #2, L87)
+- [prije Railwaya] Uloga baze bez prava UPDATE/DELETE nad `events` (okidač ostaje); kolačić `Secure` uz HTTPS; `content::repo_dir()` je put iz vremena prevođenja — na Railwayu `HOTELIXSIM_CONTENT`; zaseban način `work`.
 - [prije Railwaya] **`deny.toml` zabranjuje samo `openssl-sys`** — ne native-tls/openssl. (Task 8 #4, L89)
 - [prije Railwaya] **E2E „baza ne radi" dokazan krivom lozinkom, ne ugašenom bazom** — 3 s `acquire_timeout` nije izmjeren. (Task 8 #5, L90)
 
@@ -94,6 +106,8 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Obnova je i dalje najbolja proba za A i C, ali nije dominantna** — sad košta 6–7 bodova F (prije je F rastao), a napredak je A −0,39 → +5,02, B −3,03 → +2,03, C −0,90 → +6,21; za B je bolja „plaća 115". Treba li obnova od 150 000 € biti dobra odluka već u prvoj sezoni? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 5.
 - [leon] **Najviše sezonaca 50, ne 40** (DEMO §6.1 promijenjen u kalibraciji) — rasprodan kolovoz traži 44 sezonca da marža ostane ≤ 50 %. Realno za 4* od 120 soba? Odgovor: `content/hotel/catalog.json` (`seasonal_max`), DEMO §6.1.
 - [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike. Odgovor: `content/hotel/situations.json`, [ADR-013](DECISIONS.md#adr-013) t. 7.
+- [leon] **Ishod neodgovorene situacije** (kvaliteta 1 + mehanike `unanswered` za S1–S4; S3 ignorirana = ponuda propada bez kazne) — realno? Odgovor: `content/hotel/situations.json` (Task 1 plana), [ADR-015](DECISIONS.md#adr-015) t. 2.
+- [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS.md#adr-015).
 - [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS.md#adr-013).
 
 ## Drugi val (poslije demoa)
@@ -103,6 +117,7 @@ Opseg koji [ADR-013](DECISIONS.md#adr-013) t. 8 odgađa iza demoa; spec je u [DE
 - [drugi val] **Splet okolnosti i tragovi (§9)** — odluke ostavljaju tragove koji se kasnije vraćaju.
 - [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
 - [drugi val] **Naplata otvorenih tragova na kraju sezone.**
+- [drugi val] Limit 3 demo igre po IP-u na dan i brisanje gosta i igre nakon 7 dana (DEMO §1.4; Leon 05.10.).
 - [drugi val] **Različit učinak S4 po stanju hotela.**
 - [drugi val] **Tablice za 3* i 5*** — danas postoji samo 4*.
 - [drugi val] **JSON Schema kataloga** — danas samo provjera u kodu.
