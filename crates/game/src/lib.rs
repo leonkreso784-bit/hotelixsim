@@ -2,12 +2,15 @@
 //! Čisto: bez baze, mreže, sata i vlastite slučajnosti — sve što treba dolazi iz dnevnika i snimka pravila.
 
 pub mod actor;
+pub mod command;
 pub mod dto;
 pub mod error;
 pub mod event;
+mod game;
 pub mod ids;
 
 pub use actor::{Actor, strategy_from_code};
 pub use error::GameError;
 pub use event::*;
+pub use game::{Game, HotelRecord, RoundStatus};
 pub use ids::{GameId, GuestId, HotelId};
