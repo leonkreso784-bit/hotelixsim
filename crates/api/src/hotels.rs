@@ -1,12 +1,17 @@
 //! Čitanje hotela po ulozi: vlastiti (sa stvarnim brojkama) i tuđi (ocjena i pet indeksa).
 
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
+use axum::http::StatusCode;
 use axum::response::Json;
 
 use crate::AppState;
 use crate::auth::Token;
-use crate::problem::Problem;
-use crate::schema::{HotelBody, parse_hotel};
+use crate::problem::{Problem, ProblemCode};
+use crate::schema::{
+    AnswerBody, FeedBody, FeedItemBody, HotelBody, MonthCode, PlanBody, SituationsBody,
+    parse_hotel, parse_month,
+};
 
 /// Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.
 #[utoipa::path(
@@ -48,4 +53,124 @@ pub async fn hotel(
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let v = app::hotel_view(&s.deps, &caller, parse_hotel(&id)?).await?;
     Ok(Json(HotelBody::try_from(&v)?))
+}
+
+fn invalid_body() -> Problem {
+    Problem::new(StatusCode::UNPROCESSABLE_ENTITY, ProblemCode::InvalidBody)
+}
+
+/// Plan za mjesec runde; zadnji zapisani plan vrijedi.
+#[utoipa::path(
+    put,
+    path = "/v1/hotels/{hotel_id}/plans/{month}",
+    params(
+        ("hotel_id" = String, Path, description = "Hotel (uuid)"),
+        ("month" = MonthCode, Path, description = "Mjesec runde")
+    ),
+    request_body = PlanBody,
+    responses(
+        (status = 200, description = "Plan je zapisan; zadnji vrijedi", body = PlanBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json"),
+        (status = 409, description = "Runda nije otvorena", body = Problem, content_type = "application/problem+json"),
+        (status = 422, description = "Plan izvan granica ili neispravno tijelo", body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn put_plan(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path((id, month)): Path<(String, String)>,
+    body: Result<Json<PlanBody>, JsonRejection>,
+) -> Result<Json<PlanBody>, Problem> {
+    let Json(plan) = body.map_err(|_| invalid_body())?;
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let saved = app::set_plan(
+        &s.deps,
+        &caller,
+        parse_hotel(&id)?,
+        parse_month(&month)?,
+        (&plan).into(),
+    )
+    .await?;
+    Ok(Json(PlanBody::from(&saved)))
+}
+
+/// Situacije trenutnog mjeseca; odgovori su samo oznake, nikad kvaliteta.
+#[utoipa::path(
+    get,
+    path = "/v1/hotels/{hotel_id}/situations",
+    params(("hotel_id" = String, Path, description = "Hotel (uuid)")),
+    responses(
+        (status = 200, description = "Situacije", body = SituationsBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn situations(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path(id): Path<String>,
+) -> Result<Json<SituationsBody>, Problem> {
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let v = app::situations(&s.deps, &caller, parse_hotel(&id)?).await?;
+    Ok(Json(SituationsBody::try_from(&v)?))
+}
+
+/// Odgovor na situaciju; jednom po situaciji.
+#[utoipa::path(
+    post,
+    path = "/v1/hotels/{hotel_id}/situations/{code}/answer",
+    params(
+        ("hotel_id" = String, Path, description = "Hotel (uuid)"),
+        ("code" = String, Path, description = "Šifra situacije")
+    ),
+    request_body = AnswerBody,
+    responses(
+        (status = 200, description = "Situacije nakon odgovora", body = SituationsBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json"),
+        (status = 409, description = "Već odgovoreno ili runda nije otvorena", body = Problem, content_type = "application/problem+json"),
+        (status = 422, description = "Odgovor nije ponuđen ili neispravno tijelo", body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn answer(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path((id, code)): Path<(String, String)>,
+    body: Result<Json<AnswerBody>, JsonRejection>,
+) -> Result<Json<SituationsBody>, Problem> {
+    let Json(b) = body.map_err(|_| invalid_body())?;
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let v = app::answer(&s.deps, &caller, parse_hotel(&id)?, &code, b.answer).await?;
+    Ok(Json(SituationsBody::try_from(&v)?))
+}
+
+/// Dnevnik hotela, od najstarijeg: osnova vremenske crte; samo vlasnik.
+#[utoipa::path(
+    get,
+    path = "/v1/hotels/{hotel_id}/feed",
+    params(("hotel_id" = String, Path, description = "Hotel (uuid)")),
+    responses(
+        (status = 200, description = "Dnevnik", body = FeedBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn feed(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path(id): Path<String>,
+) -> Result<Json<FeedBody>, Problem> {
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let items = app::feed(&s.deps, &caller, parse_hotel(&id)?).await?;
+    Ok(Json(FeedBody {
+        items: items
+            .iter()
+            .map(FeedItemBody::try_from)
+            .collect::<Result<_, _>>()?,
+    }))
 }

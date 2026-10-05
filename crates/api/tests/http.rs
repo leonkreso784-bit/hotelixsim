@@ -93,6 +93,13 @@ fn openapi_documents_contract() {
         ("/v1/me/hotel", "get"),
         ("/v1/hotels/{hotel_id}", "get"),
         ("/v1/demo/profiles/{profile}/indices", "get"),
+        ("/v1/games/{game_id}", "get"),
+        ("/v1/games/{game_id}/rounds/{month}", "get"),
+        ("/v1/games/{game_id}/rounds/{month}/close", "post"),
+        ("/v1/hotels/{hotel_id}/plans/{month}", "put"),
+        ("/v1/hotels/{hotel_id}/situations", "get"),
+        ("/v1/hotels/{hotel_id}/situations/{code}/answer", "post"),
+        ("/v1/hotels/{hotel_id}/feed", "get"),
     ] {
         assert!(doc["paths"][path][method].is_object(), "{method} {path}");
     }
@@ -119,6 +126,14 @@ fn openapi_documents_contract() {
         assert!(codes.contains(&json!(c)), "{c}");
     }
     assert_eq!(codes.len(), 22);
+    let schemas = &doc["components"]["schemas"];
+    assert!(schemas["FeedItemBody"]["oneOf"].is_array());
+    assert_eq!(
+        schemas["RoundStatusCode"]["enum"],
+        json!(["scheduled", "open", "closing", "resolved"])
+    );
+    let close = &doc["paths"]["/v1/games/{game_id}/rounds/{month}/close"]["post"]["responses"];
+    assert!(close["202"].is_object() && close["200"].is_object());
     assert!(doc["components"]["schemas"]["IndexCode"]["enum"].is_array());
 }
 

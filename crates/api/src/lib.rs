@@ -2,6 +2,7 @@
 
 pub mod auth;
 mod demo;
+mod games;
 mod health;
 mod hotels;
 pub mod problem;
@@ -35,6 +36,13 @@ fn parts() -> OpenApiRouter<AppState> {
         .routes(routes!(demo::start))
         .routes(routes!(hotels::me_hotel))
         .routes(routes!(hotels::hotel))
+        .routes(routes!(hotels::put_plan))
+        .routes(routes!(hotels::situations))
+        .routes(routes!(hotels::answer))
+        .routes(routes!(hotels::feed))
+        .routes(routes!(games::game))
+        .routes(routes!(games::round))
+        .routes(routes!(games::close))
 }
 
 async fn unknown_route() -> Problem {

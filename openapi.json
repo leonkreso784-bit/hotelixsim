@@ -84,6 +84,212 @@
         }
       }
     },
+    "/v1/games/{game_id}": {
+      "get": {
+        "summary": "Igra u kojoj sudjeluješ: mjeseci, trenutna runda i javni podaci četiriju hotela.",
+        "operationId": "game",
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "description": "Igra (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Igra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/games/{game_id}/rounds/{month}": {
+      "get": {
+        "summary": "Stanje runde; `unanswered` kaže koliko situacija čeka odgovor.",
+        "operationId": "round",
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "description": "Igra (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "description": "Mjesec runde",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MonthCode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stanje runde",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/games/{game_id}/rounds/{month}/close": {
+      "post": {
+        "summary": "Zatvori mjesec (smije svatko u igri; neodgovorene situacije dobivaju kvalitetu 1).",
+        "operationId": "close",
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "description": "Igra (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "description": "Mjesec runde",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MonthCode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Već zatvoreno ili obračunato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundBody"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Zatvoreno sad; obračun čeka radnika",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoundBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Runda još nije otvorena",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku.",
@@ -171,6 +377,308 @@
         }
       }
     },
+    "/v1/hotels/{hotel_id}/feed": {
+      "get": {
+        "summary": "Dnevnik hotela, od najstarijeg: osnova vremenske crte; samo vlasnik.",
+        "operationId": "feed",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dnevnik",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/plans/{month}": {
+      "put": {
+        "summary": "Plan za mjesec runde; zadnji zapisani plan vrijedi.",
+        "operationId": "put_plan",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "description": "Mjesec runde",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MonthCode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Plan je zapisan; zadnji vrijedi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Runda nije otvorena",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Plan izvan granica ili neispravno tijelo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/situations": {
+      "get": {
+        "summary": "Situacije trenutnog mjeseca; odgovori su samo oznake, nikad kvaliteta.",
+        "operationId": "situations",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Situacije",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituationsBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/situations/{code}/answer": {
+      "post": {
+        "summary": "Odgovor na situaciju; jednom po situaciji.",
+        "operationId": "answer",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Šifra situacije",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Situacije nakon odgovora",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituationsBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Već odgovoreno ili runda nije otvorena",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Odgovor nije ponuđen ili neispravno tijelo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/hotel": {
       "get": {
         "summary": "Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.",
@@ -222,6 +730,54 @@
   },
   "components": {
     "schemas": {
+      "ActorKind": {
+        "type": "string",
+        "enum": [
+          "guest",
+          "robot",
+          "system"
+        ]
+      },
+      "AnswerBody": {
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "properties": {
+          "answer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Broj odgovora (indeks u `answers`).",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "CauseCode": {
+        "type": "string",
+        "description": "Uzrok promjene; šifra situacije ide u zasebno polje stavke, ne ovdje.",
+        "enum": [
+          "baseline",
+          "price",
+          "reputation",
+          "marketing",
+          "groups",
+          "capacity",
+          "other_revenue",
+          "wage",
+          "load",
+          "training",
+          "hires",
+          "release",
+          "turnover",
+          "maintenance",
+          "renovation",
+          "reply_reviews",
+          "fixed_costs",
+          "interest",
+          "situation"
+        ]
+      },
       "DatabaseState": {
         "type": "string",
         "enum": [
@@ -240,6 +796,309 @@
             "type": "string"
           },
           "hotel_id": {
+            "type": "string"
+          }
+        }
+      },
+      "FeedBody": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedItemBody"
+            }
+          }
+        }
+      },
+      "FeedItemBody": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "name",
+              "profile",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "hotel_received"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "profile": {
+                "$ref": "#/components/schemas/ProfileCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "plan",
+              "by",
+              "kind"
+            ],
+            "properties": {
+              "by": {
+                "$ref": "#/components/schemas/ActorKind"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "plan_changed"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/PlanBody"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "answer",
+              "label",
+              "by",
+              "kind"
+            ],
+            "properties": {
+              "answer": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "by": {
+                "$ref": "#/components/schemas/ActorKind"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "answer_chosen"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "by",
+              "kind"
+            ],
+            "properties": {
+              "by": {
+                "$ref": "#/components/schemas/ActorKind"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "round_closed"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "situation_ignored"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "indices",
+              "progress_hundredths",
+              "kind"
+            ],
+            "properties": {
+              "indices": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IndexEntry"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "month_resolved"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "progress_hundredths": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "var",
+              "cause",
+              "situation",
+              "amount",
+              "unit",
+              "kind"
+            ],
+            "properties": {
+              "amount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "cause": {
+                "$ref": "#/components/schemas/CauseCode"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "change"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "$ref": "#/components/schemas/UnitCode"
+              },
+              "var": {
+                "$ref": "#/components/schemas/VarCode"
+              }
+            }
+          }
+        ],
+        "description": "Stavka dnevnika hotela (osnova BitLife vremenske crte)."
+      },
+      "GameBody": {
+        "type": "object",
+        "required": [
+          "game_id",
+          "months",
+          "current",
+          "my_hotel_id",
+          "hotels"
+        ],
+        "properties": {
+          "current": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoundBody",
+                "description": "Prazno kad su svi mjeseci obračunati."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "game_id": {
+            "type": "string"
+          },
+          "hotels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicHotelBody"
+            }
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthCode"
+            }
+          },
+          "my_hotel_id": {
             "type": "string"
           }
         }
@@ -742,6 +1601,37 @@
           }
         }
       },
+      "RoundBody": {
+        "type": "object",
+        "required": [
+          "month",
+          "status",
+          "unanswered"
+        ],
+        "properties": {
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RoundStatusCode"
+          },
+          "unanswered": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko situacija mog hotela je bez odgovora; 0 kad runda nije otvorena.\nMjesec se smije zatvoriti i s neodgovorenima (dobivaju kvalitetu 1), pa ekran upozori.",
+            "minimum": 0
+          }
+        }
+      },
+      "RoundStatusCode": {
+        "type": "string",
+        "enum": [
+          "scheduled",
+          "open",
+          "closing",
+          "resolved"
+        ]
+      },
       "SeatBody": {
         "type": "object",
         "required": [
@@ -772,6 +1662,76 @@
           "robot"
         ]
       },
+      "SituationBody": {
+        "type": "object",
+        "description": "Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze.",
+        "required": [
+          "code",
+          "title",
+          "answers",
+          "chosen"
+        ],
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Oznake ponuđenih odgovora; indeks u popisu je broj odgovora."
+          },
+          "chosen": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "SituationsBody": {
+        "type": "object",
+        "required": [
+          "month",
+          "open",
+          "unanswered",
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SituationBody"
+            }
+          },
+          "month": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Može li se još odgovarati."
+          },
+          "unanswered": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko ih je bez odgovora (0 kad runda nije otvorena); ekran upozori prije zatvaranja mjeseca.",
+            "minimum": 0
+          }
+        }
+      },
       "StrategyCode": {
         "type": "string",
         "enum": [
@@ -787,6 +1747,32 @@
           "none",
           "basic",
           "full"
+        ]
+      },
+      "UnitCode": {
+        "type": "string",
+        "enum": [
+          "room_nights",
+          "cents",
+          "people",
+          "points",
+          "rating_hundredths",
+          "bp"
+        ]
+      },
+      "VarCode": {
+        "type": "string",
+        "enum": [
+          "sold",
+          "revenue",
+          "costs",
+          "cash",
+          "staff",
+          "morale",
+          "experience",
+          "equipment",
+          "satisfaction",
+          "rating"
         ]
       }
     }

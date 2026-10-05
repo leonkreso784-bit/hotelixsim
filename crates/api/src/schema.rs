@@ -460,6 +460,404 @@ pub struct DemoBody {
     pub hotel_id: String,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum RoundStatusCode {
+    Scheduled,
+    Open,
+    Closing,
+    Resolved,
+}
+
+impl From<game::RoundStatus> for RoundStatusCode {
+    fn from(s: game::RoundStatus) -> Self {
+        use game::RoundStatus as R;
+        match s {
+            R::Scheduled => RoundStatusCode::Scheduled,
+            R::Open => RoundStatusCode::Open,
+            R::Closing => RoundStatusCode::Closing,
+            R::Resolved => RoundStatusCode::Resolved,
+        }
+    }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct RoundBody {
+    pub month: MonthCode,
+    pub status: RoundStatusCode,
+    /// Koliko situacija mog hotela je bez odgovora; 0 kad runda nije otvorena.
+    /// Mjesec se smije zatvoriti i s neodgovorenima (dobivaju kvalitetu 1), pa ekran upozori.
+    pub unanswered: u8,
+}
+
+impl From<&app::RoundView> for RoundBody {
+    fn from(r: &app::RoundView) -> Self {
+        RoundBody {
+            month: r.month.into(),
+            status: r.status.into(),
+            unanswered: r.unanswered,
+        }
+    }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct GameBody {
+    pub game_id: String,
+    pub months: Vec<MonthCode>,
+    /// Prazno kad su svi mjeseci obračunati.
+    #[schema(required = true)]
+    pub current: Option<RoundBody>,
+    pub my_hotel_id: String,
+    pub hotels: Vec<PublicHotelBody>,
+}
+
+impl TryFrom<&app::GameView> for GameBody {
+    type Error = Problem;
+
+    fn try_from(v: &app::GameView) -> Result<Self, Problem> {
+        Ok(GameBody {
+            game_id: v.game_id.0.to_string(),
+            months: v.months.iter().map(|&m| m.into()).collect(),
+            current: v.current.as_ref().map(RoundBody::from),
+            my_hotel_id: v.my_hotel.0.to_string(),
+            hotels: v
+                .hotels
+                .iter()
+                .map(PublicHotelBody::try_from)
+                .collect::<Result<_, _>>()?,
+        })
+    }
+}
+
+/// Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze.
+#[derive(Serialize, ToSchema)]
+pub struct SituationBody {
+    pub code: String,
+    pub title: String,
+    /// Oznake ponuđenih odgovora; indeks u popisu je broj odgovora.
+    pub answers: Vec<String>,
+    #[schema(required = true)]
+    pub chosen: Option<u8>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct SituationsBody {
+    #[schema(required = true)]
+    pub month: Option<MonthCode>,
+    /// Može li se još odgovarati.
+    pub open: bool,
+    /// Koliko ih je bez odgovora (0 kad runda nije otvorena); ekran upozori prije zatvaranja mjeseca.
+    pub unanswered: u8,
+    pub items: Vec<SituationBody>,
+}
+
+impl TryFrom<&app::SituationsView> for SituationsBody {
+    type Error = Problem;
+
+    fn try_from(v: &app::SituationsView) -> Result<Self, Problem> {
+        let unanswered = if v.open {
+            v.items.iter().filter(|i| i.chosen.is_none()).count()
+        } else {
+            0
+        };
+        Ok(SituationsBody {
+            month: v.month.map(Into::into),
+            open: v.open,
+            unanswered: u8::try_from(unanswered).map_err(|_| {
+                tracing::error!(unanswered, "previše situacija u mjesecu");
+                Problem::new(StatusCode::INTERNAL_SERVER_ERROR, ProblemCode::Internal)
+            })?,
+            items: v
+                .items
+                .iter()
+                .map(|i| SituationBody {
+                    code: i.code.clone(),
+                    title: i.title.clone(),
+                    answers: i.answers.clone(),
+                    chosen: i.chosen,
+                })
+                .collect(),
+        })
+    }
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct AnswerBody {
+    /// Broj odgovora (indeks u `answers`).
+    pub answer: u8,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ActorKind {
+    Guest,
+    Robot,
+    System,
+}
+
+impl From<&game::Actor> for ActorKind {
+    fn from(a: &game::Actor) -> Self {
+        match a {
+            game::Actor::Guest(_) => ActorKind::Guest,
+            game::Actor::Robot(_) => ActorKind::Robot,
+            game::Actor::System => ActorKind::System,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum VarCode {
+    Sold,
+    Revenue,
+    Costs,
+    Cash,
+    Staff,
+    Morale,
+    Experience,
+    Equipment,
+    Satisfaction,
+    Rating,
+}
+
+impl From<game::dto::VarCode> for VarCode {
+    fn from(v: game::dto::VarCode) -> Self {
+        use game::dto::VarCode as V;
+        match v {
+            V::Sold => VarCode::Sold,
+            V::Revenue => VarCode::Revenue,
+            V::Costs => VarCode::Costs,
+            V::Cash => VarCode::Cash,
+            V::Staff => VarCode::Staff,
+            V::Morale => VarCode::Morale,
+            V::Experience => VarCode::Experience,
+            V::Equipment => VarCode::Equipment,
+            V::Satisfaction => VarCode::Satisfaction,
+            V::Rating => VarCode::Rating,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum UnitCode {
+    RoomNights,
+    Cents,
+    People,
+    Points,
+    RatingHundredths,
+    Bp,
+}
+
+impl From<game::dto::UnitCode> for UnitCode {
+    fn from(u: game::dto::UnitCode) -> Self {
+        use game::dto::UnitCode as U;
+        match u {
+            U::RoomNights => UnitCode::RoomNights,
+            U::Cents => UnitCode::Cents,
+            U::People => UnitCode::People,
+            U::Points => UnitCode::Points,
+            U::RatingHundredths => UnitCode::RatingHundredths,
+            U::Bp => UnitCode::Bp,
+        }
+    }
+}
+
+/// Uzrok promjene; šifra situacije ide u zasebno polje stavke, ne ovdje.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CauseCode {
+    Baseline,
+    Price,
+    Reputation,
+    Marketing,
+    Groups,
+    Capacity,
+    OtherRevenue,
+    Wage,
+    Load,
+    Training,
+    Hires,
+    Release,
+    Turnover,
+    Maintenance,
+    Renovation,
+    ReplyReviews,
+    FixedCosts,
+    Interest,
+    /// Uzrok je odgovor na situaciju (šifra u polju `situation`).
+    Situation,
+}
+
+/// Uzrok i, ako je to situacija, njezina šifra.
+fn split_cause(c: &game::dto::CauseDto) -> (CauseCode, Option<String>) {
+    use game::dto::CauseDto as C;
+    let code = match c {
+        C::Baseline => CauseCode::Baseline,
+        C::Price => CauseCode::Price,
+        C::Reputation => CauseCode::Reputation,
+        C::Marketing => CauseCode::Marketing,
+        C::Groups => CauseCode::Groups,
+        C::Capacity => CauseCode::Capacity,
+        C::OtherRevenue => CauseCode::OtherRevenue,
+        C::Wage => CauseCode::Wage,
+        C::Load => CauseCode::Load,
+        C::Training => CauseCode::Training,
+        C::Hires => CauseCode::Hires,
+        C::Release => CauseCode::Release,
+        C::Turnover => CauseCode::Turnover,
+        C::Maintenance => CauseCode::Maintenance,
+        C::Renovation => CauseCode::Renovation,
+        C::ReplyReviews => CauseCode::ReplyReviews,
+        C::FixedCosts => CauseCode::FixedCosts,
+        C::Interest => CauseCode::Interest,
+        C::Situation(code) => return (CauseCode::Situation, Some(code.clone())),
+    };
+    (code, None)
+}
+
+/// Stavka dnevnika hotela (osnova BitLife vremenske crte).
+#[derive(Serialize, ToSchema)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum FeedItemBody {
+    HotelReceived {
+        seq: i64,
+        name: String,
+        profile: ProfileCode,
+    },
+    PlanChanged {
+        seq: i64,
+        month: MonthCode,
+        plan: PlanBody,
+        by: ActorKind,
+    },
+    AnswerChosen {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+        answer: u8,
+        label: String,
+        by: ActorKind,
+    },
+    RoundClosed {
+        seq: i64,
+        month: MonthCode,
+        by: ActorKind,
+    },
+    SituationIgnored {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+    },
+    MonthResolved {
+        seq: i64,
+        month: MonthCode,
+        indices: Vec<IndexEntry>,
+        progress_hundredths: i32,
+    },
+    Change {
+        seq: i64,
+        month: MonthCode,
+        var: VarCode,
+        cause: CauseCode,
+        #[schema(required = true)]
+        situation: Option<String>,
+        amount: i64,
+        unit: UnitCode,
+    },
+}
+
+impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
+    type Error = Problem;
+
+    fn try_from(i: &game::feed::FeedItem) -> Result<Self, Problem> {
+        use game::feed::FeedItem as F;
+        Ok(match i {
+            F::HotelReceived { seq, name, profile } => FeedItemBody::HotelReceived {
+                seq: *seq,
+                name: name.clone(),
+                profile: ProfileCode::from_code(profile)
+                    .ok_or_else(|| corrupt("profil hotela", profile))?,
+            },
+            F::PlanChanged {
+                seq,
+                month,
+                plan,
+                by,
+            } => FeedItemBody::PlanChanged {
+                seq: *seq,
+                month: (*month).into(),
+                plan: plan.into(),
+                by: by.into(),
+            },
+            F::AnswerChosen {
+                seq,
+                month,
+                situation,
+                title,
+                answer,
+                label,
+                by,
+            } => FeedItemBody::AnswerChosen {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+                answer: *answer,
+                label: label.clone(),
+                by: by.into(),
+            },
+            F::RoundClosed { seq, month, by } => FeedItemBody::RoundClosed {
+                seq: *seq,
+                month: (*month).into(),
+                by: by.into(),
+            },
+            F::SituationIgnored {
+                seq,
+                month,
+                situation,
+                title,
+            } => FeedItemBody::SituationIgnored {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+            },
+            F::MonthResolved {
+                seq,
+                month,
+                indices,
+                progress_hundredths,
+            } => FeedItemBody::MonthResolved {
+                seq: *seq,
+                month: (*month).into(),
+                indices: entries(*indices),
+                progress_hundredths: *progress_hundredths,
+            },
+            F::Change { seq, month, line } => {
+                let (cause, situation) = split_cause(&line.cause);
+                FeedItemBody::Change {
+                    seq: *seq,
+                    month: (*month).into(),
+                    var: line.var.into(),
+                    cause,
+                    situation,
+                    amount: line.amount,
+                    unit: line.unit.into(),
+                }
+            }
+        })
+    }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct FeedBody {
+    pub items: Vec<FeedItemBody>,
+}
+
 pub fn parse_game(s: &str) -> Result<app::GameId, Problem> {
     s.parse()
         .map(app::GameId)
