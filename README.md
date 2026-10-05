@@ -30,7 +30,9 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
    (`bash scripts/baza.sh status` pokazuje radi li; `bash scripts/baza.sh stop` je gasi).
 2. Jednom: `cp .env.example .env` i `corepack pnpm install`.
 3. API (Git Bash, prvi terminal): `set -a; source .env; set +a; cargo run -p server -- migrate && cargo run -p server -- serve`
-   `serve` radi u prvom planu i drži terminal zauzetim dok ga ne zaustaviš (Ctrl+C).
+   `serve` radi u prvom planu i drži terminal zauzetim dok ga ne zaustaviš (Ctrl+C). Pri startu učitava i provjerava
+   `content/hotel` (ili mapu iz `HOTELIXSIM_CONTENT`) i pokreće radnika koji obračunava zatvorene mjesece; migracije se
+   ne pokreću same — uvijek `migrate` prije `serve`.
 4. Sučelje (drugi terminal): `corepack pnpm --filter @hotelixsim/web dev` → <http://localhost:5173>
 5. Provjere prije commita: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,

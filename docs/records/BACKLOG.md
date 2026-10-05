@@ -36,7 +36,6 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 - [dnevnik] **`stream_sequence_is_unique` je preslab** — provjerava samo `is_err`, ne SQLSTATE 23505, ni da isti seq u drugom toku prolazi. (Task 4 #2, L54)
 - [dnevnik] **Oblik tablice `events`** — globalni redoslijed, tip `actor`, indeks na `game_id`; mora biti gotovo prije Railwaya. (Final minori, L96; SLJEDECA_SESIJA §3)
-- [dnevnik] **`check:api` ne hvata nepraćenu generiranu datoteku** — dodati `git status --porcelain`. (Task 6 #2, L70)
 
 ## Odgođeni nalazi — [ekrani]
 

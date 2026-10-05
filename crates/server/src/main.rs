@@ -54,6 +54,23 @@ fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
     }
 }
 
+/// Radnik reda poslova u istom procesu (demo; zaseban način `work` je za pilot). Pad procesa ne gubi posao:
+/// zakup istekne i posao se preuzme ponovno (ARHITEKTURA §9.4).
+fn spawn_worker(deps: app::Deps) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        loop {
+            match app::run_next_job(&deps).await {
+                Ok(true) => {}
+                Ok(false) => tokio::time::sleep(std::time::Duration::from_millis(250)).await,
+                Err(e) => {
+                    tracing::warn!(error = %e, "posao reda nije uspio");
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                }
+            }
+        }
+    })
+}
+
 async fn serve() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -64,9 +81,9 @@ async fn serve() -> anyhow::Result<()> {
     let snapshot = content_snapshot()?;
     let ruleset = snapshot.fingerprint();
     let store = store::Store::connect_lazy(&database_url()?)?;
-    let app = api::router(api::AppState {
-        deps: deps(store, snapshot),
-    });
+    let deps = deps(store, snapshot);
+    let worker = spawn_worker(deps.clone());
+    let app = api::router(api::AppState { deps });
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .with_context(|| format!("ne mogu slušati na {addr} (je li port zauzet?)"))?;
@@ -76,5 +93,6 @@ async fn serve() -> anyhow::Result<()> {
             let _ = tokio::signal::ctrl_c().await;
         })
         .await?;
+    worker.abort();
     Ok(())
 }
