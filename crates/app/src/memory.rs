@@ -5,7 +5,8 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::{
     BoxFut, Decide, DecideError, Decided, Deps, EventLog, GameId, Guests, HotelId, Ids, Job,
-    JobQueue, MAX_ATTEMPTS, NewGame, NewJob, RawEvent, StatusError, StoreError, SystemStatus,
+    JobClaim, JobQueue, MAX_ATTEMPTS, NewGame, NewJob, RawEvent, StatusError, StoreError,
+    SystemStatus,
 };
 use game::GuestId;
 
@@ -103,7 +104,11 @@ impl Memory {
     pub fn expire_leases(&self) {
         for j in &mut self.lock().jobs {
             if j.status == JobStatus::Running {
-                j.status = JobStatus::Queued;
+                j.status = if j.attempts >= MAX_ATTEMPTS {
+                    JobStatus::Failed
+                } else {
+                    JobStatus::Queued
+                };
             }
         }
     }
@@ -177,8 +182,10 @@ impl EventLog for Memory {
         {
             push_job_to(&mut m, j);
         }
-        if let Some(id) = decision.finish_job
-            && let Some(j) = m.jobs.iter_mut().find(|j| j.id == id)
+        if let Some(c) = decision.finish_job
+            && let Some(j) = m.jobs.iter_mut().find(|j| {
+                j.id == c.id && j.attempts == c.attempts && j.status == JobStatus::Running
+            })
         {
             j.status = JobStatus::Done;
         }
@@ -248,14 +255,11 @@ impl JobQueue for Memory {
         ready(Ok(job))
     }
 
-    fn fail(&self, id: i64, _error: String) -> BoxFut<'_, Result<(), StoreError>> {
-        // samo posao koji radnik drži; gotov ili već neuspio posao se ne dira
-        if let Some(j) = self
-            .lock()
-            .jobs
-            .iter_mut()
-            .find(|j| j.id == id && j.status == JobStatus::Running)
-        {
+    fn fail(&self, claim: JobClaim, _error: String) -> BoxFut<'_, Result<(), StoreError>> {
+        // samo posao koji TAJ radnik još drži (isti pokušaj); gotov, neuspio ili tuđi zakup se ne dira
+        if let Some(j) = self.lock().jobs.iter_mut().find(|j| {
+            j.id == claim.id && j.attempts == claim.attempts && j.status == JobStatus::Running
+        }) {
             j.status = if j.attempts >= MAX_ATTEMPTS {
                 JobStatus::Failed
             } else {

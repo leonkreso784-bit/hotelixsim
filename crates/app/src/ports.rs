@@ -39,6 +39,23 @@ pub struct Job {
     pub attempts: i32,
 }
 
+impl Job {
+    pub fn claim(&self) -> JobClaim {
+        JobClaim {
+            id: self.id,
+            attempts: self.attempts,
+        }
+    }
+}
+
+/// Identitet zahtjeva: posao i broj pokušaja koji je vratio `claim`. Radnik kojem je zakup istekao
+/// i koji je posao ponovno preuzeo drugi radnik ima zastarjeli `attempts`, pa njegovi pozivi ne rade ništa.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobClaim {
+    pub id: i64,
+    pub attempts: i32,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct NewHotel {
     pub hotel_id: HotelId,
@@ -58,7 +75,7 @@ pub struct NewGame {
 pub struct Decision {
     pub events: Vec<NewEvent>,
     pub enqueue: Option<NewJob>,
-    pub finish_job: Option<i64>,
+    pub finish_job: Option<JobClaim>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -115,8 +132,10 @@ pub trait Guests: Send + Sync {
 pub trait JobQueue: Send + Sync {
     /// Preuzmi najstariji posao u redu ili posao s isteklim zakupom; zakup traje `lease_secs` (ARHITEKTURA §9.4).
     fn claim(&self, lease_secs: i32) -> BoxFut<'_, Result<Option<Job>, StoreError>>;
-    /// Vrati posao u red, ili ga označi `failed` kad je potrošio `MAX_ATTEMPTS`.
-    fn fail(&self, id: i64, error: String) -> BoxFut<'_, Result<(), StoreError>>;
+    /// Vrati posao u red, ili ga označi `failed` kad je potrošio `MAX_ATTEMPTS`. Djeluje samo ako je posao
+    /// još `running` s istim brojem pokušaja kao `claim`; inače ne radi ništa (i vraća `Ok`).
+    /// Posao `running` kojem istekne zakup na zadnjem pokušaju postaje `failed`, ne ostaje zaglavljen.
+    fn fail(&self, claim: JobClaim, error: String) -> BoxFut<'_, Result<(), StoreError>>;
 }
 
 /// Izvor identifikatora i sjemena; u testovima predvidljiv (`memory::SeqIds`).

@@ -172,8 +172,14 @@ async fn done_job_is_never_resurrected_by_fail() {
     let (me, s) = guest(&d).await;
     close_round(&d, &me, s.game_id, Jun).await.unwrap();
     run_next_job(&d).await.unwrap();
-    let id = mem.jobs()[0].id;
-    d.jobs.fail(id, "zakašnjela greška".into()).await.unwrap();
+    let claim = JobClaim {
+        id: mem.jobs()[0].id,
+        attempts: 1,
+    };
+    d.jobs
+        .fail(claim, "zakašnjela greška".into())
+        .await
+        .unwrap();
     assert_eq!(mem.jobs()[0].status, JobStatus::Done);
     assert!(!run_next_job(&d).await.unwrap());
 }
@@ -254,4 +260,66 @@ async fn full_demo_season_june_and_july() {
     assert_eq!(g.current, None, "igra je gotova nakon srpnja");
     assert!(g.hotels.iter().all(|h| h.months.len() == 2));
     assert!(!close_round(&d, &me, s.game_id, Jul).await.unwrap().accepted);
+}
+
+#[tokio::test]
+async fn stale_worker_cannot_clobber_reclaimed_job() {
+    let (d, mem) = setup();
+    let (me, s) = guest(&d).await;
+    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    let a = d.jobs.claim(30).await.unwrap().unwrap();
+    mem.expire_leases();
+    let b = d.jobs.claim(30).await.unwrap().unwrap();
+    assert_eq!((a.id, a.attempts, b.attempts), (b.id, 1, 2));
+    d.jobs.fail(a.claim(), "kasni A".into()).await.unwrap();
+    let j = &mem.jobs()[0];
+    assert_eq!((j.status, j.attempts), (JobStatus::Running, 2));
+    // A-ov kasni završetak ne zatvara B-ov posao
+    let stale = a.claim();
+    d.log
+        .decide(
+            s.game_id,
+            Box::new(move |_| {
+                Ok(Decision {
+                    finish_job: Some(stale),
+                    ..Decision::default()
+                })
+            }),
+        )
+        .await
+        .unwrap();
+    assert_eq!(mem.jobs()[0].status, JobStatus::Running);
+    // B normalno završi
+    let own = b.claim();
+    d.log
+        .decide(
+            s.game_id,
+            Box::new(move |_| {
+                Ok(Decision {
+                    finish_job: Some(own),
+                    ..Decision::default()
+                })
+            }),
+        )
+        .await
+        .unwrap();
+    assert_eq!(mem.jobs()[0].status, JobStatus::Done);
+}
+
+#[tokio::test]
+async fn expired_lease_on_last_attempt_fails_job() {
+    let (d, mem) = setup();
+    let (_, s) = guest(&d).await;
+    mem.push_job(NewJob {
+        key: "zadnji".into(),
+        kind: RESOLVE_KIND.into(),
+        game_id: s.game_id,
+        payload: serde_json::json!({"month": "jun"}),
+    });
+    for _ in 0..MAX_ATTEMPTS {
+        assert!(d.jobs.claim(30).await.unwrap().is_some());
+        mem.expire_leases();
+    }
+    assert_eq!(mem.jobs()[0].status, JobStatus::Failed);
+    assert!(d.jobs.claim(30).await.unwrap().is_none());
 }

@@ -30,7 +30,13 @@ pub async fn run_next_job(deps: &Deps) -> Result<bool, AppError> {
     match run_job(deps, &job).await {
         Ok(()) => Ok(true),
         Err(e) => {
-            deps.jobs.fail(job.id, format!("{e}")).await?;
+            // izvornu grešku posla ne smije progutati greška zapisivanja u red
+            if let Err(f) = deps.jobs.fail(job.claim(), format!("{e}")).await {
+                return Err(AppError {
+                    code: e.code,
+                    detail: format!("{e}; uz to zapis neuspjeha u red nije uspio: {f}"),
+                });
+            }
             Err(e)
         }
     }
@@ -45,7 +51,7 @@ async fn run_job(deps: &Deps, job: &Job) -> Result<(), AppError> {
     }
     let p: ResolvePayload = serde_json::from_value(job.payload.clone())
         .map_err(|e| AppError::internal(e.to_string()))?;
-    let id = job.id;
+    let claim = job.claim();
     deps.log
         .decide(
             job.game_id,
@@ -60,7 +66,7 @@ async fn run_job(deps: &Deps, job: &Job) -> Result<(), AppError> {
                 Ok(Decision {
                     events,
                     enqueue: None,
-                    finish_job: Some(id),
+                    finish_job: Some(claim),
                 })
             }),
         )
