@@ -9,8 +9,12 @@ use sim_hotel::{
 
 use crate::actor::{Actor, strategy_from_code};
 use crate::error::{GameError, corrupt};
-use crate::event::{Controller, GameCreated, GameEvent, HotelSetup, Recorded, RoundResolved};
+use crate::event::{
+    Controller, DebriefRecorded, GameCreated, GameEvent, HotelSetup, Recorded, RoundResolved,
+    VerdictRecorded,
+};
 use crate::ids::{GameId, HotelId};
+use crate::talk::MAX_CHAT_MESSAGES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RoundStatus {
@@ -22,6 +26,31 @@ pub enum RoundStatus {
     Resolved,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Speaker {
+    Student,
+    Character,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct ChatLine {
+    pub from: Speaker,
+    pub text: String,
+}
+
+/// Slobodan odgovor na situaciju, njegova presuda i presude koje su stigle prekasno.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FreeResponse {
+    pub text: String,
+    pub verdict: Option<VerdictRecorded>,
+    pub late: Vec<VerdictRecorded>,
+}
+
+pub(crate) fn student_count(lines: &[ChatLine]) -> usize {
+    lines.iter().filter(|l| l.from == Speaker::Student).count()
+}
+
 /// Jedan hotel u igri: postavke iz `GameCreated` plus ono što su igrač ili robot odlučili.
 #[derive(Clone, Debug)]
 pub struct HotelRecord {
@@ -31,6 +60,9 @@ pub struct HotelRecord {
     pub start_indices: IndexSet,
     pub plans: BTreeMap<Month, MonthPlan>,
     pub answers: BTreeMap<(Month, String), u8>,
+    pub chats: BTreeMap<(Month, String), Vec<ChatLine>>,
+    pub responses: BTreeMap<(Month, String), FreeResponse>,
+    pub debriefs: BTreeMap<Month, DebriefRecorded>,
 }
 
 /// Projekcija dnevnika: stanje igre dobiveno slijedom događaja (`fold`).
@@ -113,6 +145,9 @@ impl Game {
                 start_indices: start,
                 plans: BTreeMap::new(),
                 answers: BTreeMap::new(),
+                chats: BTreeMap::new(),
+                responses: BTreeMap::new(),
+                debriefs: BTreeMap::new(),
             });
         }
         Ok(Game {
@@ -150,11 +185,108 @@ impl Game {
                 let m = a.month.into();
                 self.expect_open(m)?;
                 let h = self.hotel_mut(a.hotel_id)?;
+                if h.responses.contains_key(&(m, a.situation.clone())) {
+                    return Err(corrupt(format!(
+                        "ponuđeni odgovor uz slobodni na {}",
+                        a.situation
+                    )));
+                }
                 if h.answers
                     .insert((m, a.situation.clone()), a.answer)
                     .is_some()
                 {
                     return Err(corrupt(format!("dvostruki odgovor na {}", a.situation)));
+                }
+            }
+            GameEvent::ChatMessageSent(c) => {
+                let m = c.month.into();
+                self.expect_open(m)?;
+                self.expect_free_text(m, &c.situation)?;
+                let h = self.hotel_mut(c.hotel_id)?;
+                let key = (m, c.situation.clone());
+                if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
+                    return Err(corrupt("poruka nakon odgovora"));
+                }
+                let lines = h.chats.entry(key).or_default();
+                if student_count(lines) >= usize::from(MAX_CHAT_MESSAGES)
+                    || lines.last().is_some_and(|l| l.from == Speaker::Student)
+                {
+                    return Err(corrupt("poruka izvan reda razgovora"));
+                }
+                lines.push(ChatLine {
+                    from: Speaker::Student,
+                    text: c.text.clone(),
+                });
+            }
+            GameEvent::CharacterReplied(c) => {
+                let m = c.month.into();
+                self.expect_open(m)?;
+                let h = self.hotel_mut(c.hotel_id)?;
+                let lines = h.chats.entry((m, c.situation.clone())).or_default();
+                if usize::from(c.reply_to) != student_count(lines)
+                    || lines.last().is_none_or(|l| l.from != Speaker::Student)
+                {
+                    return Err(corrupt("odgovor lika izvan reda razgovora"));
+                }
+                lines.push(ChatLine {
+                    from: Speaker::Character,
+                    text: c.text.clone(),
+                });
+            }
+            GameEvent::ResponseSubmitted(s) => {
+                let m = s.month.into();
+                self.expect_open(m)?;
+                self.expect_free_text(m, &s.situation)?;
+                let h = self.hotel_mut(s.hotel_id)?;
+                let key = (m, s.situation.clone());
+                if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
+                    return Err(corrupt(format!("dvostruki odgovor na {}", s.situation)));
+                }
+                h.responses.insert(
+                    key,
+                    FreeResponse {
+                        text: s.text.clone(),
+                        verdict: None,
+                        late: Vec::new(),
+                    },
+                );
+            }
+            GameEvent::VerdictRecorded(v) => {
+                let m = v.month.into();
+                if !matches!(self.status(m)?, RoundStatus::Open | RoundStatus::Closing) {
+                    return Err(corrupt("presuda za rundu koja nije otvorena ni zatvorena"));
+                }
+                let h = self.hotel_mut(v.hotel_id)?;
+                let fr = h
+                    .responses
+                    .get_mut(&(m, v.situation.clone()))
+                    .ok_or_else(|| corrupt("presuda bez slobodnog odgovora"))?;
+                if fr.verdict.is_some() {
+                    return Err(corrupt("dvostruka presuda"));
+                }
+                fr.verdict = Some(v.clone());
+            }
+            GameEvent::VerdictLate(v) => {
+                let m = v.month.into();
+                let resolved = self.status(m)? == RoundStatus::Resolved;
+                let h = self.hotel_mut(v.hotel_id)?;
+                let fr = h
+                    .responses
+                    .get_mut(&(m, v.situation.clone()))
+                    .ok_or_else(|| corrupt("kasna presuda bez slobodnog odgovora"))?;
+                if fr.verdict.is_none() && !resolved {
+                    return Err(corrupt("kasna presuda bez ranije presude"));
+                }
+                fr.late.push(v.clone());
+            }
+            GameEvent::DebriefRecorded(d) => {
+                let m = d.month.into();
+                if self.status(m)? != RoundStatus::Resolved {
+                    return Err(corrupt("mentor za rundu koja nije obračunata"));
+                }
+                let h = self.hotel_mut(d.hotel_id)?;
+                if h.debriefs.insert(m, d.clone()).is_some() {
+                    return Err(corrupt("dvostruki mentor"));
                 }
             }
             GameEvent::RoundClosed(c) => {
@@ -179,6 +311,20 @@ impl Game {
         match self.status(m)? {
             RoundStatus::Open => Ok(()),
             s => Err(corrupt(format!("događaj za rundu u stanju {s:?}"))),
+        }
+    }
+
+    fn expect_free_text(&self, m: Month, code: &str) -> Result<(), GameError> {
+        let ok = self
+            .content
+            .situations
+            .iter()
+            .any(|t| t.month == m && t.code == code)
+            && self.content.ai.get(code).is_some_and(|a| a.free_text);
+        if ok {
+            Ok(())
+        } else {
+            Err(corrupt(format!("situacija {code} nema slobodni odgovor")))
         }
     }
 
@@ -285,7 +431,10 @@ impl Game {
         let n = self
             .situations_in(m)
             .into_iter()
-            .filter(|t| !h.answers.contains_key(&(m, t.code.clone())))
+            .filter(|t| {
+                let key = (m, t.code.clone());
+                !h.answers.contains_key(&key) && !h.responses.contains_key(&key)
+            })
             .count();
         u8::try_from(n).map_err(|_| corrupt("broj neodgovorenih situacija"))
     }

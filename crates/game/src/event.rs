@@ -99,6 +99,94 @@ pub struct SituationResult {
     pub quality: u8,
 }
 
+/// Tko je napisao tekst: AI ili napisani rezervni (kad AI ne radi, ARHITEKTURA §8.3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AiSource {
+    Ai,
+    Fallback,
+}
+
+/// Podaci o AI pozivu uz događaj (za nadzor i trošak).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AiMeta {
+    pub model: String,
+    pub prompt: String,
+    pub input_tokens: u32,
+    pub output_tokens: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CriterionVerdict {
+    pub n: u8,
+    pub met: bool,
+    pub reason: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatMessageSent {
+    pub hotel_id: HotelId,
+    pub month: MonthCode,
+    pub situation: String,
+    pub text: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CharacterReplied {
+    pub hotel_id: HotelId,
+    pub month: MonthCode,
+    pub situation: String,
+    /// Redni broj studentove poruke na koju lik odgovara (1..=6).
+    pub reply_to: u8,
+    pub text: String,
+    pub source: AiSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<AiMeta>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ResponseSubmitted {
+    pub hotel_id: HotelId,
+    pub month: MonthCode,
+    pub situation: String,
+    pub text: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VerdictRecorded {
+    pub hotel_id: HotelId,
+    pub month: MonthCode,
+    pub situation: String,
+    /// Pet ocjena kriterija (prazno kod neutralne presude).
+    pub criteria: Vec<CriterionVerdict>,
+    /// Ponuđeni odgovor čije se mehanike primjenjuju; `None` = neutralna presuda (mehanike `unanswered`).
+    pub nearest_answer: Option<u8>,
+    pub quality: u8,
+    pub rationale: String,
+    pub source: AiSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<AiMeta>,
+    /// Na pregled profesoru (neutralna presuda ili AI ispad, ARHITEKTURA §8.3 korak 5).
+    pub review: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DebriefRecorded {
+    pub hotel_id: HotelId,
+    pub month: MonthCode,
+    pub text: String,
+    pub source: AiSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<AiMeta>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GameEvent {
     GameCreated(GameCreated),
@@ -106,6 +194,13 @@ pub enum GameEvent {
     AnswerChosen(AnswerChosen),
     RoundClosed(RoundClosed),
     RoundResolved(RoundResolved),
+    ChatMessageSent(ChatMessageSent),
+    CharacterReplied(CharacterReplied),
+    ResponseSubmitted(ResponseSubmitted),
+    VerdictRecorded(VerdictRecorded),
+    /// Presuda koja je stigla nakon neutralne presude ili obračuna: zapisana, ne mijenja obračun (ARHITEKTURA §9.4).
+    VerdictLate(VerdictRecorded),
+    DebriefRecorded(DebriefRecorded),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -138,6 +233,12 @@ impl GameEvent {
             GameEvent::AnswerChosen(_) => "AnswerChosen",
             GameEvent::RoundClosed(_) => "RoundClosed",
             GameEvent::RoundResolved(_) => "RoundResolved",
+            GameEvent::ChatMessageSent(_) => "ChatMessageSent",
+            GameEvent::CharacterReplied(_) => "CharacterReplied",
+            GameEvent::ResponseSubmitted(_) => "ResponseSubmitted",
+            GameEvent::VerdictRecorded(_) => "VerdictRecorded",
+            GameEvent::VerdictLate(_) => "VerdictLate",
+            GameEvent::DebriefRecorded(_) => "DebriefRecorded",
         }
     }
 
@@ -148,6 +249,11 @@ impl GameEvent {
             GameEvent::AnswerChosen(e) => serde_json::to_value(e),
             GameEvent::RoundClosed(e) => serde_json::to_value(e),
             GameEvent::RoundResolved(e) => serde_json::to_value(e),
+            GameEvent::ChatMessageSent(e) => serde_json::to_value(e),
+            GameEvent::CharacterReplied(e) => serde_json::to_value(e),
+            GameEvent::ResponseSubmitted(e) => serde_json::to_value(e),
+            GameEvent::VerdictRecorded(e) | GameEvent::VerdictLate(e) => serde_json::to_value(e),
+            GameEvent::DebriefRecorded(e) => serde_json::to_value(e),
         };
         v.expect("događaj nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
     }
@@ -169,6 +275,12 @@ impl GameEvent {
             "AnswerChosen" => GameEvent::AnswerChosen(body(kind, payload)?),
             "RoundClosed" => GameEvent::RoundClosed(body(kind, payload)?),
             "RoundResolved" => GameEvent::RoundResolved(body(kind, payload)?),
+            "ChatMessageSent" => GameEvent::ChatMessageSent(body(kind, payload)?),
+            "CharacterReplied" => GameEvent::CharacterReplied(body(kind, payload)?),
+            "ResponseSubmitted" => GameEvent::ResponseSubmitted(body(kind, payload)?),
+            "VerdictRecorded" => GameEvent::VerdictRecorded(body(kind, payload)?),
+            "VerdictLate" => GameEvent::VerdictLate(body(kind, payload)?),
+            "DebriefRecorded" => GameEvent::DebriefRecorded(body(kind, payload)?),
             other => return Err(EventError::UnknownKind(other.to_owned())),
         })
     }

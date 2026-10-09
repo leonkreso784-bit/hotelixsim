@@ -10,10 +10,12 @@ pub mod feed;
 mod game;
 pub mod ids;
 mod resolve;
+pub mod talk;
 pub mod view;
 
 pub use actor::{Actor, strategy_from_code};
 pub use error::GameError;
 pub use event::*;
-pub use game::{Game, HotelRecord, RoundStatus};
+pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};
 pub use ids::{GameId, GuestId, HotelId};
+pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};

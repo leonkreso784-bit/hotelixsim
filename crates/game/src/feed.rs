@@ -115,7 +115,15 @@ impl Game {
                         line: l.clone(),
                     }));
                 }
-                GameEvent::PlanSet(_) | GameEvent::AnswerChosen(_) => {}
+                // Prave stavke za razgovor, presudu i mentora dolaze kasnije (AI sloj, zadatak 5).
+                GameEvent::PlanSet(_)
+                | GameEvent::AnswerChosen(_)
+                | GameEvent::ChatMessageSent(_)
+                | GameEvent::CharacterReplied(_)
+                | GameEvent::ResponseSubmitted(_)
+                | GameEvent::VerdictRecorded(_)
+                | GameEvent::VerdictLate(_)
+                | GameEvent::DebriefRecorded(_) => {}
             }
         }
         Ok(out)

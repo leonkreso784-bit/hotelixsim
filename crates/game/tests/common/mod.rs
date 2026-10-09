@@ -48,3 +48,20 @@ pub fn push(log: &mut Vec<Recorded>, actor: Actor, event: GameEvent) {
     let seq = log.last().map_or(1, |r| r.seq + 1);
     log.push(Recorded { seq, actor, event });
 }
+
+pub fn guest() -> GuestId {
+    GUEST
+}
+
+/// Igra s otvorenim lipnjem i hotelom igrača (prvi hotel).
+pub fn open_june_game() -> (Game, HotelId) {
+    let snap = Snapshot::read(&repo_dir()).unwrap();
+    let g = Game::fold(&new_game_events(&snap)).unwrap();
+    (g, hotel_ids()[0])
+}
+
+/// Primijeni događaj na igru sa sljedećim rednim brojem.
+pub fn apply_ev(g: &mut Game, actor: Actor, event: GameEvent) {
+    let seq = g.last_seq + 1;
+    g.apply(Recorded { seq, actor, event }).unwrap();
+}

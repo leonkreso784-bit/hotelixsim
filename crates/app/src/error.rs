@@ -16,6 +16,10 @@ pub enum ErrorCode {
     UnknownProfile,
     RoundNotOpen,
     AlreadyAnswered,
+    NotFreeText,
+    ChatLimit,
+    AwaitingReply,
+    BadText,
     PriceNotWholeEuro,
     PriceOutOfRange,
     MarketingOutOfRange,
@@ -39,7 +43,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 20] = [
+    pub const ALL: [ErrorCode; 24] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -51,6 +55,10 @@ impl ErrorCode {
         ErrorCode::UnknownProfile,
         ErrorCode::RoundNotOpen,
         ErrorCode::AlreadyAnswered,
+        ErrorCode::NotFreeText,
+        ErrorCode::ChatLimit,
+        ErrorCode::AwaitingReply,
+        ErrorCode::BadText,
         ErrorCode::PriceNotWholeEuro,
         ErrorCode::PriceOutOfRange,
         ErrorCode::MarketingOutOfRange,
@@ -70,11 +78,10 @@ impl ErrorCode {
             UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile => {
                 ErrorKind::NotFound
             }
-            RoundNotOpen | AlreadyAnswered => ErrorKind::Conflict,
-            UnknownAnswer | PriceNotWholeEuro | PriceOutOfRange | MarketingOutOfRange
-            | SeasonalOutOfRange | SeasonalStepTooBig | WageOutOfRange | RenovationTwice => {
-                ErrorKind::Invalid
-            }
+            RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply => ErrorKind::Conflict,
+            UnknownAnswer | NotFreeText | BadText | PriceNotWholeEuro | PriceOutOfRange
+            | MarketingOutOfRange | SeasonalOutOfRange | SeasonalStepTooBig | WageOutOfRange
+            | RenovationTwice => ErrorKind::Invalid,
             StorageUnavailable => ErrorKind::Unavailable,
             Internal => ErrorKind::Internal,
         }
@@ -95,6 +102,10 @@ impl ErrorCode {
             UnknownProfile => "unknown_profile",
             RoundNotOpen => "round_not_open",
             AlreadyAnswered => "already_answered",
+            NotFreeText => "not_free_text",
+            ChatLimit => "chat_limit",
+            AwaitingReply => "awaiting_reply",
+            BadText => "bad_text",
             PriceNotWholeEuro => "price_not_whole_euro",
             PriceOutOfRange => "price_out_of_range",
             MarketingOutOfRange => "marketing_out_of_range",
@@ -142,6 +153,10 @@ impl From<GameError> for AppError {
             GameError::UnknownAnswer => C::UnknownAnswer,
             GameError::RoundNotOpen => C::RoundNotOpen,
             GameError::AlreadyAnswered => C::AlreadyAnswered,
+            GameError::NotFreeText => C::NotFreeText,
+            GameError::ChatLimit => C::ChatLimit,
+            GameError::AwaitingReply => C::AwaitingReply,
+            GameError::EmptyText | GameError::TextTooLong => C::BadText,
             GameError::Plan(p) => match p {
                 PlanError::PriceNotWholeEuro => C::PriceNotWholeEuro,
                 PlanError::PriceOutOfRange => C::PriceOutOfRange,

@@ -165,7 +165,8 @@ impl Game {
         if usize::from(answer) >= t.answers.len() {
             return Err(GameError::UnknownAnswer);
         }
-        if h.answers.contains_key(&(t.month, t.code.clone())) {
+        let key = (t.month, t.code.clone());
+        if h.responses.contains_key(&key) || h.answers.contains_key(&key) {
             return Err(GameError::AlreadyAnswered);
         }
         Ok(GameEvent::AnswerChosen(AnswerChosen {
