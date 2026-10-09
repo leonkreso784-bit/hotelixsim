@@ -6,6 +6,7 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+ai.workspace = true
 api.workspace = true
 app.workspace = true
 content.workspace = true

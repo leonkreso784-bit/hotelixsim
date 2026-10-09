@@ -191,6 +191,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}/situations/{code}/conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Razgovor s likom situacije (otvaranje, poruke, preostali broj poruka). */
+        get: operations["conversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hotels/{hotel_id}/situations/{code}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Poruka liku u razgovoru; odgovor lika stiže kasnije (radnik), pa je odgovor 202. */
+        post: operations["send_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hotels/{hotel_id}/situations/{code}/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Slobodan odgovor na situaciju; presuda stiže kasnije (radnik), pa je odgovor 202. */
+        post: operations["submit_response"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/hotel": {
         parameters: {
             query?: never;
@@ -226,6 +277,37 @@ export interface components {
          * @enum {string}
          */
         CauseCode: "baseline" | "price" | "reputation" | "marketing" | "groups" | "capacity" | "other_revenue" | "wage" | "load" | "training" | "hires" | "release" | "turnover" | "maintenance" | "renovation" | "reply_reviews" | "fixed_costs" | "interest" | "situation";
+        CharacterBody: {
+            name: string;
+            role: string;
+        };
+        ChatLineBody: {
+            from: components["schemas"]["SpeakerBody"];
+            text: string;
+        };
+        ConversationBody: {
+            /** @description Lik još nije odgovorio na zadnju poruku. */
+            awaiting_reply: boolean;
+            character_name: string;
+            lines: components["schemas"]["ChatLineBody"][];
+            /** @description Runda je otvorena; inače je razgovor samo za čitanje. */
+            open: boolean;
+            opening: string;
+            /**
+             * Format: int32
+             * @description Koliko poruka student još smije poslati.
+             */
+            remaining: number;
+            role: string;
+            situation: string;
+        };
+        CriterionBody: {
+            met: boolean;
+            /** Format: int32 */
+            n: number;
+            reason: string;
+            text: string;
+        };
         /** @enum {string} */
         DatabaseState: "ok" | "error";
         DemoBody: {
@@ -482,6 +564,17 @@ export interface components {
             /** Format: int32 */
             wage_pct: number;
         };
+        /** @description Slobodan odgovor studenta i njegova presuda (ponuđeni odgovori nemaju ovo). */
+        ResponseBody: {
+            criteria: components["schemas"]["CriterionBody"][];
+            /** Format: int32 */
+            quality: number | null;
+            rationale: string | null;
+            status: components["schemas"]["ResponseStatusBody"];
+            text: string;
+        };
+        /** @enum {string} */
+        ResponseStatusBody: "pending" | "judged" | "neutral";
         RoundBody: {
             month: components["schemas"]["MonthCode"];
             status: components["schemas"]["RoundStatusCode"];
@@ -504,9 +597,13 @@ export interface components {
         SituationBody: {
             /** @description Oznake ponuđenih odgovora; indeks u popisu je broj odgovora. */
             answers: string[];
+            character: components["schemas"]["CharacterBody"] | null;
             /** Format: int32 */
             chosen: number | null;
             code: string;
+            /** @description Student smije odgovoriti svojim riječima i razgovarati s likom. */
+            free_text: boolean;
+            response: components["schemas"]["ResponseBody"] | null;
             title: string;
         };
         SituationsBody: {
@@ -521,7 +618,13 @@ export interface components {
             unanswered: number;
         };
         /** @enum {string} */
+        SpeakerBody: "student" | "character";
+        /** @enum {string} */
         StrategyCode: "stedisa" | "brizni" | "lovac" | "nasumicni";
+        /** @description Tekst studenta (poruka liku ili slobodan odgovor); duljinu i praznoću provjerava jezgra (`bad_text`). */
+        TextBody: {
+            text: string;
+        };
         /** @enum {string} */
         TrainingCode: "none" | "basic" | "full";
         /** @enum {string} */
@@ -1068,6 +1171,206 @@ export interface operations {
                 };
             };
             /** @description Odgovor nije ponuđen ili neispravno tijelo */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Šifra situacije */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Razgovor */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Situacija nema lika */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    send_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Šifra situacije */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextBody"];
+            };
+        };
+        responses: {
+            /** @description Poruka je primljena; lik odgovara kasnije */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Runda nije otvorena, sve poruke iskorištene ili lik još nije odgovorio */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Situacija nema lika, tekst prazan ili predug, ili neispravno tijelo */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    submit_response: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Šifra situacije */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextBody"];
+            };
+        };
+        responses: {
+            /** @description Odgovor je primljen; presuda stiže kasnije */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationsBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Već odgovoreno ili runda nije otvorena */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Situacija nije za slobodan odgovor, tekst prazan ili predug, ili neispravno tijelo */
             422: {
                 headers: {
                     [name: string]: unknown;

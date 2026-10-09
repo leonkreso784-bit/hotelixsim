@@ -100,6 +100,12 @@ fn openapi_documents_contract() {
         ("/v1/hotels/{hotel_id}/situations", "get"),
         ("/v1/hotels/{hotel_id}/situations/{code}/answer", "post"),
         ("/v1/hotels/{hotel_id}/feed", "get"),
+        ("/v1/hotels/{hotel_id}/situations/{code}/messages", "post"),
+        (
+            "/v1/hotels/{hotel_id}/situations/{code}/conversation",
+            "get",
+        ),
+        ("/v1/hotels/{hotel_id}/situations/{code}/response", "post"),
     ] {
         assert!(doc["paths"][path][method].is_object(), "{method} {path}");
     }
@@ -122,6 +128,10 @@ fn openapi_documents_contract() {
         "guest_required",
         "round_not_open",
         "price_not_whole_euro",
+        "not_free_text",
+        "chat_limit",
+        "awaiting_reply",
+        "bad_text",
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
