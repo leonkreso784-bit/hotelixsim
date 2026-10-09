@@ -1,6 +1,6 @@
 //! Radnik obračuna (ARHITEKTURA §9.4): preuzima poslove iz reda i obračunava rundu.
-use game::GameId;
 use game::dto::MonthCode;
+use game::{GameId, ResolveStep};
 use serde::{Deserialize, Serialize};
 use sim_hotel::Month;
 
@@ -58,11 +58,14 @@ async fn run_job(deps: &Deps, job: &Job) -> Result<(), AppError> {
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 // idempotentno: već obračunata runda daje praznu odluku, ali se posao ipak zatvara
-                let events = g
-                    .resolve_job(p.month.into())?
-                    .iter()
-                    .map(|(a, e)| new_event(a, e))
-                    .collect();
+                // Privremeno (Task 6 to zamjenjuje odgodom posla): presude koje čekaju još nisu podržane.
+                let evs = match g.resolve_job(p.month.into(), false)? {
+                    ResolveStep::Done(evs) => evs,
+                    ResolveStep::WaitForVerdicts(_) => {
+                        return Err(AppError::internal("presude još čekaju"));
+                    }
+                };
+                let events = evs.iter().map(|(a, e)| new_event(a, e)).collect();
                 Ok(Decision {
                     events,
                     enqueue: None,

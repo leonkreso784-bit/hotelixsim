@@ -90,11 +90,13 @@ fn samples() -> Vec<GameEvent> {
                         code: "S1".into(),
                         answer: Some(2),
                         quality: 1,
+                        free_text: false,
                     },
                     SituationResult {
                         code: "S3".into(),
                         answer: None,
                         quality: 1,
+                        free_text: false,
                     },
                 ],
                 report: MonthReportDto::from(&r),

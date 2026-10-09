@@ -251,7 +251,7 @@ fn resolve_refuses_other_core_version() {
     let mut g = closed_june_game();
     g.core_version = "0.0.0-drugi".into();
     assert!(matches!(
-        g.resolve_job(Month::Jun),
+        g.resolve_job(Month::Jun, false),
         Err(GameError::CoreMismatch(_))
     ));
 }

@@ -97,6 +97,13 @@ pub struct SituationResult {
     /// `None` = nitko nije odgovorio do zatvaranja (kvaliteta 1, DEMO §1.2).
     pub answer: Option<u8>,
     pub quality: u8,
+    /// Slobodan odgovor (kvaliteta iz presude, `answer` je tada `None`); stari događaji ga nemaju.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub free_text: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 /// Tko je napisao tekst: AI ili napisani rezervni (kad AI ne radi, ARHITEKTURA §8.3).
