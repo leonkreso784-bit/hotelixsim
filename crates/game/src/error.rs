@@ -12,6 +12,8 @@ pub enum GameError {
     AlreadyAnswered,
     Plan(PlanError),
     Corrupt(String),
+    /// Igra je stvorena drugom verzijom jezgre; obračun bi dao druge brojke (BACKLOG M3).
+    CoreMismatch(String),
 }
 
 pub(crate) fn corrupt(msg: impl Into<String>) -> GameError {

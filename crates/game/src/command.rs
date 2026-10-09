@@ -55,12 +55,13 @@ pub fn new_game(
             },
         });
     }
+    let value = snapshot.to_value();
     let created = GameCreated {
         game_id,
         seed,
-        ruleset_id: snapshot.fingerprint(),
+        ruleset_id: content::fingerprint_value(&value),
         core_version: sim_hotel::CORE_VERSION.into(),
-        snapshot: Box::new(snapshot.clone()),
+        snapshot: Box::new(value),
         months: MONTHS.iter().map(|&m| m.into()).collect(),
         hotels,
     };

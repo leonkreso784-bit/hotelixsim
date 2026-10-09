@@ -39,6 +39,8 @@ pub struct Game {
     pub id: GameId,
     pub seed: u64,
     pub months: Vec<Month>,
+    /// Verzija jezgre kojom je igra stvorena; obračun se odbija na drugoj (BACKLOG M3).
+    pub core_version: String,
     pub content: Content,
     pub hotels: Vec<HotelRecord>,
     pub closed: BTreeMap<Month, Actor>,
@@ -67,11 +69,14 @@ impl Game {
     }
 
     fn created(c: &GameCreated, r: &Recorded) -> Result<Game, GameError> {
-        if c.snapshot.fingerprint() != c.ruleset_id {
+        let snap = content::Snapshot::from_value(&c.snapshot)
+            .map_err(|e| corrupt(format!("snimak: {e:?}")))?;
+        let ok = content::fingerprint_value(&c.snapshot) == c.ruleset_id
+            || snap.legacy_fingerprint() == c.ruleset_id;
+        if !ok {
             return Err(corrupt("otisak pravila se ne slaže sa snimkom"));
         }
-        let content = c
-            .snapshot
+        let content = snap
             .build()
             .map_err(|e| corrupt(format!("snimak: {e:?}")))?;
         let mut setups: Vec<HotelSetup> = c.hotels.clone();
@@ -114,6 +119,7 @@ impl Game {
             id: c.game_id,
             seed: c.seed,
             months: c.months.iter().map(|&m| m.into()).collect(),
+            core_version: c.core_version.clone(),
             content,
             hotels,
             closed: BTreeMap::new(),

@@ -152,7 +152,7 @@ impl From<GameError> for AppError {
                 PlanError::RenovationTwice => C::RenovationTwice,
                 PlanError::Calc => C::Internal,
             },
-            GameError::Corrupt(_) => C::Internal,
+            GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };
         AppError {
             code,

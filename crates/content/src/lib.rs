@@ -451,12 +451,35 @@ impl Snapshot {
         })
     }
 
-    /// Otisak pravila (`RulesetId`): SHA-256 kanonskog JSON-a tipiziranog snimka. Mape su `BTreeMap`, polja struktura
-    /// imaju stalan redoslijed, pa je izlaz isti na svakom računalu i ne ovisi o redoslijedu ključeva u izvoru.
+    pub fn to_value(&self) -> serde_json::Value {
+        serde_json::to_value(self)
+            .expect("snimak nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
+    }
+
+    /// Snimak iz spremljenog `GameCreated`. Nova polja DTO-a imaju `#[serde(default)]`, pa se stari snimci čitaju.
+    pub fn from_value(v: &serde_json::Value) -> Result<Snapshot, ContentError> {
+        serde_json::from_value(v.clone())
+            .map_err(|e| ContentError::Json(PathBuf::from("<snimak iz dnevnika>"), e.to_string()))
+    }
+
+    /// Otisak pravila (`RulesetId`) nad kanonskim `Value` snimka (ADR-015 t. 3, ispravak iz koraka 4).
     pub fn fingerprint(&self) -> String {
+        fingerprint_value(&self.to_value())
+    }
+
+    /// Otisak iz koraka 3: nad tipiziranim zapisom, redoslijedom polja iz deklaracije. Vrijedi samo za igre stvorene
+    /// prije koraka 4; nova polja DTO-a zato imaju `skip_serializing_if`, da stari snimak da isti stari zapis.
+    pub fn legacy_fingerprint(&self) -> String {
         let bytes = serde_json::to_vec(self).expect("snimak se uvijek serijalizira");
         format!("sha256:{:x}", Sha256::digest(&bytes))
     }
+}
+
+/// Otisak proizvoljnog JSON-a: SHA-256 kanonskog zapisa. `serde_json::Value` drži objekte u `BTreeMap` (bez značajke
+/// `preserve_order`), pa su ključevi poredani i otisak ne ovisi o redoslijedu iz datoteke ni o JSONB-u.
+pub fn fingerprint_value(v: &serde_json::Value) -> String {
+    let bytes = serde_json::to_vec(v).expect("Value se uvijek serijalizira");
+    format!("sha256:{:x}", Sha256::digest(&bytes))
 }
 
 /// Učita `catalog.json`, `profiles.json` i `situations.json` iz `dir` i provjeri ih.

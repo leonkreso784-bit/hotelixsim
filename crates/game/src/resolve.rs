@@ -67,6 +67,13 @@ impl Game {
 
     /// Odluka posla obračuna (red poslova, ADR-015 t. 8): idempotentna po stanju runde.
     pub fn resolve_job(&self, m: Month) -> Result<Vec<(Actor, GameEvent)>, GameError> {
+        if self.core_version != sim_hotel::CORE_VERSION {
+            return Err(GameError::CoreMismatch(format!(
+                "igra je stvorena jezgrom {}, a radi {}",
+                self.core_version,
+                sim_hotel::CORE_VERSION
+            )));
+        }
         match self.status(m)? {
             RoundStatus::Resolved => Ok(Vec::new()),
             RoundStatus::Closing => {

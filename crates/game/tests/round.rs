@@ -40,7 +40,7 @@ fn new_game_writes_created_then_robot_moves_for_june() {
     let GameEvent::GameCreated(c) = &log[0].event else {
         panic!()
     };
-    assert_eq!(c.ruleset_id, c.snapshot.fingerprint());
+    assert_eq!(c.ruleset_id, content::fingerprint_value(&c.snapshot));
     assert_eq!(c.months, [MonthCode::Jun, MonthCode::Jul]);
     let mut robot_profiles: Vec<&str> = c.hotels[1..].iter().map(|h| h.profile.as_str()).collect();
     robot_profiles.sort_unstable();
@@ -244,4 +244,14 @@ fn fold_rejects_unknown_profile_and_strategy_codes() {
         Err(GameError::Corrupt(m)) => assert!(m.contains("strategija"), "{m}"),
         other => panic!("{other:?}"),
     }
+}
+
+#[test]
+fn resolve_refuses_other_core_version() {
+    let mut g = closed_june_game();
+    g.core_version = "0.0.0-drugi".into();
+    assert!(matches!(
+        g.resolve_job(Month::Jun),
+        Err(GameError::CoreMismatch(_))
+    ));
 }

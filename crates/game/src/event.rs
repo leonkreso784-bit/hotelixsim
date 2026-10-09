@@ -13,11 +13,12 @@ pub const SCHEMA_VER: i32 = 1;
 pub struct GameCreated {
     pub game_id: GameId,
     pub seed: u64,
-    /// `snapshot.fingerprint()`; fold ga provjerava.
+    /// Otisak snimka (`content::fingerprint_value` nad `snapshot`; stare igre: `legacy_fingerprint`); fold ga provjerava.
     pub ruleset_id: String,
     pub core_version: String,
-    /// U kutiji jer je snimak velik u odnosu na ostale događaje (`clippy::large_enum_variant`).
-    pub snapshot: Box<content::Snapshot>,
+    /// Sirovi snimak kakav je spremljen; otisak se računa nad njim. U kutiji jer je velik u odnosu na ostale događaje
+    /// (`clippy::large_enum_variant`).
+    pub snapshot: Box<serde_json::Value>,
     pub months: Vec<MonthCode>,
     pub hotels: Vec<HotelSetup>,
 }

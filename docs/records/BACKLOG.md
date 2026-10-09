@@ -50,8 +50,6 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [korak 4]
 
-- [korak 4] **PRIJE prve promjene content DTO-a: otisak pravila nad kanonskim `serde_json::Value`** spremljenog snimka (ne nad tipiziranim ponovnim zapisom) i nova DTO polja samo uz `#[serde(default)]`; inače svaka postojeća igra postaje `Corrupt`/500. Vidi [ADR-015](DECISIONS.md#adr-015) t. 3. (`game/src/game.rs:70`, `content/src/lib.rs` `Snapshot`; završni pregled I2)
-- [korak 4] **`core_version` se zapisuje, ali se nikad ne provjerava** — promjena jezgre usred igre obračuna srpanj novim kodom (replay lipnja više nije bajt-isti). (`game/src/game.rs:69`; M3)
 - [korak 4] **Svako čitanje radi puni fold** (`Snapshot::build` klonira cijeli snimak, SHA-256, `RefTable::compute`) — zanemarivo za 4 hotela × 2 mjeseca; riješiti uz projekcije. (M6, T1)
 
 ## Odgođeni nalazi — [ekrani]
