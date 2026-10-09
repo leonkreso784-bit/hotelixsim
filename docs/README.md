@@ -72,6 +72,7 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
+| [2026-10-09-ai-sloj.md](./plan/2026-10-09-ai-sloj.md) | 🟩 **AKTIVAN** — DEMO korak 4: AI sloj (presuda, likovi, mentor, mjerilo), 11 taskova, grana `gradnja/ai-sloj` |
 
 ## `workflow/` — kako radimo
 

@@ -21,9 +21,9 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
   dokumentacija po Sokratovom sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)). Ekrana još nema.
   Pretpostavke: [ADR-013](docs/records/DECISIONS.md#adr-013), [ADR-014](docs/records/DECISIONS.md#adr-014),
   [ADR-015](docs/records/DECISIONS.md#adr-015). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
-- **Sljedeće:** DEMO korak 4 — AI sloj (presuda na slobodni odgovor, likovi, mentor); aktivnog plana još nema
-  ([ROADMAP](docs/plan/ROADMAP.md)). **Prvo** popraviti pravilo otiska snimka iz BACKLOG-a `[korak 4]` prije ikakve
-  promjene content DTO-a. **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
+- **Sljedeće:** DEMO korak 4 — AI sloj; aktivni plan [2026-10-09-ai-sloj.md](docs/plan/2026-10-09-ai-sloj.md) na grani
+  `gradnja/ai-sloj` (Task 1 = otisak snimka). Odluke: [ADR-018](docs/records/DECISIONS.md#adr-018),
+  [ADR-019](docs/records/DECISIONS.md#adr-019). **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
   i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md), među njima ADR-015 i [ADR-017](docs/records/DECISIONS.md#adr-017).
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main` (osim zadnjeg `/kraj` commita, korak 3 je na GitHubu).
