@@ -1,6 +1,7 @@
 //! Klijent za Claude Messages API (sirovi HTTP: za Rust nema službenog SDK-a) iza `app::AiPort`.
 //! Ključ je samo ovdje i nikad se ne logira ni ne ispisuje.
 
+pub mod benchmark;
 pub mod prompts;
 pub mod request;
 pub mod response;
