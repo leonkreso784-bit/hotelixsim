@@ -333,3 +333,187 @@ async fn replay_from_database_matches(pool: PgPool) {
         serde_json::to_vec(stored).unwrap()
     );
 }
+
+fn deps_with(pool: PgPool, ai: app::memory::FakeAi) -> app::Deps {
+    app::Deps {
+        ai: Arc::new(ai),
+        ..deps(pool)
+    }
+}
+
+/// Jedan prolaz radnika bez čekanja odgode: poslovi koji čekaju postaju spremni odmah.
+async fn tick(pool: &PgPool, d: &app::Deps) -> bool {
+    sqlx::query("UPDATE jobs SET run_after = now() WHERE status IN ('queued', 'running')")
+        .execute(pool)
+        .await
+        .unwrap();
+    // AI koji ne radi vraća grešku posla (zapisana je u red uz odgodu); to je očekivano
+    app::run_next_job(d).await.unwrap_or(true)
+}
+
+async fn drain_now(pool: &PgPool, d: &app::Deps, rounds: usize) {
+    for _ in 0..rounds {
+        tick(pool, d).await;
+    }
+}
+
+#[sqlx::test(migrations = "../store/migrations")]
+async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
+    let good = deps_with(pool.clone(), app::memory::FakeAi::good());
+    let bad = deps_with(pool.clone(), app::memory::FakeAi::failing());
+    let app = router(AppState { deps: good.clone() });
+    let r = call(&app, "POST", "/v1/demo", None, None).await;
+    let tok = token(&r.set_cookie.unwrap());
+    let (game, hotel) = (
+        r.body["game_id"].as_str().unwrap().to_owned(),
+        r.body["hotel_id"].as_str().unwrap().to_owned(),
+    );
+    let text = |t: &str| Some(json!({ "text": t }));
+    // lipanj: dvije poruke liku S1, radnik odgovara
+    let msgs = format!("/v1/hotels/{hotel}/situations/S1/messages");
+    for t in ["Dobar dan, kako vam mogu pomoći?", "Premjestit ću vas."] {
+        let m = call(&app, "POST", &msgs, Some(&tok), text(t)).await;
+        assert_eq!(m.status.as_u16(), 202, "{:?}", m.body);
+        run_worker(&good).await;
+    }
+    let conv = call(
+        &app,
+        "GET",
+        &format!("/v1/hotels/{hotel}/situations/S1/conversation"),
+        Some(&tok),
+        None,
+    )
+    .await;
+    assert_eq!(conv.status.as_u16(), 200, "{:?}", conv.body);
+    assert!(
+        conv.body
+            .to_string()
+            .matches("Hvala, to mi pomaže.")
+            .count()
+            >= 2,
+        "{:?}",
+        conv.body
+    );
+    // slobodan odgovor → presuda q4
+    let resp = call(
+        &app,
+        "POST",
+        &format!("/v1/hotels/{hotel}/situations/S1/response"),
+        Some(&tok),
+        text("Ispričam se i premjestim obitelj."),
+    )
+    .await;
+    assert_eq!(resp.status.as_u16(), 202, "{:?}", resp.body);
+    run_worker(&good).await;
+    let s = call(
+        &app,
+        "GET",
+        &format!("/v1/hotels/{hotel}/situations"),
+        Some(&tok),
+        None,
+    )
+    .await;
+    let items = s.body["items"].as_array().unwrap();
+    let s1 = items.iter().find(|i| i["code"] == "S1").unwrap();
+    assert_eq!(s1["response"]["status"], "judged", "{s1}");
+    let verdict: serde_json::Value = sqlx::query_scalar(
+        "SELECT payload FROM events WHERE type = 'VerdictRecorded' ORDER BY id LIMIT 1",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(verdict["quality"], 4, "{verdict}");
+    let s3 = items.iter().find(|i| i["code"] == "S3").unwrap();
+    assert_eq!(s3["free_text"], false);
+    assert!(s3["answer"].is_null(), "S3 je ponuđen, ne odgovoren: {s3}");
+    // zatvori lipanj → obračun i mentor
+    let close = format!("/v1/games/{game}/rounds/jun/close");
+    assert_eq!(
+        call(&app, "POST", &close, Some(&tok), None)
+            .await
+            .status
+            .as_u16(),
+        202
+    );
+    run_worker(&good).await;
+    let me = call(&app, "GET", "/v1/me/hotel", Some(&tok), None).await;
+    assert_eq!(
+        me.body["private"]["last_month"]["mentor"], "Mentor: dobar mjesec.",
+        "{:?}",
+        me.body["private"]
+    );
+    // srpanj s AI-jem koji ne radi: presuda se ne može dobiti
+    let resp = call(
+        &app,
+        "POST",
+        &format!("/v1/hotels/{hotel}/situations/S2/response"),
+        Some(&tok),
+        text("Smirim gosta."),
+    )
+    .await;
+    assert_eq!(resp.status.as_u16(), 202, "{:?}", resp.body);
+    let jul_close = call(
+        &app,
+        "POST",
+        &format!("/v1/games/{game}/rounds/jul/close"),
+        Some(&tok),
+        None,
+    )
+    .await;
+    assert_eq!(jul_close.status.as_u16(), 202, "{:?}", jul_close.body);
+    drain_now(&pool, &bad, 12).await;
+    // rok presude istekao: obračun smije proći s neutralnom presudom
+    sqlx::query("UPDATE jobs SET created_at = now() - interval '10 minutes', run_after = now()")
+        .execute(&pool)
+        .await
+        .unwrap();
+    for _ in 0..12 {
+        if !tick(&pool, &bad).await {
+            break;
+        }
+    }
+    let neutral: Vec<serde_json::Value> = sqlx::query_scalar(
+        "SELECT payload FROM events WHERE type = 'VerdictRecorded' AND payload->>'situation' = 'S2'",
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(neutral.len(), 1, "{neutral:?}");
+    assert_eq!(neutral[0]["review"], true, "{:?}", neutral[0]);
+    let n: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM events WHERE type = 'RoundResolved' AND payload->>'month' = 'jul'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(n, 1);
+    // ponovljivost: fold iz baze i ponovni obračun lipnja daje bajt-isti RoundResolved
+    let raw = good
+        .log
+        .load(app::GameId(game.parse().unwrap()))
+        .await
+        .unwrap();
+    let recs: Vec<game::Recorded> = raw
+        .iter()
+        .map(|r| game::Recorded {
+            seq: r.seq,
+            actor: game::Actor::parse(&r.actor).unwrap(),
+            event: game::GameEvent::from_record(&r.kind, r.schema_ver, r.payload.clone()).unwrap(),
+        })
+        .collect();
+    let at = recs
+        .iter()
+        .position(|r| r.event.kind() == "RoundResolved")
+        .unwrap();
+    let again = Game::fold(&recs[..at])
+        .unwrap()
+        .resolve_round(game::dto::MonthCode::Jun.into())
+        .unwrap();
+    let game::GameEvent::RoundResolved(stored) = &recs[at].event else {
+        panic!("očekivan RoundResolved")
+    };
+    assert_eq!(
+        serde_json::to_vec(&again).unwrap(),
+        serde_json::to_vec(stored).unwrap()
+    );
+}
