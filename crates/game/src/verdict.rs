@@ -114,6 +114,12 @@ impl Game {
         Ok((m, fr.verdict.is_some()))
     }
 
+    /// Odgovor postoji i još nema presudu (ni AI-jevu ni neutralnu).
+    pub fn response_pending(&self, hotel: HotelId, code: &str) -> Result<bool, GameError> {
+        let (_, has_verdict) = self.response_slot(hotel, code)?;
+        Ok(!has_verdict)
+    }
+
     /// Upis presude: `VerdictRecorded` dok odgovor čeka (runda `Open`/`Closing`), inače `VerdictLate`.
     pub fn record_verdict(
         &self,

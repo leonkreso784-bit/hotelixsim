@@ -37,6 +37,8 @@ pub struct Job {
     pub game_id: GameId,
     pub payload: serde_json::Value,
     pub attempts: i32,
+    /// Sekunde od upisa posla (računa baza, ne aplikacija).
+    pub age_secs: i64,
 }
 
 impl Job {
@@ -74,7 +76,7 @@ pub struct NewGame {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Decision {
     pub events: Vec<NewEvent>,
-    pub enqueue: Option<NewJob>,
+    pub enqueue: Vec<NewJob>,
     pub finish_job: Option<JobClaim>,
 }
 
@@ -136,6 +138,58 @@ pub trait JobQueue: Send + Sync {
     /// još `running` s istim brojem pokušaja kao `claim`; inače ne radi ništa (i vraća `Ok`).
     /// Posao `running` kojem istekne zakup na zadnjem pokušaju postaje `failed`, ne ostaje zaglavljen.
     fn fail(&self, claim: JobClaim, error: String) -> BoxFut<'_, Result<(), StoreError>>;
+    /// Vrati posao u red bez trošenja pokušaja, najranije za `secs` sekundi (čekanje presuda pri zatvaranju).
+    fn defer(&self, claim: JobClaim, secs: i32) -> BoxFut<'_, Result<(), StoreError>>;
+}
+
+/// Odgovor AI-ja uz podatke o pozivu.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AiOut<T> {
+    pub value: T,
+    pub meta: game::AiMeta,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum AiError {
+    #[error("AI nije uključen (nema ključa)")]
+    Disabled,
+    #[error("AI nije dostupan: {0}")]
+    Unavailable(String),
+    #[error("AI je odbio zahtjev: {0}")]
+    Refused(String),
+    #[error("AI je vratio neispravan izlaz: {0}")]
+    BadOutput(String),
+}
+
+/// Port prema AI-ju; poziva se SAMO izvan `decide` (radnik).
+pub trait AiPort: Send + Sync {
+    fn assess(
+        &self,
+        input: game::AssessInput,
+    ) -> BoxFut<'_, Result<AiOut<game::VerdictDraft>, AiError>>;
+    fn character(&self, input: game::CharacterInput) -> BoxFut<'_, Result<AiOut<String>, AiError>>;
+    fn debrief(&self, input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>>;
+}
+
+/// AI bez ključa: sve uloge odmah vraćaju `Disabled`, pa rade rezerve.
+pub struct DisabledAi;
+
+impl AiPort for DisabledAi {
+    fn assess(
+        &self,
+        _input: game::AssessInput,
+    ) -> BoxFut<'_, Result<AiOut<game::VerdictDraft>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn character(
+        &self,
+        _input: game::CharacterInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn debrief(&self, _input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
 }
 
 /// Izvor identifikatora i sjemena; u testovima predvidljiv (`memory::SeqIds`).

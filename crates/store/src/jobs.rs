@@ -44,6 +44,7 @@ impl JobQueue for Store {
                 game_id: GameId(r.game_id),
                 payload: r.payload,
                 attempts: r.attempts,
+                age_secs: 0,
             }))
         })
     }
@@ -65,5 +66,9 @@ impl JobQueue for Store {
             .map_err(store_err)?;
             Ok(())
         })
+    }
+
+    fn defer(&self, _claim: JobClaim, _secs: i32) -> BoxFut<'_, Result<(), StoreError>> {
+        Box::pin(async { Err(StoreError("defer: Task 7".into())) })
     }
 }

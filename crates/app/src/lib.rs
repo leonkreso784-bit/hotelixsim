@@ -6,6 +6,7 @@ pub mod error;
 pub mod jobs;
 pub mod memory;
 pub mod ports;
+pub mod talk;
 pub mod views;
 
 pub use commands::*;
@@ -14,6 +15,7 @@ pub use error::*;
 pub use game::{GameId, GuestId, HotelId};
 pub use jobs::*;
 pub use ports::*;
+pub use talk::*;
 pub use views::*;
 
 use std::future::Future;
@@ -27,6 +29,7 @@ pub struct Deps {
     pub log: Arc<dyn EventLog>,
     pub guests: Arc<dyn Guests>,
     pub jobs: Arc<dyn JobQueue>,
+    pub ai: Arc<dyn AiPort>,
     pub ids: Arc<dyn Ids>,
     pub snapshot: Arc<content::Snapshot>,
 }

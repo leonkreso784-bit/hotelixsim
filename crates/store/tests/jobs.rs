@@ -51,12 +51,12 @@ async fn enqueue(s: &Store, g: GameId, key: &str) {
             Ok(Decision {
                 events: vec![],
                 finish_job: None,
-                enqueue: Some(NewJob {
+                enqueue: vec![NewJob {
                     key,
                     kind: "resolve_round".into(),
                     game_id: g,
                     payload: json!({"month": "jun"}),
-                }),
+                }],
             })
         }),
     )
@@ -136,7 +136,7 @@ async fn finished_job_is_not_claimed(pool: PgPool) {
         Box::new(move |_: &[RawEvent]| {
             Ok(Decision {
                 events: vec![],
-                enqueue: None,
+                enqueue: vec![],
                 finish_job: Some(j.claim()),
             })
         }),

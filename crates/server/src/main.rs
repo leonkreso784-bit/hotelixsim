@@ -49,6 +49,7 @@ fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
         log: s.clone(),
         guests: s.clone(),
         jobs: s,
+        ai: Arc::new(app::DisabledAi),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
     }

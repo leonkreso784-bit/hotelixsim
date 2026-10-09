@@ -61,6 +61,10 @@ async fn plan_answer_close_then_worker_resolves_june() {
     assert!(c.accepted);
     assert_eq!(c.round.status, RoundStatus::Closing);
     assert!(run_next_job(&d).await.unwrap());
+    assert!(
+        run_next_job(&d).await.unwrap(),
+        "mentorov posao za igračev hotel"
+    );
     assert!(!run_next_job(&d).await.unwrap(), "red je prazan");
     assert_eq!(
         round_status(&d, &me, s.game_id, Jun).await.unwrap().status,
@@ -134,6 +138,7 @@ async fn crashed_worker_job_is_reclaimed_and_duplicate_job_is_noop() {
     assert!(!run_next_job(&d).await.unwrap(), "zakup još traje");
     mem.expire_leases();
     assert!(run_next_job(&d).await.unwrap());
+    while run_next_job(&d).await.unwrap() {} // mentorov posao nastao obračunom
     mem.push_job(NewJob {
         key: "dupli".into(),
         kind: RESOLVE_KIND.into(),
@@ -181,6 +186,7 @@ async fn done_job_is_never_resurrected_by_fail() {
         .await
         .unwrap();
     assert_eq!(mem.jobs()[0].status, JobStatus::Done);
+    assert!(run_next_job(&d).await.unwrap(), "mentorov posao");
     assert!(!run_next_job(&d).await.unwrap());
 }
 
@@ -248,14 +254,14 @@ async fn full_demo_season_june_and_july() {
     let (d, _) = setup();
     let (me, s) = guest(&d).await;
     close_round(&d, &me, s.game_id, Jun).await.unwrap();
-    run_next_job(&d).await.unwrap();
+    while run_next_job(&d).await.unwrap() {}
     let v = situations(&d, &me, s.hotel_id).await.unwrap();
     assert_eq!(
         v.items.iter().map(|i| i.code.as_str()).collect::<Vec<_>>(),
         ["S2"]
     );
     close_round(&d, &me, s.game_id, Jul).await.unwrap();
-    run_next_job(&d).await.unwrap();
+    while run_next_job(&d).await.unwrap() {}
     let g = game_view(&d, &me, s.game_id).await.unwrap();
     assert_eq!(g.current, None, "igra je gotova nakon srpnja");
     assert!(g.hotels.iter().all(|h| h.months.len() == 2));

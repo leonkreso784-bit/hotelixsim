@@ -16,6 +16,7 @@ fn deps(pool: PgPool) -> app::Deps {
         log: s.clone(),
         guests: s.clone(),
         jobs: s,
+        ai: Arc::new(app::DisabledAi),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(Snapshot::read(&repo_dir()).unwrap()),
     }

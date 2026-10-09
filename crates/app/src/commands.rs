@@ -104,13 +104,13 @@ pub async fn close_round(
                     None => Ok(Decision::default()),
                     Some(ev) => Ok(Decision {
                         events: vec![new_event(&Actor::Guest(guest), &ev)],
-                        enqueue: Some(NewJob {
+                        enqueue: vec![NewJob {
                             key: resolve_key(game_id, m),
                             kind: RESOLVE_KIND.to_owned(),
                             game_id,
                             payload: serde_json::to_value(ResolvePayload { month })
                                 .map_err(|e| AppError::internal(e.to_string()))?,
-                        }),
+                        }],
                         finish_job: None,
                     }),
                 }
