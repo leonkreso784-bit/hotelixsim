@@ -92,3 +92,24 @@ fn from_value_rejects_unknown_field() {
         .insert("nepoznato".into(), serde_json::json!(1));
     assert!(Snapshot::from_value(&v).is_err());
 }
+
+#[test]
+fn legacy_fingerprint_of_step3_snapshot_is_frozen() {
+    // Literal je otisak snimka iz koraka 3 (izračunan prije izmjene DTO-a u koraku 4) i NIKAD se ne smije mijenjati:
+    // dokazuje da `skip_serializing_if` daje bajt-isti stari zapis pa stvarne igre iz koraka 3 i dalje prolaze.
+    let mut v = snap().to_value();
+    for s in v["situations"].as_array_mut().unwrap() {
+        let o = s.as_object_mut().unwrap();
+        for k in ["rubric", "character", "free_text"] {
+            o.remove(k);
+        }
+        for a in o["answers"].as_array_mut().unwrap() {
+            a.as_object_mut().unwrap().remove("criteria");
+        }
+    }
+    let old = Snapshot::from_value(&v).unwrap();
+    assert_eq!(
+        old.legacy_fingerprint(),
+        "sha256:5ef1b8541e85d0f2311a6c6ba1af2411ee043e1f79473823452bcbfbbc88973e"
+    );
+}

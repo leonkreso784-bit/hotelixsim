@@ -229,3 +229,27 @@ fn tampered_snapshot_is_corrupt() {
     c.snapshot["catalog"]["economy"]["hire_cents"] = json!(1);
     assert!(matches!(Game::fold(&events), Err(GameError::Corrupt(_))));
 }
+
+#[test]
+fn old_snapshot_without_ai_fields_still_folds() {
+    // Snimak iz koraka 3 nema rubric/character/free_text/criteria; mora se čitati i dati stari otisak.
+    let snap = content::Snapshot::read(&content::repo_dir()).unwrap();
+    let mut v = snap.to_value();
+    for s in v["situations"].as_array_mut().unwrap() {
+        let o = s.as_object_mut().unwrap();
+        o.remove("rubric");
+        o.remove("character");
+        o.remove("free_text");
+        for a in o["answers"].as_array_mut().unwrap() {
+            a.as_object_mut().unwrap().remove("criteria");
+        }
+    }
+    let old = content::Snapshot::from_value(&v).unwrap();
+    let mut events = common::new_game_events(&old);
+    let GameEvent::GameCreated(c) = &mut events[0].event else {
+        panic!()
+    };
+    c.ruleset_id = old.legacy_fingerprint();
+    let g = Game::fold(&events).unwrap();
+    assert!(!g.content.ai["S1"].free_text);
+}

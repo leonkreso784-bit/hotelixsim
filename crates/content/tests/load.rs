@@ -117,3 +117,93 @@ fn duplicate_situation_code_is_rejected() {
         "{err:?}"
     );
 }
+
+#[test]
+fn s1_and_s2_are_free_text_with_rubric_and_character() {
+    let c = content::load(&content::repo_dir()).unwrap();
+    for code in ["S1", "S2"] {
+        let ai = &c.ai[code];
+        assert!(ai.free_text, "{code}");
+        assert_eq!(ai.rubric.len(), 5, "{code}");
+        assert!(ai.character.is_some(), "{code}");
+    }
+    assert!(!c.ai["S3"].free_text);
+}
+
+#[test]
+fn offered_answer_quality_matches_criteria_count() {
+    // Ponuđeni odgovori i slobodan tekst su na istoj ljestvici (ARHITEKTURA §10.3): q = max(1, broj kriterija).
+    let c = content::load(&content::repo_dir()).unwrap();
+    for t in &c.situations {
+        let ai = &c.ai[&t.code];
+        if ai.rubric.is_empty() {
+            continue;
+        }
+        for (a, crit) in t.answers.iter().zip(&ai.criteria) {
+            let expected = u8::try_from(crit.len()).unwrap().max(1);
+            assert_eq!(a.quality, expected, "{} / {}", t.code, a.label);
+        }
+    }
+}
+
+/// Učita sadržaj iz repoa s promijenjenom situacijom S1 (`edit` mijenja njezin JSON) i vrati grešku.
+fn load_with_s1(tag: &str, edit: impl FnOnce(&mut serde_json::Value)) -> content::ContentError {
+    let s = std::fs::read_to_string(content::repo_dir().join("situations.json")).unwrap();
+    let mut list: Vec<serde_json::Value> = serde_json::from_str(&s).unwrap();
+    edit(&mut list[0]);
+    let t = TempContent::new(tag, &serde_json::to_string(&list).unwrap());
+    content::load(&t.0).unwrap_err()
+}
+
+fn assert_invalid_s1(err: content::ContentError) {
+    assert!(
+        matches!(&err, content::ContentError::Invalid(m) if m.contains("S1")),
+        "{err:?}"
+    );
+}
+
+#[test]
+fn free_text_without_character_is_rejected() {
+    assert_invalid_s1(load_with_s1("nochar", |s| {
+        s.as_object_mut().unwrap().remove("character");
+    }));
+}
+
+#[test]
+fn rubric_with_four_criteria_is_rejected() {
+    assert_invalid_s1(load_with_s1("r4", |s| {
+        s["rubric"].as_array_mut().unwrap().pop();
+    }));
+}
+
+#[test]
+fn criterion_six_is_rejected() {
+    assert_invalid_s1(load_with_s1("c6", |s| {
+        s["answers"][2]["criteria"] = serde_json::json!([6]);
+    }));
+}
+
+#[test]
+fn duplicate_criterion_in_answer_is_rejected() {
+    assert_invalid_s1(load_with_s1("cdup", |s| {
+        s["answers"][1]["criteria"] = serde_json::json!([1, 1, 4]);
+    }));
+}
+
+#[test]
+fn quality_not_matching_criteria_is_rejected() {
+    assert_invalid_s1(load_with_s1("qmis", |s| {
+        s["answers"][0]["quality"] = serde_json::json!(5);
+        s["answers"][0]["criteria"] = serde_json::json!([1, 2]);
+    }));
+}
+
+#[test]
+fn criteria_without_rubric_are_rejected() {
+    assert_invalid_s1(load_with_s1("norub", |s| {
+        let o = s.as_object_mut().unwrap();
+        o.remove("rubric");
+        o.remove("free_text");
+        o.remove("character");
+    }));
+}
