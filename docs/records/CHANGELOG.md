@@ -2,6 +2,26 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [0.4.0] — 2026-10-10 — AI sloj (DEMO korak 4)
+
+Verzija bez git taga. Plan: [archive/2026-10-09-ai-sloj.md](../archive/2026-10-09-ai-sloj.md).
+
+### Dodano
+
+- Razgovor s likom u S1 (gošća) i S2 (šef kuhinje), do 6 poruka; lik glumi Claude, a bez AI-ja odgovara napisana rečenica.
+- Slobodan odgovor u S1 i S2: AI za svaki od pet kriterija rubrike kaže ispunjen/ne uz razlog; kvalitetu (1–5) računa
+  kod, brojke dolaze iz najbližeg ponuđenog odgovora. Presuda bez valjanog oblika se ponavlja, zadnji pokušaj daje
+  neutralnu presudu „na pregled profesoru".
+- „Zatvori mjesec" čeka presude do 120 s, zatim neutralna; kasna presuda se zapisuje (`VerdictLate`) i ne mijenja obračun.
+- Mentor nakon obračuna (Claude, ili tekst iz brojki bez AI-ja); nove stavke feeda; red poslova s odgodom.
+- Crate `ai` (Claude Messages API, strukturirani izlaz, upute u `prompts/`), alat `mjerilo` (DEMO §11 t. 7).
+- Rute `…/situations/{code}/messages`, `/conversation`, `/response`; ključ `ANTHROPIC_API_KEY` u `.env`.
+
+### Gdje se vidi
+
+Lokalno: `cargo test --workspace`, `cargo test -p ai --test live -- --ignored` (pravi ključ), `cargo run -p server`.
+GitHub: `main` na `156e6df`, CI zelen. Ekrana još nema (korak 5).
+
 ## [0.3.0] — 2026-10-05 — Dnevnik, runde i red poslova (DEMO korak 3)
 
 Verzija bez git taga. Plan: [archive/2026-10-05-dnevnik-runde.md](../archive/2026-10-05-dnevnik-runde.md).

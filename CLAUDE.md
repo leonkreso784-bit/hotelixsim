@@ -16,17 +16,18 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
 ## Stanje
 - **Sesija počinje** s `/clear` → `/newsession` (čita [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)), **završava**
   s `/kraj` (dnevnik, ADR-ovi, predaja, `check:docs`, commit).
-- **Gotovo:** kostur od kraja do kraja, jezgra s alatom za balans i DEMO korak 3 — cijela igra preko API-ja na pravom
-  Postgresu (gost, igrač + 3 robota, lipanj i srpanj, „Zatvori mjesec", radnik, ljestvica, feed) ([CHANGELOG](docs/records/CHANGELOG.md));
-  dokumentacija po Sokratovom sustavu ([ADR-011](docs/records/DECISIONS.md#adr-011)). Ekrana još nema.
-  Pretpostavke: [ADR-013](docs/records/DECISIONS.md#adr-013), [ADR-014](docs/records/DECISIONS.md#adr-014),
-  [ADR-015](docs/records/DECISIONS.md#adr-015). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
-- **Sljedeće:** DEMO korak 4 — AI sloj; aktivni plan [2026-10-09-ai-sloj.md](docs/plan/2026-10-09-ai-sloj.md) na grani
-  `gradnja/ai-sloj` (Task 1 = otisak snimka). Odluke: [ADR-018](docs/records/DECISIONS.md#adr-018),
-  [ADR-019](docs/records/DECISIONS.md#adr-019). **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
-- **Čeka Leona:** [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona" (domena, arhitektura v2, AI ključ, inkubator)
-  i ADR-ovi sa statusom 🟨 u [DECISIONS.md](docs/records/DECISIONS.md), među njima ADR-015 i [ADR-017](docs/records/DECISIONS.md#adr-017).
-- **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main` (osim zadnjeg `/kraj` commita, korak 3 je na GitHubu).
+- **Gotovo:** DEMO koraci 1–4 — cijela igra preko API-ja na pravom Postgresu (gost, igrač + 3 robota, lipanj i srpanj,
+  „Zatvori mjesec", ljestvica, feed) i AI sloj (razgovor s likom, slobodan odgovor s presudom po rubrici, mentor,
+  rezerve bez AI-ja, alat `mjerilo`) ([CHANGELOG](docs/records/CHANGELOG.md)). **Ekrana još nema.** Pretpostavke 🟨:
+  ADR-013, ADR-015, ADR-017, [ADR-019](docs/records/DECISIONS.md#adr-019). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
+- **AI ključ** je u `.env` (`ANTHROPIC_API_KEY`), nikad u `.env.example` ni u gitu; živi test:
+  `cargo test -p ai --test live -- --ignored` (uz `set -a; source .env; set +a`).
+- **Sljedeće:** DEMO korak 5 — ekrani igrača, mobitel prvi, **Tailwind**, po Leonovom konceptu
+  [DIZAJN.md](docs/product/DIZAJN.md) ([ADR-020](docs/records/DECISIONS.md#adr-020)); aktivnog plana još nema.
+  **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
+- **Čeka Leona:** ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); [BACKLOG.md](docs/records/BACKLOG.md)
+  → „Otvoreno za Leona" (domena, arhitektura v2, inkubator) i ADR-ovi 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).
+- **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main` (korak 4 je na GitHubu).
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
   (`gh` je prijavljen, nije na PATH-u).
 - **Okolina:** VS Code panel ([ADR-010](docs/records/DECISIONS.md#adr-010)), Windows, Git Bash + PowerShell.

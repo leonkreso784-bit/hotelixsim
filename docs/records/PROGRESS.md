@@ -4,6 +4,16 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-09/10 — AI sloj (DEMO korak 4) i Leonov dizajn
+
+- Leon kroz anketu: slobodan tekst u S1 i S2, brojke iz najbližeg ponuđenog odgovora, do 6 poruka liku, Anthropic ([ADR-018](DECISIONS.md#adr-018) ✅); pretpostavke [ADR-019](DECISIONS.md#adr-019) 🟨. Plan s 11 taskova ([archive/](../archive/2026-10-09-ai-sloj.md), ledger uz njega).
+- Izgrađeno kroz subagente (sonnet izvođači i pregledi, opus završni pregled): otisak pravila nad kanonskim `Value` (stare igre i dalje rade — zamrznut hash koraka 3 provjeren na lokalnoj bazi), rubrike i likovi, razgovor, slobodan odgovor, presuda (kvalitetu računa kod), neutralna i zakašnjela presuda, mentor, odgoda u redu poslova, crate `ai` (Claude), rute, mjerilo.
+- Završni pregled: „spremno uz popravke" — 4 važna (injekcija preko replika lika → `presuda.v2`, timeout klijenta, izlazni kod mjerila, e2e komentar) i 4 sitna; jedan val popravaka, ponovni pregled čist.
+- Provjereno: 262 testa / 0 palih, fmt, clippy, brana jezgre, balans, check:docs, check:api, lint, typecheck — na grani i na spojenom `main`. Živi test s pravim ključem prošao (presuda ~8 s). Spojeno u `main` (`156e6df`), pushano uz Leonov OK, CI zelen (run 38003510045).
+- Leon je zalijepio ključ u `.env.example` (datoteka u gitu) — premješten u `.env` prije ikakvog commita; ništa nije otišlo na GitHub.
+- Leon: ekrani u sljedećoj sesiji, Tailwind, njegov logo i koncept ekrana ([ADR-020](DECISIONS.md#adr-020), [DIZAJN.md](../product/DIZAJN.md)); nađeno 6 neslaganja koncepta i igre.
+- Otvoreno: Leonove ocjene 40 odgovora za mjerilo; likovi i ADR-019 na pregled; odgođeni nalazi u BACKLOG-u `[ai-sloj]`.
+
 ## 2026-10-05 — Dnevnik, runde i red poslova (DEMO korak 3)
 
 - Plan s 12 taskova ([archive/](../archive/2026-10-05-dnevnik-runde.md), ledger uz njega) i pretpostavke [ADR-015](DECISIONS.md#adr-015) 🟨. Leon je kroz ankete odlučio gosta, zatvaranje s neodgovorenim, tko zatvara i profile ([ADR-016](DECISIONS.md#adr-016) ✅); tehničke presude voditelja su u [ADR-017](DECISIONS.md#adr-017) 🟨.

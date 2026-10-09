@@ -57,6 +57,7 @@
 |---|---|
 | [VIZIJA.md](./product/VIZIJA.md) | Zašto i za koga: dobiveni hotel, fer start, pet osi situacija, AI u četiri uloge, relativna ocjena |
 | [DEMO.md](./product/DEMO.md) | **Spec demoa**: stvarni sloj hotela, pet indeksa, profili A/B/C, mehanike, situacije S1–S8, roboti, provjere (§11), pravila zaokruživanja (§12, nacrt) |
+| [DIZAJN.md](./product/DIZAJN.md) | Leonov logo i koncept ekrana (boje, tri ekrana, gdje se koncept i igra ne slažu); slike u [dizajn/](./product/dizajn/) |
 | [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — čeka Leonovu provjeru |
 | [PITANJA_ZA_PROFESORE.md](./product/PITANJA_ZA_PROFESORE.md) | Pitanja za profesore FMTU-a — čeka Leonov pregled prije slanja |
 
@@ -72,7 +73,6 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
-| [2026-10-09-ai-sloj.md](./plan/2026-10-09-ai-sloj.md) | 🟩 **AKTIVAN** — DEMO korak 4: AI sloj (presuda, likovi, mentor, mjerilo), 11 taskova, grana `gradnja/ai-sloj` |
 
 ## `workflow/` — kako radimo
 
@@ -109,4 +109,6 @@
 | [2026-10-04-jezgra-ledger.md](./archive/2026-10-04-jezgra-ledger.md) | ✅ Radni ledger jezgre: odluke, nalazi pregleda, odgođene sitnice |
 | [2026-10-05-dnevnik-runde.md](./archive/2026-10-05-dnevnik-runde.md) | ✅ Plan „dnevnik, runde i red poslova" (12 taskova, DEMO korak 3) |
 | [2026-10-05-dnevnik-runde-ledger.md](./archive/2026-10-05-dnevnik-runde-ledger.md) | ✅ Radni ledger koraka 3: odluke, nalazi pregleda, sažetak završnog pregleda |
+| [2026-10-09-ai-sloj.md](./archive/2026-10-09-ai-sloj.md) | ✅ Plan „AI sloj" (11 taskova, DEMO korak 4) |
+| [2026-10-09-ai-sloj-ledger.md](./archive/2026-10-09-ai-sloj-ledger.md) | ✅ Radni ledger koraka 4: preflight, presude voditelja, odgođeni nalazi, završni pregled |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |

@@ -26,15 +26,16 @@ Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; 
 2. ✅ Jezgra + alat za balans: stvarni sloj, indeksi, mehanike, obračun, kocka. Provjere iz DEMO §11 (točke 1–6).
 3. ✅ Dnevnik, runde (demo način: gumb) i red poslova ([CHANGELOG 0.3.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-05-dnevnik-runde.md);
    [ADR-015](../records/DECISIONS.md#adr-015), [ADR-016](../records/DECISIONS.md#adr-016)).
-4. **U gradnji:** AI sloj: presuda na slobodni odgovor, likovi, mentor (situacije iz predložaka); provjera DEMO §11, točka 7
-   (plan [2026-10-09-ai-sloj.md](2026-10-09-ai-sloj.md); [ADR-018](../records/DECISIONS.md#adr-018), [ADR-019](../records/DECISIONS.md#adr-019)).
-5. Sučelje igrača (mobitel prvi) i gost preko poveznice.
+4. ✅ AI sloj: razgovor s likom, presuda na slobodni odgovor po rubrici, mentor, mjerilo za DEMO §11 t. 7
+   ([CHANGELOG 0.4.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-09-ai-sloj.md);
+   [ADR-018](../records/DECISIONS.md#adr-018), [ADR-019](../records/DECISIONS.md#adr-019)).
+5. **Sljedeće:** sučelje igrača (mobitel prvi, Tailwind, Leonov koncept u [DIZAJN.md](../product/DIZAJN.md)) i gost preko poveznice.
 6. Profesorov pogled (trag promjena, presude s kriterijima).
 
 ## Gdje smo
 
 **TEMELJI** su napisani, ali arhitektura v2 i domena u DEMO.md još čekaju Leonovu potvrdu (ADR-003, BACKLOG).
-**DEMO:** korak 1 ✅; korak 2 ✅ (jezgra i alat za balans, plan u [archive/](../archive/2026-10-04-jezgra.md)); korak 3 ✅ (dnevnik, runde, red poslova, plan u [archive/](../archive/2026-10-05-dnevnik-runde.md)); korak 4 (AI sloj) je sljedeći. Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
+**DEMO:** korak 1 ✅; korak 2 ✅ (jezgra i alat za balans, plan u [archive/](../archive/2026-10-04-jezgra.md)); korak 3 ✅ (dnevnik, runde, red poslova, plan u [archive/](../archive/2026-10-05-dnevnik-runde.md)); korak 4 ✅ (AI sloj, plan u [archive/](../archive/2026-10-09-ai-sloj.md)); korak 5 (ekrani) je sljedeći. Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
 [ADR-012](../records/DECISIONS.md#adr-012); pitanja profesorima idu tijekom tjedna 5.–11.10.; prijava u inkubator 16.11.
 
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".

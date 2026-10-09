@@ -5,9 +5,21 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-020 — Sučelje: Tailwind i Leonov koncept dizajna; gradnja ekrana u sljedećoj sesiji
+**Datum:** 2026-10-10 · **Status:** ✅ ODLUČIO LEON · **Vezano:** [DIZAJN.md](../product/DIZAJN.md), ROADMAP korak 5
+
+**Odluka.** Leon: *„mislim da je kreiaranje sucelja za novu sesiju iskreno. koristit cemo tailwind za dizajn ja cu ti
+poslat u ovoj sesiji plan dizajna pa cemo u sljedecoj sesiji krenuti sa izradom"*. Dizajn sučelja je Leonov logo i
+koncept tri ekrana (Moj hotel, Situacija, Mjesec završen) u `docs/product/dizajn/`; boje `#246BFD`, `#151B2B`,
+`#FFFFFF`; stilovi se pišu Tailwindom.
+**Posljedice.** Plan ekrana (korak 5) gradi po [DIZAJN.md](../product/DIZAJN.md); šest neslaganja koncepta i igre
+(§3 tamo) rješava plan ili Leon prije gradnje.
+
+---
+
 ## ADR-019 — AI sloj: arhitektonske pretpostavke koraka 4
 **Datum:** 2026-10-09 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-018](#adr-018),
-[ADR-015](#adr-015), ARHITEKTURA §8.3–8.4, §9.4, §10 · **Plan:** [2026-10-09-ai-sloj.md](../plan/2026-10-09-ai-sloj.md)
+[ADR-015](#adr-015), ARHITEKTURA §8.3–8.4, §9.4, §10 · **Plan:** [2026-10-09-ai-sloj.md](../archive/2026-10-09-ai-sloj.md)
 
 **Kontekst.** Korak 4 dodaje AI (presuda, lik, mentor) na igru iz koraka 3. ARHITEKTURA opisuje cilj, ali ne i kako se
 to uklapa u dnevnik, red poslova i rok demoa ~14.10. Ovo su pretpostavke s kojima plan gradi.
