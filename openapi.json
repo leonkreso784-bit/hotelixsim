@@ -1058,6 +1058,109 @@
                 "$ref": "#/components/schemas/VarCode"
               }
             }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "response"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "quality",
+              "neutral",
+              "late",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "verdict"
+                ]
+              },
+              "late": {
+                "type": "boolean"
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "neutral": {
+                "type": "boolean"
+              },
+              "quality": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "text",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "mentor"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
           }
         ],
         "description": "Stavka dnevnika hotela (osnova BitLife vremenske crte)."
@@ -1205,7 +1308,8 @@
           "available",
           "rooms_revenue_cents",
           "gop_cents",
-          "goppar_cents"
+          "goppar_cents",
+          "mentor"
         ],
         "properties": {
           "available": {
@@ -1220,6 +1324,12 @@
           "goppar_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "mentor": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "month": {
             "$ref": "#/components/schemas/MonthCode"

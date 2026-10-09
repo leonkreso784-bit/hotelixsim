@@ -3,7 +3,7 @@
 use crate::actor::Actor;
 use crate::dto::{LineDto, MonthCode, PlanDto};
 use crate::error::{GameError, corrupt};
-use crate::event::GameEvent;
+use crate::event::{AiSource, GameEvent, VerdictRecorded};
 use crate::game::Game;
 use crate::ids::HotelId;
 
@@ -51,6 +51,29 @@ pub enum FeedItem {
         month: MonthCode,
         line: LineDto,
     },
+    /// Slobodan odgovor igrača na situaciju (tekst je u pogledu situacije, ne u feedu).
+    Response {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+    },
+    /// Presuda na slobodni odgovor; `neutral` = rezervna (bez AI-ja), `late` = stigla nakon obračuna.
+    Verdict {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+        quality: u8,
+        neutral: bool,
+        late: bool,
+    },
+    /// Mentorov osvrt na mjesec.
+    Mentor {
+        seq: i64,
+        month: MonthCode,
+        text: String,
+    },
 }
 
 impl Game {
@@ -95,7 +118,11 @@ impl Game {
                         .iter()
                         .find(|x| x.hotel_id == hotel)
                         .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
-                    for s in res.situations.iter().filter(|s| s.answer.is_none()) {
+                    for s in res
+                        .situations
+                        .iter()
+                        .filter(|s| s.answer.is_none() && !s.free_text)
+                    {
                         out.push(FeedItem::SituationIgnored {
                             seq,
                             month: rr.month,
@@ -115,7 +142,28 @@ impl Game {
                         line: l.clone(),
                     }));
                 }
-                // Prave stavke za razgovor, presudu i mentora dolaze kasnije (AI sloj, zadatak 5).
+                GameEvent::ResponseSubmitted(e) if e.hotel_id == hotel => {
+                    out.push(FeedItem::Response {
+                        seq,
+                        month: e.month,
+                        situation: e.situation.clone(),
+                        title: self.situation_title(&e.situation)?,
+                    });
+                }
+                GameEvent::VerdictRecorded(v) if v.hotel_id == hotel => {
+                    out.push(self.verdict_item(seq, v, false)?);
+                }
+                GameEvent::VerdictLate(v) if v.hotel_id == hotel => {
+                    out.push(self.verdict_item(seq, v, true)?);
+                }
+                GameEvent::DebriefRecorded(d) if d.hotel_id == hotel => {
+                    out.push(FeedItem::Mentor {
+                        seq,
+                        month: d.month,
+                        text: d.text.clone(),
+                    });
+                }
+                // Razgovor je dio situacije, ne feeda; ostalo je tuđi hotel.
                 GameEvent::PlanSet(_)
                 | GameEvent::AnswerChosen(_)
                 | GameEvent::ChatMessageSent(_)
@@ -127,6 +175,23 @@ impl Game {
             }
         }
         Ok(out)
+    }
+
+    fn verdict_item(
+        &self,
+        seq: i64,
+        v: &VerdictRecorded,
+        late: bool,
+    ) -> Result<FeedItem, GameError> {
+        Ok(FeedItem::Verdict {
+            seq,
+            month: v.month,
+            situation: v.situation.clone(),
+            title: self.situation_title(&v.situation)?,
+            quality: v.quality,
+            neutral: v.source == AiSource::Fallback,
+            late,
+        })
     }
 
     fn situation_title(&self, code: &str) -> Result<String, GameError> {

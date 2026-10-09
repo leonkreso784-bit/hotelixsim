@@ -371,6 +371,8 @@ pub struct LastMonthBody {
     pub rooms_revenue_cents: i64,
     pub gop_cents: i64,
     pub goppar_cents: i64,
+    #[schema(required = true)]
+    pub mentor: Option<String>,
 }
 
 impl From<&LastMonth> for LastMonthBody {
@@ -382,6 +384,7 @@ impl From<&LastMonth> for LastMonthBody {
             rooms_revenue_cents: m.rooms_revenue_cents,
             gop_cents: m.gop_cents,
             goppar_cents: m.goppar_cents,
+            mentor: m.mentor.clone(),
         }
     }
 }
@@ -768,6 +771,26 @@ pub enum FeedItemBody {
         amount: i64,
         unit: UnitCode,
     },
+    Response {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+    },
+    Verdict {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+        quality: u8,
+        neutral: bool,
+        late: bool,
+    },
+    Mentor {
+        seq: i64,
+        month: MonthCode,
+        text: String,
+    },
 }
 
 impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
@@ -849,6 +872,39 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
                     unit: line.unit.into(),
                 }
             }
+            F::Response {
+                seq,
+                month,
+                situation,
+                title,
+            } => FeedItemBody::Response {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+            },
+            F::Verdict {
+                seq,
+                month,
+                situation,
+                title,
+                quality,
+                neutral,
+                late,
+            } => FeedItemBody::Verdict {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+                quality: *quality,
+                neutral: *neutral,
+                late: *late,
+            },
+            F::Mentor { seq, month, text } => FeedItemBody::Mentor {
+                seq: *seq,
+                month: (*month).into(),
+                text: text.clone(),
+            },
         })
     }
 }

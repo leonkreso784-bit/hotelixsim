@@ -1,6 +1,7 @@
 mod common;
 
 use game::dto::MonthCode;
+use game::feed::FeedItem;
 use game::talk::{MAX_TEXT_CHARS, ReplyBody};
 use game::*;
 use sim_hotel::Month;
@@ -165,4 +166,38 @@ fn new_events_roundtrip_through_payload() {
             e.kind()
         );
     }
+}
+
+#[test]
+fn feed_shows_response_verdict_and_mentor_only_to_owner_stream() {
+    let g = common::june_resolved_with_free_verdict_game(4, 0); // + DebriefRecorded za igrača
+    let h = common::my_hotel(&g);
+    let feed = g.feed(h).unwrap();
+    assert!(
+        feed.iter()
+            .any(|i| matches!(i, FeedItem::Response { situation, .. } if situation == "S1"))
+    );
+    assert!(feed.iter().any(|i| matches!(
+        i,
+        FeedItem::Verdict {
+            quality: 4,
+            neutral: false,
+            late: false,
+            ..
+        }
+    )));
+    assert!(feed.iter().any(|i| matches!(i, FeedItem::Mentor { .. })));
+    // Slobodan odgovor nije "zanemarena situacija".
+    assert!(
+        !feed.iter().any(
+            |i| matches!(i, FeedItem::SituationIgnored { situation, .. } if situation == "S1")
+        )
+    );
+}
+
+#[test]
+fn private_view_carries_mentor_of_last_month() {
+    let g = common::june_resolved_with_free_verdict_game(4, 0);
+    let p = g.private_hotel(common::my_hotel(&g)).unwrap();
+    assert!(p.last_month.unwrap().mentor.is_some());
 }

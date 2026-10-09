@@ -264,7 +264,10 @@ fn seq(f: &FeedItem) -> i64 {
         | FeedItem::RoundClosed { seq, .. }
         | FeedItem::SituationIgnored { seq, .. }
         | FeedItem::MonthResolved { seq, .. }
-        | FeedItem::Change { seq, .. } => *seq,
+        | FeedItem::Change { seq, .. }
+        | FeedItem::Response { seq, .. }
+        | FeedItem::Verdict { seq, .. }
+        | FeedItem::Mentor { seq, .. } => *seq,
     }
 }
 

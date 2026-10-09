@@ -299,6 +299,33 @@ export interface components {
             situation: string | null;
             unit: components["schemas"]["UnitCode"];
             var: components["schemas"]["VarCode"];
+        } | {
+            /** @enum {string} */
+            kind: "response";
+            month: components["schemas"]["MonthCode"];
+            /** Format: int64 */
+            seq: number;
+            situation: string;
+            title: string;
+        } | {
+            /** @enum {string} */
+            kind: "verdict";
+            late: boolean;
+            month: components["schemas"]["MonthCode"];
+            neutral: boolean;
+            /** Format: int32 */
+            quality: number;
+            /** Format: int64 */
+            seq: number;
+            situation: string;
+            title: string;
+        } | {
+            /** @enum {string} */
+            kind: "mentor";
+            month: components["schemas"]["MonthCode"];
+            /** Format: int64 */
+            seq: number;
+            text: string;
         };
         GameBody: {
             current: components["schemas"]["RoundBody"] | null;
@@ -342,6 +369,7 @@ export interface components {
             gop_cents: number;
             /** Format: int64 */
             goppar_cents: number;
+            mentor: string | null;
             month: components["schemas"]["MonthCode"];
             /** Format: int64 */
             rooms_revenue_cents: number;

@@ -3,6 +3,7 @@
 
 use content::{Snapshot, repo_dir};
 use game::command::new_game;
+use game::event::AiSource;
 use game::*;
 use uuid::Uuid;
 
@@ -130,6 +131,18 @@ pub fn june_resolved_with_free_verdict_game(q: usize, i: u8) -> Game {
     let ev = g.close_round(sim_hotel::Month::Jun).unwrap().unwrap();
     apply_ev(&mut g, Actor::Guest(GUEST), ev);
     run_resolve(&mut g);
+    // Mentor za lipanj (rezervni tekst, kao kad AI ne radi).
+    let ev = g
+        .record_debrief(
+            h,
+            sim_hotel::Month::Jun,
+            "Mentor: dobar početak.".to_owned(),
+            AiSource::Fallback,
+            None,
+        )
+        .unwrap()
+        .unwrap();
+    apply_ev(&mut g, Actor::System, ev);
     g
 }
 
