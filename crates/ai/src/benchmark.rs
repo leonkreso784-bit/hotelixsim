@@ -1,11 +1,12 @@
 //! Mjerilo AI presuda (DEMO §11 t. 7): koliko se AI slaže s Leonovim ocjenama (±1) na S1 i S2.
 //! Logika je ovdje, `bin/mjerilo.rs` samo zove `run`. Testovi ne zovu mrežu.
 
-use app::AiPort;
+use app::{AiError, AiPort};
 use content::{Content, Snapshot, repo_dir};
 use game::command::new_game;
 use game::{AssessInput, Game, GameId, GuestId, HotelId, OfferedForJudge, Recorded};
 use serde::Deserialize;
+use std::time::{Duration, Instant};
 use uuid::Uuid;
 
 /// Najmanji udio slaganja (unutar ±1) u promilima: 800 = 80 %.
@@ -45,6 +46,33 @@ pub fn agreement_permille(outcomes: &[Outcome]) -> u32 {
         .unwrap_or(u32::MAX)
         .saturating_mul(1000)
         / total
+}
+
+/// Izlazni kod mjerila za jednu šifru: 2 = mjerenje nije moguće (barem jedan poziv je pao na AiError),
+/// 1 = ne slaže se (ispod praga), 0 = slaže se. Nevaljana presuda NIJE greška poziva, nego neslaganje.
+pub fn verdict_exit(errors: usize, outcomes: &[Outcome]) -> u8 {
+    if errors > 0 {
+        2
+    } else if agreement_permille(outcomes) >= THRESHOLD_PERMILLE {
+        0
+    } else {
+        1
+    }
+}
+
+/// Odbij ocjene izvan 1..=5 (poruka s rednim brojem slučaja).
+pub fn validate_cases(code: &str, cases: &[Case]) -> Result<(), String> {
+    for (i, c) in cases.iter().enumerate() {
+        if let Some(q) = c.leon_quality
+            && !(1..=5).contains(&q)
+        {
+            return Err(format!(
+                "{code}, slučaj {}: leon_quality {q} nije u rasponu 1..=5",
+                i + 1
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn build_game() -> Result<Game, String> {
@@ -100,7 +128,10 @@ fn assess_input(content: &Content, code: &str, text: &str) -> Result<AssessInput
 fn load_cases(code: &str) -> Result<Vec<Case>, String> {
     let path = repo_dir().join(format!("mjerilo/{code}.json"));
     let raw = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))
+    let cases: Vec<Case> =
+        serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))?;
+    validate_cases(code, &cases)?;
+    Ok(cases)
 }
 
 fn clip(text: &str) -> String {
@@ -161,35 +192,72 @@ pub async fn run(codes: &[String]) -> i32 {
             return 2;
         }
     };
-    let port = crate::Anthropic::new(key, crate::Models::default());
-    let mut all_ok = true;
+    let port = crate::Anthropic::new(key, crate::Models::from_env());
+    let mut exit = 0u8;
+    let mut errors = 0usize;
+    let mut first_error: Option<String> = None;
+    let mut durations: Vec<Duration> = Vec::new();
     for (code, cases) in &loaded {
-        println!("\n{code}\n  #  Leon  AI  razlika  tekst");
+        println!(
+            "
+{code}
+  #  Leon  AI  razlika  sekunde  tekst"
+        );
         let mut outcomes = Vec::new();
+        let mut code_errors = 0usize;
         for (i, case) in cases.iter().enumerate() {
             let leon = case.leon_quality.unwrap_or(1);
-            let verdict = match assess_input(&content, code, &case.text) {
-                Ok(input) => match port.assess(input).await {
-                    Ok(out) => game
-                        .validate_verdict(code, out.value)
-                        .map_err(|e| format!("nevaljana presuda: {e:?}")),
-                    Err(e) => Err(format!("AI nije odgovorio: {e:?}")),
-                },
-                Err(e) => Err(e),
-            };
             let n = i + 1;
             let text = clip(&case.text);
+            let input = match assess_input(&content, code, &case.text) {
+                Ok(input) => input,
+                Err(e) => {
+                    println!(
+                        "{n:>3}  {leon:>4}   —        —        —  {text}
+       greška: {e}"
+                    );
+                    code_errors += 1;
+                    first_error.get_or_insert(e);
+                    continue;
+                }
+            };
+            let started = Instant::now();
+            let called: Result<_, AiError> = port.assess(input).await;
+            let took = started.elapsed();
+            durations.push(took);
+            let secs = took.as_secs_f64();
+            let verdict = match called {
+                Ok(out) => game
+                    .validate_verdict(code, out.value)
+                    .map_err(|e| format!("nevaljana presuda: {e:?}")),
+                Err(e) => {
+                    let reason = format!("AI nije odgovorio: {e:?}");
+                    println!(
+                        "{n:>3}  {leon:>4}   —        —  {secs:>7.1}  {text}
+       greška: {reason}"
+                    );
+                    code_errors += 1;
+                    first_error.get_or_insert(reason);
+                    continue;
+                }
+            };
             match verdict {
                 Ok(v) => {
                     let diff = i16::from(v.quality) - i16::from(leon);
-                    println!("{n:>3}  {leon:>4}  {:>2}  {diff:>+7}  {text}", v.quality);
+                    println!(
+                        "{n:>3}  {leon:>4}  {:>2}  {diff:>+7}  {secs:>7.1}  {text}",
+                        v.quality
+                    );
                     outcomes.push(Outcome {
                         ai_quality: v.quality,
                         leon_quality: leon,
                     });
                 }
                 Err(reason) => {
-                    println!("{n:>3}  {leon:>4}   —        —  {text}\n       neslaganje: {reason}");
+                    println!(
+                        "{n:>3}  {leon:>4}   —        —  {secs:>7.1}  {text}
+       neslaganje: {reason}"
+                    );
                     // Nevaljana presuda broji se kao neslaganje: ocjena najdalja od Leonove.
                     outcomes.push(Outcome {
                         ai_quality: if leon >= 3 { 1 } else { 5 },
@@ -198,16 +266,37 @@ pub async fn run(codes: &[String]) -> i32 {
                 }
             }
         }
+        errors += code_errors;
         let p = agreement_permille(&outcomes);
-        let ok = p >= THRESHOLD_PERMILLE;
-        all_ok &= ok;
+        let code_exit = verdict_exit(code_errors, &outcomes);
+        exit = exit.max(code_exit);
         println!(
             "Slaganje {code}: {}.{} % (traži se najmanje {} %) — {}",
             p / 10,
             p % 10,
             THRESHOLD_PERMILLE / 10,
-            if ok { "ZADOVOLJAVA" } else { "NE ZADOVOLJAVA" }
+            match code_exit {
+                0 => "ZADOVOLJAVA",
+                1 => "NE ZADOVOLJAVA",
+                _ => "NEPOUZDANO (pozivi nisu uspjeli)",
+            }
         );
     }
-    if all_ok { 0 } else { 1 }
+    if !durations.is_empty() {
+        let total: f64 = durations.iter().map(Duration::as_secs_f64).sum();
+        let max = durations.iter().max().map_or(0.0, Duration::as_secs_f64);
+        println!(
+            "
+Trajanje poziva: prosjek {:.1} s, najdulje {max:.1} s ({} poziva)",
+            total / durations.len() as f64,
+            durations.len()
+        );
+    }
+    if errors > 0 {
+        println!(
+            "mjerenje nije moguće: {errors} poziva nije uspjelo (prvi razlog: {})",
+            first_error.unwrap_or_default()
+        );
+    }
+    i32::from(exit)
 }

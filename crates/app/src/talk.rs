@@ -37,15 +37,16 @@ fn view_of(g: &Game, hotel: HotelId, code: &str) -> Result<ConversationView, App
         .ok_or(AppError::new(ErrorCode::NotFreeText))?;
     let lines = g.chat(hotel, code)?;
     let used = u8::try_from(student_count(&lines)).unwrap_or(MAX_CHAT_MESSAGES);
+    let open = g.status(m)? == RoundStatus::Open;
     Ok(ConversationView {
         situation: code.to_owned(),
         character_name: c.name.clone(),
         role: c.role.clone(),
         opening: c.opening.clone(),
-        awaiting_reply: lines.last().is_some_and(|l| l.from == Speaker::Student),
+        awaiting_reply: open && lines.last().is_some_and(|l| l.from == Speaker::Student),
         lines,
         remaining: MAX_CHAT_MESSAGES.saturating_sub(used),
-        open: g.status(m)? == RoundStatus::Open,
+        open,
     })
 }
 

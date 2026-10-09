@@ -105,16 +105,16 @@ impl Game {
     /// Odluka posla obračuna (red poslova, ADR-015 t. 8): idempotentna po stanju runde. Dok presude za slobodne
     /// odgovore nisu stigle i rok nije prošao, čeka; po isteku roka upisuje neutralne presude i obračunava.
     pub fn resolve_job(&self, m: Month, deadline_passed: bool) -> Result<ResolveStep, GameError> {
-        if self.core_version != sim_hotel::CORE_VERSION {
-            return Err(GameError::CoreMismatch(format!(
-                "igra je stvorena jezgrom {}, a radi {}",
-                self.core_version,
-                sim_hotel::CORE_VERSION
-            )));
-        }
         match self.status(m)? {
             RoundStatus::Resolved => Ok(ResolveStep::Done(Vec::new())),
             RoundStatus::Closing => {
+                if self.core_version != sim_hotel::CORE_VERSION {
+                    return Err(GameError::CoreMismatch(format!(
+                        "igra je stvorena jezgrom {}, a radi {}",
+                        self.core_version,
+                        sim_hotel::CORE_VERSION
+                    )));
+                }
                 let pending = self.pending_verdicts(m);
                 if !pending.is_empty() && !deadline_passed {
                     return Ok(ResolveStep::WaitForVerdicts(pending.len()));

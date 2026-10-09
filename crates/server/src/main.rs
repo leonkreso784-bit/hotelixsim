@@ -46,18 +46,7 @@ fn content_snapshot() -> anyhow::Result<content::Snapshot> {
 fn ai_port() -> Arc<dyn app::AiPort> {
     match std::env::var("ANTHROPIC_API_KEY") {
         Ok(k) if !k.trim().is_empty() => {
-            let d = ai::Models::default();
-            let pick = |var: &str, def: String| {
-                std::env::var(var)
-                    .ok()
-                    .filter(|v| !v.trim().is_empty())
-                    .unwrap_or(def)
-            };
-            let models = ai::Models {
-                judge: pick("HOTELIXSIM_AI_MODEL_PRESUDA", d.judge),
-                character: pick("HOTELIXSIM_AI_MODEL_LIK", d.character),
-                mentor: pick("HOTELIXSIM_AI_MODEL_MENTOR", d.mentor),
-            };
+            let models = ai::Models::from_env();
             tracing::info!(presuda = %models.judge, lik = %models.character, mentor = %models.mentor, "AI uključen");
             Arc::new(ai::Anthropic::new(k, models))
         }

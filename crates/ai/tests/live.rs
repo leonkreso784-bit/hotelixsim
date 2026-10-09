@@ -39,6 +39,6 @@ async fn judge_verdict_for_s1_passes_validation() {
 
     let ai = ai::Anthropic::new(key, ai::Models::default());
     let out = ai.assess(input).await.expect("presuda");
-    assert_eq!(out.meta.prompt, "presuda.v1");
+    assert_eq!(out.meta.prompt, "presuda.v2");
     assert!(g.validate_verdict("S1", out.value).is_ok());
 }

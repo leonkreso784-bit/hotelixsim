@@ -52,6 +52,16 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 - [korak 4] **Svako čitanje radi puni fold** (`Snapshot::build` klonira cijeli snimak, SHA-256, `RefTable::compute`) — zanemarivo za 4 hotela × 2 mjeseca; riješiti uz projekcije. (M6, T1)
 
+## Odgođeni nalazi — [ai-sloj]
+
+- [ai-sloj] **Pravi Postgres test „rok prošao dok procjena još čeka“** (posao procjene u odgodi/`running`, obračun ostario > 120 s, neutralna na roku, zakašnjela presuda poslije) — e2e dokazuje samo put preko petog pokušaja. (`crates/api/tests/e2e.rs`)
+- [ai-sloj] **`DebriefSituation` treba zastavicu `answered`** — mentor ne smije kritizirati odgovor koji student nije dao (rezerva i ponuđeni q1 se ne razlikuju). (`crates/game/src/ai_input.rs`)
+- [ai-sloj] **Testovi koji nedostaju:** fold odbija pokvaren dnevnik razgovora (7. poruka, dvije studentove zaredom, krivi `reply_to`, `AnswerChosen` nakon `ResponseSubmitted`), negativni test privatnosti feeda (tuđi hotel ne vidi Response/Verdict/Mentor, late/neutral stavka), 404 za nove rute, točne odgode 2/4/8/16/60 s. (`crates/game/tests/`, `crates/api/tests/`, `crates/store`)
+- [ai-sloj] **`AssessInput` se gradi na dva mjesta** — `ai/benchmark.rs` i `game/ai_input.rs`; izvući jedno. (`crates/ai/src/benchmark.rs`)
+- [ai-sloj] **Serijski radnik:** odgovor lika čeka iza dugog posla presude (jedan radnik); za pilot više radnika ili odvojeni redovi. (`crates/server/src/main.rs`)
+- [ai-sloj] **Latencija Opusa (effort high) prema roku 120 s** — izmjeriti mjerilom (`cargo run -p ai --bin mjerilo`, ispisuje trajanje po pozivu) prije 14.10. (`crates/ai/src/benchmark.rs`)
+- [ai-sloj] **Sitnice:** `legacy_fingerprint_differs` je slab test i `from_value` klonira `Value` pri svakom foldu (`content`); `validate_verdict` vraća `NotFreeText` i za nepoznatu šifru (`game/ai_input.rs`); `unwrap_or_default` pri serijalizaciji `DebriefInput` (`ai/request.rs`); nema testa UTF-8 rezanja tijela odgovora (`ai/response.rs`); `aws-lc-sys` traži C alate — provjeriti prvi CI; SQL odgode ima niz razmaka u nastavcima retka (`store`); odgoda se ne provjerava prije UPDATE roka i `tick` resetira i `running` (e2e).
+
 ## Odgođeni nalazi — [ekrani]
 
 - [ekrani] **`openapi-fetch` i `application/problem+json`** — provjeriti parsiranje 404 tijela u prvom stvarnom pozivu. (Task 6 #3, L71)

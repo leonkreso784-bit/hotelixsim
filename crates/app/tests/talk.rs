@@ -196,3 +196,39 @@ async fn other_guest_cannot_chat_or_respond_in_my_hotel() {
         .unwrap_err();
     assert_eq!(e.code, ErrorCode::NotInGame);
 }
+
+#[tokio::test]
+async fn refused_reply_falls_back_after_single_attempt() {
+    let ai = Arc::new(FakeAi::refusing());
+    let (deps, _mem) = app::memory::deps_with_ai(snapshot(), ai.clone());
+    let (caller, hotel, _) = start(&deps).await;
+    app::send_message(&deps, &caller, hotel, "S1", "Halo?".into())
+        .await
+        .unwrap();
+    run_all_jobs(&deps).await;
+    assert_eq!(ai.calls().1, 1, "odbijanje se ne ponavlja");
+    let v = app::conversation(&deps, &caller, hotel, "S1")
+        .await
+        .unwrap();
+    assert_eq!(
+        v.lines.last().unwrap().text,
+        "Gošća je previše ljuta da bi nastavila razgovor. Odluči što ćeš poduzeti."
+    );
+}
+
+#[tokio::test]
+async fn closed_round_is_not_awaiting_reply() {
+    let (deps, _mem) = app::memory::deps(snapshot());
+    let (caller, hotel, game) = start(&deps).await;
+    app::send_message(&deps, &caller, hotel, "S1", "Halo?".into())
+        .await
+        .unwrap();
+    app::close_round(&deps, &caller, game, MonthCode::Jun)
+        .await
+        .unwrap();
+    let v = app::conversation(&deps, &caller, hotel, "S1")
+        .await
+        .unwrap();
+    assert!(!v.open);
+    assert!(!v.awaiting_reply, "zatvorena runda ne čeka odgovor lika");
+}

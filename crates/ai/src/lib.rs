@@ -33,6 +33,24 @@ impl Default for Models {
     }
 }
 
+impl Models {
+    /// Zadani modeli, nadjačani varijablama okoline (isti izvor za server i mjerilo).
+    pub fn from_env() -> Models {
+        let d = Models::default();
+        let pick = |var: &str, def: String| {
+            std::env::var(var)
+                .ok()
+                .filter(|v| !v.trim().is_empty())
+                .unwrap_or(def)
+        };
+        Models {
+            judge: pick("HOTELIXSIM_AI_MODEL_PRESUDA", d.judge),
+            character: pick("HOTELIXSIM_AI_MODEL_LIK", d.character),
+            mentor: pick("HOTELIXSIM_AI_MODEL_MENTOR", d.mentor),
+        }
+    }
+}
+
 pub struct Anthropic {
     http: reqwest::Client,
     key: String,
@@ -54,7 +72,7 @@ impl Anthropic {
         let http = reqwest::Client::builder()
             .timeout(TIMEOUT)
             .build()
-            .unwrap_or_default();
+            .expect("reqwest klijent se mora izgraditi");
         Anthropic {
             http,
             key,

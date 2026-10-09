@@ -255,3 +255,20 @@ fn resolve_refuses_other_core_version() {
         Err(GameError::CoreMismatch(_))
     ));
 }
+
+#[test]
+fn resolved_round_is_done_even_with_other_core_version() {
+    let mut g = closed_june_game();
+    let ResolveStep::Done(evs) = g.resolve_job(Month::Jun, true).unwrap() else {
+        panic!("očekivano Done")
+    };
+    for (actor, event) in evs {
+        let seq = g.last_seq + 1;
+        g.apply(Recorded { seq, actor, event }).unwrap();
+    }
+    g.core_version = "0.0.0-drugi".into();
+    assert_eq!(
+        g.resolve_job(Month::Jun, false),
+        Ok(ResolveStep::Done(Vec::new()))
+    );
+}

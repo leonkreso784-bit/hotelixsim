@@ -15,15 +15,22 @@ pub fn quote_student(text: &str) -> String {
     text.replace('<', "‹").replace('>', "›")
 }
 
+/// Tekst iz razgovora kao podatak: oznake se razoružaju, a novi red postaje `⏎` da se ne može krivotvoriti redak.
+fn quote_line(text: &str) -> String {
+    quote_student(text).replace([char::from(13), char::from(10)], "⏎")
+}
+
+/// Svaka replika u vlastitoj oznaci; i replike lika su podatak (AI izlaz koji student može usmjeravati).
 fn render_transcript(lines: &[ChatLine], character: &str) -> String {
+    let name = quote_line(character);
     let mut out = String::new();
     for l in lines {
         match l.from {
             Speaker::Student => {
-                let _ = writeln!(out, "Student: {}", quote_student(&l.text));
+                let _ = writeln!(out, "<student>{}</student>", quote_line(&l.text));
             }
             Speaker::Character => {
-                let _ = writeln!(out, "{character}: {}", l.text);
+                let _ = writeln!(out, "<lik ime=\"{name}\">{}</lik>", quote_line(&l.text));
             }
         }
     }

@@ -36,6 +36,9 @@ to uklapa u dnevnik, red poslova i rok demoa ~14.10. Ovo su pretpostavke s kojim
    pravila (prije pilota), AI koji smišlja situacije (pilot).
 9. **Likovi (Petra Horvat, gošća; Marko Babić, šef kuhinje), njihovo ponašanje i 40 nacrta odgovora za mjerilo** su
    nacrt; ocjene u mjerilu upisuje Leon.
+10. **AI izlaz koji ulazi u drugu uputu (replike lika u presudi) je također podatak, ne uputa** — ide kroz istu zaštitu
+   oznaka kao studentov tekst (svaka replika u vlastitoj oznaci, `<` i `>` razoružani, novi red kao `⏎`); upute presude
+   zato postaju `presuda.v2` (v1 ostaje u repou radi povijesti).
 **Posljedice.** Novi crate `ai`, migracija `0004`, šest novih događaja (`schema_ver` ostaje 1). Ako Leon odbije t. 3,
 lik prelazi na izravan poziv u zahtjevu (mijenja se `app/talk.rs` i ruta); ako odbije t. 5, mijenja se jedna konstanta.
 

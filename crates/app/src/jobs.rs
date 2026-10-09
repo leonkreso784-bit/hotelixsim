@@ -105,9 +105,10 @@ pub async fn run_job_for_test(deps: &Deps, job: &Job) -> Result<(), AppError> {
     run_job(deps, job).await
 }
 
-/// Isključen AI se ne ponavlja (nema smisla čekati ključ): odmah rezerva. Ostale greške do zadnjeg pokušaja.
+/// Isključen AI i odbijanje zahtjeva se ne ponavljaju (ponavljanje ih ne mijenja): odmah rezerva.
+/// Ostale greške do zadnjeg pokušaja.
 fn retry(job: &Job, e: &AiError) -> bool {
-    *e != AiError::Disabled && job.attempts < MAX_ATTEMPTS
+    !matches!(e, AiError::Disabled | AiError::Refused(_)) && job.attempts < MAX_ATTEMPTS
 }
 
 fn payload<T: serde::de::DeserializeOwned>(job: &Job) -> Result<T, AppError> {

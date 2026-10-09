@@ -417,7 +417,7 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
     let s1 = items.iter().find(|i| i["code"] == "S1").unwrap();
     assert_eq!(s1["response"]["status"], "judged", "{s1}");
     let verdict: serde_json::Value = sqlx::query_scalar(
-        "SELECT payload FROM events WHERE type = 'VerdictRecorded' ORDER BY id LIMIT 1",
+        "SELECT payload FROM events WHERE type = 'VerdictRecorded' AND payload->>'situation' = 'S1' ORDER BY id LIMIT 1",
     )
     .fetch_one(&pool)
     .await
@@ -462,7 +462,8 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
     .await;
     assert_eq!(jul_close.status.as_u16(), 202, "{:?}", jul_close.body);
     drain_now(&pool, &bad, 12).await;
-    // rok presude istekao: obračun smije proći s neutralnom presudom
+    // Do ovdje je peti pokušaj već upisao neutralnu presudu zbog ispada (NEUTRAL_FAILED), pa se rok ovdje ne dosegne.
+    // Pomak vremena ostaje samo kao zaštita da test ne ovisi o satu; ne mijenja ishod.
     sqlx::query("UPDATE jobs SET created_at = now() - interval '10 minutes', run_after = now()")
         .execute(&pool)
         .await
@@ -480,6 +481,12 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
     .unwrap();
     assert_eq!(neutral.len(), 1, "{neutral:?}");
     assert_eq!(neutral[0]["review"], true, "{:?}", neutral[0]);
+    assert_eq!(
+        neutral[0]["rationale"],
+        game::NEUTRAL_FAILED,
+        "{:?}",
+        neutral[0]
+    );
     let n: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM events WHERE type = 'RoundResolved' AND payload->>'month' = 'jul'",
     )

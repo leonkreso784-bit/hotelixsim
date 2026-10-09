@@ -62,15 +62,17 @@ impl Ids for SeqIds {
 /// Lažni AI za testove: `good()` uvijek uspije, `failing()` uvijek ispadne; broji pozive po ulozi.
 pub struct FakeAi {
     fail: bool,
+    refuse: bool,
     assess: AtomicU32,
     character: AtomicU32,
     debrief: AtomicU32,
 }
 
 impl FakeAi {
-    fn new(fail: bool) -> Self {
+    fn new(fail: bool, refuse: bool) -> Self {
         Self {
             fail,
+            refuse,
             assess: AtomicU32::new(0),
             character: AtomicU32::new(0),
             debrief: AtomicU32::new(0),
@@ -78,11 +80,16 @@ impl FakeAi {
     }
 
     pub fn good() -> Self {
-        Self::new(false)
+        Self::new(false, false)
     }
 
     pub fn failing() -> Self {
-        Self::new(true)
+        Self::new(true, false)
+    }
+
+    /// Uvijek odbije zahtjev (`AiError::Refused`): konačna greška, bez ponavljanja.
+    pub fn refusing() -> Self {
+        Self::new(false, true)
     }
 
     /// Broj poziva (presuda, lik, mentor).
@@ -100,7 +107,9 @@ impl FakeAi {
         value: T,
     ) -> BoxFut<'static, Result<AiOut<T>, AiError>> {
         counter.fetch_add(1, Ordering::SeqCst);
-        let r = if self.fail {
+        let r = if self.refuse {
+            Err(AiError::Refused("lažno odbijanje".into()))
+        } else if self.fail {
             Err(AiError::Unavailable("lažni ispad".into()))
         } else {
             Ok(AiOut {
