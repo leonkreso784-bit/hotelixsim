@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE jobs SET status = 'queued', attempts = attempts - 1, locked_until = NULL,                  run_after = now() + make_interval(secs => $3::float8), updated_at = now()                  WHERE id = $1 AND attempts = $2 AND status = 'running'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "26480c7b0876f65fc5ce40d6aff1b6c1452564560c258b2a41b50e3bc9244d35"
+}

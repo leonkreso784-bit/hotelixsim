@@ -71,6 +71,13 @@ async fn expire(pool: &PgPool) {
         .unwrap();
 }
 
+async fn ready(pool: &PgPool) {
+    sqlx::query("UPDATE jobs SET run_after = now()")
+        .execute(pool)
+        .await
+        .unwrap();
+}
+
 async fn state(pool: &PgPool) -> (String, i32) {
     sqlx::query_as("SELECT status, attempts FROM jobs")
         .fetch_one(pool)
@@ -154,6 +161,7 @@ async fn failing_job_is_retried_then_failed(pool: PgPool) {
     let (g, _, _) = game(&s, 1).await;
     enqueue(&s, g, "a").await;
     for i in 1..=app::MAX_ATTEMPTS {
+        ready(&pool).await;
         let j = s.claim(30).await.unwrap().expect("posao se vraća u red");
         assert_eq!(j.attempts, i);
         s.fail(j.claim(), format!("pokušaj {i}")).await.unwrap();
@@ -224,4 +232,88 @@ async fn fail_on_done_job_keeps_it_done(pool: PgPool) {
     .unwrap();
     s.fail(claim, "kasno".into()).await.unwrap();
     assert_eq!(state(&pool).await, ("done".to_owned(), 1));
+}
+
+#[sqlx::test]
+async fn failed_job_is_not_claimable_before_backoff(pool: PgPool) {
+    let s = Store::from_pool(pool.clone());
+    let (g, _, _) = game(&s, 1).await;
+    enqueue(&s, g, "a").await;
+    let j = s.claim(30).await.unwrap().unwrap();
+    s.fail(j.claim(), "greška".into()).await.unwrap();
+    assert!(s.claim(30).await.unwrap().is_none(), "razmak se čeka");
+    ready(&pool).await;
+    let again = s.claim(30).await.unwrap().unwrap();
+    assert_eq!((again.id, again.attempts), (j.id, 2));
+}
+
+#[sqlx::test]
+async fn defer_keeps_attempts_and_delays(pool: PgPool) {
+    let s = Store::from_pool(pool.clone());
+    let (g, _, _) = game(&s, 1).await;
+    enqueue(&s, g, "a").await;
+    let j = s.claim(30).await.unwrap().unwrap();
+    assert_eq!(j.attempts, 1);
+    s.defer(j.claim(), 60).await.unwrap();
+    assert_eq!(state(&pool).await, ("queued".to_owned(), 0));
+    assert!(s.claim(30).await.unwrap().is_none());
+    ready(&pool).await;
+    let again = s.claim(30).await.unwrap().unwrap();
+    assert_eq!((again.id, again.attempts), (j.id, 1));
+}
+
+#[sqlx::test]
+async fn defer_with_stale_claim_does_nothing(pool: PgPool) {
+    let s = Store::from_pool(pool.clone());
+    let (g, _, _) = game(&s, 1).await;
+    enqueue(&s, g, "a").await;
+    let a = s.claim(30).await.unwrap().unwrap();
+    expire(&pool).await;
+    let b = s.claim(30).await.unwrap().unwrap();
+    assert_eq!(b.attempts, 2);
+    s.defer(a.claim(), 60).await.unwrap();
+    assert_eq!(state(&pool).await, ("running".to_owned(), 2));
+}
+
+#[sqlx::test]
+async fn age_secs_comes_from_created_at(pool: PgPool) {
+    let s = Store::from_pool(pool.clone());
+    let (g, _, _) = game(&s, 1).await;
+    enqueue(&s, g, "a").await;
+    sqlx::query("UPDATE jobs SET created_at = now() - interval '200 seconds'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let j = s.claim(30).await.unwrap().unwrap();
+    assert!(j.age_secs >= 200, "age_secs = {}", j.age_secs);
+}
+
+#[sqlx::test]
+async fn decide_enqueues_many_jobs(pool: PgPool) {
+    let s = Store::from_pool(pool.clone());
+    let (g, _, _) = game(&s, 1).await;
+    let two = |keys: [&'static str; 2]| -> app::Decide<'static> {
+        Box::new(move |_: &[RawEvent]| {
+            Ok(Decision {
+                events: vec![],
+                finish_job: None,
+                enqueue: keys
+                    .iter()
+                    .map(|k| NewJob {
+                        key: (*k).into(),
+                        kind: "resolve_round".into(),
+                        game_id: g,
+                        payload: json!({"month": "jun"}),
+                    })
+                    .collect(),
+            })
+        })
+    };
+    s.decide(g, two(["a", "b"])).await.unwrap();
+    s.decide(g, two(["b", "c"])).await.unwrap();
+    let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM jobs")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(n, 3);
 }

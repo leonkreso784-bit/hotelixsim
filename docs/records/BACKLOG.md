@@ -34,7 +34,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [dnevnik]
 
-- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); ponovni pokušaj s odgodom; probni test apalis/pgmq (ARHITEKTURA §9.4); zakašnjela AI presuda za zatvorenu rundu (§8.3).
+- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); probni test apalis/pgmq (ARHITEKTURA §9.4) — odgođeno, ADR-019.
 - [dnevnik] **Siroče gost:** `start_demo` upisuje gosta pa igru u dvije zasebne radnje — ako `create_game` padne, ostaje gost bez igre; počistiti uz brisanje gostiju nakon 7 dana. (`app/src/demo.rs:41`)
 - [dnevnik] **`ErrorCode::ALL` i `as_str()` se ne koriste** (žičani kod daje serde `ProblemCode`) — dva izvora istine; test `ProblemCode::from(c)` = `c.as_str()` za sve ili brisanje. (`app/src/error.rs:42,84`; M1)
 - [dnevnik] **`parse_hotel`/`parse_game`/`parse_month` idu prije `caller.require()`** — anonimac s pokvarenim uuid-om dobiva 404 umjesto 401; bezopasno. (`api/src/hotels.rs:54,107`, `games.rs:222,247,274`; M2)
