@@ -34,7 +34,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [dnevnik]
 
-- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); ponovni pokušaj s odgodom; probni test apalis/pgmq (ARHITEKTURA §9.4); zakašnjela AI presuda za zatvorenu rundu (§8.3).
+- [dnevnik] → korak 4: zaglavlje `Idempotency-Key` (ARHITEKTURA §11); probni test apalis/pgmq (ARHITEKTURA §9.4) — odgođeno, ADR-019.
 - [dnevnik] **Siroče gost:** `start_demo` upisuje gosta pa igru u dvije zasebne radnje — ako `create_game` padne, ostaje gost bez igre; počistiti uz brisanje gostiju nakon 7 dana. (`app/src/demo.rs:41`)
 - [dnevnik] **`ErrorCode::ALL` i `as_str()` se ne koriste** (žičani kod daje serde `ProblemCode`) — dva izvora istine; test `ProblemCode::from(c)` = `c.as_str()` za sve ili brisanje. (`app/src/error.rs:42,84`; M1)
 - [dnevnik] **`parse_hotel`/`parse_game`/`parse_month` idu prije `caller.require()`** — anonimac s pokvarenim uuid-om dobiva 404 umjesto 401; bezopasno. (`api/src/hotels.rs:54,107`, `games.rs:222,247,274`; M2)
@@ -50,9 +50,17 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [korak 4]
 
-- [korak 4] **PRIJE prve promjene content DTO-a: otisak pravila nad kanonskim `serde_json::Value`** spremljenog snimka (ne nad tipiziranim ponovnim zapisom) i nova DTO polja samo uz `#[serde(default)]`; inače svaka postojeća igra postaje `Corrupt`/500. Vidi [ADR-015](DECISIONS.md#adr-015) t. 3. (`game/src/game.rs:70`, `content/src/lib.rs` `Snapshot`; završni pregled I2)
-- [korak 4] **`core_version` se zapisuje, ali se nikad ne provjerava** — promjena jezgre usred igre obračuna srpanj novim kodom (replay lipnja više nije bajt-isti). (`game/src/game.rs:69`; M3)
 - [korak 4] **Svako čitanje radi puni fold** (`Snapshot::build` klonira cijeli snimak, SHA-256, `RefTable::compute`) — zanemarivo za 4 hotela × 2 mjeseca; riješiti uz projekcije. (M6, T1)
+
+## Odgođeni nalazi — [ai-sloj]
+
+- [ai-sloj] **Pravi Postgres test „rok prošao dok procjena još čeka“** (posao procjene u odgodi/`running`, obračun ostario > 120 s, neutralna na roku, zakašnjela presuda poslije) — e2e dokazuje samo put preko petog pokušaja. (`crates/api/tests/e2e.rs`)
+- [ai-sloj] **`DebriefSituation` treba zastavicu `answered`** — mentor ne smije kritizirati odgovor koji student nije dao (rezerva i ponuđeni q1 se ne razlikuju). (`crates/game/src/ai_input.rs`)
+- [ai-sloj] **Testovi koji nedostaju:** fold odbija pokvaren dnevnik razgovora (7. poruka, dvije studentove zaredom, krivi `reply_to`, `AnswerChosen` nakon `ResponseSubmitted`), negativni test privatnosti feeda (tuđi hotel ne vidi Response/Verdict/Mentor, late/neutral stavka), 404 za nove rute, točne odgode 2/4/8/16/60 s. (`crates/game/tests/`, `crates/api/tests/`, `crates/store`)
+- [ai-sloj] **`AssessInput` se gradi na dva mjesta** — `ai/benchmark.rs` i `game/ai_input.rs`; izvući jedno. (`crates/ai/src/benchmark.rs`)
+- [ai-sloj] **Serijski radnik:** odgovor lika čeka iza dugog posla presude (jedan radnik); za pilot više radnika ili odvojeni redovi. (`crates/server/src/main.rs`)
+- [ai-sloj] **Latencija Opusa (effort high) prema roku 120 s** — izmjeriti mjerilom (`cargo run -p ai --bin mjerilo`, ispisuje trajanje po pozivu) prije 14.10. (`crates/ai/src/benchmark.rs`)
+- [ai-sloj] **Sitnice:** `legacy_fingerprint_differs` je slab test i `from_value` klonira `Value` pri svakom foldu (`content`); `validate_verdict` vraća `NotFreeText` i za nepoznatu šifru (`game/ai_input.rs`); `unwrap_or_default` pri serijalizaciji `DebriefInput` (`ai/request.rs`); nema testa UTF-8 rezanja tijela odgovora (`ai/response.rs`); `aws-lc-sys` traži C alate — provjeriti prvi CI; SQL odgode ima niz razmaka u nastavcima retka (`store`); odgoda se ne provjerava prije UPDATE roka i `tick` resetira i `running` (e2e).
 
 ## Odgođeni nalazi — [ekrani]
 
@@ -97,7 +105,6 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **S3: 25 % popusta agenciji za grupu u kolovozu** — realna ponuda? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 4.
 - [leon] **Kriteriji rubrika u S1–S4** — Leon je mjerilo; blokira sadržaj i AI presude, ne kod jezgre. Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 5.
 - [leon] **Priče profila A i B (§5)** — prepoznaje li takve hotele? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 6.
-- [leon] **AI ključ za demo** — koje besplatne ključeve ima (pružatelj i model); ne blokira jezgru. Odgovor: [ROADMAP](../plan/ROADMAP.md).
 - [leon] **Pitanja za profesore** — Leon ih šalje tijekom tjedna 5.–11.10.; pregled prije slanja. Odgovor: [PITANJA_ZA_PROFESORE](../product/PITANJA_ZA_PROFESORE.md).
 - [leon] **Inkubator** — prijava do **16.11.**: nosi li se Sokrat ili simulacija. Odgovor: [ROADMAP](../plan/ROADMAP.md).
 - [leon] **Potvrda ARHITEKTURE v2** — ROADMAP kaže „Leon ih je pregledao", a ARHITEKTURA kaže „prijedlog dok Leon ne potvrdi"; potvrditi ili ostaviti raspravu otvorenom, pa uskladiti oba. Odgovor: [ARHITEKTURA](../architecture/ARHITEKTURA.md).

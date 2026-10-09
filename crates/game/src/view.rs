@@ -54,6 +54,8 @@ pub struct LastMonth {
     pub rooms_revenue_cents: i64,
     pub gop_cents: i64,
     pub goppar_cents: i64,
+    /// Mentorov osvrt na taj mjesec (kad ga ima).
+    pub mentor: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -137,6 +139,7 @@ impl Game {
                 rooms_revenue_cents: res.report.money.rooms_revenue_cents,
                 gop_cents: res.report.money.gop_cents,
                 goppar_cents: res.report.money.goppar_cents,
+                mentor: h.debriefs.get(&rr.month.into()).map(|d| d.text.clone()),
             });
         }
         let mut plan = None;

@@ -371,6 +371,8 @@ pub struct LastMonthBody {
     pub rooms_revenue_cents: i64,
     pub gop_cents: i64,
     pub goppar_cents: i64,
+    #[schema(required = true)]
+    pub mentor: Option<String>,
 }
 
 impl From<&LastMonth> for LastMonthBody {
@@ -382,6 +384,7 @@ impl From<&LastMonth> for LastMonthBody {
             rooms_revenue_cents: m.rooms_revenue_cents,
             gop_cents: m.gop_cents,
             goppar_cents: m.goppar_cents,
+            mentor: m.mentor.clone(),
         }
     }
 }
@@ -538,6 +541,138 @@ pub struct SituationBody {
     pub answers: Vec<String>,
     #[schema(required = true)]
     pub chosen: Option<u8>,
+    /// Student smije odgovoriti svojim riječima i razgovarati s likom.
+    pub free_text: bool,
+    #[schema(required = true)]
+    pub character: Option<CharacterBody>,
+    #[schema(required = true)]
+    pub response: Option<ResponseBody>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct CharacterBody {
+    pub name: String,
+    pub role: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ResponseStatusBody {
+    Pending,
+    Judged,
+    Neutral,
+}
+
+impl From<app::ResponseStatus> for ResponseStatusBody {
+    fn from(s: app::ResponseStatus) -> Self {
+        match s {
+            app::ResponseStatus::Pending => Self::Pending,
+            app::ResponseStatus::Judged => Self::Judged,
+            app::ResponseStatus::Neutral => Self::Neutral,
+        }
+    }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct CriterionBody {
+    pub n: u8,
+    pub text: String,
+    pub met: bool,
+    pub reason: String,
+}
+
+/// Slobodan odgovor studenta i njegova presuda (ponuđeni odgovori nemaju ovo).
+#[derive(Serialize, ToSchema)]
+pub struct ResponseBody {
+    pub text: String,
+    pub status: ResponseStatusBody,
+    #[schema(required = true)]
+    pub quality: Option<u8>,
+    pub criteria: Vec<CriterionBody>,
+    #[schema(required = true)]
+    pub rationale: Option<String>,
+}
+
+impl From<&app::ResponseView> for ResponseBody {
+    fn from(r: &app::ResponseView) -> Self {
+        ResponseBody {
+            text: r.text.clone(),
+            status: r.status.into(),
+            quality: r.quality,
+            criteria: r
+                .criteria
+                .iter()
+                .map(|c| CriterionBody {
+                    n: c.n,
+                    text: c.text.clone(),
+                    met: c.met,
+                    reason: c.reason.clone(),
+                })
+                .collect(),
+            rationale: r.rationale.clone(),
+        }
+    }
+}
+
+/// Tekst studenta (poruka liku ili slobodan odgovor); duljinu i praznoću provjerava jezgra (`bad_text`).
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct TextBody {
+    #[schema(max_length = 2000)]
+    pub text: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SpeakerBody {
+    Student,
+    Character,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ChatLineBody {
+    pub from: SpeakerBody,
+    pub text: String,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ConversationBody {
+    pub situation: String,
+    pub character_name: String,
+    pub role: String,
+    pub opening: String,
+    pub lines: Vec<ChatLineBody>,
+    /// Koliko poruka student još smije poslati.
+    pub remaining: u8,
+    /// Lik još nije odgovorio na zadnju poruku.
+    pub awaiting_reply: bool,
+    /// Runda je otvorena; inače je razgovor samo za čitanje.
+    pub open: bool,
+}
+
+impl From<&app::ConversationView> for ConversationBody {
+    fn from(v: &app::ConversationView) -> Self {
+        ConversationBody {
+            situation: v.situation.clone(),
+            character_name: v.character_name.clone(),
+            role: v.role.clone(),
+            opening: v.opening.clone(),
+            lines: v
+                .lines
+                .iter()
+                .map(|l| ChatLineBody {
+                    from: match l.from {
+                        game::Speaker::Student => SpeakerBody::Student,
+                        game::Speaker::Character => SpeakerBody::Character,
+                    },
+                    text: l.text.clone(),
+                })
+                .collect(),
+            remaining: v.remaining,
+            awaiting_reply: v.awaiting_reply,
+            open: v.open,
+        }
+    }
 }
 
 #[derive(Serialize, ToSchema)]
@@ -575,6 +710,12 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
                     title: i.title.clone(),
                     answers: i.answers.clone(),
                     chosen: i.chosen,
+                    free_text: i.free_text,
+                    character: i.character.as_ref().map(|c| CharacterBody {
+                        name: c.name.clone(),
+                        role: c.role.clone(),
+                    }),
+                    response: i.response.as_ref().map(ResponseBody::from),
                 })
                 .collect(),
         })
@@ -768,6 +909,26 @@ pub enum FeedItemBody {
         amount: i64,
         unit: UnitCode,
     },
+    Response {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+    },
+    Verdict {
+        seq: i64,
+        month: MonthCode,
+        situation: String,
+        title: String,
+        quality: u8,
+        neutral: bool,
+        late: bool,
+    },
+    Mentor {
+        seq: i64,
+        month: MonthCode,
+        text: String,
+    },
 }
 
 impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
@@ -849,6 +1010,39 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
                     unit: line.unit.into(),
                 }
             }
+            F::Response {
+                seq,
+                month,
+                situation,
+                title,
+            } => FeedItemBody::Response {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+            },
+            F::Verdict {
+                seq,
+                month,
+                situation,
+                title,
+                quality,
+                neutral,
+                late,
+            } => FeedItemBody::Verdict {
+                seq: *seq,
+                month: (*month).into(),
+                situation: situation.clone(),
+                title: title.clone(),
+                quality: *quality,
+                neutral: *neutral,
+                late: *late,
+            },
+            F::Mentor { seq, month, text } => FeedItemBody::Mentor {
+                seq: *seq,
+                month: (*month).into(),
+                text: text.clone(),
+            },
         })
     }
 }

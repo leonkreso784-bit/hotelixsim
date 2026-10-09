@@ -28,7 +28,7 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
    ```
    Svaki dan (nakon ponovnog pokretanja računala): samo `bash scripts/baza.sh start`
    (`bash scripts/baza.sh status` pokazuje radi li; `bash scripts/baza.sh stop` je gasi).
-2. Jednom: `cp .env.example .env` i `corepack pnpm install`.
+2. Jednom: `cp .env.example .env` i `corepack pnpm install`. Claude ključ upiši u `.env` (`ANTHROPIC_API_KEY=…`); bez njega igra radi na rezervama.
 3. API (Git Bash, prvi terminal): `set -a; source .env; set +a; cargo run -p server -- migrate && cargo run -p server -- serve`
    `serve` radi u prvom planu i drži terminal zauzetim dok ga ne zaustaviš (Ctrl+C). Pri startu učitava i provjerava
    `content/hotel` (ili mapu iz `HOTELIXSIM_CONTENT`) i pokreće radnika koji obračunava zatvorene mjesece; migracije se
@@ -40,3 +40,4 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 
 Gradnja koristi spremljene podatke iz `.sqlx/` (`SQLX_OFFLINE=true` u `.env`), pa ne treba živu bazu. Nakon promjene SQL upita (baza mora raditi): `cargo sqlx prepare --workspace` i commitaj `.sqlx/`; alat se instalira jednom: `cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked`.
 Nakon promjene API-ja: `corepack pnpm gen:api` i commitaj `openapi.json` i `schema.d.ts`.
+Mjerilo AI-ja (DEMO §11 t. 7): u `content/hotel/mjerilo/*.json` upiši `leon_quality`, pa `set -a; source .env; set +a; cargo run -p ai --bin mjerilo -- S1 S2`.

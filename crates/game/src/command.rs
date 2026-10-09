@@ -55,12 +55,13 @@ pub fn new_game(
             },
         });
     }
+    let value = snapshot.to_value();
     let created = GameCreated {
         game_id,
         seed,
-        ruleset_id: snapshot.fingerprint(),
+        ruleset_id: content::fingerprint_value(&value),
         core_version: sim_hotel::CORE_VERSION.into(),
-        snapshot: Box::new(snapshot.clone()),
+        snapshot: Box::new(value),
         months: MONTHS.iter().map(|&m| m.into()).collect(),
         hotels,
     };
@@ -164,7 +165,8 @@ impl Game {
         if usize::from(answer) >= t.answers.len() {
             return Err(GameError::UnknownAnswer);
         }
-        if h.answers.contains_key(&(t.month, t.code.clone())) {
+        let key = (t.month, t.code.clone());
+        if h.responses.contains_key(&key) || h.answers.contains_key(&key) {
             return Err(GameError::AlreadyAnswered);
         }
         Ok(GameEvent::AnswerChosen(AnswerChosen {

@@ -2,7 +2,7 @@
 use game::dto::MonthCode;
 use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
-use game::{Controller, Game, GameId, GuestId, HotelId, RoundStatus};
+use game::{AiSource, Controller, FreeResponse, Game, GameId, GuestId, HotelId, RoundStatus};
 use sim_hotel::Month;
 
 use crate::demo::load_game;
@@ -37,6 +37,43 @@ pub struct SituationItem {
     pub title: String,
     pub answers: Vec<String>,
     pub chosen: Option<u8>,
+    /// Student smije odgovoriti svojim riječima (i razgovarati s likom).
+    pub free_text: bool,
+    pub character: Option<CharacterCardView>,
+    pub response: Option<ResponseView>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CharacterCardView {
+    pub name: String,
+    pub role: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ResponseStatus {
+    /// Presuda još nije stigla.
+    Pending,
+    /// Presudio AI.
+    Judged,
+    /// Neutralna presuda po pravilu (AI nije stigao ili nije uspio).
+    Neutral,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CriterionView {
+    pub n: u8,
+    pub text: String,
+    pub met: bool,
+    pub reason: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ResponseView {
+    pub text: String,
+    pub status: ResponseStatus,
+    pub quality: Option<u8>,
+    pub criteria: Vec<CriterionView>,
+    pub rationale: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -164,11 +201,72 @@ pub async fn situations(
     caller: &Caller,
     hotel: HotelId,
 ) -> Result<SituationsView, AppError> {
+    situations_in_month(deps, caller, hotel, None).await
+}
+
+/// Isti pogled za zadani mjesec (nakon obračuna je „trenutni" već sljedeći).
+pub async fn situations_for_month(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    month: MonthCode,
+) -> Result<SituationsView, AppError> {
+    situations_in_month(deps, caller, hotel, Some(month.into())).await
+}
+
+fn response_view(g: &Game, code: &str, fr: &FreeResponse) -> ResponseView {
+    let rubric = g
+        .content
+        .ai
+        .get(code)
+        .map(|a| a.rubric.as_slice())
+        .unwrap_or_default();
+    let Some(v) = &fr.verdict else {
+        return ResponseView {
+            text: fr.text.clone(),
+            status: ResponseStatus::Pending,
+            quality: None,
+            criteria: Vec::new(),
+            rationale: None,
+        };
+    };
+    let criteria = v
+        .criteria
+        .iter()
+        .map(|c| CriterionView {
+            n: c.n,
+            text: rubric
+                .get(usize::from(c.n).saturating_sub(1))
+                .cloned()
+                .unwrap_or_default(),
+            met: c.met,
+            reason: c.reason.clone(),
+        })
+        .collect();
+    ResponseView {
+        text: fr.text.clone(),
+        status: if v.source == AiSource::Ai {
+            ResponseStatus::Judged
+        } else {
+            ResponseStatus::Neutral
+        },
+        quality: Some(v.quality),
+        criteria,
+        rationale: Some(v.rationale.clone()),
+    }
+}
+
+async fn situations_in_month(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    month: Option<Month>,
+) -> Result<SituationsView, AppError> {
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
     let g = load_game(deps, game_id).await?;
     require_owner(&g, guest, hotel)?;
-    let Some(month) = g.current_month() else {
+    let Some(month) = month.or_else(|| g.current_month()) else {
         return Ok(SituationsView {
             month: None,
             open: false,
@@ -179,11 +277,26 @@ pub async fn situations(
     let items = g
         .situations_in(month)
         .into_iter()
-        .map(|t| SituationItem {
-            code: t.code.clone(),
-            title: t.title.clone(),
-            answers: t.answers.iter().map(|a| a.label.clone()).collect(),
-            chosen: record.answers.get(&(month, t.code.clone())).copied(),
+        .map(|t| {
+            let ai = g.content.ai.get(&t.code);
+            let key = (month, t.code.clone());
+            SituationItem {
+                code: t.code.clone(),
+                title: t.title.clone(),
+                answers: t.answers.iter().map(|a| a.label.clone()).collect(),
+                chosen: record.answers.get(&key).copied(),
+                free_text: ai.is_some_and(|a| a.free_text),
+                character: ai
+                    .and_then(|a| a.character.as_ref())
+                    .map(|c| CharacterCardView {
+                        name: c.name.clone(),
+                        role: c.role.clone(),
+                    }),
+                response: record
+                    .responses
+                    .get(&key)
+                    .map(|fr| response_view(&g, &t.code, fr)),
+            }
         })
         .collect();
     Ok(SituationsView {

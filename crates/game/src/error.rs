@@ -10,8 +10,18 @@ pub enum GameError {
     UnknownAnswer,
     RoundNotOpen,
     AlreadyAnswered,
+    /// Situacija nema razgovor ni slobodni odgovor (`free_text` je isključen).
+    NotFreeText,
+    /// Svih šest studentovih poruka je iskorišteno.
+    ChatLimit,
+    /// Lik još nije odgovorio na zadnju poruku.
+    AwaitingReply,
+    EmptyText,
+    TextTooLong,
     Plan(PlanError),
     Corrupt(String),
+    /// Igra je stvorena drugom verzijom jezgre; obračun bi dao druge brojke (BACKLOG M3).
+    CoreMismatch(String),
 }
 
 pub(crate) fn corrupt(msg: impl Into<String>) -> GameError {

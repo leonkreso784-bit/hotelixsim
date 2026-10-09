@@ -679,6 +679,271 @@
         }
       }
     },
+    "/v1/hotels/{hotel_id}/situations/{code}/conversation": {
+      "get": {
+        "summary": "Razgovor s likom situacije (otvaranje, poruke, preostali broj poruka).",
+        "operationId": "conversation",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Šifra situacije",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Razgovor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Situacija nema lika",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/situations/{code}/messages": {
+      "post": {
+        "summary": "Poruka liku u razgovoru; odgovor lika stiže kasnije (radnik), pa je odgovor 202.",
+        "operationId": "send_message",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Šifra situacije",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Poruka je primljena; lik odgovara kasnije",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Runda nije otvorena, sve poruke iskorištene ili lik još nije odgovorio",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Situacija nema lika, tekst prazan ili predug, ili neispravno tijelo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/situations/{code}/response": {
+      "post": {
+        "summary": "Slobodan odgovor na situaciju; presuda stiže kasnije (radnik), pa je odgovor 202.",
+        "operationId": "submit_response",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Šifra situacije",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Odgovor je primljen; presuda stiže kasnije",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituationsBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Već odgovoreno ili runda nije otvorena",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Situacija nije za slobodan odgovor, tekst prazan ili predug, ili neispravno tijelo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/hotel": {
       "get": {
         "summary": "Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.",
@@ -777,6 +1042,108 @@
           "interest",
           "situation"
         ]
+      },
+      "CharacterBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "role"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatLineBody": {
+        "type": "object",
+        "required": [
+          "from",
+          "text"
+        ],
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/SpeakerBody"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationBody": {
+        "type": "object",
+        "required": [
+          "situation",
+          "character_name",
+          "role",
+          "opening",
+          "lines",
+          "remaining",
+          "awaiting_reply",
+          "open"
+        ],
+        "properties": {
+          "awaiting_reply": {
+            "type": "boolean",
+            "description": "Lik još nije odgovorio na zadnju poruku."
+          },
+          "character_name": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatLineBody"
+            }
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Runda je otvorena; inače je razgovor samo za čitanje."
+          },
+          "opening": {
+            "type": "string"
+          },
+          "remaining": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko poruka student još smije poslati.",
+            "minimum": 0
+          },
+          "role": {
+            "type": "string"
+          },
+          "situation": {
+            "type": "string"
+          }
+        }
+      },
+      "CriterionBody": {
+        "type": "object",
+        "required": [
+          "n",
+          "text",
+          "met",
+          "reason"
+        ],
+        "properties": {
+          "met": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
       },
       "DatabaseState": {
         "type": "string",
@@ -1058,6 +1425,109 @@
                 "$ref": "#/components/schemas/VarCode"
               }
             }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "response"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "situation",
+              "title",
+              "quality",
+              "neutral",
+              "late",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "verdict"
+                ]
+              },
+              "late": {
+                "type": "boolean"
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "neutral": {
+                "type": "boolean"
+              },
+              "quality": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "situation": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "seq",
+              "month",
+              "text",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "mentor"
+                ]
+              },
+              "month": {
+                "$ref": "#/components/schemas/MonthCode"
+              },
+              "seq": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
           }
         ],
         "description": "Stavka dnevnika hotela (osnova BitLife vremenske crte)."
@@ -1205,7 +1675,8 @@
           "available",
           "rooms_revenue_cents",
           "gop_cents",
-          "goppar_cents"
+          "goppar_cents",
+          "mentor"
         ],
         "properties": {
           "available": {
@@ -1220,6 +1691,12 @@
           "goppar_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "mentor": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "month": {
             "$ref": "#/components/schemas/MonthCode"
@@ -1472,6 +1949,10 @@
           "unknown_profile",
           "round_not_open",
           "already_answered",
+          "not_free_text",
+          "chat_limit",
+          "awaiting_reply",
+          "bad_text",
           "price_not_whole_euro",
           "price_out_of_range",
           "marketing_out_of_range",
@@ -1601,6 +2082,53 @@
           }
         }
       },
+      "ResponseBody": {
+        "type": "object",
+        "description": "Slobodan odgovor studenta i njegova presuda (ponuđeni odgovori nemaju ovo).",
+        "required": [
+          "text",
+          "status",
+          "quality",
+          "criteria",
+          "rationale"
+        ],
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CriterionBody"
+            }
+          },
+          "quality": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "rationale": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResponseStatusBody"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseStatusBody": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "judged",
+          "neutral"
+        ]
+      },
       "RoundBody": {
         "type": "object",
         "required": [
@@ -1669,7 +2197,10 @@
           "code",
           "title",
           "answers",
-          "chosen"
+          "chosen",
+          "free_text",
+          "character",
+          "response"
         ],
         "properties": {
           "answers": {
@@ -1678,6 +2209,16 @@
               "type": "string"
             },
             "description": "Oznake ponuđenih odgovora; indeks u popisu je broj odgovora."
+          },
+          "character": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CharacterBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "chosen": {
             "type": [
@@ -1689,6 +2230,20 @@
           },
           "code": {
             "type": "string"
+          },
+          "free_text": {
+            "type": "boolean",
+            "description": "Student smije odgovoriti svojim riječima i razgovarati s likom."
+          },
+          "response": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ResponseBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "title": {
             "type": "string"
@@ -1732,6 +2287,13 @@
           }
         }
       },
+      "SpeakerBody": {
+        "type": "string",
+        "enum": [
+          "student",
+          "character"
+        ]
+      },
       "StrategyCode": {
         "type": "string",
         "enum": [
@@ -1740,6 +2302,20 @@
           "lovac",
           "nasumicni"
         ]
+      },
+      "TextBody": {
+        "type": "object",
+        "description": "Tekst studenta (poruka liku ili slobodan odgovor); duljinu i praznoću provjerava jezgra (`bad_text`).",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "additionalProperties": false
       },
       "TrainingCode": {
         "type": "string",

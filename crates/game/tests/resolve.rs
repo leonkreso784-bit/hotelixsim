@@ -31,7 +31,10 @@ fn june_closed(seed: u64) -> Vec<Recorded> {
 }
 
 fn run_job(log: &mut Vec<Recorded>, m: Month) {
-    for (a, e) in Game::fold(log).unwrap().resolve_job(m).unwrap() {
+    let ResolveStep::Done(evs) = Game::fold(log).unwrap().resolve_job(m, false).unwrap() else {
+        panic!("presude ne čekaju");
+    };
+    for (a, e) in evs {
         push(log, a, e);
     }
 }
@@ -50,7 +53,8 @@ fn june_resolution_covers_four_hotels_and_unanswered_is_quality_one() {
         SituationResult {
             code: "S1".into(),
             answer: Some(0),
-            quality: 5
+            quality: 5,
+            free_text: false
         }
     );
     assert_eq!(
@@ -58,7 +62,8 @@ fn june_resolution_covers_four_hotels_and_unanswered_is_quality_one() {
         SituationResult {
             code: "S3".into(),
             answer: None,
-            quality: 1
+            quality: 1,
+            free_text: false
         }
     );
     assert!(
@@ -173,8 +178,11 @@ fn resolve_job_twice_is_noop() {
     let mut log = june_closed(42);
     run_job(&mut log, Month::Jun);
     assert_eq!(
-        Game::fold(&log).unwrap().resolve_job(Month::Jun).unwrap(),
-        vec![]
+        Game::fold(&log)
+            .unwrap()
+            .resolve_job(Month::Jun, false)
+            .unwrap(),
+        ResolveStep::Done(vec![])
     );
 }
 
@@ -182,11 +190,11 @@ fn resolve_job_twice_is_noop() {
 fn resolve_job_for_open_round_is_corrupt() {
     let g = Game::fold(&created(42)).unwrap();
     assert!(matches!(
-        g.resolve_job(Month::Jun),
+        g.resolve_job(Month::Jun, false),
         Err(GameError::Corrupt(_))
     ));
     assert!(matches!(
-        g.resolve_job(Month::Jul),
+        g.resolve_job(Month::Jul, false),
         Err(GameError::Corrupt(_))
     ));
 }
@@ -256,7 +264,10 @@ fn seq(f: &FeedItem) -> i64 {
         | FeedItem::RoundClosed { seq, .. }
         | FeedItem::SituationIgnored { seq, .. }
         | FeedItem::MonthResolved { seq, .. }
-        | FeedItem::Change { seq, .. } => *seq,
+        | FeedItem::Change { seq, .. }
+        | FeedItem::Response { seq, .. }
+        | FeedItem::Verdict { seq, .. }
+        | FeedItem::Mentor { seq, .. } => *seq,
     }
 }
 
@@ -288,4 +299,96 @@ fn views_split_public_and_private() {
     assert_eq!(mine.last_month.as_ref().unwrap().month, MonthCode::Jun);
     let plan = mine.plan.expect("srpanj je otvoren");
     assert_eq!(plan.month, MonthCode::Jul);
+}
+
+#[test]
+fn verdict_drives_resolution_with_nearest_answer_mechanics() {
+    // Slobodan odgovor s presudom (q=3, najbliži odgovor 1) daje ISTI obračun hotela kao ponuđeni odgovor 1 (q=3).
+    let free = common::june_resolved_with_free_verdict(3, 1);
+    let offered = common::june_resolved_with_offered(1);
+    let a = common::my_resolution(&free);
+    let b = common::my_resolution(&offered);
+    assert_eq!(a.report, b.report);
+    assert_eq!(a.indices, b.indices);
+    let s1 = a.situations.iter().find(|s| s.code == "S1").unwrap();
+    assert!(s1.free_text);
+    assert_eq!(s1.quality, 3);
+}
+
+#[test]
+fn closing_with_pending_verdict_waits_then_goes_neutral() {
+    let g = common::june_closed_with_pending_response();
+    assert_eq!(g.pending_verdicts(Month::Jun).len(), 1);
+    assert!(matches!(
+        g.resolve_job(Month::Jun, false).unwrap(),
+        ResolveStep::WaitForVerdicts(1)
+    ));
+    let ResolveStep::Done(evs) = g.resolve_job(Month::Jun, true).unwrap() else {
+        panic!()
+    };
+    let GameEvent::VerdictRecorded(v) = &evs[0].1 else {
+        panic!("prvo neutralna presuda")
+    };
+    assert_eq!(
+        (v.quality, v.nearest_answer, v.source, v.review),
+        (3, None, AiSource::Fallback, true)
+    );
+    assert!(matches!(evs[1].1, GameEvent::RoundResolved(_)));
+}
+
+#[test]
+fn verdict_after_neutral_is_late_and_changes_nothing() {
+    let mut g = common::june_closed_with_pending_response();
+    let ResolveStep::Done(evs) = g.resolve_job(Month::Jun, true).unwrap() else {
+        panic!()
+    };
+    for (a, e) in evs {
+        common::apply_ev(&mut g, a, e);
+    }
+    let before = g.resolved[&Month::Jun].clone();
+    let h = common::my_hotel(&g);
+    let v = g.validate_verdict("S1", common::draft_all_met(0)).unwrap();
+    let ev = g.record_verdict(h, "S1", v, common::meta()).unwrap();
+    assert!(matches!(ev, GameEvent::VerdictLate(_)));
+    common::apply_ev(&mut g, Actor::System, ev);
+    assert_eq!(g.resolved[&Month::Jun], before);
+}
+
+#[test]
+fn replay_with_verdicts_is_byte_identical() {
+    // Ponovljivost (DEMO §11.5) i uz presude: dnevnik pročitan kroz JSON (kao iz baze) obračuna lipanj bajt-isto.
+    let g = common::june_resolved_with_free_verdict_game(4, 0);
+    let reread: Vec<Recorded> = g
+        .history
+        .iter()
+        .map(|r| {
+            let text = serde_json::to_string(&r.event.to_payload()).unwrap();
+            let payload: serde_json::Value = serde_json::from_str(&text).unwrap();
+            Recorded {
+                seq: r.seq,
+                actor: r.actor.clone(),
+                event: GameEvent::from_record(r.event.kind(), 1, payload).unwrap(),
+            }
+        })
+        .collect();
+    let pos = reread
+        .iter()
+        .position(|r| matches!(r.event, GameEvent::RoundResolved(_)))
+        .unwrap();
+    let before = Game::fold(&reread[..pos]).unwrap();
+    let again = before.resolve_round(Month::Jun).unwrap();
+    let stored = Game::fold(&reread).unwrap().resolved[&Month::Jun].clone();
+    assert_eq!(
+        serde_json::to_vec(&again).unwrap(),
+        serde_json::to_vec(&stored).unwrap()
+    );
+}
+
+#[test]
+fn fallback_debrief_mentions_progress_and_situations() {
+    let g = common::june_resolved_game();
+    let input = g.debrief_input(common::my_hotel(&g), Month::Jun).unwrap();
+    let text = fallback_debrief(&input);
+    assert!(text.contains("lipanj") || text.contains("lipnju"));
+    assert!(!text.is_empty() && text.chars().count() < 1200);
 }

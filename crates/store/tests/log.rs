@@ -136,12 +136,12 @@ fn enqueue(g: GameId) -> app::Decide<'static> {
     Box::new(move |_: &[RawEvent]| {
         Ok(Decision {
             events: vec![],
-            enqueue: Some(NewJob {
+            enqueue: vec![NewJob {
                 key: "resolve:x:jun".into(),
                 kind: "resolve_round".into(),
                 game_id: g,
                 payload: json!({"month": "jun"}),
-            }),
+            }],
             finish_job: None,
         })
     })
@@ -179,7 +179,7 @@ async fn finish_job_requires_matching_claim(pool: PgPool) {
         Box::new(move |_: &[RawEvent]| {
             Ok(Decision {
                 events: vec![ev("RoundResolved")],
-                enqueue: None,
+                enqueue: vec![],
                 finish_job: Some(app::JobClaim { id, attempts }),
             })
         })

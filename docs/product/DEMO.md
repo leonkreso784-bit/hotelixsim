@@ -501,7 +501,8 @@ Demo nije spreman dok svaka stavka nema izmjereni rezultat.
 5. **Ponovljivost:** isto sjeme i isti dnevnik daju iste brojke, bajt za bajt.
 6. **Prozirnost:** svaka promjena (`Delta`) ima uzrok koji se može prikazati studentu.
 7. **AI presude:** za S1 i S2 po 20 odgovora koje je ocijenio Leon. AI se slaže unutar ±1 u barem 80 % slučajeva
-   [PROC] prije nego što ide pred profesora.
+   [PROC] prije nego što ide pred profesora. Mjerilo je alat `cargo run -p ai --bin mjerilo -- S1 [S2]` s ocjenama u
+   `content/hotel/mjerilo/S1.json` i `S2.json` (Leon upisuje `leon_quality`; bez ocjena ili ključa ne mjeri i izlazi s kodom 2).
 
 ---
 

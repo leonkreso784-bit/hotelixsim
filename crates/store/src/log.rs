@@ -117,7 +117,7 @@ impl EventLog for Store {
             insert_events(&mut tx, game, &stream, last, &d.events)
                 .await
                 .map_err(st)?;
-            if let Some(j) = &d.enqueue {
+            for j in &d.enqueue {
                 sqlx::query!(
                     "INSERT INTO jobs (job_key, kind, game_id, payload) VALUES ($1, $2, $3, $4) \
                      ON CONFLICT (job_key) DO NOTHING",

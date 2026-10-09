@@ -22,6 +22,34 @@ pub enum ContentError {
 pub struct Content {
     pub catalog: Catalog,
     pub situations: Vec<SituationTemplate>,
+    /// Po šifri situacije; svaka situacija ima unos (prazan ako nema AI-ja).
+    pub ai: BTreeMap<String, SituationAi>,
+}
+
+/// Lik s kojim student razgovara u situaciji sa slobodnim odgovorom (DEMO §7).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Character {
+    pub name: String,
+    /// Tko je lik, jednom rečenicom za studenta (npr. „gošća u sobi 214, s dvoje djece").
+    pub role: String,
+    /// Upute za AI kako lik razmišlja i što skriva (studentu se ne prikazuje).
+    pub brief: String,
+    /// Prva rečenica lika, napisana (bez AI-ja).
+    pub opening: String,
+    /// Odgovor lika kad AI ne radi (rezerva, ARHITEKTURA §8.4).
+    pub fallback_reply: String,
+}
+
+/// Sadržaj situacije koji treba AI sloju; jezgra `sim_hotel` ga ne poznaje.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SituationAi {
+    /// Pet kriterija rubrike (DEMO §7) ili prazno.
+    pub rubric: Vec<String>,
+    pub character: Option<Character>,
+    /// Smije li student odgovoriti svojim riječima (Leonova odluka 1: S1 i S2).
+    pub free_text: bool,
+    /// Za svaki ponuđeni odgovor (istim redom) brojevi ispunjenih kriterija 1..=5.
+    pub criteria: Vec<Vec<u8>>,
 }
 
 /// Direktorij sadržaja u repou (`content/hotel`).
@@ -178,6 +206,23 @@ struct AnswerDto {
     label: String,
     quality: u8,
     mechanics: Vec<MechanicDto>,
+    /// Ispunjeni kriteriji rubrike. `skip_serializing_if`: snimak iz koraka 3 mora dati bajt-isti stari zapis.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    criteria: Vec<u8>,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CharacterDto {
+    name: String,
+    role: String,
+    brief: String,
+    opening: String,
+    fallback_reply: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -188,6 +233,12 @@ struct SituationDto {
     title: String,
     unanswered: Vec<MechanicDto>,
     answers: Vec<AnswerDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    rubric: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    character: Option<CharacterDto>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    free_text: bool,
 }
 
 fn read<T: for<'de> Deserialize<'de>>(dir: &Path, name: &str) -> Result<T, ContentError> {
@@ -368,8 +419,77 @@ fn build_mechanic(d: MechanicDto, ctx: &str) -> Result<Mechanic, ContentError> {
     })
 }
 
-fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, ContentError> {
+/// Rubrika, lik i slobodan tekst jedne situacije; svaka greška imenuje situaciju.
+fn build_ai(
+    ctx: &str,
+    rubric: Vec<String>,
+    character: Option<CharacterDto>,
+    free_text: bool,
+    criteria: Vec<Vec<u8>>,
+    qualities: &[u8],
+) -> Result<SituationAi, ContentError> {
+    if !rubric.is_empty() && (rubric.len() != 5 || rubric.iter().any(|r| r.trim().is_empty())) {
+        return invalid(format!(
+            "{ctx}: rubrika mora imati točno 5 nepraznih kriterija"
+        ));
+    }
+    let character = match character {
+        Some(c) => {
+            let fields = [&c.name, &c.role, &c.brief, &c.opening, &c.fallback_reply];
+            if fields.iter().any(|f| f.trim().is_empty()) {
+                return invalid(format!("{ctx}: lik ima prazno polje"));
+            }
+            Some(Character {
+                name: c.name,
+                role: c.role,
+                brief: c.brief,
+                opening: c.opening,
+                fallback_reply: c.fallback_reply,
+            })
+        }
+        None => None,
+    };
+    if free_text && (rubric.is_empty() || character.is_none()) {
+        return invalid(format!("{ctx}: slobodan tekst traži rubriku i lika"));
+    }
+    let mut sorted = Vec::new();
+    for (i, mut crit) in criteria.into_iter().enumerate() {
+        if let Some(bad) = crit.iter().find(|n| !(1..=5).contains(*n)) {
+            return invalid(format!("{ctx}: kriterij {bad} izvan 1..=5"));
+        }
+        crit.sort_unstable();
+        if crit.windows(2).any(|w| w[0] == w[1]) {
+            return invalid(format!("{ctx}: kriterij se ponavlja u istom odgovoru"));
+        }
+        if rubric.is_empty() {
+            if !crit.is_empty() {
+                return invalid(format!("{ctx}: kriteriji bez rubrike"));
+            }
+        } else {
+            let expected = u8::try_from(crit.len()).unwrap_or(u8::MAX).max(1);
+            if qualities[i] != expected {
+                return invalid(format!(
+                    "{ctx}: kvaliteta {} ne odgovara broju kriterija {}",
+                    qualities[i],
+                    crit.len()
+                ));
+            }
+        }
+        sorted.push(crit);
+    }
+    Ok(SituationAi {
+        rubric,
+        character,
+        free_text,
+        criteria: sorted,
+    })
+}
+
+fn build_situations(
+    list: Vec<SituationDto>,
+) -> Result<(Vec<SituationTemplate>, BTreeMap<String, SituationAi>), ContentError> {
     let mut out = Vec::new();
+    let mut ai = BTreeMap::new();
     for s in list {
         let ctx = format!("situacija {}", s.code);
         if out.iter().any(|t: &SituationTemplate| t.code == s.code) {
@@ -379,6 +499,7 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
             return invalid(format!("{ctx}: nema ponuđenih odgovora"));
         }
         let mut answers = Vec::new();
+        let mut criteria = Vec::new();
         for a in s.answers {
             if !(1..=5).contains(&a.quality) {
                 return invalid(format!("{ctx}: kvaliteta {} izvan 1..=5", a.quality));
@@ -391,6 +512,7 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
                 .into_iter()
                 .map(|m| build_mechanic(m, &ctx))
                 .collect::<Result<Vec<_>, _>>()?;
+            criteria.push(a.criteria);
             answers.push(OfferedAnswer {
                 label: a.label,
                 mechanics,
@@ -405,6 +527,18 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
             .into_iter()
             .map(|m| build_mechanic(m, &ctx))
             .collect::<Result<Vec<_>, _>>()?;
+        let qualities: Vec<u8> = answers.iter().map(|a| a.quality).collect();
+        ai.insert(
+            s.code.clone(),
+            build_ai(
+                &ctx,
+                s.rubric,
+                s.character,
+                s.free_text,
+                criteria,
+                &qualities,
+            )?,
+        );
         out.push(SituationTemplate {
             month: month(&s.month, &ctx)?,
             code: s.code,
@@ -414,7 +548,7 @@ fn build_situations(list: Vec<SituationDto>) -> Result<Vec<SituationTemplate>, C
         });
     }
     out.sort_by_key(|s| s.month); // stabilno: unutar mjeseca ostaje redoslijed iz datoteke
-    Ok(out)
+    Ok((out, ai))
 }
 
 /// Puni snimak pravila (ARHITEKTURA §7.2): stablo DTO-a iz `content/hotel/*.json`. Ulazi cijeli u `GameCreated`,
@@ -441,22 +575,46 @@ impl Snapshot {
     pub fn build(&self) -> Result<Content, ContentError> {
         let s = self.clone();
         let catalog = build_catalog(s.catalog, s.profiles)?;
-        let situations = build_situations(s.situations)?;
+        let (situations, ai) = build_situations(s.situations)?;
         catalog
             .validate()
             .map_err(|e| ContentError::Invalid(format!("katalog: {e:?}")))?;
         Ok(Content {
             catalog,
             situations,
+            ai,
         })
     }
 
-    /// Otisak pravila (`RulesetId`): SHA-256 kanonskog JSON-a tipiziranog snimka. Mape su `BTreeMap`, polja struktura
-    /// imaju stalan redoslijed, pa je izlaz isti na svakom računalu i ne ovisi o redoslijedu ključeva u izvoru.
+    pub fn to_value(&self) -> serde_json::Value {
+        serde_json::to_value(self)
+            .expect("snimak nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
+    }
+
+    /// Snimak iz spremljenog `GameCreated`. Nova polja DTO-a imaju `#[serde(default)]`, pa se stari snimci čitaju.
+    pub fn from_value(v: &serde_json::Value) -> Result<Snapshot, ContentError> {
+        serde_json::from_value(v.clone())
+            .map_err(|e| ContentError::Json(PathBuf::from("<snimak iz dnevnika>"), e.to_string()))
+    }
+
+    /// Otisak pravila (`RulesetId`) nad kanonskim `Value` snimka (ADR-015 t. 3, ispravak iz koraka 4).
     pub fn fingerprint(&self) -> String {
+        fingerprint_value(&self.to_value())
+    }
+
+    /// Otisak iz koraka 3: nad tipiziranim zapisom, redoslijedom polja iz deklaracije. Vrijedi samo za igre stvorene
+    /// prije koraka 4; nova polja DTO-a zato imaju `skip_serializing_if`, da stari snimak da isti stari zapis.
+    pub fn legacy_fingerprint(&self) -> String {
         let bytes = serde_json::to_vec(self).expect("snimak se uvijek serijalizira");
         format!("sha256:{:x}", Sha256::digest(&bytes))
     }
+}
+
+/// Otisak proizvoljnog JSON-a: SHA-256 kanonskog zapisa. `serde_json::Value` drži objekte u `BTreeMap` (bez značajke
+/// `preserve_order`), pa su ključevi poredani i otisak ne ovisi o redoslijedu iz datoteke ni o JSONB-u.
+pub fn fingerprint_value(v: &serde_json::Value) -> String {
+    let bytes = serde_json::to_vec(v).expect("Value se uvijek serijalizira");
+    format!("sha256:{:x}", Sha256::digest(&bytes))
 }
 
 /// Učita `catalog.json`, `profiles.json` i `situations.json` iz `dir` i provjeri ih.

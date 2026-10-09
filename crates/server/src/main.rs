@@ -42,6 +42,23 @@ fn content_snapshot() -> anyhow::Result<content::Snapshot> {
     Ok(snap)
 }
 
+/// AI iz okoline: bez ključa igra radi na rezervama (neutralne presude, kratki odgovori likova).
+fn ai_port() -> Arc<dyn app::AiPort> {
+    match std::env::var("ANTHROPIC_API_KEY") {
+        Ok(k) if !k.trim().is_empty() => {
+            let models = ai::Models::from_env();
+            tracing::info!(presuda = %models.judge, lik = %models.character, mentor = %models.mentor, "AI uključen");
+            Arc::new(ai::Anthropic::new(k, models))
+        }
+        _ => {
+            tracing::warn!(
+                "ANTHROPIC_API_KEY nije postavljen: AI je isključen, igra radi na rezervama"
+            );
+            Arc::new(app::DisabledAi)
+        }
+    }
+}
+
 fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
     let s = Arc::new(store);
     app::Deps {
@@ -49,6 +66,7 @@ fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
         log: s.clone(),
         guests: s.clone(),
         jobs: s,
+        ai: ai_port(),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
     }

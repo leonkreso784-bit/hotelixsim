@@ -26,7 +26,8 @@ Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; 
 2. ✅ Jezgra + alat za balans: stvarni sloj, indeksi, mehanike, obračun, kocka. Provjere iz DEMO §11 (točke 1–6).
 3. ✅ Dnevnik, runde (demo način: gumb) i red poslova ([CHANGELOG 0.3.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-05-dnevnik-runde.md);
    [ADR-015](../records/DECISIONS.md#adr-015), [ADR-016](../records/DECISIONS.md#adr-016)).
-4. **Sljedeće:** AI sloj: presuda na slobodni odgovor, likovi, mentor (situacije iz predložaka); provjera DEMO §11, točka 7.
+4. **U gradnji:** AI sloj: presuda na slobodni odgovor, likovi, mentor (situacije iz predložaka); provjera DEMO §11, točka 7
+   (plan [2026-10-09-ai-sloj.md](2026-10-09-ai-sloj.md); [ADR-018](../records/DECISIONS.md#adr-018), [ADR-019](../records/DECISIONS.md#adr-019)).
 5. Sučelje igrača (mobitel prvi) i gost preko poveznice.
 6. Profesorov pogled (trag promjena, presude s kriterijima).
 

@@ -1,3 +1,4 @@
+mod common;
 use content::{Snapshot, repo_dir};
 use game::dto::*;
 use game::*;
@@ -44,7 +45,7 @@ fn samples() -> Vec<GameEvent> {
             seed: u64::MAX,
             ruleset_id: snap.fingerprint(),
             core_version: sim_hotel::CORE_VERSION.into(),
-            snapshot: Box::new(snap),
+            snapshot: Box::new(snap.to_value()),
             months: vec![MonthCode::Jun, MonthCode::Jul],
             hotels: vec![
                 HotelSetup {
@@ -89,11 +90,13 @@ fn samples() -> Vec<GameEvent> {
                         code: "S1".into(),
                         answer: Some(2),
                         quality: 1,
+                        free_text: false,
                     },
                     SituationResult {
                         code: "S3".into(),
                         answer: None,
                         quality: 1,
+                        free_text: false,
                     },
                 ],
                 report: MonthReportDto::from(&r),
@@ -190,4 +193,65 @@ fn report_dto_survives_json() {
         serde_json::to_value(CauseDto::Price).unwrap(),
         json!("price")
     );
+}
+
+#[test]
+fn legacy_game_still_folds() {
+    // Igra iz koraka 3: ruleset_id je stari otisak tipiziranog snimka.
+    let snap = Snapshot::read(&repo_dir()).unwrap();
+    let mut events = common::new_game_events(&snap);
+    let GameEvent::GameCreated(c) = &mut events[0].event else {
+        panic!()
+    };
+    c.ruleset_id = snap.legacy_fingerprint();
+    assert!(Game::fold(&events).is_ok());
+}
+
+#[test]
+fn shuffled_jsonb_keys_still_fold() {
+    // JSONB vraća ključeve drugim redom; otisak nad Value to ne smije primijetiti.
+    let snap = Snapshot::read(&repo_dir()).unwrap();
+    let events = common::new_game_events(&snap);
+    let payload = events[0].event.to_payload();
+    let text = serde_json::to_string(&payload).unwrap();
+    let reparsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let ev = GameEvent::from_record("GameCreated", 1, reparsed).unwrap();
+    let mut again = events.clone();
+    again[0].event = ev;
+    assert!(Game::fold(&again).is_ok());
+}
+
+#[test]
+fn tampered_snapshot_is_corrupt() {
+    let snap = Snapshot::read(&repo_dir()).unwrap();
+    let mut events = common::new_game_events(&snap);
+    let GameEvent::GameCreated(c) = &mut events[0].event else {
+        panic!()
+    };
+    c.snapshot["catalog"]["economy"]["hire_cents"] = json!(1);
+    assert!(matches!(Game::fold(&events), Err(GameError::Corrupt(_))));
+}
+
+#[test]
+fn old_snapshot_without_ai_fields_still_folds() {
+    // Snimak iz koraka 3 nema rubric/character/free_text/criteria; mora se čitati i dati stari otisak.
+    let snap = content::Snapshot::read(&content::repo_dir()).unwrap();
+    let mut v = snap.to_value();
+    for s in v["situations"].as_array_mut().unwrap() {
+        let o = s.as_object_mut().unwrap();
+        o.remove("rubric");
+        o.remove("character");
+        o.remove("free_text");
+        for a in o["answers"].as_array_mut().unwrap() {
+            a.as_object_mut().unwrap().remove("criteria");
+        }
+    }
+    let old = content::Snapshot::from_value(&v).unwrap();
+    let mut events = common::new_game_events(&old);
+    let GameEvent::GameCreated(c) = &mut events[0].event else {
+        panic!()
+    };
+    c.ruleset_id = old.legacy_fingerprint();
+    let g = Game::fold(&events).unwrap();
+    assert!(!g.content.ai["S1"].free_text);
 }

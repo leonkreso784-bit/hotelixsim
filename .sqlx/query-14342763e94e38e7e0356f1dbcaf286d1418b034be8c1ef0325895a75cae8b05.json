@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE jobs SET status = 'running', attempts = attempts + 1,\n                       locked_until = now() + make_interval(secs => $1), updated_at = now()\n                   WHERE id = (\n                       SELECT id FROM jobs\n                       WHERE (status = 'queued' OR (status = 'running' AND locked_until < now()))\n                         AND attempts < $2\n                       ORDER BY id\n                       FOR UPDATE SKIP LOCKED\n                       LIMIT 1\n                   )\n                   RETURNING id, job_key, kind, game_id, payload, attempts",
+  "query": "UPDATE jobs SET status = 'running', attempts = attempts + 1,\n                       locked_until = now() + make_interval(secs => $1), updated_at = now()\n                   WHERE id = (\n                       SELECT id FROM jobs\n                       WHERE ((status = 'queued' AND run_after <= now())\n                           OR (status = 'running' AND locked_until < now()))\n                         AND attempts < $2\n                       ORDER BY id\n                       FOR UPDATE SKIP LOCKED\n                       LIMIT 1\n                   )\n                   RETURNING id, job_key, kind, game_id, payload, attempts,\n                       EXTRACT(EPOCH FROM (now() - created_at))::bigint AS \"age_secs!\"",
   "describe": {
     "columns": [
       {
@@ -68,6 +68,12 @@
             "name": "attempts"
           }
         }
+      },
+      {
+        "ordinal": 6,
+        "name": "age_secs!",
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {
@@ -82,8 +88,9 @@
       false,
       false,
       false,
-      false
+      false,
+      null
     ]
   },
-  "hash": "e51697f57526ce1efaaff81e328f11d780f59ebbdcfb5eaeca164eda4ecf7094"
+  "hash": "14342763e94e38e7e0356f1dbcaf286d1418b034be8c1ef0325895a75cae8b05"
 }

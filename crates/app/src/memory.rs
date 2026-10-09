@@ -1,12 +1,12 @@
 //! Pohrana u memoriji za testove `app` i `api`: ista pravila kao `store`, bez baze i bez sata.
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::{
-    BoxFut, Decide, DecideError, Decided, Deps, EventLog, GameId, Guests, HotelId, Ids, Job,
-    JobClaim, JobQueue, MAX_ATTEMPTS, NewGame, NewJob, RawEvent, StatusError, StoreError,
-    SystemStatus,
+    AiError, AiOut, AiPort, BoxFut, Decide, DecideError, Decided, Deps, EventLog, GameId, Guests,
+    HotelId, Ids, Job, JobClaim, JobQueue, MAX_ATTEMPTS, NewGame, NewJob, RawEvent, StatusError,
+    StoreError, SystemStatus,
 };
 use game::GuestId;
 
@@ -27,6 +27,8 @@ pub struct MemJob {
     pub payload: serde_json::Value,
     pub status: JobStatus,
     pub attempts: i32,
+    /// Sekunde od upisa; u memoriji nema sata, pa ih test postavlja ručno (`set_job_age`).
+    pub age_secs: i64,
 }
 
 #[derive(Default)]
@@ -57,13 +59,119 @@ impl Ids for SeqIds {
     }
 }
 
+/// Lažni AI za testove: `good()` uvijek uspije, `failing()` uvijek ispadne; broji pozive po ulozi.
+pub struct FakeAi {
+    fail: bool,
+    refuse: bool,
+    assess: AtomicU32,
+    character: AtomicU32,
+    debrief: AtomicU32,
+}
+
+impl FakeAi {
+    fn new(fail: bool, refuse: bool) -> Self {
+        Self {
+            fail,
+            refuse,
+            assess: AtomicU32::new(0),
+            character: AtomicU32::new(0),
+            debrief: AtomicU32::new(0),
+        }
+    }
+
+    pub fn good() -> Self {
+        Self::new(false, false)
+    }
+
+    pub fn failing() -> Self {
+        Self::new(true, false)
+    }
+
+    /// Uvijek odbije zahtjev (`AiError::Refused`): konačna greška, bez ponavljanja.
+    pub fn refusing() -> Self {
+        Self::new(false, true)
+    }
+
+    /// Broj poziva (presuda, lik, mentor).
+    pub fn calls(&self) -> (u32, u32, u32) {
+        (
+            self.assess.load(Ordering::SeqCst),
+            self.character.load(Ordering::SeqCst),
+            self.debrief.load(Ordering::SeqCst),
+        )
+    }
+
+    fn out<T: Send + 'static>(
+        &self,
+        counter: &AtomicU32,
+        value: T,
+    ) -> BoxFut<'static, Result<AiOut<T>, AiError>> {
+        counter.fetch_add(1, Ordering::SeqCst);
+        let r = if self.refuse {
+            Err(AiError::Refused("lažno odbijanje".into()))
+        } else if self.fail {
+            Err(AiError::Unavailable("lažni ispad".into()))
+        } else {
+            Ok(AiOut {
+                value,
+                meta: game::AiMeta {
+                    model: "fake".into(),
+                    prompt: "fake.v1".into(),
+                    input_tokens: 0,
+                    output_tokens: 0,
+                },
+            })
+        };
+        Box::pin(async move { r })
+    }
+}
+
+impl AiPort for FakeAi {
+    fn assess(
+        &self,
+        _input: game::AssessInput,
+    ) -> BoxFut<'_, Result<AiOut<game::VerdictDraft>, AiError>> {
+        let criteria = (1..=5)
+            .map(|n| game::CriterionVerdict {
+                n,
+                met: n <= 4,
+                reason: format!("Lažna ocjena kriterija {n}."),
+            })
+            .collect();
+        self.out(
+            &self.assess,
+            game::VerdictDraft {
+                criteria,
+                nearest_answer: 0,
+                rationale: "Lažna presuda.".into(),
+            },
+        )
+    }
+
+    fn character(
+        &self,
+        _input: game::CharacterInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        self.out(&self.character, "Hvala, to mi pomaže.".to_owned())
+    }
+
+    fn debrief(&self, _input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        self.out(&self.debrief, "Mentor: dobar mjesec.".to_owned())
+    }
+}
+
 pub fn deps(snapshot: content::Snapshot) -> (Deps, Arc<Memory>) {
+    deps_with_ai(snapshot, Arc::new(FakeAi::good()))
+}
+
+pub fn deps_with_ai(snapshot: content::Snapshot, ai: Arc<dyn AiPort>) -> (Deps, Arc<Memory>) {
     let m = Arc::new(Memory::default());
     let d = Deps {
         status: m.clone(),
         log: m.clone(),
         guests: m.clone(),
         jobs: m.clone(),
+        ai,
         ids: Arc::new(SeqIds::default()),
         snapshot: Arc::new(snapshot),
     };
@@ -84,6 +192,7 @@ fn push_job_to(mem: &mut Mem, j: NewJob) {
         payload: j.payload,
         status: JobStatus::Queued,
         attempts: 0,
+        age_secs: 0,
     });
 }
 
@@ -110,6 +219,13 @@ impl Memory {
                     JobStatus::Queued
                 };
             }
+        }
+    }
+
+    /// Postavi „starost" posla po ključu (memorija nema sat).
+    pub fn set_job_age(&self, key: &str, secs: i64) {
+        for j in self.lock().jobs.iter_mut().filter(|j| j.key == key) {
+            j.age_secs = secs;
         }
     }
 
@@ -177,10 +293,10 @@ impl EventLog for Memory {
                 actor: e.actor,
             });
         }
-        if let Some(j) = decision.enqueue
-            && !m.jobs.iter().any(|x| x.key == j.key)
-        {
-            push_job_to(&mut m, j);
+        for j in decision.enqueue {
+            if !m.jobs.iter().any(|x| x.key == j.key) {
+                push_job_to(&mut m, j);
+            }
         }
         if let Some(c) = decision.finish_job
             && let Some(j) = m.jobs.iter_mut().find(|j| {
@@ -246,6 +362,7 @@ impl JobQueue for Memory {
                     game_id: j.game_id,
                     payload: j.payload.clone(),
                     attempts: j.attempts,
+                    age_secs: j.age_secs,
                 }
             });
         ready(Ok(job))
@@ -261,6 +378,17 @@ impl JobQueue for Memory {
             } else {
                 JobStatus::Queued
             };
+        }
+        ready(Ok(()))
+    }
+
+    fn defer(&self, claim: JobClaim, _secs: i32) -> BoxFut<'_, Result<(), StoreError>> {
+        // memorija nema sat: posao je odmah opet u redu, a pokušaj se ne troši
+        if let Some(j) = self.lock().jobs.iter_mut().find(|j| {
+            j.id == claim.id && j.attempts == claim.attempts && j.status == JobStatus::Running
+        }) {
+            j.status = JobStatus::Queued;
+            j.attempts -= 1;
         }
         ready(Ok(()))
     }

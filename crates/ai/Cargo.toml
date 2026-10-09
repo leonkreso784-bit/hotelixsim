@@ -1,0 +1,23 @@
+[package]
+name = "ai"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+app.workspace = true
+game.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+content.workspace = true
+tokio.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+sim-hotel.workspace = true
+
+[lints]
+workspace = true
