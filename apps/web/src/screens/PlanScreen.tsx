@@ -1,9 +1,10 @@
 import { t } from "@hotelixsim/i18n";
 import { type FormEvent, type ReactNode, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
-import { useSavePlan } from "../api/queries";
+import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatRange, monthName } from "../format";
+import { formatRange, monthName, roundPhrase } from "../format";
+import { isWeekly, roundInfo } from "../game";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 
 type Draft = {
@@ -149,14 +150,18 @@ function Toggle(props: {
 export function PlanScreen({ me }: { me: HotelBody }) {
   const state = me.private?.plan ?? null;
   const save = useSavePlan(me.hotel.hotel_id);
+  const game = useGame(me.game_id).data;
+  const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
   const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
   const [invalid, setInvalid] = useState(false);
   if (!state || !draft)
     return (
       <>
-        <h1 className="text-3xl font-extrabold tracking-tight">{t("plan.title")}</h1>
-        <p className="text-muted">{t("plan.closed")}</p>
+        <h1 className="text-3xl font-extrabold tracking-tight">
+          {t(weekly ? "plan.title.week" : "plan.title")}
+        </h1>
+        <p className="text-muted">{t(weekly ? "plan.closed.week" : "plan.closed")}</p>
       </>
     );
   const l = state.limits;
@@ -176,7 +181,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
     }
     inFlight.current = true;
     save.mutate(
-      { month: state.month, plan },
+      { round: state.round, plan },
       {
         onSettled: () => {
           inFlight.current = false;
@@ -185,11 +190,16 @@ export function PlanScreen({ me }: { me: HotelBody }) {
     );
   }
 
-  const month = monthName(state.month);
+  const info = game ? roundInfo(game, state.round) : null;
+  const round = info ? roundPhrase(info) : monthName(state.month);
   return (
     <form onSubmit={onSubmit} className="space-y-3">
-      <h1 className="text-3xl font-extrabold tracking-tight">{t("plan.title")}</h1>
-      <p className="text-sm text-muted">{t("plan.for", { month })}</p>
+      <h1 className="text-3xl font-extrabold tracking-tight">
+        {t(weekly ? "plan.title.week" : "plan.title")}
+      </h1>
+      <p className="text-sm text-muted">
+        {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
+      </p>
       <Card className="space-y-4">
         <NumberField
           id="plan-price"
@@ -271,7 +281,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       </details>
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
       {save.isError && <ErrorText>{problemMessage(save.error)}</ErrorText>}
-      {save.isSuccess && <StatusText>{t("plan.saved", { month })}</StatusText>}
+      {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
       <Button type="submit" disabled={save.isPending}>
         {t("plan.save")}
       </Button>

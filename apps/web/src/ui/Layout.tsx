@@ -3,14 +3,16 @@ import { ChartNoAxesColumn, House, MessageCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import type { GameBody } from "../api/types";
 import { monthName } from "../format";
-import { monthPosition } from "../game";
+import { roundPosition } from "../game";
 import { Link, type Route, useRoute } from "../router";
 
 export function chipText(game: GameBody): string {
-  const pos = monthPosition(game);
+  const pos = roundPosition(game);
   if (!pos) return t("chip.over");
+  if (pos.round.kind === "week")
+    return t("chip.week", { n: pos.round.index + 1, i: pos.index + 1, total: pos.total });
   return t("chip.position", {
-    month: monthName(pos.month).toLocaleUpperCase("hr-HR"),
+    month: monthName(pos.round.first_month).toLocaleUpperCase("hr-HR"),
     n: pos.index + 1,
     total: pos.total,
   });
@@ -38,7 +40,7 @@ function Logo() {
 }
 
 const TABS = [
-  { to: "/", label: "nav.hotel", icon: House, match: ["hotel", "plan", "month", "indicator", "kpi"] },
+  { to: "/", label: "nav.hotel", icon: House, match: ["hotel", "plan", "round", "indicator", "kpi"] },
   { to: "/situacije", label: "nav.situations", icon: MessageCircle, match: ["situations", "situation"] },
   { to: "/tijek", label: "nav.feed", icon: ChartNoAxesColumn, match: ["feed"] },
 ] as const;

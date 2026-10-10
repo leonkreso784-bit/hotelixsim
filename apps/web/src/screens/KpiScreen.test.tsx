@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { game, ix, kpiMonth, myHotel, roundInfo, standardApi } from "../test/fixtures";
+import { game, ix, kpiMonth, myHotel, roundInfo, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -200,5 +200,26 @@ describe("Pokazatelji", () => {
     renderApp(standardApi());
     const link = await screen.findByRole("link", { name: /^Pokazatelji/ });
     expect(link.textContent).not.toContain("ADR");
+  });
+});
+
+describe("Pokazatelji: tjedna igra", () => {
+  it("stupci su tjedni s datumima, uvod i prazno stanje govore o tjednu", async () => {
+    const api = v2Api().on("GET", "/v1/hotels/:hotel/kpi", {
+      months: [kpiMonth({ round: "t01", days: 7 }), kpiMonth({ round: "t02", days: 7 })],
+    });
+    renderApp(api, "/pokazatelji");
+    const table = await screen.findByRole("table", { name: "Pokazatelji po tjednima" });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .map((c) => c.textContent),
+    ).toEqual(["Pokazatelj", "Tjedan 1 (1. 6. – 7. 6.)", "Tjedan 2 (8. 6. – 14. 6.)"]);
+    expect(screen.getByText(/dani u tjednu/)).toBeTruthy();
+  });
+
+  it("prije prvog tjedna: rečenica o tjednu", async () => {
+    renderApp(v2Api(), "/pokazatelji");
+    expect(await screen.findByText("Pokazatelji se računaju nakon prvog tjedna.")).toBeTruthy();
   });
 });

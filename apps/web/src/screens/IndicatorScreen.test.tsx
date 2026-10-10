@@ -2,7 +2,7 @@ import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExplanationBody } from "../api/types";
 import { json } from "../test/fakeApi";
-import { explanation, game, ix, myHotel, standardApi } from "../test/fixtures";
+import { explanation, game, ix, myHotel, standardApi, v2Api, weeklyHotel } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -181,5 +181,32 @@ describe("Detalj pokazatelja", () => {
     );
     expect((await screen.findByRole("alert")).textContent).not.toMatch(/undefined|storage_unavailable/);
     expect(screen.getByRole("list", { name: "Kroz mjesece" })).toBeTruthy();
+  });
+});
+
+describe("pokazatelj: tjedna igra", () => {
+  it("povijest i izbor kruga su tjedni; objašnjenje se traži za izabrani kod", async () => {
+    const wk = (round: string, g: number) => ({
+      month: "jun" as const,
+      round,
+      indices: ix(g, 5000, 5000, 5000, 5000),
+      progress_hundredths: 100,
+    });
+    const scored = [wk("t01", 5300), wk("t02", 5600)];
+    const api = v2Api().on("GET", "/v1/me/hotel", weeklyHotel({ week: 3, months: scored }));
+    renderApp(api, "/pokazatelj/G");
+    expect(await screen.findByRole("heading", { name: "Kroz tjedne" })).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)",
+      }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tjedan 1 (1. 6. – 7. 6.)" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 1 (1. 6. – 7. 6.)",
+      }),
+    ).toBeTruthy();
+    expect(api.calls.some((c) => c.path.endsWith("/months/t01/explanation"))).toBe(true);
   });
 });

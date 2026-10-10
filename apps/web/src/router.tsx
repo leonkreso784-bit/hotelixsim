@@ -1,20 +1,27 @@
-// Mali usmjerivač nad History API-jem (ADR-022 t. 1): devet ruta, bez učitavača.
+// Mali usmjerivač nad History API-jem (ADR-022 t. 1): devet ruta (krug: /krug/:kod, a stari /mjesec/:kod vrijedi i dalje), bez učitavača.
 import { type AnchorHTMLAttributes, type MouseEvent, useSyncExternalStore } from "react";
-import type { DriverCode, IndexCode, MonthCode } from "./api/types";
+import type { DriverCode, IndexCode } from "./api/types";
 
 export type Route =
   | { name: "hotel" }
   | { name: "situations" }
   | { name: "situation"; code: string }
   | { name: "plan" }
-  | { name: "month"; month: MonthCode }
+  | { name: "round"; code: string }
   | { name: "indicator"; code: IndexCode; highlight: DriverCode | null }
   | { name: "kpi" }
   | { name: "feed" }
   | { name: "avatars" }
   | { name: "notFound" };
 
-const MONTHS: readonly MonthCode[] = ["jun", "jul", "aug", "sep"];
+/** Kodovi krugova: mjeseci (v1 i mjesečna v2) i tjedni t01…t17. */
+const ROUND_CODES: readonly string[] = [
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  ...Array.from({ length: 17 }, (_v, i) => `t${String(i + 1).padStart(2, "0")}`),
+];
 
 const INDEX_CODES: readonly IndexCode[] = ["G", "R", "Z", "O", "F"];
 const DRIVER_CODES: readonly DriverCode[] = [
@@ -39,8 +46,8 @@ function isDriver(s: string): s is DriverCode {
   return (DRIVER_CODES as readonly string[]).includes(s);
 }
 
-function isMonth(s: string): s is MonthCode {
-  return (MONTHS as readonly string[]).includes(s);
+function isRound(s: string): boolean {
+  return ROUND_CODES.includes(s);
 }
 
 export function matchRoute(pathname: string): Route {
@@ -63,10 +70,15 @@ export function matchRoute(pathname: string): Route {
   }
   if (a === "plan" && b === undefined) return { name: "plan" };
   if (a === "pokazatelji" && b === undefined) return { name: "kpi" };
-  if (a === "mjesec" && b !== undefined && isMonth(b)) return { name: "month", month: b };
+  if ((a === "krug" || a === "mjesec") && b !== undefined && isRound(b)) return { name: "round", code: b };
   if (a === "tijek" && b === undefined) return { name: "feed" };
   if (a === "likovi" && b === undefined) return { name: "avatars" };
   return { name: "notFound" };
+}
+
+/** Putanja ekrana kruga: mjeseci ostaju na starom „/mjesec/…“ (v1 poveznice), tjedni su „/krug/tNN“. */
+export function roundPath(code: string): string {
+  return code.startsWith("t") ? `/krug/${code}` : `/mjesec/${code}`;
 }
 
 const listeners = new Set<() => void>();

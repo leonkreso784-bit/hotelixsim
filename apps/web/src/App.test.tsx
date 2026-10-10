@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FakeApi, json, problem } from "./test/fakeApi";
-import { game, myHotel } from "./test/fixtures";
+import { game, myHotel, startApi } from "./test/fixtures";
 import { renderApp } from "./test/renderApp";
 
 afterEach(() => {
@@ -86,5 +86,53 @@ describe("okvir", () => {
     const api = new FakeApi().on("GET", "/v1/me/hotel", myHotel()).on("GET", "/v1/games/:game", game());
     renderApp(api, "/nesto");
     expect(await screen.findByText("Ova stranica ne postoji.")).toBeTruthy();
+  });
+});
+
+describe("početni ekran: postavke za profesora", () => {
+  it("Započni igru bez postavki šalje prazno tijelo", async () => {
+    const api = startApi();
+    renderApp(api, "/");
+    fireEvent.click(await screen.findByRole("button", { name: "Započni igru" }));
+    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    expect(api.posts("/v1/demo")[0]?.body).toBeUndefined();
+  });
+
+  it("novi model po tjednima šalje jednom tijelo s modelom", async () => {
+    const api = startApi();
+    renderApp(api, "/");
+    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
+    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
+    expect(
+      (screen.getByRole("radio", { name: "Po tjednima (preporučeno)" }) as HTMLInputElement).checked,
+    ).toBe(true);
+    const start = screen.getByRole("button", { name: "Započni igru" });
+    fireEvent.click(start);
+    fireEvent.click(start);
+    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "week" });
+  });
+
+  it("novi model po mjesecima šalje round_kind month", async () => {
+    const api = startApi();
+    renderApp(api, "/");
+    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
+    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Po mjesecima" }));
+    fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
+    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "month" });
+  });
+
+  it("povratak na demo model skriva vrstu kruga i opet šalje prazno tijelo", async () => {
+    const api = startApi();
+    renderApp(api, "/");
+    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
+    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Demo (dva mjeseca, bez odjela)" }));
+    expect(screen.queryByRole("radio", { name: "Po tjednima (preporučeno)" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
+    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    expect(api.posts("/v1/demo")[0]?.body).toBeUndefined();
   });
 });

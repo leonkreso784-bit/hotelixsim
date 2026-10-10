@@ -4,7 +4,7 @@ import { t } from "@hotelixsim/i18n";
 import { ChevronDown } from "lucide-react";
 import { problemMessage } from "../../api/errors";
 import { useExplanation } from "../../api/queries";
-import type { DriverCode, EffectCode, ExplanationIndexBody, MonthCode } from "../../api/types";
+import type { DriverCode, EffectCode, ExplanationIndexBody } from "../../api/types";
 import { sortIndices } from "../../game";
 import { Delta, INDEX_ICON } from "../../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../../ui/primitives";
@@ -79,15 +79,16 @@ function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean 
 
 export function Explanation({
   hotelId,
-  month,
+  round,
   className = "",
 }: {
   hotelId: string;
-  month: MonthCode;
+  /** Kod kruga: mjesec („jun“) ili tjedan („t05“). */
+  round: string;
   /** Samo raspored (npr. `order-*` na mobitelu). */
   className?: string;
 }) {
-  const q = useExplanation(hotelId, month);
+  const q = useExplanation(hotelId, round);
   const indices = q.data ? sortIndices(q.data.indices) : [];
   const open = mostMoved(indices);
   return (

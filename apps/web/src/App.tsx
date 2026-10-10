@@ -19,7 +19,7 @@ import { StartScreen } from "./screens/StartScreen";
 import { chipText, Layout } from "./ui/Layout";
 import { Button, ErrorText, StatusText } from "./ui/primitives";
 
-/** Ekrani s jednim stupcem dobivaju ograničenu širinu čitanja; hotel, mjesec i situacija sami slažu dva stupca,
+/** Ekrani s jednim stupcem dobivaju ograničenu širinu čitanja; hotel, krug i situacija sami slažu dva stupca,
  * a pokazatelji na računalu trebaju širinu za tablicu. */
 function Reading({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-2xl space-y-3">{children}</div>;
@@ -43,8 +43,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
           <PlanScreen me={me} />
         </Reading>
       );
-    case "month":
-      return <MonthScreen key={route.month} me={me} month={route.month} />;
+    case "round":
+      return <MonthScreen key={route.code} me={me} code={route.code} />;
     case "indicator":
       return (
         <Reading>

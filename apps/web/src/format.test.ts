@@ -13,6 +13,8 @@ import {
   formatWhole,
   formatWholeSigned,
   monthName,
+  roundDates,
+  roundTitle,
   strategyLabel,
 } from "./format";
 
@@ -118,5 +120,36 @@ describe("formatCount", () => {
       "11 osoba",
       "32 osobe",
     ]);
+  });
+});
+
+describe("oznaka kruga", () => {
+  it("oznaka tjedna i mjeseca", () => {
+    const t05 = {
+      code: "t05",
+      kind: "week",
+      index: 4,
+      days: 7,
+      first_day: 29,
+      first_month: "jun",
+      last_day: 5,
+      last_month: "jul",
+      month_ends: true,
+    } as const;
+    expect(roundDates(t05)).toBe("29. 6. – 5. 7.");
+    expect(roundTitle(t05)).toBe("Tjedan 5 (29. 6. – 5. 7.)");
+    const jun = {
+      code: "jun",
+      kind: "month",
+      index: 0,
+      days: 30,
+      first_day: 1,
+      first_month: "jun",
+      last_day: 30,
+      last_month: "jun",
+      month_ends: true,
+    } as const;
+    expect(roundDates(jun)).toBe("lipanj");
+    expect(roundTitle(jun)).toBe("Lipanj");
   });
 });

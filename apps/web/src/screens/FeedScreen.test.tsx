@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
-import { ix, plan, standardApi } from "../test/fixtures";
+import { ix, plan, standardApi, v2Api } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
 import { feedEntries } from "./FeedScreen";
 
@@ -153,5 +153,42 @@ describe("Tijek, ključevi", () => {
     err.mockRestore();
     expect(dup).toEqual([]);
     expect(screen.getAllByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" })).toHaveLength(1);
+  });
+});
+
+describe("Tijek: tjedna igra", () => {
+  const weekItems: FeedItemBody[] = [
+    { kind: "round_closed", seq: 1, month: "jun", round: "t01", by: "guest" },
+    {
+      kind: "change",
+      seq: 2,
+      month: "jun",
+      round: "t01",
+      var: "sold",
+      cause: "price",
+      amount: -1200,
+      unit: "bp",
+      situation: null,
+    },
+    {
+      kind: "month_resolved",
+      seq: 3,
+      month: "jun",
+      round: "t01",
+      indices: ix(5300, 5200, 5100, 5400, 4800),
+      progress_hundredths: 800,
+    },
+    { kind: "plan_changed", seq: 4, month: "jun", round: "t02", plan: plan(), by: "guest" },
+  ];
+
+  it("naslovi su tjedni s datumima, rečenice govore o tjednu, poveznica vodi na /krug/t01", async () => {
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/feed", { items: weekItems }), "/tijek");
+    expect(await screen.findByRole("heading", { name: "Tjedan 1 (1. 6. – 7. 6.)" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Tjedan 2 (8. 6. – 14. 6.)" })).toBeTruthy();
+    expect(screen.getByText("Tjedan 1 (1. 6. – 7. 6.) je zatvoren.")).toBeTruthy();
+    expect(screen.getByText("Tjedan 1 (1. 6. – 7. 6.) je obračunat: napredak +8 bodova.")).toBeTruthy();
+    expect(screen.getByText("Plan za tjedan 2 (8. 6. – 14. 6.) je promijenjen.")).toBeTruthy();
+    const why = screen.getByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" });
+    expect(why.getAttribute("href")).toBe("/krug/t01");
   });
 });

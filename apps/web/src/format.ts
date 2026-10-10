@@ -1,5 +1,5 @@
 import { t } from "@hotelixsim/i18n";
-import type { MonthCode, StrategyCode } from "./api/types";
+import type { MonthCode, RoundInfoBody, StrategyCode } from "./api/types";
 
 const nf2 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 2 });
 // hr-HR po zadanom ne grupira četiri znamenke (1234), pa grupiranje tražimo izričito: 1.234.
@@ -98,6 +98,30 @@ export function monthName(code: MonthCode): string {
 
 export function capitalize(s: string): string {
   return s.charAt(0).toLocaleUpperCase("hr-HR") + s.slice(1);
+}
+
+const MONTH_NUMBER: Record<MonthCode, number> = { jun: 6, jul: 7, aug: 8, sep: 9 };
+
+/** Mjesec: „lipanj“; tjedan: „29. 6. – 5. 7.“. Datumi dolaze iz tijela kruga, ekran ne računa kalendar. */
+export function roundDates(r: RoundInfoBody): string {
+  if (r.kind === "month") return monthName(r.first_month);
+  return t("round.dates", {
+    d1: r.first_day,
+    m1: MONTH_NUMBER[r.first_month],
+    d2: r.last_day,
+    m2: MONTH_NUMBER[r.last_month],
+  });
+}
+
+/** Krug usred rečenice: „lipanj“ ili „tjedan 5 (29. 6. – 5. 7.)“. */
+export function roundPhrase(r: RoundInfoBody): string {
+  if (r.kind === "month") return monthName(r.first_month);
+  return t("round.weekPhrase", { n: r.index + 1, dates: roundDates(r) });
+}
+
+/** Krug kao naslov: „Lipanj“ ili „Tjedan 5 (29. 6. – 5. 7.)“. */
+export function roundTitle(r: RoundInfoBody): string {
+  return capitalize(roundPhrase(r));
 }
 
 export function strategyLabel(code: StrategyCode): string {

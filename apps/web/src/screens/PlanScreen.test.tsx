@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { myHotel, plan, standardApi } from "../test/fixtures";
+import { HOTEL_ID, myHotel, plan, standardApi, v2Api } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
 
 afterEach(() => {
@@ -107,5 +107,25 @@ describe("plan mjeseca", () => {
     renderApp(standardApi().on("GET", "/v1/me/hotel", myHotel({ planMonth: null })), "/plan");
     expect(await screen.findByText("Plan se mijenja dok je mjesec otvoren.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Spremi plan" })).toBeNull();
+  });
+});
+
+describe("plan tjedna", () => {
+  it("naslov i opis govore o tjednu, a plan se sprema za kod kruga t01 jednim zahtjevom", async () => {
+    const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) =>
+      json(200, body as object),
+    );
+    renderApp(api, "/plan");
+    expect(await screen.findByRole("heading", { level: 1, name: "Plan tjedna" })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Za tjedan 1 (1. 6. – 7. 6.). Vrijedi od zatvaranja tjedna; zadnji spremljeni plan pobjeđuje.",
+      ),
+    ).toBeTruthy();
+    const button = screen.getByRole("button", { name: "Spremi plan" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(await screen.findByText("Plan za tjedan 1 (1. 6. – 7. 6.) je spremljen.")).toBeTruthy();
+    expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1);
   });
 });
