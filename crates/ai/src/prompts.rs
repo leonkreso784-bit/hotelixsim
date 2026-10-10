@@ -6,8 +6,8 @@ pub struct Prompt {
 }
 
 pub const JUDGE: Prompt = Prompt {
-    version: "presuda.v2",
-    text: include_str!("../../../prompts/presuda.v2.md"),
+    version: "presuda.v3",
+    text: include_str!("../../../prompts/presuda.v3.md"),
 };
 pub const CHARACTER: Prompt = Prompt {
     version: "lik.v1",

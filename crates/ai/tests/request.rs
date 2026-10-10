@@ -240,6 +240,21 @@ fn mentor_prompt_example_is_invented_and_forbids_guessing() {
     }
 }
 
+/// Presuda je 10.10. napisala „odgovara ponuđenom odgovoru 0" — korisnička poruka nosi `[i]` ispred ponuđenih
+/// odgovora, a student ih ne vidi. Uputa to zabranjuje; `game::validate_verdict` odbija tekst koji ipak promakne.
+#[test]
+fn judge_prompt_forbids_internal_numbers() {
+    assert_eq!(ai::prompts::JUDGE.version, "presuda.v3");
+    let prompt = ai::prompts::JUDGE.text.to_lowercase();
+    for must in [
+        "student ne vidi ponuđene odgovore ni brojeve kriterija",
+        "spominji redni broj, oznaku ni redoslijed",
+        "opiši ga riječima",
+    ] {
+        assert!(prompt.contains(must), "uputa presude nema „{must}“");
+    }
+}
+
 #[test]
 fn server_fallback_is_a_rule_per_model() {
     use ai::request::supports_server_fallback as ok;

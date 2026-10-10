@@ -36,6 +36,8 @@ pub enum VerdictError {
     EmptyReason(u8),
     NearestAnswer(u8),
     EmptyRationale,
+    /// Tekst za studenta spominje redni broj ponuđenog odgovora ili kriterija (ADR-025).
+    InternalNumber,
 }
 
 /// Presuda koja je prošla provjeru oblika; kvaliteta je izračunata, ne preuzeta.
@@ -51,6 +53,35 @@ pub struct ValidVerdict {
 pub fn quality_from(criteria: &[CriterionVerdict]) -> u8 {
     let met = criteria.iter().filter(|c| c.met).count();
     u8::try_from(met).unwrap_or(5).clamp(1, 5)
+}
+
+/// Spominje li tekst redni broj ponuđenog odgovora ili kriterija („ponuđenom odgovoru 0", „kriterije 1 i 3",
+/// „[2]"). Student ne vidi te brojeve (ponuđeni odgovori su skriveni, kriteriji nisu numerirani), pa mu ništa ne znače.
+fn names_internal_number(text: &str) -> bool {
+    let digits = |s: &str| !s.is_empty() && s.chars().all(|c| c.is_ascii_digit());
+    let bare = |w: &str| {
+        w.trim_matches(|c: char| !c.is_alphanumeric())
+            .to_lowercase()
+    };
+    let words: Vec<&str> = text.split_whitespace().collect();
+    words.iter().enumerate().any(|(i, w)| {
+        let raw = w.trim_end_matches(['.', ',', ';', ':', '!', '?']);
+        if raw.starts_with(['[', '('])
+            && raw.ends_with([']', ')'])
+            && digits(&raw[1..raw.len() - 1])
+        {
+            return true;
+        }
+        let word = bare(w);
+        if !(word.starts_with("odgovor") || word.starts_with("kriterij")) {
+            return false;
+        }
+        words[i + 1..]
+            .iter()
+            .map(|n| bare(n))
+            .find(|n| !matches!(n.as_str(), "br" | "broj" | "pod"))
+            .is_some_and(|n| digits(&n))
+    })
 }
 
 impl Game {
@@ -91,6 +122,14 @@ impl Game {
         }
         if draft.rationale.trim().is_empty() {
             return Err(VerdictError::EmptyRationale);
+        }
+        if names_internal_number(&draft.rationale)
+            || draft
+                .criteria
+                .iter()
+                .any(|c| names_internal_number(&c.reason))
+        {
+            return Err(VerdictError::InternalNumber);
         }
         let mut criteria = draft.criteria;
         criteria.sort_by_key(|c| c.n);
