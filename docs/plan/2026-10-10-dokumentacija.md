@@ -1,6 +1,6 @@
 # Raspored dokumentacije — granice veličine, podindeksi, planovi kao mape, ADR po datoteci — plan
 
-**Status:** 🟩 AKTIVAN · **Područje:** dokumentacija · **Otvoren:** 2026-10-10 ·
+**Status:** ⏸️ PAUZIRAN (čeka spajanje Sloja 1; Taskovi 11–13) · **Područje:** dokumentacija · **Otvoren:** 2026-10-10 ·
 **Grana:** `dokumentacija/raspored` (od `main`) u radnom stablu `C:/Users/leonk/Documents/hotelixsim-dokumentacija`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development (preporučeno) ili

@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-030"></a>[ADR-030](DECISIONS/ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) | Raspored dokumentacije: granice veličine, indeks + mapa, ADR po datoteci | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |
 | <a id="adr-028"></a>[ADR-028](DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) | Leonove odluke za put B: ljudi kao u Simsima, burza rada, tjedni krug, AI razgovori | ✅ Leonova odluka 10.10. | 2026-10-10 |
 | <a id="adr-027"></a>[ADR-027](DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md) | Raspored za računalo prije demoa | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |
 | <a id="adr-026"></a>[ADR-026](DECISIONS/ADR-026-put-b-hotel-od-brojeva-postaje.md) | Put B: hotel od brojeva postaje skup stvari, u slojevima | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |

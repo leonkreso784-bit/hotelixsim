@@ -4,6 +4,29 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-10 (večer) — raspored dokumentacije (paralelna sesija)
+
+- Leon: *„md datoteke imaju previše informacija … preko 3000 linija je JAKO JAKO loše"* → preuređenje na grani
+  `dokumentacija/raspored` (radno stablo uz sesiju koda, njezin plan, MODEL_V2 i predaja nedirnuti). Rezultat: nijedan
+  dokument nije preko granice osim dvije prijelazne iznimke (plan i MODEL_V2 sloja 1).
+- **Alati i brana (T1–T3, T7):** mjere i granice u `scripts/docs-granice.mjs`, zajednički alati u `scripts/docs-alati.mjs`,
+  `docs:plan` (razdvaja plan na pregled + taskove), `docs:adr` (generira indeks ADR-ova); `check:docs` sada pazi
+  granice, podindekse, područje plana i svježinu indeksa ADR-ova. Svako razdvajanje ima provjeru „spoji natrag = izvornik".
+- **Razdvojeno (T4–T6, T8):** ARHITEKTURA i DEMO po dijelovima (§ brojevi u naslovima ostaju), pet arhiviranih planova
+  na pregled + taskove (sadržaj doslovan), 28 ADR-ova u zasebne datoteke s generiranim indeksom
+  [DECISIONS.md](DECISIONS.md) i poveznicama ravno na odluke. T9: pravila i tok rada zapisani, pregled popravljen.
+- **Brojke prije → poslije** (`node scripts/check-docs.mjs --popis`): najveća datoteka 4733 → 4104 redaka, a bez dviju
+  iznimki 4733 → 1037 (arhivski task; granica arhive 1100), najveći živi dokument izvan iznimki 772 → 263 (plan ove
+  sesije; granica 300); `.md` pod `docs/` 36 → 136; preko granice 10 → 2 (samo iznimke). Cijeli ispis:
+  `.superpowers/sdd/2026-10-10-dokumentacija/zavrsno-stanje.txt`.
+- **Provjere:** `check:docs`, `test:docs` (90 testova), `adr.mjs indeks --provjeri` i `lint` — sve izlaz 0.
+- **Gdje se vidi:** samo lokalno, grana `dokumentacija/raspored` — **nije pushana ni spojena**.
+- **Odluka:** [ADR-030](DECISIONS/ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) 🟨 čeka Leonov pregled.
+- **Slijedi:** završni pregled grane; uz Leonov OK push grane, CI, spajanje u `main` (novi OK za push). Zatim sesija koda
+  spaja `main` u svoju granu i prenosi pretinac. Taskovi 11–13 (MODEL_V2 po dijelovima, zatvaranje) tek kad je sloj 1 u `main`;
+  plan je do tada ⏸️ pauziran.
+- AI trošak ove sesije: 0 $.
+
 ## 2026-10-10 (popodne) — demo na GitHubu, računalo, sloj 0, dizajn puta B, UI čuvar
 
 - Završni pregled grane ekrana (opus) → val popravaka (presuda bez internih brojeva `presuda.v3` + brana u kodu
