@@ -6,7 +6,9 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty, retention};
+use sim_hotel::{
+    Driver, Index, LOAD_LIMIT_HUNDREDTHS, Month, index_drivers, load_penalty, retention,
+};
 
 use crate::ai_input::DebriefInput;
 use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
@@ -215,7 +217,7 @@ fn var_meaning(v: VarCode) -> &'static str {
         VarCode::Costs => "Što je hotel platio ovaj mjesec, po vrsti troška.",
         VarCode::Cash => "Kako se mijenjao novac na računu hotela.",
         VarCode::Staff => {
-            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego stopu odlazaka (koji dio osoblja u mjesecu da otkaz): veća nego prošli mjesec ruši indeks, manja ga diže. Stopa raste kad moral padne ispod 60 bodova."
+            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
         }
         VarCode::Morale => {
             "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
@@ -606,30 +608,50 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
 /// pokretača „Zaposleni". Z = 60 % moral + 40 % zadržavanje, a zadržavanje = 10 000 − 12,5 · stopa u
 /// bazama (`sim_hotel::retention`). Indeks zato ne miče broj otišlih (razina, ovisi i o broju ljudi) nego
 /// promjena stope: guranje = 40 · Δzadržavanja = −500 po bazi rasta stope, isto mjerilo kao moral ×60.
-/// Kad je zadržavanje već na nuli (stopa 8 % i više), indeks se zbog odlazaka više ne miče: siva.
-/// Stopa slijedi moral na kraju mjeseca (`sim_hotel::turnover_bp`): 3 % do 60 bodova morala, iznad
-/// toga raste; zato rečenica „zašto" kaže i mehanizam.
-fn turnover_changes(before: u16, after: u16) -> [ChangeFact; 2] {
-    let share = |bp: u16| format!("{} % osoblja", decimal_hundredths(u64::from(bp)));
-    let vs_last = match after.cmp(&before) {
-        std::cmp::Ordering::Greater => "više nego prošli mjesec",
-        std::cmp::Ordering::Less => "manje nego prošli mjesec",
-        std::cmp::Ordering::Equal => "isto kao prošli mjesec",
+/// Kad je zadržavanje već na nuli (stopa 8 % i više) i prije i poslije, indeks se zbog odlazaka ne miče:
+/// siva, i iznos to kaže. Stopa slijedi moral na kraju mjeseca (`sim_hotel::turnover_bp`): 3 % do 60
+/// bodova morala, iznad toga raste; zato rečenica „zašto" kaže i mehanizam.
+/// `first`: prvi mjesec igre nema prošlog, usporedba je s početkom igre („na početku igre").
+fn turnover_changes(before: u16, after: u16, first: bool) -> [ChangeFact; 2] {
+    let share = |bp: u16| format!("{} %", decimal_hundredths(u64::from(bp)));
+    let (than, prev_cause) = if first {
+        (
+            "na početku igre",
+            "udio osoblja koje daje otkaz na početku igre",
+        )
+    } else {
+        (
+            "prošli mjesec",
+            "udio osoblja koje je dalo otkaz prošli mjesec",
+        )
+    };
+    let vs = match after.cmp(&before) {
+        std::cmp::Ordering::Greater => format!("više nego {than}"),
+        std::cmp::Ordering::Less => format!("manje nego {than}"),
+        std::cmp::Ordering::Equal => format!("isto kao {than}"),
     };
     let kept = |bp: u16| i64::from(retention(bp).unwrap_or_default());
     let pushed = (kept(after) - kept(before)) * 40;
-    let because = "češćih odlazaka osoblja nego prošli mjesec: kad moral padne ispod 60 bodova, više ljudi daje otkaz".to_owned();
+    // Udio se promijenio, a indeks nije: oba mjeseca su na dnu zadržavanja.
+    let floor = if after != before && pushed == 0 {
+        ", ali od 8 % naviše taj je dio indeksa već na najnižem, pa se ne miče"
+    } else {
+        ""
+    };
+    let because = format!(
+        "većeg udjela osoblja koje je dalo otkaz nego {than}: kad moral padne ispod 60 bodova, više ljudi daje otkaz"
+    );
     [
         ChangeFact {
-            cause: "stopa odlazaka u ovom mjesecu".to_owned(),
-            amount: format!("{}, {vs_last}", share(after)),
+            cause: "udio osoblja koje je dalo otkaz ovaj mjesec".to_owned(),
+            amount: format!("{}, {vs}{floor}", share(after)),
             harm: harm_of(pushed),
             effect: Effect::of(pushed),
             because: because.clone(),
         },
-        // Prošli mjesec je samo usporedba, ne uzrok.
+        // Prošli mjesec (ili početak igre) je samo usporedba, ne uzrok.
         ChangeFact {
-            cause: "stopa odlazaka prošli mjesec".to_owned(),
+            cause: prev_cause.to_owned(),
             amount: share(before),
             harm: 0,
             effect: Effect::Neutral,
@@ -747,9 +769,11 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         .filter(|l| l.var == VarCode::Morale && amount_text(l, true).is_some())
         .collect();
     let morale_alone = matches!(morale_shown.as_slice(), [l] if l.cause == CauseDto::Baseline);
+    // Svaka igra počinje prvim mjesecom sezone (lipanj); prije njega je početno stanje hotela.
+    let first = input.month == MonthCode::from(Month::SEASON[0]);
     let var_driver = |var: VarCode| -> Option<DriverFact> {
         let rate = if var == VarCode::Staff {
-            turnover_changes(input.turnover_before_bp, input.turnover_after_bp).to_vec()
+            turnover_changes(input.turnover_before_bp, input.turnover_after_bp, first).to_vec()
         } else {
             Vec::new()
         };
@@ -1059,7 +1083,7 @@ mod tests {
         assert!(sim_hotel::turnover_bp(5_900).unwrap() > 300);
         assert_eq!(retention(799).unwrap(), 12);
         assert_eq!(retention(800).unwrap(), 0);
-        let [now, last] = turnover_changes(375, 443);
+        let [now, last] = turnover_changes(375, 443, false);
         assert_eq!((now.harm, now.effect), (500 * 68, Effect::Down));
         assert_eq!((last.harm, last.effect), (0, Effect::Neutral));
     }

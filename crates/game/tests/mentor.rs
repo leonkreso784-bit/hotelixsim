@@ -879,7 +879,9 @@ fn every_line_says_whether_it_pushed_its_index_up_or_down() {
     );
 }
 
-/// Odlasci pod Zaposlenici: stopa ovog mjeseca prema prošlom (zadržavanje je 40 % indeksa), riječima.
+const QUIT_NOW: &str = "udio osoblja koje je dalo otkaz ovaj mjesec";
+
+/// Odlasci pod Zaposlenici: udio koji je dao otkaz prema prošlom mjesecu (zadržavanje je 40 % indeksa).
 #[test]
 fn turnover_rate_against_last_month_moves_staff_index() {
     let f = facts_json(&sample());
@@ -887,12 +889,12 @@ fn turnover_rate_against_last_month_moves_staff_index() {
         changes(&f, "Zaposleni"),
         [
             (
-                "stopa odlazaka u ovom mjesecu".to_owned(),
-                "4,43 % osoblja, više nego prošli mjesec".to_owned()
+                QUIT_NOW.to_owned(),
+                "4,43 %, više nego prošli mjesec".to_owned()
             ),
             (
-                "stopa odlazaka prošli mjesec".to_owned(),
-                "3,75 % osoblja".to_owned()
+                "udio osoblja koje je dalo otkaz prošli mjesec".to_owned(),
+                "3,75 %".to_owned()
             ),
             // Broj ljudi ostaje razina.
             (
@@ -906,20 +908,20 @@ fn turnover_rate_against_last_month_moves_staff_index() {
         (375, 443, Effect::Down, "više nego prošli mjesec"),
         (443, 375, Effect::Up, "manje nego prošli mjesec"),
         (300, 300, Effect::Neutral, "isto kao prošli mjesec"),
-        // Zadržavanje je već na nuli (stopa 8 % i više): indeks se zbog odlazaka više ne miče.
-        (900, 1_000, Effect::Neutral, "više nego prošli mjesec"),
+        // Jedan od dva mjeseca ispod 8 %: zadržavanje se miče.
+        (700, 900, Effect::Down, "više nego prošli mjesec"),
     ] {
         let mut input = sample();
         input.turnover_before_bp = before;
         input.turnover_after_bp = after;
         let facts = debrief_facts(&input);
         assert_eq!(
-            effect_of(&facts, "Zaposleni", "stopa odlazaka u ovom"),
+            effect_of(&facts, "Zaposleni", QUIT_NOW),
             want,
             "{before} → {after}"
         );
         assert_eq!(
-            effect_of(&facts, "Zaposleni", "stopa odlazaka prošli"),
+            effect_of(&facts, "Zaposleni", "otkaz prošli mjesec"),
             Effect::Neutral
         );
         assert_eq!(
@@ -927,25 +929,113 @@ fn turnover_rate_against_last_month_moves_staff_index() {
             Effect::Neutral
         );
         assert!(
-            amount_for(&facts_json(&input), "Zaposleni", "u ovom mjesecu").ends_with(words),
+            amount_for(&facts_json(&input), "Zaposleni", QUIT_NOW).ends_with(words),
             "{before} → {after}"
         );
         assert_human_facts(&facts_json(&input));
     }
-    // Prvi mjesec: „prošli mjesec" je početno stanje hotela.
+}
+
+/// Prvi mjesec nema prošlog: usporedba je s početkom igre, riječima „na početku igre".
+#[test]
+fn first_month_compares_turnover_with_start_of_game() {
     let mut june = sample();
     june.month = MonthCode::Jun;
     june.next_month = Some(MonthCode::Jul);
     june.turnover_before_bp = 450;
     june.turnover_after_bp = 375;
+    let f = facts_json(&june);
+    let rows = changes(&f, "Zaposleni");
     assert_eq!(
-        effect_of(&debrief_facts(&june), "Zaposleni", "u ovom mjesecu"),
+        rows[..2],
+        [
+            (
+                QUIT_NOW.to_owned(),
+                "3,75 %, manje nego na početku igre".to_owned()
+            ),
+            (
+                "udio osoblja koje daje otkaz na početku igre".to_owned(),
+                "4,5 %".to_owned()
+            ),
+        ]
+    );
+    assert!(
+        rows.iter()
+            .all(|(c, a)| !c.contains("prošli mjesec") && !a.contains("prošli mjesec")),
+        "{rows:?}"
+    );
+    assert_eq!(
+        effect_of(&debrief_facts(&june), "Zaposleni", QUIT_NOW),
         Effect::Up
     );
-    assert_eq!(
-        amount_for(&facts_json(&june), "Zaposleni", "prošli mjesec"),
-        "4,5 % osoblja"
+    for (before, after, words) in [
+        (375, 443, "više nego na početku igre"),
+        (300, 300, "isto kao na početku igre"),
+    ] {
+        june.turnover_before_bp = before;
+        june.turnover_after_bp = after;
+        assert!(
+            amount_for(&facts_json(&june), "Zaposleni", QUIT_NOW).ends_with(words),
+            "{before} → {after}"
+        );
+    }
+    // Pad Zaposlenika u lipnju okrivljuje odlaske prema početku, ne „prošlom mjesecu".
+    june.turnover_before_bp = 375;
+    june.turnover_after_bp = 443;
+    june.lines
+        .retain(|l| l.var != VarCode::Morale || l.cause == CauseDto::Baseline);
+    let text = fallback_debrief(&june);
+    assert!(
+        text.contains(
+            "Indeks Zaposlenici pao je ponajviše zbog većeg udjela osoblja koje je dalo otkaz nego na početku igre: kad moral padne ispod 60 bodova, više ljudi daje otkaz."
+        ),
+        "{text}"
     );
+    assert_human(&text);
+}
+
+/// Oba mjeseca 8 % i više: zadržavanje je na nuli, pa se indeks zbog odlazaka ne miče — redak je siv
+/// i to kaže, umjesto da „više" zvuči kao pad.
+#[test]
+fn turnover_at_floor_is_grey_and_says_index_cannot_move() {
+    for (before, after, cmp) in [(900, 1_000, "više"), (1_000, 900, "manje")] {
+        let mut input = sample();
+        input.turnover_before_bp = before;
+        input.turnover_after_bp = after;
+        let facts = debrief_facts(&input);
+        assert_eq!(
+            effect_of(&facts, "Zaposleni", QUIT_NOW),
+            Effect::Neutral,
+            "{before} → {after}"
+        );
+        let pct = |bp: u16| format!("{}", bp / 100);
+        assert_eq!(
+            amount_for(&facts_json(&input), "Zaposleni", QUIT_NOW),
+            format!(
+                "{} %, {cmp} nego prošli mjesec, ali od 8 % naviše taj je dio indeksa već na najnižem, pa se ne miče",
+                pct(after)
+            )
+        );
+        assert_human_facts(&facts_json(&input));
+    }
+    // Isti udio na dnu: „isto" je istina i bez dodatka.
+    let mut same = sample();
+    same.turnover_before_bp = 900;
+    same.turnover_after_bp = 900;
+    assert_eq!(
+        amount_for(&facts_json(&same), "Zaposleni", QUIT_NOW),
+        "9 %, isto kao prošli mjesec"
+    );
+    // Značenje ne tvrdi da veći udio uvijek ruši indeks.
+    let f = debrief_facts(&sample());
+    let meaning = f
+        .indices
+        .iter()
+        .flat_map(|i| &i.drivers)
+        .find(|d| d.what == "Zaposleni")
+        .unwrap()
+        .meaning;
+    assert!(meaning.contains("od 8 % naviše"), "{meaning}");
 }
 
 /// Ukupna promjena morala je uzrok samo kad je jedini redak morala; uz pritiske je zbroj (siva).
@@ -998,7 +1088,7 @@ fn fallback_blames_departures_or_falling_morale_for_staff_index() {
     let text = fallback_debrief(&alone);
     assert!(
         text.contains(
-            "Indeks Zaposlenici pao je ponajviše zbog češćih odlazaka osoblja nego prošli mjesec: kad moral padne ispod 60 bodova, više ljudi daje otkaz."
+            "Indeks Zaposlenici pao je ponajviše zbog većeg udjela osoblja koje je dalo otkaz nego prošli mjesec: kad moral padne ispod 60 bodova, više ljudi daje otkaz."
         ),
         "{text}"
     );

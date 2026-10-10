@@ -69,9 +69,10 @@ brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga
    postotak u prihod od noćenja i imaju težinu najmanje 1, da se smjer ne izgubi zaokruživanjem.
    **Zaposlenici:** indeks ne miče broj otišlih nego **stopa odlazaka prema prošlom mjesecu** (za lipanj: početno
    stanje), jer je zadržavanje = 10 000 − 12,5 · stopa (`sim_hotel::retention`); pokretač „Zaposleni" zato ima redak
-   „stopa odlazaka u ovom mjesecu: 5,44 % osoblja, više nego prošli mjesec" (više → dolje, manje → gore, isto → sivo;
-   na nuli zadržavanja, stopa ≥ 8 %, sivo) i usporedni redak prošlog mjeseca; broj zaposlenih i otišlih ostaje siva
-   razina. Stopa nije zasebna poluga: slijedi moral na kraju mjeseca (3 % do 60 bodova morala, iznad toga raste,
+   „udio osoblja koje je dalo otkaz ovaj mjesec: 5,44 %, više nego prošli mjesec" (više → dolje, manje → gore,
+   isto → sivo) i usporedni redak prošlog mjeseca; u prvom mjesecu igre usporedba je „na početku igre". Kad su oba
+   mjeseca na 8 % i više (zadržavanje na nuli), redak je siv i to kaže („…, ali od 8 % naviše taj je dio indeksa već
+   na najnižem, pa se ne miče"). Broj zaposlenih i otišlih ostaje siva razina. Stopa nije zasebna poluga: slijedi moral na kraju mjeseca (3 % do 60 bodova morala, iznad toga raste,
    P21), pa redak to kaže riječima. **Ukupna promjena morala** nosi smjer samo kad je jedini prikazani redak morala;
    uz pritiske (plaće, opterećenje, obuka, otpuštanje, situacije) je zbroj i ostaje siva, da se ne broji dvaput.
 
