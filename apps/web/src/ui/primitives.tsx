@@ -6,14 +6,24 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   );
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" };
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "secondary";
+  /** "full" (zadano) puni redak; "auto" je širok koliko sadržaj, npr. uz polje unosa. */
+  width?: "full" | "auto";
+};
 
-export function Button({ variant = "primary", className = "", type = "button", ...rest }: ButtonProps) {
+export function Button({
+  variant = "primary",
+  width = "full",
+  className = "",
+  type = "button",
+  ...rest
+}: ButtonProps) {
   const look = variant === "primary" ? "bg-accent text-white" : "bg-accent-soft text-accent";
   return (
     <button
       type={type}
-      className={`min-h-12 w-full rounded-2xl px-4 py-3 text-base font-bold disabled:opacity-50 ${look} ${className}`}
+      className={`min-h-12 ${width === "full" ? "w-full" : "w-auto shrink-0"} rounded-2xl px-4 py-3 text-base font-bold disabled:opacity-50 ${look} ${className}`}
       {...rest}
     />
   );

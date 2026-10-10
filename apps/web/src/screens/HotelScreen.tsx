@@ -34,13 +34,15 @@ function Stat({
   note?: string;
 }) {
   return (
-    <Card className="flex items-center gap-3 p-3">
-      <span className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent">{icon}</span>
-      <span className="min-w-0">
-        <span className="block text-xs text-muted">{label}</span>
-        <strong className="block text-lg tabular-nums">{value}</strong>
-        {note && <span className="block truncate text-xs text-muted">{note}</span>}
+    <Card className="space-y-1 p-3">
+      <span className="flex items-center gap-2">
+        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+          {icon}
+        </span>
+        <span className="min-w-0 text-xs text-muted">{label}</span>
       </span>
+      <strong className="block whitespace-nowrap text-xl tabular-nums">{value}</strong>
+      {note && <span className="line-clamp-2 block text-xs text-muted">{note}</span>}
     </Card>
   );
 }

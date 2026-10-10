@@ -85,6 +85,15 @@ describe("situacija s likom (otvorena izravno, kao nakon osvježavanja)", () => 
     });
   });
 
+  it("gumb Pošalji ne gazi polje poruke: nije pune širine, polje se širi", async () => {
+    renderApp(standardApi(), "/situacije/S1");
+    const box = await screen.findByRole("textbox", { name: "Poruka liku" });
+    expect(box.className).toContain("flex-1");
+    expect(box.className).toContain("min-w-0");
+    const send = screen.getByRole("button", { name: "Pošalji" });
+    expect(send.className).not.toContain("w-full");
+  });
+
   it("409 awaiting_reply je hrvatska rečenica", async () => {
     const api = standardApi().on("POST", "/v1/hotels/:hotel/situations/:code/messages", () =>
       problem(409, "awaiting_reply"),

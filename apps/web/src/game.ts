@@ -1,5 +1,7 @@
 // Čista logika igre za ekrane: indeksi, promjene, ljestvica. Bez Reacta i mreže.
+
 import type { GameBody, IndexCode, IndexEntry, MonthCode, PublicHotelBody, StrategyCode } from "./api/types";
+import { wholePoints } from "./format";
 
 export const INDEX_ORDER: readonly IndexCode[] = ["G", "R", "Z", "O", "F"];
 
@@ -23,9 +25,12 @@ export function indicesBefore(h: PublicHotelBody, months: MonthCode[], month: Mo
   return (prev && indicesAt(h, prev)) || h.start;
 }
 
+/** Promjena po indeksu u cijelim bodovima: razlika zaokruženih vrijednosti (48,76 → 42,69 = 49 → 43 = −6). */
 export function indexDeltas(from: IndexEntry[], to: IndexEntry[]): Map<IndexCode, number> {
-  const before = new Map(from.map((e) => [e.code, e.hundredths]));
-  return new Map(to.map((e) => [e.code, e.hundredths - (before.get(e.code) ?? e.hundredths)]));
+  const before = new Map(from.map((e) => [e.code, wholePoints(e.hundredths)]));
+  return new Map(
+    to.map((e) => [e.code, wholePoints(e.hundredths) - (before.get(e.code) ?? wholePoints(e.hundredths))]),
+  );
 }
 
 export function progressAt(h: PublicHotelBody, month: MonthCode): number | null {

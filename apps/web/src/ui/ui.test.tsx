@@ -22,17 +22,35 @@ describe("IndexBars", () => {
     expect(screen.getByRole("img", { name: "Recenzije: 58 od 100" })).toBeTruthy();
     expect(screen.getByText("50 = prosjek usporedivog hotela")).toBeTruthy();
   });
+  it("vrijednost i opis trake su cijeli brojevi (4876 → 49)", () => {
+    render(
+      <IndexBars
+        indices={[{ code: "G", hundredths: 4876 }, ...ix.slice(1)]}
+        deltas={null}
+        deltaLabel={null}
+      />,
+    );
+    expect(screen.getByText("49")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Zadovoljstvo gostiju: 49 od 100" })).toBeTruthy();
+  });
+  it("naziv indeksa nije rezan (bez truncate) i traka je na svojem retku", () => {
+    render(<IndexBars indices={ix} deltas={null} deltaLabel={null} />);
+    const name = screen.getByText("Zadovoljstvo gostiju");
+    expect(name.className).not.toContain("truncate");
+    const bar = screen.getByRole("img", { name: /Zadovoljstvo gostiju/ });
+    expect(bar.className).toContain("col-span-full");
+  });
   it("uz promjene pokazuje ▲/▼ s predznakom", () => {
     render(
       <IndexBars
         indices={ix}
         deltas={
           new Map([
-            ["G", 300],
-            ["F", -200],
+            ["G", 3],
+            ["F", -2],
             ["R", 0],
-            ["Z", 100],
-            ["O", 400],
+            ["Z", 1],
+            ["O", 4],
           ])
         }
         deltaLabel="od početka"
@@ -54,5 +72,17 @@ describe("Delta i Button", () => {
     const b = screen.getByRole("button", { name: "Spremi" }) as HTMLButtonElement;
     expect(b.type).toBe("button");
     expect(b.disabled).toBe(true);
+  });
+  it('Button je zadano pune širine, a width="auto" ga ne širi', () => {
+    render(
+      <>
+        <Button>Puni</Button>
+        <Button width="auto">Uski</Button>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "Puni" }).className).toContain("w-full");
+    const narrow = screen.getByRole("button", { name: "Uski" }).className;
+    expect(narrow).not.toContain("w-full");
+    expect(narrow).toContain("w-auto");
   });
 });

@@ -10,7 +10,7 @@ import {
   causeLabel,
   formatChange,
   formatCount,
-  formatSigned,
+  formatPointsCount,
   monthName,
   varLabel,
 } from "../format";
@@ -53,7 +53,7 @@ function sentence(i: Plain): string {
     case "month_resolved":
       return t("feed.month_resolved", {
         month: capitalize(monthName(i.month)),
-        progress: formatCount(i.progress_hundredths / 100, "point", formatSigned(i.progress_hundredths)),
+        progress: formatPointsCount(i.progress_hundredths),
       });
     case "response":
       return t("feed.response", { title: i.title });

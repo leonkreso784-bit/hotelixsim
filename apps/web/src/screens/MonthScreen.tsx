@@ -6,7 +6,7 @@ import { useFeed, useGameUntilResolved } from "../api/queries";
 import type { GameBody, HotelBody, MonthCode, PublicHotelBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import { capitalize, formatSigned, monthName } from "../format";
+import { capitalize, formatSignedPoints, monthName } from "../format";
 import { indexDeltas, indicesAt, indicesBefore, leaderboard, nextMonth, progressAt } from "../game";
 import { Link } from "../router";
 import { IndexBars } from "../ui/IndexBars";
@@ -48,7 +48,7 @@ function MonthResult({
         {t("month.title", { month: capitalize(monthName(month)) })}
       </h1>
       <Card className="bg-accent-soft py-6 text-center">
-        <p className="text-6xl font-extrabold text-accent tabular-nums">{formatSigned(progress)}</p>
+        <p className="text-6xl font-extrabold text-accent tabular-nums">{formatSignedPoints(progress)}</p>
         <p className="mt-1">{t("month.progress")}</p>
       </Card>
 
@@ -62,7 +62,7 @@ function MonthResult({
         <div>
           <p className="font-bold text-accent">{t("month.mentor")}</p>
           {mentor?.kind === "mentor" ? (
-            <p>{mentor.text}</p>
+            <p className="whitespace-pre-line">{mentor.text}</p>
           ) : (
             <p role="status">{mentorMissing ? t("month.mentorMissing") : t("month.mentorWaiting")}</p>
           )}

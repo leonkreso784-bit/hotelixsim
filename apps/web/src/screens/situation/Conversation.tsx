@@ -92,11 +92,7 @@ export function Conversation({
             onChange={(e) => setText(e.target.value)}
             className="min-h-12 min-w-0 flex-1 rounded-2xl border border-line bg-surface px-3"
           />
-          <Button
-            type="submit"
-            className="w-auto"
-            disabled={send.isPending || c.awaiting_reply || !text.trim()}
-          >
+          <Button type="submit" width="auto" disabled={send.isPending || c.awaiting_reply || !text.trim()}>
             {t("chat.send")}
           </Button>
         </form>

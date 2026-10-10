@@ -55,8 +55,16 @@ describe("indeksi", () => {
   });
   it("indexDeltas daje razliku po kodu", () => {
     const d = indexDeltas(ix(5000, 5000, 5000, 5000, 5000), jun.indices);
-    expect(d.get("G")).toBe(300);
-    expect(d.get("F")).toBe(-200);
+    expect(d.get("G")).toBe(3);
+    expect(d.get("F")).toBe(-2);
+  });
+  it("indexDeltas je razlika zaokruženih vrijednosti u cijelim bodovima (4876 → 4269 = −6)", () => {
+    const d = indexDeltas(ix(4876, 4850, 0, 4849, 10000), ix(4269, 4849, 10000, 4850, 10000));
+    expect(d.get("G")).toBe(-6);
+    expect(d.get("R")).toBe(-1);
+    expect(d.get("Z")).toBe(100);
+    expect(d.get("O")).toBe(1);
+    expect(d.get("F")).toBe(0);
   });
 });
 

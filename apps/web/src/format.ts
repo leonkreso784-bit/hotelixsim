@@ -2,12 +2,32 @@ import { t } from "@hotelixsim/i18n";
 import type { CauseCode, MonthCode, StrategyCode, UnitCode, VarCode } from "./api/types";
 
 const nf2 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 2 });
-const nf0 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 0 });
+// hr-HR po zadanom ne grupira četiri znamenke (1234), pa grupiranje tražimo izričito: 1.234.
+const nf0 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 0, useGrouping: "always" });
 const MINUS = "−";
 
-/** Indeks u stotinkama (0–10000) → tekst za prikaz, npr. 5025 → "50,25". */
+/**
+ * Jedino pravilo za bodove na ekranu: stotinke → cijeli bodovi, pola od nule (4850 → 49, 4849 → 48, −450 → −5).
+ * Isto pravilo koristi mentor na poslužitelju, pa se prikazane vrijednosti i promjene slažu.
+ */
+export function wholePoints(hundredths: number): number {
+  const rounded = Math.round(Math.abs(hundredths) / 100);
+  return hundredths < 0 && rounded > 0 ? -rounded : rounded;
+}
+
+/** Indeks u stotinkama (0–10000) → cijeli broj za prikaz, npr. 4850 → "49". */
 export function formatIndex(hundredths: number): string {
-  return nf2.format(hundredths / 100);
+  return nf0.format(wholePoints(hundredths));
+}
+
+/** Bodovi (stotinke) s predznakom, cijeli: 825 → "+8", −200 → "−2", 20 → "0". */
+export function formatSignedPoints(hundredths: number): string {
+  return formatWholeSigned(wholePoints(hundredths));
+}
+
+/** Cijeli broj s predznakom: 6 → "+6", −6 → "−6", 0 → "0". */
+export function formatWholeSigned(n: number): string {
+  return signed(n, nf0.format(Math.abs(n)));
 }
 
 function signed(value: number, abs: string): string {
@@ -50,12 +70,18 @@ export function formatChange(amount: number, unit: UnitCode): string {
     case "people":
       return `${signed(amount, nf0.format(Math.abs(amount)))} ${t("unit.people")}`;
     case "points":
-      return `${formatSigned(amount)} ${t("unit.points")}`;
+      return formatPointsCount(amount);
     case "rating_hundredths":
       return `${formatSigned(amount)} ${t("unit.rating_hundredths")}`;
     case "bp":
       return `${formatSigned(amount)} %`;
   }
+}
+
+/** Promjena u bodovima s množinom: 450 → "+5 bodova", −100 → "−1 bod". */
+export function formatPointsCount(hundredths: number): string {
+  const n = wholePoints(hundredths);
+  return formatCount(n, "point", formatWholeSigned(n));
 }
 
 export function monthName(code: MonthCode): string {

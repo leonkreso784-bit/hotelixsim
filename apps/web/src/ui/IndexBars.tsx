@@ -2,7 +2,7 @@ import { indexLabel, t } from "@hotelixsim/i18n";
 import { Coins, MessageSquare, Settings, User, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { IndexCode, IndexEntry } from "../api/types";
-import { formatIndex, formatSigned } from "../format";
+import { formatIndex, formatWholeSigned } from "../format";
 import { sortIndices } from "../game";
 
 const ICON: Record<IndexCode, ReactNode> = {
@@ -21,7 +21,7 @@ export function Delta({ value, size = "sm" }: { value: number | null; size?: "sm
   return (
     <span
       className={`whitespace-nowrap tabular-nums ${tone} ${text}`}
-    >{`${arrow}${formatSigned(value)}`}</span>
+    >{`${arrow}${formatWholeSigned(value)}`}</span>
   );
 }
 
@@ -48,24 +48,24 @@ export function IndexBars({
           return (
             <li
               key={e.code}
-              className="grid grid-cols-[1.25rem_7.5rem_1fr_2.25rem_3.5rem] items-center gap-2 py-1.5"
+              className="grid grid-cols-[1.25rem_1fr_auto_auto] items-center gap-x-2 gap-y-1.5 py-2"
             >
               <span className="text-accent">{ICON[e.code]}</span>
-              <span className="truncate text-sm">{label}</span>
+              <span className="min-w-0 text-sm">{label}</span>
+              <strong className="text-right tabular-nums">{value}</strong>
+              <span className="min-w-12 text-right">
+                <Delta value={deltas?.get(e.code) ?? null} />
+              </span>
               <span
                 role="img"
                 aria-label={t("index.bar", { label, value })}
-                className="relative h-2 rounded-full bg-line"
+                className="relative col-span-full h-2 rounded-full bg-line"
               >
                 <span
                   className="absolute inset-y-0 left-0 rounded-full bg-accent"
                   style={{ width: `${pct}%` }}
                 />
                 <span className="absolute -top-1 left-1/2 h-4 w-0.5 rounded bg-ink" />
-              </span>
-              <strong className="text-right tabular-nums">{value}</strong>
-              <span className="text-right">
-                <Delta value={deltas?.get(e.code) ?? null} />
               </span>
             </li>
           );

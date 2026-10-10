@@ -2,7 +2,7 @@ import { t } from "@hotelixsim/i18n";
 import { ChartColumn } from "lucide-react";
 import { Avatar } from "../../avatar/Avatar";
 import { lookFor, PLAYER_LOOK } from "../../avatar/look";
-import { formatSigned, strategyLabel } from "../../format";
+import { formatSignedPoints, strategyLabel } from "../../format";
 import type { LeaderRow } from "../../game";
 import { Card } from "../../ui/primitives";
 
@@ -29,7 +29,7 @@ export function Leaderboard({ rows }: { rows: LeaderRow[] }) {
               )}
             </span>
             <span className={`tabular-nums font-extrabold ${r.progress < 0 ? "text-down" : "text-up"}`}>
-              {formatSigned(r.progress)}
+              {formatSignedPoints(r.progress)}
             </span>
           </li>
         ))}

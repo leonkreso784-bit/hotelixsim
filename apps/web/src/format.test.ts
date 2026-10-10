@@ -18,9 +18,14 @@ import {
 describe("formatIndex", () => {
   it("prikazuje stotinke hrvatskim zarezom i bez suvišnih nula", () => {
     expect(formatIndex(5000)).toBe("50");
-    expect(formatIndex(5025)).toBe("50,25");
     expect(formatIndex(0)).toBe("0");
     expect(formatIndex(10000)).toBe("100");
+  });
+  it("prikazuje cijeli broj, pola zaokružuje od nule (4850 → 49, 4849 → 48)", () => {
+    expect(formatIndex(4850)).toBe("49");
+    expect(formatIndex(4849)).toBe("48");
+    expect(formatIndex(4876)).toBe("49");
+    expect(formatIndex(5025)).toBe("50");
   });
 });
 
@@ -38,6 +43,10 @@ describe("novac i ocjena", () => {
     expect(formatEuros(9_800_000)).toBe("98.000 €");
     expect(formatEuros(4_200_049)).toBe("42.000 €");
     expect(formatEuros(13_200)).toBe("132 €");
+  });
+  it("formatEuros uvijek grupira tisuće, i za četiri znamenke", () => {
+    expect(formatEuros(123_400)).toBe("1.234 €");
+    expect(formatEuros(-123_400)).toBe("−1.234 €");
   });
   it("formatSignedEuros piše predznak", () => {
     expect(formatSignedEuros(1_250_000)).toBe("+12.500 €");
@@ -59,7 +68,11 @@ describe("formatChange", () => {
     expect(formatChange(312, "room_nights")).toBe("+312 noćenja");
     expect(formatChange(-1_250_000, "cents")).toBe("−12.500 €");
     expect(formatChange(-3, "people")).toBe("−3 ljudi");
-    expect(formatChange(450, "points")).toBe("+4,5 bodova");
+    expect(formatChange(450, "points")).toBe("+5 bodova");
+    expect(formatChange(449, "points")).toBe("+4 boda");
+    expect(formatChange(-100, "points")).toBe("−1 bod");
+    expect(formatChange(-1200, "points")).toBe("−12 bodova");
+    expect(formatChange(20, "points")).toBe("0 bodova");
     expect(formatChange(12, "rating_hundredths")).toBe("+0,12 ocjene");
     expect(formatChange(-1200, "bp")).toBe("−12 %");
   });

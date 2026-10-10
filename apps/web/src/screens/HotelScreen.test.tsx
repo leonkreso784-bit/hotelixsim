@@ -67,6 +67,14 @@ describe("Moj hotel", () => {
     expect(screen.getByRole("link", { name: /Rezultat: lipanj/ }).getAttribute("href")).toBe("/mjesec/jun");
   });
 
+  it("kartice: iznos se ne lomi, a bilješka se prelama umjesto da se reže", async () => {
+    renderApp(standardApi());
+    expect((await screen.findByText("42.000 €")).className).toContain("whitespace-nowrap");
+    const note = screen.getAllByText("nakon prvog mjeseca")[0] as HTMLElement;
+    expect(note.className).not.toContain("truncate");
+    expect(note.className).toContain("line-clamp-2");
+  });
+
   it("mjesec se obračuna u pozadini: Moj hotel sam osvježi indekse bez ručnog osvježavanja", async () => {
     let gameCalls = 0;
     const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });

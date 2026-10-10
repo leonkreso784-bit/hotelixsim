@@ -154,6 +154,19 @@ describe("Mjesec završen", () => {
     expect(await screen.findByText("Usluga je bolja. Prati troškove.")).toBeTruthy();
   });
 
+  it("mentorov tekst s prijelomima redaka čuva retke", async () => {
+    const text = "Usluga je bolja.\nPrati troškove.\nCijene drži.\nSretno.";
+    const api = standardApi()
+      .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
+      .on("GET", "/v1/games/:game", resolvedGame)
+      .on("GET", "/v1/hotels/:hotel/feed", {
+        items: [...feed.slice(0, 5), { kind: "mentor", seq: 6, month: "jun", text }],
+      });
+    renderApp(api, "/mjesec/jun");
+    const el = await screen.findByText((_, node) => node?.tagName === "P" && node.textContent === text);
+    expect(el.className).toContain("whitespace-pre-line");
+  });
+
   it("spor obračun: mentor koji stigne tek nakon obračuna se vidi, sat ne kreće dok traje „closing“", async () => {
     let gameCalls = 0;
     let resolved = false;
