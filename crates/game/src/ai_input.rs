@@ -69,6 +69,8 @@ pub struct DebriefInput {
     pub month: MonthCode,
     /// Idući mjesec igre; `None` = ovo je bio zadnji.
     pub next_month: Option<MonthCode>,
+    /// Prošli mjesec igre; `None` = ovo je prvi mjesec, a „prije" je početno stanje hotela.
+    pub prev_month: Option<MonthCode>,
     pub hotel_name: String,
     pub situations: Vec<DebriefSituation>,
     /// Pet indeksa (stotinke) na početku mjeseca, redoslijedom `INDEX_ORDER`.
@@ -172,7 +174,8 @@ impl Game {
             .iter()
             .position(|&x| x == m)
             .ok_or(GameError::UnknownMonth)?;
-        let indices_before = match pos.checked_sub(1).and_then(|p| self.months.get(p)) {
+        let prev_month = pos.checked_sub(1).and_then(|p| self.months.get(p));
+        let indices_before = match prev_month {
             None => indices_dto(&h.start_indices),
             Some(prev) => {
                 self.resolved
@@ -232,6 +235,7 @@ impl Game {
                 .checked_add(1)
                 .and_then(|p| self.months.get(p))
                 .map(|&n| n.into()),
+            prev_month: prev_month.map(|&p| p.into()),
             hotel_name: h.setup.name.clone(),
             situations,
             indices_before,

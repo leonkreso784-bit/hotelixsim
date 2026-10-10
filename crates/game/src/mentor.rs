@@ -6,9 +6,7 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use sim_hotel::{
-    Driver, Index, LOAD_LIMIT_HUNDREDTHS, Month, index_drivers, load_penalty, retention,
-};
+use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty, retention};
 
 use crate::ai_input::DebriefInput;
 use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
@@ -559,9 +557,29 @@ fn merged(lines: &[LineDto]) -> Vec<LineDto> {
     out
 }
 
+/// S čim se uspoređuje „prije" mjeseca: prošli mjesec, a u prvom mjesecu igre (`first`, iz
+/// `DebriefInput::prev_month`) početno stanje hotela. Jedno mjesto za sve usporedbe u činjenicama.
+fn earlier(first: bool) -> &'static str {
+    if first {
+        "na početku igre"
+    } else {
+        "prošli mjesec"
+    }
+}
+
+/// Ovaj mjesec prema ranijem: „više nego prošli mjesec", „manje nego na početku igre", „isto kao …".
+fn compared(now_vs_before: std::cmp::Ordering, first: bool) -> String {
+    let than = earlier(first);
+    match now_vs_before {
+        std::cmp::Ordering::Greater => format!("više nego {than}"),
+        std::cmp::Ordering::Less => format!("manje nego {than}"),
+        std::cmp::Ordering::Equal => format!("isto kao {than}"),
+    }
+}
+
 /// Opterećenje osoblja kao pokretač Operative; izostaje kad je i prije i poslije bilo u redu.
 /// Šteta je porast kazne opterećenja s težinom 25 (njezin udio u Operativi).
-fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
+fn load_driver(before: u16, after: u16, first: bool) -> Option<DriverFact> {
     if before <= LOAD_LIMIT_HUNDREDTHS && after <= LOAD_LIMIT_HUNDREDTHS {
         return None;
     }
@@ -592,9 +610,9 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
                 effect: Effect::of(pushed),
                 because: because.clone(),
             },
-            // Prošli mjesec je samo usporedba, ne uzrok.
+            // Prošli mjesec (ili početak igre) je samo usporedba, ne uzrok.
             ChangeFact {
-                cause: "opterećenje prošli mjesec".to_owned(),
+                cause: format!("opterećenje {}", earlier(first)),
                 amount: per_day(before),
                 harm: 0,
                 effect: Effect::Neutral,
@@ -614,22 +632,14 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
 /// `first`: prvi mjesec igre nema prošlog, usporedba je s početkom igre („na početku igre").
 fn turnover_changes(before: u16, after: u16, first: bool) -> [ChangeFact; 2] {
     let share = |bp: u16| format!("{} %", decimal_hundredths(u64::from(bp)));
-    let (than, prev_cause) = if first {
-        (
-            "na početku igre",
-            "udio osoblja koje daje otkaz na početku igre",
-        )
+    let than = earlier(first);
+    // Na početku igre nitko još nije otišao: to je udio koji hotel tada ima, ne prošli događaj.
+    let prev_cause = if first {
+        format!("udio osoblja koje daje otkaz {than}")
     } else {
-        (
-            "prošli mjesec",
-            "udio osoblja koje je dalo otkaz prošli mjesec",
-        )
+        format!("udio osoblja koje je dalo otkaz {than}")
     };
-    let vs = match after.cmp(&before) {
-        std::cmp::Ordering::Greater => format!("više nego {than}"),
-        std::cmp::Ordering::Less => format!("manje nego {than}"),
-        std::cmp::Ordering::Equal => format!("isto kao {than}"),
-    };
+    let vs = compared(after.cmp(&before), first);
     let kept = |bp: u16| i64::from(retention(bp).unwrap_or_default());
     let pushed = (kept(after) - kept(before)) * 40;
     // Udio se promijenio, a indeks nije: oba mjeseca su na dnu zadržavanja.
@@ -651,7 +661,7 @@ fn turnover_changes(before: u16, after: u16, first: bool) -> [ChangeFact; 2] {
         },
         // Prošli mjesec (ili početak igre) je samo usporedba, ne uzrok.
         ChangeFact {
-            cause: prev_cause.to_owned(),
+            cause: prev_cause,
             amount: share(before),
             harm: 0,
             effect: Effect::Neutral,
@@ -702,11 +712,10 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
             )
         )
     };
-    let vs_last = match p.seasonal_target.cmp(&input.seasonal_before) {
-        std::cmp::Ordering::Greater => "više nego prošli mjesec",
-        std::cmp::Ordering::Less => "manje nego prošli mjesec",
-        std::cmp::Ordering::Equal => "isto kao prošli mjesec",
-    };
+    let vs_last = compared(
+        p.seasonal_target.cmp(&input.seasonal_before),
+        input.prev_month.is_none(),
+    );
     let wage_note = match p.wage_pct.cmp(&100) {
         std::cmp::Ordering::Less => " (niže od uobičajenih)",
         std::cmp::Ordering::Greater => " (više od uobičajenih)",
@@ -769,8 +778,8 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         .filter(|l| l.var == VarCode::Morale && amount_text(l, true).is_some())
         .collect();
     let morale_alone = matches!(morale_shown.as_slice(), [l] if l.cause == CauseDto::Baseline);
-    // Svaka igra počinje prvim mjesecom sezone (lipanj); prije njega je početno stanje hotela.
-    let first = input.month == MonthCode::from(Month::SEASON[0]);
+    // Prvi mjesec kaže igra (`prev_month`), ne kalendar: prije njega je početno stanje hotela.
+    let first = input.prev_month.is_none();
     let var_driver = |var: VarCode| -> Option<DriverFact> {
         let rate = if var == VarCode::Staff {
             turnover_changes(input.turnover_before_bp, input.turnover_after_bp, first).to_vec()
@@ -814,9 +823,11 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                     .iter()
                     .filter_map(|d| match d {
                         Driver::Var(v) => var_driver(VarCode::from(v)),
-                        Driver::StaffLoad => {
-                            load_driver(input.load_before_hundredths, input.load_after_hundredths)
-                        }
+                        Driver::StaffLoad => load_driver(
+                            input.load_before_hundredths,
+                            input.load_after_hundredths,
+                            first,
+                        ),
                     })
                     .collect(),
             }

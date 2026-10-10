@@ -49,6 +49,7 @@ fn sample() -> DebriefInput {
     DebriefInput {
         month: MonthCode::Jul,
         next_month: Some(MonthCode::Aug),
+        prev_month: Some(MonthCode::Jun),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![DebriefSituation {
             chosen_label: Some(CHEF_ANSWER.into()),
@@ -936,12 +937,72 @@ fn turnover_rate_against_last_month_moves_staff_index() {
     }
 }
 
+/// Riječi „prošli mjesec" / „prošlog mjeseca" bilo gdje u činjenicama ili tekstu mentora bez AI-ja.
+fn mentions_last_month(input: &DebriefInput) -> Vec<String> {
+    let facts = serde_json::to_string(&debrief_facts(input)).unwrap();
+    let text = fallback_debrief(input);
+    [facts, text]
+        .iter()
+        .flat_map(|t| {
+            ["prošli mjesec", "prošlog mjeseca", "prošlom mjesecu"]
+                .iter()
+                .filter(|w| t.contains(**w))
+                .map(|w| format!("{w}: {t}"))
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+/// Prvi mjesec igre (igra kaže koji je, `prev_month: None`) nema prošlog: opterećenje, sezonci i odlasci
+/// uspoređuju se s početkom igre. Mjesec sam ne odlučuje — srpanj može biti prvi, lipanj ne mora.
+#[test]
+fn first_month_never_says_last_month_anywhere() {
+    let mut first = sample();
+    first.prev_month = None;
+    assert_eq!(mentions_last_month(&first), Vec::<String>::new());
+    let f = facts_json(&first);
+    assert_eq!(
+        f["odluke_u_planu"]["sezonski_radnici"],
+        "20 sezonskih radnika, više nego na početku igre"
+    );
+    assert_eq!(
+        changes(&f, "Opterećenje osoblja")[1],
+        (
+            "opterećenje na početku igre".to_owned(),
+            "1,7 noćenja po zaposlenom na dan".to_owned()
+        )
+    );
+    assert_human_facts(&f);
+    assert_human(&fallback_debrief(&first));
+    // Isti mjesec kad igra ima prošli: usporedbe kažu „prošli mjesec".
+    let later = sample();
+    let said = mentions_last_month(&later);
+    assert!(
+        said.iter().any(|s| s.starts_with("prošli mjesec")),
+        "srpanj s prošlim mjesecom: {said:?}"
+    );
+    let f = facts_json(&later);
+    assert_eq!(
+        f["odluke_u_planu"]["sezonski_radnici"],
+        "20 sezonskih radnika, više nego prošli mjesec"
+    );
+    assert_eq!(
+        changes(&f, "Opterećenje osoblja")[1].0,
+        "opterećenje prošli mjesec"
+    );
+    assert!(amount_for(&f, "Zaposleni", QUIT_NOW).ends_with("više nego prošli mjesec"));
+    let mut june_not_first = sample();
+    june_not_first.month = MonthCode::Jun;
+    assert!(!mentions_last_month(&june_not_first).is_empty());
+}
+
 /// Prvi mjesec nema prošlog: usporedba je s početkom igre, riječima „na početku igre".
 #[test]
 fn first_month_compares_turnover_with_start_of_game() {
     let mut june = sample();
     june.month = MonthCode::Jun;
     june.next_month = Some(MonthCode::Jul);
+    june.prev_month = None;
     june.turnover_before_bp = 450;
     june.turnover_after_bp = 375;
     let f = facts_json(&june);
@@ -1140,6 +1201,14 @@ fn real_months_colour_a_cause_under_staff_index() {
     let (g, h) = july_resolved_bad_chef_game();
     for m in [Month::Jun, Month::Jul] {
         let input = g.debrief_input(h, m).unwrap();
+        // Igra kaže koji je mjesec prvi; u prvom nigdje nema „prošlog mjeseca".
+        if m == Month::Jun {
+            assert_eq!(input.prev_month, None);
+            assert_eq!(mentions_last_month(&input), Vec::<String>::new());
+        } else {
+            assert_eq!(input.prev_month, Some(MonthCode::Jun));
+            assert!(!mentions_last_month(&input).is_empty());
+        }
         let f = debrief_facts(&input);
         let block = staff_block(&f);
         // Za izvještaj: `cargo test -p game --test mentor -- --nocapture real_months`.

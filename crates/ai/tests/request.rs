@@ -133,6 +133,7 @@ fn sample_debrief() -> game::DebriefInput {
     game::DebriefInput {
         month: MonthCode::Jul,
         next_month: Some(MonthCode::Aug),
+        prev_month: Some(MonthCode::Jun),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![game::DebriefSituation {
             code: "S2".into(),
