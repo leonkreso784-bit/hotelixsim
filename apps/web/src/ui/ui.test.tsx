@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { IndexEntry } from "../api/types";
 import { Delta, IndexBars } from "./IndexBars";
-import { Button } from "./primitives";
+import { Button, Card } from "./primitives";
 
 afterEach(cleanup);
 
@@ -84,5 +84,47 @@ describe("Delta i Button", () => {
     const narrow = screen.getByRole("button", { name: "Uski" }).className;
     expect(narrow).not.toContain("w-full");
     expect(narrow).toContain("w-auto");
+  });
+});
+
+describe("Card", () => {
+  it("zadano: bijela, sivi obrub, p-4", () => {
+    render(<Card>x</Card>);
+    const c = screen.getByText("x").closest("section") as HTMLElement;
+    expect(c.className).toContain("bg-surface");
+    expect(c.className).toContain("border-line");
+    expect(c.className).toContain("p-4");
+  });
+  it("tone, emphasis i pad zamjenjuju zadane klase umjesto da se lijepe uz njih (I1)", () => {
+    render(
+      <Card tone="mint" emphasis pad="sm">
+        y
+      </Card>,
+    );
+    const c = (screen.getByText("y").closest("section") as HTMLElement).className.split(/\s+/);
+    expect(c).toContain("bg-mint");
+    expect(c).not.toContain("bg-surface");
+    expect(c).toContain("border-accent");
+    expect(c).not.toContain("border-line");
+    expect(c).toContain("p-3");
+    expect(c).not.toContain("p-4");
+  });
+});
+
+describe("Card u ekranima", () => {
+  // Boja, obrub i padding u `className` kartice tiho gube od zadanih klasa (I1) — idu samo kroz propove.
+  const sources = import.meta.glob("../**/*.tsx", { query: "?raw", import: "default", eager: true });
+  it("nijedna <Card> ne dobiva bg-*, border-* ni p-* kroz className", () => {
+    expect(Object.keys(sources).some((f) => f.endsWith("MonthScreen.tsx"))).toBe(true);
+    const bad: string[] = [];
+    for (const [file, text] of Object.entries(sources)) {
+      if (file.includes(".test.")) continue;
+      for (const m of String(text).matchAll(/<Card\b[^>]*?className="([^"]*)"/g)) {
+        const cls = (m[1] ?? "").split(/\s+/);
+        if (cls.some((c) => /^(?:[a-z]+:)*(?:bg-|border-(?!0)|p[xytblr]?-\d)/.test(c)))
+          bad.push(`${file}: ${m[1]}`);
+      }
+    }
+    expect(bad).toEqual([]);
   });
 });

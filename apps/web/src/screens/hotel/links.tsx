@@ -22,7 +22,7 @@ export function Stat({
       to={to}
       className="block rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <Card className="space-y-1 p-3">
+      <Card pad="sm" className="space-y-1">
         <span className="flex items-center gap-2">
           <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
             {icon}

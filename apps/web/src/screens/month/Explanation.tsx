@@ -77,12 +77,21 @@ function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean 
   );
 }
 
-export function Explanation({ hotelId, month }: { hotelId: string; month: MonthCode }) {
+export function Explanation({
+  hotelId,
+  month,
+  className = "",
+}: {
+  hotelId: string;
+  month: MonthCode;
+  /** Samo raspored (npr. `order-*` na mobitelu). */
+  className?: string;
+}) {
   const q = useExplanation(hotelId, month);
   const indices = q.data ? sortIndices(q.data.indices) : [];
   const open = mostMoved(indices);
   return (
-    <Card>
+    <Card className={className}>
       <h2 className="pb-1 text-lg font-bold">{t("month.why")}</h2>
       {q.isPending ? (
         <StatusText>{t("status.loading")}</StatusText>

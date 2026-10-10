@@ -6,9 +6,9 @@ import { formatPointsCount, progressTone, strategyLabel } from "../../format";
 import type { LeaderRow } from "../../game";
 import { Card } from "../../ui/primitives";
 
-export function Leaderboard({ rows }: { rows: LeaderRow[] }) {
+export function Leaderboard({ rows, className = "" }: { rows: LeaderRow[]; className?: string }) {
   return (
-    <Card className="p-3">
+    <Card pad="sm" className={className}>
       <h2 id="ljestvica" className="flex items-center gap-2 px-1 pb-2 text-lg font-bold">
         <ChartColumn size={18} aria-hidden="true" className="text-accent" />
         {t("month.leaderboard")}
@@ -18,7 +18,7 @@ export function Leaderboard({ rows }: { rows: LeaderRow[] }) {
           <li
             key={r.hotelId}
             aria-current={r.mine ? "true" : undefined}
-            className={`flex items-center gap-3 rounded-xl px-2 py-2 ${r.mine ? "bg-accent-soft font-bold text-accent" : ""}`}
+            className={`flex items-center gap-3 rounded-xl px-2 py-2 ${r.mine ? "bg-accent-soft font-bold text-accent-ink" : ""}`}
           >
             <span className="w-5 tabular-nums">{i + 1}.</span>
             <Avatar look={r.mine ? PLAYER_LOOK : lookFor(r.name)} size={32} />

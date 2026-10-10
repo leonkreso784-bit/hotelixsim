@@ -11,5 +11,6 @@ export default defineConfig({
   },
   // Testovi ekrana renderiraju cijeli tijek kroz FakeApi; samostalno traju ~1 s, ali pod punim paralelnim
   // opterećenjem (ili na CI-ju) zadanih 5 s je jednom isteklo (10.10., „obračunat lipanj“ 5,4 s).
-  test: { environment: "jsdom", testTimeout: 15_000 },
+  // `css.include` propušta samo sirovi tekst tokena (`styles.css?raw`) za test kontrasta; ostali CSS je u testu prazan.
+  test: { environment: "jsdom", testTimeout: 15_000, css: { include: [/styles\.css\?raw$/] } },
 });

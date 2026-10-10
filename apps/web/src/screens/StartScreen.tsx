@@ -3,6 +3,7 @@ import { t } from "@hotelixsim/i18n";
 import { useRef } from "react";
 import { problemMessage } from "../api/errors";
 import { useStartDemo } from "../api/queries";
+import { Wordmark } from "../ui/Layout";
 import { Button, ErrorText, StatusText } from "../ui/primitives";
 
 export function StartScreen() {
@@ -21,7 +22,7 @@ export function StartScreen() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col md:max-w-xl justify-center gap-6 px-6 py-10">
-      <img src="/logo-znak.png" alt="" className="size-16 rounded-2xl" />
+      <Wordmark size="lg" />
       <h1 className="text-4xl leading-tight font-extrabold tracking-tight">
         {t("start.title1")} <span className="text-accent">{t("start.title2")}</span>
       </h1>

@@ -3,7 +3,7 @@ import { type FormEvent, type ReactNode, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { monthName } from "../format";
+import { formatRange, monthName } from "../format";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 
 type Draft = {
@@ -59,6 +59,8 @@ function NumberField(props: {
   value: string;
   min: number;
   max: number;
+  /** Jedinica raspona ispod polja (UI_PRAVILA §2.1: broj ima ime i jedinicu, i u rasponu). */
+  unit: "euro" | "percent" | "person";
   onChange: (v: string) => void;
 }) {
   return (
@@ -77,7 +79,9 @@ function NumberField(props: {
         onChange={(e) => props.onChange(e.target.value)}
         className="min-h-12 w-full rounded-2xl border border-line bg-surface px-3 text-lg tabular-nums"
       />
-      <p className="text-xs text-muted">{t("plan.range", { min: props.min, max: props.max })}</p>
+      <p className="text-xs text-muted">
+        {t("plan.range", { range: formatRange(props.min, props.max, props.unit) })}
+      </p>
     </div>
   );
 }
@@ -96,8 +100,8 @@ function Choice<T extends string>(props: {
         {props.options.map((o) => (
           <label
             key={o.v}
-            className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold ${
-              props.value === o.v ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface"
+            className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+              props.value === o.v ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-surface"
             }`}
           >
             <input
@@ -193,6 +197,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           value={draft.price}
           min={l.price_min_cents / 100}
           max={l.price_max_cents / 100}
+          unit="euro"
           onChange={(v) => set({ price: v })}
         />
         <NumberField
@@ -201,6 +206,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           value={draft.seasonal}
           min={l.seasonal_min}
           max={l.seasonal_max}
+          unit="person"
           onChange={(v) => set({ seasonal: v })}
         />
         <Choice
@@ -224,6 +230,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             value={draft.marketing}
             min={0}
             max={l.marketing_max_cents / 100}
+            unit="euro"
             onChange={(v) => set({ marketing: v })}
           />
           <NumberField
@@ -232,6 +239,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             value={draft.wage}
             min={l.wage_min_pct}
             max={l.wage_max_pct}
+            unit="percent"
             onChange={(v) => set({ wage: v })}
           />
           <Choice

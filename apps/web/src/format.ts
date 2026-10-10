@@ -10,6 +10,7 @@ const nfCents = new Intl.NumberFormat("hr-HR", {
   maximumFractionDigits: 2,
   useGrouping: "always",
 });
+const nfRating = new Intl.NumberFormat("hr-HR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const MINUS = "−";
 const NONE = "—";
 
@@ -66,9 +67,23 @@ export function formatPercentBp(bp: number | null): string {
   return `${bp < 0 ? MINUS : ""}${nf1.format(Math.abs(bp) / 100)} %`;
 }
 
-/** Ocjena u stotinkama na ljestvici do 10: 840 → "8,4/10". */
+/** Ocjena u stotinkama na ljestvici do 10, uvijek jedna decimala: 840 → "8,4/10", 800 → "8,0/10", 898 → "9,0/10". */
 export function formatRating(hundredths: number): string {
-  return `${nf2.format(hundredths / 100)}/10`;
+  return `${nfRating.format(hundredths / 100)}/10`;
+}
+
+/** Cijeli broj s grupiranjem, bez jedinice (samo kao dio oznake s jedinicom): 40000 → "40.000". */
+export function formatWhole(n: number): string {
+  return `${n < 0 ? MINUS : ""}${nf0.format(Math.abs(n))}`;
+}
+
+/** Dopušteni raspon s jedinicom: (0, 40000, "euro") → "0–40.000 €", (18, 38, "person") → "18–38 osoba". */
+export function formatRange(min: number, max: number, unit: "euro" | "percent" | "person"): string {
+  const span = `${formatWhole(min)}–${formatWhole(max)}`;
+  if (unit === "euro") return `${span} €`;
+  if (unit === "percent") return `${span} %`;
+  // Imenica se slaže s gornjom granicom: „18–38 osoba“, „1–2 osobe“.
+  return formatCount(max, "person", span);
 }
 
 /** Promjena u bodovima s množinom: 450 → "+5 bodova", −100 → "−1 bod". */

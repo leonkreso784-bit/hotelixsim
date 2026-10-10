@@ -86,7 +86,7 @@ export function FeedScreen({ me }: { me: HotelBody }) {
           <h2 className="pt-2 text-sm font-bold tracking-wide text-muted uppercase">
             {g.month ? capitalize(monthName(g.month)) : t("feed.start")}
           </h2>
-          <Card className="divide-y divide-line py-1">
+          <Card pad="list" className="divide-y divide-line">
             <ol>
               {g.entries.map((e) =>
                 e.kind === "item" && e.item.kind === "mentor" ? (
@@ -102,7 +102,7 @@ export function FeedScreen({ me }: { me: HotelBody }) {
                   <li key={e.key}>
                     <Link
                       to={`/mjesec/${e.month}`}
-                      className="flex min-h-11 items-center font-semibold text-accent"
+                      className="flex min-h-11 items-center font-semibold text-accent-ink"
                     >
                       {t("feed.why")}
                     </Link>

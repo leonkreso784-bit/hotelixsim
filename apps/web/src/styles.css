@@ -5,6 +5,8 @@
 @theme {
   --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
   --color-accent: #246bfd;
+  /* Tekst u boji naglaska na svijetloj podlozi (≥ 4,5:1 i na accent-soft); bg-accent ostaje #246bfd. */
+  --color-accent-ink: #1f5fe0;
   --color-accent-soft: #eaf1ff;
   --color-ink: #151b2b;
   --color-muted: #5d6679;
@@ -13,8 +15,8 @@
   --color-surface: #ffffff;
   --color-sand: #f4e8d5;
   --color-mint: #d8f0ee;
-  --color-up: #15924a;
-  --color-down: #dc2f2f;
+  --color-up: #0f7a3c;
+  --color-down: #c42626;
   --radius-card: 1.25rem;
 }
 

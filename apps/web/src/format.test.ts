@@ -8,7 +8,9 @@ import {
   formatNights,
   formatPercentBp,
   formatPointsCount,
+  formatRange,
   formatRating,
+  formatWhole,
   formatWholeSigned,
   monthName,
   strategyLabel,
@@ -56,10 +58,20 @@ describe("novac i ocjena", () => {
     expect(formatEuros(123_400)).toBe("1.234 €");
     expect(formatEuros(-123_400)).toBe("−1.234 €");
   });
-  it("formatRating je ocjena do 10", () => {
+  it("formatRating je ocjena do 10, uvijek s točno jednom decimalom", () => {
     expect(formatRating(840)).toBe("8,4/10");
-    expect(formatRating(845)).toBe("8,45/10");
-    expect(formatRating(1000)).toBe("10/10");
+    expect(formatRating(800)).toBe("8,0/10");
+    expect(formatRating(898)).toBe("9,0/10");
+    expect(formatRating(803)).toBe("8,0/10");
+    expect(formatRating(1000)).toBe("10,0/10");
+  });
+  it("formatRange: raspon s grupiranjem i jedinicom, imenica po gornjoj granici", () => {
+    expect(formatRange(0, 40_000, "euro")).toBe("0–40.000 €");
+    expect(formatRange(81, 202, "euro")).toBe("81–202 €");
+    expect(formatRange(90, 115, "percent")).toBe("90–115 %");
+    expect(formatRange(18, 38, "person")).toBe("18–38 osoba");
+    expect(formatRange(1, 2, "person")).toBe("1–2 osobe");
+    expect(formatWhole(40_000)).toBe("40.000");
   });
   it("pokazatelji: postotak iz baznih bodova, euri s centima, noći; null je crtica", () => {
     expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual(["68 %", "31,7 %", "121,2 %", "−4,5 %"]);
