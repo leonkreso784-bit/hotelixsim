@@ -6,6 +6,7 @@ use crate::error::{GameError, corrupt};
 use crate::event::Controller;
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
+use crate::kpi::report_kpi;
 
 /// Tko vodi hotel; namjerno bez `guest_id`, tuđi gost se ne otkriva.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -56,6 +57,10 @@ pub struct LastMonth {
     pub goppar_cents: i64,
     /// Mentorov osvrt na taj mjesec (kad ga ima).
     pub mentor: Option<String>,
+    /// Sloj 0: isti brojevi kao `/kpi` za taj mjesec (prodane noći ÷ sve sobe × dani; bp).
+    pub occupancy_bp: Option<i64>,
+    pub adr_cents: Option<i64>,
+    pub revpar_cents: Option<i64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -132,6 +137,7 @@ impl Game {
                 .iter()
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
+            let k = report_kpi(&res.report, &self.content.catalog)?;
             last_month = Some(LastMonth {
                 month: rr.month,
                 sold: res.report.market.sold,
@@ -140,6 +146,9 @@ impl Game {
                 gop_cents: res.report.money.gop_cents,
                 goppar_cents: res.report.money.goppar_cents,
                 mentor: h.debriefs.get(&rr.month.into()).map(|d| d.text.clone()),
+                occupancy_bp: k.occupancy_bp,
+                adr_cents: k.adr_cents,
+                revpar_cents: k.revpar_cents,
             });
         }
         let mut plan = None;

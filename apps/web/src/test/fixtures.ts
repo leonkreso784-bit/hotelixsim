@@ -5,6 +5,7 @@ import type {
   GameBody,
   HotelBody,
   IndexEntry,
+  KpiMonthBody,
   LastMonthBody,
   MonthScoreBody,
   PlanBody,
@@ -318,7 +319,32 @@ export function explanation(over: Partial<ExplanationBody> = {}): ExplanationBod
   };
 }
 
-/** Igra u otvorenom lipnju: moj hotel, igra, situacije, razgovor S1, prazan tijek. */
+/** Pokazatelji lipnja: 120 soba × 30 dana, 2 sobe izvan funkcije, ADR 132,45 €, točka pokrića 52,4 %. */
+export function kpiMonth(over: Partial<KpiMonthBody> = {}): KpiMonthBody {
+  return {
+    month: "jun",
+    room_nights: 3600,
+    sold_nights: 2448,
+    lost_nights: 60,
+    occupancy_bp: 6800,
+    sellable_occupancy_bp: 9833,
+    adr_cents: 13_245,
+    revpar_cents: 9007,
+    rooms_revenue_cents: 32_423_760,
+    total_revenue_cents: 42_150_888,
+    trevpar_cents: 11_709,
+    gop_cents: 11_650_000,
+    gop_margin_bp: 2764,
+    goppar_cents: 3236,
+    labor_cents: 11_300_000,
+    labor_share_bp: 2681,
+    cpor_cents: 2200,
+    break_even_occupancy_bp: 5240,
+    ...over,
+  };
+}
+
+/** Igra u otvorenom lipnju: moj hotel, igra, situacije, razgovor S1, prazan tijek, još bez pokazatelja. */
 export function standardApi(): FakeApi {
   return new FakeApi()
     .on("GET", "/v1/me/hotel", myHotel())
@@ -326,5 +352,6 @@ export function standardApi(): FakeApi {
     .on("GET", "/v1/hotels/:hotel/situations", situations())
     .on("GET", "/v1/hotels/:hotel/situations/:code/conversation", conversation())
     .on("GET", "/v1/hotels/:hotel/feed", { items: [] })
-    .on("GET", "/v1/hotels/:hotel/months/:month/explanation", explanation());
+    .on("GET", "/v1/hotels/:hotel/months/:month/explanation", explanation())
+    .on("GET", "/v1/hotels/:hotel/kpi", { months: [] });
 }

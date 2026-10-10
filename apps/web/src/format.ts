@@ -4,7 +4,14 @@ import type { MonthCode, StrategyCode } from "./api/types";
 const nf2 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 2 });
 // hr-HR po zadanom ne grupira četiri znamenke (1234), pa grupiranje tražimo izričito: 1.234.
 const nf0 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 0, useGrouping: "always" });
+const nf1 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 1, useGrouping: "always" });
+const nfCents = new Intl.NumberFormat("hr-HR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  useGrouping: "always",
+});
 const MINUS = "−";
+const NONE = "—";
 
 /**
  * Jedino pravilo za bodove na ekranu: stotinke → cijeli bodovi, pola od nule (4850 → 49, 4849 → 48, −450 → −5).
@@ -47,14 +54,21 @@ export function formatEuros(cents: number): string {
   return `${euros < 0 ? MINUS : ""}${nf0.format(Math.abs(euros))} €`;
 }
 
+/** Centi → euri s centima (pokazatelji po sobi): 4003 → "40,03 €"; bez vrijednosti crtica. */
+export function formatEurosCents(cents: number | null): string {
+  if (cents === null) return NONE;
+  return `${cents < 0 ? MINUS : ""}${nfCents.format(Math.abs(cents) / 100)} €`;
+}
+
+/** Bazni bodovi → postotak, najviše jedna decimala: 6800 → "68 %", 3173 → "31,7 %"; bez vrijednosti crtica. */
+export function formatPercentBp(bp: number | null): string {
+  if (bp === null) return NONE;
+  return `${bp < 0 ? MINUS : ""}${nf1.format(Math.abs(bp) / 100)} %`;
+}
+
 /** Ocjena u stotinkama na ljestvici do 10: 840 → "8,4/10". */
 export function formatRating(hundredths: number): string {
   return `${nf2.format(hundredths / 100)}/10`;
-}
-
-export function formatOccupancy(sold: number, available: number): string {
-  if (available <= 0) return "—";
-  return `${Math.round((sold * 100) / available)} %`;
 }
 
 /** Promjena u bodovima s množinom: 450 → "+5 bodova", −100 → "−1 bod". */
@@ -81,8 +95,17 @@ const pluralRules = new Intl.PluralRules("hr");
  * Broj s imenicom u ispravnom hrvatskom množinskom obliku: 1 bod, 3 boda, 8 bodova.
  * Necijeli brojevi (8,25) uzimaju oblik uz 2–4 („8,25 boda“).
  */
-export function formatCount(n: number, noun: "point" | "person", shown: string = nf2.format(n)): string {
+export function formatCount(
+  n: number,
+  noun: "point" | "person" | "night",
+  shown: string = nf2.format(n),
+): string {
   const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
   const form = category === "one" || category === "few" ? category : "other";
   return `${shown} ${t(`plural.${noun}.${form}` as const)}`;
+}
+
+/** Noći s grupiranjem i množinom: 1 noć, 3 noći, 3.600 noći. */
+export function formatNights(n: number): string {
+  return formatCount(n, "night", nf0.format(n));
 }

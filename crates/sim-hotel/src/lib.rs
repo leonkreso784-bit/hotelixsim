@@ -10,6 +10,7 @@ pub mod catalog;
 pub mod explain;
 pub mod index;
 pub mod indices;
+pub mod kpi;
 pub mod market;
 pub mod mechanic;
 pub mod month;
@@ -31,6 +32,7 @@ pub use indices::{
     Driver, LOAD_LIMIT_HUNDREDTHS, RawIndices, RefPoint, RefTable, base_labor_cents, centred,
     index_drivers, load_penalty, month_indices, raw_indices, retention, start_indices,
 };
+pub use kpi::{KpiError, KpiInput, MonthKpi, kpi, month_kpi};
 pub use market::{MarketOutcome, market};
 pub use mechanic::{
     Effects, Mechanic, MechanicError, OfferedAnswer, SituationOutcome, SituationTemplate, effects,

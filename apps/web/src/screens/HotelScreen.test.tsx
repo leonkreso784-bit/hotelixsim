@@ -48,11 +48,15 @@ describe("Moj hotel", () => {
           lastMonth: {
             month: "jun",
             sold: 2448,
-            available: 3600,
+            // 2 sobe izvan funkcije: popunjenost se dijeli sa SVIM sobama (6800 bp s poslužitelja), ne s 3 540.
+            available: 3540,
             rooms_revenue_cents: 9_800_000,
             gop_cents: 2_000_000,
             goppar_cents: 55_500,
             mentor: "Usluga je bolja. Prati troškove.",
+            occupancy_bp: 6800,
+            adr_cents: 4003,
+            revpar_cents: 2722,
           },
         }),
       )
@@ -63,6 +67,7 @@ describe("Moj hotel", () => {
     expect(screen.getByText("▼ −2")).toBeTruthy();
     expect(screen.getByText("od početka")).toBeTruthy();
     expect(screen.getByText("68 %")).toBeTruthy();
+    expect(screen.queryByText("69 %")).toBeNull();
     expect(screen.getByText("98.000 €")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Rezultat: lipanj/ }).getAttribute("href")).toBe("/mjesec/jun");
   });
@@ -82,6 +87,7 @@ describe("Moj hotel", () => {
       "/pokazatelj/F/cash",
       "/pokazatelj/Z/staff",
       "/pokazatelj/R/rating",
+      "/pokazatelji",
     ]);
     expect(screen.getByRole("link", { name: /Prihod od soba/ }).getAttribute("href")).toBe(
       "/pokazatelj/F/revenue",

@@ -373,6 +373,15 @@ pub struct LastMonthBody {
     pub goppar_cents: i64,
     #[schema(required = true)]
     pub mentor: Option<String>,
+    /// Prodane noći ÷ sve sobe × dani, u baznim bodovima (isti broj kao `/kpi`).
+    #[schema(required = true)]
+    pub occupancy_bp: Option<i64>,
+    /// Prihod od soba ÷ prodane noći (isti broj kao `/kpi`).
+    #[schema(required = true)]
+    pub adr_cents: Option<i64>,
+    /// Prihod od soba ÷ sve sobe × dani (isti broj kao `/kpi`).
+    #[schema(required = true)]
+    pub revpar_cents: Option<i64>,
 }
 
 impl From<&LastMonth> for LastMonthBody {
@@ -385,6 +394,9 @@ impl From<&LastMonth> for LastMonthBody {
             gop_cents: m.gop_cents,
             goppar_cents: m.goppar_cents,
             mentor: m.mentor.clone(),
+            occupancy_bp: m.occupancy_bp,
+            adr_cents: m.adr_cents,
+            revpar_cents: m.revpar_cents,
         }
     }
 }

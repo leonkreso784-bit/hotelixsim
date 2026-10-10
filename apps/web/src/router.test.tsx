@@ -14,6 +14,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/mjesec/jun")).toEqual({ name: "month", month: "jun" });
     expect(matchRoute("/tijek/")).toEqual({ name: "feed" });
     expect(matchRoute("/likovi")).toEqual({ name: "avatars" });
+    expect(matchRoute("/pokazatelji")).toEqual({ name: "kpi" });
     expect(matchRoute("/pokazatelj/Z")).toEqual({ name: "indicator", code: "Z", highlight: null });
     expect(matchRoute("/pokazatelj/F/revenue")).toEqual({
       name: "indicator",
@@ -25,6 +26,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/mjesec/xyz")).toEqual({ name: "notFound" });
     expect(matchRoute("/situacije/S1/x")).toEqual({ name: "notFound" });
     expect(matchRoute("/pokazatelj")).toEqual({ name: "notFound" });
+    expect(matchRoute("/pokazatelji/jun")).toEqual({ name: "notFound" });
     expect(matchRoute("/pokazatelj/X")).toEqual({ name: "notFound" });
     expect(matchRoute("/pokazatelj/Z/nema")).toEqual({ name: "notFound" });
     expect(matchRoute("/pokazatelj/Z/staff/x")).toEqual({ name: "notFound" });

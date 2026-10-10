@@ -6,6 +6,7 @@ mod explanation;
 mod games;
 mod health;
 mod hotels;
+mod kpi;
 pub mod problem;
 pub mod schema;
 
@@ -45,6 +46,7 @@ fn parts() -> OpenApiRouter<AppState> {
         .routes(routes!(hotels::submit_response))
         .routes(routes!(hotels::feed))
         .routes(routes!(explanation::explanation))
+        .routes(routes!(kpi::kpi))
         .routes(routes!(games::game))
         .routes(routes!(games::round))
         .routes(routes!(games::close))

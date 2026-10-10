@@ -9,6 +9,7 @@ import { AvatarGallery } from "./screens/AvatarGallery";
 import { FeedScreen } from "./screens/FeedScreen";
 import { HotelScreen } from "./screens/HotelScreen";
 import { IndicatorScreen } from "./screens/IndicatorScreen";
+import { KpiScreen } from "./screens/KpiScreen";
 import { MonthScreen } from "./screens/MonthScreen";
 import { NotFound } from "./screens/NotFound";
 import { PlanScreen } from "./screens/PlanScreen";
@@ -18,7 +19,8 @@ import { StartScreen } from "./screens/StartScreen";
 import { chipText, Layout } from "./ui/Layout";
 import { Button, ErrorText, StatusText } from "./ui/primitives";
 
-/** Ekrani s jednim stupcem dobivaju ograničenu širinu čitanja; hotel, mjesec i situacija sami slažu dva stupca. */
+/** Ekrani s jednim stupcem dobivaju ograničenu širinu čitanja; hotel, mjesec i situacija sami slažu dva stupca,
+ * a pokazatelji na računalu trebaju širinu za tablicu. */
 function Reading({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-2xl space-y-3">{children}</div>;
 }
@@ -49,6 +51,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
           <IndicatorScreen key={route.code} me={me} code={route.code} highlight={route.highlight} />
         </Reading>
       );
+    case "kpi":
+      return <KpiScreen me={me} />;
     case "feed":
       return (
         <Reading>
