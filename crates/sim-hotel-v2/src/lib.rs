@@ -10,6 +10,7 @@
 
 pub mod calendar;
 pub mod catalog;
+pub mod department;
 pub mod explain;
 pub mod indices;
 pub mod market;
@@ -21,7 +22,9 @@ pub mod state;
 pub mod streams;
 
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
-pub use catalog::{Catalog, PeriodCoefficients, degenerate};
+pub use catalog::{
+    Catalog, DeptStart, EconomyV2, FixedChargeSpec, PeriodCoefficients, ProfileV2, degenerate,
+};
 pub use indices::{RefTable, period_indices, start_indices};
 pub use plan::{PeriodPlan, PlanError, PlanLimits};
 pub use resolve::{PeriodReport, ResolveError, resolve_period};
