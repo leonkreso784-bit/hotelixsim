@@ -87,7 +87,7 @@ describe("Tijek", () => {
     expect(screen.getByText("Lipanj je obračunat: napredak +8 bodova.")).toBeTruthy();
     expect(screen.getByText("Klima: AI ocjena 4/5.")).toBeTruthy();
     expect(screen.getByText("Agencija: izabrano „Prihvatiti uz 15 % popusta i depozit“.")).toBeTruthy();
-    expect(screen.getByText("Dobio si hotel „Tvoj hotel“.")).toBeTruthy();
+    expect(screen.getByText("Igra počinje: vodiš hotel „Tvoj hotel“.")).toBeTruthy();
     // Promjene obračuna su jedan redak s poveznicom na „Mjesec završen“, ne sirovi retci.
     expect(screen.queryByText(/Obračun: \d+ promjen/)).toBeNull();
     expect(screen.queryByText("−12 %")).toBeNull();

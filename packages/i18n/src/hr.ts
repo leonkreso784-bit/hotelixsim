@@ -240,7 +240,7 @@ export const hr = {
   "feed.title": "Tijek",
   "feed.empty": "Još se ništa nije dogodilo.",
   "feed.start": "Početak",
-  "feed.hotel_received": "Dobio si hotel „{name}“.",
+  "feed.hotel_received": "Igra počinje: vodiš hotel „{name}“.",
   "feed.plan_changed": "Plan za {month} je promijenjen.",
   "feed.plan_changed.robot": "Robot je postavio plan za {month}.",
   "feed.answer_chosen": "{title}: izabrano „{label}“.",
