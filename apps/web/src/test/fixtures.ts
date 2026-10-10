@@ -160,7 +160,7 @@ export function s2(over: Partial<SituationBody> = {}): SituationBody {
 export function s3(over: Partial<SituationBody> = {}): SituationBody {
   return {
     code: "S3",
-    title: "Agencija nudi grupu od 25 soba za 7 noći (nacrt)",
+    title: "Agencija nudi grupu od 25 soba za 7 noći",
     answers: [
       "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
       "Prihvatiti uz 15 % popusta i depozit",
