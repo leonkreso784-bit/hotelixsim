@@ -119,7 +119,8 @@ impl Game {
         let r = r.into();
         let info = self.round_info(r)?;
         let pos = u64::try_from(self.position(r)?).map_err(|_| corrupt("pozicija kruga"))?;
-        let cat = &self.content.catalog;
+        let model = self.model();
+        let cat = model.catalog(&self.content)?;
         let mut out = Vec::new();
         for h in &self.hotels {
             let Controller::Robot { strategy } = &h.setup.controller else {
@@ -131,7 +132,6 @@ impl Game {
             let state = self.state_at(id, r)?;
             let slot = u64::from(h.setup.slot);
             let mut rng = Rng::derive(self.seed, &[label("game:robot-plan"), pos, slot]);
-            let model = self.model();
             let plan = model.robot_plan(st, &state, &info, &self.content, &mut rng)?;
             model
                 .validate_plan(&plan, &state, &info, &self.content)
