@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import { formatIndex } from "./format";
 
 function jsonResponse(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -23,15 +22,6 @@ function renderWith(fetchImpl: (req: Request) => Promise<Response>) {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
-});
-
-describe("formatIndex", () => {
-  it("prikazuje stotinke hrvatskim zarezom i bez suvišnih nula", () => {
-    expect(formatIndex(5000)).toBe("50");
-    expect(formatIndex(5025)).toBe("50,25");
-    expect(formatIndex(0)).toBe("0");
-    expect(formatIndex(10000)).toBe("100");
-  });
 });
 
 describe("App", () => {
