@@ -30,7 +30,7 @@
 
 ### 1.1 Što demo jest
 
-Jedna igra: **igrač + tri robota**, svaki sa svojim hotelom, kroz **četiri runde**. Demo je prvi rez prave
+Jedna igra: **igrač + tri robota**, svaki sa svojim hotelom, kroz **dvije runde** (lipanj, srpanj; Leon 10.10., [ADR-021](../records/DECISIONS.md#adr-021)). Demo je prvi rez prave
 arhitekture, a ne prototip koji se baca: ista jezgra, isti dnevnik, isti API.
 
 | | demo | pilot (kasnije) |
@@ -38,7 +38,7 @@ arhitekture, a ne prototip koji se baca: ista jezgra, isti dnevnik, isti API.
 | vrijeme | **demo način**: rundu zatvara **gumb** | kalendar kolegija |
 | igrači | 1 čovjek + 3 robota | grupa studenata |
 | prijava | **poveznica stvori gosta** | pravi pružatelj prijave (ARHITEKTURA §12) |
-| sezona | 4 runde: lipanj, srpanj, kolovoz, rujan | po dogovoru s profesorom |
+| sezona | 2 runde: lipanj, srpanj (kolovoz i rujan poslije demoa) | po dogovoru s profesorom |
 | situacije | predlošci + AI za presudu, likove i mentora | i AI-jem smišljene situacije |
 | hosting | **lokalno** (Leonovo računalo) | Railway |
 
@@ -77,7 +77,7 @@ dokaz da obračun radi za više hotela.
 | 9–12 | **Srpanj:** zaposlenik traži povišicu; možda i splet okolnosti iz lipnja | odluke ostavljaju tragove |
 | 12–15 | Profesorov pogled: **zašto je hotel tu gdje jest** (svaka promjena s uzrokom), presude AI-ja s kriterijima rubrike | prozirnost i pravednost |
 
-Kolovoz i rujan su tu za onoga tko želi igrati dalje. U njima se splet okolnosti najjasnije vidi.
+Kolovoz i rujan dolaze poslije demoa (sadržaj za njih još nije gotov). U njima se splet okolnosti najjasnije vidi.
 
 ### 1.6 Što demo ne radi
 
