@@ -15,6 +15,12 @@ export function wholePoints(hundredths: number): number {
   return hundredths < 0 && rounded > 0 ? -rounded : rounded;
 }
 
+/** Boja broja napretka po predznaku prikazanog (cijelog) broja: −0,3 se prikaže kao 0 i ostaje neutralno. */
+export function progressTone(hundredths: number): string {
+  const n = wholePoints(hundredths);
+  return n > 0 ? "text-up" : n < 0 ? "text-down" : "text-muted";
+}
+
 /** Indeks u stotinkama (0–10000) → cijeli broj za prikaz, npr. 4850 → "49". */
 export function formatIndex(hundredths: number): string {
   return nf0.format(wholePoints(hundredths));
@@ -75,8 +81,8 @@ const pluralRules = new Intl.PluralRules("hr");
  * Broj s imenicom u ispravnom hrvatskom množinskom obliku: 1 bod, 3 boda, 8 bodova.
  * Necijeli brojevi (8,25) uzimaju oblik uz 2–4 („8,25 boda“).
  */
-export function formatCount(n: number, noun: "point", shown: string = nf2.format(n)): string {
+export function formatCount(n: number, noun: "point" | "person", shown: string = nf2.format(n)): string {
   const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
   const form = category === "one" || category === "few" ? category : "other";
-  return `${shown} ${t(`plural.${noun}.${form}`)}`;
+  return `${shown} ${t(`plural.${noun}.${form}` as const)}`;
 }

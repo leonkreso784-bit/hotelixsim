@@ -28,7 +28,7 @@ function Logo() {
 }
 
 const TABS = [
-  { to: "/", label: "nav.hotel", icon: House, match: ["hotel", "plan", "month"] },
+  { to: "/", label: "nav.hotel", icon: House, match: ["hotel", "plan", "month", "indicator"] },
   { to: "/situacije", label: "nav.situations", icon: MessageCircle, match: ["situations", "situation"] },
   { to: "/tijek", label: "nav.feed", icon: ChartNoAxesColumn, match: ["feed"] },
 ] as const;

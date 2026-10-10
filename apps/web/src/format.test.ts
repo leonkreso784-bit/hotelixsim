@@ -88,5 +88,13 @@ describe("formatCount", () => {
   it("bod: bod, boda, bodova; decimale uz „boda“", () => {
     expect([1, 3, 8].map((n) => formatCount(n, "point"))).toEqual(["1 bod", "3 boda", "8 bodova"]);
     expect(formatCount(8.25, "point")).toBe("8,25 boda");
+    expect([1, 2, 4, 5, 11, 32].map((n) => formatCount(n, "person"))).toEqual([
+      "1 osoba",
+      "2 osobe",
+      "4 osobe",
+      "5 osoba",
+      "11 osoba",
+      "32 osobe",
+    ]);
   });
 });

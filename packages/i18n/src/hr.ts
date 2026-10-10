@@ -141,7 +141,7 @@ export const hr = {
   "plan.maintenance": "Održavanje",
   "plan.more": "Više postavki",
   "plan.marketing": "Marketing (€)",
-  "plan.wage": "Plaće (% od tržišne)",
+  "plan.wage": "Plaće (% uobičajene plaće)",
   "plan.training": "Obuka",
   "plan.renovation": "Obnova (jednom u sezoni)",
   "plan.renovationUsed": "Obnova je već iskorištena.",
@@ -160,7 +160,8 @@ export const hr = {
   "month.closingTitle": "Obračunavam {month}…",
   "month.closingText":
     "Svi hoteli se obračunavaju zajedno. AI još može ocjenjivati odgovore — najviše dvije minute.",
-  "month.slow": "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi Leonu.",
+  "month.slow":
+    "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi profesoru.",
   "month.notYet": "Ovaj mjesec još nije zatvoren.",
   "month.progress": "Napredak od početka",
   "month.indices": "Indeksi na kraju mjeseca",
@@ -194,7 +195,7 @@ export const hr = {
   "feed.plan_changed.robot": "Robot je postavio plan za {month}.",
   "feed.answer_chosen": "{title}: izabrano „{label}“.",
   "feed.round_closed": "{month} je zatvoren.",
-  "feed.situation_ignored": "{title}: bez odgovora (ocjena 1).",
+  "feed.situation_ignored": "{title}: bez odgovora (ocjena 1/5).",
   "feed.month_resolved": "{month} je obračunat: napredak {progress}.",
   "feed.response": "{title}: predan odgovor svojim riječima.",
   "feed.verdict": "{title}: AI ocjena {q}/5.",
@@ -205,4 +206,7 @@ export const hr = {
   "plural.point.one": "bod",
   "plural.point.few": "boda",
   "plural.point.other": "bodova",
+  "plural.person.one": "osoba",
+  "plural.person.few": "osobe",
+  "plural.person.other": "osoba",
 } as const;

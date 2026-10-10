@@ -21,7 +21,7 @@ export function Conversation({
   const inFlight = useRef(false);
   const [text, setText] = useState("");
   if (conv.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (conv.isError) return <ErrorText>{problemMessage(conv.error)}</ErrorText>;
+  if (conv.isError && !conv.data) return <ErrorText>{problemMessage(conv.error)}</ErrorText>;
   const c = conv.data;
   const used = c.lines.filter((l) => l.from === "student").length;
   const total = used + c.remaining;

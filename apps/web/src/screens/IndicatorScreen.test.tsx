@@ -60,6 +60,14 @@ describe("Detalj pokazatelja", () => {
     expect(within(rows[0] as HTMLElement).getByRole("img", { name: "Zaposlenici: 50 od 100" })).toBeTruthy();
   });
 
+  it("na detalju pokazatelja aktivan je donji tab „Hotel“", async () => {
+    renderApp(twoMonths(), "/pokazatelj/Z");
+    await screen.findByRole("heading", { name: "Zaposlenici" });
+    const nav = screen.getByRole("navigation", { name: "Glavni izbornik" });
+    const active = nav.querySelector("[aria-current='page']");
+    expect(active?.textContent).toBe("Hotel");
+  });
+
   it("objašnjenje zadnjeg mjeseca iz poslužitelja, boje po učinku", async () => {
     const api = twoMonths();
     renderApp(api, "/pokazatelj/Z");

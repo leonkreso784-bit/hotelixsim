@@ -89,6 +89,8 @@ describe("slobodan odgovor", () => {
       ),
     ).toBeTruthy();
     expect(screen.getByText("Ukupno 3/5")).toBeTruthy();
+    // Bez kriterija nema ni praznog okvira popisa.
+    expect(document.querySelector("ul.divide-y")).toBeNull();
   });
 
   it("S3 nema polja za slobodan odgovor", async () => {

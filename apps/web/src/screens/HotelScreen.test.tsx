@@ -1,7 +1,7 @@
 import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { json } from "../test/fakeApi";
+import { json, problem } from "../test/fakeApi";
 import { game, ix, myHotel, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
@@ -30,7 +30,7 @@ describe("Moj hotel", () => {
     expect(screen.getAllByRole("img", { name: /od 100$/ })).toHaveLength(5);
     expect(screen.queryByText(/▲|▼/)).toBeNull();
     expect(screen.getByText("42.000 €")).toBeTruthy();
-    expect(screen.getByText("58")).toBeTruthy();
+    expect(screen.getByText("58 osoba")).toBeTruthy();
     expect(screen.getByText("8,4/10")).toBeTruthy();
     const sit = screen.getByRole("link", { name: /Situacije mjeseca/ });
     expect(await within(sit).findByText("2")).toBeTruthy();
@@ -124,6 +124,51 @@ describe("Moj hotel", () => {
     expect(screen.queryByText("od početka")).toBeNull();
     expect(await screen.findByText("▲ +3")).toBeTruthy();
     expect(screen.getByText("od početka")).toBeTruthy();
+  });
+
+  it("obračun završi između dva dohvata (nikad viđen „closing“): Moj hotel ipak dohvati nove indekse", async () => {
+    let gameCalls = 0;
+    let meCalls = 0;
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", () => {
+        gameCalls += 1;
+        return json(
+          200,
+          gameCalls < 2
+            ? game({ current: { month: "jun", status: "open", unanswered: 0 } })
+            : game({ current: { month: "jul", status: "open", unanswered: 1 } }),
+        );
+      })
+      // Drugi dohvat „me“ ide istodobno s igrom i vidi stanje od prije obračuna; tek treći vidi novo.
+      .on("GET", "/v1/me/hotel", () => {
+        meCalls += 1;
+        return json(200, meCalls < 3 ? myHotel() : myHotel({ months: [junScore], planMonth: "jul" }));
+      });
+    renderApp(api);
+    expect(await screen.findByRole("heading", { name: "Moj hotel" })).toBeTruthy();
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+    expect(await screen.findByText("▲ +3")).toBeTruthy();
+    expect(meCalls).toBeGreaterThanOrEqual(3);
+  });
+
+  it("neuspjeli pozadinski dohvat igre ne zamjenjuje Moj hotel porukom o grešci", async () => {
+    let gameCalls = 0;
+    const api = standardApi().on("GET", "/v1/games/:game", () => {
+      gameCalls += 1;
+      return gameCalls < 2
+        ? json(200, game({ current: { month: "jun", status: "open", unanswered: 2 } }))
+        : problem(503, "storage_unavailable");
+    });
+    renderApp(api);
+    expect(await screen.findByRole("heading", { name: "Moj hotel" })).toBeTruthy();
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+    await waitFor(() => expect(gameCalls).toBeGreaterThanOrEqual(2));
+    // Pričekaj da upit uđe u stanje greške, pa provjeri da sadržaj ostaje.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(screen.getByRole("heading", { name: "Moj hotel" })).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("„Zatvori mjesec“ traži potvrdu s upozorenjem, šalje jednom i vodi na obračun", async () => {

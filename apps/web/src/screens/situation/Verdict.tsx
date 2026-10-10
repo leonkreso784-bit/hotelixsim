@@ -22,22 +22,24 @@ export function Verdict({ response }: { response: ResponseBody }) {
           {response.quality !== null && (
             <p className="text-2xl font-extrabold">{t("verdict.total", { q: response.quality })}</p>
           )}
-          <ul className="divide-y divide-line rounded-xl bg-surface">
-            {response.criteria.map((c) => (
-              <li key={c.n} className="flex gap-3 p-3">
-                <span className={c.met ? "text-up" : "text-down"}>
-                  {c.met ? <Check size={20} aria-hidden="true" /> : <X size={20} aria-hidden="true" />}
-                </span>
-                <span className="min-w-0 space-y-0.5">
-                  <span className="block font-semibold">{c.text}</span>
-                  <span className={`block text-xs font-bold ${c.met ? "text-up" : "text-down"}`}>
-                    {c.met ? t("verdict.met") : t("verdict.notMet")}
+          {response.criteria.length > 0 && (
+            <ul className="divide-y divide-line rounded-xl bg-surface">
+              {response.criteria.map((c) => (
+                <li key={c.n} className="flex gap-3 p-3">
+                  <span className={c.met ? "text-up" : "text-down"}>
+                    {c.met ? <Check size={20} aria-hidden="true" /> : <X size={20} aria-hidden="true" />}
                   </span>
-                  <span className="block text-sm text-muted">{c.reason}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span className="min-w-0 space-y-0.5">
+                    <span className="block font-semibold">{c.text}</span>
+                    <span className={`block text-xs font-bold ${c.met ? "text-up" : "text-down"}`}>
+                      {c.met ? t("verdict.met") : t("verdict.notMet")}
+                    </span>
+                    <span className="block text-sm text-muted">{c.reason}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           {response.rationale && <p className="text-sm">{response.rationale}</p>}
         </Card>
       )}

@@ -36,14 +36,17 @@ type Api = ReturnType<typeof useApi>;
 
 /**
  * Jedino mjesto koje dohvaća igru. Mjesec se obračuna u pozadini, nakon što je „Zatvori mjesec“ već vratio 202 i
- * invalidirao upite; kad ispitivanje vidi da je runda iz „closing“ prešla dalje, sve što ovisi o obračunu
- * (moj hotel: indeksi, gotovina, zadnji mjesec; situacije; dnevnik) se mora ponovno dohvatiti.
+ * invalidirao upite (a radnik može biti brži od tog dohvata, pa se „closing“ nikad ne vidi). Zato se sve što ovisi
+ * o obračunu (moj hotel: indeksi, gotovina, zadnji mjesec; situacije; dnevnik) ponovno dohvaća kad god se mjesec
+ * ILI stanje runde razlikuje od spremljene igre (i kad se sezona završi). Prvi dohvat ne invalidira: podaci su svježi.
  */
 async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<GameBody> {
   const before = qc.getQueryData<GameBody>(keys.game(gameId));
   const next = unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } }));
-  const was = before?.current;
-  if (was?.status === "closing" && (next.current?.status !== "closing" || next.current.month !== was.month)) {
+  if (
+    before &&
+    (before.current?.month !== next.current?.month || before.current?.status !== next.current?.status)
+  ) {
     void qc.invalidateQueries({ queryKey: keys.me });
     void qc.invalidateQueries({ queryKey: ["situations"] });
     void qc.invalidateQueries({ queryKey: ["feed"] });

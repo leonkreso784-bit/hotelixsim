@@ -79,7 +79,7 @@ describe("Mjesec završen", () => {
     renderApp(api, "/mjesec/jun");
     expect(await screen.findByRole("heading", { name: "Lipanj završen" })).toBeTruthy();
     const hero = screen.getByText("Napredak od početka").parentElement as HTMLElement;
-    expect(within(hero).getByText("+8")).toBeTruthy();
+    expect(within(hero).getByText("+8 bodova")).toBeTruthy();
     // Pet traka s vrijednostima na kraju lipnja (ne početnih 50) i promjenom u lipnju.
     expect(screen.getByText("Indeksi na kraju mjeseca")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Zadovoljstvo gostiju: 56 od 100" })).toBeTruthy();
@@ -131,7 +131,7 @@ describe("Mjesec završen", () => {
     renderApp(api, "/mjesec/jun");
     expect(
       await screen.findByText(
-        "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi Leonu.",
+        "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi profesoru.",
         {},
         { timeout: 2000 },
       ),
@@ -202,7 +202,8 @@ describe("Mjesec završen", () => {
       json(200, game({ current: { month: current, status: "closing", unanswered: 0 } })),
     );
     renderApp(api, "/mjesec/jun");
-    const slow = "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi Leonu.";
+    const slow =
+      "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi profesoru.";
     expect(await screen.findByText(slow, {}, { timeout: 2000 })).toBeTruthy();
     current = "jul";
     act(() => navigate("/mjesec/jul"));
@@ -334,15 +335,36 @@ describe("Mjesec završen: zašto se indeksi pomaknuli", () => {
   it("veliki broj napretka u boji po predznaku; mentorov lik poravnat gore", async () => {
     renderApp(settledApi(), "/mjesec/jun");
     const hero = (await screen.findByText("Napredak od početka")).parentElement as HTMLElement;
-    expect(within(hero).getByText("+8").className).toContain("text-up");
+    expect(within(hero).getByText("+8 bodova").className).toContain("text-up");
     const mentor = (await screen.findByText("Mentor")).closest("section") as HTMLElement;
     expect(mentor.className).toContain("items-start");
     expect(mentor.className).not.toContain("items-center");
   });
 
+  it("ljestvica: −0,3 boda se zaokruži na 0 i nije crveno; brojevi imaju jedinicu", async () => {
+    const g = game({
+      current: { month: "jul", status: "open", unanswered: 1 },
+      hotels: [myPublic([jun(800)]), robot("h2", 2, "Štediša", "stedisa", [jun(-30)])],
+    });
+    renderApp(
+      standardApi()
+        .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
+        .on("GET", "/v1/games/:game", g),
+      "/mjesec/jun",
+    );
+    const board = await screen.findByRole("list", { name: "Ljestvica napretka" });
+    const rows = within(board).getAllByRole("listitem");
+    const mine = within(rows[0] as HTMLElement).getByText("+8 bodova");
+    expect(mine.className).toContain("text-up");
+    expect(mine.className).toContain("whitespace-nowrap");
+    const zero = within(rows[1] as HTMLElement).getByText("0 bodova");
+    expect(zero.className).not.toContain("text-down");
+    expect(zero.className).not.toContain("text-up");
+  });
+
   it.each([
-    [-300, "−3", "text-down"],
-    [20, "0", "text-muted"],
+    [-300, "−3 boda", "text-down"],
+    [20, "0 bodova", "text-muted"],
   ])("napredak %i: %s u boji %s", async (p, shown, tone) => {
     const g = game({
       current: { month: "jul", status: "open", unanswered: 1 },

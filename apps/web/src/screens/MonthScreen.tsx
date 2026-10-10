@@ -6,19 +6,13 @@ import { useFeed, useGameUntilResolved } from "../api/queries";
 import type { GameBody, HotelBody, MonthCode, PublicHotelBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import { capitalize, formatSignedPoints, monthName, wholePoints } from "../format";
+import { capitalize, formatPointsCount, monthName, progressTone } from "../format";
 import { indexDeltas, indicesAt, indicesBefore, leaderboard, nextMonth, progressAt } from "../game";
 import { Link } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
 import { Explanation } from "./month/Explanation";
 import { Leaderboard } from "./month/Leaderboard";
-
-/** Boja velikog broja napretka po predznaku prikazanog (cijelog) broja. */
-function progressTone(hundredths: number): string {
-  const n = wholePoints(hundredths);
-  return n > 0 ? "text-up" : n < 0 ? "text-down" : "text-muted";
-}
 
 /** Dio ekrana poslije obračuna. Montira se tek kad je moj mjesec obračunat, pa dnevnik i sat za mentora kreću tek tada. */
 function MonthResult({
@@ -53,8 +47,8 @@ function MonthResult({
         {t("month.title", { month: capitalize(monthName(month)) })}
       </h1>
       <Card className="bg-accent-soft py-6 text-center">
-        <p className={`text-6xl font-extrabold tabular-nums ${progressTone(progress)}`}>
-          {formatSignedPoints(progress)}
+        <p className={`whitespace-nowrap text-5xl font-extrabold tabular-nums ${progressTone(progress)}`}>
+          {formatPointsCount(progress)}
         </p>
         <p className="mt-1">{t("month.progress")}</p>
       </Card>
@@ -114,7 +108,7 @@ export function MonthScreen({ me, month }: { me: HotelBody; month: MonthCode }) 
   const name = monthName(month);
 
   if (game.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (game.isError) return <ErrorText>{problemMessage(game.error)}</ErrorText>;
+  if (game.isError && !game.data) return <ErrorText>{problemMessage(game.error)}</ErrorText>;
   const g = game.data;
   const mine = g.hotels.find((h) => h.hotel_id === hotelId);
   const progress = mine ? progressAt(mine, month) : null;

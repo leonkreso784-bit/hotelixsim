@@ -20,7 +20,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
     </Link>
   );
   if (sits.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (sits.isError) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
+  if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
   const s = sits.data.items.find((i) => i.code === code);
   if (!s)
     return (

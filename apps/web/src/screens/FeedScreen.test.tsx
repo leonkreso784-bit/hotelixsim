@@ -141,7 +141,7 @@ describe("Tijek, ključevi", () => {
   it("bez upozorenja Reacta o istim ključevima", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
     renderApp(standardApi().on("GET", "/v1/hotels/:hotel/feed", { items: sameSeq }), "/tijek");
-    expect(await screen.findByText("Agencija: bez odgovora (ocjena 1).")).toBeTruthy();
+    expect(await screen.findByText("Agencija: bez odgovora (ocjena 1/5).")).toBeTruthy();
     const dup = err.mock.calls.filter((c) => c.some((a) => String(a).includes("same key")));
     err.mockRestore();
     expect(dup).toEqual([]);

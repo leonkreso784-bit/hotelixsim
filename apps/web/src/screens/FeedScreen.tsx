@@ -69,7 +69,7 @@ function sentence(i: Plain): string {
 export function FeedScreen({ me }: { me: HotelBody }) {
   const feed = useFeed(me.hotel.hotel_id);
   if (feed.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (feed.isError) return <ErrorText>{problemMessage(feed.error)}</ErrorText>;
+  if (feed.isError && !feed.data) return <ErrorText>{problemMessage(feed.error)}</ErrorText>;
   const entries = feedEntries(feed.data);
   const groups: { month: MonthCode | null; entries: FeedEntry[] }[] = [];
   for (const e of entries) {

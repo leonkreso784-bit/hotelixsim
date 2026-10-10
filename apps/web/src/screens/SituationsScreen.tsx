@@ -19,7 +19,7 @@ export function situationStatus(s: SituationBody): { text: string; tone: "accent
 export function SituationsScreen({ me }: { me: HotelBody }) {
   const sits = useSituations(me.hotel.hotel_id);
   if (sits.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (sits.isError) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
+  if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
   return (
     <>
       <h1 className="text-3xl font-extrabold tracking-tight">{t("situations.title")}</h1>

@@ -22,7 +22,7 @@ describe("plan mjeseca", () => {
     const more = screen.getByText("Više postavki").closest("details") as HTMLDetailsElement;
     expect(more.open).toBe(false);
     expect(screen.getByLabelText("Marketing (€)")).toBeTruthy();
-    expect(screen.getByLabelText("Plaće (% od tržišne)")).toBeTruthy();
+    expect(screen.getByLabelText("Plaće (% uobičajene plaće)")).toBeTruthy();
     expect(screen.getByRole("radio", { name: "puna" })).toBeTruthy();
     expect(screen.getByLabelText("Obnova (jednom u sezoni)")).toBeTruthy();
     expect(screen.getByLabelText("Odgovaramo na recenzije")).toBeTruthy();
