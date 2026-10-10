@@ -46,7 +46,9 @@ bez preračuna; (2) demo ima **dva mjeseca**, oznaka „1/2"; (3) AI obrazložen
 s ✓/✗ i razlogom; (4) plan mjeseca pokazuje **svih osam postavki**, cijenu, sezonce i održavanje na vrhu, ostalo pod
 „Više postavki". Zatim Leon: *„trebat cemo napravit razlicite likove u igrici izgledno i to na nacin da cemo kasnije moci
 ih customizat isto kao sto bit life ima"* → anketa (5): **temelj sad, uređivač poslije demoa** — likovi se crtaju iz
-slojeva, izgled je podatak.
+slojeva, izgled je podatak. Zatim *„trebat ce prosirit likove"* → anketa (6): više izgleda (nove osobine i opcije),
+više likova u igri (svako lice u ekranima) i uređivač lika; „dio odmah". Claude: prije demoa izgled i likovi (Task 11–12
+plana), uređivač kao zaseban plan odmah poslije, jer izgled mora na poslužitelj (ADR-022 t. 6).
 **Posljedice.** DIZAJN.md §3 zatvoren; DEMO §1.1 kaže dva mjeseca.
 
 ---
