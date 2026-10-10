@@ -5,6 +5,7 @@ pub mod actor;
 mod ai_input;
 pub mod command;
 pub mod dto;
+pub mod dto_v2;
 pub mod error;
 pub mod event;
 pub mod feed;
@@ -12,6 +13,7 @@ mod game;
 pub mod ids;
 pub mod kpi;
 mod mentor;
+mod model;
 mod resolve;
 mod round;
 pub mod talk;
@@ -30,6 +32,7 @@ pub use mentor::{
     ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact, SituationFact,
     debrief_facts, fallback_debrief,
 };
+pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;
 pub use round::{MAX_WEEK, RoundKey};
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};

@@ -1,0 +1,43 @@
+mod common;
+
+use content::{Snapshot, repo_dir};
+use game::*;
+use sim_hotel::Month;
+
+/// v2 u degeneriranom katalogu (mjesečno, kao v1) daje iste obračune kao v1 za istu igru (MODEL_V2 §2 t. 6).
+#[test]
+fn v2_monthly_degenerate_game_matches_v1_game() {
+    let v1 = Snapshot::read(&repo_dir()).unwrap();
+    let v2 = v1.degenerate_v2();
+    let play = |snap: &Snapshot| {
+        let mut g = Game::fold(&common::new_game_events(snap)).unwrap();
+        let h = common::hotel_ids()[0];
+        let me = Actor::Guest(common::GUEST);
+        let ev = g.choose_answer(h, "S1", 0).unwrap();
+        common::apply_ev(&mut g, me.clone(), ev);
+        let ev = g.choose_answer(h, "S3", 1).unwrap();
+        common::apply_ev(&mut g, me.clone(), ev);
+        for m in [Month::Jun, Month::Jul] {
+            let ev = g.close_round(m).unwrap().unwrap();
+            common::apply_ev(&mut g, me.clone(), ev);
+            let ResolveStep::Done(evs) = g.resolve_job(m, false).unwrap() else {
+                panic!()
+            };
+            for (a, e) in evs {
+                common::apply_ev(&mut g, a, e);
+            }
+        }
+        g
+    };
+    let (a, b) = (play(&v1), play(&v2));
+    assert_eq!(b.model(), Model::V2);
+    for m in [Month::Jun, Month::Jul] {
+        let (ra, rb) = (&a.resolved[&m.into()], &b.resolved[&m.into()]);
+        for (ha, hb) in ra.hotels.iter().zip(&rb.hotels) {
+            assert_eq!(ha.plan, hb.plan, "{m:?}");
+            assert_eq!(ha.report, hb.report, "{m:?}");
+            assert_eq!(ha.indices, hb.indices, "{m:?}");
+            assert_eq!(ha.progress_hundredths, hb.progress_hundredths, "{m:?}");
+        }
+    }
+}

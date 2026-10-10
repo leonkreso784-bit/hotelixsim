@@ -3,7 +3,6 @@
 use game::RoundKey;
 use game::dto::PlanDto;
 use game::{Actor, GameId, HotelId};
-use sim_hotel::MonthPlan;
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{RESOLVE_KIND, ResolvePayload, resolve_key};
@@ -22,13 +21,14 @@ pub async fn set_plan(
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
     let m = month;
-    let core = MonthPlan::from(&plan);
+    let body = plan.clone();
     deps.log
         .decide(
             game_id,
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 require_owner(&g, guest, hotel)?;
+                let core = g.plan_from_dto(hotel, m, &body)?;
                 let ev = g.set_plan(hotel, m, core)?;
                 Ok(Decision {
                     events: vec![new_event(&Actor::Guest(guest), &ev)],

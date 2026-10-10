@@ -1,5 +1,6 @@
 use game::GameError;
 use sim_hotel::PlanError;
+use sim_hotel_v2::PlanError as PlanErrorV2;
 
 use crate::ports::{DecideError, StoreError};
 
@@ -27,6 +28,9 @@ pub enum ErrorCode {
     SeasonalStepTooBig,
     WageOutOfRange,
     RenovationTwice,
+    GameOutdated,
+    InvalidSettings,
+    WrongModel,
     StorageUnavailable,
     Internal,
 }
@@ -43,7 +47,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 24] = [
+    pub const ALL: [ErrorCode; 27] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -66,6 +70,9 @@ impl ErrorCode {
         ErrorCode::SeasonalStepTooBig,
         ErrorCode::WageOutOfRange,
         ErrorCode::RenovationTwice,
+        ErrorCode::GameOutdated,
+        ErrorCode::InvalidSettings,
+        ErrorCode::WrongModel,
         ErrorCode::StorageUnavailable,
         ErrorCode::Internal,
     ];
@@ -78,10 +85,11 @@ impl ErrorCode {
             UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile => {
                 ErrorKind::NotFound
             }
-            RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply => ErrorKind::Conflict,
+            RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply | GameOutdated
+            | WrongModel => ErrorKind::Conflict,
             UnknownAnswer | NotFreeText | BadText | PriceNotWholeEuro | PriceOutOfRange
             | MarketingOutOfRange | SeasonalOutOfRange | SeasonalStepTooBig | WageOutOfRange
-            | RenovationTwice => ErrorKind::Invalid,
+            | RenovationTwice | InvalidSettings => ErrorKind::Invalid,
             StorageUnavailable => ErrorKind::Unavailable,
             Internal => ErrorKind::Internal,
         }
@@ -113,6 +121,9 @@ impl ErrorCode {
             SeasonalStepTooBig => "seasonal_step_too_big",
             WageOutOfRange => "wage_out_of_range",
             RenovationTwice => "renovation_twice",
+            GameOutdated => "game_outdated",
+            InvalidSettings => "invalid_settings",
+            WrongModel => "model_v1",
             StorageUnavailable => "storage_unavailable",
             Internal => "internal",
         }
@@ -167,6 +178,20 @@ impl From<GameError> for AppError {
                 PlanError::RenovationTwice => C::RenovationTwice,
                 PlanError::Calc => C::Internal,
             },
+            // Iste šifre kao v1: student vidi istu poruku bez obzira na model igre.
+            GameError::PlanV2(p) => match p {
+                PlanErrorV2::PriceNotWholeEuro => C::PriceNotWholeEuro,
+                PlanErrorV2::PriceOutOfRange => C::PriceOutOfRange,
+                PlanErrorV2::MarketingOutOfRange => C::MarketingOutOfRange,
+                PlanErrorV2::SeasonalOutOfRange => C::SeasonalOutOfRange,
+                PlanErrorV2::SeasonalStepTooBig => C::SeasonalStepTooBig,
+                PlanErrorV2::WageOutOfRange => C::WageOutOfRange,
+                PlanErrorV2::RenovationTwice => C::RenovationTwice,
+                PlanErrorV2::Calc => C::Internal,
+            },
+            GameError::Outdated { .. } => C::GameOutdated,
+            GameError::InvalidSettings => C::InvalidSettings,
+            GameError::WrongModel => C::WrongModel,
             GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };
         AppError {

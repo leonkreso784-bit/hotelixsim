@@ -96,15 +96,10 @@ pub struct DebriefInput {
 impl Game {
     pub fn assess_input(&self, hotel: HotelId, code: &str) -> Result<AssessInput, GameError> {
         let h = self.hotel(hotel)?;
-        let m = self.situation_month(code)?;
+        let (m, t) = self.situation_round(code)?;
         let fr = h
             .responses
             .get(&(m, code.to_owned()))
-            .ok_or(GameError::UnknownSituation)?;
-        let t = self
-            .situations_in(m)
-            .into_iter()
-            .find(|t| t.code == code)
             .ok_or(GameError::UnknownSituation)?;
         let ai = self.content.ai.get(code).ok_or(GameError::NotFreeText)?;
         let offered = t
@@ -133,12 +128,7 @@ impl Game {
     }
 
     pub fn character_input(&self, hotel: HotelId, code: &str) -> Result<CharacterInput, GameError> {
-        let m = self.situation_month(code)?;
-        let t = self
-            .situations_in(m)
-            .into_iter()
-            .find(|t| t.code == code)
-            .ok_or(GameError::UnknownSituation)?;
+        let (_, t) = self.situation_round(code)?;
         let c = self
             .content
             .ai
@@ -225,14 +215,10 @@ impl Game {
                 chosen_label,
             });
         }
-        let state = self.state_at(hotel, m)?;
-        let price_ref_cents = self
-            .content
-            .catalog
-            .category(state.category)
-            .map_err(|e| corrupt(format!("{e:?}")))?
-            .price_ref_cents
-            .get(m.require_month()?);
+        let category = self.state_at(hotel, m)?.category();
+        let price_ref_cents =
+            self.model()
+                .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
         Ok(DebriefInput {
             round: m,

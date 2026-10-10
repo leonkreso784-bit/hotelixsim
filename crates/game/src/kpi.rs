@@ -15,8 +15,13 @@ pub struct KpiMonth {
     pub kpi: MonthKpi,
 }
 
-/// Iste brojke kao `KpiInput::from_report`, samo iz oblika spremljenog u dnevniku.
+/// Iste brojke kao `KpiInput::from_report`, samo iz oblika spremljenog u dnevniku (mjesečni krug).
 pub fn report_kpi(r: &MonthReportDto, cat: &Catalog) -> Result<MonthKpi, GameError> {
+    round_kpi(r, Month::from(r.month).days(), cat)
+}
+
+/// Pokazatelji kruga od `days` dana (tjedan ili mjesec; `RoundInfo::period.days`).
+pub fn round_kpi(r: &MonthReportDto, days: u8, cat: &Catalog) -> Result<MonthKpi, GameError> {
     let category = Category::from_code(&r.before.category)
         .ok_or_else(|| corrupt(format!("kategorija {}", r.before.category)))?;
     let spec = cat
@@ -24,7 +29,7 @@ pub fn report_kpi(r: &MonthReportDto, cat: &Catalog) -> Result<MonthKpi, GameErr
         .map_err(|e| corrupt(format!("{e:?}")))?;
     let input = KpiInput {
         rooms: r.before.rooms,
-        days: Month::from(r.month).days(),
+        days,
         available: r.market.available,
         sold: r.market.sold,
         rooms_revenue_cents: r.money.rooms_revenue_cents,
@@ -53,7 +58,11 @@ impl Game {
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             out.push(KpiMonth {
                 round: rr.month,
-                kpi: report_kpi(&res.report, &self.content.catalog)?,
+                kpi: round_kpi(
+                    &res.report,
+                    self.round_info(rr.month)?.period.days,
+                    &self.content.catalog,
+                )?,
             });
         }
         Ok(out)

@@ -1,22 +1,25 @@
 use engine::{Rng, label};
-use sim_hotel::{Catalog, HotelState, Month, MonthPlan, Profile, euro_bounds, seasonal_range};
+use sim_hotel::{Catalog, HotelState, Month, Profile, euro_bounds, seasonal_range};
+use sim_hotel_v2::PeriodKind;
 
 use crate::actor::{Actor, strategy_from_code};
 use crate::error::{GameError, corrupt};
 use crate::event::*;
 use crate::game::{Game, RoundStatus};
 use crate::ids::{GameId, GuestId, HotelId};
+use crate::model::{CorePlan, Model};
 use crate::round::RoundKey;
 
-const MONTHS: [Month; 2] = [Month::Jun, Month::Jul];
 const ROBOTS: [(&str, &str); 3] = [
     ("stedisa", "Štediša"),
     ("brizni", "Brižni"),
     ("lovac", "Lovac na popunjenost"),
 ];
 
-fn pos(r: RoundKey) -> Result<u64, GameError> {
-    u64::try_from(r.require_month()?.position()).map_err(|_| corrupt("mjesec"))
+/// Postavke nove igre: vrsta kruga (tjedan ili mjesec).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GameSettings {
+    pub kind: PeriodKind,
 }
 
 fn profile_at(n: u64) -> Profile {
@@ -27,7 +30,7 @@ fn profile_at(n: u64) -> Profile {
     }
 }
 
-/// Događaji nove igre: `GameCreated` pa potezi robota za lipanj (redni brojevi od 1 dodjeljuje pozivatelj).
+/// Događaji nove igre (mjesečni krugovi): `GameCreated` pa potezi robota za prvi krug.
 pub fn new_game(
     game_id: GameId,
     seed: u64,
@@ -35,6 +38,33 @@ pub fn new_game(
     guest: GuestId,
     hotel_ids: [HotelId; 4],
 ) -> Result<Vec<(Actor, GameEvent)>, GameError> {
+    new_game_with(
+        game_id,
+        seed,
+        snapshot,
+        guest,
+        hotel_ids,
+        GameSettings {
+            kind: PeriodKind::Month,
+        },
+    )
+}
+
+/// v1: snimak `model = v1` i `kind = Month` → lipanj i srpanj (kao danas); v2: cijela sezona (🟨 P6).
+/// Redne brojeve od 1 dodjeljuje pozivatelj.
+pub fn new_game_with(
+    game_id: GameId,
+    seed: u64,
+    snapshot: &content::Snapshot,
+    guest: GuestId,
+    hotel_ids: [HotelId; 4],
+    settings: GameSettings,
+) -> Result<Vec<(Actor, GameEvent)>, GameError> {
+    let content = snapshot
+        .build()
+        .map_err(|e| corrupt(format!("snimak: {e:?}")))?;
+    let model = Model::of(&content, snapshot.model());
+    let (months, rounds) = model.new_rounds(settings.kind)?;
     let profile = profile_at(Rng::derive(seed, &[label("game:profile")]).range(0, 3));
     let rot = Rng::derive(seed, &[label("game:robot-profiles")]).range(0, 3);
     let [h1, h2, h3, h4] = hotel_ids;
@@ -57,14 +87,16 @@ pub fn new_game(
         });
     }
     let value = snapshot.to_value();
+    let first_round = *months.first().ok_or_else(|| corrupt("igra bez krugova"))?;
     let created = GameCreated {
         game_id,
         seed,
         ruleset_id: content::fingerprint_value(&value),
-        core_version: sim_hotel::CORE_VERSION.into(),
+        core_version: model.core_version().into(),
         snapshot: Box::new(value),
-        months: MONTHS.iter().map(|&m| m.into()).collect(),
+        months,
         hotels,
+        rounds,
     };
     let first = Recorded {
         seq: 1,
@@ -73,18 +105,20 @@ pub fn new_game(
     };
     let game = Game::fold(std::slice::from_ref(&first))?;
     let mut out = vec![(first.actor, first.event)];
-    out.extend(game.robot_moves(Month::Jun)?);
+    out.extend(game.robot_moves(first_round)?);
     Ok(out)
 }
 
 impl Game {
-    /// Roboti igraju istim naredbama kao čovjek (DEMO §1.3): PlanSet i AnswerChosen za mjesec koji se upravo otvara.
+    /// Roboti igraju istim naredbama kao čovjek (DEMO §1.3): PlanSet i AnswerChosen za krug koji se upravo otvara.
+    /// Tokovi kocke: `[pozicija kruga, slot]` (u v1 pozicija kruga = pozicija mjeseca, pa su nizovi isti).
     pub fn robot_moves(
         &self,
         r: impl Into<RoundKey>,
     ) -> Result<Vec<(Actor, GameEvent)>, GameError> {
         let r = r.into();
-        let m = r.require_month()?;
+        let info = self.round_info(r)?;
+        let pos = u64::try_from(self.position(r)?).map_err(|_| corrupt("pozicija kruga"))?;
         let cat = &self.content.catalog;
         let mut out = Vec::new();
         for h in &self.hotels {
@@ -96,27 +130,27 @@ impl Game {
             let id = h.setup.hotel_id;
             let state = self.state_at(id, r)?;
             let slot = u64::from(h.setup.slot);
-            let mut rng = Rng::derive(self.seed, &[label("game:robot-plan"), pos(r)?, slot]);
-            let plan = st
-                .plan(&state, m, cat, &mut rng)
-                .map_err(|e| corrupt(format!("{e:?}")))?;
-            plan.validate(&state, m, cat)
+            let mut rng = Rng::derive(self.seed, &[label("game:robot-plan"), pos, slot]);
+            let model = self.model();
+            let plan = model.robot_plan(st, &state, &info, &self.content, &mut rng)?;
+            model
+                .validate_plan(&plan, &state, &info, &self.content)
                 .map_err(|e| corrupt(format!("robot {strategy}: {e:?}")))?;
             out.push((
                 Actor::Robot(st),
                 GameEvent::PlanSet(PlanSet {
                     hotel_id: id,
                     month: r,
-                    plan: (&plan).into(),
+                    plan: plan.to_dto(),
                 }),
             ));
             for t in self.situations_in(r) {
                 let mut rng = Rng::derive(
                     self.seed,
-                    &[label("game:robot-answer"), pos(r)?, slot, label(&t.code)],
+                    &[label("game:robot-answer"), pos, slot, label(&t.code)],
                 );
                 let i = st
-                    .choose(&t.answers, cat, state.category, &mut rng)
+                    .choose(&t.answers, cat, state.category(), &mut rng)
                     .map_err(|e| corrupt(format!("{e:?}")))?;
                 let answer = u8::try_from(i).map_err(|_| corrupt("indeks odgovora"))?;
                 out.push((
@@ -137,19 +171,21 @@ impl Game {
         &self,
         hotel: HotelId,
         m: impl Into<RoundKey>,
-        plan: MonthPlan,
+        plan: impl Into<CorePlan>,
     ) -> Result<GameEvent, GameError> {
         let m = m.into();
+        let plan = plan.into();
         if self.status(m)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
         let state = self.state_at(hotel, m)?;
-        plan.validate(&state, m.require_month()?, &self.content.catalog)
-            .map_err(GameError::Plan)?;
+        let info = self.round_info(m)?;
+        self.model()
+            .validate_plan(&plan, &state, &info, &self.content)?;
         Ok(GameEvent::PlanSet(PlanSet {
             hotel_id: hotel,
             month: m,
-            plan: (&plan).into(),
+            plan: plan.to_dto(),
         }))
     }
 
@@ -160,13 +196,7 @@ impl Game {
         answer: u8,
     ) -> Result<GameEvent, GameError> {
         let h = self.hotel(hotel)?;
-        let t = self
-            .content
-            .situations
-            .iter()
-            .find(|t| t.code == code && self.rounds.contains(&t.month.into()))
-            .ok_or(GameError::UnknownSituation)?;
-        let round = RoundKey::from(t.month);
+        let (round, t) = self.situation_round(code)?;
         if self.status(round)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }

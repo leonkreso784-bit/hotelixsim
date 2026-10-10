@@ -73,9 +73,12 @@ fn statuses_follow_the_calendar() {
 fn untouched_plan_is_default_and_last_plan_wins() {
     let mut log = created(42);
     let g = Game::fold(&log).unwrap();
-    let s = g.state_at(me(), Month::Jun).unwrap();
+    let s = g.state_at(me(), Month::Jun).unwrap().summary();
     let default = MonthPlan::default_for(&s, Month::Jun, &g.content.catalog).unwrap();
-    assert_eq!(g.effective_plan(me(), Month::Jun).unwrap(), default);
+    assert_eq!(
+        g.effective_plan(me(), Month::Jun).unwrap(),
+        CorePlan::V1(default.clone())
+    );
     let mut p1 = default.clone();
     p1.marketing_cents = 500_000;
     let ev = g.set_plan(me(), Month::Jun, p1.clone()).unwrap();
@@ -93,14 +96,16 @@ fn untouched_plan_is_default_and_last_plan_wins() {
             .unwrap()
             .effective_plan(me(), Month::Jun)
             .unwrap(),
-        p2
+        CorePlan::V1(p2)
     );
 }
 
 #[test]
 fn invalid_plan_is_rejected_with_plan_error() {
     let g = Game::fold(&created(42)).unwrap();
-    let mut p = g.effective_plan(me(), Month::Jun).unwrap();
+    let CorePlan::V1(mut p) = g.effective_plan(me(), Month::Jun).unwrap() else {
+        panic!("v1 plan")
+    };
     p.price_cents += 50;
     assert_eq!(
         g.set_plan(me(), Month::Jun, p),
@@ -193,7 +198,7 @@ fn fold_rejects_broken_logs() {
 #[test]
 fn plan_limits_are_exactly_the_validation_bounds() {
     let g = Game::fold(&created(42)).unwrap();
-    let s = g.state_at(me(), Month::Jun).unwrap();
+    let s = g.state_at(me(), Month::Jun).unwrap().summary();
     let cat = &g.content.catalog;
     let l = plan_limits(&s, Month::Jun, cat).unwrap();
     let base = MonthPlan::default_for(&s, Month::Jun, cat).unwrap();

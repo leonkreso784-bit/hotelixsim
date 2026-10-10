@@ -1,7 +1,7 @@
-use sim_hotel::{SituationOutcome, month_indices, progress_pts, resolve_month};
+use sim_hotel::{SituationOutcome, progress_pts};
 
 use crate::actor::Actor;
-use crate::dto::{MonthReportDto, indices_dto};
+use crate::dto::indices_dto;
 use crate::error::{GameError, corrupt};
 use crate::event::{GameEvent, HotelResolution, Recorded, RoundResolved, SituationResult};
 use crate::game::{Game, RoundStatus};
@@ -23,7 +23,8 @@ impl Game {
         if self.status(m)? != RoundStatus::Closing {
             return Err(corrupt("obračun runde koja nije zatvorena"));
         }
-        let cat = &self.content.catalog;
+        let info = self.round_info(m)?;
+        let model = self.model();
         let err = |e: &dyn std::fmt::Debug| corrupt(format!("{e:?}"));
         let mut hotels = Vec::with_capacity(self.hotels.len());
         for h in &self.hotels {
@@ -85,18 +86,17 @@ impl Game {
                     outcomes.push(o);
                 }
             }
-            let report = resolve_month(&state, m.require_month()?, &plan, &outcomes, cat)
-                .map_err(|e| err(&e))?;
-            let idx =
-                month_indices(&report, cat, self.refs(state.category)?).map_err(|e| err(&e))?;
-            let progress = progress_pts(&h.start_indices, &idx).map_err(|e| err(&e))?;
+            let refs = self.refs(state.category())?;
+            let res = model.resolve(&state, &info, &plan, &outcomes, &self.content, refs)?;
+            let progress = progress_pts(&h.start_indices, &res.indices).map_err(|e| err(&e))?;
             hotels.push(HotelResolution {
                 hotel_id: id,
-                plan: (&plan).into(),
+                plan: plan.to_dto(),
                 situations: results,
-                report: MonthReportDto::from(&report),
-                indices: indices_dto(&idx),
+                report: res.report,
+                indices: indices_dto(&res.indices),
                 progress_hundredths: progress,
+                detail: res.detail,
             });
         }
         Ok(RoundResolved { month: m, hotels })
@@ -113,11 +113,11 @@ impl Game {
         match self.status(m)? {
             RoundStatus::Resolved => Ok(ResolveStep::Done(Vec::new())),
             RoundStatus::Closing => {
-                if self.core_version != sim_hotel::CORE_VERSION {
+                let current = self.model().core_version();
+                if self.core_version != current {
                     return Err(GameError::CoreMismatch(format!(
                         "igra je stvorena jezgrom {}, a radi {}",
-                        self.core_version,
-                        sim_hotel::CORE_VERSION
+                        self.core_version, current
                     )));
                 }
                 let pending = self.pending_verdicts(m);

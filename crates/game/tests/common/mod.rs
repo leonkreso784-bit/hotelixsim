@@ -195,7 +195,9 @@ pub fn july_resolved_bad_chef_game() -> (Game, HotelId) {
     let ev = g.choose_answer(h, "S3", 1).unwrap();
     apply_ev(&mut g, Actor::Guest(GUEST), ev);
     resolve_month_now(&mut g, Month::Jun);
-    let mut plan = g.effective_plan(h, Month::Jul).unwrap();
+    let CorePlan::V1(mut plan) = g.effective_plan(h, Month::Jul).unwrap() else {
+        panic!("v1 plan")
+    };
     plan.wage_pct = 95;
     plan.maintenance = Maintenance::Deferred;
     let ev = g.set_plan(h, Month::Jul, plan).unwrap();

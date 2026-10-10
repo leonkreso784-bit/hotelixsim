@@ -135,7 +135,7 @@ fn openapi_documents_contract() {
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
-    assert_eq!(codes.len(), 26);
+    assert_eq!(codes.len(), 29);
     let schemas = &doc["components"]["schemas"];
     assert!(schemas["FeedItemBody"]["oneOf"].is_array());
     assert_eq!(
