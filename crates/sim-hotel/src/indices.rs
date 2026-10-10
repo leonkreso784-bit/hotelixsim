@@ -4,7 +4,8 @@
 use engine::calc::{self as c, Calc, CalcError};
 
 use crate::catalog::{Catalog, Category};
-use crate::index::IndexSet;
+use crate::explain::Var;
+use crate::index::{Index, IndexSet};
 use crate::month::{Month, MonthTable};
 use crate::plan::MonthPlan;
 use crate::resolve::{MonthReport, ResolveError, resolve_month, w};
@@ -38,6 +39,19 @@ pub fn base_labor_cents(s: &HotelState, cat: &Catalog) -> Result<i64, ResolveErr
     let unit = c::div_floor(w(spec.wage_cents), 100)?;
     let wage = c::mul(c::mul(w(s.staff()), unit)?, w(s.wage_pct))?;
     Ok(c::narrow(c::add(wage, w(s.extra_wage_cents))?)?)
+}
+
+/// Koje varijable iz objašnjenja mjeseca (`explain::Var`) ulaze u koji indeks u `raw_indices`, da mentor
+/// zna što je pokrenulo indeks. Opterećenje osoblja nije varijabla nego posljedica prodaje i broja ljudi;
+/// `Staff` stoji uz Z jer odlasci (`turnover_bp`) ulaze u zadržavanje. Test drži popis uz formulu.
+pub fn index_drivers(i: Index) -> &'static [Var] {
+    match i {
+        Index::Guests => &[Var::Satisfaction],
+        Index::Reviews => &[Var::Rating],
+        Index::Staff => &[Var::Morale, Var::Staff],
+        Index::Operations => &[Var::Equipment, Var::Experience],
+        Index::Finance => &[Var::Sold, Var::Revenue, Var::Costs, Var::Cash],
+    }
 }
 
 pub fn raw_indices(

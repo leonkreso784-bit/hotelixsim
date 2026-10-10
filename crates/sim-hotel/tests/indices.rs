@@ -147,3 +147,69 @@ fn liquidity_has_no_upper_bound_in_raw_f() {
     let raw = raw_indices(&s, 4_163, 11_000_000, 4_163, &cat).unwrap();
     assert_eq!(raw.f, 23_065); // likvidnost 65 217, ADR-014
 }
+
+fn raw_of(r: &RawIndices, i: Index) -> i32 {
+    match i {
+        Index::Guests => r.g,
+        Index::Reviews => r.r,
+        Index::Staff => r.z,
+        Index::Operations => r.o,
+        Index::Finance => r.f,
+    }
+}
+
+/// Čuvar `index_drivers`: pomak svake varijable mijenja točno one indekse kojima je upisana kao pokretač.
+#[test]
+fn index_drivers_match_raw_formula() {
+    let cat = test_catalog();
+    let base = state_c();
+    let (goppar, labor) = (4_163, 11_000_000);
+    let start = raw_indices(&base, goppar, labor, goppar, &cat).unwrap();
+    let all = [
+        Var::Sold,
+        Var::Revenue,
+        Var::Costs,
+        Var::Cash,
+        Var::Staff,
+        Var::Morale,
+        Var::Experience,
+        Var::Equipment,
+        Var::Satisfaction,
+        Var::Rating,
+    ];
+    for v in all {
+        let mut s = base.clone();
+        let (mut g, mut l) = (goppar, labor);
+        match v {
+            // Prodaja, prihod i troškovi ulaze kroz GOPPAR; troškovi i kroz plaće u likvidnosti.
+            Var::Sold | Var::Revenue => g += 500,
+            Var::Costs => {
+                g -= 500;
+                l += 1_000_000;
+            }
+            Var::Cash => s.cash_cents += 1_000_000,
+            Var::Staff => s.turnover_bp += 400,
+            Var::Morale => s.morale_pts += 500,
+            Var::Experience => s.experience_pts += 500,
+            Var::Equipment => s.equipment_pts += 500,
+            Var::Satisfaction => s.satisfaction_pts += 500,
+            Var::Rating => s.rating += 20,
+        }
+        let moved = raw_indices(&s, g, l, goppar, &cat).unwrap();
+        for i in Index::ALL {
+            let changed = raw_of(&moved, i) != raw_of(&start, i);
+            assert_eq!(
+                changed,
+                index_drivers(i).contains(&v),
+                "{v:?} → {i:?}: formula i index_drivers se ne slažu"
+            );
+        }
+    }
+    // Svaka varijabla pokreće barem jedan indeks.
+    for v in all {
+        assert!(
+            Index::ALL.iter().any(|&i| index_drivers(i).contains(&v)),
+            "{v:?}"
+        );
+    }
+}
