@@ -83,6 +83,8 @@ describe("Tijek", () => {
     expect(screen.getByRole("heading", { name: "Lipanj" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Početak" })).toBeTruthy();
     expect(screen.getByText("Mentor: Usluga je bolja.")).toBeTruthy();
+    const mentorRow = screen.getByText("Mentor: Usluga je bolja.").closest("li") as HTMLElement;
+    expect(mentorRow.querySelector("svg[aria-hidden='true']")).not.toBeNull();
     expect(screen.getByText("Lipanj je obračunat: napredak +8 bodova.")).toBeTruthy();
     expect(screen.getByText("Klima: AI ocjena 4/5.")).toBeTruthy();
     expect(screen.getByText("Agencija: izabrano „Prihvatiti uz 15 % popusta i depozit“.")).toBeTruthy();

@@ -71,6 +71,12 @@ describe("izgled lika", () => {
     expect(lookFor("Marko Babić").hat).toBe("chef");
     expect(lookFor("Netko Novi")).toEqual(lookFromSeed("Netko Novi"));
   });
+  it("roboti-upravitelji imaju lik pod imenom hotela iz igre", () => {
+    expect(lookFor("Štediša")).toEqual(KNOWN_LOOKS.Štediša);
+    expect(lookFor("Štediša").glasses).toBe("square");
+    expect(lookFor("Brižni").earrings).toBe("hoops");
+    expect(lookFor("Lovac na popunjenost").hat).toBe("cap");
+  });
   it("igrač, mentor i poznati likovi su valjani", () => {
     for (const l of [PLAYER_LOOK, MENTOR_LOOK, ...Object.values(KNOWN_LOOKS)])
       expect(isValidLook(l)).toBe(true);

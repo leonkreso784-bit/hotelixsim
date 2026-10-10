@@ -13,6 +13,8 @@ import { type ReactNode, useRef } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSituations, useStartDemo } from "../api/queries";
 import type { HotelBody } from "../api/types";
+import { Avatar } from "../avatar/Avatar";
+import { PLAYER_LOOK } from "../avatar/look";
 import { formatEuros, formatOccupancy, formatRating, monthName } from "../format";
 import { indexDeltas, latestIndices } from "../game";
 import { Link } from "../router";
@@ -92,9 +94,13 @@ export function HotelScreen({ me }: { me: HotelBody }) {
 
   return (
     <>
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">{t("hotel.title")}</h1>
-        <p className="text-muted">{t("hotel.rooms", { rooms: priv.now.rooms })}</p>
+      <div className="flex items-center gap-3">
+        <Avatar look={PLAYER_LOOK} size={48} />
+        <div className="min-w-0">
+          <h1 className="text-3xl font-extrabold tracking-tight">{t("hotel.title")}</h1>
+          <p className="text-muted">{t("hotel.you")}</p>
+          <p className="text-muted">{t("hotel.rooms", { rooms: priv.now.rooms })}</p>
+        </div>
       </div>
 
       <Card>

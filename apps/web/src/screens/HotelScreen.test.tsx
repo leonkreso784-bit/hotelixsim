@@ -22,6 +22,10 @@ describe("Moj hotel", () => {
     renderApp(standardApi());
     expect(await screen.findByRole("heading", { name: "Moj hotel" })).toBeTruthy();
     expect(screen.getByText("120 soba")).toBeTruthy();
+    expect(screen.getByText("Ti, upravitelj")).toBeTruthy();
+    const head = screen.getByRole("heading", { name: "Moj hotel" }).parentElement
+      ?.parentElement as HTMLElement;
+    expect(head.querySelector("svg[aria-hidden='true']:not(.lucide)")).not.toBeNull();
     expect(screen.getByText("50 = prosjek usporedivog hotela")).toBeTruthy();
     expect(screen.getAllByRole("img", { name: /od 100$/ })).toHaveLength(5);
     expect(screen.queryByText(/▲|▼/)).toBeNull();

@@ -99,6 +99,7 @@ export const hr = {
   "chip.position": "{month} · {n}/{total}",
   "chip.over": "SEZONA ZAVRŠENA",
   "hotel.title": "Moj hotel",
+  "hotel.you": "Ti, upravitelj",
   "hotel.rooms": "{rooms} soba",
   "hotel.fromStart": "od početka",
   "hotel.occupancy": "Popunjenost",

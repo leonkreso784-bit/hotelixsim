@@ -17,6 +17,9 @@ describe("popis situacija", () => {
     const link = screen.getByRole("link", { name: /Klima u sobi obitelji s djecom/ });
     expect(link.getAttribute("href")).toBe("/situacije/S1");
     expect(link.textContent).toContain("Razgovor s likom");
+    expect(link.querySelector("svg[aria-hidden='true']:not(.lucide)")).not.toBeNull();
+    const s3link = screen.getByRole("link", { name: /Agencija nudi/ });
+    expect(s3link.querySelector("svg:not(.lucide)")).toBeNull();
     expect(screen.getAllByText("Bez odgovora")).toHaveLength(2);
   });
 });

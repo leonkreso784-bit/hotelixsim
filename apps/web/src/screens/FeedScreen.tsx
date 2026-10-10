@@ -3,6 +3,8 @@ import { t } from "@hotelixsim/i18n";
 import { problemMessage } from "../api/errors";
 import { useFeed } from "../api/queries";
 import type { FeedItemBody, HotelBody, MonthCode } from "../api/types";
+import { Avatar } from "../avatar/Avatar";
+import { MENTOR_LOOK } from "../avatar/look";
 import {
   capitalize,
   causeLabel,
@@ -88,7 +90,12 @@ export function FeedScreen({ me }: { me: HotelBody }) {
           <Card className="divide-y divide-line py-1">
             <ol>
               {g.entries.map((e) =>
-                e.kind === "item" ? (
+                e.kind === "item" && e.item.kind === "mentor" ? (
+                  <li key={e.key} className="flex items-start gap-2 py-2">
+                    <Avatar look={MENTOR_LOOK} size={28} />
+                    <span className="min-w-0 flex-1 whitespace-pre-line">{sentence(e.item)}</span>
+                  </li>
+                ) : e.kind === "item" ? (
                   <li key={e.key} className="py-2 whitespace-pre-line">
                     {sentence(e.item)}
                   </li>

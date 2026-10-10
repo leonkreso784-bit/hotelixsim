@@ -105,6 +105,9 @@ describe("Mjesec završen", () => {
       expect.stringContaining("Lovac na popunjenost"),
     ]);
     expect(rows[0]?.getAttribute("aria-current")).toBe("true");
+    expect(board.querySelectorAll("svg")).toHaveLength(4);
+    expect(board.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(4);
+    expect(rows[2]?.querySelector('[data-part="glasses-square"]')).not.toBeNull();
     expect(screen.getByRole("link", { name: "Nastavi u srpanj" }).getAttribute("href")).toBe("/");
   });
 

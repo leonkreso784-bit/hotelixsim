@@ -3,6 +3,8 @@ import { ChevronRight, MessageCircle } from "lucide-react";
 import { problemMessage } from "../api/errors";
 import { useSituations } from "../api/queries";
 import type { HotelBody, SituationBody } from "../api/types";
+import { Avatar } from "../avatar/Avatar";
+import { lookFor } from "../avatar/look";
 import { Link } from "../router";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
 
@@ -30,6 +32,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
             <li key={s.code}>
               <Link to={`/situacije/${encodeURIComponent(s.code)}`} className="block">
                 <Card className="flex items-center gap-3">
+                  {s.character && <Avatar look={lookFor(s.character.name)} size={40} />}
                   <span className="min-w-0 flex-1 space-y-1">
                     <span className="block font-bold">{s.title}</span>
                     {s.character && (
