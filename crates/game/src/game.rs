@@ -2,17 +2,17 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
 use content::Content;
-use sim_hotel::{
-    Category, HotelState, IndexSet, MonthPlan, Profile, RefTable, SituationTemplate, start_indices,
-};
+use sim_hotel::{Category, IndexSet, Profile, SituationTemplate};
 
 use crate::actor::{Actor, strategy_from_code};
+use crate::dto::PlanDto;
 use crate::error::{GameError, corrupt};
 use crate::event::{
-    Controller, DebriefRecorded, GameCreated, GameEvent, HotelSetup, Recorded, RoundResolved,
-    VerdictRecorded,
+    Controller, DebriefRecorded, GameCreated, GameEvent, HotelResolution, HotelSetup, Recorded,
+    RoundResolved, VerdictRecorded,
 };
 use crate::ids::{GameId, HotelId};
+use crate::model::{CorePlan, CoreRefs, CoreState, Model, RoundInfo};
 use crate::round::RoundKey;
 use crate::talk::MAX_CHAT_MESSAGES;
 
@@ -56,9 +56,9 @@ pub(crate) fn student_count(lines: &[ChatLine]) -> usize {
 pub struct HotelRecord {
     pub setup: HotelSetup,
     pub profile: Profile,
-    pub start_state: HotelState,
+    pub start_state: CoreState,
     pub start_indices: IndexSet,
-    pub plans: BTreeMap<RoundKey, MonthPlan>,
+    pub plans: BTreeMap<RoundKey, CorePlan>,
     pub answers: BTreeMap<(RoundKey, String), u8>,
     pub chats: BTreeMap<(RoundKey, String), Vec<ChatLine>>,
     pub responses: BTreeMap<(RoundKey, String), FreeResponse>,
@@ -79,7 +79,10 @@ pub struct Game {
     pub resolved: BTreeMap<RoundKey, RoundResolved>,
     pub last_seq: i64,
     pub history: Vec<Recorded>,
-    refs: BTreeMap<Category, RefTable>,
+    model: Model,
+    /// Krugovi igre s kalendarom, redom `rounds`.
+    rounds_info: Vec<RoundInfo>,
+    refs: BTreeMap<Category, CoreRefs>,
 }
 
 impl Game {
@@ -111,6 +114,9 @@ impl Game {
         let content = snap
             .build()
             .map_err(|e| corrupt(format!("snimak: {e:?}")))?;
+        let model = Model::of(&content, snap.model());
+        model.check_version(&c.core_version)?;
+        let rounds_info = model.rounds(&c.months, &c.rounds)?;
         let mut setups: Vec<HotelSetup> = c.hotels.clone();
         setups.sort_by_key(|h| h.slot);
         let mut refs = BTreeMap::new();
@@ -123,21 +129,15 @@ impl Game {
             {
                 return Err(corrupt(format!("strategija {strategy}")));
             }
-            let spec = content
-                .catalog
-                .profile(profile)
-                .map_err(|e| corrupt(format!("{e:?}")))?;
-            let state = HotelState::from_profile(spec).map_err(|e| corrupt(format!("{e:?}")))?;
-            if let Entry::Vacant(e) = refs.entry(state.category) {
-                let t = RefTable::compute(&content.catalog, state.category)
-                    .map_err(|e| corrupt(format!("{e:?}")))?;
-                e.insert(t);
+            let state = model.start_state(&content, profile)?;
+            let category = state.category();
+            if let Entry::Vacant(e) = refs.entry(category) {
+                e.insert(model.refs(&content, category, &rounds_info)?);
             }
             let table = refs
-                .get(&state.category)
+                .get(&category)
                 .ok_or_else(|| corrupt("referentna tablica"))?;
-            let start = start_indices(&state, &content.catalog, table)
-                .map_err(|e| corrupt(format!("{e:?}")))?;
+            let start = model.start_indices(&state, &content, table)?;
             hotels.push(HotelRecord {
                 setup,
                 profile,
@@ -161,6 +161,8 @@ impl Game {
             resolved: BTreeMap::new(),
             last_seq: 1,
             history: vec![r.clone()],
+            model,
+            rounds_info,
             refs,
         })
     }
@@ -178,7 +180,7 @@ impl Game {
             GameEvent::PlanSet(p) => {
                 let m = p.month;
                 self.expect_open(m)?;
-                let plan = MonthPlan::from(&p.plan);
+                let plan = self.model.plan_from_dto(&p.plan)?;
                 self.hotel_mut(p.hotel_id)?.plans.insert(m, plan);
             }
             GameEvent::AnswerChosen(a) => {
@@ -315,11 +317,7 @@ impl Game {
     }
 
     fn expect_free_text(&self, m: RoundKey, code: &str) -> Result<(), GameError> {
-        let ok = self
-            .content
-            .situations
-            .iter()
-            .any(|t| RoundKey::Month(t.month) == m && t.code == code)
+        let ok = self.situation_round(code).is_ok_and(|(r, _)| r == m)
             && self.content.ai.get(code).is_some_and(|a| a.free_text);
         if ok {
             Ok(())
@@ -365,33 +363,55 @@ impl Game {
         })
     }
 
-    /// Stanje hotela na POČETKU kruga `m`: početno stanje ili `after` iz obračuna prethodnog kruga.
-    pub fn state_at(
-        &self,
-        hotel: HotelId,
-        m: impl Into<RoundKey>,
-    ) -> Result<HotelState, GameError> {
-        let m = m.into();
-        let h = self.hotel(hotel)?;
-        let pos = self
-            .rounds
+    pub fn model(&self) -> Model {
+        self.model
+    }
+
+    /// Krug igre s kalendarom (`UnknownMonth` ako krug nije u ovoj igri).
+    pub fn round_info(&self, r: impl Into<RoundKey>) -> Result<RoundInfo, GameError> {
+        let r = r.into();
+        self.rounds_info
             .iter()
-            .position(|&x| x == m)
-            .ok_or(GameError::UnknownMonth)?;
-        let Some(prev) = pos.checked_sub(1).and_then(|p| self.rounds.get(p)) else {
-            return Ok(h.start_state.clone());
-        };
-        let rr = self.resolved.get(prev).ok_or(GameError::RoundNotOpen)?;
-        let res = rr
+            .find(|i| i.key == r)
+            .copied()
+            .ok_or(GameError::UnknownMonth)
+    }
+
+    pub fn rounds_info(&self) -> Vec<RoundInfo> {
+        self.rounds_info.clone()
+    }
+
+    /// Pozicija kruga u igri (od 0).
+    pub(crate) fn position(&self, r: RoundKey) -> Result<usize, GameError> {
+        self.rounds
+            .iter()
+            .position(|&x| x == r)
+            .ok_or(GameError::UnknownMonth)
+    }
+
+    /// Obračun hotela u obračunatom krugu.
+    fn resolution(&self, hotel: HotelId, r: &RoundKey) -> Result<&HotelResolution, GameError> {
+        self.resolved
+            .get(r)
+            .ok_or(GameError::RoundNotOpen)?
             .hotels
             .iter()
             .find(|x| x.hotel_id == hotel)
-            .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
-        HotelState::try_from(&res.report.after)
+            .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))
     }
 
-    /// Stanje nakon zadnjeg obračunatog mjeseca (ili početno).
-    pub fn latest_state(&self, hotel: HotelId) -> Result<HotelState, GameError> {
+    /// Stanje hotela na POČETKU kruga `m`: početno stanje ili stanje nakon obračuna prethodnog kruga.
+    pub fn state_at(&self, hotel: HotelId, m: impl Into<RoundKey>) -> Result<CoreState, GameError> {
+        let h = self.hotel(hotel)?;
+        let pos = self.position(m.into())?;
+        let Some(prev) = pos.checked_sub(1).and_then(|p| self.rounds.get(p)) else {
+            return Ok(h.start_state.clone());
+        };
+        self.model.state_after(self.resolution(hotel, prev)?)
+    }
+
+    /// Stanje nakon zadnjeg obračunatog kruga (ili početno).
+    pub fn latest_state(&self, hotel: HotelId) -> Result<CoreState, GameError> {
         let h = self.hotel(hotel)?;
         let Some(last) = self
             .rounds
@@ -401,42 +421,55 @@ impl Game {
         else {
             return Ok(h.start_state.clone());
         };
-        let rr = self
-            .resolved
-            .get(last)
-            .ok_or_else(|| corrupt("obračun mjeseca"))?;
-        let res = rr
-            .hotels
-            .iter()
-            .find(|x| x.hotel_id == hotel)
-            .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
-        HotelState::try_from(&res.report.after)
+        self.model.state_after(self.resolution(hotel, last)?)
     }
 
-    /// Zadnji postavljeni plan ili zadani (DEMO §6.1).
+    /// Plan kruga: zadnji postavljeni; inače plan najbližeg ranijeg kruga s planom, prenesen u ovaj krug
+    /// (`Model::carry_plan`; v1 ne prenosi, nego daje zadani, DEMO §6.1); inače zadani.
     pub fn effective_plan(
         &self,
         hotel: HotelId,
         m: impl Into<RoundKey>,
-    ) -> Result<MonthPlan, GameError> {
+    ) -> Result<CorePlan, GameError> {
         let m = m.into();
         let h = self.hotel(hotel)?;
         if let Some(p) = h.plans.get(&m) {
             return Ok(p.clone());
         }
         let state = self.state_at(hotel, m)?;
-        MonthPlan::default_for(&state, m.require_month()?, &self.content.catalog)
-            .map_err(|e| corrupt(format!("{e:?}")))
+        let info = self.round_info(m)?;
+        let pos = self.position(m)?;
+        let earlier = self
+            .rounds
+            .iter()
+            .take(pos)
+            .rev()
+            .find_map(|r| h.plans.get(r));
+        match earlier {
+            Some(prev) => self.model.carry_plan(prev, &state, &info, &self.content),
+            None => self.model.default_plan(&state, &info, &self.content),
+        }
     }
 
-    /// Situacije kruga: za mjesec situacije tog mjeseca, za tjedan (Task 6) za sada prazno.
+    /// Plan iz tijela zahtjeva (app `set_plan`) za model ove igre; javni omotač oko `Model::plan_from_dto`.
+    /// `h` i `r` koristi Task 11: v2 plan bez `departments` uzima postavke odjela iz `effective_plan(h, r)`.
+    pub fn plan_from_dto(
+        &self,
+        h: HotelId,
+        r: impl Into<RoundKey>,
+        d: &PlanDto,
+    ) -> Result<CorePlan, GameError> {
+        self.hotel(h)?;
+        self.round_info(r)?;
+        self.model.plan_from_dto(d)
+    }
+
+    /// Situacije kruga (`Model::situations_in`); krug koji nije u ovoj igri nema situacija.
     pub fn situations_in(&self, r: impl Into<RoundKey>) -> Vec<&SituationTemplate> {
-        let month = r.into().month();
-        self.content
-            .situations
-            .iter()
-            .filter(|t| Some(t.month) == month)
-            .collect()
+        match self.round_info(r) {
+            Ok(info) => self.model.situations_in(&info, &self.content.situations),
+            Err(_) => Vec::new(),
+        }
     }
 
     pub fn unanswered_count(
@@ -457,7 +490,7 @@ impl Game {
         u8::try_from(n).map_err(|_| corrupt("broj neodgovorenih situacija"))
     }
 
-    pub fn refs(&self, c: Category) -> Result<&RefTable, GameError> {
+    pub(crate) fn refs(&self, c: Category) -> Result<&CoreRefs, GameError> {
         self.refs
             .get(&c)
             .ok_or_else(|| corrupt("referentna tablica"))

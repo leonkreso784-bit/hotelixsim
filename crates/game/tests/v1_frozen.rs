@@ -111,7 +111,9 @@ fn play_reference_game() -> Game {
         .unwrap();
     common::apply_ev(&mut g, Actor::System, ev);
     // Srpanj: plaća 95 %, odgođeno održavanje; S2 razgovor (jedna poruka, odgovor rezervom) pa ponuđeni odgovor 1.
-    let mut plan = g.effective_plan(h, Month::Jul).unwrap();
+    let CorePlan::V1(mut plan) = g.effective_plan(h, Month::Jul).unwrap() else {
+        panic!("v1 plan")
+    };
     plan.wage_pct = 95;
     plan.maintenance = Maintenance::Deferred;
     let ev = g.set_plan(h, Month::Jul, plan).unwrap();

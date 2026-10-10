@@ -168,7 +168,7 @@ fn june_resolution_opens_july_with_robot_moves() {
         panic!()
     };
     assert_eq!(
-        HotelStateDto::from(&g.state_at(me(), Month::Jul).unwrap()),
+        HotelStateDto::from(&g.state_at(me(), Month::Jul).unwrap().summary()),
         rr.hotels[0].report.after
     );
 }

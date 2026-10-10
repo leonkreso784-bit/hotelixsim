@@ -1,5 +1,7 @@
 //! Naredbe razgovora, slobodnog odgovora i mentora (DEMO korak 4): čiste, vraćaju događaj za upis.
 
+use sim_hotel::SituationTemplate;
+
 use crate::round::RoundKey;
 
 use crate::error::GameError;
@@ -35,13 +37,17 @@ fn clean(text: &str) -> Result<String, GameError> {
 }
 
 impl Game {
-    /// Mjesec u kojem se situacija igra (`UnknownSituation` ako nije u mjesecima ove igre).
-    pub fn situation_month(&self, code: &str) -> Result<RoundKey, GameError> {
-        self.content
-            .situations
+    /// Krug u kojem se situacija igra i njen predložak, kroz `Model::situations_in` za svaki krug igre
+    /// (`UnknownSituation` ako nije ni u jednom krugu ove igre).
+    pub fn situation_round(&self, code: &str) -> Result<(RoundKey, &SituationTemplate), GameError> {
+        self.rounds
             .iter()
-            .find(|t| t.code == code && self.rounds.contains(&RoundKey::from(t.month)))
-            .map(|t| RoundKey::from(t.month))
+            .find_map(|&r| {
+                self.situations_in(r)
+                    .into_iter()
+                    .find(|t| t.code == code)
+                    .map(|t| (r, t))
+            })
             .ok_or(GameError::UnknownSituation)
     }
 
@@ -52,7 +58,7 @@ impl Game {
         code: &str,
     ) -> Result<(RoundKey, Vec<ChatLine>), GameError> {
         let h = self.hotel(hotel)?;
-        let m = self.situation_month(code)?;
+        let (m, _) = self.situation_round(code)?;
         if self.status(m)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
@@ -113,7 +119,7 @@ impl Game {
         reply: ReplyBody,
     ) -> Result<Option<GameEvent>, GameError> {
         let h = self.hotel(hotel)?;
-        let m = self.situation_month(code)?;
+        let (m, _) = self.situation_round(code)?;
         if self.status(m)? != RoundStatus::Open {
             return Ok(None);
         }
@@ -164,7 +170,7 @@ impl Game {
     /// Razgovor igrača sa likom u situaciji (prazan ako ga nema).
     pub fn chat(&self, hotel: HotelId, code: &str) -> Result<Vec<ChatLine>, GameError> {
         let h = self.hotel(hotel)?;
-        let m = self.situation_month(code)?;
+        let (m, _) = self.situation_round(code)?;
         Ok(h.chats
             .get(&(m, code.to_owned()))
             .cloned()

@@ -65,6 +65,7 @@ fn samples() -> Vec<GameEvent> {
                     },
                 },
             ],
+            rounds: vec![],
         }),
         GameEvent::PlanSet(PlanSet {
             hotel_id: h,
@@ -102,6 +103,7 @@ fn samples() -> Vec<GameEvent> {
                 report: MonthReportDto::from(&r),
                 indices: [5000, 5100, 4900, 5000, 5200],
                 progress_hundredths: -37,
+                detail: None,
             }],
         }),
     ]

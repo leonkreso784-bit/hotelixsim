@@ -70,6 +70,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "sim-hotel",
+ "sim-hotel-v2",
  "thiserror",
  "tokio",
  "uuid",
@@ -612,6 +613,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "sim-hotel",
+ "sim-hotel-v2",
  "uuid",
 ]
 

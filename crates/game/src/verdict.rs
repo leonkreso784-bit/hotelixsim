@@ -111,11 +111,9 @@ impl Game {
     ) -> Result<ValidVerdict, VerdictError> {
         let free = self.content.ai.get(code).is_some_and(|a| a.free_text);
         let answers = self
-            .content
-            .situations
-            .iter()
-            .find(|t| t.code == code && self.rounds.contains(&RoundKey::from(t.month)))
-            .map(|t| t.answers.len());
+            .situation_round(code)
+            .ok()
+            .map(|(_, t)| t.answers.len());
         let (true, Some(answers)) = (free, answers) else {
             return Err(VerdictError::NotFreeText);
         };
@@ -164,7 +162,7 @@ impl Game {
     /// Mjesec i je li presuda već upisana za slobodni odgovor hotela.
     fn response_slot(&self, hotel: HotelId, code: &str) -> Result<(RoundKey, bool), GameError> {
         let h = self.hotel(hotel)?;
-        let m = self.situation_month(code)?;
+        let (m, _) = self.situation_round(code)?;
         let fr = h
             .responses
             .get(&(m, code.to_owned()))

@@ -22,6 +22,17 @@ pub enum GameError {
     Corrupt(String),
     /// Igra je stvorena drugom verzijom jezgre; obračun bi dao druge brojke (BACKLOG M3).
     CoreMismatch(String),
+    /// v2 igra stvorena drugom verzijom jezgre v2: ne čita se (🟨 P11). v1 igra ovo nikad ne dobije.
+    Outdated {
+        created: String,
+        current: String,
+    },
+    /// Metoda ili prikaz postoji samo za drugi model igre.
+    WrongModel,
+    /// Postavke nove igre nisu dopuštene (npr. v1 po tjednima).
+    InvalidSettings,
+    /// Greška plana v2 (v1 ostaje `Plan`).
+    PlanV2(sim_hotel_v2::PlanError),
 }
 
 pub(crate) fn corrupt(msg: impl Into<String>) -> GameError {

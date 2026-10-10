@@ -28,7 +28,7 @@ fn student_count(lines: &[ChatLine]) -> usize {
 }
 
 fn view_of(g: &Game, hotel: HotelId, code: &str) -> Result<ConversationView, AppError> {
-    let m = g.situation_month(code)?;
+    let (m, _) = g.situation_round(code)?;
     let c = g
         .content
         .ai

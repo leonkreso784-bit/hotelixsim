@@ -1,12 +1,12 @@
 //! Pogledi na hotel (ARHITEKTURA §12): javni (tuđi hotel: ocjena i pet indeksa) i privatni (vlasnik: stvarne brojke).
 
-use crate::command::{PlanLimits, plan_limits};
+use crate::command::PlanLimits;
 use crate::dto::{PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::event::Controller;
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
-use crate::kpi::report_kpi;
+use crate::kpi::round_kpi;
 use crate::round::RoundKey;
 
 /// Tko vodi hotel; namjerno bez `guest_id`, tuđi gost se ne otkriva.
@@ -117,7 +117,7 @@ impl Game {
 
     pub fn private_hotel(&self, id: HotelId) -> Result<PrivateHotel, GameError> {
         let h = self.hotel(id)?;
-        let s = self.latest_state(id)?;
+        let s = self.latest_state(id)?.summary();
         let now = RealNumbers {
             rooms: s.rooms,
             permanent: s.permanent,
@@ -138,7 +138,8 @@ impl Game {
                 .iter()
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
-            let k = report_kpi(&res.report, &self.content.catalog)?;
+            let days = self.round_info(rr.month)?.period.days;
+            let k = round_kpi(&res.report, days, &self.content.catalog)?;
             last_month = Some(LastMonth {
                 round: rr.month,
                 sold: res.report.market.sold,
@@ -157,10 +158,11 @@ impl Game {
             && self.status(m)? == RoundStatus::Open
         {
             let state = self.state_at(id, m)?;
+            let info = self.round_info(m)?;
             plan = Some(PlanState {
                 round: m,
-                plan: (&self.effective_plan(id, m)?).into(),
-                limits: plan_limits(&state, m.require_month()?, &self.content.catalog)?,
+                plan: self.effective_plan(id, m)?.to_dto(),
+                limits: self.model().plan_limits(&state, &info, &self.content)?,
             });
         }
         Ok(PrivateHotel {

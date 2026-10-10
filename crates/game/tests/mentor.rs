@@ -567,7 +567,7 @@ fn real_month_input_carries_codes_cash_and_unanswered() {
     let s2 = input.situations.iter().find(|s| s.code == "S2").unwrap();
     assert_eq!((s2.quality, s2.unanswered), (2, false));
     assert_eq!(s2.chosen_label.as_deref(), Some(CHEF_ANSWER));
-    let july_start = g.state_at(h, Month::Jul).unwrap();
+    let july_start = g.state_at(h, Month::Jul).unwrap().summary();
     assert_eq!(
         (input.plan.wage_pct, input.seasonal_before),
         (95, july_start.seasonal)
@@ -575,9 +575,9 @@ fn real_month_input_carries_codes_cash_and_unanswered() {
     assert!(input.price_ref_cents > 0);
     assert_eq!(
         input.load_after_hundredths,
-        g.latest_state(h).unwrap().load_hundredths
+        g.latest_state(h).unwrap().summary().load_hundredths
     );
-    let cash = g.latest_state(h).unwrap().cash_cents;
+    let cash = g.latest_state(h).unwrap().summary().cash_cents;
     assert_eq!(input.cash_end_cents, cash);
 }
 

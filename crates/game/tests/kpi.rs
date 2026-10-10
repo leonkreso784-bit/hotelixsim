@@ -51,7 +51,7 @@ fn unknown_hotel_is_an_error() {
 fn log_form_gives_the_same_numbers_as_core() {
     let (g, h) = open_june_game();
     let cat = &g.content.catalog;
-    let state = g.state_at(h, Month::Jun).unwrap();
+    let state = g.state_at(h, Month::Jun).unwrap().summary();
     for price_pct in [60_i64, 100, 150] {
         let mut plan = MonthPlan::default_for(&state, Month::Jun, cat).unwrap();
         plan.price_cents = plan.price_cents * price_pct / 100 / 100 * 100;

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::actor::Actor;
 use crate::dto::{MonthReportDto, PlanDto};
+use crate::dto_v2::DetailDto;
 use crate::ids::{GameId, GuestId, HotelId};
 use crate::round::RoundKey;
 
@@ -22,6 +23,21 @@ pub struct GameCreated {
     pub snapshot: Box<serde_json::Value>,
     pub months: Vec<RoundKey>,
     pub hotels: Vec<HotelSetup>,
+    /// v2: kalendar krugova u trenutku stvaranja (igra ga nikad ne računa ponovno). v1: prazno.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rounds: Vec<RoundDefDto>,
+}
+
+/// Jedan krug v2 igre kakav je zapisan pri stvaranju (`sim_hotel_v2::Period` uz ključ kruga).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RoundDefDto {
+    pub code: RoundKey,
+    /// `PeriodKind::code()`: "month" | "week".
+    pub kind: String,
+    pub index: u8,
+    pub start_day: u16,
+    pub days: u8,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -89,6 +105,9 @@ pub struct HotelResolution {
     /// Pet indeksa nakon mjeseca, redoslijedom `INDEX_ORDER`.
     pub indices: [u16; 5],
     pub progress_hundredths: i32,
+    /// v2: stanje v2 nakon kruga (izvor stanja idućeg kruga); v1 ga nema, pa je njen JSON isti.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<DetailDto>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
