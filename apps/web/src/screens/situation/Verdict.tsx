@@ -7,18 +7,25 @@ export function Verdict({ response }: { response: ResponseBody }) {
   return (
     <section className="space-y-3">
       <Card className="space-y-1">
-        <p className="text-sm font-bold text-accent">{t("response.title")}</p>
+        <p className="text-sm font-bold text-accent-ink">{t("response.title")}</p>
         <p>{response.text}</p>
       </Card>
       {response.status === "pending" ? (
         <StatusText>{t("verdict.pending")}</StatusText>
+      ) : response.status === "neutral" ? (
+        // AI nije ništa rekao: jedna rečenica poslužitelja bi ponovila web rečenicu, pa je nema (UI_PRAVILA §3.1).
+        <Card tone="accent" className="space-y-2">
+          <h2 className="text-lg font-bold">
+            {response.quality !== null ? t("verdict.total", { q: response.quality }) : t("verdict.grade")}
+          </h2>
+          <p className="text-sm">{t("verdict.neutral")}</p>
+        </Card>
       ) : (
-        <Card className="space-y-3 bg-accent-soft">
+        <Card tone="accent" className="space-y-3">
           <h2 className="flex items-center gap-2 text-lg font-bold">
             <Sparkles size={18} aria-hidden="true" className="text-accent" />
             {t("verdict.title")}
           </h2>
-          {response.status === "neutral" && <p className="text-sm">{t("verdict.neutral")}</p>}
           {response.quality !== null && (
             <p className="text-2xl font-extrabold">{t("verdict.total", { q: response.quality })}</p>
           )}

@@ -1,10 +1,11 @@
 import { t } from "@hotelixsim/i18n";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { problemMessage } from "../../api/errors";
 import { useAnswer } from "../../api/queries";
 import type { SituationBody } from "../../api/types";
 import { Button, Card, ErrorText } from "../../ui/primitives";
 
+/** Izbor u dva koraka (UI_PRAVILA §6.9): klik označi odgovor, tek „Potvrdi izbor“ ga šalje — izbor je nepovratan. */
 export function OfferedAnswers({
   hotelId,
   s,
@@ -16,11 +17,29 @@ export function OfferedAnswers({
 }) {
   const answer = useAnswer(hotelId, s.code);
   const inFlight = useRef(false);
+  const [picked, setPicked] = useState<number | null>(null);
+  const confirmTitle = useRef<HTMLHeadingElement>(null);
+  const pickButtons = useRef<(HTMLButtonElement | null)[]>([]);
+  const textId = (i: number) => `odgovor-${s.code}-${i}`;
 
-  function choose(i: number) {
-    if (answer.isPending || inFlight.current) return;
+  // Potvrda se pojavi ispod popisa: fokus i pogled idu na nju, da tipkovnica i mobitel ne ostanu iznad.
+  useEffect(() => {
+    if (picked === null) return;
+    confirmTitle.current?.focus();
+    confirmTitle.current?.scrollIntoView?.({ block: "center" });
+  }, [picked]);
+
+  function cancel() {
+    const back = picked;
+    setPicked(null);
+    answer.reset();
+    if (back !== null) pickButtons.current[back]?.focus();
+  }
+
+  function confirm() {
+    if (picked === null || answer.isPending || inFlight.current) return;
     inFlight.current = true;
-    answer.mutate(i, {
+    answer.mutate(picked, {
       onSettled: () => {
         inFlight.current = false;
       },
@@ -30,19 +49,43 @@ export function OfferedAnswers({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">{heading}</h2>
-      {answer.isError && <ErrorText>{problemMessage(answer.error)}</ErrorText>}
       <ol className="space-y-2">
         {s.answers.map((label, i) => (
           <li key={label}>
-            <Card className="space-y-2 p-3">
-              <p>{label}</p>
-              <Button variant="secondary" disabled={answer.isPending} onClick={() => choose(i)}>
+            <Card pad="sm" emphasis={picked === i} className="space-y-2">
+              <p id={textId(i)}>{label}</p>
+              <Button
+                ref={(el) => {
+                  pickButtons.current[i] = el;
+                }}
+                variant="secondary"
+                aria-describedby={textId(i)}
+                aria-pressed={picked === i}
+                disabled={answer.isPending}
+                onClick={() => setPicked(i)}
+              >
                 {t("answers.choose")}
               </Button>
             </Card>
           </li>
         ))}
       </ol>
+      {picked !== null && (
+        <Card emphasis className="space-y-3">
+          <h3 ref={confirmTitle} tabIndex={-1} className="text-lg font-bold">
+            {t("answers.confirmTitle")}
+          </h3>
+          <p>{s.answers[picked]}</p>
+          <p className="text-sm text-muted">{t("answers.confirmText")}</p>
+          {answer.isError && <ErrorText>{problemMessage(answer.error)}</ErrorText>}
+          <Button disabled={answer.isPending} onClick={confirm}>
+            {t("answers.confirm")}
+          </Button>
+          <Button variant="secondary" disabled={answer.isPending} onClick={cancel}>
+            {t("answers.cancel")}
+          </Button>
+        </Card>
+      )}
     </section>
   );
 }
@@ -50,8 +93,8 @@ export function OfferedAnswers({
 export function ChosenAnswer({ s }: { s: SituationBody }) {
   if (s.chosen === null) return null;
   return (
-    <Card className="space-y-1 border-accent">
-      <p className="text-sm font-bold text-accent">{t("answers.chosen")}</p>
+    <Card emphasis className="space-y-1">
+      <p className="text-sm font-bold text-accent-ink">{t("answers.chosen")}</p>
       <p>{s.answers[s.chosen]}</p>
     </Card>
   );

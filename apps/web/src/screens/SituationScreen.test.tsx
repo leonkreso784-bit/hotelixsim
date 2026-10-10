@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { conversation, s1, s3, situations, standardApi } from "../test/fixtures";
+import { conversation, game, s1, s3, situations, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -21,6 +21,31 @@ describe("popis situacija", () => {
     const s3link = screen.getByRole("link", { name: /Agencija nudi/ });
     expect(s3link.querySelector("svg:not(.lucide)")).toBeNull();
     expect(screen.getAllByText("Bez odgovora")).toHaveLength(2);
+  });
+});
+
+describe("popis situacija nakon kraja sezone", () => {
+  it("jedna rečenica s poveznicom na Tijek, bez proturječnih rečenica (I11)", async () => {
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", game({ current: null }))
+      .on("GET", "/v1/hotels/:hotel/situations", situations([], { open: false, unanswered: 0 }));
+    renderApp(api, "/situacije");
+    expect(await screen.findByText("Sezona je završena. Sve odluke su u Tijeku.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Otvori Tijek" }).getAttribute("href")).toBe("/tijek");
+    expect(screen.queryByText("Ovaj mjesec nema situacija.")).toBeNull();
+    expect(screen.queryByText("Mjesec je zatvoren — situacije su samo za čitanje.")).toBeNull();
+  });
+
+  it("zatvoren mjesec usred sezone: samo rečenica „samo za čitanje“", async () => {
+    const api = standardApi().on(
+      "GET",
+      "/v1/hotels/:hotel/situations",
+      situations([s1(), s3()], { open: false, unanswered: 0 }),
+    );
+    renderApp(api, "/situacije");
+    expect(await screen.findByText("Mjesec je zatvoren — situacije su samo za čitanje.")).toBeTruthy();
+    expect(screen.queryByText("Ovaj mjesec nema situacija.")).toBeNull();
+    expect(screen.queryByText("Sezona je završena. Sve odluke su u Tijeku.")).toBeNull();
   });
 });
 
@@ -122,7 +147,7 @@ describe("situacija s likom (otvorena izravno, kao nakon osvježavanja)", () => 
 });
 
 describe("ponuđeni odgovori (S3, bez lika)", () => {
-  it("izbor se šalje jednom i prikaže kao „Tvoj izbor“", async () => {
+  it("izbor u dva koraka: oznaka, pa „Potvrdi izbor“ — šalje se jednom i prikaže kao „Tvoj izbor“", async () => {
     const api = standardApi().on("POST", "/v1/hotels/:hotel/situations/:code/answer", () =>
       json(200, situations([s1(), s3({ chosen: 1 })])),
     );
@@ -130,13 +155,46 @@ describe("ponuđeni odgovori (S3, bez lika)", () => {
     expect(await screen.findByRole("heading", { name: /Agencija nudi grupu/ })).toBeTruthy();
     const buttons = screen.getAllByRole("button", { name: "Izaberi ovaj odgovor" });
     expect(buttons).toHaveLength(4);
+    // Svaki od četiri ista gumba čitač zaslona razlikuje po opisu: tekstu svog odgovora (I8).
+    const described = buttons.map((b) => {
+      const id = b.getAttribute("aria-describedby") ?? "";
+      return document.getElementById(id)?.textContent;
+    });
+    expect(described).toEqual(s3().answers);
     fireEvent.click(buttons[1] as HTMLElement);
-    fireEvent.click(buttons[1] as HTMLElement);
+    // Prvi klik samo označi odgovor: nema zahtjeva, fokus je na potvrdi.
+    const title = await screen.findByRole("heading", { name: "Izabrani odgovor" });
+    expect(document.activeElement).toBe(title);
+    expect(buttons[1]?.getAttribute("aria-pressed")).toBe("true");
+    expect(api.posts("/v1/hotels/h1/situations/S3/answer")).toHaveLength(0);
+    const confirm = screen.getByRole("button", { name: "Potvrdi izbor" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
     expect(await screen.findByText("Tvoj izbor")).toBeTruthy();
     expect(screen.getByText("Prihvatiti uz 15 % popusta i depozit")).toBeTruthy();
     expect(api.posts("/v1/hotels/h1/situations/S3/answer")).toHaveLength(1);
     expect(api.posts("/v1/hotels/h1/situations/S3/answer")[0]?.body).toEqual({ answer: 1 });
     await waitFor(() => expect(screen.queryByRole("button", { name: "Izaberi ovaj odgovor" })).toBeNull());
+  });
+
+  it("„Odustani“ u potvrdi izbora: bez zahtjeva, fokus natrag na isti gumb", async () => {
+    const api = standardApi();
+    renderApp(api, "/situacije/S3");
+    const buttons = await screen.findAllByRole("button", { name: "Izaberi ovaj odgovor" });
+    fireEvent.click(buttons[2] as HTMLElement);
+    fireEvent.click(await screen.findByRole("button", { name: "Odustani" }));
+    expect(screen.queryByRole("heading", { name: "Izabrani odgovor" })).toBeNull();
+    expect(document.activeElement).toBe(buttons[2]);
+    expect(api.posts("/v1/hotels/h1/situations/S3/answer")).toHaveLength(0);
+  });
+
+  it("bez lika su povratak, naslov i odgovori u istom stupcu za čitanje (I5)", async () => {
+    renderApp(standardApi(), "/situacije/S3");
+    const h1 = await screen.findByRole("heading", { level: 1, name: /Agencija nudi grupu/ });
+    const column = h1.closest("[data-layout='reading']") as HTMLElement;
+    expect(column.className).toContain("max-w-2xl");
+    expect(column.contains(screen.getByRole("link", { name: "Sve situacije" }))).toBe(true);
+    expect(column.contains(screen.getByRole("heading", { name: "Ponuđeni odgovori" }))).toBe(true);
   });
 
   it("zatvoren mjesec bez odgovora: samo poruka, bez gumba", async () => {

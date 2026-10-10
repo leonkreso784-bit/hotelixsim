@@ -98,7 +98,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
             />
           </div>
 
-          <Card className="divide-y divide-line py-1">
+          <Card pad="list" className="divide-y divide-line">
             <Row
               to="/pokazatelj/R/rating"
               icon={<Star size={20} aria-hidden="true" />}
@@ -122,7 +122,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
             />
           </Card>
 
-          <Card className="divide-y divide-line py-1">
+          <Card pad="list" className="divide-y divide-line">
             {current && (
               <Row
                 to="/situacije"
@@ -157,7 +157,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               <p role="status">{t("hotel.closing", { month: monthName(current.month) })}</p>
               <Link
                 to={`/mjesec/${current.month}`}
-                className="inline-flex min-h-11 items-center font-semibold text-accent"
+                className="inline-flex min-h-11 items-center font-semibold text-accent-ink"
               >
                 {t("hotel.closingLink")}
               </Link>

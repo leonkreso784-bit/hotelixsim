@@ -88,7 +88,7 @@ function MonthPicker({
           type="button"
           aria-pressed={m === value}
           onClick={() => onPick(m)}
-          className={`min-h-11 rounded-2xl px-4 font-semibold ${m === value ? "bg-accent text-white" : "bg-accent-soft text-accent"}`}
+          className={`min-h-11 rounded-2xl px-4 font-semibold ${m === value ? "bg-accent text-white" : "bg-accent-soft text-accent-ink"}`}
         >
           {capitalize(monthName(m))}
         </button>
@@ -135,7 +135,7 @@ export function IndicatorScreen({
   const month = picked && scored.includes(picked) ? picked : last;
   return (
     <>
-      <Link to="/" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent">
+      <Link to="/" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink">
         <ChevronLeft size={18} aria-hidden="true" />
         {t("indicator.back")}
       </Link>

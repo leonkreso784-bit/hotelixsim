@@ -97,7 +97,7 @@ export function KpiScreen({ me }: { me: HotelBody }) {
   const q = useKpi(me.hotel.hotel_id);
   return (
     <>
-      <Link to="/" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent">
+      <Link to="/" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink">
         <ChevronLeft size={18} aria-hidden="true" />
         {t("kpi.back")}
       </Link>

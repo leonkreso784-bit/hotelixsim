@@ -183,7 +183,9 @@ describe("Moj hotel", () => {
     );
     renderApp(api);
     fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
-    expect(screen.getByText("Zatvaraš lipanj.")).toBeTruthy();
+    // Kliknuti gumb nestaje: fokus ide na naslov potvrde, ne na <body> (I6).
+    const title = screen.getByRole("heading", { name: "Zatvaraš lipanj." });
+    expect(document.activeElement).toBe(title);
     expect(
       await screen.findByText("Bez odgovora: 2. Takve situacije dobivaju najnižu ocjenu (1)."),
     ).toBeTruthy();
@@ -225,12 +227,13 @@ describe("Moj hotel", () => {
     expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(1);
   });
 
-  it("„Odustani“ zatvara potvrdu bez zahtjeva", async () => {
+  it("„Odustani“ zatvara potvrdu bez zahtjeva i vraća fokus na „Zatvori mjesec“", async () => {
     const api = standardApi();
     renderApp(api);
     fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
     fireEvent.click(screen.getByRole("button", { name: "Odustani" }));
     expect(screen.queryByText("Zatvaraš lipanj.")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Zatvori mjesec" }));
     expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(0);
   });
 

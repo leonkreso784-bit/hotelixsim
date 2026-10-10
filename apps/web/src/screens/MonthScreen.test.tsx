@@ -111,6 +111,43 @@ describe("Mjesec završen", () => {
     expect(screen.getByRole("link", { name: "Nastavi u srpanj" }).getAttribute("href")).toBe("/");
   });
 
+  it("na mobitelu redom: rezultat, indeksi, mentor, ljestvica, objašnjenje; boje kartica kroz ton (I1, I2)", async () => {
+    const api = standardApi()
+      .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
+      .on("GET", "/v1/games/:game", resolvedGame)
+      .on("GET", "/v1/hotels/:hotel/feed", { items: feed });
+    renderApp(api, "/mjesec/jun");
+    await screen.findByText("Usluga je bolja. Prati troškove.");
+    const section = (text: string) => screen.getByText(text).closest("section") as HTMLElement;
+    const cards = {
+      result: section("Napredak od početka"),
+      indices: section("Indeksi na kraju mjeseca"),
+      mentor: section("Mentor"),
+      board: section("Ljestvica napretka"),
+      why: section("Zašto se indeksi pomaknuli"),
+    };
+    // `order` na omotaču s `contents` ne djeluje: smije biti samo na samim karticama.
+    for (const el of document.querySelectorAll(".contents")) {
+      expect(el.className.split(/\s+/).some((c) => /^order-/.test(c))).toBe(false);
+    }
+    // Redoslijed na mobitelu = (order bez prefiksa, pa položaj u dokumentu), kako ga slaže flex.
+    const mobileOrder = (el: HTMLElement) => {
+      const c = el.className.split(/\s+/).find((x) => /^order-\d+$/.test(x));
+      return c ? Number(c.slice(6)) : 0;
+    };
+    const all = Object.entries(cards);
+    const sorted = [...all].sort(([, a], [, b]) => {
+      const d = mobileOrder(a) - mobileOrder(b);
+      if (d !== 0) return d;
+      return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
+    expect(sorted.map(([k]) => k)).toEqual(["result", "indices", "mentor", "board", "why"]);
+    expect(cards.result.className).toContain("bg-accent-soft");
+    expect(cards.result.className).not.toContain("bg-surface");
+    expect(cards.mentor.className).toContain("bg-mint");
+    expect(cards.mentor.className).not.toContain("bg-surface");
+  });
+
   it("dok se obračunava: čeka i ispituje, pa pokaže rezultat (otvoreno izravno, kao nakon osvježavanja)", async () => {
     let calls = 0;
     const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });

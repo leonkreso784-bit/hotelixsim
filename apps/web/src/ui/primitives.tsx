@@ -1,12 +1,46 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+// Boja, obrub i unutarnji razmak kartice biraju se propom: iste klase u `className` gube od zadanih (UI_PRAVILA §1.3).
+const CARD_TONE = {
+  plain: "bg-surface",
+  accent: "bg-accent-soft",
+  mint: "bg-mint",
+  sand: "bg-sand",
+} as const;
+
+const CARD_PAD = {
+  md: "p-4",
+  sm: "p-3",
+  /** Popis redaka s razdjelnicima: retci sami nose visinu. */
+  list: "px-4 py-1",
+  /** Istaknuta brojka (rezultat mjeseca). */
+  lg: "px-4 py-6",
+} as const;
+
+export function Card({
+  children,
+  className = "",
+  tone = "plain",
+  emphasis = false,
+  pad = "md",
+}: {
+  children: ReactNode;
+  /** Samo raspored (razmaci, flex, red, vidljivost) — ne boja, obrub ni padding. */
+  className?: string;
+  tone?: keyof typeof CARD_TONE;
+  /** Obrub u boji naglaska (potvrda, izbor). */
+  emphasis?: boolean;
+  pad?: keyof typeof CARD_PAD;
+}) {
+  const border = emphasis ? "border-2 border-accent" : "border border-line";
   return (
-    <section className={`rounded-card border border-line bg-surface p-4 ${className}`}>{children}</section>
+    <section className={`rounded-card ${border} ${CARD_TONE[tone]} ${CARD_PAD[pad]} ${className}`}>
+      {children}
+    </section>
   );
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = ComponentPropsWithRef<"button"> & {
   variant?: "primary" | "secondary";
   /** "full" (zadano) puni redak; "auto" je širok koliko sadržaj, npr. uz polje unosa. */
   width?: "full" | "auto";
@@ -19,7 +53,7 @@ export function Button({
   type = "button",
   ...rest
 }: ButtonProps) {
-  const look = variant === "primary" ? "bg-accent text-white" : "bg-accent-soft text-accent";
+  const look = variant === "primary" ? "bg-accent text-white" : "bg-accent-soft text-accent-ink";
   return (
     <button
       type={type}
@@ -30,7 +64,7 @@ export function Button({
 }
 
 const BADGE = {
-  accent: "bg-accent-soft text-accent",
+  accent: "bg-accent-soft text-accent-ink",
   muted: "bg-line text-muted",
   up: "bg-mint text-up",
   down: "bg-sand text-down",

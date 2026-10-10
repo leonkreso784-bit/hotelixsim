@@ -35,6 +35,20 @@ describe("gost", () => {
     expect(window.location.pathname).toBe("/");
   });
 
+  it("početni ekran kaže ime igre „HotelixSim“ iznad naslova (I12)", async () => {
+    const api = new FakeApi().on("GET", "/v1/me/hotel", () => problem(401, "guest_required"));
+    renderApp(api, "/");
+    const h1 = await screen.findByRole("heading", { level: 1 });
+    // Riječ je složena od „Hotelix“ i plavog „Sim“; traži se najuži element s cijelim imenom.
+    const name = screen.getByText(
+      (_, el) =>
+        el?.tagName === "SPAN" &&
+        el.textContent === "HotelixSim" &&
+        !Array.from(el.children).some((c) => c.textContent === "HotelixSim"),
+    );
+    expect(name.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("greška pri stvaranju igre (503) je hrvatska rečenica", async () => {
     const api = new FakeApi()
       .on("GET", "/v1/me/hotel", () => problem(404, "not_in_game"))
