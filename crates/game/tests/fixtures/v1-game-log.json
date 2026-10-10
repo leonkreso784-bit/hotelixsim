@@ -1,0 +1,3201 @@
+[
+  {
+    "actor": "system",
+    "kind": "GameCreated",
+    "payload": {
+      "core_version": "0.1.0",
+      "game_id": "00000000-0000-0000-0000-000000000001",
+      "hotels": [
+        {
+          "controller": {
+            "guest_id": "00000000-0000-0000-0000-000000000063",
+            "kind": "human"
+          },
+          "hotel_id": "00000000-0000-0000-0000-00000000000b",
+          "name": "Tvoj hotel",
+          "profile": "A",
+          "slot": 1
+        },
+        {
+          "controller": {
+            "kind": "robot",
+            "strategy": "stedisa"
+          },
+          "hotel_id": "00000000-0000-0000-0000-00000000000c",
+          "name": "Štediša",
+          "profile": "C",
+          "slot": 2
+        },
+        {
+          "controller": {
+            "kind": "robot",
+            "strategy": "brizni"
+          },
+          "hotel_id": "00000000-0000-0000-0000-00000000000d",
+          "name": "Brižni",
+          "profile": "A",
+          "slot": 3
+        },
+        {
+          "controller": {
+            "kind": "robot",
+            "strategy": "lovac"
+          },
+          "hotel_id": "00000000-0000-0000-0000-00000000000e",
+          "name": "Lovac na popunjenost",
+          "profile": "B",
+          "slot": 4
+        }
+      ],
+      "months": [
+        "jun",
+        "jul"
+      ],
+      "ruleset_id": "sha256:55232208129b725ef07ef5a7dd9fb216b1588951bd0a67454adaa82793e24e24",
+      "seed": 42,
+      "snapshot": {
+        "catalog": {
+          "actions": {
+            "maintenance_deferred": {
+              "cost_cents": 300000,
+              "equipment_pts": 0
+            },
+            "maintenance_intensive": {
+              "cost_cents": 3000000,
+              "equipment_pts": 800
+            },
+            "maintenance_regular": {
+              "cost_cents": 1500000,
+              "equipment_pts": 400
+            },
+            "marketing_max_cents": 4000000,
+            "price_max_pct": 150,
+            "price_min_pct": 60,
+            "release_morale_pts": -300,
+            "renovation_cents": 15000000,
+            "renovation_equipment_pts": 2500,
+            "renovation_satisfaction_pts": 300,
+            "reply_cents": 150000,
+            "reply_rating": 5,
+            "seasonal_max": 50,
+            "seasonal_step": 10,
+            "training_basic": {
+              "cost_cents": 500000,
+              "experience_pts": 400,
+              "morale_pts": 200
+            },
+            "training_full": {
+              "cost_cents": 1000000,
+              "experience_pts": 700,
+              "morale_pts": 200
+            },
+            "wage_max_pct": 115,
+            "wage_min_pct": 90
+          },
+          "categories": {
+            "4": {
+              "base_occupancy_bp": {
+                "aug": 10600,
+                "jul": 7800,
+                "jun": 7200,
+                "sep": 7300
+              },
+              "cpor_cents": 2200,
+              "elasticity_bp": -8000,
+              "price_ref_cents": {
+                "aug": 17500,
+                "jul": 16500,
+                "jun": 13500,
+                "sep": 13500
+              },
+              "seasonal_plan": {
+                "aug": 44,
+                "jul": 34,
+                "jun": 28,
+                "sep": 34
+              },
+              "wage_cents": 220000
+            }
+          },
+          "economy": {
+            "goppar_floor_cents": 1000,
+            "hire_cents": 150000,
+            "interest_bp": 100,
+            "marketing_half_cents": 1500000,
+            "marketing_max_bp": 1500,
+            "other_revenue_bp": 3000
+          },
+          "mechanics": {
+            "crisis_pts_per_q": 300,
+            "group_good_quality_cut_bp": 500,
+            "morale_bound_pts": 800,
+            "rating_bound": 15,
+            "recovery_pts_per_q": 200,
+            "repair_temporary_cents": 8000,
+            "repair_temporary_equipment_pts": -100,
+            "repair_urgent_cents": 25000,
+            "retention_pts_per_q": 300,
+            "satisfaction_bound_pts": 800
+          },
+          "reference_profiles": {
+            "4": "C"
+          }
+        },
+        "profiles": {
+          "A": {
+            "cash_cents": 3700000,
+            "category": "4",
+            "equipment_pts": 7500,
+            "experience_pts": 7000,
+            "fixed_cents": 17000000,
+            "load_hundredths": 220,
+            "morale_pts": 4000,
+            "permanent": 28,
+            "rating": 910,
+            "rooms": 120,
+            "satisfaction_pts": 8000,
+            "seasonal": 28,
+            "wage_pct": 100
+          },
+          "B": {
+            "cash_cents": 67800000,
+            "category": "4",
+            "equipment_pts": 4000,
+            "experience_pts": 5500,
+            "fixed_cents": 14500000,
+            "load_hundredths": 173,
+            "morale_pts": 5800,
+            "permanent": 28,
+            "rating": 800,
+            "rooms": 120,
+            "satisfaction_pts": 6500,
+            "seasonal": 28,
+            "wage_pct": 95
+          },
+          "C": {
+            "cash_cents": 30000000,
+            "category": "4",
+            "equipment_pts": 6000,
+            "experience_pts": 6000,
+            "fixed_cents": 15000000,
+            "load_hundredths": 173,
+            "morale_pts": 5500,
+            "permanent": 30,
+            "rating": 840,
+            "rooms": 120,
+            "satisfaction_pts": 7000,
+            "seasonal": 28,
+            "wage_pct": 100
+          }
+        },
+        "situations": [
+          {
+            "answers": [
+              {
+                "criteria": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+                "mechanics": [
+                  {
+                    "compensation_cents": 12000,
+                    "type": "ServiceRecovery"
+                  },
+                  {
+                    "type": "EquipmentRepair",
+                    "urgent": true
+                  }
+                ],
+                "quality": 5
+              },
+              {
+                "criteria": [
+                  1,
+                  2,
+                  4
+                ],
+                "label": "Ispričati se, premjestiti obitelj i poslati tehničara",
+                "mechanics": [
+                  {
+                    "compensation_cents": 0,
+                    "type": "ServiceRecovery"
+                  },
+                  {
+                    "type": "EquipmentRepair",
+                    "urgent": true
+                  }
+                ],
+                "quality": 3
+              },
+              {
+                "criteria": [
+                  1
+                ],
+                "label": "Vratiti novac za cijeli boravak",
+                "mechanics": [
+                  {
+                    "compensation_cents": 94500,
+                    "type": "ServiceRecovery"
+                  },
+                  {
+                    "type": "EquipmentRepair",
+                    "urgent": false
+                  }
+                ],
+                "quality": 1
+              },
+              {
+                "criteria": [
+                  4
+                ],
+                "label": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+                "mechanics": [
+                  {
+                    "compensation_cents": 0,
+                    "type": "ServiceRecovery"
+                  },
+                  {
+                    "type": "EquipmentRepair",
+                    "urgent": false
+                  }
+                ],
+                "quality": 1
+              }
+            ],
+            "character": {
+              "brief": "Umorna si i ljuta: klima ne radi od jutra, vani je 34 °C, djeca ne mogu spavati, a ovo je tvoj treći poziv recepciji. Najviše ti treba hladna soba za djecu ODMAH; novac ti je sporedan. Smiriš se ako se netko iskreno ispriča i odmah ponudi rješenje. Ako ti kažu da je kriva vrućina ili da tehničar dolazi 'kad stigne', postaješ ljuća i spominješ lošu recenziju. Ne nudiš sama rješenja; čekaš da ih ponudi hotel.",
+              "fallback_reply": "Gošća je previše ljuta da bi nastavila razgovor. Odluči što ćeš poduzeti.",
+              "name": "Petra Horvat",
+              "opening": "Treći put zovem! Klima u sobi 214 ne radi od jutra, djeca su mokra od znoja. Što ćete poduzeti?",
+              "role": "gošća u sobi 214, s dvoje male djece"
+            },
+            "code": "S1",
+            "free_text": true,
+            "month": "jun",
+            "rubric": [
+              "Brza isprika i preuzimanje odgovornosti, bez prebacivanja krivnje (vrućina, tehničar)",
+              "Trenutno rješenje: druga soba ili prijenosni uređaj, odmah",
+              "Razmjerna kompenzacija (večera, popust na noćenje), ne povrat cijelog boravka",
+              "Uzrok se popravlja i prijavljuje održavanju",
+              "Provjera kasnije (follow-up)"
+            ],
+            "title": "Klima u sobi obitelji s djecom",
+            "unanswered": [
+              {
+                "compensation_cents": 0,
+                "type": "ServiceRecovery"
+              },
+              {
+                "type": "EquipmentRepair",
+                "urgent": false
+              }
+            ]
+          },
+          {
+            "answers": [
+              {
+                "criteria": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+                "mechanics": [
+                  {
+                    "bonus_cents": 200000,
+                    "raise_one_pct": 8,
+                    "type": "StaffRetention"
+                  }
+                ],
+                "quality": 5
+              },
+              {
+                "criteria": [
+                  2,
+                  5
+                ],
+                "label": "Bonus na kraju sezone ako ostane, bez razgovora",
+                "mechanics": [
+                  {
+                    "bonus_cents": 300000,
+                    "raise_one_pct": 0,
+                    "type": "StaffRetention"
+                  }
+                ],
+                "quality": 2
+              },
+              {
+                "criteria": [
+                  1
+                ],
+                "label": "Odmah dati 20 %",
+                "mechanics": [
+                  {
+                    "bonus_cents": 0,
+                    "raise_one_pct": 20,
+                    "type": "StaffRetention"
+                  }
+                ],
+                "quality": 1
+              },
+              {
+                "label": "Odbiti: „nitko nije nezamjenjiv\"",
+                "mechanics": [
+                  {
+                    "bonus_cents": 0,
+                    "raise_one_pct": 0,
+                    "type": "StaffRetention"
+                  }
+                ],
+                "quality": 1
+              }
+            ],
+            "character": {
+              "brief": "Konkurentski hotel nudi ti 20 % veću plaću. Novac je važan, ali pravi razlog je da radiš 12 sati dnevno bez slobodnog dana i da te nitko nije pitao za mišljenje o jelovniku tri sezone. Ne kažeš to odmah: prvo tražiš povišicu. Otkriješ pravi razlog tek ako te netko pita kako ti je i sasluša. Ne prihvaćaš prijetnje ni 'nitko nije nezamjenjiv'. Rado bi obučio zamjenika ako dobiš više odgovornosti.",
+              "fallback_reply": "Marko je otišao u kuhinju; razgovor se nastavlja drugi put. Odluči što ćeš učiniti.",
+              "name": "Marko Babić",
+              "opening": "Šefe, imam ponudu iz hotela preko puta, 20 % više. Ili mi dignete plaću ili odlazim na kraju mjeseca.",
+              "role": "šef kuhinje, u hotelu sedam sezona"
+            },
+            "code": "S2",
+            "free_text": true,
+            "month": "jul",
+            "rubric": [
+              "Saslušati ga i otkriti pravi razlog (plaća, opterećenje, priznanje)",
+              "Odluka u okviru budžeta, s obrazloženjem",
+              "Pravednost prema ostatku tima: bez presedana koji ruši moral drugih",
+              "Nenovčani elementi: raspored, odgovornost, priznanje, razvoj",
+              "Plan B: zamjenik ili nasljednik iz tima"
+            ],
+            "title": "Šef kuhinje traži povišicu ili odlazi",
+            "unanswered": [
+              {
+                "bonus_cents": 0,
+                "raise_one_pct": 0,
+                "type": "StaffRetention"
+              }
+            ]
+          },
+          {
+            "answers": [
+              {
+                "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+                "mechanics": [
+                  {
+                    "accept": true,
+                    "discount_bp": 2000,
+                    "month": "sep",
+                    "nights": 7,
+                    "rooms": 25,
+                    "type": "GroupBooking"
+                  }
+                ],
+                "quality": 5
+              },
+              {
+                "label": "Prihvatiti uz 15 % popusta i depozit",
+                "mechanics": [
+                  {
+                    "accept": true,
+                    "discount_bp": 1500,
+                    "month": "aug",
+                    "nights": 7,
+                    "rooms": 25,
+                    "type": "GroupBooking"
+                  }
+                ],
+                "quality": 3
+              },
+              {
+                "label": "Prihvatiti ponudu kako je",
+                "mechanics": [
+                  {
+                    "accept": true,
+                    "discount_bp": 2500,
+                    "month": "aug",
+                    "nights": 7,
+                    "rooms": 25,
+                    "type": "GroupBooking"
+                  }
+                ],
+                "quality": 1
+              },
+              {
+                "label": "Odbiti",
+                "mechanics": [
+                  {
+                    "accept": false,
+                    "discount_bp": 2500,
+                    "month": "aug",
+                    "nights": 7,
+                    "rooms": 25,
+                    "type": "GroupBooking"
+                  }
+                ],
+                "quality": 2
+              }
+            ],
+            "code": "S3",
+            "month": "jun",
+            "title": "Agencija nudi grupu od 25 soba za 7 noći",
+            "unanswered": [
+              {
+                "accept": false,
+                "discount_bp": 2500,
+                "month": "aug",
+                "nights": 7,
+                "rooms": 25,
+                "type": "GroupBooking"
+              }
+            ]
+          },
+          {
+            "answers": [
+              {
+                "label": "Voda i hlađenje za goste i osoblje, iskrena obavijest unaprijed, štednja u praonici i bazenu, cisterna kao rezerva, kraće smjene",
+                "mechanics": [
+                  {
+                    "backup_cents": 300000,
+                    "type": "CrisisCommunication"
+                  }
+                ],
+                "quality": 5
+              },
+              {
+                "label": "Obavijest gostima i štednja u praonici",
+                "mechanics": [
+                  {
+                    "backup_cents": 0,
+                    "type": "CrisisCommunication"
+                  }
+                ],
+                "quality": 3
+              },
+              {
+                "label": "Noću zatvoriti tuševe i bazen bez objašnjenja",
+                "mechanics": [
+                  {
+                    "backup_cents": 0,
+                    "type": "CrisisCommunication"
+                  }
+                ],
+                "quality": 1
+              },
+              {
+                "label": "Ne poduzimati ništa dok ograničenja ne počnu",
+                "mechanics": [
+                  {
+                    "backup_cents": 0,
+                    "type": "CrisisCommunication"
+                  }
+                ],
+                "quality": 1
+              }
+            ],
+            "code": "S4",
+            "month": "aug",
+            "title": "Najava restrikcija vode zbog suše",
+            "unanswered": [
+              {
+                "backup_cents": 0,
+                "type": "CrisisCommunication"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "schema_ver": 1,
+    "seq": 1
+  },
+  {
+    "actor": "robot:stedisa",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000c",
+      "month": "jun",
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 13500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 23,
+        "training": "none",
+        "wage_pct": 95
+      }
+    },
+    "schema_ver": 1,
+    "seq": 2
+  },
+  {
+    "actor": "robot:stedisa",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 3,
+      "hotel_id": "00000000-0000-0000-0000-00000000000c",
+      "month": "jun",
+      "situation": "S1"
+    },
+    "schema_ver": 1,
+    "seq": 3
+  },
+  {
+    "actor": "robot:stedisa",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 2,
+      "hotel_id": "00000000-0000-0000-0000-00000000000c",
+      "month": "jun",
+      "situation": "S3"
+    },
+    "schema_ver": 1,
+    "seq": 4
+  },
+  {
+    "actor": "robot:brizni",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000d",
+      "month": "jun",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 500000,
+        "price_cents": 14200,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 20,
+        "training": "basic",
+        "wage_pct": 103
+      }
+    },
+    "schema_ver": 1,
+    "seq": 5
+  },
+  {
+    "actor": "robot:brizni",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 0,
+      "hotel_id": "00000000-0000-0000-0000-00000000000d",
+      "month": "jun",
+      "situation": "S1"
+    },
+    "schema_ver": 1,
+    "seq": 6
+  },
+  {
+    "actor": "robot:brizni",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 0,
+      "hotel_id": "00000000-0000-0000-0000-00000000000d",
+      "month": "jun",
+      "situation": "S3"
+    },
+    "schema_ver": 1,
+    "seq": 7
+  },
+  {
+    "actor": "robot:lovac",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000e",
+      "month": "jun",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 2500000,
+        "price_cents": 11500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      }
+    },
+    "schema_ver": 1,
+    "seq": 8
+  },
+  {
+    "actor": "robot:lovac",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 1,
+      "hotel_id": "00000000-0000-0000-0000-00000000000e",
+      "month": "jun",
+      "situation": "S1"
+    },
+    "schema_ver": 1,
+    "seq": 9
+  },
+  {
+    "actor": "robot:lovac",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 2,
+      "hotel_id": "00000000-0000-0000-0000-00000000000e",
+      "month": "jun",
+      "situation": "S3"
+    },
+    "schema_ver": 1,
+    "seq": 10
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "ResponseSubmitted",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jun",
+      "situation": "S1",
+      "text": "Ispričat ću se i ponuditi zamjenu sobe."
+    },
+    "schema_ver": 1,
+    "seq": 11
+  },
+  {
+    "actor": "system",
+    "kind": "VerdictRecorded",
+    "payload": {
+      "criteria": [
+        {
+          "met": true,
+          "n": 1,
+          "reason": "razlog 1"
+        },
+        {
+          "met": true,
+          "n": 2,
+          "reason": "razlog 2"
+        },
+        {
+          "met": true,
+          "n": 3,
+          "reason": "razlog 3"
+        },
+        {
+          "met": true,
+          "n": 4,
+          "reason": "razlog 4"
+        },
+        {
+          "met": false,
+          "n": 5,
+          "reason": "razlog 5"
+        }
+      ],
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "meta": {
+        "input_tokens": 10,
+        "model": "test-model",
+        "output_tokens": 5,
+        "prompt": "test-prompt"
+      },
+      "month": "jun",
+      "nearest_answer": 0,
+      "quality": 4,
+      "rationale": "obrazloženje",
+      "review": false,
+      "situation": "S1",
+      "source": "ai"
+    },
+    "schema_ver": 1,
+    "seq": 12
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 1,
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jun",
+      "situation": "S3"
+    },
+    "schema_ver": 1,
+    "seq": 13
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "RoundClosed",
+    "payload": {
+      "month": "jun"
+    },
+    "schema_ver": 1,
+    "seq": 14
+  },
+  {
+    "actor": "system",
+    "kind": "RoundResolved",
+    "payload": {
+      "hotels": [
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000b",
+          "indices": [
+            5932,
+            7179,
+            3580,
+            5936,
+            3455
+          ],
+          "plan": {
+            "maintenance": "regular",
+            "marketing_cents": 0,
+            "price_cents": 13500,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 28,
+            "training": "none",
+            "wage_pct": 100
+          },
+          "progress_hundredths": 422,
+          "report": {
+            "after": {
+              "cash_cents": 13684500,
+              "category": "4",
+              "equipment_pts": 7500,
+              "experience_pts": 7032,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 14875,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 160,
+              "morale_pts": 4450,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 900,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7808,
+              "seasonal": 28,
+              "turnover_bp": 533,
+              "wage_pct": 100
+            },
+            "before": {
+              "cash_cents": 3700000,
+              "category": "4",
+              "equipment_pts": 7500,
+              "experience_pts": 7000,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [],
+              "load_hundredths": 220,
+              "morale_pts": 4000,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 910,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 8000,
+              "seasonal": 28,
+              "turnover_bp": 600,
+              "wage_pct": 100
+            },
+            "guests": {
+              "quality_pts": 7148,
+              "rating_target": 872,
+              "satisfaction_target_pts": 7217,
+              "value_pts": 7000
+            },
+            "lines": [
+              {
+                "amount": 2592,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": 378,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 36315000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 10894500,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 12320000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 450000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 5918000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1500000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 17000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 9984500,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 3,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 450,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -268,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": 400,
+                "cause": "maintenance",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -392,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -10,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 37000,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 200,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "points",
+                "var": "satisfaction"
+              }
+            ],
+            "market": {
+              "available": 3600,
+              "base_demand": 2592,
+              "demand": 2690,
+              "f_marketing_bp": 10000,
+              "f_price_bp": 10000,
+              "f_reputation_bp": 10378,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2690,
+              "rooms_out": 0,
+              "sold": 2690,
+              "staff_capacity": 4032
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 37225000,
+              "gop_cents": 9984500,
+              "goppar_cents": 2773,
+              "interest_cents": 0,
+              "labor_cents": 12770000,
+              "other_revenue_cents": 10894500,
+              "rooms_revenue_cents": 36315000
+            },
+            "month": "jun",
+            "people": {
+              "departures": 3,
+              "experience_mix_pts": 6732,
+              "hires": 0,
+              "load_hundredths": 160,
+              "load_penalty_pts": 0,
+              "morale_target_pts": 5500,
+              "released": 0,
+              "staff": 56,
+              "turnover_bp": 533
+            }
+          },
+          "situations": [
+            {
+              "answer": null,
+              "code": "S1",
+              "free_text": true,
+              "quality": 4
+            },
+            {
+              "answer": 1,
+              "code": "S3",
+              "quality": 3
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000c",
+          "indices": [
+            4497,
+            4822,
+            4471,
+            4771,
+            6285
+          ],
+          "plan": {
+            "maintenance": "deferred",
+            "marketing_cents": 0,
+            "price_cents": 13500,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 23,
+            "training": "none",
+            "wage_pct": 95
+          },
+          "progress_hundredths": -62,
+          "report": {
+            "after": {
+              "cash_cents": 43102200,
+              "category": "4",
+              "equipment_pts": 5500,
+              "experience_pts": 6149,
+              "extra_wage_cents": 0,
+              "fixed_cents": 15000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 163,
+              "morale_pts": 5110,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 30,
+              "rating": 834,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6373,
+              "seasonal": 23,
+              "turnover_bp": 434,
+              "wage_pct": 95
+            },
+            "before": {
+              "cash_cents": 30000000,
+              "category": "4",
+              "equipment_pts": 6000,
+              "experience_pts": 6000,
+              "extra_wage_cents": 0,
+              "fixed_cents": 15000000,
+              "groups": [],
+              "load_hundredths": 173,
+              "morale_pts": 5500,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 30,
+              "rating": 840,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7000,
+              "seasonal": 28,
+              "turnover_bp": 375,
+              "wage_pct": 100
+            },
+            "guests": {
+              "quality_pts": 6993,
+              "rating_target": 815,
+              "satisfaction_target_pts": 6547,
+              "value_pts": 7000
+            },
+            "lines": [
+              {
+                "amount": 2592,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": 34992000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 10497600,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 11077000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 5702400,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 15000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 13102200,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": -5,
+                "cause": "release",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 2,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": -390,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -1000,
+                "cause": "wage",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -300,
+                "cause": "release",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -151,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -227,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -6,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 8000,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": -100,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -400,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "points",
+                "var": "satisfaction"
+              }
+            ],
+            "market": {
+              "available": 3600,
+              "base_demand": 2592,
+              "demand": 2592,
+              "f_marketing_bp": 10000,
+              "f_price_bp": 10000,
+              "f_reputation_bp": 10000,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2592,
+              "rooms_out": 0,
+              "sold": 2592,
+              "staff_capacity": 3816
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 32387400,
+              "gop_cents": 13102200,
+              "goppar_cents": 3640,
+              "interest_cents": 0,
+              "labor_cents": 11377000,
+              "other_revenue_cents": 10497600,
+              "rooms_revenue_cents": 34992000
+            },
+            "month": "jun",
+            "people": {
+              "departures": 2,
+              "experience_mix_pts": 5849,
+              "hires": 0,
+              "load_hundredths": 163,
+              "load_penalty_pts": 0,
+              "morale_target_pts": 4200,
+              "released": 5,
+              "staff": 53,
+              "turnover_bp": 434
+            }
+          },
+          "situations": [
+            {
+              "answer": 3,
+              "code": "S1",
+              "quality": 1
+            },
+            {
+              "answer": 2,
+              "code": "S3",
+              "quality": 1
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000d",
+          "indices": [
+            6008,
+            7215,
+            3580,
+            5727,
+            4523
+          ],
+          "plan": {
+            "maintenance": "regular",
+            "marketing_cents": 500000,
+            "price_cents": 14200,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 20,
+            "training": "basic",
+            "wage_pct": 103
+          },
+          "progress_hundredths": 715,
+          "report": {
+            "after": {
+              "cash_cents": 16331700,
+              "category": "4",
+              "equipment_pts": 7400,
+              "experience_pts": 6988,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "sep",
+                  "price_cents": 11475,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 186,
+              "morale_pts": 4450,
+              "pending": {
+                "experience_pts": 400,
+                "morale_pts": 200,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 901,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7884,
+              "seasonal": 20,
+              "turnover_bp": 533,
+              "wage_pct": 103
+            },
+            "before": {
+              "cash_cents": 3700000,
+              "category": "4",
+              "equipment_pts": 7500,
+              "experience_pts": 7000,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [],
+              "load_hundredths": 220,
+              "morale_pts": 4000,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 910,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 8000,
+              "seasonal": 28,
+              "turnover_bp": 600,
+              "wage_pct": 100
+            },
+            "guests": {
+              "quality_pts": 6950,
+              "rating_target": 875,
+              "satisfaction_target_pts": 6968,
+              "value_pts": 6481
+            },
+            "lines": [
+              {
+                "amount": 2592,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": -415,
+                "cause": "price",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 378,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 375,
+                "cause": "marketing",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 37985000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 11395500,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 10876800,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 450000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 500000,
+                "cause": "training",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 5885000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1500000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 500000,
+                "cause": "marketing",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 17000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 12631700,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": -8,
+                "cause": "release",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 3,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 450,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 600,
+                "cause": "wage",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -300,
+                "cause": "load",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -300,
+                "cause": "release",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -312,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -100,
+                "cause": "load",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": 400,
+                "cause": "maintenance",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -516,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -9,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 37000,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 400,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "points",
+                "var": "satisfaction"
+              }
+            ],
+            "market": {
+              "available": 3600,
+              "base_demand": 2592,
+              "demand": 2675,
+              "f_marketing_bp": 10375,
+              "f_price_bp": 9585,
+              "f_reputation_bp": 10378,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2675,
+              "rooms_out": 0,
+              "sold": 2675,
+              "staff_capacity": 3456
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 36748800,
+              "gop_cents": 12631700,
+              "goppar_cents": 3509,
+              "interest_cents": 0,
+              "labor_cents": 11826800,
+              "other_revenue_cents": 11395500,
+              "rooms_revenue_cents": 37985000
+            },
+            "month": "jun",
+            "people": {
+              "departures": 3,
+              "experience_mix_pts": 6688,
+              "hires": 0,
+              "load_hundredths": 186,
+              "load_penalty_pts": 600,
+              "morale_target_pts": 5500,
+              "released": 8,
+              "staff": 48,
+              "turnover_bp": 533
+            }
+          },
+          "situations": [
+            {
+              "answer": 0,
+              "code": "S1",
+              "quality": 5
+            },
+            {
+              "answer": 0,
+              "code": "S3",
+              "quality": 5
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000e",
+          "indices": [
+            4551,
+            3750,
+            5181,
+            3784,
+            6446
+          ],
+          "plan": {
+            "maintenance": "regular",
+            "marketing_cents": 2500000,
+            "price_cents": 11500,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 28,
+            "training": "none",
+            "wage_pct": 100
+          },
+          "progress_hundredths": -373,
+          "report": {
+            "after": {
+              "cash_cents": 76218250,
+              "category": "4",
+              "equipment_pts": 3900,
+              "experience_pts": 5675,
+              "extra_wage_cents": 0,
+              "fixed_cents": 14500000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 185,
+              "morale_pts": 5635,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 804,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6427,
+              "seasonal": 28,
+              "turnover_bp": 355,
+              "wage_pct": 100
+            },
+            "before": {
+              "cash_cents": 67800000,
+              "category": "4",
+              "equipment_pts": 4000,
+              "experience_pts": 5500,
+              "extra_wage_cents": 0,
+              "fixed_cents": 14500000,
+              "groups": [],
+              "load_hundredths": 173,
+              "morale_pts": 5800,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 800,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6500,
+              "seasonal": 28,
+              "turnover_bp": 330,
+              "wage_pct": 95
+            },
+            "guests": {
+              "quality_pts": 6811,
+              "rating_target": 817,
+              "satisfaction_target_pts": 6355,
+              "value_pts": 8481
+            },
+            "lines": [
+              {
+                "amount": 2592,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": 1185,
+                "cause": "price",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": -216,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 938,
+                "cause": "marketing",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 35684500,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 10705350,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 12320000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 6826600,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1500000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 2500000,
+                "cause": "marketing",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 14500000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 8418250,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 2,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": -165,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -250,
+                "cause": "load",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -125,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -100,
+                "cause": "load",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": 400,
+                "cause": "maintenance",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -73,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": 4,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 25000,
+                "cause": {
+                  "situation": "S1"
+                },
+                "unit": "cents",
+                "var": "costs"
+              }
+            ],
+            "market": {
+              "available": 3600,
+              "base_demand": 2592,
+              "demand": 3103,
+              "f_marketing_bp": 10938,
+              "f_price_bp": 11185,
+              "f_reputation_bp": 9784,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 3103,
+              "rooms_out": 0,
+              "sold": 3103,
+              "staff_capacity": 4032
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 37971600,
+              "gop_cents": 8418250,
+              "goppar_cents": 2338,
+              "interest_cents": 0,
+              "labor_cents": 12620000,
+              "other_revenue_cents": 10705350,
+              "rooms_revenue_cents": 35684500
+            },
+            "month": "jun",
+            "people": {
+              "departures": 2,
+              "experience_mix_pts": 5375,
+              "hires": 0,
+              "load_hundredths": 185,
+              "load_penalty_pts": 500,
+              "morale_target_pts": 5250,
+              "released": 0,
+              "staff": 56,
+              "turnover_bp": 355
+            }
+          },
+          "situations": [
+            {
+              "answer": 1,
+              "code": "S1",
+              "quality": 3
+            },
+            {
+              "answer": 2,
+              "code": "S3",
+              "quality": 1
+            }
+          ]
+        }
+      ],
+      "month": "jun"
+    },
+    "schema_ver": 1,
+    "seq": 15
+  },
+  {
+    "actor": "robot:stedisa",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000c",
+      "month": "jul",
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 16500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 29,
+        "training": "none",
+        "wage_pct": 95
+      }
+    },
+    "schema_ver": 1,
+    "seq": 16
+  },
+  {
+    "actor": "robot:stedisa",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 3,
+      "hotel_id": "00000000-0000-0000-0000-00000000000c",
+      "month": "jul",
+      "situation": "S2"
+    },
+    "schema_ver": 1,
+    "seq": 17
+  },
+  {
+    "actor": "robot:brizni",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000d",
+      "month": "jul",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 500000,
+        "price_cents": 17300,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 24,
+        "training": "basic",
+        "wage_pct": 103
+      }
+    },
+    "schema_ver": 1,
+    "seq": 18
+  },
+  {
+    "actor": "robot:brizni",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 0,
+      "hotel_id": "00000000-0000-0000-0000-00000000000d",
+      "month": "jul",
+      "situation": "S2"
+    },
+    "schema_ver": 1,
+    "seq": 19
+  },
+  {
+    "actor": "robot:lovac",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000e",
+      "month": "jul",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 2500000,
+        "price_cents": 14000,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      }
+    },
+    "schema_ver": 1,
+    "seq": 20
+  },
+  {
+    "actor": "robot:lovac",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 1,
+      "hotel_id": "00000000-0000-0000-0000-00000000000e",
+      "month": "jul",
+      "situation": "S2"
+    },
+    "schema_ver": 1,
+    "seq": 21
+  },
+  {
+    "actor": "system",
+    "kind": "DebriefRecorded",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jun",
+      "source": "fallback",
+      "text": "Mentor: lipanj."
+    },
+    "schema_ver": 1,
+    "seq": 22
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "PlanSet",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jul",
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 16500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 34,
+        "training": "none",
+        "wage_pct": 95
+      }
+    },
+    "schema_ver": 1,
+    "seq": 23
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "ChatMessageSent",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jul",
+      "situation": "S2",
+      "text": "Što vas muči u kuhinji?"
+    },
+    "schema_ver": 1,
+    "seq": 24
+  },
+  {
+    "actor": "system",
+    "kind": "CharacterReplied",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jul",
+      "reply_to": 1,
+      "situation": "S2",
+      "source": "fallback",
+      "text": "Premalo nas je."
+    },
+    "schema_ver": 1,
+    "seq": 25
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "AnswerChosen",
+    "payload": {
+      "answer": 1,
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jul",
+      "situation": "S2"
+    },
+    "schema_ver": 1,
+    "seq": 26
+  },
+  {
+    "actor": "guest:00000000-0000-0000-0000-000000000063",
+    "kind": "RoundClosed",
+    "payload": {
+      "month": "jul"
+    },
+    "schema_ver": 1,
+    "seq": 27
+  },
+  {
+    "actor": "system",
+    "kind": "RoundResolved",
+    "payload": {
+      "hotels": [
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000b",
+          "indices": [
+            5614,
+            6857,
+            3480,
+            5693,
+            3956
+          ],
+          "plan": {
+            "maintenance": "deferred",
+            "marketing_cents": 0,
+            "price_cents": 16500,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 34,
+            "training": "none",
+            "wage_pct": 95
+          },
+          "progress_hundredths": 270,
+          "report": {
+            "after": {
+              "cash_cents": 39449500,
+              "category": "4",
+              "equipment_pts": 7100,
+              "experience_pts": 6602,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 14875,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 156,
+              "morale_pts": 4375,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 889,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7408,
+              "seasonal": 34,
+              "turnover_bp": 544,
+              "wage_pct": 95
+            },
+            "before": {
+              "cash_cents": 13684500,
+              "category": "4",
+              "equipment_pts": 7500,
+              "experience_pts": 7032,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 14875,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 160,
+              "morale_pts": 4450,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 900,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7808,
+              "seasonal": 28,
+              "turnover_bp": 533,
+              "wage_pct": 100
+            },
+            "guests": {
+              "quality_pts": 6953,
+              "rating_target": 856,
+              "satisfaction_target_pts": 7009,
+              "value_pts": 7000
+            },
+            "lines": [
+              {
+                "amount": 2902,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": 324,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 49434000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 14830200,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 12958000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1350000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 6591200,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 17000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 25765000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 6,
+                "cause": "hires",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 3,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": -75,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -1000,
+                "cause": "wage",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -730,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -11,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 300000,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": -300,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "points",
+                "var": "morale"
+              }
+            ],
+            "market": {
+              "available": 3720,
+              "base_demand": 2902,
+              "demand": 2996,
+              "f_marketing_bp": 10000,
+              "f_price_bp": 10000,
+              "f_reputation_bp": 10324,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2996,
+              "rooms_out": 0,
+              "sold": 2996,
+              "staff_capacity": 4612
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 38499200,
+              "gop_cents": 25765000,
+              "goppar_cents": 6926,
+              "interest_cents": 0,
+              "labor_cents": 14308000,
+              "other_revenue_cents": 14830200,
+              "rooms_revenue_cents": 49434000
+            },
+            "month": "jul",
+            "people": {
+              "departures": 3,
+              "experience_mix_pts": 6302,
+              "hires": 6,
+              "load_hundredths": 156,
+              "load_penalty_pts": 0,
+              "morale_target_pts": 4200,
+              "released": 0,
+              "staff": 62,
+              "turnover_bp": 544
+            }
+          },
+          "situations": [
+            {
+              "answer": 1,
+              "code": "S2",
+              "quality": 2
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000c",
+          "indices": [
+            4551,
+            4714,
+            3983,
+            4557,
+            5851
+          ],
+          "plan": {
+            "maintenance": "deferred",
+            "marketing_cents": 0,
+            "price_cents": 16500,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 29,
+            "training": "none",
+            "wage_pct": 95
+          },
+          "progress_hundredths": -538,
+          "report": {
+            "after": {
+              "cash_cents": 69792200,
+              "category": "4",
+              "equipment_pts": 5100,
+              "experience_pts": 5816,
+              "extra_wage_cents": 0,
+              "fixed_cents": 15000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 158,
+              "morale_pts": 4747,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 30,
+              "rating": 829,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6345,
+              "seasonal": 29,
+              "turnover_bp": 488,
+              "wage_pct": 95
+            },
+            "before": {
+              "cash_cents": 43102200,
+              "category": "4",
+              "equipment_pts": 5500,
+              "experience_pts": 6149,
+              "extra_wage_cents": 0,
+              "fixed_cents": 15000000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 163,
+              "morale_pts": 5110,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 30,
+              "rating": 834,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6373,
+              "seasonal": 23,
+              "turnover_bp": 434,
+              "wage_pct": 95
+            },
+            "guests": {
+              "quality_pts": 6751,
+              "rating_target": 814,
+              "satisfaction_target_pts": 6318,
+              "value_pts": 7000
+            },
+            "lines": [
+              {
+                "amount": 2902,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": -32,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 47718000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 14315400,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 12331000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1350000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 6362400,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 15000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 26690000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 6,
+                "cause": "hires",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 3,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": -363,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -1000,
+                "cause": "wage",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -633,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -28,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -5,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": -600,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "points",
+                "var": "morale"
+              }
+            ],
+            "market": {
+              "available": 3720,
+              "base_demand": 2902,
+              "demand": 2892,
+              "f_marketing_bp": 10000,
+              "f_price_bp": 10000,
+              "f_reputation_bp": 9968,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2892,
+              "rooms_out": 0,
+              "sold": 2892,
+              "staff_capacity": 4389
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 35343400,
+              "gop_cents": 26690000,
+              "goppar_cents": 7175,
+              "interest_cents": 0,
+              "labor_cents": 13681000,
+              "other_revenue_cents": 14315400,
+              "rooms_revenue_cents": 47718000
+            },
+            "month": "jul",
+            "people": {
+              "departures": 3,
+              "experience_mix_pts": 5516,
+              "hires": 6,
+              "load_hundredths": 158,
+              "load_penalty_pts": 0,
+              "morale_target_pts": 3900,
+              "released": 0,
+              "staff": 59,
+              "turnover_bp": 488
+            }
+          },
+          "situations": [
+            {
+              "answer": 3,
+              "code": "S2",
+              "quality": 1
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000d",
+          "indices": [
+            5683,
+            6893,
+            4471,
+            5811,
+            4641
+          ],
+          "plan": {
+            "maintenance": "regular",
+            "marketing_cents": 500000,
+            "price_cents": 17300,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 24,
+            "training": "basic",
+            "wage_pct": 103
+          },
+          "progress_hundredths": 843,
+          "report": {
+            "after": {
+              "cash_cents": 44577710,
+              "category": "4",
+              "equipment_pts": 7300,
+              "experience_pts": 7112,
+              "extra_wage_cents": 17600,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "sep",
+                  "price_cents": 11475,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 185,
+              "morale_pts": 5110,
+              "pending": {
+                "experience_pts": 400,
+                "morale_pts": 200,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 890,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7477,
+              "seasonal": 24,
+              "turnover_bp": 434,
+              "wage_pct": 103
+            },
+            "before": {
+              "cash_cents": 16331700,
+              "category": "4",
+              "equipment_pts": 7400,
+              "experience_pts": 6988,
+              "extra_wage_cents": 0,
+              "fixed_cents": 17000000,
+              "groups": [
+                {
+                  "month": "sep",
+                  "price_cents": 11475,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 186,
+              "morale_pts": 4450,
+              "pending": {
+                "experience_pts": 400,
+                "morale_pts": 200,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 901,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 7884,
+              "seasonal": 20,
+              "turnover_bp": 533,
+              "wage_pct": 103
+            },
+            "guests": {
+              "quality_pts": 7228,
+              "rating_target": 859,
+              "satisfaction_target_pts": 7071,
+              "value_pts": 6515
+            },
+            "lines": [
+              {
+                "amount": 2902,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": -388,
+                "cause": "price",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 329,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 375,
+                "cause": "marketing",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 51709700,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 15512910,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 11783200,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 900000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 500000,
+                "cause": "training",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 6575800,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1500000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 500000,
+                "cause": "marketing",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 17000000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 28246010,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 4,
+                "cause": "hires",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 2,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": 660,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 600,
+                "cause": "wage",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -250,
+                "cause": "load",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 200,
+                "cause": "training",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -576,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": 400,
+                "cause": "training",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -100,
+                "cause": "load",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": 400,
+                "cause": "maintenance",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -407,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": -11,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 200000,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 17600,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 600,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "points",
+                "var": "morale"
+              }
+            ],
+            "market": {
+              "available": 3720,
+              "base_demand": 2902,
+              "demand": 2989,
+              "f_marketing_bp": 10375,
+              "f_price_bp": 9612,
+              "f_reputation_bp": 10329,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 2989,
+              "rooms_out": 0,
+              "sold": 2989,
+              "staff_capacity": 3868
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 38976600,
+              "gop_cents": 28246010,
+              "goppar_cents": 7593,
+              "interest_cents": 0,
+              "labor_cents": 13200800,
+              "other_revenue_cents": 15512910,
+              "rooms_revenue_cents": 51709700
+            },
+            "month": "jul",
+            "people": {
+              "departures": 2,
+              "experience_mix_pts": 6412,
+              "hires": 4,
+              "load_hundredths": 185,
+              "load_penalty_pts": 500,
+              "morale_target_pts": 6650,
+              "released": 0,
+              "staff": 52,
+              "turnover_bp": 434
+            }
+          },
+          "situations": [
+            {
+              "answer": 0,
+              "code": "S2",
+              "quality": 5
+            }
+          ]
+        },
+        {
+          "hotel_id": "00000000-0000-0000-0000-00000000000e",
+          "indices": [
+            4463,
+            3893,
+            4578,
+            3455,
+            7433
+          ],
+          "plan": {
+            "maintenance": "regular",
+            "marketing_cents": 2500000,
+            "price_cents": 14000,
+            "renovation": false,
+            "reply_reviews": false,
+            "seasonal_target": 28,
+            "training": "none",
+            "wage_pct": 100
+          },
+          "progress_hundredths": -490,
+          "report": {
+            "after": {
+              "cash_cents": 100622250,
+              "category": "4",
+              "equipment_pts": 3800,
+              "experience_pts": 5844,
+              "extra_wage_cents": 0,
+              "fixed_cents": 14500000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 201,
+              "morale_pts": 5189,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 806,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6257,
+              "seasonal": 28,
+              "turnover_bp": 422,
+              "wage_pct": 100
+            },
+            "before": {
+              "cash_cents": 76218250,
+              "category": "4",
+              "equipment_pts": 3900,
+              "experience_pts": 5675,
+              "extra_wage_cents": 0,
+              "fixed_cents": 14500000,
+              "groups": [
+                {
+                  "month": "aug",
+                  "price_cents": 13125,
+                  "room_nights": 175
+                }
+              ],
+              "load_hundredths": 185,
+              "morale_pts": 5635,
+              "pending": {
+                "experience_pts": 0,
+                "morale_pts": 0,
+                "renovation": false
+              },
+              "permanent": 28,
+              "rating": 804,
+              "renovated": false,
+              "rooms": 120,
+              "satisfaction_pts": 6427,
+              "seasonal": 28,
+              "turnover_bp": 355,
+              "wage_pct": 100
+            },
+            "guests": {
+              "quality_pts": 6264,
+              "rating_target": 810,
+              "satisfaction_target_pts": 6088,
+              "value_pts": 8515
+            },
+            "lines": [
+              {
+                "amount": 2902,
+                "cause": "baseline",
+                "unit": "room_nights",
+                "var": "sold"
+              },
+              {
+                "amount": 1212,
+                "cause": "price",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": -194,
+                "cause": "reputation",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 938,
+                "cause": "marketing",
+                "unit": "bp",
+                "var": "sold"
+              },
+              {
+                "amount": 48846000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 14653800,
+                "cause": "other_revenue",
+                "unit": "cents",
+                "var": "revenue"
+              },
+              {
+                "amount": 12320000,
+                "cause": "wage",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 300000,
+                "cause": "hires",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 7675800,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 1500000,
+                "cause": "maintenance",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 2500000,
+                "cause": "marketing",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 14500000,
+                "cause": "fixed_costs",
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": 24404000,
+                "cause": "baseline",
+                "unit": "cents",
+                "var": "cash"
+              },
+              {
+                "amount": 2,
+                "cause": "turnover",
+                "unit": "people",
+                "var": "staff"
+              },
+              {
+                "amount": -446,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": -1050,
+                "cause": "load",
+                "unit": "points",
+                "var": "morale"
+              },
+              {
+                "amount": 300,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -131,
+                "cause": "turnover",
+                "unit": "points",
+                "var": "experience"
+              },
+              {
+                "amount": -400,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -100,
+                "cause": "load",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": 400,
+                "cause": "maintenance",
+                "unit": "points",
+                "var": "equipment"
+              },
+              {
+                "amount": -170,
+                "cause": "baseline",
+                "unit": "points",
+                "var": "satisfaction"
+              },
+              {
+                "amount": 2,
+                "cause": "baseline",
+                "unit": "rating_hundredths",
+                "var": "rating"
+              },
+              {
+                "amount": 300000,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "cents",
+                "var": "costs"
+              },
+              {
+                "amount": -300,
+                "cause": {
+                  "situation": "S2"
+                },
+                "unit": "points",
+                "var": "morale"
+              }
+            ],
+            "market": {
+              "available": 3720,
+              "base_demand": 2902,
+              "demand": 3489,
+              "f_marketing_bp": 10938,
+              "f_price_bp": 11212,
+              "f_reputation_bp": 9806,
+              "group_revenue_cents": 0,
+              "group_room_nights": 0,
+              "group_sold": 0,
+              "individual_sold": 3489,
+              "rooms_out": 0,
+              "sold": 3489,
+              "staff_capacity": 4166
+            },
+            "money": {
+              "capex_cents": 0,
+              "costs_cents": 39095800,
+              "gop_cents": 24404000,
+              "goppar_cents": 6560,
+              "interest_cents": 0,
+              "labor_cents": 12620000,
+              "other_revenue_cents": 14653800,
+              "rooms_revenue_cents": 48846000
+            },
+            "month": "jul",
+            "people": {
+              "departures": 2,
+              "experience_mix_pts": 5544,
+              "hires": 0,
+              "load_hundredths": 201,
+              "load_penalty_pts": 2100,
+              "morale_target_pts": 4150,
+              "released": 0,
+              "staff": 56,
+              "turnover_bp": 422
+            }
+          },
+          "situations": [
+            {
+              "answer": 1,
+              "code": "S2",
+              "quality": 2
+            }
+          ]
+        }
+      ],
+      "month": "jul"
+    },
+    "schema_ver": 1,
+    "seq": 28
+  },
+  {
+    "actor": "system",
+    "kind": "DebriefRecorded",
+    "payload": {
+      "hotel_id": "00000000-0000-0000-0000-00000000000b",
+      "month": "jul",
+      "source": "fallback",
+      "text": "Mentor: srpanj."
+    },
+    "schema_ver": 1,
+    "seq": 29
+  }
+]
