@@ -17,7 +17,8 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
   [DECISIONS.md](DECISIONS.md) i poveznicama ravno na odluke. T9: pravila i tok rada zapisani, pregled popravljen.
 - **Brojke prije → poslije** (`node scripts/check-docs.mjs --popis`): najveća datoteka 4733 → 4104 redaka, a bez dviju
   iznimki 4733 → 1037 (arhivski task; granica arhive 1100), najveći živi dokument izvan iznimki 772 → 263 (plan ove
-  sesije; granica 300); `.md` pod `docs/` 36 → 136; preko granice 10 → 2 (samo iznimke).- **Provjere:** `check:docs`, `test:docs` (90 testova), `adr.mjs indeks --provjeri` i `lint` — sve izlaz 0.
+  sesije; granica 300); `.md` pod `docs/` 36 → 136; preko granice 10 → 2 (samo iznimke).
+- **Provjere:** `check:docs`, `test:docs` (90 testova), `adr.mjs indeks --provjeri` i `lint` — sve izlaz 0.
 - **Gdje se vidi:** samo lokalno, grana `dokumentacija/raspored` — **nije pushana ni spojena**.
 - **Odluka:** [ADR-030](DECISIONS/ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) 🟨 čeka Leonov pregled.
 - **Slijedi:** završni pregled grane; uz Leonov OK push grane, CI, spajanje u `main` (novi OK za push). Zatim sesija koda
