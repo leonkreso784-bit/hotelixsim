@@ -37,8 +37,7 @@
 
 ### Pravila (čuva ih `corepack pnpm check:docs`, i u CI-ju)
 
-1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku ili mapu koje nema pada. Isto vrijedi za bilo koju
-   datoteku (npr. sliku ili skriptu).
+1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku, skriptu ili mapu koje nema pada.
 2. **Svaki `.md` pod `docs/` je naveden u svom indeksu.** Dokument koji nigdje nije naveden je „duh". Dokumenti u
    `docs/<uloga>/` navedeni su ovdje; dijelovi u mapi `X/` navedeni su u `X.md`.
 3. **Jedan aktivni plan po području.** Svaki plan u zaglavlju ima `**Područje:** kod` ili `**Područje:** dokumentacija`
@@ -57,7 +56,8 @@
 
 ### Granice veličine
 
-Granica se mjeri u **redcima** (osim `CLAUDE.md`: znakovi). Izvor je u kodu, `scripts/docs-granice.mjs`; brana ih provodi.
+Granica se mjeri u **redcima** (osim `CLAUDE.md`: znakovi). Izvor granica za dokumente je `scripts/docs-granice.mjs`, a budžet `CLAUDE.md`
+je `CLAUDE_BUDGET` u `scripts/check-docs.mjs`; brana provodi oba.
 Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 
 | vrsta | gdje | granica | zašto |
@@ -74,7 +74,7 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 Dokument `X.md` koji preraste granicu postaje kratak **indeks** (svrha i tablica „§ → datoteka"), a dijelovi idu u
 **mapu `X/`** pokraj njega. Ovaj `README.md` ostaje jedini ulaz: navodi `X.md`, a `X.md` navodi svoje dijelove. Brojevi
 paragrafa (§) ostaju u naslovima dijelova, pa navodi poput „ARHITEKTURA §7.2" i stare poveznice i dalje vrijede.
-Danas je tako složeno: ARHITEKTURA, DEMO i pet arhivskih planova.
+Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova i ADR-ovi (`records/DECISIONS/`).
 
 ### Planovi, područja i ADR-ovi
 

@@ -16,11 +16,12 @@
 //    5) CLAUDE.md je preko budžeta                                           → trošak svake sesije
 //    6) ćirilica u .md izvan koda                                            → kopirano slovo-dvojnik
 //    7) docs/plan/*.md i docs/plan/*/*.md proglašava plan iz archive/ AKTIVNIM → arhiva laže da je živa
+//    8) podindeks: X.md uz mapu X/ mora postojati i biti naveden; dublja razina pada → provodi se u bloku 2
 //    9) .md pod docs/ preko granice redaka (scripts/docs-granice.mjs; prijelazne iznimke izuzete) → veličina
 //   10) ADR: ako postoji docs/records/DECISIONS/ — imena ADR-NNN-slug.md, jedinstveni brojevi i
 //       DECISIONS.md jednak generiranom indeksu (scripts/adr.mjs); DECISIONS.md bez mape pada → ADR po datoteci
 //   11) poveznica koja cilja DECISIONS.md#adr-… (osim u prijelaznim iznimkama)  → stari način navođenja ADR-a
-//   (brojevi prate plan dokumentacije; pravilo 8 „podindeks" je dio pravila 2)
+//   (brojevi prate plan dokumentacije)
 //
 // Pokreni: pnpm check:docs   |   korijen se može zadati: node scripts/check-docs.mjs <dir>
 // ili env CHECK_DOCS_ROOT (tako ga testira check-docs.test.mjs nad privremenim mapama).
@@ -266,7 +267,7 @@ for (const r of mdFiles.filter((x) => /^docs\/plan\/(?:[^/]+\/)?[^/]+\.md$/.test
 }
 
 // ── 9) veličina ─────────────────────────────────────────────────────
-// Granice su u scripts/docs-granice.mjs (predaja 60, ADR 120, indeks 200, ostalo 300, arhiva 1100).
+// Granice (i njihovi brojevi) su samo u scripts/docs-granice.mjs; ovdje se čitaju iz tog modula.
 // Veliki dokument se ne reže ručno nego u indeks + mapu istog imena. Prijelazne iznimke su izuzete.
 for (const r of mdFiles.filter((x) => x.startsWith("docs/"))) {
   const g = granicaDatoteke(r);

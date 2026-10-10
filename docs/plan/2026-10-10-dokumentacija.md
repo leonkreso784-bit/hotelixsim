@@ -83,7 +83,10 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
   `model-v2/sloj1` **između valova** (nijedno radno stablo taska otvoreno) i prenosi pretinac (postupak na kraju plana);
   (3) od tada sesija koda piše po novim pravilima; (4) nakon spajanja Sloja 1 u `main` slijede Taskovi 11–13.
 - **Sukob pri spajanju:** tekst (činjenice) uzmi s grane koda, mjesto (raspored) s grane dokumentacije; zatim
-  `node scripts/adr.mjs poveznice` i `corepack pnpm check:docs`. Ako je kod ipak prvi u `main`: grana dokumentacije
+  `node scripts/adr.mjs poveznice` i `corepack pnpm check:docs`. **Iznimka — sukob u `docs/records/DECISIONS.md`:**
+  uzmi stranu koda, pa `node scripts/adr.mjs razdvoji` (iznova piše 001–028 identično), `corepack pnpm docs:adr`,
+  `node scripts/adr.mjs poveznice`; pravilo „raspored s grane dokumentacije” ondje bi tiho izgubilo novi ADR sesije
+  koda. Ako je kod ipak prvi u `main`: grana dokumentacije
   spaja `main`, novi `## ADR-…` blok iz staroga `DECISIONS.md` postaje datoteka, pa `corepack pnpm docs:adr`.
 
 ## Global Constraints
@@ -257,6 +260,8 @@ uz pečat `✅ ISPUNJEN datum`) + mapa; ledger kao `docs/archive/2026-10-10-v2-s
 
 1. Između valova (nijedno radno stablo taska otvoreno): `git -C C:/Users/leonk/Documents/hotelixsim merge main`.
 2. Sukobi: tekst s grane koda, raspored s grane dokumentacije (pravilo iz Protokola); `node scripts/adr.mjs poveznice`.
+   Sukob u `docs/records/DECISIONS.md`: uzmi stranu koda, pa `node scripts/adr.mjs razdvoji` (iznova piše 001–028
+   identično), `corepack pnpm docs:adr`, `node scripts/adr.mjs poveznice`.
 3. Pretinac `za-dokumentaciju.md`: ADR-ovi → `docs/records/DECISIONS/ADR-0NN-<slug>.md` (029 je Slojev, ostali dobivaju
    sljedeće slobodne brojeve) + `corepack pnpm docs:adr`; BACKLOG, CHANGELOG i PROGRESS unosi u svoje datoteke; pretinac se briše.
 4. `corepack pnpm check:docs` i `corepack pnpm test:docs`, svaki `echo EXIT=$?` → 0; commit „Spoji raspored dokumentacije".

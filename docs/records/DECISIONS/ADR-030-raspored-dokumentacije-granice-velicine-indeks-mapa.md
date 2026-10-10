@@ -5,7 +5,7 @@
 JAKO JAKO loše. Sve treba biti savršeno raspoređeno u dokumentacijama jer to je srce naših operacija."* Plan sloja 1 imao
 je preko 4000 redaka, arhivirani planovi do 4700, ADR-ovi su bili jedna datoteka od 623 retka.
 
-**Odluka (pretpostavka).** Osam pravila, sva provodi `check:docs`:
+**Odluka (pretpostavka).** Osam pravila; `check:docs` provodi točke 1, 2, 4, 5 i 8, a ostale su način rada:
 1. **Indeks + mapa istog imena.** Dokument `X.md` koji preraste granicu postaje kratak indeks (svrha, tablica
    „§ → datoteka"), a dijelovi idu u mapu `X/` pokraj njega. `docs/README.md` ostaje jedini ulaz. Samo jedna razina
    (`docs/<uloga>/X/Y/*.md` je zabranjen). Stare poveznice i navodi u kodu („ARHITEKTURA §7.2") ostaju točni jer se

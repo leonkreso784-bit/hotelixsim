@@ -10,7 +10,8 @@
 2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** kod|dokumentacija`. Najviše jedan aktivni plan **po području**;
    dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan unutar granice živog dokumenta ([tablica](../README.md#granice-veličine)) smije biti jedna datoteka. Veći se **prije
    aktivacije** razdvaja u pregled + mapu taskova: prvo `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa
-   `corepack pnpm docs:plan <plan.md>`. Granice veličine: [tablica](../README.md#granice-veličine).
+   `corepack pnpm docs:plan <plan.md>`. Pregled razdvojenog plana ima granicu indeksa iz iste tablice, pa
+   velik plan treba pisati tako da pregled stane, inače se ne može aktivirati.
 3. **Gradnja** (`superpowers:subagent-driven-development`) na zasebnoj grani (npr. `gradnja/<ime>`): jedan izvođač po tasku.
 4. **Pregled nakon svakog taska** — zaseban pregledavatelj, ne izvođač. Nalaz se vraća izvođaču; tek zeleno ide dalje.
 5. **Završni pregled** cijele grane na najjačem modelu; odgođeni nalazi idu u [BACKLOG](../records/BACKLOG.md).
@@ -28,9 +29,10 @@ pregledu plana (`<datum>-<ime>`), i kad je plan razdvojen.
   Ako je potreban `task-brief`, uvijek s trećim argumentom, inače radni prostor dobije ime taska:
   `task-brief <mapa>/task-NN-x.md N "$(sdd-workspace <pregled>.md)/task-N-brief.md"`
 - **Dvije sesije paralelno** samo na različitim područjima (`kod` i `dokumentacija`), svaka sa svojim aktivnim planom.
-- **Pretinac.** Dok jedna sesija radi na dokumentaciji, sesija koda ne piše u `docs/records/`. Svoje bilješke ostavlja u
-  `.superpowers/sdd/<plan>/za-dokumentaciju.md`, u odjeljcima `## ADR`, `## BACKLOG`, `## CHANGELOG`, `## PROGRESS`;
-  sesija dokumentacije ih prenese pri `/kraj`.
+- **Pretinac.** Dok traje faza A (plan dokumentacije, Protokol paralelnih sesija), sesija koda ne piše u
+  `docs/records/`. Svoje bilješke ostavlja u `.superpowers/sdd/<plan>/za-dokumentaciju.md`, u odjeljcima `## ADR`,
+  `## BACKLOG`, `## CHANGELOG`, `## PROGRESS`. Pretinac prenosi sesija koda kad spoji `main` (plan dokumentacije →
+  „Spajanje u sesiju koda”); sesija dokumentacije ga samo čita.
 
 ## 3 · Model po poslu
 

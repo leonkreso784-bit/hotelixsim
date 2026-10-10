@@ -157,3 +157,9 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
 - [ci] **`ubuntu-latest` prelazi na Ubuntu 26 od 19.10.** — provjeriti da poslovi `rust` i `web` prolaze, po potrebi pinirati sliku. (isto upozorenje CI-ja)
 - [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)
 - [ci] **`cargo-deny-action@v2` koristi vlastiti Rust, a repo `rust-toolchain` 1.98.1** — provjeriti na prvom CI-u. (Task 8 #3, L88)
+- [alati] **Brana i alati dokumentacije — sitni nalazi (2026-10-10)** (završni pregled; danas ništa ne puca):
+  1. skener poveznica ne zna ciljeve `<…>`, naslove `'…'`/`(…)`, escape `\[a](x)` ni reference-style `[x]: url` (danas 0 pojava; pravila 1 i 11 ih ne vide);
+  2. ograde u listama/citatima (uvlaka ≥4) i inline kod preko više redaka nisu prepoznati;
+  3. `razdvoji-plan` prepisuje izvornik prije provjere s diska (bolje: usporedba u memoriji prije pisanja); nema testa da izmjena tablice ne mijenja spoj;
+  4. `adr.mjs razdvoji` pri ponovnom pokretanju prepisuje ADR datoteke bez upozorenja kad se razlikuju; `procitajAdr` gleda samo 5 redaka zaglavlja;
+  5. brana: Područje se čita iz prvih 10 redaka; nema testa za skidanje `?upita`; sidra (`#granice-veličine`) se ne provjeravaju.

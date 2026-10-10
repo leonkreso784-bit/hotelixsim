@@ -25,16 +25,17 @@ odlučeno ili ostalo otvoreno. Necommitane tuđe izmjene ne diraj — javi ih.
 
 ## 3 · Odluke
 
-Svaka odluka iz sesije → **nova datoteka** `docs/records/DECISIONS/ADR-0NN-<slug>.md` (sljedeći broj; naslov
+Svaka odluka iz sesije → **nova datoteka** `docs/records/DECISIONS/ADR-0NN-<slug>.md` (sljedeći broj = najveći postojeći + 1, ne prva rupa; ADR-029 je rezerviran za Sloj 1; naslov
 `# ADR-0NN — naslov`, pa redak `**Datum:** … · **Status:** … · **Vezano:** …`; Leonov citat doslovno ako postoji; razlog,
 cijena ako je krivo). Zatim `corepack pnpm docs:adr` osvježi popis `DECISIONS.md` — njega nikad ne uređuj ručno. Pravilo „radi bez pitanja": pretpostavke koje
 si donio umjesto Leona → ADR sa statusom `🟨 ČEKA LEONOV PREGLED`.
 
 ## 4 · Plan i backlog
 
-- Ažuriraj aktivni plan u `docs/plan/` (zaglavlje `**Status:** 🟩 AKTIVAN`; najviše jedan).
+- Ažuriraj aktivni plan u `docs/plan/` (zaglavlje `**Status:** 🟩 AKTIVAN`; najviše jedan po području).
 - Ispunjen plan → `git mv` u `docs/archive/` s pečatom `✅ ISPUNJEN datum` u zaglavlju, **istog dana**. Ako prelazi granicu arhive
   ([tablica](../../../docs/README.md#granice-veličine)) ili ima taskove, razdvoji ga: `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa `corepack pnpm docs:plan <plan.md>`.
+  Kod razdvojenog plana (pregled + mapa) `git mv` premješta i pregled i mapu.
 - Ledger subagenata iz `.superpowers/sdd/` (gitignoriran) kopiraj u `docs/archive/<datum>-<ime>-ledger.md`.
 - Novo neriješeno → `docs/records/BACKLOG.md`; riješeno iz backloga → **obriši** redak.
 
