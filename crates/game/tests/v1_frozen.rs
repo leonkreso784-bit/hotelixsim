@@ -233,7 +233,7 @@ fn old_v1_game_rounds_resolve_to_the_stored_numbers() {
             continue;
         };
         let before = Game::fold(&recs[..i]).unwrap();
-        let again = before.resolve_round(stored.month.into()).unwrap();
+        let again = before.resolve_round(stored.month).unwrap();
         assert_eq!(&again, stored, "obračun {:?}", stored.month);
         checked += 1;
     }
@@ -248,7 +248,7 @@ fn old_v1_game_resolve_job_replays_the_stored_system_events() {
             continue;
         };
         let g = Game::fold(&recs[..=i]).unwrap();
-        let ResolveStep::Done(evs) = g.resolve_job(c.month.into(), false).unwrap() else {
+        let ResolveStep::Done(evs) = g.resolve_job(c.month, false).unwrap() else {
             panic!("presude su već u dnevniku, obračun ne čeka");
         };
         let stored: Vec<(Actor, GameEvent)> = recs[i + 1..i + 1 + evs.len()]

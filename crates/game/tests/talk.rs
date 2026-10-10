@@ -1,6 +1,5 @@
 mod common;
 
-use game::dto::MonthCode;
 use game::feed::FeedItem;
 use game::talk::{MAX_TEXT_CHARS, ReplyBody};
 use game::*;
@@ -112,7 +111,7 @@ fn new_events_roundtrip_through_payload() {
     };
     let verdict = VerdictRecorded {
         hotel_id: h,
-        month: MonthCode::Jun,
+        month: RoundKey::Month(Month::Jun),
         situation: "S1".into(),
         criteria: vec![CriterionVerdict {
             n: 1,
@@ -129,13 +128,13 @@ fn new_events_roundtrip_through_payload() {
     let all = vec![
         GameEvent::ChatMessageSent(ChatMessageSent {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             situation: "S1".into(),
             text: "halo".into(),
         }),
         GameEvent::CharacterReplied(CharacterReplied {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             situation: "S1".into(),
             reply_to: 1,
             text: "Da?".into(),
@@ -144,7 +143,7 @@ fn new_events_roundtrip_through_payload() {
         }),
         GameEvent::ResponseSubmitted(ResponseSubmitted {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             situation: "S1".into(),
             text: "odgovor".into(),
         }),
@@ -152,7 +151,7 @@ fn new_events_roundtrip_through_payload() {
         GameEvent::VerdictLate(verdict),
         GameEvent::DebriefRecorded(DebriefRecorded {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             text: "mentor".into(),
             source: AiSource::Ai,
             meta: Some(meta),

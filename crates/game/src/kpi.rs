@@ -3,14 +3,15 @@
 
 use sim_hotel::{Catalog, Category, KpiInput, Month, MonthKpi, kpi};
 
-use crate::dto::{MonthCode, MonthReportDto};
+use crate::dto::MonthReportDto;
 use crate::error::{GameError, corrupt};
 use crate::game::Game;
 use crate::ids::HotelId;
+use crate::round::RoundKey;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KpiMonth {
-    pub month: MonthCode,
+    pub round: RoundKey,
     pub kpi: MonthKpi,
 }
 
@@ -41,7 +42,7 @@ impl Game {
     pub fn hotel_kpi(&self, id: HotelId) -> Result<Vec<KpiMonth>, GameError> {
         self.hotel(id)?;
         let mut out = Vec::new();
-        for m in &self.months {
+        for m in &self.rounds {
             let Some(rr) = self.resolved.get(m) else {
                 continue;
             };
@@ -51,7 +52,7 @@ impl Game {
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             out.push(KpiMonth {
-                month: rr.month,
+                round: rr.month,
                 kpi: report_kpi(&res.report, &self.content.catalog)?,
             });
         }

@@ -2,8 +2,9 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use crate::actor::Actor;
-use crate::dto::{MonthCode, MonthReportDto, PlanDto};
+use crate::dto::{MonthReportDto, PlanDto};
 use crate::ids::{GameId, GuestId, HotelId};
+use crate::round::RoundKey;
 
 /// Verzija oblika svih događaja; promjena oblika = nova verzija i „podizanje" starih pri čitanju (ARHITEKTURA §9.1).
 pub const SCHEMA_VER: i32 = 1;
@@ -19,7 +20,7 @@ pub struct GameCreated {
     /// Sirovi snimak kakav je spremljen; otisak se računa nad njim. U kutiji jer je velik u odnosu na ostale događaje
     /// (`clippy::large_enum_variant`).
     pub snapshot: Box<serde_json::Value>,
-    pub months: Vec<MonthCode>,
+    pub months: Vec<RoundKey>,
     pub hotels: Vec<HotelSetup>,
 }
 
@@ -51,7 +52,7 @@ pub enum Controller {
 #[serde(deny_unknown_fields)]
 pub struct PlanSet {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub plan: PlanDto,
 }
 
@@ -59,7 +60,7 @@ pub struct PlanSet {
 #[serde(deny_unknown_fields)]
 pub struct AnswerChosen {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub situation: String,
     pub answer: u8,
 }
@@ -67,13 +68,13 @@ pub struct AnswerChosen {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RoundClosed {
-    pub month: MonthCode,
+    pub month: RoundKey,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RoundResolved {
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub hotels: Vec<HotelResolution>,
 }
 
@@ -136,7 +137,7 @@ pub struct CriterionVerdict {
 #[serde(deny_unknown_fields)]
 pub struct ChatMessageSent {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub situation: String,
     pub text: String,
 }
@@ -145,7 +146,7 @@ pub struct ChatMessageSent {
 #[serde(deny_unknown_fields)]
 pub struct CharacterReplied {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub situation: String,
     /// Redni broj studentove poruke na koju lik odgovara (1..=6).
     pub reply_to: u8,
@@ -159,7 +160,7 @@ pub struct CharacterReplied {
 #[serde(deny_unknown_fields)]
 pub struct ResponseSubmitted {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub situation: String,
     pub text: String,
 }
@@ -168,7 +169,7 @@ pub struct ResponseSubmitted {
 #[serde(deny_unknown_fields)]
 pub struct VerdictRecorded {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub situation: String,
     /// Pet ocjena kriterija (prazno kod neutralne presude).
     pub criteria: Vec<CriterionVerdict>,
@@ -187,7 +188,7 @@ pub struct VerdictRecorded {
 #[serde(deny_unknown_fields)]
 pub struct DebriefRecorded {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
     pub text: String,
     pub source: AiSource,
     #[serde(default, skip_serializing_if = "Option::is_none")]

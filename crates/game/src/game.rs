@@ -3,8 +3,7 @@ use std::collections::btree_map::Entry;
 
 use content::Content;
 use sim_hotel::{
-    Category, HotelState, IndexSet, Month, MonthPlan, Profile, RefTable, SituationTemplate,
-    start_indices,
+    Category, HotelState, IndexSet, MonthPlan, Profile, RefTable, SituationTemplate, start_indices,
 };
 
 use crate::actor::{Actor, strategy_from_code};
@@ -14,6 +13,7 @@ use crate::event::{
     VerdictRecorded,
 };
 use crate::ids::{GameId, HotelId};
+use crate::round::RoundKey;
 use crate::talk::MAX_CHAT_MESSAGES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,11 +58,11 @@ pub struct HotelRecord {
     pub profile: Profile,
     pub start_state: HotelState,
     pub start_indices: IndexSet,
-    pub plans: BTreeMap<Month, MonthPlan>,
-    pub answers: BTreeMap<(Month, String), u8>,
-    pub chats: BTreeMap<(Month, String), Vec<ChatLine>>,
-    pub responses: BTreeMap<(Month, String), FreeResponse>,
-    pub debriefs: BTreeMap<Month, DebriefRecorded>,
+    pub plans: BTreeMap<RoundKey, MonthPlan>,
+    pub answers: BTreeMap<(RoundKey, String), u8>,
+    pub chats: BTreeMap<(RoundKey, String), Vec<ChatLine>>,
+    pub responses: BTreeMap<(RoundKey, String), FreeResponse>,
+    pub debriefs: BTreeMap<RoundKey, DebriefRecorded>,
 }
 
 /// Projekcija dnevnika: stanje igre dobiveno slijedom događaja (`fold`).
@@ -70,13 +70,13 @@ pub struct HotelRecord {
 pub struct Game {
     pub id: GameId,
     pub seed: u64,
-    pub months: Vec<Month>,
+    pub rounds: Vec<RoundKey>,
     /// Verzija jezgre kojom je igra stvorena; obračun se odbija na drugoj (BACKLOG M3).
     pub core_version: String,
     pub content: Content,
     pub hotels: Vec<HotelRecord>,
-    pub closed: BTreeMap<Month, Actor>,
-    pub resolved: BTreeMap<Month, RoundResolved>,
+    pub closed: BTreeMap<RoundKey, Actor>,
+    pub resolved: BTreeMap<RoundKey, RoundResolved>,
     pub last_seq: i64,
     pub history: Vec<Recorded>,
     refs: BTreeMap<Category, RefTable>,
@@ -153,7 +153,7 @@ impl Game {
         Ok(Game {
             id: c.game_id,
             seed: c.seed,
-            months: c.months.iter().map(|&m| m.into()).collect(),
+            rounds: c.months.clone(),
             core_version: c.core_version.clone(),
             content,
             hotels,
@@ -176,13 +176,13 @@ impl Game {
         match &r.event {
             GameEvent::GameCreated(_) => return Err(corrupt("drugi GameCreated")),
             GameEvent::PlanSet(p) => {
-                let m = p.month.into();
+                let m = p.month;
                 self.expect_open(m)?;
                 let plan = MonthPlan::from(&p.plan);
                 self.hotel_mut(p.hotel_id)?.plans.insert(m, plan);
             }
             GameEvent::AnswerChosen(a) => {
-                let m = a.month.into();
+                let m = a.month;
                 self.expect_open(m)?;
                 let h = self.hotel_mut(a.hotel_id)?;
                 if h.responses.contains_key(&(m, a.situation.clone())) {
@@ -199,7 +199,7 @@ impl Game {
                 }
             }
             GameEvent::ChatMessageSent(c) => {
-                let m = c.month.into();
+                let m = c.month;
                 self.expect_open(m)?;
                 self.expect_free_text(m, &c.situation)?;
                 let h = self.hotel_mut(c.hotel_id)?;
@@ -219,7 +219,7 @@ impl Game {
                 });
             }
             GameEvent::CharacterReplied(c) => {
-                let m = c.month.into();
+                let m = c.month;
                 self.expect_open(m)?;
                 let h = self.hotel_mut(c.hotel_id)?;
                 let lines = h.chats.entry((m, c.situation.clone())).or_default();
@@ -234,7 +234,7 @@ impl Game {
                 });
             }
             GameEvent::ResponseSubmitted(s) => {
-                let m = s.month.into();
+                let m = s.month;
                 self.expect_open(m)?;
                 self.expect_free_text(m, &s.situation)?;
                 let h = self.hotel_mut(s.hotel_id)?;
@@ -252,7 +252,7 @@ impl Game {
                 );
             }
             GameEvent::VerdictRecorded(v) => {
-                let m = v.month.into();
+                let m = v.month;
                 if !matches!(self.status(m)?, RoundStatus::Open | RoundStatus::Closing) {
                     return Err(corrupt("presuda za rundu koja nije otvorena ni zatvorena"));
                 }
@@ -267,7 +267,7 @@ impl Game {
                 fr.verdict = Some(v.clone());
             }
             GameEvent::VerdictLate(v) => {
-                let m = v.month.into();
+                let m = v.month;
                 let resolved = self.status(m)? == RoundStatus::Resolved;
                 let h = self.hotel_mut(v.hotel_id)?;
                 let fr = h
@@ -280,7 +280,7 @@ impl Game {
                 fr.late.push(v.clone());
             }
             GameEvent::DebriefRecorded(d) => {
-                let m = d.month.into();
+                let m = d.month;
                 if self.status(m)? != RoundStatus::Resolved {
                     return Err(corrupt("mentor za rundu koja nije obračunata"));
                 }
@@ -290,12 +290,12 @@ impl Game {
                 }
             }
             GameEvent::RoundClosed(c) => {
-                let m = c.month.into();
+                let m = c.month;
                 self.expect_open(m)?;
                 self.closed.insert(m, r.actor.clone());
             }
             GameEvent::RoundResolved(rr) => {
-                let m = rr.month.into();
+                let m = rr.month;
                 if self.status(m)? != RoundStatus::Closing {
                     return Err(corrupt("obračun runde koja nije zatvorena"));
                 }
@@ -307,19 +307,19 @@ impl Game {
         Ok(())
     }
 
-    fn expect_open(&self, m: Month) -> Result<(), GameError> {
+    fn expect_open(&self, m: RoundKey) -> Result<(), GameError> {
         match self.status(m)? {
             RoundStatus::Open => Ok(()),
             s => Err(corrupt(format!("događaj za rundu u stanju {s:?}"))),
         }
     }
 
-    fn expect_free_text(&self, m: Month, code: &str) -> Result<(), GameError> {
+    fn expect_free_text(&self, m: RoundKey, code: &str) -> Result<(), GameError> {
         let ok = self
             .content
             .situations
             .iter()
-            .any(|t| t.month == m && t.code == code)
+            .any(|t| RoundKey::Month(t.month) == m && t.code == code)
             && self.content.ai.get(code).is_some_and(|a| a.free_text);
         if ok {
             Ok(())
@@ -342,37 +342,43 @@ impl Game {
             .ok_or(GameError::UnknownHotel)
     }
 
-    pub fn current_month(&self) -> Option<Month> {
-        self.months
+    pub fn current_round(&self) -> Option<RoundKey> {
+        self.rounds
             .iter()
             .copied()
             .find(|m| !self.resolved.contains_key(m))
     }
 
-    pub fn status(&self, m: Month) -> Result<RoundStatus, GameError> {
-        if !self.months.contains(&m) {
+    pub fn status(&self, m: impl Into<RoundKey>) -> Result<RoundStatus, GameError> {
+        let m = m.into();
+        if !self.rounds.contains(&m) {
             return Err(GameError::UnknownMonth);
         }
         Ok(if self.resolved.contains_key(&m) {
             RoundStatus::Resolved
         } else if self.closed.contains_key(&m) {
             RoundStatus::Closing
-        } else if self.current_month() == Some(m) {
+        } else if self.current_round() == Some(m) {
             RoundStatus::Open
         } else {
             RoundStatus::Scheduled
         })
     }
 
-    /// Stanje hotela na POČETKU mjeseca `m`: početno stanje ili `after` iz obračuna prethodnog mjeseca.
-    pub fn state_at(&self, hotel: HotelId, m: Month) -> Result<HotelState, GameError> {
+    /// Stanje hotela na POČETKU kruga `m`: početno stanje ili `after` iz obračuna prethodnog kruga.
+    pub fn state_at(
+        &self,
+        hotel: HotelId,
+        m: impl Into<RoundKey>,
+    ) -> Result<HotelState, GameError> {
+        let m = m.into();
         let h = self.hotel(hotel)?;
         let pos = self
-            .months
+            .rounds
             .iter()
             .position(|&x| x == m)
             .ok_or(GameError::UnknownMonth)?;
-        let Some(prev) = pos.checked_sub(1).and_then(|p| self.months.get(p)) else {
+        let Some(prev) = pos.checked_sub(1).and_then(|p| self.rounds.get(p)) else {
             return Ok(h.start_state.clone());
         };
         let rr = self.resolved.get(prev).ok_or(GameError::RoundNotOpen)?;
@@ -388,7 +394,7 @@ impl Game {
     pub fn latest_state(&self, hotel: HotelId) -> Result<HotelState, GameError> {
         let h = self.hotel(hotel)?;
         let Some(last) = self
-            .months
+            .rounds
             .iter()
             .rev()
             .find(|m| self.resolved.contains_key(m))
@@ -408,25 +414,37 @@ impl Game {
     }
 
     /// Zadnji postavljeni plan ili zadani (DEMO §6.1).
-    pub fn effective_plan(&self, hotel: HotelId, m: Month) -> Result<MonthPlan, GameError> {
+    pub fn effective_plan(
+        &self,
+        hotel: HotelId,
+        m: impl Into<RoundKey>,
+    ) -> Result<MonthPlan, GameError> {
+        let m = m.into();
         let h = self.hotel(hotel)?;
         if let Some(p) = h.plans.get(&m) {
             return Ok(p.clone());
         }
         let state = self.state_at(hotel, m)?;
-        MonthPlan::default_for(&state, m, &self.content.catalog)
+        MonthPlan::default_for(&state, m.require_month()?, &self.content.catalog)
             .map_err(|e| corrupt(format!("{e:?}")))
     }
 
-    pub fn situations_in(&self, m: Month) -> Vec<&SituationTemplate> {
+    /// Situacije kruga: za mjesec situacije tog mjeseca, za tjedan (Task 6) za sada prazno.
+    pub fn situations_in(&self, r: impl Into<RoundKey>) -> Vec<&SituationTemplate> {
+        let month = r.into().month();
         self.content
             .situations
             .iter()
-            .filter(|t| t.month == m)
+            .filter(|t| Some(t.month) == month)
             .collect()
     }
 
-    pub fn unanswered_count(&self, hotel: HotelId, m: Month) -> Result<u8, GameError> {
+    pub fn unanswered_count(
+        &self,
+        hotel: HotelId,
+        m: impl Into<RoundKey>,
+    ) -> Result<u8, GameError> {
+        let m = m.into();
         let h = self.hotel(hotel)?;
         let n = self
             .situations_in(m)

@@ -1,8 +1,9 @@
 //! Naredbe runde: svaka je JEDAN `decide`, pa provjera prava i pravila igre i upis idu pod istim zaključavanjem.
 //! Redoslijed provjera: igra postoji (`fold_raw`), pravo (`member_hotel`/`require_owner`), pravilo igre.
-use game::dto::{MonthCode, PlanDto};
+use game::RoundKey;
+use game::dto::PlanDto;
 use game::{Actor, GameId, HotelId};
-use sim_hotel::{Month, MonthPlan};
+use sim_hotel::MonthPlan;
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{RESOLVE_KIND, ResolvePayload, resolve_key};
@@ -15,12 +16,12 @@ pub async fn set_plan(
     deps: &Deps,
     caller: &Caller,
     hotel: HotelId,
-    month: MonthCode,
+    month: RoundKey,
     plan: PlanDto,
 ) -> Result<PlanDto, AppError> {
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
-    let m: Month = month.into();
+    let m = month;
     let core = MonthPlan::from(&plan);
     deps.log
         .decide(
@@ -70,12 +71,12 @@ pub async fn round_status(
     deps: &Deps,
     caller: &Caller,
     game_id: GameId,
-    month: MonthCode,
+    month: RoundKey,
 ) -> Result<RoundView, AppError> {
     let guest = caller.require()?;
     let g = load_game(deps, game_id).await?;
     let mine = member_hotel(&g, guest)?;
-    round_view(&g, month.into(), mine)
+    round_view(&g, month, mine)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -89,10 +90,10 @@ pub async fn close_round(
     deps: &Deps,
     caller: &Caller,
     game_id: GameId,
-    month: MonthCode,
+    month: RoundKey,
 ) -> Result<CloseOutcome, AppError> {
     let guest = caller.require()?;
-    let m: Month = month.into();
+    let m = month;
     let decided = deps
         .log
         .decide(

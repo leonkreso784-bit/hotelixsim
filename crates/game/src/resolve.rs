@@ -1,10 +1,11 @@
-use sim_hotel::{Month, SituationOutcome, month_indices, progress_pts, resolve_month};
+use sim_hotel::{SituationOutcome, month_indices, progress_pts, resolve_month};
 
 use crate::actor::Actor;
 use crate::dto::{MonthReportDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::event::{GameEvent, HotelResolution, Recorded, RoundResolved, SituationResult};
 use crate::game::{Game, RoundStatus};
+use crate::round::RoundKey;
 use crate::verdict::NEUTRAL_DEADLINE;
 
 /// Ishod odluke posla obračuna.
@@ -17,7 +18,8 @@ pub enum ResolveStep {
 
 impl Game {
     /// Obračun runde za sve hotele, redom po slotu, iz snimka pravila igre (ARHITEKTURA §7.5; DEMO §1.2).
-    pub fn resolve_round(&self, m: Month) -> Result<RoundResolved, GameError> {
+    pub fn resolve_round(&self, m: impl Into<RoundKey>) -> Result<RoundResolved, GameError> {
+        let m = m.into();
         if self.status(m)? != RoundStatus::Closing {
             return Err(corrupt("obračun runde koja nije zatvorena"));
         }
@@ -83,7 +85,8 @@ impl Game {
                     outcomes.push(o);
                 }
             }
-            let report = resolve_month(&state, m, &plan, &outcomes, cat).map_err(|e| err(&e))?;
+            let report = resolve_month(&state, m.require_month()?, &plan, &outcomes, cat)
+                .map_err(|e| err(&e))?;
             let idx =
                 month_indices(&report, cat, self.refs(state.category)?).map_err(|e| err(&e))?;
             let progress = progress_pts(&h.start_indices, &idx).map_err(|e| err(&e))?;
@@ -96,15 +99,17 @@ impl Game {
                 progress_hundredths: progress,
             });
         }
-        Ok(RoundResolved {
-            month: m.into(),
-            hotels,
-        })
+        Ok(RoundResolved { month: m, hotels })
     }
 
     /// Odluka posla obračuna (red poslova, ADR-015 t. 8): idempotentna po stanju runde. Dok presude za slobodne
     /// odgovore nisu stigle i rok nije prošao, čeka; po isteku roka upisuje neutralne presude i obračunava.
-    pub fn resolve_job(&self, m: Month, deadline_passed: bool) -> Result<ResolveStep, GameError> {
+    pub fn resolve_job(
+        &self,
+        m: impl Into<RoundKey>,
+        deadline_passed: bool,
+    ) -> Result<ResolveStep, GameError> {
+        let m = m.into();
         match self.status(m)? {
             RoundStatus::Resolved => Ok(ResolveStep::Done(Vec::new())),
             RoundStatus::Closing => {
@@ -137,7 +142,7 @@ impl Game {
                     event: GameEvent::RoundResolved(rr.clone()),
                 })?;
                 out.push((Actor::System, GameEvent::RoundResolved(rr)));
-                if let Some(n) = next.current_month() {
+                if let Some(n) = next.current_round() {
                     out.extend(next.robot_moves(n)?);
                 }
                 Ok(ResolveStep::Done(out))

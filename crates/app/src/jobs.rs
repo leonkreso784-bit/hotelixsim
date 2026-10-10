@@ -1,12 +1,11 @@
 //! Radnik (ARHITEKTURA §9.4): preuzima poslove iz reda — obračun runde, odgovor lika, presudu i mentora.
 //! AI se zove IZVAN `decide`; unutar `decide` se nad svježom igrom ponovno provjerava smije li se rezultat upisati.
-use game::dto::MonthCode;
+use game::RoundKey;
 use game::{
     Actor, AiSource, Controller, GameError, GameEvent, GameId, HotelId, NEUTRAL_FAILED, ReplyBody,
     ResolveStep, RoundStatus,
 };
 use serde::{Deserialize, Serialize};
-use sim_hotel::Month;
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::{
@@ -24,7 +23,7 @@ pub const LEASE_SECS: i32 = 180;
 pub const VERDICT_DEADLINE_SECS: i64 = 120;
 pub const VERDICT_WAIT_SECS: i32 = 5;
 
-pub fn resolve_key(game: GameId, m: Month) -> String {
+pub fn resolve_key(game: GameId, m: RoundKey) -> String {
     format!("resolve:{}:{}", game.0, m.code())
 }
 
@@ -36,14 +35,14 @@ pub fn assess_key(g: GameId, h: HotelId, code: &str) -> String {
     format!("assess:{}:{}:{code}", g.0, h.0)
 }
 
-pub fn debrief_key(g: GameId, m: Month, h: HotelId) -> String {
+pub fn debrief_key(g: GameId, m: RoundKey, h: HotelId) -> String {
     format!("debrief:{}:{}:{}", g.0, m.code(), h.0)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ResolvePayload {
-    pub month: MonthCode,
+    pub month: RoundKey,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,7 +64,7 @@ pub struct AssessPayload {
 #[serde(deny_unknown_fields)]
 pub struct DebriefPayload {
     pub hotel_id: HotelId,
-    pub month: MonthCode,
+    pub month: RoundKey,
 }
 
 /// Jedan korak radnika: preuzmi posao, obradi ga, a grešku zapiši u red (ponovni pokušaj ili `failed`).
@@ -153,7 +152,7 @@ fn verdict_settled(g: &game::Game, hotel: HotelId, code: &str) -> Result<bool, G
 
 async fn run_resolve(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let p: ResolvePayload = payload(job)?;
-    let m: Month = p.month.into();
+    let m = p.month;
     let claim = job.claim();
     let deadline_passed = job.age_secs >= VERDICT_DEADLINE_SECS;
     let g = load_game(deps, job.game_id).await?;
@@ -190,11 +189,8 @@ async fn run_resolve(deps: &Deps, job: &Job) -> Result<(), AppError> {
                             key: debrief_key(game_id, m, hotel_id),
                             kind: DEBRIEF_KIND.to_owned(),
                             game_id,
-                            payload: serde_json::to_value(DebriefPayload {
-                                hotel_id,
-                                month: m.into(),
-                            })
-                            .map_err(|e| AppError::internal(e.to_string()))?,
+                            payload: serde_json::to_value(DebriefPayload { hotel_id, month: m })
+                                .map_err(|e| AppError::internal(e.to_string()))?,
                         });
                     }
                 }
@@ -310,7 +306,7 @@ async fn run_assess(deps: &Deps, job: &Job) -> Result<(), AppError> {
 
 async fn run_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let p: DebriefPayload = payload(job)?;
-    let m: Month = p.month.into();
+    let m = p.month;
     let claim = job.claim();
     let g = load_game(deps, job.game_id).await?;
     if g.hotel(p.hotel_id)?.debriefs.contains_key(&m) {

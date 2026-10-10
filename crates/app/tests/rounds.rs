@@ -1,8 +1,9 @@
 use app::memory::{JobStatus, Memory, deps};
 use app::*;
 use content::{Snapshot, repo_dir};
+use game::RoundKey;
 use game::RoundStatus;
-use game::dto::MonthCode::{Aug, Jul, Jun};
+use sim_hotel::Month;
 use std::sync::Arc;
 
 fn setup() -> (Deps, Arc<Memory>) {
@@ -44,20 +45,28 @@ async fn plan_answer_close_then_worker_resolves_june() {
         .plan;
     plan.marketing_cents = 500_000;
     assert_eq!(
-        set_plan(&d, &me, s.hotel_id, Jun, plan.clone())
-            .await
-            .unwrap(),
+        set_plan(
+            &d,
+            &me,
+            s.hotel_id,
+            RoundKey::Month(Month::Jun),
+            plan.clone()
+        )
+        .await
+        .unwrap(),
         plan
     );
     answer(&d, &me, s.hotel_id, "S1", 0).await.unwrap();
     assert_eq!(
-        round_status(&d, &me, s.game_id, Jun)
+        round_status(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
             .await
             .unwrap()
             .unanswered,
         1
     );
-    let c = close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    let c = close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     assert!(c.accepted);
     assert_eq!(c.round.status, RoundStatus::Closing);
     assert!(run_next_job(&d).await.unwrap());
@@ -67,11 +76,14 @@ async fn plan_answer_close_then_worker_resolves_june() {
     );
     assert!(!run_next_job(&d).await.unwrap(), "red je prazan");
     assert_eq!(
-        round_status(&d, &me, s.game_id, Jun).await.unwrap().status,
+        round_status(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+            .await
+            .unwrap()
+            .status,
         RoundStatus::Resolved
     );
     let g = game_view(&d, &me, s.game_id).await.unwrap();
-    assert_eq!(g.current.unwrap().month, Jul);
+    assert_eq!(g.current.unwrap().round, RoundKey::Month(Month::Jul));
     assert!(g.hotels.iter().all(|h| h.months.len() == 1));
     assert_eq!(events_of(&mem, s.game_id, "RoundResolved"), 1);
 }
@@ -80,13 +92,22 @@ async fn plan_answer_close_then_worker_resolves_june() {
 async fn double_close_is_idempotent() {
     let (d, mem) = setup();
     let (me, s) = guest(&d).await;
-    assert!(close_round(&d, &me, s.game_id, Jun).await.unwrap().accepted);
-    let again = close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    assert!(
+        close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+            .await
+            .unwrap()
+            .accepted
+    );
+    let again = close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     assert!(!again.accepted);
     assert_eq!(again.round.status, RoundStatus::Closing);
     assert_eq!(mem.jobs().len(), 1, "jedan posao po ključu");
     run_next_job(&d).await.unwrap();
-    let after = close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    let after = close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     assert_eq!(
         (after.accepted, after.round.status),
         (false, RoundStatus::Resolved)
@@ -106,9 +127,11 @@ async fn plan_for_closed_month_rejected() {
         .plan
         .unwrap()
         .plan;
-    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     assert_eq!(
-        set_plan(&d, &me, s.hotel_id, Jun, plan)
+        set_plan(&d, &me, s.hotel_id, RoundKey::Month(Month::Jun), plan)
             .await
             .unwrap_err()
             .code,
@@ -119,11 +142,17 @@ async fn plan_for_closed_month_rejected() {
         ErrorCode::RoundNotOpen
     );
     assert_eq!(
-        close_round(&d, &me, s.game_id, Jul).await.unwrap_err().code,
+        close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jul))
+            .await
+            .unwrap_err()
+            .code,
         ErrorCode::RoundNotOpen
     );
     assert_eq!(
-        close_round(&d, &me, s.game_id, Aug).await.unwrap_err().code,
+        close_round(&d, &me, s.game_id, RoundKey::Month(Month::Aug))
+            .await
+            .unwrap_err()
+            .code,
         ErrorCode::UnknownMonth
     );
 }
@@ -132,7 +161,9 @@ async fn plan_for_closed_month_rejected() {
 async fn crashed_worker_job_is_reclaimed_and_duplicate_job_is_noop() {
     let (d, mem) = setup();
     let (me, s) = guest(&d).await;
-    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     let claimed = d.jobs.claim(30).await.unwrap().unwrap(); // radnik preuzme i „padne"
     assert_eq!(claimed.attempts, 1);
     assert!(!run_next_job(&d).await.unwrap(), "zakup još traje");
@@ -175,7 +206,9 @@ async fn failing_job_is_recorded_and_eventually_failed() {
 async fn done_job_is_never_resurrected_by_fail() {
     let (d, mem) = setup();
     let (me, s) = guest(&d).await;
-    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     run_next_job(&d).await.unwrap();
     let claim = JobClaim {
         id: mem.jobs()[0].id,
@@ -205,7 +238,7 @@ async fn rights_by_role() {
         .plan;
     let robot = robot_hotel(&mem, s.game_id);
     assert_eq!(
-        set_plan(&d, &me, robot, Jun, plan.clone())
+        set_plan(&d, &me, robot, RoundKey::Month(Month::Jun), plan.clone())
             .await
             .unwrap_err()
             .code,
@@ -216,7 +249,7 @@ async fn rights_by_role() {
         ErrorCode::NotYourHotel
     );
     assert_eq!(
-        close_round(&d, &other, s.game_id, Jun)
+        close_round(&d, &other, s.game_id, RoundKey::Month(Month::Jun))
             .await
             .unwrap_err()
             .code,
@@ -224,7 +257,7 @@ async fn rights_by_role() {
     );
     let anon = Caller { guest: None };
     assert_eq!(
-        close_round(&d, &anon, s.game_id, Jun)
+        close_round(&d, &anon, s.game_id, RoundKey::Month(Month::Jun))
             .await
             .unwrap_err()
             .code,
@@ -233,7 +266,7 @@ async fn rights_by_role() {
     let mut bad = plan.clone();
     bad.price_cents += 50;
     assert_eq!(
-        set_plan(&d, &me, s.hotel_id, Jun, bad)
+        set_plan(&d, &me, s.hotel_id, RoundKey::Month(Month::Jun), bad)
             .await
             .unwrap_err()
             .code,
@@ -241,7 +274,7 @@ async fn rights_by_role() {
     );
     let unknown = HotelId(uuid::Uuid::from_u128(9999));
     assert_eq!(
-        set_plan(&d, &me, unknown, Jun, plan)
+        set_plan(&d, &me, unknown, RoundKey::Month(Month::Jun), plan)
             .await
             .unwrap_err()
             .code,
@@ -253,26 +286,37 @@ async fn rights_by_role() {
 async fn full_demo_season_june_and_july() {
     let (d, _) = setup();
     let (me, s) = guest(&d).await;
-    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     while run_next_job(&d).await.unwrap() {}
     let v = situations(&d, &me, s.hotel_id).await.unwrap();
     assert_eq!(
         v.items.iter().map(|i| i.code.as_str()).collect::<Vec<_>>(),
         ["S2"]
     );
-    close_round(&d, &me, s.game_id, Jul).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jul))
+        .await
+        .unwrap();
     while run_next_job(&d).await.unwrap() {}
     let g = game_view(&d, &me, s.game_id).await.unwrap();
     assert_eq!(g.current, None, "igra je gotova nakon srpnja");
     assert!(g.hotels.iter().all(|h| h.months.len() == 2));
-    assert!(!close_round(&d, &me, s.game_id, Jul).await.unwrap().accepted);
+    assert!(
+        !close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jul))
+            .await
+            .unwrap()
+            .accepted
+    );
 }
 
 #[tokio::test]
 async fn stale_worker_cannot_clobber_reclaimed_job() {
     let (d, mem) = setup();
     let (me, s) = guest(&d).await;
-    close_round(&d, &me, s.game_id, Jun).await.unwrap();
+    close_round(&d, &me, s.game_id, RoundKey::Month(Month::Jun))
+        .await
+        .unwrap();
     let a = d.jobs.claim(30).await.unwrap().unwrap();
     mem.expire_leases();
     let b = d.jobs.claim(30).await.unwrap().unwrap();

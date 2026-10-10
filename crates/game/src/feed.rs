@@ -1,11 +1,12 @@
 //! Dnevnik jednog hotela kao popis stavki za ekran (DEMO §3): samo događaji koji se tiču tog hotela.
 
 use crate::actor::Actor;
-use crate::dto::{LineDto, MonthCode, PlanDto};
+use crate::dto::{LineDto, PlanDto};
 use crate::error::{GameError, corrupt};
 use crate::event::{AiSource, GameEvent, VerdictRecorded};
 use crate::game::Game;
 use crate::ids::HotelId;
+use crate::round::RoundKey;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FeedItem {
@@ -16,13 +17,13 @@ pub enum FeedItem {
     },
     PlanChanged {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         plan: PlanDto,
         by: Actor,
     },
     AnswerChosen {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         situation: String,
         title: String,
         answer: u8,
@@ -31,37 +32,37 @@ pub enum FeedItem {
     },
     RoundClosed {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         by: Actor,
     },
     SituationIgnored {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         situation: String,
         title: String,
     },
     MonthResolved {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         indices: [u16; 5],
         progress_hundredths: i32,
     },
     Change {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         line: LineDto,
     },
     /// Slobodan odgovor igrača na situaciju (tekst je u pogledu situacije, ne u feedu).
     Response {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         situation: String,
         title: String,
     },
     /// Presuda na slobodni odgovor; `neutral` = rezervna (bez AI-ja), `late` = stigla nakon obračuna.
     Verdict {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         situation: String,
         title: String,
         quality: u8,
@@ -71,7 +72,7 @@ pub enum FeedItem {
     /// Mentorov osvrt na mjesec.
     Mentor {
         seq: i64,
-        month: MonthCode,
+        round: RoundKey,
         text: String,
     },
 }
@@ -91,7 +92,7 @@ impl Game {
                 }),
                 GameEvent::PlanSet(p) if p.hotel_id == hotel => out.push(FeedItem::PlanChanged {
                     seq,
-                    month: p.month,
+                    round: p.month,
                     plan: p.plan.clone(),
                     by: r.actor.clone(),
                 }),
@@ -99,7 +100,7 @@ impl Game {
                     let (title, label) = self.answer_texts(&a.situation, a.answer)?;
                     out.push(FeedItem::AnswerChosen {
                         seq,
-                        month: a.month,
+                        round: a.month,
                         situation: a.situation.clone(),
                         title,
                         answer: a.answer,
@@ -109,7 +110,7 @@ impl Game {
                 }
                 GameEvent::RoundClosed(c) => out.push(FeedItem::RoundClosed {
                     seq,
-                    month: c.month,
+                    round: c.month,
                     by: r.actor.clone(),
                 }),
                 GameEvent::RoundResolved(rr) => {
@@ -125,27 +126,27 @@ impl Game {
                     {
                         out.push(FeedItem::SituationIgnored {
                             seq,
-                            month: rr.month,
+                            round: rr.month,
                             situation: s.code.clone(),
                             title: self.situation_title(&s.code)?,
                         });
                     }
                     out.push(FeedItem::MonthResolved {
                         seq,
-                        month: rr.month,
+                        round: rr.month,
                         indices: res.indices,
                         progress_hundredths: res.progress_hundredths,
                     });
                     out.extend(res.report.lines.iter().map(|l| FeedItem::Change {
                         seq,
-                        month: rr.month,
+                        round: rr.month,
                         line: l.clone(),
                     }));
                 }
                 GameEvent::ResponseSubmitted(e) if e.hotel_id == hotel => {
                     out.push(FeedItem::Response {
                         seq,
-                        month: e.month,
+                        round: e.month,
                         situation: e.situation.clone(),
                         title: self.situation_title(&e.situation)?,
                     });
@@ -159,7 +160,7 @@ impl Game {
                 GameEvent::DebriefRecorded(d) if d.hotel_id == hotel => {
                     out.push(FeedItem::Mentor {
                         seq,
-                        month: d.month,
+                        round: d.month,
                         text: d.text.clone(),
                     });
                 }
@@ -185,7 +186,7 @@ impl Game {
     ) -> Result<FeedItem, GameError> {
         Ok(FeedItem::Verdict {
             seq,
-            month: v.month,
+            round: v.month,
             situation: v.situation.clone(),
             title: self.situation_title(&v.situation)?,
             quality: v.quality,

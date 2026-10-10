@@ -6,10 +6,13 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty, retention};
+use sim_hotel::{
+    Driver, Index, LOAD_LIMIT_HUNDREDTHS, Month, index_drivers, load_penalty, retention,
+};
 
 use crate::ai_input::DebriefInput;
-use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
+use crate::dto::{CauseDto, LineDto, MaintenanceCode, TrainingCode, UnitCode, VarCode};
+use crate::round::RoundKey;
 
 const MINUS: char = '\u{2212}';
 
@@ -176,13 +179,14 @@ fn index_name(i: Index) -> &'static str {
     }
 }
 
-/// Mjesec u lokativu („u lipnju").
-fn month_locative(m: MonthCode) -> &'static str {
-    match m {
-        MonthCode::Jun => "u lipnju",
-        MonthCode::Jul => "u srpnju",
-        MonthCode::Aug => "u kolovozu",
-        MonthCode::Sep => "u rujnu",
+/// Krug u lokativu („u lipnju"); pravi tekst tjedna dolazi u Tasku 8.
+fn round_locative(r: RoundKey) -> &'static str {
+    match r {
+        RoundKey::Month(Month::Jun) => "u lipnju",
+        RoundKey::Month(Month::Jul) => "u srpnju",
+        RoundKey::Month(Month::Aug) => "u kolovozu",
+        RoundKey::Month(Month::Sep) => "u rujnu",
+        RoundKey::Week(_) => "u ovom tjednu",
     }
 }
 
@@ -714,7 +718,7 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
     };
     let vs_last = compared(
         p.seasonal_target.cmp(&input.seasonal_before),
-        input.prev_month.is_none(),
+        input.prev_round.is_none(),
     );
     let wage_note = match p.wage_pct.cmp(&100) {
         std::cmp::Ordering::Less => " (niže od uobičajenih)",
@@ -779,7 +783,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         .collect();
     let morale_alone = matches!(morale_shown.as_slice(), [l] if l.cause == CauseDto::Baseline);
     // Prvi mjesec kaže igra (`prev_month`), ne kalendar: prije njega je početno stanje hotela.
-    let first = input.prev_month.is_none();
+    let first = input.prev_round.is_none();
     let var_driver = |var: VarCode| -> Option<DriverFact> {
         let rate = if var == VarCode::Staff {
             turnover_changes(input.turnover_before_bp, input.turnover_after_bp, first).to_vec()
@@ -858,8 +862,8 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
     let progress = round_div(i64::from(input.progress_hundredths), 100);
     DebriefFacts {
         hotel: input.hotel_name.clone(),
-        month: month_locative(input.month),
-        next_month: input.next_month.map(month_locative),
+        month: round_locative(input.round),
+        next_month: input.next_round.map(round_locative),
         progress: if progress == 0 {
             "0 bodova".to_owned()
         } else {

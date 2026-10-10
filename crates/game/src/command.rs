@@ -6,6 +6,7 @@ use crate::error::{GameError, corrupt};
 use crate::event::*;
 use crate::game::{Game, RoundStatus};
 use crate::ids::{GameId, GuestId, HotelId};
+use crate::round::RoundKey;
 
 const MONTHS: [Month; 2] = [Month::Jun, Month::Jul];
 const ROBOTS: [(&str, &str); 3] = [
@@ -14,8 +15,8 @@ const ROBOTS: [(&str, &str); 3] = [
     ("lovac", "Lovac na popunjenost"),
 ];
 
-fn pos(m: Month) -> Result<u64, GameError> {
-    u64::try_from(m.position()).map_err(|_| corrupt("mjesec"))
+fn pos(r: RoundKey) -> Result<u64, GameError> {
+    u64::try_from(r.require_month()?.position()).map_err(|_| corrupt("mjesec"))
 }
 
 fn profile_at(n: u64) -> Profile {
@@ -78,7 +79,12 @@ pub fn new_game(
 
 impl Game {
     /// Roboti igraju istim naredbama kao čovjek (DEMO §1.3): PlanSet i AnswerChosen za mjesec koji se upravo otvara.
-    pub fn robot_moves(&self, m: Month) -> Result<Vec<(Actor, GameEvent)>, GameError> {
+    pub fn robot_moves(
+        &self,
+        r: impl Into<RoundKey>,
+    ) -> Result<Vec<(Actor, GameEvent)>, GameError> {
+        let r = r.into();
+        let m = r.require_month()?;
         let cat = &self.content.catalog;
         let mut out = Vec::new();
         for h in &self.hotels {
@@ -88,9 +94,9 @@ impl Game {
             let st = strategy_from_code(strategy)
                 .ok_or_else(|| corrupt(format!("strategija {strategy}")))?;
             let id = h.setup.hotel_id;
-            let state = self.state_at(id, m)?;
+            let state = self.state_at(id, r)?;
             let slot = u64::from(h.setup.slot);
-            let mut rng = Rng::derive(self.seed, &[label("game:robot-plan"), pos(m)?, slot]);
+            let mut rng = Rng::derive(self.seed, &[label("game:robot-plan"), pos(r)?, slot]);
             let plan = st
                 .plan(&state, m, cat, &mut rng)
                 .map_err(|e| corrupt(format!("{e:?}")))?;
@@ -100,14 +106,14 @@ impl Game {
                 Actor::Robot(st),
                 GameEvent::PlanSet(PlanSet {
                     hotel_id: id,
-                    month: m.into(),
+                    month: r,
                     plan: (&plan).into(),
                 }),
             ));
-            for t in self.situations_in(m) {
+            for t in self.situations_in(r) {
                 let mut rng = Rng::derive(
                     self.seed,
-                    &[label("game:robot-answer"), pos(m)?, slot, label(&t.code)],
+                    &[label("game:robot-answer"), pos(r)?, slot, label(&t.code)],
                 );
                 let i = st
                     .choose(&t.answers, cat, state.category, &mut rng)
@@ -117,7 +123,7 @@ impl Game {
                     Actor::Robot(st),
                     GameEvent::AnswerChosen(AnswerChosen {
                         hotel_id: id,
-                        month: m.into(),
+                        month: r,
                         situation: t.code.clone(),
                         answer,
                     }),
@@ -130,18 +136,19 @@ impl Game {
     pub fn set_plan(
         &self,
         hotel: HotelId,
-        m: Month,
+        m: impl Into<RoundKey>,
         plan: MonthPlan,
     ) -> Result<GameEvent, GameError> {
+        let m = m.into();
         if self.status(m)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
         let state = self.state_at(hotel, m)?;
-        plan.validate(&state, m, &self.content.catalog)
+        plan.validate(&state, m.require_month()?, &self.content.catalog)
             .map_err(GameError::Plan)?;
         Ok(GameEvent::PlanSet(PlanSet {
             hotel_id: hotel,
-            month: m.into(),
+            month: m,
             plan: (&plan).into(),
         }))
     }
@@ -157,32 +164,32 @@ impl Game {
             .content
             .situations
             .iter()
-            .find(|t| t.code == code && self.months.contains(&t.month))
+            .find(|t| t.code == code && self.rounds.contains(&t.month.into()))
             .ok_or(GameError::UnknownSituation)?;
-        if self.status(t.month)? != RoundStatus::Open {
+        let round = RoundKey::from(t.month);
+        if self.status(round)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
         if usize::from(answer) >= t.answers.len() {
             return Err(GameError::UnknownAnswer);
         }
-        let key = (t.month, t.code.clone());
+        let key = (round, t.code.clone());
         if h.responses.contains_key(&key) || h.answers.contains_key(&key) {
             return Err(GameError::AlreadyAnswered);
         }
         Ok(GameEvent::AnswerChosen(AnswerChosen {
             hotel_id: hotel,
-            month: t.month.into(),
+            month: round,
             situation: t.code.clone(),
             answer,
         }))
     }
 
     /// `None` = runda je već zatvorena ili obračunata (drugi klik vraća stanje, ne piše ništa).
-    pub fn close_round(&self, m: Month) -> Result<Option<GameEvent>, GameError> {
+    pub fn close_round(&self, m: impl Into<RoundKey>) -> Result<Option<GameEvent>, GameError> {
+        let m = m.into();
         match self.status(m)? {
-            RoundStatus::Open => Ok(Some(GameEvent::RoundClosed(RoundClosed {
-                month: m.into(),
-            }))),
+            RoundStatus::Open => Ok(Some(GameEvent::RoundClosed(RoundClosed { month: m }))),
             RoundStatus::Closing | RoundStatus::Resolved => Ok(None),
             RoundStatus::Scheduled => Err(GameError::RoundNotOpen),
         }

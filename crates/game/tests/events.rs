@@ -46,7 +46,7 @@ fn samples() -> Vec<GameEvent> {
             ruleset_id: snap.fingerprint(),
             core_version: sim_hotel::CORE_VERSION.into(),
             snapshot: Box::new(snap.to_value()),
-            months: vec![MonthCode::Jun, MonthCode::Jul],
+            months: vec![RoundKey::Month(Month::Jun), RoundKey::Month(Month::Jul)],
             hotels: vec![
                 HotelSetup {
                     hotel_id: h,
@@ -68,20 +68,20 @@ fn samples() -> Vec<GameEvent> {
         }),
         GameEvent::PlanSet(PlanSet {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             plan: plan(),
         }),
         GameEvent::AnswerChosen(AnswerChosen {
             hotel_id: h,
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             situation: "S1".into(),
             answer: 2,
         }),
         GameEvent::RoundClosed(RoundClosed {
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
         }),
         GameEvent::RoundResolved(RoundResolved {
-            month: MonthCode::Jun,
+            month: RoundKey::Month(Month::Jun),
             hotels: vec![HotelResolution {
                 hotel_id: h,
                 plan: plan(),

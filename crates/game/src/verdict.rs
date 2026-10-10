@@ -7,7 +7,7 @@ use crate::error::GameError;
 use crate::event::{AiMeta, AiSource, CriterionVerdict, GameEvent, VerdictRecorded};
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
-use sim_hotel::Month;
+use crate::round::RoundKey;
 
 /// Razlog neutralne presude kad rok zatvaranja istekne (ARHITEKTURA §8.3 korak 5).
 pub const NEUTRAL_DEADLINE: &str = "AI presuda nije stigla do kraja zatvaranja mjeseca; neutralna presuda po pravilu, na pregled profesoru.";
@@ -114,7 +114,7 @@ impl Game {
             .content
             .situations
             .iter()
-            .find(|t| t.code == code && self.months.contains(&t.month))
+            .find(|t| t.code == code && self.rounds.contains(&RoundKey::from(t.month)))
             .map(|t| t.answers.len());
         let (true, Some(answers)) = (free, answers) else {
             return Err(VerdictError::NotFreeText);
@@ -162,7 +162,7 @@ impl Game {
     }
 
     /// Mjesec i je li presuda već upisana za slobodni odgovor hotela.
-    fn response_slot(&self, hotel: HotelId, code: &str) -> Result<(Month, bool), GameError> {
+    fn response_slot(&self, hotel: HotelId, code: &str) -> Result<(RoundKey, bool), GameError> {
         let h = self.hotel(hotel)?;
         let m = self.situation_month(code)?;
         let fr = h
@@ -189,7 +189,7 @@ impl Game {
         let (m, has_verdict) = self.response_slot(hotel, code)?;
         let rec = VerdictRecorded {
             hotel_id: hotel,
-            month: m.into(),
+            month: m,
             situation: code.to_owned(),
             criteria: v.criteria,
             nearest_answer: Some(v.nearest_answer),
@@ -217,7 +217,7 @@ impl Game {
         let (m, _) = self.response_slot(hotel, code)?;
         Ok(GameEvent::VerdictRecorded(VerdictRecorded {
             hotel_id: hotel,
-            month: m.into(),
+            month: m,
             situation: code.to_owned(),
             criteria: Vec::new(),
             nearest_answer: None,
@@ -230,7 +230,8 @@ impl Game {
     }
 
     /// Slobodni odgovori u mjesecu `m` bez presude: hotelima redom slota, situacijama redom iz sadržaja.
-    pub fn pending_verdicts(&self, m: Month) -> Vec<(HotelId, String)> {
+    pub fn pending_verdicts(&self, m: impl Into<RoundKey>) -> Vec<(HotelId, String)> {
+        let m = m.into();
         let mut out = Vec::new();
         for h in &self.hotels {
             for t in self.situations_in(m) {

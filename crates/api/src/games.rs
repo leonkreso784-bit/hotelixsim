@@ -7,7 +7,7 @@ use axum::response::Json;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{GameBody, MonthCode, RoundBody, parse_game, parse_month};
+use crate::schema::{GameBody, MonthCode, RoundBody, parse_game, parse_round};
 
 /// Igra u kojoj sudjeluješ: mjeseci, trenutna runda i javni podaci četiriju hotela.
 #[utoipa::path(
@@ -52,8 +52,8 @@ pub async fn round(
     Path((id, month)): Path<(String, String)>,
 ) -> Result<Json<RoundBody>, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
-    let r = app::round_status(&s.deps, &caller, parse_game(&id)?, parse_month(&month)?).await?;
-    Ok(Json(RoundBody::from(&r)))
+    let r = app::round_status(&s.deps, &caller, parse_game(&id)?, parse_round(&month)?).await?;
+    Ok(Json(RoundBody::try_from(&r)?))
 }
 
 /// Zatvori mjesec (smije svatko u igri; neodgovorene situacije dobivaju kvalitetu 1).
@@ -79,11 +79,11 @@ pub async fn close(
     Path((id, month)): Path<(String, String)>,
 ) -> Result<(StatusCode, Json<RoundBody>), Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
-    let out = app::close_round(&s.deps, &caller, parse_game(&id)?, parse_month(&month)?).await?;
+    let out = app::close_round(&s.deps, &caller, parse_game(&id)?, parse_round(&month)?).await?;
     let status = if out.accepted {
         StatusCode::ACCEPTED
     } else {
         StatusCode::OK
     };
-    Ok((status, Json(RoundBody::from(&out.round))))
+    Ok((status, Json(RoundBody::try_from(&out.round)?)))
 }

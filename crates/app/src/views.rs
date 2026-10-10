@@ -1,12 +1,10 @@
 //! Čitanje po ulozi (ARHITEKTURA §12): provjere idu redom gost, igra postoji, član, vlasnik.
-use game::dto::MonthCode;
 use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
 use game::{
-    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, RoundStatus,
-    debrief_facts,
+    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, RoundKey,
+    RoundStatus, debrief_facts,
 };
-use sim_hotel::Month;
 
 use crate::demo::load_game;
 use crate::{AppError, Caller, Deps, ErrorCode};
@@ -20,7 +18,7 @@ pub struct HotelView {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RoundView {
-    pub month: MonthCode,
+    pub round: RoundKey,
     pub status: RoundStatus,
     pub unanswered: u8,
 }
@@ -28,7 +26,7 @@ pub struct RoundView {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GameView {
     pub game_id: GameId,
-    pub months: Vec<MonthCode>,
+    pub months: Vec<RoundKey>,
     pub current: Option<RoundView>,
     pub my_hotel: HotelId,
     pub hotels: Vec<PublicHotel>,
@@ -81,7 +79,7 @@ pub struct ResponseView {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SituationsView {
-    pub month: Option<MonthCode>,
+    pub round: Option<RoundKey>,
     pub open: bool,
     /// Koliko ih je bez odgovora (0 kad runda nije otvorena); isto pravilo kao `RoundView::unanswered`.
     pub unanswered: u8,
@@ -106,7 +104,7 @@ pub(crate) fn require_owner(g: &Game, guest: GuestId, hotel: HotelId) -> Result<
     }
 }
 
-pub(crate) fn round_view(g: &Game, m: Month, mine: HotelId) -> Result<RoundView, AppError> {
+pub(crate) fn round_view(g: &Game, m: RoundKey, mine: HotelId) -> Result<RoundView, AppError> {
     let status = g.status(m)?;
     let unanswered = if status == RoundStatus::Open {
         g.unanswered_count(mine, m)?
@@ -114,7 +112,7 @@ pub(crate) fn round_view(g: &Game, m: Month, mine: HotelId) -> Result<RoundView,
         0
     };
     Ok(RoundView {
-        month: m.into(),
+        round: m,
         status,
         unanswered,
     })
@@ -189,12 +187,12 @@ pub async fn game_view(
         .map(|(_, id)| g.public_hotel(id))
         .collect::<Result<Vec<_>, _>>()?;
     let current = g
-        .current_month()
+        .current_round()
         .map(|m| round_view(&g, m, mine))
         .transpose()?;
     Ok(GameView {
         game_id,
-        months: g.months.iter().map(|&m| m.into()).collect(),
+        months: g.rounds.clone(),
         current,
         my_hotel: mine,
         hotels,
@@ -214,9 +212,9 @@ pub async fn situations_for_month(
     deps: &Deps,
     caller: &Caller,
     hotel: HotelId,
-    month: MonthCode,
+    month: RoundKey,
 ) -> Result<SituationsView, AppError> {
-    situations_in_month(deps, caller, hotel, Some(month.into())).await
+    situations_in_month(deps, caller, hotel, Some(month)).await
 }
 
 fn response_view(g: &Game, code: &str, fr: &FreeResponse) -> ResponseView {
@@ -265,15 +263,15 @@ async fn situations_in_month(
     deps: &Deps,
     caller: &Caller,
     hotel: HotelId,
-    month: Option<Month>,
+    month: Option<RoundKey>,
 ) -> Result<SituationsView, AppError> {
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
     let g = load_game(deps, game_id).await?;
     require_owner(&g, guest, hotel)?;
-    let Some(month) = month.or_else(|| g.current_month()) else {
+    let Some(month) = month.or_else(|| g.current_round()) else {
         return Ok(SituationsView {
-            month: None,
+            round: None,
             open: false,
             unanswered: 0,
             items: Vec::new(),
@@ -313,7 +311,7 @@ async fn situations_in_month(
         0
     };
     Ok(SituationsView {
-        month: Some(month.into()),
+        round: Some(month),
         open,
         unanswered,
         items,
@@ -326,13 +324,13 @@ pub async fn explanation(
     deps: &Deps,
     caller: &Caller,
     hotel: HotelId,
-    month: MonthCode,
+    month: RoundKey,
 ) -> Result<DebriefFacts, AppError> {
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
     let g = load_game(deps, game_id).await?;
     require_owner(&g, guest, hotel)?;
-    Ok(debrief_facts(&g.debrief_input(hotel, month.into())?))
+    Ok(debrief_facts(&g.debrief_input(hotel, month)?))
 }
 
 pub async fn feed(deps: &Deps, caller: &Caller, hotel: HotelId) -> Result<Vec<FeedItem>, AppError> {

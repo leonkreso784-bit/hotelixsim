@@ -1,10 +1,10 @@
 //! Ulazi za AI sloj (DEMO korak 4): sve što `ai` smije vidjeti gradi `game` iz dnevnika i sadržaja, a `ai` ne
 //! poznaje ništa drugo. Mentor ne dobiva `DebriefInput` nego ljudske činjenice iz `mentor.rs`.
 
+use crate::round::RoundKey;
 use serde::Serialize;
-use sim_hotel::Month;
 
-use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
+use crate::dto::{LineDto, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::game::{ChatLine, Game, RoundStatus};
 use crate::ids::HotelId;
@@ -66,11 +66,11 @@ pub struct DebriefSituation {
 /// Ulaz za mentora nakon obračuna mjeseca.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefInput {
-    pub month: MonthCode,
+    pub round: RoundKey,
     /// Idući mjesec igre; `None` = ovo je bio zadnji.
-    pub next_month: Option<MonthCode>,
+    pub next_round: Option<RoundKey>,
     /// Prošli mjesec igre; `None` = ovo je prvi mjesec, a „prije" je početno stanje hotela.
-    pub prev_month: Option<MonthCode>,
+    pub prev_round: Option<RoundKey>,
     pub hotel_name: String,
     pub situations: Vec<DebriefSituation>,
     /// Pet indeksa (stotinke) na početku mjeseca, redoslijedom `INDEX_ORDER`.
@@ -158,7 +158,12 @@ impl Game {
         })
     }
 
-    pub fn debrief_input(&self, hotel: HotelId, m: Month) -> Result<DebriefInput, GameError> {
+    pub fn debrief_input(
+        &self,
+        hotel: HotelId,
+        m: impl Into<RoundKey>,
+    ) -> Result<DebriefInput, GameError> {
+        let m = m.into();
         let h = self.hotel(hotel)?;
         if self.status(m)? != RoundStatus::Resolved {
             return Err(GameError::RoundNotOpen);
@@ -170,12 +175,12 @@ impl Game {
             .find(|x| x.hotel_id == hotel)
             .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
         let pos = self
-            .months
+            .rounds
             .iter()
             .position(|&x| x == m)
             .ok_or(GameError::UnknownMonth)?;
-        let prev_month = pos.checked_sub(1).and_then(|p| self.months.get(p));
-        let indices_before = match prev_month {
+        let prev_round = pos.checked_sub(1).and_then(|p| self.rounds.get(p));
+        let indices_before = match prev_round {
             None => indices_dto(&h.start_indices),
             Some(prev) => {
                 self.resolved
@@ -227,15 +232,12 @@ impl Game {
             .category(state.category)
             .map_err(|e| corrupt(format!("{e:?}")))?
             .price_ref_cents
-            .get(m);
+            .get(m.require_month()?);
         let report = &res.report;
         Ok(DebriefInput {
-            month: m.into(),
-            next_month: pos
-                .checked_add(1)
-                .and_then(|p| self.months.get(p))
-                .map(|&n| n.into()),
-            prev_month: prev_month.map(|&p| p.into()),
+            round: m,
+            next_round: pos.checked_add(1).and_then(|p| self.rounds.get(p)).copied(),
+            prev_round: prev_round.copied(),
             hotel_name: h.setup.name.clone(),
             situations,
             indices_before,

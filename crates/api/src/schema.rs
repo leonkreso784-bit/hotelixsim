@@ -275,13 +275,15 @@ pub struct MonthScoreBody {
     pub progress_hundredths: i32,
 }
 
-impl From<&MonthScore> for MonthScoreBody {
-    fn from(m: &MonthScore) -> Self {
-        MonthScoreBody {
-            month: m.month.into(),
+impl TryFrom<&MonthScore> for MonthScoreBody {
+    type Error = Problem;
+
+    fn try_from(m: &MonthScore) -> Result<Self, Problem> {
+        Ok(MonthScoreBody {
+            month: calendar_month(m.round)?,
             indices: entries(m.indices),
             progress_hundredths: m.progress_hundredths,
-        }
+        })
     }
 }
 
@@ -306,7 +308,11 @@ impl TryFrom<&PublicHotel> for PublicHotelBody {
             name: h.name.clone(),
             seat: (&h.seat).try_into()?,
             start: entries(h.start),
-            months: h.months.iter().map(MonthScoreBody::from).collect(),
+            months: h
+                .months
+                .iter()
+                .map(MonthScoreBody::try_from)
+                .collect::<Result<_, _>>()?,
         })
     }
 }
@@ -384,10 +390,12 @@ pub struct LastMonthBody {
     pub revpar_cents: Option<i64>,
 }
 
-impl From<&LastMonth> for LastMonthBody {
-    fn from(m: &LastMonth) -> Self {
-        LastMonthBody {
-            month: m.month.into(),
+impl TryFrom<&LastMonth> for LastMonthBody {
+    type Error = Problem;
+
+    fn try_from(m: &LastMonth) -> Result<Self, Problem> {
+        Ok(LastMonthBody {
+            month: calendar_month(m.round)?,
             sold: m.sold,
             available: m.available,
             rooms_revenue_cents: m.rooms_revenue_cents,
@@ -397,7 +405,7 @@ impl From<&LastMonth> for LastMonthBody {
             occupancy_bp: m.occupancy_bp,
             adr_cents: m.adr_cents,
             revpar_cents: m.revpar_cents,
-        }
+        })
     }
 }
 
@@ -408,13 +416,15 @@ pub struct PlanStateBody {
     pub limits: PlanLimitsBody,
 }
 
-impl From<&PlanState> for PlanStateBody {
-    fn from(p: &PlanState) -> Self {
-        PlanStateBody {
-            month: p.month.into(),
+impl TryFrom<&PlanState> for PlanStateBody {
+    type Error = Problem;
+
+    fn try_from(p: &PlanState) -> Result<Self, Problem> {
+        Ok(PlanStateBody {
+            month: calendar_month(p.round)?,
             plan: (&p.plan).into(),
             limits: (&p.limits).into(),
-        }
+        })
     }
 }
 
@@ -438,8 +448,12 @@ impl TryFrom<&PrivateHotel> for PrivateHotelBody {
             profile: ProfileCode::from_code(&p.profile)
                 .ok_or_else(|| corrupt("profil hotela", &p.profile))?,
             now: (&p.now).into(),
-            last_month: p.last_month.as_ref().map(LastMonthBody::from),
-            plan: p.plan.as_ref().map(PlanStateBody::from),
+            last_month: p
+                .last_month
+                .as_ref()
+                .map(LastMonthBody::try_from)
+                .transpose()?,
+            plan: p.plan.as_ref().map(PlanStateBody::try_from).transpose()?,
         })
     }
 }
@@ -505,13 +519,15 @@ pub struct RoundBody {
     pub unanswered: u8,
 }
 
-impl From<&app::RoundView> for RoundBody {
-    fn from(r: &app::RoundView) -> Self {
-        RoundBody {
-            month: r.month.into(),
+impl TryFrom<&app::RoundView> for RoundBody {
+    type Error = Problem;
+
+    fn try_from(r: &app::RoundView) -> Result<Self, Problem> {
+        Ok(RoundBody {
+            month: calendar_month(r.round)?,
             status: r.status.into(),
             unanswered: r.unanswered,
-        }
+        })
     }
 }
 
@@ -532,8 +548,12 @@ impl TryFrom<&app::GameView> for GameBody {
     fn try_from(v: &app::GameView) -> Result<Self, Problem> {
         Ok(GameBody {
             game_id: v.game_id.0.to_string(),
-            months: v.months.iter().map(|&m| m.into()).collect(),
-            current: v.current.as_ref().map(RoundBody::from),
+            months: v
+                .months
+                .iter()
+                .map(|&m| calendar_month(m))
+                .collect::<Result<_, _>>()?,
+            current: v.current.as_ref().map(RoundBody::try_from).transpose()?,
             my_hotel_id: v.my_hotel.0.to_string(),
             hotels: v
                 .hotels
@@ -703,7 +723,7 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
 
     fn try_from(v: &app::SituationsView) -> Result<Self, Problem> {
         Ok(SituationsBody {
-            month: v.month.map(Into::into),
+            month: v.round.map(calendar_month).transpose()?,
             open: v.open,
             unanswered: v.unanswered,
             items: v
@@ -949,18 +969,18 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             },
             F::PlanChanged {
                 seq,
-                month,
+                round,
                 plan,
                 by,
             } => FeedItemBody::PlanChanged {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 plan: plan.into(),
                 by: by.into(),
             },
             F::AnswerChosen {
                 seq,
-                month,
+                round,
                 situation,
                 title,
                 answer,
@@ -968,45 +988,45 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
                 by,
             } => FeedItemBody::AnswerChosen {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 situation: situation.clone(),
                 title: title.clone(),
                 answer: *answer,
                 label: label.clone(),
                 by: by.into(),
             },
-            F::RoundClosed { seq, month, by } => FeedItemBody::RoundClosed {
+            F::RoundClosed { seq, round, by } => FeedItemBody::RoundClosed {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 by: by.into(),
             },
             F::SituationIgnored {
                 seq,
-                month,
+                round,
                 situation,
                 title,
             } => FeedItemBody::SituationIgnored {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 situation: situation.clone(),
                 title: title.clone(),
             },
             F::MonthResolved {
                 seq,
-                month,
+                round,
                 indices,
                 progress_hundredths,
             } => FeedItemBody::MonthResolved {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 indices: entries(*indices),
                 progress_hundredths: *progress_hundredths,
             },
-            F::Change { seq, month, line } => {
+            F::Change { seq, round, line } => {
                 let (cause, situation) = split_cause(&line.cause);
                 FeedItemBody::Change {
                     seq: *seq,
-                    month: (*month).into(),
+                    month: calendar_month(*round)?,
                     var: line.var.into(),
                     cause,
                     situation,
@@ -1016,18 +1036,18 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             }
             F::Response {
                 seq,
-                month,
+                round,
                 situation,
                 title,
             } => FeedItemBody::Response {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 situation: situation.clone(),
                 title: title.clone(),
             },
             F::Verdict {
                 seq,
-                month,
+                round,
                 situation,
                 title,
                 quality,
@@ -1035,16 +1055,16 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
                 late,
             } => FeedItemBody::Verdict {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 situation: situation.clone(),
                 title: title.clone(),
                 quality: *quality,
                 neutral: *neutral,
                 late: *late,
             },
-            F::Mentor { seq, month, text } => FeedItemBody::Mentor {
+            F::Mentor { seq, round, text } => FeedItemBody::Mentor {
                 seq: *seq,
-                month: (*month).into(),
+                month: calendar_month(*round)?,
                 text: text.clone(),
             },
         })
@@ -1068,10 +1088,17 @@ pub fn parse_hotel(s: &str) -> Result<app::HotelId, Problem> {
         .map_err(|_| Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownHotel))
 }
 
-pub fn parse_month(s: &str) -> Result<game::dto::MonthCode, Problem> {
-    serde_json::from_value::<MonthCode>(serde_json::Value::String(s.to_owned()))
-        .map(Into::into)
-        .map_err(|_| Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownMonth))
+pub fn parse_round(s: &str) -> Result<game::RoundKey, Problem> {
+    game::RoundKey::parse(s)
+        .ok_or_else(|| Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownMonth))
+}
+
+/// Kalendarski mjesec kruga za tijela odgovora; tjedan do kalendara (Task 7) nema mjesec: 500, a u v1 igri
+/// se nikad ne događa.
+pub fn calendar_month(r: game::RoundKey) -> Result<MonthCode, Problem> {
+    r.month()
+        .map(|m| game::dto::MonthCode::from(m).into())
+        .ok_or_else(|| corrupt("krug", &r.code()))
 }
 
 #[cfg(test)]
@@ -1133,9 +1160,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_month_accepts_only_lowercase_codes() {
-        assert_eq!(parse_month("jul").unwrap(), game::dto::MonthCode::Jul);
-        assert!(parse_month("Jul").is_err());
-        assert!(parse_month("x").is_err());
+    fn parse_round_accepts_only_lowercase_codes() {
+        assert_eq!(
+            parse_round("jul").unwrap(),
+            game::RoundKey::parse("jul").unwrap()
+        );
+        assert_eq!(parse_round("t05").unwrap(), game::RoundKey::Week(5));
+        assert!(parse_round("Jul").is_err());
+        assert!(parse_round("x").is_err());
     }
 }
