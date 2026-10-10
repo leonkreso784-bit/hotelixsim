@@ -15,7 +15,7 @@
 |---|---|---|
 | **`product/`** | **ŠTO** gradimo — vizija, dizajn igre, sadržaj | rijetko, uz odluku |
 | **`architecture/`** | **KAKO** je građeno — sustav, granice, ugovori | kad kod pomakne granicu |
-| **`plan/`** | **ŠTO SADA** — `ROADMAP.md` + najviše **jedan** aktivni plan | stalno |
+| **`plan/`** | **ŠTO SADA** — `ROADMAP.md` + najviše **jedan** aktivni plan **po području** | stalno |
 | **`workflow/`** | **KAKO RADIMO** — agenti, tok rada | povremeno |
 | **`records/`** | **POVIJEST** — dnevnik, isporuke, odluke, backlog | stalno |
 | **`research/`** | istraživanja — podloga za brojke i izbore | uz istraživanje |
@@ -27,7 +27,7 @@
 |---|---|---|
 | **što sustav radi** | **kod + testovi** | dokument to samo *opisuje*, nikad ne *definira* |
 | **što vrijedi sad** | `../CLAUDE.md` + `product/` + aktivni plan | nikad dnevnik, nikad `archive/` |
-| **zašto je tako** | `records/DECISIONS.md` (ADR) | ostali linkaju ADR |
+| **zašto je tako** | `records/DECISIONS/` (jedan ADR = jedna datoteka) | ostali linkaju ADR; `records/DECISIONS.md` je samo popis |
 | **što se kad dogodilo** | `records/PROGRESS.md` (sesija) · `records/CHANGELOG.md` (isporuka) | `CLAUDE.md` ih ne ponavlja |
 | **što nije riješeno** | `records/BACKLOG.md` (i pitanja za Leona) | plan uzima stavke po oznaci, ne prepisuje ih |
 | **kako pokrenuti** | korijenski `README.md` | ostali linkaju |
@@ -37,11 +37,55 @@
 
 ### Pravila (čuva ih `corepack pnpm check:docs`, i u CI-ju)
 
-1. **Svaki `.md` pod `docs/` je naveden ovdje.** Dokument koji nije u indeksu je duh.
-2. **Jedan aktivni plan.** `plan/` ima `ROADMAP.md` i najviše jedan plan. Ispunjen → `archive/` isti dan, s pečatom
-   `✅ ISPUNJEN datum`. Plan koji čeka nosi `**Status:** ⏸️ PAUZIRAN`.
-3. **`product/` nije dnevnik** — najviše 3 ISO datuma po datoteci; kronologija ide u `records/`.
-4. **Nema mrtvih poveznica** ni ćirilice u tekstu; `CLAUDE.md` ima budžet znakova.
+1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku ili mapu koje nema pada. Isto vrijedi za `.md`, `.png` i `.mjs`.
+2. **Svaki `.md` pod `docs/` je naveden u svom indeksu.** Dokument koji nigdje nije naveden je „duh". Dokumenti u
+   `docs/<uloga>/` navedeni su ovdje; dijelovi u mapi `X/` navedeni su u `X.md` (a `X.md` je naveden ovdje).
+   Više od jedne razine mapa (`X/Y/…`) je zabranjeno.
+3. **Jedan aktivni plan po području.** Svaki plan u zaglavlju ima `**Područje:** kod` ili `**Područje:** dokumentacija`
+   (bez tog retka znači `kod`). U `plan/` smije biti najviše jedan aktivan plan za svako područje, uz `ROADMAP.md`.
+   Plan koji čeka nosi `**Status:** ⏸️ PAUZIRAN`. Dvije sesije smiju raditi usporedno samo na različitim područjima.
+4. **`product/` nije dnevnik** — najviše 3 ISO datuma (npr. 2026-10-10) po datoteci; kronologija ide u `records/`.
+5. **`CLAUDE.md` ima budžet znakova** (vidi tablicu), jer se učitava svaku sesiju.
+6. **Nema ćirilice** u tekstu izvan koda (slovo-dvojnik zna ući kopiranjem).
+7. **Arhiva ne smije biti živa.** Plan u `plan/` ne smije proglasiti plan iz `archive/` aktivnim.
+8. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1) su izuzeta
+   dok sloj traje.
+9. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
+   `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
+10. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
+
+(Brojevi pravila ovdje nisu isti kao u komentaru na vrhu `scripts/check-docs.mjs`, koji je izvor istine.)
+
+### Granice veličine
+
+Granica se mjeri u **redcima** (osim `CLAUDE.md`: znakovi). Izvor je u kodu, `scripts/docs-granice.mjs`; brana ih provodi.
+Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
+
+| vrsta | gdje | granica | zašto |
+|---|---|---|---|
+| predaja | `docs/SLJEDECA_SESIJA.md` | 60 | već pravilo `/kraj`, sad i brana |
+| ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 63 (ADR-015) |
+| indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
+| živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
+| arhiva | `docs/archive/**` | 1100 | zamrznuto; task se ne reže na pola |
+| `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
+
+### Indeks + mapa istog imena
+
+Dokument `X.md` koji preraste granicu postaje kratak **indeks** (svrha i tablica „§ → datoteka"), a dijelovi idu u
+**mapu `X/`** pokraj njega. Ovaj `README.md` ostaje jedini ulaz: navodi `X.md`, a `X.md` navodi svoje dijelove. Brojevi
+paragrafa (§) ostaju u naslovima dijelova, pa navodi poput „ARHITEKTURA §7.2" i stare poveznice i dalje vrijede.
+Danas je tako složeno: ARHITEKTURA, DEMO i pet arhivskih planova.
+
+### Planovi, područja i ADR-ovi
+
+- **Plan** do 300 redaka smije biti jedna datoteka. Veći je **pregled** `plan/<datum>-<ime>.md` + mapa istog imena sa
+  po jednim taskom u datoteci; razdvaja ga alat (`corepack pnpm docs:plan <plan.md>`, vidi [AGENTI](./workflow/AGENTI.md)).
+- **Područje** je `kod` ili `dokumentacija`; za svako smije biti jedan aktivan plan.
+- **Odluke** žive u `records/DECISIONS/`, jedna datoteka po ADR-u. `records/DECISIONS.md` je **popis koji se generira**
+  (`corepack pnpm docs:adr`): ne uređuj ga ručno.
+- **Zapisnici** (`PROGRESS`, `CHANGELOG`, `BACKLOG`) imaju granicu živog dokumenta; kad je prijeđu, stariji unosi idu u
+  mapu istog imena po mjesecima (npr. `PROGRESS/2026-10.md`), a indeks ostaje na vrhu (kako, vidi `/kraj`).
 
 ---
 
@@ -90,7 +134,7 @@
 |---|---|
 | [PROGRESS.md](./records/PROGRESS.md) | Dnevnik sesija, najnoviji na vrhu |
 | [CHANGELOG.md](./records/CHANGELOG.md) | Isporuke (ono što radi) |
-| [DECISIONS.md](./records/DECISIONS.md) | Odluke (ADR-001…), najnovija na vrhu; uključuje one koje čekaju Leonov pregled |
+| [DECISIONS.md](./records/DECISIONS.md) | **Generirani** popis odluka (ADR-001…) s datumom i statusom, najnovija na vrhu; sam ADR je u `DECISIONS/` (jedna datoteka po odluci); uključuje one koje čekaju Leonov pregled |
 | [BACKLOG.md](./records/BACKLOG.md) | Sve neriješeno: odgođeni nalazi pregleda po oznakama, rupe u specu, pitanja za Leona |
 
 ## `research/` — istraživanja

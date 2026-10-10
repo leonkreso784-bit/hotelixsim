@@ -7,19 +7,30 @@
 ## 1 · Tok rada
 
 1. **Brainstorming** (`superpowers:brainstorming`) — što i zašto; arhitektura kroz dokument i raspravu, ne kroz anketu.
-2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN`. Najviše jedan aktivni plan;
-   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md).
+2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** kod|dokumentacija`. Najviše jedan aktivni plan **po području**;
+   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan do 300 redaka smije biti jedna datoteka. Veći se **prije
+   aktivacije** razdvaja u pregled + mapu taskova: prvo `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa
+   `corepack pnpm docs:plan <plan.md>`. Granice veličine: [tablica](../README.md#granice-veličine).
 3. **Gradnja** (`superpowers:subagent-driven-development`) na zasebnoj grani (npr. `gradnja/<ime>`): jedan izvođač po tasku.
 4. **Pregled nakon svakog taska** — zaseban pregledavatelj, ne izvođač. Nalaz se vraća izvođaču; tek zeleno ide dalje.
 5. **Završni pregled** cijele grane na najjačem modelu; odgođeni nalazi idu u [BACKLOG](../records/BACKLOG.md).
 6. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
 
-## 2 · Radni ledger
+## 2 · Radni ledger, brief i pretinac
 
 Orkestrator vodi ledger u `.superpowers/sdd/<plan>/` (**gitignoriran**): spec i grana na vrhu, „Ruling" za svaku
 odluku koju je donio umjesto Leona (s cijenom ako je kriva), „Preflight scan" (tablica parova taskova: što jedan
 proizvodi, što drugi troši, nalaz) i stanje po tasku. Primjer oblika: [ledger kostura](../archive/2026-10-04-kostur-ledger.md).
-Na kraju plana ga `/kraj` kopira u `docs/archive/<datum>-<ime>-ledger.md`, jer git ledger ne vidi.
+Na kraju plana ga `/kraj` kopira u `docs/archive/<datum>-<ime>-ledger.md`, jer git ledger ne vidi. Ledger se zove po
+pregledu plana (`<datum>-<ime>`), i kad je plan razdvojen.
+
+- **Brief = task datoteka.** Izvođač dobiva putanju task datoteke (`docs/plan/<datum>-<ime>/task-NN-….md`) i pregleda.
+  Ako je potreban `task-brief`, uvijek s trećim argumentom, inače radni prostor dobije ime taska:
+  `task-brief <mapa>/task-NN-x.md N "$(sdd-workspace <pregled>.md)/task-N-brief.md"`
+- **Dvije sesije paralelno** samo na različitim područjima (`kod` i `dokumentacija`), svaka sa svojim aktivnim planom.
+- **Pretinac.** Dok jedna sesija radi na dokumentaciji, sesija koda ne piše u `docs/records/`. Svoje bilješke ostavlja u
+  `.superpowers/sdd/<plan>/za-dokumentaciju.md`, u odjeljcima `## ADR`, `## BACKLOG`, `## CHANGELOG`, `## PROGRESS`;
+  sesija dokumentacije ih prenese pri `/kraj`.
 
 ## 3 · Model po poslu
 

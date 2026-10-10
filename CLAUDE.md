@@ -11,7 +11,8 @@ i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**
 vremena nego Sokratu.
 
 **Dokumentacija:** jedini indeks je [docs/README.md](docs/README.md) — tamo piše gdje što ide (jedna činjenica,
-jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → „Lokalni razvoj".
+jedno mjesto), **granice veličine** dokumenata ([tablica](docs/README.md#granice-veličine)) i pravilo „indeks + mapa istog
+imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: [README.md](README.md) → „Lokalni razvoj".
 
 ## Stanje
 - **Sesija počinje** s `/clear` → `/newsession` (čita [docs/SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)), **završava**
