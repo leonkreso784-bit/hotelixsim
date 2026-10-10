@@ -32,6 +32,14 @@ mehanike.
 agencije, potrebu za smještajem, dozvolu i rok dolaska; **nikad** vještinu, pouzdanost ni osobnost — one su osobne i
 izvlače se iz istih raspodjela za sve. Razlog: igra je nastavni materijal fakulteta; student uči procijeniti čovjeka,
 ne zastavu. Ljude drugih hotela student ne vidi (pretpostavka; t. 9 govori samo o recenzijama).
+**Odgovori na 11 novih pitanja arhitekta (Leon 10.10., MODEL_V2 §9):** (1) strani radnici: **ista plaća za istu
+vještinu** — agencija daje dostupnost uz naknadu i smještaj; (2) **zajednička burza rada** — kandidata kojeg zaposli
+jedan hotel drugi više ne mogu (suprotno preporuci); (3) tjedni kalendar **16 × 7 dana + završnih 10 dana**; (4) nova v2
+igra je **tjedna** po zadanom; (5) mentor tjedno kratko bez AI-ja, **AI mentor na kraju mjeseca**; (6) broj AI razgovora
+**bira profesor** pri stvaranju igre; (7) granica AI troška **2 $ po studentu po igri**, zatim ponuđeni odgovori;
+(8) mješavinu jezika gostiju **istražuje agent** (DZS, Kvarner); (9) ciljna GOP marža **35–45 %**, profesor potvrđuje;
+(10) sobe hotela kao smještaj osoblja **do 10 % soba**; (11) **jedna skrivena osobina** kandidata, otkriva je razgovor
+za posao ili 4 tjedna rada.
 **Cijena ako krivo:** tjedni krug i bogati ljudi povećavaju posao sloja 1 i 2 — nova procjena u MODEL_V2 §5.
 
 ---
