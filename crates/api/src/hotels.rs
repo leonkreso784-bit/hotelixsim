@@ -10,7 +10,7 @@ use crate::auth::Token;
 use crate::problem::{Problem, ProblemCode};
 use crate::schema::{
     AnswerBody, ConversationBody, FeedBody, FeedItemBody, HotelBody, MonthCode, PlanBody,
-    SituationsBody, TextBody, parse_hotel, parse_month,
+    SituationsBody, TextBody, parse_hotel, parse_round,
 };
 
 /// Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.
@@ -105,7 +105,7 @@ pub async fn put_plan(
 ) -> Result<Json<PlanBody>, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let hotel = parse_hotel(&id)?;
-    let month = parse_month(&month)?;
+    let month = parse_round(&month)?;
     let plan = body_or_problem(&s, &caller, hotel, body).await?;
     let saved = app::set_plan(&s.deps, &caller, hotel, month, (&plan).into()).await?;
     Ok(Json(PlanBody::from(&saved)))

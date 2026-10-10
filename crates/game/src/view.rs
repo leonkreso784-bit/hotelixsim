@@ -1,12 +1,13 @@
 //! Pogledi na hotel (ARHITEKTURA §12): javni (tuđi hotel: ocjena i pet indeksa) i privatni (vlasnik: stvarne brojke).
 
 use crate::command::{PlanLimits, plan_limits};
-use crate::dto::{MonthCode, PlanDto, indices_dto};
+use crate::dto::{PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::event::Controller;
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
 use crate::kpi::report_kpi;
+use crate::round::RoundKey;
 
 /// Tko vodi hotel; namjerno bez `guest_id`, tuđi gost se ne otkriva.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -17,7 +18,7 @@ pub enum Seat {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MonthScore {
-    pub month: MonthCode,
+    pub round: RoundKey,
     pub indices: [u16; 5],
     pub progress_hundredths: i32,
 }
@@ -49,7 +50,7 @@ pub struct RealNumbers {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LastMonth {
-    pub month: MonthCode,
+    pub round: RoundKey,
     pub sold: u32,
     pub available: u32,
     pub rooms_revenue_cents: i64,
@@ -65,7 +66,7 @@ pub struct LastMonth {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlanState {
-    pub month: MonthCode,
+    pub round: RoundKey,
     pub plan: PlanDto,
     pub limits: PlanLimits,
 }
@@ -89,7 +90,7 @@ impl Game {
             },
         };
         let mut months = Vec::new();
-        for m in &self.months {
+        for m in &self.rounds {
             let Some(rr) = self.resolved.get(m) else {
                 continue;
             };
@@ -99,7 +100,7 @@ impl Game {
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             months.push(MonthScore {
-                month: rr.month,
+                round: rr.month,
                 indices: res.indices,
                 progress_hundredths: res.progress_hundredths,
             });
@@ -131,7 +132,7 @@ impl Game {
             load_hundredths: s.load_hundredths,
         };
         let mut last_month = None;
-        if let Some(rr) = self.months.iter().rev().find_map(|m| self.resolved.get(m)) {
+        if let Some(rr) = self.rounds.iter().rev().find_map(|m| self.resolved.get(m)) {
             let res = rr
                 .hotels
                 .iter()
@@ -139,27 +140,27 @@ impl Game {
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             let k = report_kpi(&res.report, &self.content.catalog)?;
             last_month = Some(LastMonth {
-                month: rr.month,
+                round: rr.month,
                 sold: res.report.market.sold,
                 available: res.report.market.available,
                 rooms_revenue_cents: res.report.money.rooms_revenue_cents,
                 gop_cents: res.report.money.gop_cents,
                 goppar_cents: res.report.money.goppar_cents,
-                mentor: h.debriefs.get(&rr.month.into()).map(|d| d.text.clone()),
+                mentor: h.debriefs.get(&rr.month).map(|d| d.text.clone()),
                 occupancy_bp: k.occupancy_bp,
                 adr_cents: k.adr_cents,
                 revpar_cents: k.revpar_cents,
             });
         }
         let mut plan = None;
-        if let Some(m) = self.current_month()
+        if let Some(m) = self.current_round()
             && self.status(m)? == RoundStatus::Open
         {
             let state = self.state_at(id, m)?;
             plan = Some(PlanState {
-                month: m.into(),
+                round: m,
                 plan: (&self.effective_plan(id, m)?).into(),
-                limits: plan_limits(&state, m, &self.content.catalog)?,
+                limits: plan_limits(&state, m.require_month()?, &self.content.catalog)?,
             });
         }
         Ok(PrivateHotel {

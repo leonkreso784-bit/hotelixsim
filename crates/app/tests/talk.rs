@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use app::memory::FakeAi;
 use app::{Caller, Deps, ErrorCode, GameId, HotelId, ResponseStatus};
+use game::RoundKey;
 use game::RoundStatus;
-use game::dto::MonthCode;
 use sim_hotel::Month;
 
 fn snapshot() -> content::Snapshot {
@@ -166,26 +166,26 @@ async fn close_waits_for_verdict_then_neutral_and_late_verdict_is_kept() {
     // posao procjene preuzmi ručno i drži ga „u radu" (kao spor AI)
     let assess = deps.jobs.claim(app::LEASE_SECS).await.unwrap().unwrap();
     assert_eq!(assess.kind, app::ASSESS_KIND);
-    app::close_round(&deps, &caller, game, MonthCode::Jun)
+    app::close_round(&deps, &caller, game, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     // obračun vidi presudu na čekanju i odgađa se
     assert!(app::run_next_job(&deps).await.unwrap());
-    let r = app::round_status(&deps, &caller, game, MonthCode::Jun)
+    let r = app::round_status(&deps, &caller, game, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     assert_eq!(r.status, RoundStatus::Closing);
     // rok je prošao → neutralna presuda i obračun
     mem.set_job_age(
-        &app::resolve_key(game, Month::Jun),
+        &app::resolve_key(game, RoundKey::Month(Month::Jun)),
         app::VERDICT_DEADLINE_SECS + 1,
     );
     assert!(app::run_next_job(&deps).await.unwrap());
-    let r = app::round_status(&deps, &caller, game, MonthCode::Jun)
+    let r = app::round_status(&deps, &caller, game, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     assert_eq!(r.status, RoundStatus::Resolved);
-    let s = app::situations_for_month(&deps, &caller, hotel, MonthCode::Jun)
+    let s = app::situations_for_month(&deps, &caller, hotel, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     assert_eq!(s1_response(&s).status, ResponseStatus::Neutral);
@@ -203,7 +203,7 @@ async fn resolve_enqueues_debrief_for_human_only_and_mentor_appears() {
     let ai = Arc::new(FakeAi::good());
     let (deps, _mem) = app::memory::deps_with_ai(snapshot(), ai.clone());
     let (caller, hotel, game) = start(&deps).await;
-    app::close_round(&deps, &caller, game, MonthCode::Jun)
+    app::close_round(&deps, &caller, game, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     run_all_jobs(&deps).await;
@@ -258,7 +258,7 @@ async fn closed_round_is_not_awaiting_reply() {
     app::send_message(&deps, &caller, hotel, "S1", "Halo?".into())
         .await
         .unwrap();
-    app::close_round(&deps, &caller, game, MonthCode::Jun)
+    app::close_round(&deps, &caller, game, RoundKey::Month(Month::Jun))
         .await
         .unwrap();
     let v = app::conversation(&deps, &caller, hotel, "S1")

@@ -47,9 +47,9 @@ const CHEF_ANSWER: &str = "Bonus na kraju sezone ako ostane, bez razgovora";
 /// Srpanj kao iz Leonova primjera, složen ručno da su brojke poznate.
 fn sample() -> DebriefInput {
     DebriefInput {
-        month: MonthCode::Jul,
-        next_month: Some(MonthCode::Aug),
-        prev_month: Some(MonthCode::Jun),
+        round: RoundKey::parse("jul").unwrap(),
+        next_round: RoundKey::parse("aug"),
+        prev_round: RoundKey::parse("jun"),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![DebriefSituation {
             chosen_label: Some(CHEF_ANSWER.into()),
@@ -526,8 +526,8 @@ fn month_next_month_hotel_and_progress_in_words() {
     assert_eq!(f["iduci_mjesec"], "u kolovozu");
     assert_eq!(f["napredak_od_pocetka"], "+3 boda");
     let mut last = sample();
-    last.month = MonthCode::Sep;
-    last.next_month = None;
+    last.round = RoundKey::Month(Month::Sep);
+    last.next_round = None;
     last.progress_hundredths = -1_150;
     let f = facts_json(&last);
     assert_eq!(f["iduci_mjesec"], Value::Null);
@@ -545,7 +545,7 @@ fn guard_facts_and_fallback_for_real_settled_month_are_human() {
     let (g, h) = july_resolved_bad_chef_game();
     let input = g.debrief_input(h, Month::Jul).unwrap();
     assert_eq!(
-        input.next_month, None,
+        input.next_round, None,
         "u testnom sadržaju srpanj je zadnji"
     );
     let json = serde_json::to_string_pretty(&debrief_facts(&input)).unwrap();
@@ -555,7 +555,7 @@ fn guard_facts_and_fallback_for_real_settled_month_are_human() {
     // Za izvještaj: `cargo test -p game --test mentor -- --nocapture guard`.
     println!("{json}\n-----\n{text}");
     let june = g.debrief_input(h, Month::Jun).unwrap();
-    assert_eq!(june.next_month, Some(MonthCode::Jul));
+    assert_eq!(june.next_round, Some(RoundKey::Month(Month::Jul)));
     assert_human_facts(&facts_json(&june));
     assert_human(&fallback_debrief(&june));
 }
@@ -953,12 +953,12 @@ fn mentions_last_month(input: &DebriefInput) -> Vec<String> {
         .collect()
 }
 
-/// Prvi mjesec igre (igra kaže koji je, `prev_month: None`) nema prošlog: opterećenje, sezonci i odlasci
+/// Prvi mjesec igre (igra kaže koji je, `prev_round: None`) nema prošlog: opterećenje, sezonci i odlasci
 /// uspoređuju se s početkom igre. Mjesec sam ne odlučuje — srpanj može biti prvi, lipanj ne mora.
 #[test]
 fn first_month_never_says_last_month_anywhere() {
     let mut first = sample();
-    first.prev_month = None;
+    first.prev_round = None;
     assert_eq!(mentions_last_month(&first), Vec::<String>::new());
     let f = facts_json(&first);
     assert_eq!(
@@ -992,7 +992,7 @@ fn first_month_never_says_last_month_anywhere() {
     );
     assert!(amount_for(&f, "Zaposleni", QUIT_NOW).ends_with("više nego prošli mjesec"));
     let mut june_not_first = sample();
-    june_not_first.month = MonthCode::Jun;
+    june_not_first.round = RoundKey::Month(Month::Jun);
     assert!(!mentions_last_month(&june_not_first).is_empty());
 }
 
@@ -1000,9 +1000,9 @@ fn first_month_never_says_last_month_anywhere() {
 #[test]
 fn first_month_compares_turnover_with_start_of_game() {
     let mut june = sample();
-    june.month = MonthCode::Jun;
-    june.next_month = Some(MonthCode::Jul);
-    june.prev_month = None;
+    june.round = RoundKey::Month(Month::Jun);
+    june.next_round = Some(RoundKey::Month(Month::Jul));
+    june.prev_round = None;
     june.turnover_before_bp = 450;
     june.turnover_after_bp = 375;
     let f = facts_json(&june);
@@ -1203,10 +1203,10 @@ fn real_months_colour_a_cause_under_staff_index() {
         let input = g.debrief_input(h, m).unwrap();
         // Igra kaže koji je mjesec prvi; u prvom nigdje nema „prošlog mjeseca".
         if m == Month::Jun {
-            assert_eq!(input.prev_month, None);
+            assert_eq!(input.prev_round, None);
             assert_eq!(mentions_last_month(&input), Vec::<String>::new());
         } else {
-            assert_eq!(input.prev_month, Some(MonthCode::Jun));
+            assert_eq!(input.prev_round, Some(RoundKey::Month(Month::Jun)));
             assert!(!mentions_last_month(&input).is_empty());
         }
         let f = debrief_facts(&input);

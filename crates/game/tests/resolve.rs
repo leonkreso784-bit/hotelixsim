@@ -162,7 +162,7 @@ fn june_resolution_opens_july_with_robot_moves() {
     assert_eq!(kinds[0], "RoundResolved");
     assert_eq!(kinds.len(), 1 + 3 * 2, "svaki robot: PlanSet + S2");
     let g = Game::fold(&log).unwrap();
-    assert_eq!(g.current_month(), Some(Month::Jul));
+    assert_eq!(g.current_round(), Some(RoundKey::Month(Month::Jul)));
     assert_eq!(g.status(Month::Jul), Ok(RoundStatus::Open));
     let GameEvent::RoundResolved(rr) = &log[before].event else {
         panic!()
@@ -217,7 +217,7 @@ fn july_resolution_finishes_game() {
         "nakon srpnja nema novih poteza robota"
     );
     let g = Game::fold(&log).unwrap();
-    assert_eq!(g.current_month(), None);
+    assert_eq!(g.current_round(), None);
     assert_eq!(g.close_round(Month::Jul), Ok(None));
     assert_eq!(g.public_hotel(me()).unwrap().months.len(), 2);
     assert_eq!(g.private_hotel(me()).unwrap().plan, None, "igra je gotova");
@@ -239,7 +239,7 @@ fn feed_is_chronological_and_only_mine() {
     assert!(feed.iter().any(|f| matches!(
         f,
         FeedItem::MonthResolved {
-            month: MonthCode::Jun,
+            round: RoundKey::Month(Month::Jun),
             ..
         }
     )));
@@ -296,9 +296,12 @@ fn views_split_public_and_private() {
         panic!()
     };
     assert_eq!(mine.now.cash_cents, rr.hotels[0].report.after.cash_cents);
-    assert_eq!(mine.last_month.as_ref().unwrap().month, MonthCode::Jun);
+    assert_eq!(
+        mine.last_month.as_ref().unwrap().round,
+        RoundKey::Month(Month::Jun)
+    );
     let plan = mine.plan.expect("srpanj je otvoren");
-    assert_eq!(plan.month, MonthCode::Jul);
+    assert_eq!(plan.round, RoundKey::Month(Month::Jul));
 }
 
 #[test]
@@ -345,13 +348,13 @@ fn verdict_after_neutral_is_late_and_changes_nothing() {
     for (a, e) in evs {
         common::apply_ev(&mut g, a, e);
     }
-    let before = g.resolved[&Month::Jun].clone();
+    let before = g.resolved[&RoundKey::Month(Month::Jun)].clone();
     let h = common::my_hotel(&g);
     let v = g.validate_verdict("S1", common::draft_all_met(0)).unwrap();
     let ev = g.record_verdict(h, "S1", v, common::meta()).unwrap();
     assert!(matches!(ev, GameEvent::VerdictLate(_)));
     common::apply_ev(&mut g, Actor::System, ev);
-    assert_eq!(g.resolved[&Month::Jun], before);
+    assert_eq!(g.resolved[&RoundKey::Month(Month::Jun)], before);
 }
 
 #[test]
@@ -377,7 +380,7 @@ fn replay_with_verdicts_is_byte_identical() {
         .unwrap();
     let before = Game::fold(&reread[..pos]).unwrap();
     let again = before.resolve_round(Month::Jun).unwrap();
-    let stored = Game::fold(&reread).unwrap().resolved[&Month::Jun].clone();
+    let stored = Game::fold(&reread).unwrap().resolved[&RoundKey::Month(Month::Jun)].clone();
     assert_eq!(
         serde_json::to_vec(&again).unwrap(),
         serde_json::to_vec(&stored).unwrap()

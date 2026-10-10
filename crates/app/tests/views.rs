@@ -90,8 +90,12 @@ async fn game_view_lists_four_hotels_with_open_june() {
     assert_eq!(g.my_hotel, s.hotel_id);
     let r = g.current.unwrap();
     assert_eq!(
-        (r.month, r.status, r.unanswered),
-        (game::dto::MonthCode::Jun, game::RoundStatus::Open, 2)
+        (r.round, r.status, r.unanswered),
+        (
+            game::RoundKey::Month(sim_hotel::Month::Jun),
+            game::RoundStatus::Open,
+            2
+        )
     );
 }
 

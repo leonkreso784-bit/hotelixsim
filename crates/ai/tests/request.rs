@@ -127,13 +127,11 @@ fn student_newline_cannot_forge_character_line() {
 }
 
 fn sample_debrief() -> game::DebriefInput {
-    use game::dto::{
-        CauseDto, LineDto, MaintenanceCode, MonthCode, PlanDto, TrainingCode, UnitCode, VarCode,
-    };
+    use game::dto::{CauseDto, LineDto, MaintenanceCode, PlanDto, TrainingCode, UnitCode, VarCode};
     game::DebriefInput {
-        month: MonthCode::Jul,
-        next_month: Some(MonthCode::Aug),
-        prev_month: Some(MonthCode::Jun),
+        round: game::RoundKey::parse("jul").unwrap(),
+        next_round: game::RoundKey::parse("aug"),
+        prev_round: game::RoundKey::parse("jun"),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![game::DebriefSituation {
             code: "S2".into(),

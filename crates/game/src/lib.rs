@@ -13,6 +13,7 @@ pub mod ids;
 pub mod kpi;
 mod mentor;
 mod resolve;
+mod round;
 pub mod talk;
 mod verdict;
 pub mod view;
@@ -30,6 +31,7 @@ pub use mentor::{
     debrief_facts, fallback_debrief,
 };
 pub use resolve::ResolveStep;
+pub use round::{MAX_WEEK, RoundKey};
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};
 pub use verdict::{
     NEUTRAL_DEADLINE, NEUTRAL_FAILED, ValidVerdict, VerdictDraft, VerdictError, quality_from,

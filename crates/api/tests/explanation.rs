@@ -1,7 +1,6 @@
 //! „Zašto se indeksi pomaknuli": isto što mentor dobiva (`debrief_facts`), za ekran „Mjesec završen".
 mod common;
 use common::*;
-use game::dto::MonthCode;
 use game::{Actor, DriverSource, Effect, Game, GameEvent, Recorded, debrief_facts};
 use serde_json::Value;
 
@@ -58,7 +57,10 @@ async fn settled_month_explains_every_index_with_mentor_facts() {
 
     let g = game_of(&mem, &game);
     let h = app::HotelId(hotel.parse().unwrap());
-    let f = debrief_facts(&g.debrief_input(h, MonthCode::Jun.into()).unwrap());
+    let f = debrief_facts(
+        &g.debrief_input(h, game::RoundKey::parse("jun").unwrap())
+            .unwrap(),
+    );
 
     assert_eq!(r.body["month"], "jun");
     assert_eq!(r.body["progress_text"], f.progress.as_str());

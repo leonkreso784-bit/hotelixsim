@@ -147,7 +147,8 @@ pub fn june_resolved_with_free_verdict_game(q: usize, i: u8) -> Game {
 }
 
 pub fn june_resolved_with_free_verdict(q: usize, i: u8) -> RoundResolved {
-    june_resolved_with_free_verdict_game(q, i).resolved[&sim_hotel::Month::Jun].clone()
+    june_resolved_with_free_verdict_game(q, i).resolved[&RoundKey::Month(sim_hotel::Month::Jun)]
+        .clone()
 }
 
 fn june_resolved_offered_game(i: u8) -> Game {
@@ -161,7 +162,7 @@ fn june_resolved_offered_game(i: u8) -> Game {
 }
 
 pub fn june_resolved_with_offered(i: u8) -> RoundResolved {
-    june_resolved_offered_game(i).resolved[&sim_hotel::Month::Jun].clone()
+    june_resolved_offered_game(i).resolved[&RoundKey::Month(sim_hotel::Month::Jun)].clone()
 }
 
 pub fn june_resolved_game() -> Game {

@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{IndexCode, MonthCode, VarCode, parse_hotel, parse_month};
+use crate::schema::{IndexCode, MonthCode, VarCode, calendar_month, parse_hotel, parse_round};
 
 /// Što pokreće indeks: jedna od varijabli hotela ili `staff_load` (opterećenje osoblja, nije varijabla).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
@@ -175,7 +175,7 @@ pub async fn explanation(
 ) -> Result<Json<ExplanationBody>, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let hotel = parse_hotel(&id)?;
-    let month = parse_month(&month)?;
+    let month = parse_round(&month)?;
     let f = app::explanation(&s.deps, &caller, hotel, month).await?;
-    Ok(Json(ExplanationBody::new(month.into(), &f)))
+    Ok(Json(ExplanationBody::new(calendar_month(month)?, &f)))
 }

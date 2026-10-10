@@ -323,7 +323,7 @@ async fn replay_from_database_matches(pool: PgPool) {
         .unwrap();
     let again = Game::fold(&recs[..at])
         .unwrap()
-        .resolve_round(game::dto::MonthCode::Jun.into())
+        .resolve_round(game::RoundKey::parse("jun").unwrap())
         .unwrap();
     let game::GameEvent::RoundResolved(stored) = &recs[at].event else {
         panic!("očekivan RoundResolved")
@@ -514,7 +514,7 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
         .unwrap();
     let again = Game::fold(&recs[..at])
         .unwrap()
-        .resolve_round(game::dto::MonthCode::Jun.into())
+        .resolve_round(game::RoundKey::parse("jun").unwrap())
         .unwrap();
     let game::GameEvent::RoundResolved(stored) = &recs[at].event else {
         panic!("očekivan RoundResolved")

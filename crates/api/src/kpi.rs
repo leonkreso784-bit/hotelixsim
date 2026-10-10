@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{MonthCode, parse_hotel};
+use crate::schema::{MonthCode, calendar_month, parse_hotel};
 
 /// Pokazatelji jednog obračunatog mjeseca. Sve „po sobi" dijeli se sa svim sobama × dani (`room_nights`), pa vrijedi
 /// RevPAR = ADR × popunjenost. Iznosi u centima, udjeli u baznim bodovima (10 000 = 100 %); `null` kad je
@@ -55,11 +55,13 @@ pub struct KpiMonthBody {
     pub break_even_occupancy_bp: Option<i64>,
 }
 
-impl From<&KpiMonth> for KpiMonthBody {
-    fn from(m: &KpiMonth) -> Self {
+impl TryFrom<&KpiMonth> for KpiMonthBody {
+    type Error = Problem;
+
+    fn try_from(m: &KpiMonth) -> Result<Self, Problem> {
         let k = &m.kpi;
-        KpiMonthBody {
-            month: m.month.into(),
+        Ok(KpiMonthBody {
+            month: calendar_month(m.round)?,
             room_nights: k.room_nights,
             sold_nights: k.sold_nights,
             lost_nights: k.lost_nights,
@@ -77,7 +79,7 @@ impl From<&KpiMonth> for KpiMonthBody {
             labor_share_bp: k.labor_share_bp,
             cpor_cents: k.cpor_cents,
             break_even_occupancy_bp: k.break_even_occupancy_bp,
-        }
+        })
     }
 }
 
@@ -107,6 +109,9 @@ pub async fn kpi(
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let months = app::hotel_kpi(&s.deps, &caller, parse_hotel(&id)?).await?;
     Ok(Json(KpiBody {
-        months: months.iter().map(KpiMonthBody::from).collect(),
+        months: months
+            .iter()
+            .map(KpiMonthBody::try_from)
+            .collect::<Result<_, _>>()?,
     }))
 }

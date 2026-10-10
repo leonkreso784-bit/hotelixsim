@@ -1,7 +1,6 @@
 mod common;
 use common::*;
 use game::command::*;
-use game::dto::*;
 use game::*;
 use sim_hotel::{Month, MonthPlan, PlanError};
 
@@ -41,7 +40,10 @@ fn new_game_writes_created_then_robot_moves_for_june() {
         panic!()
     };
     assert_eq!(c.ruleset_id, content::fingerprint_value(&c.snapshot));
-    assert_eq!(c.months, [MonthCode::Jun, MonthCode::Jul]);
+    assert_eq!(
+        c.months,
+        [RoundKey::Month(Month::Jun), RoundKey::Month(Month::Jul)]
+    );
     let mut robot_profiles: Vec<&str> = c.hotels[1..].iter().map(|h| h.profile.as_str()).collect();
     robot_profiles.sort_unstable();
     assert_eq!(
@@ -59,7 +61,7 @@ fn new_game_writes_created_then_robot_moves_for_june() {
 #[test]
 fn statuses_follow_the_calendar() {
     let g = Game::fold(&created(42)).unwrap();
-    assert_eq!(g.current_month(), Some(Month::Jun));
+    assert_eq!(g.current_round(), Some(RoundKey::Month(Month::Jun)));
     assert_eq!(g.status(Month::Jun), Ok(RoundStatus::Open));
     assert_eq!(g.status(Month::Jul), Ok(RoundStatus::Scheduled));
     assert_eq!(g.status(Month::Aug), Err(GameError::UnknownMonth));
