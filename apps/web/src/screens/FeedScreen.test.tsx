@@ -83,11 +83,11 @@ describe("Tijek", () => {
     expect(screen.getByRole("heading", { name: "Lipanj" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Početak" })).toBeTruthy();
     expect(screen.getByText("Mentor: Usluga je bolja.")).toBeTruthy();
-    expect(screen.getByText("Lipanj je obračunat: napredak +8.")).toBeTruthy();
+    expect(screen.getByText("Lipanj je obračunat: napredak +8 bodova.")).toBeTruthy();
     expect(screen.getByText("Klima: AI ocjena 4/5.")).toBeTruthy();
     expect(screen.getByText("Agencija: izabrano „Prihvatiti uz 15 % popusta i depozit“.")).toBeTruthy();
     expect(screen.getByText("Dobio si hotel „Tvoj hotel“.")).toBeTruthy();
-    const sum = screen.getByText("Obračun: 2 promjena s uzrokom");
+    const sum = screen.getByText("Obračun: 2 promjene s uzrokom");
     fireEvent.click(sum);
     const box = sum.closest("details") as HTMLElement;
     expect(within(box).getByText("−12 %")).toBeTruthy();
@@ -96,5 +96,26 @@ describe("Tijek", () => {
   it("prazan tijek", async () => {
     renderApp(standardApi(), "/tijek");
     expect(await screen.findByText("Još se ništa nije dogodilo.")).toBeTruthy();
+  });
+});
+
+describe("Tijek, množina promjena", () => {
+  const change = (seq: number): FeedItemBody => ({
+    kind: "change",
+    seq,
+    month: "jun",
+    var: "sold",
+    cause: "price",
+    amount: -100,
+    unit: "bp",
+    situation: null,
+  });
+  it.each([
+    [1, "Obračun: 1 promjena s uzrokom"],
+    [5, "Obračun: 5 promjena s uzrokom"],
+  ])("%i promjena", async (n, text) => {
+    const list = Array.from({ length: n }, (_, k) => change(k + 1));
+    renderApp(standardApi().on("GET", "/v1/hotels/:hotel/feed", { items: list }), "/tijek");
+    expect(await screen.findByText(text)).toBeTruthy();
   });
 });

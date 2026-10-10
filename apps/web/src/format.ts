@@ -77,3 +77,15 @@ export function varLabel(code: VarCode): string {
 export function strategyLabel(code: StrategyCode): string {
   return t(`strategy.${code}` as const);
 }
+
+const pluralRules = new Intl.PluralRules("hr");
+
+/**
+ * Broj s imenicom u ispravnom hrvatskom množinskom obliku: 1 promjena, 2 promjene, 5 promjena.
+ * Necijeli brojevi (8,25) uzimaju oblik uz 2–4 („8,25 boda“).
+ */
+export function formatCount(n: number, noun: "change" | "point", shown: string = nf2.format(n)): string {
+  const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
+  const form = category === "one" || category === "few" ? category : "other";
+  return `${shown} ${t(`plural.${noun}.${form}`)}`;
+}

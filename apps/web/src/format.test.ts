@@ -3,6 +3,7 @@ import {
   capitalize,
   causeLabel,
   formatChange,
+  formatCount,
   formatEuros,
   formatIndex,
   formatOccupancy,
@@ -71,5 +72,23 @@ describe("nazivi", () => {
     expect(causeLabel("reply_reviews")).toBe("odgovori na recenzije");
     expect(varLabel("sold")).toBe("Prodane noći");
     expect(strategyLabel("lovac")).toBe("lovi popunjenost");
+  });
+});
+
+describe("formatCount", () => {
+  it("promjena: 1, 2–4, 5+, 11, 21, 22", () => {
+    const f = (n: number) => formatCount(n, "change");
+    expect([1, 2, 5, 11, 21, 22].map(f)).toEqual([
+      "1 promjena",
+      "2 promjene",
+      "5 promjena",
+      "11 promjena",
+      "21 promjena",
+      "22 promjene",
+    ]);
+  });
+  it("bod: bod, boda, bodova; decimale uz „boda“", () => {
+    expect([1, 3, 8].map((n) => formatCount(n, "point"))).toEqual(["1 bod", "3 boda", "8 bodova"]);
+    expect(formatCount(8.25, "point")).toBe("8,25 boda");
   });
 });

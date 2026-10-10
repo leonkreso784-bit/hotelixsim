@@ -3,7 +3,15 @@ import { t } from "@hotelixsim/i18n";
 import { problemMessage } from "../api/errors";
 import { useFeed } from "../api/queries";
 import type { FeedItemBody, HotelBody, MonthCode } from "../api/types";
-import { capitalize, causeLabel, formatChange, formatSigned, monthName, varLabel } from "../format";
+import {
+  capitalize,
+  causeLabel,
+  formatChange,
+  formatCount,
+  formatSigned,
+  monthName,
+  varLabel,
+} from "../format";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
 import type { FeedChange } from "./month/Changes";
 
@@ -43,7 +51,7 @@ function sentence(i: Plain): string {
     case "month_resolved":
       return t("feed.month_resolved", {
         month: capitalize(monthName(i.month)),
-        progress: formatSigned(i.progress_hundredths),
+        progress: formatCount(i.progress_hundredths / 100, "point", formatSigned(i.progress_hundredths)),
       });
     case "response":
       return t("feed.response", { title: i.title });
@@ -88,7 +96,7 @@ export function FeedScreen({ me }: { me: HotelBody }) {
                   <li key={e.key} className="py-2">
                     <details>
                       <summary className="min-h-11 cursor-pointer font-semibold">
-                        {t("feed.changes", { n: e.changes.length })}
+                        {t("feed.changes", { count: formatCount(e.changes.length, "change") })}
                       </summary>
                       <ul className="text-sm">
                         {e.changes.map((c) => (

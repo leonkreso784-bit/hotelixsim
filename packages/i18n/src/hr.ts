@@ -222,5 +222,11 @@ export const hr = {
   "feed.verdict.neutral": "{title}: neutralna ocjena {q}/5, ide profesoru na pregled.",
   "feed.verdict.late": "{title}: zakašnjela AI ocjena {q}/5 — ne mijenja obračun.",
   "feed.mentor": "Mentor: {text}",
-  "feed.changes": "Obračun: {n} promjena s uzrokom",
+  "feed.changes": "Obračun: {count} s uzrokom",
+  "plural.change.one": "promjena",
+  "plural.change.few": "promjene",
+  "plural.change.other": "promjena",
+  "plural.point.one": "bod",
+  "plural.point.few": "boda",
+  "plural.point.other": "bodova",
 } as const;
