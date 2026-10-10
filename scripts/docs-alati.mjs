@@ -48,14 +48,67 @@ export function uOgradi(retci) {
 }
 
 const INLINE_KOD = /(`+)(?:(?!\1)[\s\S])+?\1/g;
-const POVEZNICA = /(!?\[[^\]\n]*\]\()([^)\s]+)((?:\s+"[^"\n]*")?\))/g;
 const JE_RELATIVAN = (cilj) =>
   !/^[a-z][a-z0-9+.-]*:/i.test(cilj) && !cilj.startsWith("#") && !cilj.startsWith("/");
 
+// Završetak teksta poveznice: indeks zatvarajuće `]` uz uravnotežene zagrade (ili -1).
+function krajTeksta(t, od) {
+  let dubina = 0;
+  for (let i = od; i < t.length; i++) {
+    if (t[i] === "\\") i++;
+    else if (t[i] === "[") dubina++;
+    else if (t[i] === "]" && --dubina === 0) return i;
+  }
+  return -1;
+}
+
+// Cilj nakon `(`: do razmaka ili `)` na dubini 0 (zagrade u cilju, `x(1).md`, se uravnotežuju).
+function krajCilja(t, od) {
+  let dubina = 0;
+  let i = od;
+  for (; i < t.length; i++) {
+    if (t[i] === "\\") i++;
+    else if (t[i] === "(") dubina++;
+    else if (t[i] === ")") {
+      if (dubina === 0) break;
+      dubina--;
+    } else if (/\s/.test(t[i])) break;
+  }
+  return i;
+}
+
+// Skener umjesto jednog regexa: tekst poveznice se rekurzivno obrađuje, pa se prepišu i
+// slika u tekstu poveznice (`[![b](img.png)](x.md)`) i vanjski cilj.
 function prepisiUTekstu(tekst, fn) {
-  return tekst.replace(POVEZNICA, (cijelo, pocetak, cilj, kraj) =>
-    JE_RELATIVAN(cilj) ? `${pocetak}${fn(cilj)}${kraj}` : cijelo,
-  );
+  let izlaz = "";
+  let i = 0;
+  while (i < tekst.length) {
+    const pocetak = tekst[i] === "!" && tekst[i + 1] === "[" ? i + 1 : tekst[i] === "[" ? i : -1;
+    if (pocetak === -1) {
+      izlaz += tekst[i++];
+      continue;
+    }
+    const zatvori = krajTeksta(tekst, pocetak);
+    if (zatvori === -1 || tekst[zatvori + 1] !== "(") {
+      izlaz += tekst.slice(i, pocetak + 1);
+      i = pocetak + 1;
+      continue;
+    }
+    const odCilja = zatvori + 2;
+    const doCilja = krajCilja(tekst, odCilja);
+    const naslov = /^(?:\s+"[^"\n]*")?\)/.exec(tekst.slice(doCilja));
+    const cilj = tekst.slice(odCilja, doCilja);
+    if (doCilja === odCilja || !naslov) {
+      izlaz += tekst.slice(i, pocetak + 1);
+      i = pocetak + 1;
+      continue;
+    }
+    const unutra = prepisiUTekstu(tekst.slice(pocetak + 1, zatvori), fn);
+    const noviCilj = JE_RELATIVAN(cilj) ? fn(cilj) : cilj;
+    izlaz += `${tekst.slice(i, pocetak + 1)}${unutra}](${noviCilj}${naslov[0]}`;
+    i = doCilja + naslov[0].length;
+  }
+  return izlaz;
 }
 
 /**

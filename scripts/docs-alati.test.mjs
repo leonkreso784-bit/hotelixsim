@@ -112,3 +112,31 @@ test("prepisiRelativnePoveznice: ../ pa slice(3) vraća izvornik", () => {
     t,
   );
 });
+
+test("prepisiRelativnePoveznice: slika u tekstu poveznice, oba cilja prolaze kroz fn", () => {
+  const viđeno = [];
+  const out = prepisiRelativnePoveznice("[![b](img.png)](x.md)", (c) => {
+    viđeno.push(c);
+    return `../${c}`;
+  });
+  assert.equal(out, "[![b](../img.png)](../x.md)");
+  assert.deepEqual(viđeno.sort(), ["img.png", "x.md"]);
+});
+
+test("prepisiRelativnePoveznice: uglate zagrade u tekstu poveznice", () => {
+  assert.equal(
+    prepisiRelativnePoveznice("[a [b] c](x.md)", (c) => `../${c}`),
+    "[a [b] c](../x.md)",
+  );
+  assert.equal(
+    prepisiRelativnePoveznice("[nije poveznica] i [a](x.md)", (c) => `../${c}`),
+    "[nije poveznica] i [a](../x.md)",
+  );
+});
+
+test("prepisiRelativnePoveznice: zagrade u cilju", () => {
+  assert.equal(
+    prepisiRelativnePoveznice("[a](x(1).md) i (b)", (c) => `../${c}`),
+    "[a](../x(1).md) i (b)",
+  );
+});
