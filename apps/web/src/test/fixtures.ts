@@ -1,6 +1,7 @@
 // test/fixtures.ts — tipizirani primjerci odgovora API-ja (oblik iz openapi.json).
 import type {
   ConversationBody,
+  ExplanationBody,
   GameBody,
   HotelBody,
   IndexEntry,
@@ -201,6 +202,122 @@ export function conversation(over: Partial<ConversationBody> = {}): Conversation
   };
 }
 
+/** „Zašto se indeksi pomaknuli“ za lipanj; indeksi kao `ix(5600, 5200, 5000, 5400, 4800)`, najviše G (+6). */
+export function explanation(over: Partial<ExplanationBody> = {}): ExplanationBody {
+  return {
+    month: "jun",
+    progress_text: "+8 bodova",
+    indices: [
+      {
+        code: "G",
+        name: "Zadovoljstvo gostiju",
+        before: 50,
+        after: 56,
+        change: 6,
+        drivers: [
+          {
+            var: "satisfaction",
+            name: "Zadovoljstvo gostiju",
+            meaning: "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova.",
+            lines: [
+              { cause: "usluga, oprema i cijena zajedno", amount: "+1 bod", effect: "up" },
+              {
+                cause: "situacija „Klima u sobi obitelji s djecom“",
+                amount: "+5 bodova",
+                effect: "up",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        code: "R",
+        name: "Recenzije",
+        before: 50,
+        after: 52,
+        change: 2,
+        drivers: [
+          {
+            var: "rating",
+            name: "Ocjena na portalima",
+            meaning: "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset.",
+            lines: [
+              { cause: "ocjene gostiju prema njihovu zadovoljstvu", amount: "+0,12 ocjene", effect: "up" },
+            ],
+          },
+        ],
+      },
+      {
+        code: "Z",
+        name: "Zaposlenici",
+        before: 50,
+        after: 50,
+        change: 0,
+        drivers: [
+          {
+            var: "morale",
+            name: "Moral",
+            meaning: "Raspoloženje i volja tima, na ljestvici do 100 bodova.",
+            lines: [
+              { cause: "ukupna promjena morala u mjesecu", amount: "−1 bod", effect: "neutral" },
+              { cause: "plaće", amount: "−10 bodova", effect: "down" },
+            ],
+          },
+          {
+            var: "staff",
+            name: "Zaposleni",
+            meaning: "Tko je došao i tko je otišao.",
+            lines: [
+              {
+                cause: "odlasci zaposlenih (zamijenjeni novima)",
+                amount: "otišle 2 osobe",
+                effect: "neutral",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        code: "O",
+        name: "Operativa",
+        before: 50,
+        after: 54,
+        change: 4,
+        drivers: [
+          {
+            var: "staff_load",
+            name: "Opterećenje osoblja",
+            meaning: "Koliko posla pada na jednog zaposlenog.",
+            lines: [
+              {
+                cause: "opterećenje u ovom mjesecu",
+                amount: "1,6 noćenja po zaposlenom na dan, u redu",
+                effect: "up",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        code: "F",
+        name: "Financije",
+        before: 50,
+        after: 48,
+        change: -2,
+        drivers: [
+          {
+            var: "costs",
+            name: "Troškovi",
+            meaning: "Što je hotel platio ovaj mjesec, po vrsti troška.",
+            lines: [{ cause: "plaće", amount: "117.040 €", effect: "neutral" }],
+          },
+        ],
+      },
+    ],
+    ...over,
+  };
+}
+
 /** Igra u otvorenom lipnju: moj hotel, igra, situacije, razgovor S1, prazan tijek. */
 export function standardApi(): FakeApi {
   return new FakeApi()
@@ -208,5 +325,6 @@ export function standardApi(): FakeApi {
     .on("GET", "/v1/games/:game", game())
     .on("GET", "/v1/hotels/:hotel/situations", situations())
     .on("GET", "/v1/hotels/:hotel/situations/:code/conversation", conversation())
-    .on("GET", "/v1/hotels/:hotel/feed", { items: [] });
+    .on("GET", "/v1/hotels/:hotel/feed", { items: [] })
+    .on("GET", "/v1/hotels/:hotel/months/:month/explanation", explanation());
 }

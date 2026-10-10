@@ -2,8 +2,8 @@ import { act, cleanup, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
 import { navigate } from "../router";
-import { json } from "../test/fakeApi";
-import { game, ix, myHotel, myPublic, robot, standardApi } from "../test/fixtures";
+import { json, problem } from "../test/fakeApi";
+import { explanation, game, ix, myHotel, myPublic, robot, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -90,12 +90,10 @@ describe("Mjesec završen", () => {
     expect(screen.getByText("▲ +6")).toBeTruthy();
     expect(screen.getByText("▼ −2")).toBeTruthy();
     expect(await screen.findByText("Usluga je bolja. Prati troškove.")).toBeTruthy();
-    const changes = screen.getByText("Zašto (svaka promjena s uzrokom)").closest("section") as HTMLElement;
-    expect(within(changes).getByText("Prodane noći")).toBeTruthy();
-    expect(within(changes).getByText("cijena")).toBeTruthy();
-    expect(within(changes).getByText("−12 %")).toBeTruthy();
-    expect(within(changes).getByText("situacija S1")).toBeTruthy();
-    expect(within(changes).getByText("−12.500 €")).toBeTruthy();
+    // Sirovi retci iz dnevnika (kod situacije, „osnova“) više se ne pokazuju.
+    expect(screen.queryByText("Zašto (svaka promjena s uzrokom)")).toBeNull();
+    expect(screen.queryByText("situacija S1")).toBeNull();
+    expect(await screen.findByRole("heading", { name: "Zašto se indeksi pomaknuli" })).toBeTruthy();
     const board = screen.getByRole("list", { name: "Ljestvica napretka" });
     const rows = within(board).getAllByRole("listitem");
     expect(rows.map((r) => r.textContent)).toEqual([
@@ -240,5 +238,123 @@ describe("Mjesec završen", () => {
   it("mjesec koji još nije ni zatvoren", async () => {
     renderApp(standardApi(), "/mjesec/jul");
     expect(await screen.findByText("Ovaj mjesec još nije zatvoren.")).toBeTruthy();
+  });
+});
+
+describe("Mjesec završen: zašto se indeksi pomaknuli", () => {
+  const settledApi = () =>
+    standardApi()
+      .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
+      .on("GET", "/v1/games/:game", resolvedGame)
+      .on("GET", "/v1/hotels/:hotel/feed", { items: feed });
+
+  async function whyCard() {
+    const h = await screen.findByRole("heading", { name: "Zašto se indeksi pomaknuli" });
+    return h.closest("section") as HTMLElement;
+  }
+
+  it("po indeksu G R Z O F: naziv, prije → poslije, promjena; najveća promjena otvorena", async () => {
+    const api = settledApi();
+    renderApp(api, "/mjesec/jun");
+    const card = await whyCard();
+    const details = await within(card).findAllByRole("group");
+    expect(details).toHaveLength(5);
+    const summaries = details.map((d) => d.querySelector("summary")?.textContent ?? "");
+    expect(summaries[0]).toContain("Zadovoljstvo gostiju");
+    expect(summaries[0]).toContain("50 → 56");
+    expect(summaries[0]).toContain("▲ +6");
+    expect(summaries.slice(1).map((s) => s.split(/\d/)[0])).toEqual([
+      "Recenzije",
+      "Zaposlenici",
+      "Operativa",
+      "Financije",
+    ]);
+    expect(summaries[4]).toContain("50 → 48");
+    expect(summaries[4]).toContain("▼ −2");
+    expect(details.map((d) => (d as HTMLDetailsElement).open)).toEqual([true, false, false, false, false]);
+    // Ikona uz naziv kao na trakama, skrivena čitaču.
+    expect(details[0]?.querySelector("summary svg[aria-hidden='true']")).not.toBeNull();
+    expect(api.calls.some((c) => c.path === "/v1/hotels/h1/months/jun/explanation")).toBe(true);
+  });
+
+  it("otvoreno: varijabla, rečenica značenja sitno, retci u boji po smjeru", async () => {
+    renderApp(settledApi(), "/mjesec/jun");
+    const card = await whyCard();
+    const z = (await within(card).findAllByRole("group"))[2] as HTMLDetailsElement;
+    z.open = true;
+    expect(within(z).getByText("Moral")).toBeTruthy();
+    expect(within(z).getByText("Raspoloženje i volja tima, na ljestvici do 100 bodova.").className).toContain(
+      "text-muted",
+    );
+    expect(within(z).getByText("−10 bodova").className).toContain("text-down");
+    expect(within(z).getByText("−1 bod").className).toContain("text-muted");
+    expect(within(z).getByText("otišle 2 osobe").className).toContain("text-muted");
+    const g = (await within(card).findAllByRole("group"))[0] as HTMLElement;
+    expect(within(g).getByText("+5 bodova").className).toContain("text-up");
+    expect(within(g).getByText("situacija „Klima u sobi obitelji s djecom“")).toBeTruthy();
+    // Trošak je razina, ne dobitak: bez zelene boje.
+    const f = (await within(card).findAllByRole("group"))[4] as HTMLElement;
+    expect(within(f).getByText("117.040 €").className).toContain("text-muted");
+  });
+
+  it("otvoren je indeks s najvećom apsolutnom promjenom, i kad je to pad", async () => {
+    const base = explanation();
+    const indices = base.indices.map((i) => (i.code === "F" ? { ...i, after: 43, change: -7 } : i));
+    renderApp(
+      settledApi().on("GET", "/v1/hotels/:hotel/months/:month/explanation", explanation({ indices })),
+      "/mjesec/jun",
+    );
+    const details = await within(await whyCard()).findAllByRole("group");
+    expect(details.map((d) => (d as HTMLDetailsElement).open)).toEqual([false, false, false, false, true]);
+  });
+
+  it("dok se učitava: „Učitavam…“; greška: hrvatska rečenica", async () => {
+    renderApp(
+      settledApi().on(
+        "GET",
+        "/v1/hotels/:hotel/months/:month/explanation",
+        () => new Promise<Response>(() => {}),
+      ),
+      "/mjesec/jun",
+    );
+    const card = await whyCard();
+    expect(within(card).getByRole("status").textContent).toBe("Učitavam…");
+    cleanup();
+    renderApp(
+      settledApi().on("GET", "/v1/hotels/:hotel/months/:month/explanation", () =>
+        problem(503, "storage_unavailable"),
+      ),
+      "/mjesec/jun",
+    );
+    const alert = await within(await whyCard()).findByRole("alert");
+    expect(alert.textContent).not.toMatch(/undefined|storage_unavailable/);
+    expect(alert.textContent?.length).toBeGreaterThan(10);
+  });
+
+  it("veliki broj napretka u boji po predznaku; mentorov lik poravnat gore", async () => {
+    renderApp(settledApi(), "/mjesec/jun");
+    const hero = (await screen.findByText("Napredak od početka")).parentElement as HTMLElement;
+    expect(within(hero).getByText("+8").className).toContain("text-up");
+    const mentor = (await screen.findByText("Mentor")).closest("section") as HTMLElement;
+    expect(mentor.className).toContain("items-start");
+    expect(mentor.className).not.toContain("items-center");
+  });
+
+  it.each([
+    [-300, "−3", "text-down"],
+    [20, "0", "text-muted"],
+  ])("napredak %i: %s u boji %s", async (p, shown, tone) => {
+    const g = game({
+      current: { month: "jul", status: "open", unanswered: 1 },
+      hotels: [myPublic([jun(p)]), robot("h2", 2, "Štediša", "stedisa", [jun(400)])],
+    });
+    renderApp(
+      standardApi()
+        .on("GET", "/v1/me/hotel", myHotel({ months: [jun(p)], planMonth: "jul" }))
+        .on("GET", "/v1/games/:game", g),
+      "/mjesec/jun",
+    );
+    const hero = (await screen.findByText("Napredak od početka")).parentElement as HTMLElement;
+    expect(within(hero).getByText(shown).className).toContain(tone);
   });
 });

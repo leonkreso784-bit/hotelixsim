@@ -6,6 +6,7 @@ import { unwrap } from "./errors";
 import { poll } from "./poll";
 import type {
   ConversationBody,
+  ExplanationBody,
   FeedItemBody,
   GameBody,
   HotelBody,
@@ -20,6 +21,7 @@ export const keys = {
   situations: (hotelId: string) => ["situations", hotelId] as const,
   conversation: (hotelId: string, code: string) => ["conversation", hotelId, code] as const,
   feed: (hotelId: string) => ["feed", hotelId] as const,
+  explanation: (hotelId: string, month: MonthCode) => ["explanation", hotelId, month] as const,
 };
 
 export function useMe() {
@@ -220,5 +222,19 @@ export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = 
       const has = q.state.data?.some((i) => i.kind === "mentor" && i.month === m);
       return has || q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
     },
+  });
+}
+
+/** Zašto su se indeksi obračunatog mjeseca pomaknuli; obračunat mjesec se više ne mijenja, pa nema ispitivanja. */
+export function useExplanation(hotelId: string, month: MonthCode) {
+  const api = useApi();
+  return useQuery<ExplanationBody>({
+    queryKey: keys.explanation(hotelId, month),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/v1/hotels/{hotel_id}/months/{month}/explanation", {
+          params: { path: { hotel_id: hotelId, month } },
+        }),
+      ),
   });
 }

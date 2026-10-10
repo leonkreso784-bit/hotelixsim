@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
 import { ix, plan, standardApi } from "../test/fixtures";
@@ -69,8 +69,7 @@ describe("feedEntries", () => {
   it("najnovije prvo, uzastopne promjene istog mjeseca u jednoj stavci", () => {
     const e = feedEntries(items);
     expect(e[0]?.kind === "item" && e[0].item.kind).toBe("mentor");
-    const changes = e.find((x) => x.kind === "changes");
-    expect(changes?.kind === "changes" && changes.changes).toHaveLength(2);
+    expect(e.filter((x) => x.kind === "changes")).toHaveLength(1);
     expect(e).toHaveLength(9);
     expect(e.at(-1)?.month).toBeNull();
   });
@@ -89,10 +88,15 @@ describe("Tijek", () => {
     expect(screen.getByText("Klima: AI ocjena 4/5.")).toBeTruthy();
     expect(screen.getByText("Agencija: izabrano „Prihvatiti uz 15 % popusta i depozit“.")).toBeTruthy();
     expect(screen.getByText("Dobio si hotel „Tvoj hotel“.")).toBeTruthy();
-    const sum = screen.getByText("Obračun: 2 promjene s uzrokom");
-    fireEvent.click(sum);
-    const box = sum.closest("details") as HTMLElement;
-    expect(within(box).getByText("−12 %")).toBeTruthy();
+    // Promjene obračuna su jedan redak s poveznicom na „Mjesec završen“, ne sirovi retci.
+    expect(screen.queryByText(/Obračun: \d+ promjen/)).toBeNull();
+    expect(screen.queryByText("−12 %")).toBeNull();
+    const why = screen.getByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" });
+    expect(why.getAttribute("href")).toBe("/mjesec/jun");
+    expect(why.className).toContain("min-h-11");
+    expect(document.querySelector("details")).toBeNull();
+    fireEvent.click(why);
+    expect(window.location.pathname).toBe("/mjesec/jun");
   });
 
   it("prazan tijek", async () => {
@@ -101,23 +105,46 @@ describe("Tijek", () => {
   });
 });
 
-describe("Tijek, množina promjena", () => {
-  const change = (seq: number): FeedItemBody => ({
-    kind: "change",
-    seq,
-    month: "jun",
-    var: "sold",
-    cause: "price",
-    amount: -100,
-    unit: "bp",
-    situation: null,
+describe("Tijek, ključevi", () => {
+  // Jedan događaj daje više stavki s istim `seq` (sve promjene obračuna, neodgovorene situacije zatvaranja).
+  const sameSeq: FeedItemBody[] = [
+    { kind: "round_closed", seq: 5, month: "jun", by: "guest" },
+    { kind: "situation_ignored", seq: 5, month: "jun", situation: "S2", title: "Šef kuhinje" },
+    { kind: "situation_ignored", seq: 5, month: "jun", situation: "S3", title: "Agencija" },
+    {
+      kind: "change",
+      seq: 21,
+      month: "jun",
+      var: "sold",
+      cause: "price",
+      amount: -100,
+      unit: "bp",
+      situation: null,
+    },
+    {
+      kind: "change",
+      seq: 21,
+      month: "jun",
+      var: "cash",
+      cause: "interest",
+      amount: -100,
+      unit: "cents",
+      situation: null,
+    },
+  ];
+
+  it("stavke istog `seq` dobivaju različite ključeve", () => {
+    const keys = feedEntries(sameSeq).map((e) => e.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
-  it.each([
-    [1, "Obračun: 1 promjena s uzrokom"],
-    [5, "Obračun: 5 promjena s uzrokom"],
-  ])("%i promjena", async (n, text) => {
-    const list = Array.from({ length: n }, (_, k) => change(k + 1));
-    renderApp(standardApi().on("GET", "/v1/hotels/:hotel/feed", { items: list }), "/tijek");
-    expect(await screen.findByText(text)).toBeTruthy();
+
+  it("bez upozorenja Reacta o istim ključevima", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    renderApp(standardApi().on("GET", "/v1/hotels/:hotel/feed", { items: sameSeq }), "/tijek");
+    expect(await screen.findByText("Agencija: bez odgovora (ocjena 1).")).toBeTruthy();
+    const dup = err.mock.calls.filter((c) => c.some((a) => String(a).includes("same key")));
+    err.mockRestore();
+    expect(dup).toEqual([]);
+    expect(screen.getAllByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" })).toHaveLength(1);
   });
 });

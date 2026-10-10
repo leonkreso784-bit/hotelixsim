@@ -41,7 +41,8 @@ Donja traka „Tijek" = feed hotela (vremenska crta). Profesorov pogled nije u k
    AI-jevim razlogom, a ukupno „4/5" (Leon, anketa 10.10.). Kratkih naziva („Empatija") nema.
 2. **Ocjena na portalima:** „8,4/10", bez preračuna (Leon, anketa 10.10.).
 3. **Broj mjeseci:** demo ima dva (lipanj, srpanj) → oznaka „LIPANJ · 1/2" (Leon, anketa 10.10.).
-4. **Uzroci promjena:** API daje kodove (`CauseCode`); hrvatski tekstovi su u `packages/i18n` (`cause.*`).
+4. **Uzroci promjena:** „Zašto se indeksi pomaknuli" na „Mjesec završen" prikazuje gotove ljudske retke s poslužitelja
+   (`GET /v1/hotels/{hotel_id}/months/{month}/explanation`, iste činjenice kao mentor); web ne prevodi kodove uzroka.
 5. **Avatari:** crtani likovi iz slojeva umjesto inicijala iz koncepta v2 (Leon, anketa 10.10.); uređivač poslije demoa.
 6. **„Nastavi u srpanj":** u igri srpanj otvara obračun lipnja; gumb samo vodi na „Moj hotel" za srpanj.
 7. **Ilustracija obale** u zaglavlju „Moj hotel" i „Jadran · 4★" nemaju izvor (nema slike ni regije u API-ju) — dok ne

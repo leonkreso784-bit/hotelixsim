@@ -5,7 +5,7 @@ import { wholePoints } from "./format";
 
 export const INDEX_ORDER: readonly IndexCode[] = ["G", "R", "Z", "O", "F"];
 
-export function sortIndices(xs: IndexEntry[]): IndexEntry[] {
+export function sortIndices<T extends { code: IndexCode }>(xs: T[]): T[] {
   return [...xs].sort((a, b) => INDEX_ORDER.indexOf(a.code) - INDEX_ORDER.indexOf(b.code));
 }
 

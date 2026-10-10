@@ -186,7 +186,7 @@ fn month_locative(m: MonthCode) -> &'static str {
     }
 }
 
-/// Nazivi kao `var.*` u `packages/i18n/src/hr.ts`.
+/// Nazivi varijabli za studenta (ekran „Zašto se indeksi pomaknuli" ih prikazuje kakvi jesu).
 fn var_name(v: VarCode) -> &'static str {
     match v {
         VarCode::Sold => "Prodane noći",
@@ -250,7 +250,7 @@ fn consequence(s: DriverSource) -> &'static str {
     }
 }
 
-/// Uzrok u nominativu; „osnova" dobiva značenje po varijabli. Ostalo kao `cause.*` u `hr.ts`.
+/// Uzrok u nominativu; „osnova" dobiva značenje po varijabli.
 fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> String {
     let s = match (v, c) {
         (_, CauseDto::Situation(code)) => return format!("situacija „{}“", title(titles, code)),

@@ -5,7 +5,7 @@ import type { IndexCode, IndexEntry } from "../api/types";
 import { formatIndex, formatWholeSigned } from "../format";
 import { sortIndices } from "../game";
 
-const ICON: Record<IndexCode, ReactNode> = {
+export const INDEX_ICON: Record<IndexCode, ReactNode> = {
   G: <User size={18} aria-hidden="true" />,
   R: <MessageSquare size={18} aria-hidden="true" />,
   Z: <Users size={18} aria-hidden="true" />,
@@ -50,7 +50,7 @@ export function IndexBars({
               key={e.code}
               className="grid grid-cols-[1.25rem_1fr_auto_auto] items-center gap-x-2 gap-y-1.5 py-2"
             >
-              <span className="text-accent">{ICON[e.code]}</span>
+              <span className="text-accent">{INDEX_ICON[e.code]}</span>
               <span className="min-w-0 text-sm">{label}</span>
               <strong className="text-right tabular-nums">{value}</strong>
               <span className="min-w-12 text-right">

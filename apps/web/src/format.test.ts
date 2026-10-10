@@ -1,18 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   capitalize,
-  causeLabel,
-  formatChange,
   formatCount,
   formatEuros,
   formatIndex,
   formatOccupancy,
+  formatPointsCount,
   formatRating,
-  formatSigned,
-  formatSignedEuros,
+  formatWholeSigned,
   monthName,
   strategyLabel,
-  varLabel,
 } from "./format";
 
 describe("formatIndex", () => {
@@ -29,12 +26,21 @@ describe("formatIndex", () => {
   });
 });
 
-describe("formatSigned", () => {
+describe("formatWholeSigned", () => {
   it("piše predznak, pravi minus i nulu bez predznaka", () => {
-    expect(formatSigned(800)).toBe("+8");
-    expect(formatSigned(825)).toBe("+8,25");
-    expect(formatSigned(-200)).toBe("−2");
-    expect(formatSigned(0)).toBe("0");
+    expect(formatWholeSigned(8)).toBe("+8");
+    expect(formatWholeSigned(-2)).toBe("−2");
+    expect(formatWholeSigned(0)).toBe("0");
+    expect(formatWholeSigned(1234)).toBe("+1.234");
+  });
+});
+
+describe("formatPointsCount", () => {
+  it("stotinke → cijeli bodovi s predznakom i množinom", () => {
+    expect(formatPointsCount(450)).toBe("+5 bodova");
+    expect(formatPointsCount(449)).toBe("+4 boda");
+    expect(formatPointsCount(-100)).toBe("−1 bod");
+    expect(formatPointsCount(20)).toBe("0 bodova");
   });
 });
 
@@ -48,10 +54,6 @@ describe("novac i ocjena", () => {
     expect(formatEuros(123_400)).toBe("1.234 €");
     expect(formatEuros(-123_400)).toBe("−1.234 €");
   });
-  it("formatSignedEuros piše predznak", () => {
-    expect(formatSignedEuros(1_250_000)).toBe("+12.500 €");
-    expect(formatSignedEuros(-1_250_000)).toBe("−12.500 €");
-  });
   it("formatRating je ocjena do 10", () => {
     expect(formatRating(840)).toBe("8,4/10");
     expect(formatRating(845)).toBe("8,45/10");
@@ -63,41 +65,24 @@ describe("novac i ocjena", () => {
   });
 });
 
-describe("formatChange", () => {
-  it("svaka jedinica ima svoj oblik", () => {
-    expect(formatChange(312, "room_nights")).toBe("+312 noćenja");
-    expect(formatChange(-1_250_000, "cents")).toBe("−12.500 €");
-    expect(formatChange(-3, "people")).toBe("−3 ljudi");
-    expect(formatChange(450, "points")).toBe("+5 bodova");
-    expect(formatChange(449, "points")).toBe("+4 boda");
-    expect(formatChange(-100, "points")).toBe("−1 bod");
-    expect(formatChange(-1200, "points")).toBe("−12 bodova");
-    expect(formatChange(20, "points")).toBe("0 bodova");
-    expect(formatChange(12, "rating_hundredths")).toBe("+0,12 ocjene");
-    expect(formatChange(-1200, "bp")).toBe("−12 %");
-  });
-});
-
 describe("nazivi", () => {
-  it("mjeseci, uzroci, varijable i strategije su hrvatski", () => {
+  it("mjeseci i strategije su hrvatski", () => {
     expect(monthName("jun")).toBe("lipanj");
     expect(capitalize(monthName("jul"))).toBe("Srpanj");
-    expect(causeLabel("reply_reviews")).toBe("odgovori na recenzije");
-    expect(varLabel("sold")).toBe("Prodane noći");
     expect(strategyLabel("lovac")).toBe("lovi popunjenost");
   });
 });
 
 describe("formatCount", () => {
-  it("promjena: 1, 2–4, 5+, 11, 21, 22", () => {
-    const f = (n: number) => formatCount(n, "change");
+  it("množina: 1, 2–4, 5+, 11, 21, 22", () => {
+    const f = (n: number) => formatCount(n, "point");
     expect([1, 2, 5, 11, 21, 22].map(f)).toEqual([
-      "1 promjena",
-      "2 promjene",
-      "5 promjena",
-      "11 promjena",
-      "21 promjena",
-      "22 promjene",
+      "1 bod",
+      "2 boda",
+      "5 bodova",
+      "11 bodova",
+      "21 bod",
+      "22 boda",
     ]);
   });
   it("bod: bod, boda, bodova; decimale uz „boda“", () => {

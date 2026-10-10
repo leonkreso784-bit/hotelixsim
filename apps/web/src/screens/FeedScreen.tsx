@@ -5,34 +5,33 @@ import { useFeed } from "../api/queries";
 import type { FeedItemBody, HotelBody, MonthCode } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import {
-  capitalize,
-  causeLabel,
-  formatChange,
-  formatCount,
-  formatPointsCount,
-  monthName,
-  varLabel,
-} from "../format";
+import { capitalize, formatPointsCount, monthName } from "../format";
+import { Link } from "../router";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
-import type { FeedChange } from "./month/Changes";
 
+type FeedChange = Extract<FeedItemBody, { kind: "change" }>;
 type Plain = Exclude<FeedItemBody, FeedChange>;
 export type FeedEntry =
   | { key: string; month: MonthCode | null; kind: "item"; item: Plain }
-  | { key: string; month: MonthCode; kind: "changes"; changes: FeedChange[] };
+  | { key: string; month: MonthCode; kind: "changes" };
 
+/**
+ * Stavke za prikaz, najnovije prvo; uzastopne promjene istog mjeseca su jedan redak (poveznica na „Mjesec završen“).
+ * Jedan događaj daje više stavki s istim `seq` (sve promjene obračuna, neodgovorene situacije), pa ključ uz `seq`
+ * nosi i mjesto u dnevniku, koje se ne mijenja jer se dnevnik samo nadopisuje.
+ */
 export function feedEntries(items: FeedItemBody[]): FeedEntry[] {
   const out: FeedEntry[] = [];
-  for (const i of items) {
+  items.forEach((i, n) => {
+    const key = `${i.seq}.${n}`;
     if (i.kind === "change") {
       const last = out.at(-1);
-      if (last?.kind === "changes" && last.month === i.month) last.changes.push(i);
-      else out.push({ key: `c${i.seq}`, month: i.month, kind: "changes", changes: [i] });
+      if (last?.kind !== "changes" || last.month !== i.month)
+        out.push({ key: `c${key}`, month: i.month, kind: "changes" });
     } else {
-      out.push({ key: `i${i.seq}`, month: "month" in i ? i.month : null, kind: "item", item: i });
+      out.push({ key: `i${key}`, month: "month" in i ? i.month : null, kind: "item", item: i });
     }
-  }
+  });
   return out.reverse();
 }
 
@@ -100,22 +99,13 @@ export function FeedScreen({ me }: { me: HotelBody }) {
                     {sentence(e.item)}
                   </li>
                 ) : (
-                  <li key={e.key} className="py-2">
-                    <details>
-                      <summary className="min-h-11 cursor-pointer font-semibold">
-                        {t("feed.changes", { count: formatCount(e.changes.length, "change") })}
-                      </summary>
-                      <ul className="text-sm">
-                        {e.changes.map((c) => (
-                          <li key={c.seq} className="flex justify-between gap-3 py-0.5">
-                            <span className="text-muted">
-                              {varLabel(c.var)} · {causeLabel(c.cause)}
-                            </span>
-                            <span className="tabular-nums">{formatChange(c.amount, c.unit)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
+                  <li key={e.key}>
+                    <Link
+                      to={`/mjesec/${e.month}`}
+                      className="flex min-h-11 items-center font-semibold text-accent"
+                    >
+                      {t("feed.why")}
+                    </Link>
                   </li>
                 ),
               )}

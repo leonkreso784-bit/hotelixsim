@@ -6,13 +6,19 @@ import { useFeed, useGameUntilResolved } from "../api/queries";
 import type { GameBody, HotelBody, MonthCode, PublicHotelBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import { capitalize, formatSignedPoints, monthName } from "../format";
+import { capitalize, formatSignedPoints, monthName, wholePoints } from "../format";
 import { indexDeltas, indicesAt, indicesBefore, leaderboard, nextMonth, progressAt } from "../game";
 import { Link } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
-import { Changes, type FeedChange } from "./month/Changes";
+import { Explanation } from "./month/Explanation";
 import { Leaderboard } from "./month/Leaderboard";
+
+/** Boja velikog broja napretka po predznaku prikazanog (cijelog) broja. */
+function progressTone(hundredths: number): string {
+  const n = wholePoints(hundredths);
+  return n > 0 ? "text-up" : n < 0 ? "text-down" : "text-muted";
+}
 
 /** Dio ekrana poslije obračuna. Montira se tek kad je moj mjesec obračunat, pa dnevnik i sat za mentora kreću tek tada. */
 function MonthResult({
@@ -37,7 +43,6 @@ function MonthResult({
   const now = indicesAt(mine, month) ?? [];
   const deltas = indexDeltas(indicesBefore(mine, game.months, month), now);
   const items = feed.data ?? [];
-  const changes = items.filter((i): i is FeedChange => i.kind === "change" && i.month === month);
   const mentor = items.find((i) => i.kind === "mentor" && i.month === month);
   const next = nextMonth(game.months, month);
   const mentorMissing = mentorGaveUp || feed.isError;
@@ -48,7 +53,9 @@ function MonthResult({
         {t("month.title", { month: capitalize(monthName(month)) })}
       </h1>
       <Card className="bg-accent-soft py-6 text-center">
-        <p className="text-6xl font-extrabold text-accent tabular-nums">{formatSignedPoints(progress)}</p>
+        <p className={`text-6xl font-extrabold tabular-nums ${progressTone(progress)}`}>
+          {formatSignedPoints(progress)}
+        </p>
         <p className="mt-1">{t("month.progress")}</p>
       </Card>
 
@@ -57,7 +64,7 @@ function MonthResult({
         <IndexBars indices={now} deltas={deltas} deltaLabel={t("month.inMonth")} />
       </Card>
 
-      <Card className="flex items-center gap-3 bg-mint">
+      <Card className="flex items-start gap-3 bg-mint">
         <Avatar look={MENTOR_LOOK} size={56} />
         <div>
           <p className="font-bold text-accent">{t("month.mentor")}</p>
@@ -70,7 +77,7 @@ function MonthResult({
       </Card>
 
       <Leaderboard rows={leaderboard(game, month)} />
-      <Changes items={changes} />
+      <Explanation hotelId={mine.hotel_id} month={month} />
 
       {next ? (
         <Link
