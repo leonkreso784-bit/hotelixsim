@@ -364,6 +364,8 @@ export interface components {
             month: components["schemas"]["MonthCode"];
             /** @description Napredak od početka igre riječima („−2 boda"). */
             progress_text: string;
+            /** @description Kod kruga (`jun`... ili `t01`...). */
+            round: string;
         };
         ExplanationDriverBody: {
             lines: components["schemas"]["ExplanationLineBody"][];
@@ -416,6 +418,7 @@ export interface components {
             kind: "plan_changed";
             month: components["schemas"]["MonthCode"];
             plan: components["schemas"]["PlanBody"];
+            round: string;
             /** Format: int64 */
             seq: number;
         } | {
@@ -426,6 +429,7 @@ export interface components {
             kind: "answer_chosen";
             label: string;
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
             situation: string;
@@ -435,12 +439,14 @@ export interface components {
             /** @enum {string} */
             kind: "round_closed";
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
         } | {
             /** @enum {string} */
             kind: "situation_ignored";
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
             situation: string;
@@ -452,6 +458,7 @@ export interface components {
             month: components["schemas"]["MonthCode"];
             /** Format: int32 */
             progress_hundredths: number;
+            round: string;
             /** Format: int64 */
             seq: number;
         } | {
@@ -461,6 +468,7 @@ export interface components {
             /** @enum {string} */
             kind: "change";
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
             situation: string | null;
@@ -470,6 +478,7 @@ export interface components {
             /** @enum {string} */
             kind: "response";
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
             situation: string;
@@ -482,6 +491,7 @@ export interface components {
             neutral: boolean;
             /** Format: int32 */
             quality: number;
+            round: string;
             /** Format: int64 */
             seq: number;
             situation: string;
@@ -490,6 +500,7 @@ export interface components {
             /** @enum {string} */
             kind: "mentor";
             month: components["schemas"]["MonthCode"];
+            round: string;
             /** Format: int64 */
             seq: number;
             text: string;
@@ -498,8 +509,12 @@ export interface components {
             current: components["schemas"]["RoundBody"] | null;
             game_id: string;
             hotels: components["schemas"]["PublicHotelBody"][];
+            model: components["schemas"]["ModelCode"];
             months: components["schemas"]["MonthCode"][];
             my_hotel_id: string;
+            round_kind: components["schemas"]["RoundKindCode"];
+            /** @description Svi krugovi igre s kalendarom. */
+            rounds: components["schemas"]["RoundInfoBody"][];
         };
         HealthBody: {
             database: components["schemas"]["DatabaseState"];
@@ -553,6 +568,11 @@ export interface components {
              *     CPOR (svi troškovi odjela soba, i plaće) — taj stiže sa slojem 1; ime polja ostaje zbog kompatibilnosti.
              */
             cpor_cents: number | null;
+            /**
+             * Format: int32
+             * @description Dani kruga (mjesec ili tjedan).
+             */
+            days: number;
             /** Format: int64 */
             gop_cents: number;
             /** Format: int64 */
@@ -580,6 +600,8 @@ export interface components {
             room_nights: number;
             /** Format: int64 */
             rooms_revenue_cents: number;
+            /** @description Kod kruga (`jun`... ili `t01`...). */
+            round: string;
             /**
              * Format: int64
              * @description Najviša moguća popunjenost: sobe u funkciji × dani ÷ sve noći.
@@ -621,11 +643,18 @@ export interface components {
             revpar_cents: number | null;
             /** Format: int64 */
             rooms_revenue_cents: number;
+            /** @description Krug i njegov kalendar. */
+            round: components["schemas"]["RoundInfoBody"];
             /** Format: int32 */
             sold: number;
         };
         /** @enum {string} */
         MaintenanceCode: "deferred" | "regular" | "intensive";
+        /**
+         * @description Model igre u JSON-u. Dolazi iz `game::Model::code()`: api ne grana na `game::Model`.
+         * @enum {string}
+         */
+        ModelCode: "v1" | "v2";
         /** @enum {string} */
         MonthCode: "jun" | "jul" | "aug" | "sep";
         MonthScoreBody: {
@@ -636,6 +665,13 @@ export interface components {
              * @description Napredak u odnosu na početak, u stotinkama boda (10000 = +100).
              */
             progress_hundredths: number;
+            /** @description Kod kruga (`jun`... ili `t01`...). */
+            round: string;
+        };
+        /** @description Tijelo `POST /v1/demo` (neobavezno): bez polja igra je v1 po mjesecima. */
+        NewGameBody: {
+            model?: components["schemas"]["ModelCode"] | null;
+            round_kind?: components["schemas"]["RoundKindCode"] | null;
         };
         /** @description Plan mjeseca: tijelo zahtjeva i dio odgovora. */
         PlanBody: {
@@ -674,6 +710,7 @@ export interface components {
             limits: components["schemas"]["PlanLimitsBody"];
             month: components["schemas"]["MonthCode"];
             plan: components["schemas"]["PlanBody"];
+            round: string;
         };
         /** @description Samo za vlasnika hotela. */
         PrivateHotelBody: {
@@ -743,6 +780,8 @@ export interface components {
         ResponseStatusBody: "pending" | "judged" | "neutral";
         RoundBody: {
             month: components["schemas"]["MonthCode"];
+            /** @description Krug i njegov kalendar. */
+            round: components["schemas"]["RoundInfoBody"];
             status: components["schemas"]["RoundStatusCode"];
             /**
              * Format: int32
@@ -751,6 +790,28 @@ export interface components {
              */
             unanswered: number;
         };
+        /** @description Krug igre i njegov kalendar; `index` od 0; datumi su dan u mjesecu (od 1) i mjesec. */
+        RoundInfoBody: {
+            code: string;
+            /** Format: int32 */
+            days: number;
+            /** Format: int32 */
+            first_day: number;
+            first_month: components["schemas"]["MonthCode"];
+            /** Format: int32 */
+            index: number;
+            kind: components["schemas"]["RoundKindCode"];
+            /** Format: int32 */
+            last_day: number;
+            last_month: components["schemas"]["MonthCode"];
+            /** @description Završava li u ovom krugu kalendarski mjesec (tada dolazi mjesečna lekcija). */
+            month_ends: boolean;
+        };
+        /**
+         * @description Vrsta kruga: mjesec ili tjedan.
+         * @enum {string}
+         */
+        RoundKindCode: "month" | "week";
         /** @enum {string} */
         RoundStatusCode: "scheduled" | "open" | "closing" | "resolved";
         SeatBody: {
@@ -777,6 +838,7 @@ export interface components {
             month: components["schemas"]["MonthCode"] | null;
             /** @description Može li se još odgovarati. */
             open: boolean;
+            round: string | null;
             /**
              * Format: int32
              * @description Koliko ih je bez odgovora (0 kad runda nije otvorena); ekran upozori prije zatvaranja mjeseca.
@@ -813,7 +875,12 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        /** @description Neobavezne postavke igre (model, vrsta kruga) */
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["NewGameBody"] | null;
+            };
+        };
         responses: {
             /** @description Igra stvorena */
             201: {
@@ -824,6 +891,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemoBody"];
+                };
+            };
+            /** @description Postavke nisu dopuštene ili tijelo nije ispravno */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Baza nije dostupna */
@@ -923,8 +999,8 @@ export interface operations {
             path: {
                 /** @description Igra (uuid) */
                 game_id: string;
-                /** @description Mjesec runde */
-                month: components["schemas"]["MonthCode"];
+                /** @description Kod kruga: jun…sep ili t01…t17 */
+                month: string;
             };
             cookie?: never;
         };
@@ -972,8 +1048,8 @@ export interface operations {
             path: {
                 /** @description Igra (uuid) */
                 game_id: string;
-                /** @description Mjesec runde */
-                month: components["schemas"]["MonthCode"];
+                /** @description Kod kruga: jun…sep ili t01…t17 */
+                month: string;
             };
             cookie?: never;
         };
@@ -1212,8 +1288,8 @@ export interface operations {
             path: {
                 /** @description Hotel (uuid) */
                 hotel_id: string;
-                /** @description Obračunat mjesec */
-                month: components["schemas"]["MonthCode"];
+                /** @description Kod kruga: jun…sep ili t01…t17 */
+                month: string;
             };
             cookie?: never;
         };
@@ -1270,8 +1346,8 @@ export interface operations {
             path: {
                 /** @description Hotel (uuid) */
                 hotel_id: string;
-                /** @description Mjesec runde */
-                month: components["schemas"]["MonthCode"];
+                /** @description Kod kruga: jun…sep ili t01…t17 */
+                month: string;
             };
             cookie?: never;
         };

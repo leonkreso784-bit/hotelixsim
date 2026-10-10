@@ -11,7 +11,9 @@ fn setup() -> (Deps, Arc<Memory>) {
 }
 
 async fn guest(d: &Deps) -> (Caller, DemoStarted) {
-    let s = start_demo(d, None).await.unwrap();
+    let s = start_demo(d, None, NewGameSettings::default())
+        .await
+        .unwrap();
     let c = caller(d, s.new_token.as_deref()).await.unwrap();
     (c, s)
 }
@@ -83,7 +85,7 @@ async fn plan_answer_close_then_worker_resolves_june() {
         RoundStatus::Resolved
     );
     let g = game_view(&d, &me, s.game_id).await.unwrap();
-    assert_eq!(g.current.unwrap().round, RoundKey::Month(Month::Jul));
+    assert_eq!(g.current.unwrap().round.key, RoundKey::Month(Month::Jul));
     assert!(g.hotels.iter().all(|h| h.months.len() == 1));
     assert_eq!(events_of(&mem, s.game_id, "RoundResolved"), 1);
 }

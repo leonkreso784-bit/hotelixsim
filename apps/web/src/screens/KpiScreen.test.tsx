@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { game, ix, kpiMonth, myHotel, standardApi } from "../test/fixtures";
+import { game, ix, kpiMonth, myHotel, roundInfo, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -12,6 +12,7 @@ afterEach(() => {
 
 const julKpi = kpiMonth({
   month: "jul",
+  round: "jul",
   sold_nights: 3100,
   lost_nights: 0,
   occupancy_bp: 8333,
@@ -22,7 +23,11 @@ const julKpi = kpiMonth({
 
 function withKpi(months: ReturnType<typeof kpiMonth>[]) {
   return standardApi()
-    .on("GET", "/v1/games/:game", game({ current: { month: "aug", status: "open", unanswered: 0 } }))
+    .on(
+      "GET",
+      "/v1/games/:game",
+      game({ current: { month: "aug", round: roundInfo("aug"), status: "open", unanswered: 0 } }),
+    )
     .on("GET", "/v1/hotels/:hotel/kpi", { months });
 }
 
@@ -162,10 +167,13 @@ describe("Pokazatelji", () => {
       "GET",
       "/v1/me/hotel",
       myHotel({
-        months: [{ month: "jun", indices: ix(5300, 5200, 5100, 5400, 4800), progress_hundredths: 800 }],
+        months: [
+          { month: "jun", round: "jun", indices: ix(5300, 5200, 5100, 5400, 4800), progress_hundredths: 800 },
+        ],
         planMonth: "jul",
         lastMonth: {
           month: "jun",
+          round: roundInfo("jun"),
           sold: 2448,
           available: 3540,
           rooms_revenue_cents: 32_423_760,

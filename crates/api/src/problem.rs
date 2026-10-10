@@ -86,7 +86,7 @@ impl ProblemCode {
             Self::NotYourHotel => "To nije tvoj hotel",
             Self::UnknownGame => "Igra ne postoji",
             Self::UnknownHotel => "Hotel ne postoji",
-            Self::UnknownMonth => "Mjesec nije u ovoj igri",
+            Self::UnknownMonth => "Taj krug ne postoji u ovoj igri.",
             Self::UnknownSituation => "Situacija ne postoji",
             Self::UnknownAnswer => "Taj odgovor nije ponuđen",
             Self::UnknownProfile => "Nepoznat profil",

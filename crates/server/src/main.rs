@@ -31,15 +31,21 @@ fn database_url() -> anyhow::Result<String> {
 }
 
 /// Sadržaj se učitava i provjerava pri startu: server s pokvarenim katalogom ne smije ni krenuti (ADR-015 t. 12).
-fn content_snapshot() -> anyhow::Result<content::Snapshot> {
+/// Pravila v1 i pravila v2 (iz iste mape); oba se provjeravaju pri startu.
+fn content_snapshots() -> anyhow::Result<(content::Snapshot, content::Snapshot)> {
     let dir = std::env::var("HOTELIXSIM_CONTENT")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| content::repo_dir());
-    let snap = content::Snapshot::read(&dir)
-        .map_err(|e| anyhow::anyhow!("sadržaj u {}: {e:?}", dir.display()))?;
-    snap.build()
-        .map_err(|e| anyhow::anyhow!("sadržaj u {} nije ispravan: {e:?}", dir.display()))?;
-    Ok(snap)
+    let read = |f: fn(&std::path::Path) -> Result<content::Snapshot, content::ContentError>| {
+        let snap = f(&dir).map_err(|e| anyhow::anyhow!("sadržaj u {}: {e:?}", dir.display()))?;
+        snap.build()
+            .map_err(|e| anyhow::anyhow!("sadržaj u {} nije ispravan: {e:?}", dir.display()))?;
+        anyhow::Ok(snap)
+    };
+    Ok((
+        read(content::Snapshot::read)?,
+        read(content::Snapshot::read_v2)?,
+    ))
 }
 
 /// AI iz okoline: bez ključa igra radi na rezervama (neutralne presude, kratki odgovori likova).
@@ -59,7 +65,11 @@ fn ai_port() -> Arc<dyn app::AiPort> {
     }
 }
 
-fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
+fn deps(
+    store: store::Store,
+    snapshot: content::Snapshot,
+    snapshot_v2: content::Snapshot,
+) -> app::Deps {
     let s = Arc::new(store);
     app::Deps {
         status: s.clone(),
@@ -69,6 +79,7 @@ fn deps(store: store::Store, snapshot: content::Snapshot) -> app::Deps {
         ai: ai_port(),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
+        snapshot_v2: Arc::new(snapshot_v2),
     }
 }
 
@@ -131,10 +142,10 @@ async fn serve() -> anyhow::Result<()> {
         )
         .init();
     let addr = std::env::var("HOTELIXSIM_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_owned());
-    let snapshot = content_snapshot()?;
+    let (snapshot, snapshot_v2) = content_snapshots()?;
     let ruleset = snapshot.fingerprint();
     let store = store::Store::connect_lazy(&database_url()?)?;
-    let deps = deps(store, snapshot);
+    let deps = deps(store, snapshot, snapshot_v2);
     let worker = spawn_worker(deps.clone());
     let app = api::router(api::AppState { deps });
     let listener = tokio::net::TcpListener::bind(&addr)

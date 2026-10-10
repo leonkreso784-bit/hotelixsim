@@ -11,7 +11,9 @@ fn snapshot() -> content::Snapshot {
 }
 
 async fn start(deps: &Deps) -> (Caller, HotelId, GameId) {
-    let d = app::start_demo(deps, None).await.unwrap();
+    let d = app::start_demo(deps, None, app::NewGameSettings::default())
+        .await
+        .unwrap();
     let caller = app::caller(deps, d.new_token.as_deref()).await.unwrap();
     (caller, d.hotel_id, d.game_id)
 }

@@ -175,6 +175,9 @@ pub fn deps_with_ai(snapshot: content::Snapshot, ai: Arc<dyn AiPort>) -> (Deps, 
         ai,
         ids: Arc::new(SeqIds::default()),
         snapshot: Arc::new(snapshot),
+        snapshot_v2: Arc::new(
+            content::Snapshot::read_v2(&content::repo_dir()).expect("sadržaj v2 u repou"),
+        ),
     };
     (d, m)
 }
@@ -228,6 +231,18 @@ impl Memory {
         for j in self.lock().jobs.iter_mut().filter(|j| j.key == key) {
             j.age_secs = secs;
         }
+    }
+
+    /// Samo za testove: mijenja spremljeni GameCreated (prvi događaj igre).
+    pub fn patch_first_event(&self, game_id: &str, f: impl FnOnce(&mut serde_json::Value)) {
+        let id = GameId(game_id.parse().expect("uuid igre"));
+        let mut m = self.lock();
+        let first = m
+            .events
+            .get_mut(&id)
+            .and_then(|v| v.first_mut())
+            .expect("igra ima događaje");
+        f(&mut first.payload);
     }
 
     /// Doda posao BEZ provjere ključa: simulira dvostruku isporuku.

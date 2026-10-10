@@ -7,6 +7,8 @@ use game::command::PlanLimits;
 use game::dto::{INDEX_ORDER, IndexCode as CoreIndex, PlanDto};
 use game::view::{LastMonth, MonthScore, PlanState, PrivateHotel, PublicHotel, RealNumbers, Seat};
 use serde::{Deserialize, Serialize};
+use sim_hotel_v2::calendar::period_by_code;
+use sim_hotel_v2::{Period, PeriodKind};
 use utoipa::ToSchema;
 
 use crate::problem::{Problem, ProblemCode};
@@ -270,6 +272,8 @@ impl TryFrom<&Seat> for SeatBody {
 #[derive(Serialize, ToSchema)]
 pub struct MonthScoreBody {
     pub month: MonthCode,
+    /// Kod kruga (`jun`... ili `t01`...).
+    pub round: String,
     pub indices: Vec<IndexEntry>,
     /// Napredak u odnosu na početak, u stotinkama boda (10000 = +100).
     pub progress_hundredths: i32,
@@ -281,6 +285,7 @@ impl TryFrom<&MonthScore> for MonthScoreBody {
     fn try_from(m: &MonthScore) -> Result<Self, Problem> {
         Ok(MonthScoreBody {
             month: calendar_month(m.round)?,
+            round: m.round.code(),
             indices: entries(m.indices),
             progress_hundredths: m.progress_hundredths,
         })
@@ -372,6 +377,8 @@ impl From<&RealNumbers> for RealNumbersBody {
 #[derive(Serialize, ToSchema)]
 pub struct LastMonthBody {
     pub month: MonthCode,
+    /// Krug i njegov kalendar.
+    pub round: RoundInfoBody,
     pub sold: u32,
     pub available: u32,
     pub rooms_revenue_cents: i64,
@@ -396,6 +403,7 @@ impl TryFrom<&LastMonth> for LastMonthBody {
     fn try_from(m: &LastMonth) -> Result<Self, Problem> {
         Ok(LastMonthBody {
             month: calendar_month(m.round)?,
+            round: RoundInfoBody::of_key(m.round)?,
             sold: m.sold,
             available: m.available,
             rooms_revenue_cents: m.rooms_revenue_cents,
@@ -412,6 +420,7 @@ impl TryFrom<&LastMonth> for LastMonthBody {
 #[derive(Serialize, ToSchema)]
 pub struct PlanStateBody {
     pub month: MonthCode,
+    pub round: String,
     pub plan: PlanBody,
     pub limits: PlanLimitsBody,
 }
@@ -422,6 +431,7 @@ impl TryFrom<&PlanState> for PlanStateBody {
     fn try_from(p: &PlanState) -> Result<Self, Problem> {
         Ok(PlanStateBody {
             month: calendar_month(p.round)?,
+            round: p.round.code(),
             plan: (&p.plan).into(),
             limits: (&p.limits).into(),
         })
@@ -513,6 +523,8 @@ impl From<game::RoundStatus> for RoundStatusCode {
 #[derive(Serialize, ToSchema)]
 pub struct RoundBody {
     pub month: MonthCode,
+    /// Krug i njegov kalendar.
+    pub round: RoundInfoBody,
     pub status: RoundStatusCode,
     /// Koliko situacija mog hotela je bez odgovora; 0 kad runda nije otvorena.
     /// Mjesec se smije zatvoriti i s neodgovorenima (dobivaju kvalitetu 1), pa ekran upozori.
@@ -524,7 +536,8 @@ impl TryFrom<&app::RoundView> for RoundBody {
 
     fn try_from(r: &app::RoundView) -> Result<Self, Problem> {
         Ok(RoundBody {
-            month: calendar_month(r.round)?,
+            month: calendar_month(r.round.key)?,
+            round: (&r.round).try_into()?,
             status: r.status.into(),
             unanswered: r.unanswered,
         })
@@ -534,6 +547,10 @@ impl TryFrom<&app::RoundView> for RoundBody {
 #[derive(Serialize, ToSchema)]
 pub struct GameBody {
     pub game_id: String,
+    pub model: ModelCode,
+    pub round_kind: RoundKindCode,
+    /// Svi krugovi igre s kalendarom.
+    pub rounds: Vec<RoundInfoBody>,
     pub months: Vec<MonthCode>,
     /// Prazno kad su svi mjeseci obračunati.
     #[schema(required = true)]
@@ -548,6 +565,16 @@ impl TryFrom<&app::GameView> for GameBody {
     fn try_from(v: &app::GameView) -> Result<Self, Problem> {
         Ok(GameBody {
             game_id: v.game_id.0.to_string(),
+            model: ModelCode::from_code(v.model.code()),
+            round_kind: v
+                .rounds
+                .first()
+                .map_or(RoundKindCode::Month, |r| r.period.kind.into()),
+            rounds: v
+                .rounds
+                .iter()
+                .map(RoundInfoBody::try_from)
+                .collect::<Result<_, _>>()?,
             months: v
                 .months
                 .iter()
@@ -711,6 +738,8 @@ impl From<&app::ConversationView> for ConversationBody {
 pub struct SituationsBody {
     #[schema(required = true)]
     pub month: Option<MonthCode>,
+    #[schema(required = true)]
+    pub round: Option<String>,
     /// Može li se još odgovarati.
     pub open: bool,
     /// Koliko ih je bez odgovora (0 kad runda nije otvorena); ekran upozori prije zatvaranja mjeseca.
@@ -724,6 +753,7 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
     fn try_from(v: &app::SituationsView) -> Result<Self, Problem> {
         Ok(SituationsBody {
             month: v.round.map(calendar_month).transpose()?,
+            round: v.round.map(|r| r.code()),
             open: v.open,
             unanswered: v.unanswered,
             items: v
@@ -894,12 +924,14 @@ pub enum FeedItemBody {
     PlanChanged {
         seq: i64,
         month: MonthCode,
+        round: String,
         plan: PlanBody,
         by: ActorKind,
     },
     AnswerChosen {
         seq: i64,
         month: MonthCode,
+        round: String,
         situation: String,
         title: String,
         answer: u8,
@@ -909,23 +941,27 @@ pub enum FeedItemBody {
     RoundClosed {
         seq: i64,
         month: MonthCode,
+        round: String,
         by: ActorKind,
     },
     SituationIgnored {
         seq: i64,
         month: MonthCode,
+        round: String,
         situation: String,
         title: String,
     },
     MonthResolved {
         seq: i64,
         month: MonthCode,
+        round: String,
         indices: Vec<IndexEntry>,
         progress_hundredths: i32,
     },
     Change {
         seq: i64,
         month: MonthCode,
+        round: String,
         var: VarCode,
         cause: CauseCode,
         #[schema(required = true)]
@@ -936,12 +972,14 @@ pub enum FeedItemBody {
     Response {
         seq: i64,
         month: MonthCode,
+        round: String,
         situation: String,
         title: String,
     },
     Verdict {
         seq: i64,
         month: MonthCode,
+        round: String,
         situation: String,
         title: String,
         quality: u8,
@@ -951,6 +989,7 @@ pub enum FeedItemBody {
     Mentor {
         seq: i64,
         month: MonthCode,
+        round: String,
         text: String,
     },
 }
@@ -975,6 +1014,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::PlanChanged {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 plan: plan.into(),
                 by: by.into(),
             },
@@ -989,6 +1029,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::AnswerChosen {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 situation: situation.clone(),
                 title: title.clone(),
                 answer: *answer,
@@ -998,6 +1039,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             F::RoundClosed { seq, round, by } => FeedItemBody::RoundClosed {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 by: by.into(),
             },
             F::SituationIgnored {
@@ -1008,6 +1050,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::SituationIgnored {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 situation: situation.clone(),
                 title: title.clone(),
             },
@@ -1019,6 +1062,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::MonthResolved {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 indices: entries(*indices),
                 progress_hundredths: *progress_hundredths,
             },
@@ -1027,6 +1071,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
                 FeedItemBody::Change {
                     seq: *seq,
                     month: calendar_month(*round)?,
+                    round: round.code(),
                     var: line.var.into(),
                     cause,
                     situation,
@@ -1042,6 +1087,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::Response {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 situation: situation.clone(),
                 title: title.clone(),
             },
@@ -1056,6 +1102,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             } => FeedItemBody::Verdict {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 situation: situation.clone(),
                 title: title.clone(),
                 quality: *quality,
@@ -1065,6 +1112,7 @@ impl TryFrom<&game::feed::FeedItem> for FeedItemBody {
             F::Mentor { seq, round, text } => FeedItemBody::Mentor {
                 seq: *seq,
                 month: calendar_month(*round)?,
+                round: round.code(),
                 text: text.clone(),
             },
         })
@@ -1093,12 +1141,133 @@ pub fn parse_round(s: &str) -> Result<game::RoundKey, Problem> {
         .ok_or_else(|| Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownMonth))
 }
 
-/// Kalendarski mjesec kruga za tijela odgovora; tjedan do kalendara (Task 7) nema mjesec: 500, a u v1 igri
-/// se nikad ne događa.
-pub fn calendar_month(r: game::RoundKey) -> Result<MonthCode, Problem> {
-    r.month()
-        .map(|m| game::dto::MonthCode::from(m).into())
+/// Kalendar kruga iz njegova koda: kodovi mjeseci i tjedana su jedinstveni, pa ne treba igra.
+fn round_period(r: game::RoundKey) -> Result<Period, Problem> {
+    PeriodKind::ALL
+        .into_iter()
+        .find_map(|k| period_by_code(k, &r.code()))
         .ok_or_else(|| corrupt("krug", &r.code()))
+}
+
+/// Polje `month` u tijelima: kalendarski mjesec kruga; za tjedan mjesec u kojem počinje.
+pub fn calendar_month(r: game::RoundKey) -> Result<MonthCode, Problem> {
+    Ok(game::dto::MonthCode::from(round_period(r)?.start_month()).into())
+}
+
+/// Broj dana kruga (za tijela koja nose `days`).
+pub fn round_days(r: game::RoundKey) -> Result<u8, Problem> {
+    Ok(round_period(r)?.days)
+}
+
+/// Model igre u JSON-u. Dolazi iz `game::Model::code()`: api ne grana na `game::Model`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum ModelCode {
+    V1,
+    V2,
+}
+
+impl ModelCode {
+    /// `"v2"` je V2, sve ostalo V1.
+    pub fn from_code(code: &str) -> ModelCode {
+        if code == "v2" {
+            ModelCode::V2
+        } else {
+            ModelCode::V1
+        }
+    }
+}
+
+/// Vrsta kruga: mjesec ili tjedan.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum RoundKindCode {
+    Month,
+    Week,
+}
+
+impl From<PeriodKind> for RoundKindCode {
+    fn from(k: PeriodKind) -> Self {
+        match k {
+            PeriodKind::Month => RoundKindCode::Month,
+            PeriodKind::Week => RoundKindCode::Week,
+        }
+    }
+}
+
+impl From<RoundKindCode> for PeriodKind {
+    fn from(k: RoundKindCode) -> Self {
+        match k {
+            RoundKindCode::Month => PeriodKind::Month,
+            RoundKindCode::Week => PeriodKind::Week,
+        }
+    }
+}
+
+/// Tijelo `POST /v1/demo` (neobavezno): bez polja igra je v1 po mjesecima.
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NewGameBody {
+    pub model: Option<ModelCode>,
+    pub round_kind: Option<RoundKindCode>,
+}
+
+impl From<NewGameBody> for app::NewGameSettings {
+    fn from(b: NewGameBody) -> Self {
+        app::NewGameSettings {
+            model: match b.model {
+                Some(ModelCode::V2) => content::Model::V2,
+                Some(ModelCode::V1) | None => content::Model::V1,
+            },
+            kind: b.round_kind.map(Into::into),
+        }
+    }
+}
+
+/// Krug igre i njegov kalendar; `index` od 0; datumi su dan u mjesecu (od 1) i mjesec.
+#[derive(Serialize, ToSchema, Clone)]
+pub struct RoundInfoBody {
+    pub code: String,
+    pub kind: RoundKindCode,
+    pub index: u8,
+    pub days: u8,
+    pub first_day: u8,
+    pub first_month: MonthCode,
+    pub last_day: u8,
+    pub last_month: MonthCode,
+    /// Završava li u ovom krugu kalendarski mjesec (tada dolazi mjesečna lekcija).
+    pub month_ends: bool,
+}
+
+impl RoundInfoBody {
+    fn of_period(code: String, p: &Period) -> RoundInfoBody {
+        let (first_day, first_month) = p.first_date();
+        let (last_day, last_month) = p.last_date();
+        RoundInfoBody {
+            code,
+            kind: p.kind.into(),
+            index: p.index,
+            days: p.days,
+            first_day,
+            first_month: game::dto::MonthCode::from(first_month).into(),
+            last_day,
+            last_month: game::dto::MonthCode::from(last_month).into(),
+            month_ends: p.month_ending_in().is_some(),
+        }
+    }
+
+    /// Iz ključa kruga (kalendar je isti u svakoj igri).
+    pub fn of_key(r: game::RoundKey) -> Result<Self, Problem> {
+        Ok(Self::of_period(r.code(), &round_period(r)?))
+    }
+}
+
+impl TryFrom<&game::RoundInfo> for RoundInfoBody {
+    type Error = Problem;
+
+    fn try_from(i: &game::RoundInfo) -> Result<Self, Problem> {
+        Ok(Self::of_period(i.key.code(), &i.period))
+    }
 }
 
 #[cfg(test)]

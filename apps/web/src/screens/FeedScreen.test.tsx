@@ -12,23 +12,25 @@ afterEach(() => {
 
 const items: FeedItemBody[] = [
   { kind: "hotel_received", seq: 1, name: "Tvoj hotel", profile: "C" },
-  { kind: "plan_changed", seq: 2, month: "jun", plan: plan(), by: "guest" },
+  { kind: "plan_changed", seq: 2, month: "jun", round: "jun", plan: plan(), by: "guest" },
   {
     kind: "answer_chosen",
     seq: 3,
     month: "jun",
+    round: "jun",
     situation: "S3",
     title: "Agencija",
     answer: 1,
     label: "Prihvatiti uz 15 % popusta i depozit",
     by: "guest",
   },
-  { kind: "response", seq: 4, month: "jun", situation: "S1", title: "Klima" },
-  { kind: "round_closed", seq: 5, month: "jun", by: "guest" },
+  { kind: "response", seq: 4, month: "jun", round: "jun", situation: "S1", title: "Klima" },
+  { kind: "round_closed", seq: 5, month: "jun", round: "jun", by: "guest" },
   {
     kind: "verdict",
     seq: 6,
     month: "jun",
+    round: "jun",
     situation: "S1",
     title: "Klima",
     quality: 4,
@@ -39,6 +41,7 @@ const items: FeedItemBody[] = [
     kind: "change",
     seq: 7,
     month: "jun",
+    round: "jun",
     var: "sold",
     cause: "price",
     amount: -1200,
@@ -49,6 +52,7 @@ const items: FeedItemBody[] = [
     kind: "change",
     seq: 8,
     month: "jun",
+    round: "jun",
     var: "cash",
     cause: "interest",
     amount: 10_000,
@@ -59,10 +63,11 @@ const items: FeedItemBody[] = [
     kind: "month_resolved",
     seq: 9,
     month: "jun",
+    round: "jun",
     indices: ix(5300, 5200, 5100, 5400, 4800),
     progress_hundredths: 800,
   },
-  { kind: "mentor", seq: 10, month: "jun", text: "Usluga je bolja." },
+  { kind: "mentor", seq: 10, month: "jun", round: "jun", text: "Usluga je bolja." },
 ];
 
 describe("feedEntries", () => {
@@ -108,13 +113,14 @@ describe("Tijek", () => {
 describe("Tijek, ključevi", () => {
   // Jedan događaj daje više stavki s istim `seq` (sve promjene obračuna, neodgovorene situacije zatvaranja).
   const sameSeq: FeedItemBody[] = [
-    { kind: "round_closed", seq: 5, month: "jun", by: "guest" },
-    { kind: "situation_ignored", seq: 5, month: "jun", situation: "S2", title: "Šef kuhinje" },
-    { kind: "situation_ignored", seq: 5, month: "jun", situation: "S3", title: "Agencija" },
+    { kind: "round_closed", seq: 5, month: "jun", round: "jun", by: "guest" },
+    { kind: "situation_ignored", seq: 5, month: "jun", round: "jun", situation: "S2", title: "Šef kuhinje" },
+    { kind: "situation_ignored", seq: 5, month: "jun", round: "jun", situation: "S3", title: "Agencija" },
     {
       kind: "change",
       seq: 21,
       month: "jun",
+      round: "jun",
       var: "sold",
       cause: "price",
       amount: -100,
@@ -125,6 +131,7 @@ describe("Tijek, ključevi", () => {
       kind: "change",
       seq: 21,
       month: "jun",
+      round: "jun",
       var: "cash",
       cause: "interest",
       amount: -100,

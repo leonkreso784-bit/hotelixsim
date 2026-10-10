@@ -2,7 +2,7 @@ import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { game, ix, myHotel, standardApi } from "../test/fixtures";
+import { game, ix, myHotel, roundInfo, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -13,6 +13,7 @@ afterEach(() => {
 
 const junScore = {
   month: "jun" as const,
+  round: "jun",
   indices: ix(5300, 5200, 5100, 5400, 4800),
   progress_hundredths: 800,
 };
@@ -47,6 +48,7 @@ describe("Moj hotel", () => {
           planMonth: "jul",
           lastMonth: {
             month: "jun",
+            round: roundInfo("jun"),
             sold: 2448,
             // 2 sobe izvan funkcije: popunjenost se dijeli sa SVIM sobama (6800 bp s poslužitelja), ne s 3 540.
             available: 3540,
@@ -60,7 +62,11 @@ describe("Moj hotel", () => {
           },
         }),
       )
-      .on("GET", "/v1/games/:game", game({ current: { month: "jul", status: "open", unanswered: 1 } }));
+      .on(
+        "GET",
+        "/v1/games/:game",
+        game({ current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 } }),
+      );
     renderApp(api);
     expect(await screen.findByText("SRPANJ · 2/2")).toBeTruthy();
     expect(await screen.findByText("▲ +3")).toBeTruthy();
@@ -115,8 +121,10 @@ describe("Moj hotel", () => {
 
   it("mjesec se obračuna u pozadini: Moj hotel sam osvježi indekse bez ručnog osvježavanja", async () => {
     let gameCalls = 0;
-    const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });
-    const open = game({ current: { month: "jul", status: "open", unanswered: 1 } });
+    const closing = game({
+      current: { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 },
+    });
+    const open = game({ current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 } });
     const api = standardApi()
       .on("GET", "/v1/games/:game", () => {
         gameCalls += 1;
@@ -141,8 +149,8 @@ describe("Moj hotel", () => {
         return json(
           200,
           gameCalls < 2
-            ? game({ current: { month: "jun", status: "open", unanswered: 0 } })
-            : game({ current: { month: "jul", status: "open", unanswered: 1 } }),
+            ? game({ current: { month: "jun", round: roundInfo("jun"), status: "open", unanswered: 0 } })
+            : game({ current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 } }),
         );
       })
       // Drugi dohvat „me“ ide istodobno s igrom i vidi stanje od prije obračuna; tek treći vidi novo.
@@ -163,7 +171,10 @@ describe("Moj hotel", () => {
     const api = standardApi().on("GET", "/v1/games/:game", () => {
       gameCalls += 1;
       return gameCalls < 2
-        ? json(200, game({ current: { month: "jun", status: "open", unanswered: 2 } }))
+        ? json(
+            200,
+            game({ current: { month: "jun", round: roundInfo("jun"), status: "open", unanswered: 2 } }),
+          )
         : problem(503, "storage_unavailable");
     });
     renderApp(api);
@@ -179,7 +190,7 @@ describe("Moj hotel", () => {
 
   it("„Zatvori mjesec“ traži potvrdu s upozorenjem, šalje jednom i vodi na obračun", async () => {
     const api = standardApi().on("POST", "/v1/games/:game/rounds/:month/close", () =>
-      json(202, { month: "jun", status: "closing", unanswered: 0 }),
+      json(202, { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 }),
     );
     renderApp(api);
     fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
@@ -202,12 +213,22 @@ describe("Moj hotel", () => {
     });
     const api = standardApi()
       .on("GET", "/v1/games/:game", () =>
-        json(200, game({ current: { month: "jun", status: closed ? "closing" : "open", unanswered: 2 } })),
+        json(
+          200,
+          game({
+            current: {
+              month: "jun",
+              round: roundInfo("jun"),
+              status: closed ? "closing" : "open",
+              unanswered: 2,
+            },
+          }),
+        ),
       )
       .on("POST", "/v1/games/:game/rounds/:month/close", async () => {
         closed = true;
         await gate;
-        return json(202, { month: "jun", status: "closing", unanswered: 0 });
+        return json(202, { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 });
       });
     renderApp(api);
     fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
@@ -238,7 +259,7 @@ describe("Moj hotel", () => {
     const api = standardApi().on(
       "GET",
       "/v1/games/:game",
-      game({ current: { month: "jun", status: "closing", unanswered: 0 } }),
+      game({ current: { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 } }),
     );
     renderApp(api);
     expect(await screen.findByText("Obračun mjeseca „lipanj“ je u tijeku.")).toBeTruthy();
@@ -249,6 +270,7 @@ describe("Moj hotel", () => {
   it("kraj sezone: nema zatvaranja ni plana, ima rezultat srpnja i „Nova igra“", async () => {
     const julScore = {
       month: "jul" as const,
+      round: "jul",
       indices: ix(5600, 5200, 5000, 5400, 5000),
       progress_hundredths: 1100,
     };

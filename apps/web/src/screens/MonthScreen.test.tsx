@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
-import { explanation, game, ix, myHotel, myPublic, robot, standardApi } from "../test/fixtures";
+import { explanation, game, ix, myHotel, myPublic, robot, roundInfo, standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -14,12 +14,13 @@ afterEach(() => {
 
 const jun = (p: number) => ({
   month: "jun" as const,
+  round: "jun",
   indices: ix(5600, 5200, 5000, 5400, 4800),
   progress_hundredths: p,
 });
 
 const resolvedGame = game({
-  current: { month: "jul", status: "open", unanswered: 1 },
+  current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 },
   hotels: [
     myPublic([jun(800)]),
     robot("h2", 2, "Štediša", "stedisa", [jun(400)]),
@@ -29,11 +30,12 @@ const resolvedGame = game({
 });
 
 const feed: FeedItemBody[] = [
-  { kind: "round_closed", seq: 1, month: "jun", by: "guest" },
+  { kind: "round_closed", seq: 1, month: "jun", round: "jun", by: "guest" },
   {
     kind: "change",
     seq: 2,
     month: "jun",
+    round: "jun",
     var: "sold",
     cause: "price",
     amount: -1200,
@@ -44,6 +46,7 @@ const feed: FeedItemBody[] = [
     kind: "change",
     seq: 3,
     month: "jun",
+    round: "jun",
     var: "satisfaction",
     cause: "situation",
     amount: 450,
@@ -54,6 +57,7 @@ const feed: FeedItemBody[] = [
     kind: "change",
     seq: 4,
     month: "jun",
+    round: "jun",
     var: "cash",
     cause: "fixed_costs",
     amount: -1_250_000,
@@ -64,10 +68,11 @@ const feed: FeedItemBody[] = [
     kind: "month_resolved",
     seq: 5,
     month: "jun",
+    round: "jun",
     indices: ix(5600, 5200, 5000, 5400, 4800),
     progress_hundredths: 800,
   },
-  { kind: "mentor", seq: 6, month: "jun", text: "Usluga je bolja. Prati troškove." },
+  { kind: "mentor", seq: 6, month: "jun", round: "jun", text: "Usluga je bolja. Prati troškove." },
 ];
 
 describe("Mjesec završen", () => {
@@ -113,7 +118,9 @@ describe("Mjesec završen", () => {
 
   it("dok se obračunava: čeka i ispituje, pa pokaže rezultat (otvoreno izravno, kao nakon osvježavanja)", async () => {
     let calls = 0;
-    const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });
+    const closing = game({
+      current: { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 },
+    });
     const api = standardApi()
       .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
       .on("GET", "/v1/games/:game", () => {
@@ -128,7 +135,9 @@ describe("Mjesec završen", () => {
   });
 
   it("predugo obračunavanje: poruka da traje dulje", async () => {
-    const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });
+    const closing = game({
+      current: { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 },
+    });
     const api = standardApi().on("GET", "/v1/games/:game", closing);
     renderApp(api, "/mjesec/jun");
     expect(
@@ -160,7 +169,7 @@ describe("Mjesec završen", () => {
       .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
       .on("GET", "/v1/games/:game", resolvedGame)
       .on("GET", "/v1/hotels/:hotel/feed", {
-        items: [...feed.slice(0, 5), { kind: "mentor", seq: 6, month: "jun", text }],
+        items: [...feed.slice(0, 5), { kind: "mentor", seq: 6, month: "jun", round: "jun", text }],
       });
     renderApp(api, "/mjesec/jun");
     const el = await screen.findByText((_, node) => node?.tagName === "P" && node.textContent === text);
@@ -170,7 +179,9 @@ describe("Mjesec završen", () => {
   it("spor obračun: mentor koji stigne tek nakon obračuna se vidi, sat ne kreće dok traje „closing“", async () => {
     let gameCalls = 0;
     let resolved = false;
-    const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });
+    const closing = game({
+      current: { month: "jun", round: roundInfo("jun"), status: "closing", unanswered: 0 },
+    });
     const api = standardApi()
       .on("GET", "/v1/me/hotel", myHotel({ months: [jun(800)], planMonth: "jul" }))
       .on("GET", "/v1/games/:game", () => {
@@ -201,7 +212,10 @@ describe("Mjesec završen", () => {
   it("prijelaz lipanj → srpanj: sat „traje dulje“ iz lipnja ne prelazi u srpanj", async () => {
     let current: "jun" | "jul" = "jun";
     const api = standardApi().on("GET", "/v1/games/:game", () =>
-      json(200, game({ current: { month: current, status: "closing", unanswered: 0 } })),
+      json(
+        200,
+        game({ current: { month: current, round: roundInfo(current), status: "closing", unanswered: 0 } }),
+      ),
     );
     renderApp(api, "/mjesec/jun");
     const slow =
@@ -216,6 +230,7 @@ describe("Mjesec završen", () => {
   it("zadnji mjesec: nema „Nastavi“, ima „Natrag na hotel“", async () => {
     const jul = {
       month: "jul" as const,
+      round: "jul",
       indices: ix(5600, 5200, 5000, 5400, 5000),
       progress_hundredths: 1100,
     };
@@ -229,7 +244,7 @@ describe("Mjesec završen", () => {
     const api = standardApi()
       .on("GET", "/v1/games/:game", over)
       .on("GET", "/v1/hotels/:hotel/feed", {
-        items: [{ kind: "mentor", seq: 9, month: "jul", text: "Dobra sezona." }],
+        items: [{ kind: "mentor", seq: 9, month: "jul", round: "jul", text: "Dobra sezona." }],
       });
     renderApp(api, "/mjesec/jul");
     expect(await screen.findByRole("heading", { name: "Srpanj završen" })).toBeTruthy();
@@ -345,7 +360,7 @@ describe("Mjesec završen: zašto se indeksi pomaknuli", () => {
 
   it("ljestvica: −0,3 boda se zaokruži na 0 i nije crveno; brojevi imaju jedinicu", async () => {
     const g = game({
-      current: { month: "jul", status: "open", unanswered: 1 },
+      current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 },
       hotels: [myPublic([jun(800)]), robot("h2", 2, "Štediša", "stedisa", [jun(-30)])],
     });
     renderApp(
@@ -369,7 +384,7 @@ describe("Mjesec završen: zašto se indeksi pomaknuli", () => {
     [20, "0 bodova", "text-muted"],
   ])("napredak %i: %s u boji %s", async (p, shown, tone) => {
     const g = game({
-      current: { month: "jul", status: "open", unanswered: 1 },
+      current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 },
       hotels: [myPublic([jun(p)]), robot("h2", 2, "Štediša", "stedisa", [jun(400)])],
     });
     renderApp(

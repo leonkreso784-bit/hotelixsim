@@ -13,6 +13,23 @@
       "post": {
         "summary": "Novi gost (ako nema kolačić) i nova igra s tri robota (DEMO §1.4).",
         "operationId": "start",
+        "requestBody": {
+          "description": "Neobavezne postavke igre (model, vrsta kruga)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NewGameBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Igra stvorena",
@@ -28,6 +45,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DemoBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Postavke nisu dopuštene ili tijelo nije ispravno",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -157,10 +184,10 @@
           {
             "name": "month",
             "in": "path",
-            "description": "Mjesec runde",
+            "description": "Kod kruga: jun…sep ili t01…t17",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/MonthCode"
+              "type": "string"
             }
           }
         ],
@@ -222,10 +249,10 @@
           {
             "name": "month",
             "in": "path",
-            "description": "Mjesec runde",
+            "description": "Kod kruga: jun…sep ili t01…t17",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/MonthCode"
+              "type": "string"
             }
           }
         ],
@@ -506,10 +533,10 @@
           {
             "name": "month",
             "in": "path",
-            "description": "Obračunat mjesec",
+            "description": "Kod kruga: jun…sep ili t01…t17",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/MonthCode"
+              "type": "string"
             }
           }
         ],
@@ -581,10 +608,10 @@
           {
             "name": "month",
             "in": "path",
-            "description": "Mjesec runde",
+            "description": "Kod kruga: jun…sep ili t01…t17",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/MonthCode"
+              "type": "string"
             }
           }
         ],
@@ -1329,6 +1356,7 @@
         "description": "Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F.",
         "required": [
           "month",
+          "round",
           "progress_text",
           "indices"
         ],
@@ -1345,6 +1373,10 @@
           "progress_text": {
             "type": "string",
             "description": "Napredak od početka igre riječima („−2 boda\")."
+          },
+          "round": {
+            "type": "string",
+            "description": "Kod kruga (`jun`... ili `t01`...)."
           }
         }
       },
@@ -1484,6 +1516,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "plan",
               "by",
               "kind"
@@ -1504,6 +1537,9 @@
               "plan": {
                 "$ref": "#/components/schemas/PlanBody"
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1515,6 +1551,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "situation",
               "title",
               "answer",
@@ -1543,6 +1580,9 @@
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1560,6 +1600,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "by",
               "kind"
             ],
@@ -1576,6 +1617,9 @@
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1587,6 +1631,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "situation",
               "title",
               "kind"
@@ -1600,6 +1645,9 @@
               },
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
+              },
+              "round": {
+                "type": "string"
               },
               "seq": {
                 "type": "integer",
@@ -1618,6 +1666,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "indices",
               "progress_hundredths",
               "kind"
@@ -1642,6 +1691,9 @@
                 "type": "integer",
                 "format": "int32"
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1653,6 +1705,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "var",
               "cause",
               "situation",
@@ -1677,6 +1730,9 @@
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1700,6 +1756,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "situation",
               "title",
               "kind"
@@ -1713,6 +1770,9 @@
               },
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
+              },
+              "round": {
+                "type": "string"
               },
               "seq": {
                 "type": "integer",
@@ -1731,6 +1791,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "situation",
               "title",
               "quality",
@@ -1759,6 +1820,9 @@
                 "format": "int32",
                 "minimum": 0
               },
+              "round": {
+                "type": "string"
+              },
               "seq": {
                 "type": "integer",
                 "format": "int64"
@@ -1776,6 +1840,7 @@
             "required": [
               "seq",
               "month",
+              "round",
               "text",
               "kind"
             ],
@@ -1788,6 +1853,9 @@
               },
               "month": {
                 "$ref": "#/components/schemas/MonthCode"
+              },
+              "round": {
+                "type": "string"
               },
               "seq": {
                 "type": "integer",
@@ -1805,6 +1873,9 @@
         "type": "object",
         "required": [
           "game_id",
+          "model",
+          "round_kind",
+          "rounds",
           "months",
           "current",
           "my_hotel_id",
@@ -1831,6 +1902,9 @@
               "$ref": "#/components/schemas/PublicHotelBody"
             }
           },
+          "model": {
+            "$ref": "#/components/schemas/ModelCode"
+          },
           "months": {
             "type": "array",
             "items": {
@@ -1839,6 +1913,16 @@
           },
           "my_hotel_id": {
             "type": "string"
+          },
+          "round_kind": {
+            "$ref": "#/components/schemas/RoundKindCode"
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoundInfoBody"
+            },
+            "description": "Svi krugovi igre s kalendarom."
           }
         }
       },
@@ -1956,6 +2040,8 @@
         "description": "Pokazatelji jednog obračunatog mjeseca. Sve „po sobi\" dijeli se sa svim sobama × dani (`room_nights`), pa vrijedi\nRevPAR = ADR × popunjenost. Iznosi u centima, udjeli u baznim bodovima (10 000 = 100 %); `null` kad je\ndjelitelj nula (npr. ADR u mjesecu bez prodaje).",
         "required": [
           "month",
+          "round",
+          "days",
           "room_nights",
           "sold_nights",
           "lost_nights",
@@ -1997,6 +2083,12 @@
             ],
             "format": "int64",
             "description": "Izravni trošak po prodanoj noći iz kategorije hotela (katalog, bez plaća; isti svaki mjesec). Nije USALI\nCPOR (svi troškovi odjela soba, i plaće) — taj stiže sa slojem 1; ime polja ostaje zbog kompatibilnosti."
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Dani kruga (mjesec ili tjedan).",
+            "minimum": 0
           },
           "gop_cents": {
             "type": "integer",
@@ -2060,6 +2152,10 @@
             "type": "integer",
             "format": "int64"
           },
+          "round": {
+            "type": "string",
+            "description": "Kod kruga (`jun`... ili `t01`...)."
+          },
           "sellable_occupancy_bp": {
             "type": [
               "integer",
@@ -2091,6 +2187,7 @@
         "type": "object",
         "required": [
           "month",
+          "round",
           "sold",
           "available",
           "rooms_revenue_cents",
@@ -2152,6 +2249,10 @@
             "type": "integer",
             "format": "int64"
           },
+          "round": {
+            "$ref": "#/components/schemas/RoundInfoBody",
+            "description": "Krug i njegov kalendar."
+          },
           "sold": {
             "type": "integer",
             "format": "int32",
@@ -2167,6 +2268,14 @@
           "intensive"
         ]
       },
+      "ModelCode": {
+        "type": "string",
+        "description": "Model igre u JSON-u. Dolazi iz `game::Model::code()`: api ne grana na `game::Model`.",
+        "enum": [
+          "v1",
+          "v2"
+        ]
+      },
       "MonthCode": {
         "type": "string",
         "enum": [
@@ -2180,6 +2289,7 @@
         "type": "object",
         "required": [
           "month",
+          "round",
           "indices",
           "progress_hundredths"
         ],
@@ -2197,8 +2307,39 @@
             "type": "integer",
             "format": "int32",
             "description": "Napredak u odnosu na početak, u stotinkama boda (10000 = +100)."
+          },
+          "round": {
+            "type": "string",
+            "description": "Kod kruga (`jun`... ili `t01`...)."
           }
         }
+      },
+      "NewGameBody": {
+        "type": "object",
+        "description": "Tijelo `POST /v1/demo` (neobavezno): bez polja igra je v1 po mjesecima.",
+        "properties": {
+          "model": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModelCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "round_kind": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoundKindCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "PlanBody": {
         "type": "object",
@@ -2302,6 +2443,7 @@
         "type": "object",
         "required": [
           "month",
+          "round",
           "plan",
           "limits"
         ],
@@ -2314,6 +2456,9 @@
           },
           "plan": {
             "$ref": "#/components/schemas/PlanBody"
+          },
+          "round": {
+            "type": "string"
           }
         }
       },
@@ -2583,12 +2728,17 @@
         "type": "object",
         "required": [
           "month",
+          "round",
           "status",
           "unanswered"
         ],
         "properties": {
           "month": {
             "$ref": "#/components/schemas/MonthCode"
+          },
+          "round": {
+            "$ref": "#/components/schemas/RoundInfoBody",
+            "description": "Krug i njegov kalendar."
           },
           "status": {
             "$ref": "#/components/schemas/RoundStatusCode"
@@ -2600,6 +2750,67 @@
             "minimum": 0
           }
         }
+      },
+      "RoundInfoBody": {
+        "type": "object",
+        "description": "Krug igre i njegov kalendar; `index` od 0; datumi su dan u mjesecu (od 1) i mjesec.",
+        "required": [
+          "code",
+          "kind",
+          "index",
+          "days",
+          "first_day",
+          "first_month",
+          "last_day",
+          "last_month",
+          "month_ends"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "first_day": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "first_month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "index": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RoundKindCode"
+          },
+          "last_day": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "last_month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "month_ends": {
+            "type": "boolean",
+            "description": "Završava li u ovom krugu kalendarski mjesec (tada dolazi mjesečna lekcija)."
+          }
+        }
+      },
+      "RoundKindCode": {
+        "type": "string",
+        "description": "Vrsta kruga: mjesec ili tjedan.",
+        "enum": [
+          "month",
+          "week"
+        ]
       },
       "RoundStatusCode": {
         "type": "string",
@@ -2704,6 +2915,7 @@
         "type": "object",
         "required": [
           "month",
+          "round",
           "open",
           "unanswered",
           "items"
@@ -2728,6 +2940,12 @@
           "open": {
             "type": "boolean",
             "description": "Može li se još odgovarati."
+          },
+          "round": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "unanswered": {
             "type": "integer",

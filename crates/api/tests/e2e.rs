@@ -3,7 +3,7 @@ mod common;
 use std::sync::Arc;
 
 use api::{AppState, router};
-use common::{assert_problem, call};
+use common::{assert_problem, call, run_worker};
 use content::{Snapshot, repo_dir};
 use game::Game;
 use serde_json::json;
@@ -19,21 +19,8 @@ fn deps(pool: PgPool) -> app::Deps {
         ai: Arc::new(app::DisabledAi),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(Snapshot::read(&repo_dir()).unwrap()),
+        snapshot_v2: Arc::new(Snapshot::read_v2(&repo_dir()).unwrap()),
     }
-}
-
-async fn run_worker(d: &app::Deps) {
-    while app::run_next_job(d).await.unwrap() {}
-}
-
-fn token(set_cookie: &str) -> String {
-    set_cookie
-        .split(';')
-        .next()
-        .unwrap()
-        .strip_prefix("hotelixsim_guest=")
-        .unwrap()
-        .to_owned()
 }
 
 #[sqlx::test(migrations = "../store/migrations")]
@@ -42,7 +29,7 @@ async fn guest_plays_june_and_july_against_three_robots(pool: PgPool) {
     let app = router(AppState { deps: d.clone() });
     // gost → igra
     let r = call(&app, "POST", "/v1/demo", None, None).await;
-    let tok = token(&r.set_cookie.unwrap());
+    let tok = common::cookie_value(&r.set_cookie.unwrap());
     let (game, hotel) = (
         r.body["game_id"].as_str().unwrap().to_owned(),
         r.body["hotel_id"].as_str().unwrap().to_owned(),
@@ -98,7 +85,9 @@ async fn guest_plays_june_and_july_against_three_robots(pool: PgPool) {
     let g = call(&app, "GET", &format!("/v1/games/{game}"), Some(&tok), None).await;
     assert_eq!(
         g.body["current"],
-        json!({"month": "jul", "status": "open", "unanswered": 1}),
+        json!({"month": "jul", "status": "open", "unanswered": 1,
+            "round": {"code": "jul", "kind": "month", "index": 1, "days": 31, "first_day": 1,
+                      "first_month": "jul", "last_day": 31, "last_month": "jul", "month_ends": true}}),
         "{:?}",
         g.body
     );
@@ -296,7 +285,7 @@ async fn replay_from_database_matches(pool: PgPool) {
     let d = deps(pool);
     let app = router(AppState { deps: d.clone() });
     let r = call(&app, "POST", "/v1/demo", None, None).await;
-    let tok = token(&r.set_cookie.unwrap());
+    let tok = common::cookie_value(&r.set_cookie.unwrap());
     let game = app::GameId(r.body["game_id"].as_str().unwrap().parse().unwrap());
     call(
         &app,
@@ -363,7 +352,7 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
     let bad = deps_with(pool.clone(), app::memory::FakeAi::failing());
     let app = router(AppState { deps: good.clone() });
     let r = call(&app, "POST", "/v1/demo", None, None).await;
-    let tok = token(&r.set_cookie.unwrap());
+    let tok = common::cookie_value(&r.set_cookie.unwrap());
     let (game, hotel) = (
         r.body["game_id"].as_str().unwrap().to_owned(),
         r.body["hotel_id"].as_str().unwrap().to_owned(),

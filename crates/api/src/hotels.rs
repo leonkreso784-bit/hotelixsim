@@ -9,8 +9,8 @@ use crate::AppState;
 use crate::auth::Token;
 use crate::problem::{Problem, ProblemCode};
 use crate::schema::{
-    AnswerBody, ConversationBody, FeedBody, FeedItemBody, HotelBody, MonthCode, PlanBody,
-    SituationsBody, TextBody, parse_hotel, parse_round,
+    AnswerBody, ConversationBody, FeedBody, FeedItemBody, HotelBody, PlanBody, SituationsBody,
+    TextBody, parse_hotel, parse_round,
 };
 
 /// Moj hotel u mojoj zadnjoj igri, sa stvarnim brojkama i planom trenutnog mjeseca.
@@ -85,7 +85,7 @@ async fn body_or_problem<T>(
     path = "/v1/hotels/{hotel_id}/plans/{month}",
     params(
         ("hotel_id" = String, Path, description = "Hotel (uuid)"),
-        ("month" = MonthCode, Path, description = "Mjesec runde")
+        ("month" = String, Path, description = "Kod kruga: jun…sep ili t01…t17")
     ),
     request_body = PlanBody,
     responses(

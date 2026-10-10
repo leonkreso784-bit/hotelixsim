@@ -18,6 +18,24 @@ import type {
 } from "../api/types";
 import { FakeApi } from "./fakeApi";
 
+const MONTH_DAYS = { jun: 30, jul: 31, aug: 31, sep: 30 } as const;
+const MONTH_INDEX = { jun: 0, jul: 1, aug: 2, sep: 3 } as const;
+
+/** Kalendar mjesečnog kruga (v1): cijeli kalendarski mjesec. */
+export function roundInfo(code: keyof typeof MONTH_DAYS): RoundBody["round"] {
+  return {
+    code,
+    kind: "month",
+    index: MONTH_INDEX[code],
+    days: MONTH_DAYS[code],
+    first_day: 1,
+    first_month: code,
+    last_day: MONTH_DAYS[code],
+    last_month: code,
+    month_ends: true,
+  };
+}
+
 export function ix(g: number, r: number, z: number, o: number, f: number): IndexEntry[] {
   return [
     { code: "G", hundredths: g },
@@ -110,7 +128,8 @@ export function myHotel(
         load_hundredths: 180,
       },
       last_month: opts.lastMonth ?? null,
-      plan: planMonth === null ? null : { month: planMonth, plan: plan(), limits: limits() },
+      plan:
+        planMonth === null ? null : { month: planMonth, round: planMonth, plan: plan(), limits: limits() },
     },
   };
 }
@@ -118,8 +137,14 @@ export function myHotel(
 export function game(opts: { current?: RoundBody | null; hotels?: PublicHotelBody[] } = {}): GameBody {
   return {
     game_id: "g1",
+    model: "v1",
+    round_kind: "month",
+    rounds: [roundInfo("jun"), roundInfo("jul")],
     months: ["jun", "jul"],
-    current: opts.current === undefined ? { month: "jun", status: "open", unanswered: 2 } : opts.current,
+    current:
+      opts.current === undefined
+        ? { month: "jun", round: roundInfo("jun"), status: "open", unanswered: 2 }
+        : opts.current,
     my_hotel_id: "h1",
     hotels: opts.hotels ?? [
       myPublic(),
@@ -182,6 +207,7 @@ export function situations(
 ): SituationsBody {
   return {
     month: "jun",
+    round: "jun",
     open: true,
     unanswered: items.filter((i) => i.chosen === null && i.response === null).length,
     items,
@@ -207,6 +233,7 @@ export function conversation(over: Partial<ConversationBody> = {}): Conversation
 export function explanation(over: Partial<ExplanationBody> = {}): ExplanationBody {
   return {
     month: "jun",
+    round: "jun",
     progress_text: "+8 bodova",
     indices: [
       {
@@ -323,6 +350,8 @@ export function explanation(over: Partial<ExplanationBody> = {}): ExplanationBod
 export function kpiMonth(over: Partial<KpiMonthBody> = {}): KpiMonthBody {
   return {
     month: "jun",
+    round: "jun",
+    days: 30,
     room_nights: 3600,
     sold_nights: 2448,
     lost_nights: 60,

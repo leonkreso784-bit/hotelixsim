@@ -10,6 +10,7 @@ import {
   progressAt,
   sortIndices,
 } from "./game";
+import { roundInfo } from "./test/fixtures";
 
 const ix = (g: number, r: number, z: number, o: number, f: number): IndexEntry[] => [
   { code: "G", hundredths: g },
@@ -30,8 +31,18 @@ function hotel(id: string, slot: number, months: PublicHotelBody["months"]): Pub
   };
 }
 
-const jun = { month: "jun" as const, indices: ix(5300, 5200, 5100, 5400, 4800), progress_hundredths: 800 };
-const jul = { month: "jul" as const, indices: ix(5600, 5200, 5000, 5400, 5000), progress_hundredths: 1100 };
+const jun = {
+  month: "jun" as const,
+  round: "jun",
+  indices: ix(5300, 5200, 5100, 5400, 4800),
+  progress_hundredths: 800,
+};
+const jul = {
+  month: "jul" as const,
+  round: "jul",
+  indices: ix(5600, 5200, 5000, 5400, 5000),
+  progress_hundredths: 1100,
+};
 
 describe("indeksi", () => {
   it("sortIndices slaže G, R, Z, O, F", () => {
@@ -71,8 +82,11 @@ describe("indeksi", () => {
 describe("napredak i ljestvica", () => {
   const game: GameBody = {
     game_id: "g1",
+    model: "v1",
+    round_kind: "month",
+    rounds: [roundInfo("jun"), roundInfo("jul")],
     months: ["jun", "jul"],
-    current: { month: "jul", status: "open", unanswered: 1 },
+    current: { month: "jul", round: roundInfo("jul"), status: "open", unanswered: 1 },
     my_hotel_id: "h1",
     hotels: [
       hotel("h1", 1, [jun]),

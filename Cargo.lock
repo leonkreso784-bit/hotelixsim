@@ -50,6 +50,7 @@ dependencies = [
  "http-body-util",
  "serde",
  "serde_json",
+ "sim-hotel-v2",
  "sqlx",
  "store",
  "tokio",
