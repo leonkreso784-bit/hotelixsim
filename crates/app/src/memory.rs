@@ -135,7 +135,8 @@ impl AiPort for FakeAi {
             .map(|n| game::CriterionVerdict {
                 n,
                 met: n <= 4,
-                reason: format!("Lažna ocjena kriterija {n}."),
+                // Bez rednog broja kriterija: `validate_verdict` takav tekst odbija (ADR-025).
+                reason: "Lažna ocjena kriterija.".into(),
             })
             .collect();
         self.out(
