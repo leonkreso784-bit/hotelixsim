@@ -56,4 +56,11 @@ export const hr = {
   "strategy.brizni": "brine o ljudima",
   "strategy.lovac": "lovi popunjenost",
   "strategy.nasumicni": "igra nasumično",
+  "avatars.title": "Likovi",
+  "avatars.lead": "Svaki lik se slaže iz slojeva. Uređivač dolazi poslije demoa.",
+  "avatars.known": "Likovi iz igre",
+  "avatars.player": "Ti",
+  "avatars.mentor": "Mentor",
+  "avatars.random": "Gosti iz imena",
+  "avatars.hair": "Frizure",
 } as const;
