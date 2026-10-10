@@ -97,6 +97,7 @@
 | Dokument | Svrha |
 |---|---|
 | [HOTELSKI_POKAZATELJI.md](./research/HOTELSKI_POKAZATELJI.md) | Hotelski pokazatelji (popunjenost, ADR, RevPAR, GOPPAR…), tipične vrijednosti, uzročne veze |
+| [JEZICI_GOSTIJU.md](./research/JEZICI_GOSTIJU.md) | Jezici gostiju u Opatiji po mjesecima (TZG Opatija, Novi list) — preporučena tablica za jezike osoblja (procjena 🟨) |
 | [POSTOJECE_SIMULACIJE.md](./research/POSTOJECE_SIMULACIJE.md) | Postojeće hotelske simulacije i što naučiti od njih |
 | [RUST_ALATI_2026-10.md](./research/RUST_ALATI_2026-10.md) | Stanje Rust alata (listopad 2026.) za izbor ovisnosti |
 | [KALIBRACIJA_2026-10-04.md](./research/KALIBRACIJA_2026-10-04.md) | Kalibracija početnih indeksa i marže — opcije s brojkama za rupe u DEMO specu (prijedlog, nije odlučeno) |
