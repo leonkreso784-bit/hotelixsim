@@ -61,7 +61,7 @@ impl Game {
                 kpi: round_kpi(
                     &res.report,
                     self.round_info(rr.month)?.period.days,
-                    &self.content.catalog,
+                    self.model().catalog(&self.content)?,
                 )?,
             });
         }

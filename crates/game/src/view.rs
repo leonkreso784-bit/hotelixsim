@@ -139,7 +139,7 @@ impl Game {
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             let days = self.round_info(rr.month)?.period.days;
-            let k = round_kpi(&res.report, days, &self.content.catalog)?;
+            let k = round_kpi(&res.report, days, self.model().catalog(&self.content)?)?;
             last_month = Some(LastMonth {
                 round: rr.month,
                 sold: res.report.market.sold,

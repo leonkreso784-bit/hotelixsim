@@ -437,6 +437,14 @@ impl Model {
         }
     }
 
+    /// Jedini put do kataloga za igru koja može biti v2: v1 čita `content.catalog`, v2 `base` kataloga v2.
+    pub(crate) fn catalog(self, c: &Content) -> Result<&sim_hotel::Catalog, GameError> {
+        match self {
+            Model::V1 => Ok(&c.catalog),
+            Model::V2 => Ok(&v2_catalog(c)?.base),
+        }
+    }
+
     /// Uobičajena cijena sobe u krugu (za mentora): v1 mjesečna referenca, v2 prosjek po danima kruga.
     pub(crate) fn price_ref_cents(
         self,
@@ -444,7 +452,7 @@ impl Model {
         r: &RoundInfo,
         c: &Content,
     ) -> Result<i64, GameError> {
-        let spec = c.catalog.category(category).map_err(debug)?;
+        let spec = self.catalog(c)?.category(category).map_err(debug)?;
         match self {
             Model::V1 => Ok(spec.price_ref_cents.get(r.key.require_month()?)),
             Model::V2 => avg_i64(&spec.price_ref_cents, &r.period).map_err(debug),
