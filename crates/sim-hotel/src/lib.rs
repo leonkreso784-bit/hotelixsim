@@ -29,7 +29,7 @@ pub use explain::{Cause, Line, Unit, Var};
 pub use index::{Index, IndexSet, IndexValue, NamedIndices};
 pub use indices::{
     Driver, LOAD_LIMIT_HUNDREDTHS, RawIndices, RefPoint, RefTable, base_labor_cents, centred,
-    index_drivers, load_penalty, month_indices, raw_indices, start_indices,
+    index_drivers, load_penalty, month_indices, raw_indices, retention, start_indices,
 };
 pub use market::{MarketOutcome, market};
 pub use mechanic::{

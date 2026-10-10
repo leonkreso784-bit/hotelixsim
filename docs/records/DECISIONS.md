@@ -62,6 +62,18 @@ brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga
    situaciju (oznaka ponuđenog odgovora ili „vlastiti odgovor"). Uputa traži vezu samo s onim što je u činjenicama i
    zabranjuje pogađanje; primjer u uputi je izmišljen (test pazi da ne spominje stvarnu situaciju iz sadržaja), a sav
    tekst u JSON-u je podatak, nikad uputa.
+8. **Smjer retka i težina štete** (ekran „Zašto se indeksi pomaknuli" i „Zašto" mentora bez AI-ja, Task 16 i 19):
+   jedno pravilo `push` u `mentor.rs` — `effect` je predznak guranja, `harm` je njegov negativni dio (`harm > 0 ⇔
+   down`). Težina = udio člana u indeksu (%) × promjena člana u stotinkama: Operativa oprema 45, iskustvo 30,
+   opterećenje 25; **Zaposlenici moral 60, zadržavanje 40**. Retci potražnje (cijena, ugled, marketing) pretvaraju
+   postotak u prihod od noćenja i imaju težinu najmanje 1, da se smjer ne izgubi zaokruživanjem.
+   **Zaposlenici:** indeks ne miče broj otišlih nego **stopa odlazaka prema prošlom mjesecu** (za lipanj: početno
+   stanje), jer je zadržavanje = 10 000 − 12,5 · stopa (`sim_hotel::retention`); pokretač „Zaposleni" zato ima redak
+   „stopa odlazaka u ovom mjesecu: 5,44 % osoblja, više nego prošli mjesec" (više → dolje, manje → gore, isto → sivo;
+   na nuli zadržavanja, stopa ≥ 8 %, sivo) i usporedni redak prošlog mjeseca; broj zaposlenih i otišlih ostaje siva
+   razina. Stopa nije zasebna poluga: slijedi moral na kraju mjeseca (3 % do 60 bodova morala, iznad toga raste,
+   P21), pa redak to kaže riječima. **Ukupna promjena morala** nosi smjer samo kad je jedini prikazani redak morala;
+   uz pritiske (plaće, opterećenje, obuka, otpuštanje, situacije) je zbroj i ostaje siva, da se ne broji dvaput.
 
 **Cijena ako je krivo.** Tablice naziva i fraza (Rust, `crates/game/src/mentor.rs`) treba držati usklađene s
 `packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Ekran „Mjesec završen"

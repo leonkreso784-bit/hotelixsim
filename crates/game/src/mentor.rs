@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty};
+use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty, retention};
 
 use crate::ai_input::DebriefInput;
 use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
@@ -215,7 +215,7 @@ fn var_meaning(v: VarCode) -> &'static str {
         VarCode::Costs => "Što je hotel platio ovaj mjesec, po vrsti troška.",
         VarCode::Cash => "Kako se mijenjao novac na računu hotela.",
         VarCode::Staff => {
-            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti."
+            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego stopu odlazaka (koji dio osoblja u mjesecu da otkaz): veća nego prošli mjesec ruši indeks, manja ga diže. Stopa raste kad moral padne ispod 60 bodova."
         }
         VarCode::Morale => {
             "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
@@ -505,23 +505,29 @@ fn shows_sign(v: VarCode, c: &CauseDto) -> bool {
 }
 
 /// Koliko je redak gurnuo svoj indeks: + gore, − dolje, 0 razina bez smjera. Gruba težina za usporedbu
-/// unutar istog indeksa (mentor bez AI-ja bira najveću štetu), u omjeru težina iz `raw_indices`.
+/// unutar istog indeksa (mentor bez AI-ja bira najveću štetu), u omjeru težina iz `raw_indices`:
+/// udio člana u indeksu (u postocima) × promjena člana u stotinkama boda, pa je guranje / 100 promjena
+/// sirovog indeksa u stotinkama. Zaposlenici: moral 60, zadržavanje 40 (`turnover_changes`);
+/// Operativa: oprema 45, iskustvo 30, opterećenje 25 (`load_driver`).
 /// `room_revenue` (prihod od noćenja) pretvara postotak potražnje u prihod; `maintained` je koliko su
 /// održavanje i obnova vratili opremu, pa trošenje gura dolje samo u dijelu koji nisu pokrili.
-fn push(l: &LineDto, room_revenue: i64, maintained: i64) -> i64 {
+/// `morale_alone`: ukupna promjena morala je jedini prikazani redak morala.
+fn push(l: &LineDto, room_revenue: i64, maintained: i64, morale_alone: bool) -> i64 {
     let a = l.amount;
     match (l.var, &l.cause) {
         // Trošak situacije ruši Financije; ostali troškovi i prihod su razine.
         (VarCode::Costs, CauseDto::Situation(_)) => a.saturating_neg(),
+        // Broj ljudi je razina; Zaposlenike miče stopa odlazaka (`turnover_changes`).
         (VarCode::Revenue | VarCode::Costs | VarCode::Staff, _) => 0,
-        // Ukupna promjena morala je zbroj pritisaka, ne uzrok.
-        (VarCode::Morale, CauseDto::Baseline) => 0,
+        // Ukupna promjena morala je zbroj pritisaka, ne uzrok (inače bi se brojala dvaput). Kad je jedini
+        // redak morala, ona je stvarni uzrok i nosi smjer.
+        (VarCode::Morale, CauseDto::Baseline) if !morale_alone => 0,
+        (VarCode::Morale, _) => a.saturating_mul(60),
         // Najmanje 1, da se smjer ne izgubi zaokruživanjem kad je prihod od noćenja malen.
         (VarCode::Sold, CauseDto::Price | CauseDto::Reputation | CauseDto::Marketing) => {
             a.signum() * (room_revenue.max(1).saturating_mul(a.saturating_abs()) / 10_000).max(1)
         }
         (VarCode::Sold, _) => 0,
-        // Operativa: oprema 45 %, iskustvo 30 %, opterećenje 25 % (vidi `load_driver`).
         (VarCode::Equipment, CauseDto::Baseline) if a < 0 => {
             -(a.saturating_neg() - maintained).max(0) * 45
         }
@@ -594,6 +600,42 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
             },
         ],
     })
+}
+
+/// Stopa odlazaka ovog mjeseca prema prošlom (za prvi mjesec: početno stanje hotela), prvi retci
+/// pokretača „Zaposleni". Z = 60 % moral + 40 % zadržavanje, a zadržavanje = 10 000 − 12,5 · stopa u
+/// bazama (`sim_hotel::retention`). Indeks zato ne miče broj otišlih (razina, ovisi i o broju ljudi) nego
+/// promjena stope: guranje = 40 · Δzadržavanja = −500 po bazi rasta stope, isto mjerilo kao moral ×60.
+/// Kad je zadržavanje već na nuli (stopa 8 % i više), indeks se zbog odlazaka više ne miče: siva.
+/// Stopa slijedi moral na kraju mjeseca (`sim_hotel::turnover_bp`): 3 % do 60 bodova morala, iznad
+/// toga raste; zato rečenica „zašto" kaže i mehanizam.
+fn turnover_changes(before: u16, after: u16) -> [ChangeFact; 2] {
+    let share = |bp: u16| format!("{} % osoblja", decimal_hundredths(u64::from(bp)));
+    let vs_last = match after.cmp(&before) {
+        std::cmp::Ordering::Greater => "više nego prošli mjesec",
+        std::cmp::Ordering::Less => "manje nego prošli mjesec",
+        std::cmp::Ordering::Equal => "isto kao prošli mjesec",
+    };
+    let kept = |bp: u16| i64::from(retention(bp).unwrap_or_default());
+    let pushed = (kept(after) - kept(before)) * 40;
+    let because = "češćih odlazaka osoblja nego prošli mjesec: kad moral padne ispod 60 bodova, više ljudi daje otkaz".to_owned();
+    [
+        ChangeFact {
+            cause: "stopa odlazaka u ovom mjesecu".to_owned(),
+            amount: format!("{}, {vs_last}", share(after)),
+            harm: harm_of(pushed),
+            effect: Effect::of(pushed),
+            because: because.clone(),
+        },
+        // Prošli mjesec je samo usporedba, ne uzrok.
+        ChangeFact {
+            cause: "stopa odlazaka prošli mjesec".to_owned(),
+            amount: share(before),
+            harm: 0,
+            effect: Effect::Neutral,
+            because,
+        },
+    ]
 }
 
 // ---------------------------------------------------------------- činjenice
@@ -699,12 +741,22 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         })
         .map(|l| l.amount.max(0))
         .sum();
+    // Prikazani retci morala (oni koji zaokruženo nisu nula); sama ukupna promjena je tada uzrok.
+    let morale_shown: Vec<&LineDto> = lines
+        .iter()
+        .filter(|l| l.var == VarCode::Morale && amount_text(l, true).is_some())
+        .collect();
+    let morale_alone = matches!(morale_shown.as_slice(), [l] if l.cause == CauseDto::Baseline);
     let var_driver = |var: VarCode| -> Option<DriverFact> {
-        let changes: Vec<ChangeFact> = lines
-            .iter()
-            .filter(|l| l.var == var)
-            .filter_map(|l| {
-                let pushed = push(l, room_revenue, maintained);
+        let rate = if var == VarCode::Staff {
+            turnover_changes(input.turnover_before_bp, input.turnover_after_bp).to_vec()
+        } else {
+            Vec::new()
+        };
+        let changes: Vec<ChangeFact> = rate
+            .into_iter()
+            .chain(lines.iter().filter(|l| l.var == var).filter_map(|l| {
+                let pushed = push(l, room_revenue, maintained, morale_alone);
                 Some(ChangeFact {
                     amount: amount_text(l, shows_sign(l.var, &l.cause))?,
                     cause: cause_label(l.var, &l.cause, &titles),
@@ -712,7 +764,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                     harm: harm_of(pushed),
                     effect: Effect::of(pushed),
                 })
-            })
+            }))
             .collect();
         (!changes.is_empty()).then(|| DriverFact {
             source: DriverSource::Var(var),
@@ -998,6 +1050,18 @@ mod tests {
             cause_because(VarCode::Sold, &CauseDto::Marketing, &titles),
             "premalo marketinga"
         );
+    }
+
+    /// Tekstovi o odlascima kažu „60 bodova" i „8 %": drže se formule iz jezgre.
+    #[test]
+    fn turnover_words_follow_core_formula() {
+        assert_eq!(sim_hotel::turnover_bp(6_000).unwrap(), 300);
+        assert!(sim_hotel::turnover_bp(5_900).unwrap() > 300);
+        assert_eq!(retention(799).unwrap(), 12);
+        assert_eq!(retention(800).unwrap(), 0);
+        let [now, last] = turnover_changes(375, 443);
+        assert_eq!((now.harm, now.effect), (500 * 68, Effect::Down));
+        assert_eq!((last.harm, last.effect), (0, Effect::Neutral));
     }
 
     #[test]

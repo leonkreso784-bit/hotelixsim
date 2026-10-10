@@ -162,6 +162,8 @@ fn sample_debrief() -> game::DebriefInput {
         seasonal_before: 14,
         load_before_hundredths: 170,
         load_after_hundredths: 230,
+        turnover_before_bp: 375,
+        turnover_after_bp: 443,
         lines: vec![LineDto {
             var: VarCode::Morale,
             cause: CauseDto::Situation("S2".into()),

@@ -85,6 +85,9 @@ pub struct DebriefInput {
     /// Opterećenje osoblja (prodane noći po zaposlenom na dan, stotinke) prije i poslije mjeseca.
     pub load_before_hundredths: u16,
     pub load_after_hundredths: u16,
+    /// Stopa odlazaka (baze, 300 = 3 % osoblja u mjesecu) prije i poslije mjeseca; ulazi u zadržavanje (Z).
+    pub turnover_before_bp: u16,
+    pub turnover_after_bp: u16,
     pub lines: Vec<LineDto>,
 }
 
@@ -240,6 +243,8 @@ impl Game {
             seasonal_before: report.before.seasonal,
             load_before_hundredths: report.before.load_hundredths,
             load_after_hundredths: report.after.load_hundredths,
+            turnover_before_bp: report.before.turnover_bp,
+            turnover_after_bp: report.after.turnover_bp,
             lines: report.lines.clone(),
         })
     }

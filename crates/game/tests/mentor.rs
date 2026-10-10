@@ -63,6 +63,9 @@ fn sample() -> DebriefInput {
         seasonal_before: 14,
         load_before_hundredths: 170,
         load_after_hundredths: 230,
+        // Moral 55 → 50,47 bodova: stopa odlazaka 300 + 15 · (6000 − moral) / 100 baza.
+        turnover_before_bp: 375,
+        turnover_after_bp: 443,
         lines: vec![
             line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
             line(VarCode::Morale, CauseDto::Wage, -1_000, UnitCode::Points),
@@ -460,14 +463,17 @@ fn zero_lines_and_lines_that_round_to_zero_are_left_out() {
         UnitCode::Points,
     )];
     assert!(changes(&facts_json(&input), "Moral").is_empty());
-    // Varijabla bez ijedne promjene ne pojavljuje se uz indeks.
+    // Varijabla bez ijedne promjene ne pojavljuje se uz indeks; stopa odlazaka prema prošlom mjesecu
+    // je uvijek činjenica Zaposlenika (i kad je ista).
     let f = facts_json(&input);
-    assert!(
-        index(&f, "Zaposlenici")["sto_je_pokrenulo"]
-            .as_array()
-            .unwrap()
-            .is_empty()
-    );
+    let drivers: Vec<&str> = index(&f, "Zaposlenici")["sto_je_pokrenulo"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| d["sto"].as_str().unwrap())
+        .collect();
+    assert_eq!(drivers, ["Zaposleni"]);
+    assert_eq!(changes(&f, "Zaposleni").len(), 2);
 }
 
 #[test]
@@ -871,6 +877,205 @@ fn every_line_says_whether_it_pushed_its_index_up_or_down() {
         effect_of(&f, "Opterećenje osoblja", "u ovom mjesecu"),
         Effect::Up
     );
+}
+
+/// Odlasci pod Zaposlenici: stopa ovog mjeseca prema prošlom (zadržavanje je 40 % indeksa), riječima.
+#[test]
+fn turnover_rate_against_last_month_moves_staff_index() {
+    let f = facts_json(&sample());
+    assert_eq!(
+        changes(&f, "Zaposleni"),
+        [
+            (
+                "stopa odlazaka u ovom mjesecu".to_owned(),
+                "4,43 % osoblja, više nego prošli mjesec".to_owned()
+            ),
+            (
+                "stopa odlazaka prošli mjesec".to_owned(),
+                "3,75 % osoblja".to_owned()
+            ),
+            // Broj ljudi ostaje razina.
+            (
+                "odlasci zaposlenih (zamijenjeni novima)".to_owned(),
+                "otišle 3 osobe".to_owned()
+            ),
+            ("zapošljavanje".to_owned(), "zaposlena 1 osoba".to_owned()),
+        ]
+    );
+    for (before, after, want, words) in [
+        (375, 443, Effect::Down, "više nego prošli mjesec"),
+        (443, 375, Effect::Up, "manje nego prošli mjesec"),
+        (300, 300, Effect::Neutral, "isto kao prošli mjesec"),
+        // Zadržavanje je već na nuli (stopa 8 % i više): indeks se zbog odlazaka više ne miče.
+        (900, 1_000, Effect::Neutral, "više nego prošli mjesec"),
+    ] {
+        let mut input = sample();
+        input.turnover_before_bp = before;
+        input.turnover_after_bp = after;
+        let facts = debrief_facts(&input);
+        assert_eq!(
+            effect_of(&facts, "Zaposleni", "stopa odlazaka u ovom"),
+            want,
+            "{before} → {after}"
+        );
+        assert_eq!(
+            effect_of(&facts, "Zaposleni", "stopa odlazaka prošli"),
+            Effect::Neutral
+        );
+        assert_eq!(
+            effect_of(&facts, "Zaposleni", "zamijenjeni"),
+            Effect::Neutral
+        );
+        assert!(
+            amount_for(&facts_json(&input), "Zaposleni", "u ovom mjesecu").ends_with(words),
+            "{before} → {after}"
+        );
+        assert_human_facts(&facts_json(&input));
+    }
+    // Prvi mjesec: „prošli mjesec" je početno stanje hotela.
+    let mut june = sample();
+    june.month = MonthCode::Jun;
+    june.next_month = Some(MonthCode::Jul);
+    june.turnover_before_bp = 450;
+    june.turnover_after_bp = 375;
+    assert_eq!(
+        effect_of(&debrief_facts(&june), "Zaposleni", "u ovom mjesecu"),
+        Effect::Up
+    );
+    assert_eq!(
+        amount_for(&facts_json(&june), "Zaposleni", "prošli mjesec"),
+        "4,5 % osoblja"
+    );
+}
+
+/// Ukupna promjena morala je uzrok samo kad je jedini redak morala; uz pritiske je zbroj (siva).
+#[test]
+fn total_morale_change_is_a_cause_only_when_alone() {
+    let mut alone = sample();
+    alone
+        .lines
+        .retain(|l| l.var != VarCode::Morale || l.cause == CauseDto::Baseline);
+    // Pritisak koji zaokruženo daje nulu se ne vidi, pa je ukupna promjena i dalje sama.
+    alone.lines.push(line(
+        VarCode::Morale,
+        CauseDto::Training,
+        30,
+        UnitCode::Points,
+    ));
+    let total = |input: &DebriefInput| {
+        debrief_facts(input)
+            .indices
+            .into_iter()
+            .flat_map(|i| i.drivers)
+            .flat_map(|d| d.changes)
+            .find(|c| c.cause.contains("ukupna promjena morala"))
+            .unwrap()
+    };
+    let down = total(&alone);
+    assert_eq!((down.effect, down.harm > 0), (Effect::Down, true));
+    let mut rose = alone.clone();
+    for l in rose.lines.iter_mut().filter(|l| l.var == VarCode::Morale) {
+        l.amount = l.amount.abs();
+    }
+    let up = total(&rose);
+    assert_eq!((up.effect, up.harm), (Effect::Up, 0));
+    let with_pressures = total(&sample());
+    assert_eq!(
+        (with_pressures.effect, with_pressures.harm),
+        (Effect::Neutral, 0)
+    );
+}
+
+/// Mentor bez AI-ja okrivljuje odlaske ili pad morala prirodnom rečenicom.
+#[test]
+fn fallback_blames_departures_or_falling_morale_for_staff_index() {
+    let mut alone = sample();
+    alone
+        .lines
+        .retain(|l| l.var != VarCode::Morale || l.cause == CauseDto::Baseline);
+    // Moral −4,53 boda ispod 60: stopa odlazaka raste za 0,68 % (zadržavanje −8,5 boda · 40 %)
+    // i to gura Zaposlenike više od samog morala (−4,53 · 60 %).
+    let text = fallback_debrief(&alone);
+    assert!(
+        text.contains(
+            "Indeks Zaposlenici pao je ponajviše zbog češćih odlazaka osoblja nego prošli mjesec: kad moral padne ispod 60 bodova, više ljudi daje otkaz."
+        ),
+        "{text}"
+    );
+    assert_human(&text);
+    // Isti pad morala iznad 60 bodova (70 → 65,47): stopa odlazaka ostaje 3 %, kriv je sam moral.
+    let mut same_rate = alone.clone();
+    same_rate.turnover_before_bp = 300;
+    same_rate.turnover_after_bp = 300;
+    let text = fallback_debrief(&same_rate);
+    assert!(
+        text.contains(
+            "Indeks Zaposlenici pao je ponajviše zbog pada morala, pa je tim slabije raspoložen i lakše odlazi."
+        ),
+        "{text}"
+    );
+    assert_human(&text);
+}
+
+fn effect_word(e: Effect) -> &'static str {
+    match e {
+        Effect::Up => "up",
+        Effect::Down => "down",
+        Effect::Neutral => "neutral",
+    }
+}
+
+/// Blok Zaposlenici kao na ekranu (uzrok, iznos, smjer), za izvještaj i provjeru.
+fn staff_block(f: &DebriefFacts) -> Value {
+    let z = f.indices.iter().find(|i| i.name == "Zaposlenici").unwrap();
+    serde_json::json!({
+        "name": z.name,
+        "before": z.before,
+        "after": z.after,
+        "change": z.change,
+        "drivers": z.drivers.iter().map(|d| serde_json::json!({
+            "name": d.what,
+            "lines": d.changes.iter().map(|c| serde_json::json!({
+                "cause": c.cause,
+                "amount": c.amount,
+                "effect": effect_word(c.effect),
+            })).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
+    })
+}
+
+/// Stvarni lipanj i srpanj: kad se Zaposlenici pomaknu, barem jedan redak pod njima ima smjer.
+#[test]
+fn real_months_colour_a_cause_under_staff_index() {
+    let (g, h) = july_resolved_bad_chef_game();
+    for m in [Month::Jun, Month::Jul] {
+        let input = g.debrief_input(h, m).unwrap();
+        let f = debrief_facts(&input);
+        let block = staff_block(&f);
+        // Za izvještaj: `cargo test -p game --test mentor -- --nocapture real_months`.
+        println!("{m:?}\n{}", serde_json::to_string_pretty(&block).unwrap());
+        let z = f.indices.iter().find(|i| i.name == "Zaposlenici").unwrap();
+        if z.change != 0 {
+            assert!(
+                z.drivers
+                    .iter()
+                    .flat_map(|d| &d.changes)
+                    .any(|c| c.effect != Effect::Neutral),
+                "{m:?}: Zaposlenici {:+} bez obojanog uzroka: {block}",
+                z.change
+            );
+        }
+        for c in f
+            .indices
+            .iter()
+            .flat_map(|i| &i.drivers)
+            .flat_map(|d| &d.changes)
+        {
+            assert_eq!(c.harm > 0, c.effect == Effect::Down, "{}", c.cause);
+        }
+        assert_human_facts(&facts_json(&input));
+        assert_human(&fallback_debrief(&input));
+    }
 }
 
 #[test]

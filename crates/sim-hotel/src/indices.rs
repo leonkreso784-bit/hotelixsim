@@ -58,6 +58,13 @@ pub fn load_penalty(load_hundredths: u16) -> Calc<i32> {
     c::narrow(c::mul(100, over)?.clamp(0, 6_000))
 }
 
+/// Zadržavanje osoblja u stotinkama boda (0–10 000): 10 000 − 12,5 po bazi stope odlazaka. Nosi 40 % Z;
+/// ista formula za indeks i mentora.
+pub fn retention(turnover_bp: u16) -> Calc<i32> {
+    let lost = c::div_round(c::mul(25, w(turnover_bp))?, 2)?;
+    c::narrow(c::sub(10_000, lost)?.clamp(0, 10_000))
+}
+
 /// Koji pokretači ulaze u koji indeks u `raw_indices`, da mentor zna što je pokrenulo indeks.
 /// `Staff` stoji uz Z jer odlasci (`turnover_bp`) ulaze u zadržavanje; prodaja i broj ljudi u Operativu
 /// ulaze preko opterećenja. Testovi drže popis uz formulu.
@@ -79,8 +86,7 @@ pub fn raw_indices(
     ref_goppar_cents: i64,
     cat: &Catalog,
 ) -> Calc<RawIndices> {
-    let retention =
-        c::sub(10_000, c::div_round(c::mul(25, w(s.turnover_bp))?, 2)?)?.clamp(0, 10_000);
+    let retention = w(retention(s.turnover_bp)?);
     let penalty = w(load_penalty(s.load_hundredths)?);
     let floor = w(cat.economy.goppar_floor_cents);
     let diff = c::sub(w(goppar_cents), w(ref_goppar_cents))?;
