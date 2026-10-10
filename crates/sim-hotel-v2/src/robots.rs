@@ -1,10 +1,11 @@
-//! Roboti v2 (kopija v1 `Strategy::plan`, DEMO §10): plan kruga za svaku strategiju. Izbor odgovora na
+//! Roboti v2 (v1 `Strategy::plan` za krug, DEMO §10): plan kruga za svaku strategiju. Izbor odgovora na
 //! situacije ostaje v1 `Strategy::choose`. Sva slučajnost dolazi iz predanog `Rng`-a.
 
 use engine::Rng;
 use engine::calc::{self as c, Calc, CalcError};
-use sim_hotel::{Maintenance, Month, Strategy, Training, euro_bounds};
+use sim_hotel::{Maintenance, Strategy, Training, euro_bounds};
 
+use crate::calendar::{Period, avg_i64, avg_u16, prorate};
 use crate::catalog::Catalog;
 use crate::plan::PeriodPlan;
 use crate::resolve::ResolveError;
@@ -33,38 +34,36 @@ fn price_for_pct(pct: i128, reference: i128, min_pct: i128, max_pct: i128) -> Ca
     c::narrow(c::mul(euros.max(lo).min(hi.max(lo)), 100)?)
 }
 
-/// Dopušteni raspon sezonaca za sljedeći plan (v1 `seasonal_range` nad v2 stanjem).
-fn seasonal_range(state: &HotelState, cat: &Catalog) -> (u16, u16) {
-    let a = &cat.base.actions;
-    let lo = state.seasonal.saturating_sub(a.seasonal_step);
-    let hi = state
-        .seasonal
-        .saturating_add(a.seasonal_step)
-        .min(a.seasonal_max);
+/// Dopušteni raspon sezonaca za sljedeći plan (korak je koeficijent vrste kruga).
+fn seasonal_range(state: &HotelState, step: u16, seasonal_max: u16) -> (u16, u16) {
+    let lo = state.seasonal.saturating_sub(step);
+    let hi = state.seasonal.saturating_add(step).min(seasonal_max);
     (lo, hi)
 }
 
 pub fn robot_plan(
     strategy: Strategy,
     s: &HotelState,
-    m: Month,
+    p: &Period,
     cat: &Catalog,
     rng: &mut Rng,
 ) -> Result<PeriodPlan, ResolveError> {
     let spec = cat.base.category(s.category)?;
     let a = &cat.base.actions;
-    let reference = i128::from(spec.price_ref_cents.get(m));
+    let reference = i128::from(avg_i64(&spec.price_ref_cents, p)?);
     let (min_pct, max_pct) = (i128::from(a.price_min_pct), i128::from(a.price_max_pct));
     let fixed_price = |pct: i128| price_for_pct(pct, reference, min_pct, max_pct);
     let wage = |w: u16| w.max(a.wage_min_pct).min(a.wage_max_pct);
-    let market = |v: i64| v.max(0).min(a.marketing_max_cents);
-    let (s_lo, s_hi) = seasonal_range(s, cat);
+    // Marketing iz kataloga i strategija su mjesečni iznosi; plan je za krug, pa idu razmjerno.
+    let marketing_max = prorate(a.marketing_max_cents, p)?;
+    let market = |v: i64| v.max(0).min(marketing_max);
+    let (s_lo, s_hi) = seasonal_range(s, cat.coeffs(p.kind)?.seasonal_step, a.seasonal_max);
 
     let mut plan = match strategy {
         Strategy::Saver => PeriodPlan {
             price_cents: fixed_price(100)?,
             marketing_cents: 0,
-            seasonal_target: spec.seasonal_plan.get(m).saturating_sub(5),
+            seasonal_target: avg_u16(&spec.seasonal_plan, p)?.saturating_sub(5),
             wage_pct: wage(95),
             training: Training::None,
             maintenance: Maintenance::Deferred,
@@ -74,13 +73,13 @@ pub fn robot_plan(
         Strategy::Caring => {
             let rooms_bp = c::mul(
                 i128::from(s.rooms),
-                i128::from(spec.base_occupancy_bp.get(m)),
+                i128::from(avg_u16(&spec.base_occupancy_bp, p)?),
             )?;
             let need = c::div_floor(c::add(rooms_bp, 17_999)?, 18_000)?;
             let target = c::sub(need, i128::from(s.permanent))?.max(0);
             PeriodPlan {
                 price_cents: fixed_price(105)?,
-                marketing_cents: market(500_000),
+                marketing_cents: market(prorate(500_000, p)?),
                 seasonal_target: u16::try_from(target).unwrap_or(u16::MAX),
                 wage_pct: wage(103),
                 training: Training::Basic,
@@ -91,7 +90,7 @@ pub fn robot_plan(
         }
         Strategy::OccupancyHunter => PeriodPlan {
             price_cents: fixed_price(85)?,
-            marketing_cents: market(2_500_000),
+            marketing_cents: market(prorate(2_500_000, p)?),
             seasonal_target: s.seasonal,
             wage_pct: wage(100),
             training: Training::None,
@@ -102,7 +101,7 @@ pub fn robot_plan(
         Strategy::Random => {
             let (lo, hi) = euro_bounds(reference, min_pct, max_pct)?;
             let euros = uniform(rng, to_u64(lo)?, to_u64(hi)?)?;
-            let steps = a.marketing_max_cents.checked_div(100_000).unwrap_or(0);
+            let steps = marketing_max.checked_div(100_000).unwrap_or(0);
             let mkt_steps = uniform(rng, 0, to_u64(i128::from(steps))?)?;
             let seasonal = uniform(rng, u64::from(s_lo), u64::from(s_hi))?;
             let wage_pct = uniform(rng, u64::from(a.wage_min_pct), u64::from(a.wage_max_pct))?;

@@ -23,9 +23,10 @@ pub mod streams;
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{Catalog, PeriodCoefficients, degenerate};
 pub use indices::{RefTable, period_indices, start_indices};
-pub use plan::{PeriodPlan, PlanError};
-pub use resolve::{PeriodReport, ResolveError};
-pub use season::{SeasonResult, run_season, run_season_with};
+pub use plan::{PeriodPlan, PlanError, PlanLimits};
+pub use resolve::{PeriodReport, ResolveError, resolve_period};
+pub use robots::robot_plan;
+pub use season::{SeasonResult, run_season, run_season_with, situations_for};
 pub use sim_hotel::{
     CatalogError, Category, Cause, Effects, GroupBlock, GuestOutcome, Index, IndexSet, Line,
     Maintenance, MarketOutcome, Mechanic, MechanicError, MoneyOutcome, Month, MonthReport,

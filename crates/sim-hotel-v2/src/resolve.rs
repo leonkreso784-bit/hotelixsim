@@ -1,17 +1,17 @@
-//! Obračun kruga u fazama (kopija v1 obračuna mjeseca, DEMO §3, ADR-013 t. 4): osoblje, tržište, ljudi,
-//! novac, oprema i gosti. Svaka faza je privatna funkcija s vlastitim ulazom i izlazom; `resolve_month` ih
-//! samo slaže, piše objašnjenje (`lines`) i uz v2 stanje daje v1 sažetak (`PeriodReport::summary`).
-//! Task 3 pretvara mjesec u razdoblje.
+//! Obračun kruga u fazama (DEMO §3, ADR-013 t. 4): osoblje, tržište, ljudi, novac, oprema i gosti. Svaka faza je
+//! privatna funkcija s vlastitim ulazom i izlazom; `resolve_period` ih samo slaže, piše objašnjenje (`lines`) i uz
+//! v2 stanje daje v1 sažetak (`PeriodReport::summary`). Krug je tjedan ili mjesec: mjesečni iznosi (plaće, fiksno,
+//! održavanje, obuka, trošenje opreme, rast iskustva, odgovaranje) idu razmjerno (`prorate`), jednokratni (obnova,
+//! situacije, najam zaposlenika) u punom iznosu; u mjesečnom krugu svako pravilo daje točno v1 vrijednost.
 
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{
     CatalogError, CategorySpec, Effects, GuestOutcome, LevelEffect, MechanicError, MoneyOutcome,
-    Month, MonthReport, Pending, PeopleOutcome, SituationOutcome, TrainingEffect, effects,
-    turnover_bp,
+    MonthReport, Pending, PeopleOutcome, SituationOutcome, TrainingEffect, effects, turnover_bp,
 };
 use sim_hotel::{Maintenance, MarketOutcome, Training};
 
-use crate::calendar::{Period, month_period};
+use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
 use crate::explain::{Explain, Lines, explain};
 use crate::market::market;
@@ -78,8 +78,9 @@ pub(crate) fn neg(x: i128) -> Calc<i128> {
     c::sub(0, x)
 }
 
-fn training_effect(t: Training, cat: &sim_hotel::Catalog) -> TrainingEffect {
-    match t {
+/// Obuka za krug: trošak i oba odgođena učinka razmjerno krugu (mjesečni iznosi iz kataloga).
+fn training_effect(t: Training, cat: &sim_hotel::Catalog, p: &Period) -> Calc<TrainingEffect> {
+    let monthly = match t {
         Training::None => TrainingEffect {
             cost_cents: 0,
             experience_pts: 0,
@@ -87,15 +88,25 @@ fn training_effect(t: Training, cat: &sim_hotel::Catalog) -> TrainingEffect {
         },
         Training::Basic => cat.actions.training_basic.clone(),
         Training::Full => cat.actions.training_full.clone(),
-    }
+    };
+    Ok(TrainingEffect {
+        cost_cents: prorate(monthly.cost_cents, p)?,
+        experience_pts: c::narrow(w(prorate(i64::from(monthly.experience_pts), p)?))?,
+        morale_pts: c::narrow(w(prorate(i64::from(monthly.morale_pts), p)?))?,
+    })
 }
 
-fn maintenance_effect(m: Maintenance, cat: &sim_hotel::Catalog) -> LevelEffect {
-    match m {
+/// Održavanje za krug: trošak i bodovi razine razmjerno krugu.
+fn maintenance_effect(m: Maintenance, cat: &sim_hotel::Catalog, p: &Period) -> Calc<LevelEffect> {
+    let monthly = match m {
         Maintenance::Deferred => cat.actions.maintenance_deferred.clone(),
         Maintenance::Regular => cat.actions.maintenance_regular.clone(),
         Maintenance::Intensive => cat.actions.maintenance_intensive.clone(),
-    }
+    };
+    Ok(LevelEffect {
+        cost_cents: prorate(monthly.cost_cents, p)?,
+        equipment_pts: c::narrow(w(prorate(i64::from(monthly.equipment_pts), p)?))?,
+    })
 }
 
 // ---------------------------------------------------------------- faza 1: osoblje
@@ -136,6 +147,8 @@ pub(crate) struct PeopleStep {
     pub(crate) penalty: i128,
     pub(crate) load: i128,
     pub(crate) release_morale: i128,
+    /// Rast iskustva u ovom krugu (mjesečnih +300 razmjerno).
+    pub(crate) growth: i128,
 }
 
 struct PeopleIn<'a> {
@@ -144,18 +157,20 @@ struct PeopleIn<'a> {
     hires: u16,
     released: u16,
     sold: u32,
-    days: u8,
+    period: &'a Period,
+    morale_step_bp: u16,
     wage_pct: u16,
     pend: &'a Pending,
     sit_morale: i128,
 }
 
 fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
+    let days = w(i.period.days);
     let staff = w(i.staff);
     let load = if staff == 0 {
         300
     } else {
-        c::div_round(c::mul(w(i.sold), 100)?, c::mul(staff, w(i.days))?)?.clamp(0, 300)
+        c::div_round(c::mul(w(i.sold), 100)?, c::mul(staff, days)?)?.clamp(0, 300)
     };
     let penalty = c::mul(100, c::sub(load, 180)?)?.clamp(0, 6_000);
     let release_morale = if i.released > 0 {
@@ -174,10 +189,18 @@ fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
     ])?
     .clamp(0, 10_000);
     let morale_now = w(i.state.morale_pts);
-    let morale_gain = c::div_round(c::mul(3_000, c::sub(morale_target, morale_now)?)?, 10_000)?;
+    let morale_gain = c::div_round(
+        c::mul(w(i.morale_step_bp), c::sub(morale_target, morale_now)?)?,
+        10_000,
+    )?;
     let morale = c::add(morale_now, morale_gain)?.clamp(0, 10_000);
     let turnover = turnover_bp(c::narrow(morale)?)?;
-    let departures = c::div_round(c::mul(staff, w(turnover))?, 10_000)?.clamp(0, staff);
+    // Odlasci: mjesečna stopa odlazaka razmjerno danima kruga (nazivnik su dani mjeseca u kojem krug počinje).
+    let departures = c::div_round(
+        c::mul(c::mul(staff, w(turnover))?, days)?,
+        c::mul(10_000, w(i.period.month_days_at_start()))?,
+    )?
+    .clamp(0, staff);
     let replaced = c::add(departures, w(i.hires))?.min(staff);
     let exp_now = w(i.state.experience_pts);
     let exp_mix = if staff == 0 {
@@ -191,7 +214,9 @@ fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
             staff,
         )?
     };
-    let experience = c::sum(&[exp_mix, 300, w(i.pend.experience_pts)])?.clamp(0, 10_000);
+    // v1 mjesečna konstanta +300, razmjerno krugu.
+    let growth = w(prorate(300, i.period)?);
+    let experience = c::sum(&[exp_mix, growth, w(i.pend.experience_pts)])?.clamp(0, 10_000);
     Ok(PeopleStep {
         out: PeopleOutcome {
             hires: i.hires,
@@ -209,6 +234,7 @@ fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
         penalty,
         load,
         release_morale,
+        growth,
     })
 }
 
@@ -224,6 +250,7 @@ pub(crate) struct MoneyStep {
     pub(crate) maintenance_cost: i128,
     pub(crate) reply_cost: i128,
     pub(crate) other: i128,
+    pub(crate) fixed: i128,
 }
 
 struct MoneyIn<'a> {
@@ -234,11 +261,12 @@ struct MoneyIn<'a> {
     staff: u16,
     hires: u16,
     departures: u16,
-    days: u8,
+    period: &'a Period,
     sit_cost: i128,
 }
 
 fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
+    let p = i.period;
     let spec = i.spec;
     let m = i.market;
     let rooms_revenue = c::add(
@@ -250,20 +278,22 @@ fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         10_000,
     )?;
     let wage_unit = c::div_floor(w(spec.wage_cents), 100)?;
-    let wage = c::add(
+    let monthly_wage = c::add(
         c::mul(c::mul(w(i.staff), wage_unit)?, w(i.plan.wage_pct))?,
         w(i.state.extra_wage_cents),
     )?;
+    let wage = w(prorate(c::narrow(monthly_wage)?, p)?);
     let hire_cost = c::mul(
         c::add(w(i.hires), w(i.departures))?,
         w(cat.economy.hire_cents),
     )?;
-    let training_cost = w(training_effect(i.plan.training, cat).cost_cents);
+    let training_cost = w(training_effect(i.plan.training, cat, p)?.cost_cents);
     let labor = c::sum(&[wage, hire_cost, training_cost])?;
     let cpor_total = c::mul(w(spec.cpor_cents), w(m.sold))?;
-    let maintenance_cost = w(maintenance_effect(i.plan.maintenance, cat).cost_cents);
+    let maintenance_cost = w(maintenance_effect(i.plan.maintenance, cat, p)?.cost_cents);
+    let fixed = w(prorate(i.state.fixed_cents, p)?);
     let reply_cost = if i.plan.reply_reviews {
-        w(cat.actions.reply_cents)
+        w(prorate(cat.actions.reply_cents, p)?)
     } else {
         0
     };
@@ -272,7 +302,7 @@ fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         cpor_total,
         maintenance_cost,
         w(i.plan.marketing_cents),
-        w(i.state.fixed_cents),
+        fixed,
         reply_cost,
         i.sit_cost,
     ])?;
@@ -285,10 +315,15 @@ fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
     let mut cash = c::sub(c::add(w(i.state.cash_cents), gop)?, capex)?;
     let mut interest = 0;
     if cash < 0 {
-        interest = c::mul_div(neg(cash)?, w(cat.economy.interest_bp), 10_000)?;
+        // Mjesečna kamata razmjerno danima kruga (nazivnik su dani mjeseca u kojem krug počinje).
+        interest = c::mul_div(
+            c::mul(neg(cash)?, w(cat.economy.interest_bp))?,
+            w(p.days),
+            c::mul(10_000, w(p.month_days_at_start()))?,
+        )?;
         cash = c::sub(cash, interest)?;
     }
-    let goppar = c::div_round(gop, c::mul(w(i.state.rooms), w(i.days))?)?;
+    let goppar = c::div_round(gop, c::mul(w(i.state.rooms), w(p.days))?)?;
     Ok(MoneyStep {
         out: MoneyOutcome {
             rooms_revenue_cents: c::narrow(rooms_revenue)?,
@@ -308,6 +343,7 @@ fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         maintenance_cost,
         reply_cost,
         other,
+        fixed,
     })
 }
 
@@ -325,12 +361,17 @@ pub(crate) struct GuestStep {
     pub(crate) reply_rating: i128,
     pub(crate) satisfaction_gain: i128,
     pub(crate) rating_gain: i128,
+    /// Trošenje opreme u ovom krugu (mjesečnih -400 razmjerno).
+    pub(crate) wear: i128,
 }
 
 struct GuestIn<'a> {
     state: &'a HotelState,
     plan: &'a PeriodPlan,
     pend: &'a Pending,
+    period: &'a Period,
+    satisfaction_step_bp: u16,
+    rating_step_bp: u16,
     price_ref_cents: i64,
     load: i128,
     penalty: i128,
@@ -342,8 +383,15 @@ struct GuestIn<'a> {
 }
 
 fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
-    let maintenance_eff = w(maintenance_effect(i.plan.maintenance, cat).equipment_pts);
-    let equipment_load = if i.load > 180 { -100 } else { 0 };
+    let p = i.period;
+    let maintenance_eff = w(maintenance_effect(i.plan.maintenance, cat, p)?.equipment_pts);
+    // v1 mjesečna konstanta -400, razmjerno krugu.
+    let wear = w(prorate(-400, p)?);
+    let equipment_load = if i.load > 180 {
+        w(prorate(-100, p)?)
+    } else {
+        0
+    };
     let (renovation_equipment, renovation_satisfaction) = if i.pend.renovation {
         (
             w(cat.actions.renovation_equipment_pts),
@@ -354,7 +402,7 @@ fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     };
     let equipment = c::sum(&[
         w(i.state.equipment_pts),
-        -400,
+        wear,
         equipment_load,
         maintenance_eff,
         renovation_equipment,
@@ -384,7 +432,10 @@ fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         10_000,
     )?;
     let sat_now = w(i.state.satisfaction_pts);
-    let satisfaction_gain = c::div_round(c::mul(5_000, c::sub(sat_target, sat_now)?)?, 10_000)?;
+    let satisfaction_gain = c::div_round(
+        c::mul(w(i.satisfaction_step_bp), c::sub(sat_target, sat_now)?)?,
+        10_000,
+    )?;
     let satisfaction = c::sum(&[
         sat_now,
         satisfaction_gain,
@@ -394,9 +445,12 @@ fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     .clamp(0, 10_000);
     let rating_target = c::div_round(c::add(14_000, satisfaction)?, 25)?;
     let rating_now = w(i.state.rating);
-    let rating_gain = c::div_round(c::mul(2_500, c::sub(rating_target, rating_now)?)?, 10_000)?;
+    let rating_gain = c::div_round(
+        c::mul(w(i.rating_step_bp), c::sub(rating_target, rating_now)?)?,
+        10_000,
+    )?;
     let reply_rating = if i.plan.reply_reviews {
-        w(cat.actions.reply_rating)
+        w(prorate(i64::from(cat.actions.reply_rating), p)?)
     } else {
         0
     };
@@ -418,21 +472,29 @@ fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         reply_rating,
         satisfaction_gain,
         rating_gain,
+        wear,
     })
 }
 
 // ---------------------------------------------------------------- slaganje
 
-pub fn resolve_month(
+/// Grupa za mjesec `m` je obračunana kad krug završi taj mjesec ili kasniji (blokada se iz stanja briše tada).
+fn group_done(m: sim_hotel::Month, p: &Period) -> bool {
+    p.parts()
+        .last()
+        .is_some_and(|last| m < last.month || (m == last.month && p.ends_month()))
+}
+
+pub fn resolve_period(
     state: &HotelState,
-    month: Month,
+    p: &Period,
     plan: &PeriodPlan,
     situations: &[SituationOutcome],
     cat: &Catalog,
 ) -> Result<PeriodReport, ResolveError> {
-    plan.validate(state, month, cat)?;
+    plan.validate(state, p, cat)?;
     let base = &cat.base;
-    let days = month.days();
+    let coeffs = cat.coeffs(p.kind)?;
     let pend = state.pending.clone();
     let spec = base.category(state.category)?;
 
@@ -446,8 +508,9 @@ pub fn resolve_month(
         i128,
         i128,
     ) = (0, 0, 0, 0, 0, 0);
+    let mut shown_extra: i128 = 0;
     for o in situations {
-        let e = effects(o, month, base, state.category)?;
+        let e = effects(o, p.start_month(), base, state.category)?;
         sat = c::add(sat, w(e.satisfaction_pts))?;
         morale = c::add(morale, w(e.morale_pts))?;
         rating = c::add(rating, w(e.rating))?;
@@ -455,15 +518,19 @@ pub fn resolve_month(
         cost = c::add(cost, w(e.cost_cents))?;
         extra = c::add(extra, w(e.extra_wage_cents))?;
         new_groups.extend(e.groups.iter().cloned());
-        sits.push((o.code.clone(), e));
+        // Trajne povišice plaća razmjerno krugu (kao i ostale plaće); ostali učinci situacija su jednokratni.
+        let mut shown = e;
+        shown.extra_wage_cents = prorate(shown.extra_wage_cents, p)?;
+        shown_extra = c::add(shown_extra, w(shown.extra_wage_cents))?;
+        sits.push((o.code.clone(), shown));
     }
 
     let st = staffing(state, plan)?;
     let mut s = st.state;
     s.groups.extend(new_groups);
     s.extra_wage_cents = c::narrow(c::add(w(s.extra_wage_cents), extra)?)?;
-    let mkt = market(&s, month, plan, st.staff, base)?;
-    s.groups.retain(|g| g.month != month);
+    let mkt = market(&s, p, plan, st.staff, base)?;
+    s.groups.retain(|g| !group_done(g.month, p));
 
     let pe = people(
         &PeopleIn {
@@ -472,7 +539,8 @@ pub fn resolve_month(
             hires: st.hires,
             released: st.released,
             sold: mkt.sold,
-            days,
+            period: p,
+            morale_step_bp: coeffs.morale_step_bp,
             wage_pct: plan.wage_pct,
             pend: &pend,
             sit_morale: morale,
@@ -488,7 +556,7 @@ pub fn resolve_month(
             staff: st.staff,
             hires: st.hires,
             departures: pe.out.departures,
-            days,
+            period: p,
             sit_cost: cost,
         },
         base,
@@ -498,7 +566,10 @@ pub fn resolve_month(
             state: &s,
             plan,
             pend: &pend,
-            price_ref_cents: spec.price_ref_cents.get(month),
+            period: p,
+            satisfaction_step_bp: coeffs.satisfaction_step_bp,
+            rating_step_bp: coeffs.rating_step_bp,
+            price_ref_cents: avg_i64(&spec.price_ref_cents, p)?,
             load: pe.load,
             penalty: pe.penalty,
             morale: pe.morale,
@@ -522,7 +593,7 @@ pub fn resolve_month(
             money: &mo,
             guests: &gu,
             situations: &sits,
-            sit_extra_wage: extra,
+            sit_extra_wage: shown_extra,
         },
     )?;
 
@@ -536,7 +607,7 @@ pub fn resolve_month(
     after.load_hundredths = pe.out.load_hundredths;
     after.turnover_bp = pe.out.turnover_bp;
     after.renovated = after.renovated || plan.renovation;
-    let training = training_effect(plan.training, base);
+    let training = training_effect(plan.training, base, p)?;
     after.pending = Pending {
         experience_pts: training.experience_pts,
         morale_pts: training.morale_pts,
@@ -544,7 +615,7 @@ pub fn resolve_month(
     };
 
     let summary = MonthReport {
-        month,
+        month: p.start_month(),
         before: state.summary(),
         after: after.summary(),
         market: mkt,
@@ -554,7 +625,7 @@ pub fn resolve_month(
         lines: lines.0,
     };
     Ok(PeriodReport {
-        period: month_period(month),
+        period: *p,
         before: state.clone(),
         after,
         summary,
