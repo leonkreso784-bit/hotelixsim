@@ -1960,6 +1960,7 @@
           "sold_nights",
           "lost_nights",
           "occupancy_bp",
+          "sellable_occupancy_bp",
           "adr_cents",
           "revpar_cents",
           "rooms_revenue_cents",
@@ -1987,14 +1988,15 @@
               "null"
             ],
             "format": "int64",
-            "description": "Popunjenost pri kojoj bi GOP bio nula, uz isti ADR i iste fiksne troškove; može biti iznad 10 000."
+            "description": "Najniža popunjenost (zaokruženo naviše) pri kojoj GOP nije negativan, uz isti ADR i iste ostale troškove;\nmože biti iznad `sellable_occupancy_bp` i iznad 10 000."
           },
           "cpor_cents": {
             "type": [
               "integer",
               "null"
             ],
-            "format": "int64"
+            "format": "int64",
+            "description": "Izravni trošak po prodanoj noći iz kategorije hotela (katalog, bez plaća; isti svaki mjesec). Nije USALI\nCPOR (svi troškovi odjela soba, i plaće) — taj stiže sa slojem 1; ime polja ostaje zbog kompatibilnosti."
           },
           "gop_cents": {
             "type": "integer",
@@ -2057,6 +2059,14 @@
           "rooms_revenue_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "sellable_occupancy_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Najviša moguća popunjenost: sobe u funkciji × dani ÷ sve noći."
           },
           "sold_nights": {
             "type": "integer",

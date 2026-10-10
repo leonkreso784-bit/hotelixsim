@@ -15,6 +15,7 @@ const julKpi = kpiMonth({
   sold_nights: 3100,
   lost_nights: 0,
   occupancy_bp: 8333,
+  sellable_occupancy_bp: 10_000,
   adr_cents: 15_010,
   break_even_occupancy_bp: 12_121,
 });
@@ -36,7 +37,7 @@ describe("Pokazatelji", () => {
     expect(cols).toEqual(["Pokazatelj", "Lipanj", "Srpanj"]);
     expect(table.closest("section")?.className).toMatch(/ hidden .*lg:block/);
     const rows = within(table).getAllByRole("row");
-    expect(rows).toHaveLength(13);
+    expect(rows).toHaveLength(16);
     const adr = within(table).getByRole("rowheader", { name: /^ADR/ });
     expect(adr.textContent).toContain("Prosječna cijena prodane sobe: prihod od soba ÷ prodane noći.");
     const adrRow = adr.closest("tr") as HTMLElement;
@@ -55,16 +56,50 @@ describe("Pokazatelji", () => {
       .getByRole("rowheader", { name: /^Točka pokrića/ })
       .closest("tr") as HTMLElement;
     expect(within(be).getByText("52,4 %")).toBeTruthy();
+    // Ukupni iznosi u eurima, svaki sa svojom rečenicom.
+    const money = (name: RegExp) =>
+      within(table).getByRole("rowheader", { name }).closest("tr") as HTMLElement;
+    expect(within(money(/^Prihod od soba/)).getAllByText("324.238 €")).toHaveLength(2);
+    expect(within(money(/^Ukupni prihod/)).getAllByText("421.509 €")).toHaveLength(2);
+    expect(within(money(/^Trošak rada/)).getAllByText("113.000 €")).toHaveLength(2);
+    expect(within(money(/Bruto operativna dobit/)).getAllByText("116.500 €")).toHaveLength(2);
+    const direct = within(table).getByRole("rowheader", { name: /^Izravni trošak po prodanoj noći/ });
+    expect(direct.textContent).toContain("ne uključuje plaće");
+    expect(within(direct.closest("tr") as HTMLElement).getAllByText("22,00 €")).toHaveLength(2);
+    expect(within(table).queryByText("CPOR")).toBeNull();
   });
 
   it("točka pokrića rečenicom, i kad je iznad punog hotela", async () => {
     renderApp(withKpi([kpiMonth(), julKpi]), "/pokazatelji");
     expect(
-      await screen.findAllByText("GOP je nula pri popunjenosti od 52,4 %; ti si bio na 68 %."),
+      await screen.findAllByText("GOP je nula pri popunjenosti od 52,4 %; tvoja popunjenost bila je 68 %."),
     ).not.toHaveLength(0);
     expect(
       screen.getAllByText(
-        "GOP bi bio nula tek pri popunjenosti od 121,2 %, više od punog hotela; ti si bio na 83,3 %.",
+        "GOP bi bio nula tek pri popunjenosti od 121,2 %, a sobe u funkciji dopuštaju najviše 100 %; tvoja popunjenost bila je 83,3 %.",
+      ),
+    ).not.toHaveLength(0);
+  });
+
+  it("točka pokrića ispod 100 %, ali iznad onoga što sobe u funkciji dopuštaju", async () => {
+    renderApp(withKpi([kpiMonth({ break_even_occupancy_bp: 9900 })]), "/pokazatelji");
+    expect(
+      await screen.findAllByText(
+        "GOP bi bio nula tek pri popunjenosti od 99 %, a sobe u funkciji dopuštaju najviše 98,3 %; tvoja popunjenost bila je 68 %.",
+      ),
+    ).not.toHaveLength(0);
+  });
+
+  it("GOP pozitivan i bez prodaje: posebna rečenica", async () => {
+    renderApp(withKpi([kpiMonth({ break_even_occupancy_bp: 0 })]), "/pokazatelji");
+    expect(await screen.findAllByText("GOP je pozitivan i bez prodaje.")).not.toHaveLength(0);
+  });
+
+  it("prodaja koja ne pokriva izravni trošak: točka pokrića se ne može izračunati", async () => {
+    renderApp(withKpi([kpiMonth({ break_even_occupancy_bp: null })]), "/pokazatelji");
+    expect(
+      await screen.findAllByText(
+        "Točka pokrića se ne može izračunati: prodaja nije pokrila ni izravni trošak soba.",
       ),
     ).not.toHaveLength(0);
   });
@@ -75,7 +110,7 @@ describe("Pokazatelji", () => {
     const card = jun.closest("section") as HTMLElement;
     expect(card.parentElement?.className).toContain("lg:hidden");
     const items = within(card).getAllByRole("term");
-    expect(items).toHaveLength(12);
+    expect(items).toHaveLength(15);
     expect(within(card).getByText("RevPAR")).toBeTruthy();
     expect(within(card).getByText("90,07 €")).toBeTruthy();
     expect(
@@ -83,11 +118,13 @@ describe("Pokazatelji", () => {
         "Prihod od soba po svakoj sobi hotela: prihod od soba ÷ (sve sobe × dani), isto što i ADR × popunjenost.",
       ),
     ).toBeTruthy();
-    expect(within(card).getByText("GOP je nula pri popunjenosti od 52,4 %; ti si bio na 68 %.")).toBeTruthy();
+    expect(
+      within(card).getByText("GOP je nula pri popunjenosti od 52,4 %; tvoja popunjenost bila je 68 %."),
+    ).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Srpanj" })).toBeTruthy();
   });
 
-  it("mjesec bez prodaje: crtica umjesto ADR-a, točka pokrića se ne može izračunati", async () => {
+  it("mjesec bez prodaje: crtica umjesto ADR-a i rečenica da prodaje nije bilo", async () => {
     const empty = kpiMonth({
       sold_nights: 0,
       occupancy_bp: 0,
@@ -101,11 +138,7 @@ describe("Pokazatelji", () => {
     const table = await screen.findByRole("table");
     const adrRow = within(table).getByRole("rowheader", { name: /^ADR/ }).closest("tr") as HTMLElement;
     expect(within(adrRow).getByText("—")).toBeTruthy();
-    expect(
-      screen.getAllByText(
-        "Točka pokrića se ne može izračunati: prodaja nije pokrila ni izravni trošak soba.",
-      ),
-    ).not.toHaveLength(0);
+    expect(screen.getAllByText("U mjesecu nije bilo prodaje.")).not.toHaveLength(0);
   });
 
   it("prije prvog obračuna: prazno stanje, bez tablice", async () => {

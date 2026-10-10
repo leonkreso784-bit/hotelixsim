@@ -26,7 +26,7 @@ pub struct KpiInput {
     /// Svi operativni troškovi mjeseca (zbroj kojim obračun dolazi do GOP-a).
     pub costs_cents: i64,
     pub gop_cents: i64,
-    /// Izravni trošak po prodanoj noći (`cpor_cents` kategorije u katalogu).
+    /// Izravni trošak po prodanoj noći (`cpor_cents` kategorije u katalogu; bez plaća).
     pub cpor_cents: i64,
 }
 
@@ -57,6 +57,8 @@ pub struct MonthKpi {
     pub lost_nights: u32,
     /// Prodane noći ÷ sve noći.
     pub occupancy_bp: Option<i64>,
+    /// Najviša moguća popunjenost: sobe u funkciji × dani ÷ sve noći (izgubljene noći se ne mogu prodati).
+    pub sellable_occupancy_bp: Option<i64>,
     /// Prihod od soba ÷ prodane noći (prosječna cijena prodane sobe).
     pub adr_cents: Option<i64>,
     /// Prihod od soba ÷ sve noći.
@@ -74,9 +76,11 @@ pub struct MonthKpi {
     pub labor_cents: i64,
     /// Trošak rada ÷ ukupni prihod.
     pub labor_share_bp: Option<i64>,
-    /// Izravni trošak soba ÷ prodane noći.
+    /// Izravni trošak po prodanoj noći iz kategorije hotela (katalog; ne uključuje plaće), dakle isti svaki mjesec.
+    /// USALI CPOR uključuje sve troškove odjela soba (i plaće domaćinstva i recepcije) — stiže sa slojem 1.
     pub cpor_cents: Option<i64>,
-    /// Popunjenost pri kojoj bi GOP bio nula (vidi `break_even_bp`); može biti i iznad 10 000.
+    /// Najniža popunjenost (bp, zaokruženo naviše) pri kojoj GOP nije negativan (vidi `break_even_bp`); može biti
+    /// i iznad `sellable_occupancy_bp` ili 10 000.
     pub break_even_occupancy_bp: Option<i64>,
 }
 
@@ -105,8 +109,19 @@ fn ratio(a: i128, b: i128) -> Calc<Option<i64>> {
     Ok(Some(c::narrow(c::div_round(a, b)?)?))
 }
 
+/// `a / b` zaokruženo naviše, za `a ≥ 0` i `b > 0`.
+fn ratio_up(a: i128, b: i128) -> Calc<Option<i64>> {
+    if b <= 0 {
+        return Ok(None);
+    }
+    Ok(Some(c::narrow(c::div_floor(
+        c::add(a, c::sub(b, 1)?)?,
+        b,
+    )?)?))
+}
+
 /// Točka pokrića: popunjenost (bp) pri kojoj je GOP = 0, uz **isti ADR** (i isti udio ostalog prihoda) i
-/// **iste troškove koji ne ovise o prodanim noćima**.
+/// **iste troškove koji ne ovise o prodanim noćima** (plaće, održavanje, marketing… ostaju isti).
 ///
 /// ```text
 /// izravno   = CPOR × prodano                 (jedini trošak koji raste s prodanim noćima)
@@ -114,8 +129,10 @@ fn ratio(a: i128, b: i128) -> Calc<Option<i64>> {
 /// fiksno    = troškovi − izravno             (plaće, održavanje, marketing, fiksni troškovi…)
 /// GOP(x)    = x × doprinos / prodano − fiksno, za x prodanih noći
 /// GOP(x)=0  ⇒ x* = fiksno × prodano / doprinos
-/// pokriće   = x* / sve noći = fiksno × prodano × 10 000 / (doprinos × sve noći)   [bp]
+/// pokriće   = x* / sve noći = fiksno × prodano × 10 000 / (doprinos × sve noći)   [bp, naviše]
 /// ```
+///
+/// Zaokružuje se **naviše**: na pragu GOP nije negativan, a bazni bod niže jest.
 ///
 /// `None` kad nema prodaje, soba ili kad prodaja ne donosi pozitivan doprinos (nikad se ne pokriva);
 /// 0 kad fiksni troškovi nisu pozitivni (GOP je pozitivan i bez prodaje).
@@ -133,7 +150,7 @@ fn break_even_bp(i: &KpiInput, total: i128, room_nights: i128) -> Calc<Option<i6
     if fixed <= 0 {
         return Ok(Some(0));
     }
-    ratio(
+    ratio_up(
         c::mul(c::mul(fixed, sold)?, 10_000)?,
         c::mul(contribution, room_nights)?,
     )
@@ -152,6 +169,7 @@ pub fn kpi(i: &KpiInput) -> Calc<MonthKpi> {
         sold_nights: i.sold,
         lost_nights: c::narrow(lost)?,
         occupancy_bp: ratio(c::mul(sold, 10_000)?, room_nights)?,
+        sellable_occupancy_bp: ratio(c::mul(i128::from(i.available), 10_000)?, room_nights)?,
         adr_cents: ratio(rooms_revenue, sold)?,
         revpar_cents: ratio(rooms_revenue, room_nights)?,
         rooms_revenue_cents: i.rooms_revenue_cents,

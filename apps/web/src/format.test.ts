@@ -6,7 +6,6 @@ import {
   formatEurosCents,
   formatIndex,
   formatNights,
-  formatOccupancy,
   formatPercentBp,
   formatPointsCount,
   formatRating,
@@ -61,10 +60,6 @@ describe("novac i ocjena", () => {
     expect(formatRating(840)).toBe("8,4/10");
     expect(formatRating(845)).toBe("8,45/10");
     expect(formatRating(1000)).toBe("10/10");
-  });
-  it("formatOccupancy je postotak prodanih, a bez kapaciteta crtica", () => {
-    expect(formatOccupancy(2448, 3600)).toBe("68 %");
-    expect(formatOccupancy(0, 0)).toBe("—");
   });
   it("pokazatelji: postotak iz baznih bodova, euri s centima, noći; null je crtica", () => {
     expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual(["68 %", "31,7 %", "121,2 %", "−4,5 %"]);

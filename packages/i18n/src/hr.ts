@@ -196,27 +196,35 @@ export const hr = {
   "kpi.revpar": "RevPAR",
   "kpi.revpar.mean":
     "Prihod od soba po svakoj sobi hotela: prihod od soba ÷ (sve sobe × dani), isto što i ADR × popunjenost.",
+  "kpi.roomsRevenue": "Prihod od soba",
+  "kpi.roomsRevenue.mean": "Sve što su gosti i grupe platili za sobe u mjesecu: prodane noći × cijena.",
+  "kpi.totalRevenue": "Ukupni prihod",
+  "kpi.totalRevenue.mean": "Prihod od soba + ostali prihod (restoran, bar i druge usluge hotela).",
   "kpi.trevpar": "TRevPAR",
   "kpi.trevpar.mean": "Sav prihod (sobe, restoran i ostalo) po sobi: ukupni prihod ÷ (sve sobe × dani).",
+  "kpi.labor": "Trošak rada",
+  "kpi.labor.mean": "Plaće, zapošljavanje novih ljudi i obuka u mjesecu.",
+  "kpi.laborShare": "Udio troška rada",
+  "kpi.laborShare.mean":
+    "Koliki dio prihoda odlazi na plaće, zapošljavanje i obuku: trošak rada ÷ ukupni prihod.",
+  "kpi.cpor": "Izravni trošak po prodanoj noći",
+  "kpi.cpor.mean":
+    "Čišćenje, rublje i potrošni materijal za jednu prodanu noć. Iznos dolazi iz kategorije hotela i ne uključuje plaće, pa je isti svaki mjesec.",
   "kpi.gop": "GOP",
   "kpi.gop.mean":
-    "Bruto operativna dobit: ukupni prihod − troškovi poslovanja (plaće, održavanje, marketing, stalni troškovi).",
+    "Bruto operativna dobit: ukupni prihod − troškovi poslovanja (trošak rada, izravni trošak soba, održavanje, marketing, odgovaranje na recenzije, troškovi odluka u situacijama i ostali troškovi hotela).",
   "kpi.gopMargin": "GOP marža",
   "kpi.gopMargin.mean": "Koliki dio prihoda ostaje kao dobit: GOP ÷ ukupni prihod.",
   "kpi.goppar": "GOPPAR",
   "kpi.goppar.mean": "Dobit po svakoj sobi hotela: GOP ÷ (sve sobe × dani).",
-  "kpi.laborShare": "Udio troška rada",
-  "kpi.laborShare.mean":
-    "Koliki dio prihoda odlazi na plaće, zapošljavanje i obuku: trošak rada ÷ ukupni prihod.",
-  "kpi.cpor": "CPOR",
-  "kpi.cpor.mean":
-    "Izravni trošak jedne prodane noći (čišćenje, rublje, potrošni materijal): trošak soba ÷ prodane noći.",
   "kpi.breakEven": "Točka pokrića",
   "kpi.breakEven.mean":
-    "Popunjenost pri kojoj bi GOP bio nula, uz istu prosječnu cijenu i iste stalne troškove.",
-  "kpi.breakEven.sentence": "GOP je nula pri popunjenosti od {be}; ti si bio na {you}.",
+    "Najniža popunjenost pri kojoj GOP nije negativan, uz istu prosječnu cijenu i iste ostale troškove (plaće, održavanje i marketing ostaju isti).",
+  "kpi.breakEven.sentence": "GOP je nula pri popunjenosti od {be}; tvoja popunjenost bila je {you}.",
   "kpi.breakEven.over":
-    "GOP bi bio nula tek pri popunjenosti od {be}, više od punog hotela; ti si bio na {you}.",
+    "GOP bi bio nula tek pri popunjenosti od {be}, a sobe u funkciji dopuštaju najviše {max}; tvoja popunjenost bila je {you}.",
+  "kpi.breakEven.zero": "GOP je pozitivan i bez prodaje.",
+  "kpi.breakEven.noSales": "U mjesecu nije bilo prodaje.",
   "kpi.breakEven.none": "Točka pokrića se ne može izračunati: prodaja nije pokrila ni izravni trošak soba.",
   "indicator.mean.G": "Koliko su gosti zadovoljni boravkom i cijenom.",
   "indicator.mean.R": "Što gosti o hotelu pišu i koliko ga ocjenjuju na portalima.",

@@ -18,6 +18,9 @@
 | MPI / ARI / RGI | vlastita popunjenost / ADR / RevPAR ÷ isto za konkurentski set × 100; RGI = MPI × ARI / 100 |
 | NPS | % promotora (9–10) − % kritičara (0–6) |
 
+U igri (sloj 0) „raspoložive sobe" su **sve sobe × dani**: sobe izvan funkcije (out of order) ubrajaju se u ponudu
+(USALI), pa vrijedi RevPAR = ADR × popunjenost; njihove noći prikazuju se zasebno kao izgubljene noći.
+
 Indeks zadovoljstva gostiju nema standardnu formulu (ReviewPro GRI je vlasnički), pa ga igra definira sama.
 
 ## 2 · Tipične vrijednosti

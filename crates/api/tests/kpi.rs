@@ -82,6 +82,7 @@ async fn only_settled_months_with_numbers_matching_my_hotel() {
         "labor_share_bp",
         "cpor_cents",
         "break_even_occupancy_bp",
+        "sellable_occupancy_bp",
         "total_revenue_cents",
         "labor_cents",
     ] {

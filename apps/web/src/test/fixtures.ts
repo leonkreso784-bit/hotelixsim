@@ -327,6 +327,7 @@ export function kpiMonth(over: Partial<KpiMonthBody> = {}): KpiMonthBody {
     sold_nights: 2448,
     lost_nights: 60,
     occupancy_bp: 6800,
+    sellable_occupancy_bp: 9833,
     adr_cents: 13_245,
     revpar_cents: 9007,
     rooms_revenue_cents: 32_423_760,

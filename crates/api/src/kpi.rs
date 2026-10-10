@@ -25,6 +25,9 @@ pub struct KpiMonthBody {
     pub lost_nights: u32,
     #[schema(required = true)]
     pub occupancy_bp: Option<i64>,
+    /// Najviša moguća popunjenost: sobe u funkciji × dani ÷ sve noći.
+    #[schema(required = true)]
+    pub sellable_occupancy_bp: Option<i64>,
     #[schema(required = true)]
     pub adr_cents: Option<i64>,
     #[schema(required = true)]
@@ -42,9 +45,12 @@ pub struct KpiMonthBody {
     pub labor_cents: i64,
     #[schema(required = true)]
     pub labor_share_bp: Option<i64>,
+    /// Izravni trošak po prodanoj noći iz kategorije hotela (katalog, bez plaća; isti svaki mjesec). Nije USALI
+    /// CPOR (svi troškovi odjela soba, i plaće) — taj stiže sa slojem 1; ime polja ostaje zbog kompatibilnosti.
     #[schema(required = true)]
     pub cpor_cents: Option<i64>,
-    /// Popunjenost pri kojoj bi GOP bio nula, uz isti ADR i iste fiksne troškove; može biti iznad 10 000.
+    /// Najniža popunjenost (zaokruženo naviše) pri kojoj GOP nije negativan, uz isti ADR i iste ostale troškove;
+    /// može biti iznad `sellable_occupancy_bp` i iznad 10 000.
     #[schema(required = true)]
     pub break_even_occupancy_bp: Option<i64>,
 }
@@ -58,6 +64,7 @@ impl From<&KpiMonth> for KpiMonthBody {
             sold_nights: k.sold_nights,
             lost_nights: k.lost_nights,
             occupancy_bp: k.occupancy_bp,
+            sellable_occupancy_bp: k.sellable_occupancy_bp,
             adr_cents: k.adr_cents,
             revpar_cents: k.revpar_cents,
             rooms_revenue_cents: k.rooms_revenue_cents,

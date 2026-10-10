@@ -26,6 +26,8 @@ fn hand_example_every_indicator() {
     assert_eq!(k.room_nights, 3_000);
     assert_eq!(k.sold_nights, 2_400);
     assert_eq!(k.lost_nights, 60);
+    // Najviša moguća popunjenost: sobe u funkciji 2 940 ÷ 3 000.
+    assert_eq!(k.sellable_occupancy_bp, Some(9_800));
     assert_eq!(k.occupancy_bp, Some(8_000));
     assert_eq!(k.adr_cents, Some(10_000));
     assert_eq!(k.revpar_cents, Some(8_000));
@@ -70,8 +72,9 @@ fn break_even_can_exceed_full_house() {
         ..hand_input()
     };
     let k = kpi(&i).unwrap();
-    // 40 000 000 / 11 000 = 3 636,4 noći od 3 000 → 121,21 %
-    assert_eq!(k.break_even_occupancy_bp, Some(12_121));
+    // 40 000 000 / 11 000 = 3 636,36 noći od 3 000 → 121,212 %; prag se zaokružuje NAVIŠE (12 121,2 → 12 122),
+    // da GOP na pragu nikad nije negativan.
+    assert_eq!(k.break_even_occupancy_bp, Some(12_122));
     assert!(k.gop_margin_bp.unwrap() < 0);
 }
 
@@ -110,6 +113,7 @@ fn hotel_without_rooms_gives_none_not_panic() {
     let k = kpi(&i).unwrap();
     assert_eq!(k.room_nights, 0);
     assert_eq!(k.occupancy_bp, None);
+    assert_eq!(k.sellable_occupancy_bp, None);
     assert_eq!(k.revpar_cents, None);
     assert_eq!(k.trevpar_cents, None);
     assert_eq!(k.goppar_cents, None);
@@ -180,27 +184,24 @@ fn occupancy_counts_all_rooms_and_lost_nights_separately() {
 }
 
 #[test]
-fn break_even_on_real_report_makes_gop_zero() {
+fn break_even_on_real_report_is_the_first_threshold_with_gop_not_negative() {
     let cat = test_catalog();
+    let cpor = i128::from(cat.category(Category::Four).unwrap().cpor_cents);
     let mut checked = 0;
     for r in real_reports() {
         let k = month_kpi(&r, &cat).unwrap();
         let Some(be) = k.break_even_occupancy_bp else {
             continue;
         };
-        // GOP pri točki pokrića, uz isti ADR i iste fiksne troškove: blizu nule (jedna noć ≈ doprinos).
+        // GOP pri popunjenosti p (bp), uz isti ADR i iste ostale troškove, pomnožen s prodano × 10 000.
         let sold = i128::from(r.market.sold);
         let n = i128::from(k.room_nights);
-        let contribution = i128::from(k.total_revenue_cents) - sold * 2_200;
-        let fixed = i128::from(r.money.costs_cents) - sold * 2_200;
-        let be_nights_x = i128::from(be) * n; // × 10 000
-        let gop_x = contribution * be_nights_x - fixed * sold * 10_000;
-        let per_night = contribution / sold;
-        assert!(
-            gop_x.abs() <= per_night * n * sold,
-            "{:?}: {gop_x} > {per_night}",
-            r.month
-        );
+        let contribution = i128::from(k.total_revenue_cents) - sold * cpor;
+        let fixed = i128::from(r.money.costs_cents) - sold * cpor;
+        let gop_x = |p: i128| contribution * p * n - fixed * sold * 10_000;
+        // Prag je zaokružen naviše: na njemu GOP nije negativan, bazni bod niže jest.
+        assert!(gop_x(i128::from(be)) >= 0, "{:?}", r.month);
+        assert!(gop_x(i128::from(be) - 1) < 0, "{:?}", r.month);
         checked += 1;
     }
     assert_eq!(checked, 12, "svaki mjesec ima točku pokrića");

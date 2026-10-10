@@ -543,10 +543,15 @@ export interface components {
             adr_cents: number | null;
             /**
              * Format: int64
-             * @description Popunjenost pri kojoj bi GOP bio nula, uz isti ADR i iste fiksne troškove; može biti iznad 10 000.
+             * @description Najniža popunjenost (zaokruženo naviše) pri kojoj GOP nije negativan, uz isti ADR i iste ostale troškove;
+             *     može biti iznad `sellable_occupancy_bp` i iznad 10 000.
              */
             break_even_occupancy_bp: number | null;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Izravni trošak po prodanoj noći iz kategorije hotela (katalog, bez plaća; isti svaki mjesec). Nije USALI
+             *     CPOR (svi troškovi odjela soba, i plaće) — taj stiže sa slojem 1; ime polja ostaje zbog kompatibilnosti.
+             */
             cpor_cents: number | null;
             /** Format: int64 */
             gop_cents: number;
@@ -575,6 +580,11 @@ export interface components {
             room_nights: number;
             /** Format: int64 */
             rooms_revenue_cents: number;
+            /**
+             * Format: int64
+             * @description Najviša moguća popunjenost: sobe u funkciji × dani ÷ sve noći.
+             */
+            sellable_occupancy_bp: number | null;
             /** Format: int32 */
             sold_nights: number;
             /**

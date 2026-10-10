@@ -71,11 +71,6 @@ export function formatRating(hundredths: number): string {
   return `${nf2.format(hundredths / 100)}/10`;
 }
 
-export function formatOccupancy(sold: number, available: number): string {
-  if (available <= 0) return "—";
-  return `${Math.round((sold * 100) / available)} %`;
-}
-
 /** Promjena u bodovima s množinom: 450 → "+5 bodova", −100 → "−1 bod". */
 export function formatPointsCount(hundredths: number): string {
   const n = wholePoints(hundredths);
