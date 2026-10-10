@@ -1,12 +1,17 @@
-//! Sadržaj modela v2 u snimku pravila: koeficijenti po vrsti razdoblja iz `content/hotel/v2/periods.json`.
+//! Sadržaj modela v2 u snimku pravila: koeficijenti razdoblja, odjeli, profili i gospodarstvo iz `content/hotel/v2/`.
 
 use std::collections::BTreeMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use sim_hotel::Catalog;
+use sim_hotel::{Catalog, Profile};
+use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::{PeriodCoefficients, PeriodKind};
 
+use crate::v2_dept::{
+    DeptDto, EconomyDto, ProfileDto, build_dept, build_economy, build_profile, dept_to_dto,
+    economy_to_dto, profile_to_dto,
+};
 use crate::{ContentError, read};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -23,12 +28,20 @@ pub(crate) struct PeriodCoefficientsDto {
 #[serde(deny_unknown_fields)]
 pub(crate) struct V2Dto {
     periods: BTreeMap<String, PeriodCoefficientsDto>,
+    departments: BTreeMap<String, DeptDto>,
+    /// Ključevi su kodovi profila (`A`, `B`, `C`).
+    profiles: BTreeMap<String, ProfileDto>,
+    economy: EconomyDto,
 }
 
-/// Čita `dir/v2/periods.json`.
+/// Čita `dir/v2/{periods,departments,profiles,economy}.json`.
 pub(crate) fn read_v2_dir(dir: &Path) -> Result<V2Dto, ContentError> {
+    let d = dir.join("v2");
     Ok(V2Dto {
-        periods: read(&dir.join("v2"), "periods.json")?,
+        periods: read(&d, "periods.json")?,
+        departments: read(&d, "departments.json")?,
+        profiles: read(&d, "profiles.json")?,
+        economy: read(&d, "economy.json")?,
     })
 }
 
@@ -43,12 +56,24 @@ fn to_dto(c: &PeriodCoefficients) -> PeriodCoefficientsDto {
 
 /// Odjeljak v2 koji daje `sim_hotel_v2::degenerate(base)`.
 pub(crate) fn degenerate_dto(base: &Catalog) -> V2Dto {
+    let d = sim_hotel_v2::degenerate(base);
     V2Dto {
-        periods: sim_hotel_v2::degenerate(base)
+        periods: d
             .periods
             .iter()
             .map(|(k, c)| (k.code().to_string(), to_dto(c)))
             .collect(),
+        departments: d
+            .departments
+            .iter()
+            .map(|(k, s)| (k.as_str().to_string(), dept_to_dto(s)))
+            .collect(),
+        profiles: d
+            .profiles
+            .iter()
+            .map(|(k, p)| (k.code().to_string(), profile_to_dto(p)))
+            .collect(),
+        economy: economy_to_dto(&d.economy),
     }
 }
 
@@ -72,7 +97,23 @@ pub(crate) fn build_v2(dto: &V2Dto, base: &Catalog) -> Result<sim_hotel_v2::Cata
             },
         );
     }
+    let mut departments = BTreeMap::new();
+    for (code, d) in &dto.departments {
+        departments.insert(DeptCode(code.clone()), build_dept(code, d)?);
+    }
+    let mut profiles = BTreeMap::new();
+    for (code, p) in &dto.profiles {
+        let Some(profile) = Profile::from_code(code) else {
+            return Err(ContentError::Invalid(format!(
+                "v2.profiles: nepoznat profil '{code}'"
+            )));
+        };
+        profiles.insert(profile, build_profile(p));
+    }
     let mut c = sim_hotel_v2::degenerate(base);
     c.periods = periods;
+    c.departments = departments;
+    c.profiles = profiles;
+    c.economy = build_economy(&dto.economy);
     Ok(c)
 }

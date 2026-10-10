@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 mod v2;
+mod v2_dept;
 
 use sim_hotel::{
     ActionSpec, Catalog, Category, CategorySpec, Economy, LevelEffect, Mechanic, MechanicSpec,
