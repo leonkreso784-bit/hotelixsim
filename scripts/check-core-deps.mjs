@@ -1,14 +1,14 @@
-// Brana: jezgra (engine, sim-hotel) ne smije ni tranzitivno ovisiti o I/O-u, satu ni vanjskoj slučajnosti.
+// Brana: jezgra (engine, sim-hotel, sim-hotel-v2) ne smije ni tranzitivno ovisiti o I/O-u, satu ni vanjskoj slučajnosti.
 // ARHITEKTURA §6.2. Pokriva normalne i build ovisnosti, za sve targete i sa svim značajkama.
 // Izlaz 0 = čisto; 1 = nađeno (ispisuje svaki prekršaj); 2 = alat nije uspio izmjeriti.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const CORE = ["engine", "sim-hotel"];
+const CORE = ["engine", "sim-hotel", "sim-hotel-v2"];
 // Jezgra smije ovisiti SAMO o sebi. Zabranjeni popis je propuštao sve što nije nabrojano (npr. `indexmap`
 // sa zadanim nasumičnim hasherom — BRANE_DETERMINIZMA 2c); dopušteni popis pada na svaku novu ovisnost.
-const ALLOWED = new Set(["engine", "sim-hotel"]);
+const ALLOWED = new Set(["engine", "sim-hotel", "sim-hotel-v2"]);
 
 let found = 0;
 
@@ -87,7 +87,7 @@ function walkRs(dir, out = []) {
   }
   return out;
 }
-for (const crate of ["crates/engine", "crates/sim-hotel", "crates/game"]) {
+for (const crate of ["crates/engine", "crates/sim-hotel", "crates/sim-hotel-v2", "crates/game"]) {
   for (const f of walkRs(join(crate, "src"))) {
     readFileSync(f, "utf8")
       .split(/\r?\n/)
