@@ -44,13 +44,21 @@ Oznake: **sloj** = redoslijed gradnje (svaki se gradi, dokaže i pregleda zasebn
 | P6 | **Upravljanje zaposlenicima** | Zaposli, otpusti, povisi plaću, pošalji na obuku, premjesti u drugi odjel | Management (HRM, vođenje) | trošak rada, opterećenje, kvaliteta usluge odjela | 2 | ⬜ |
 | P7 | **Sobe i njihovo stanje** | Tlocrt ili popis svih soba (npr. 120): tip, stanje opreme, izvan funkcije, obnovljena; klik → povijest sobe | E-Business (PMS), Economics (investicije) | raspoložive sobe, popunjenost, zadovoljstvo gostiju, ADR po tipu sobe | 3 | ⬜ |
 | P8 | **Recenzije s tekstom** | Čitanje recenzija gostiju (ocjena, tekst, na što se žale ili što hvale), odgovor na recenziju | Marketing, upravljanje ugledom | ocjena na portalima, potražnja | 4 | ⬜ |
+| P10 | **Ljudi „kao Sims"** | Svaki zaposlenik ima osobnost, dobre i loše strane, trake vještina, jezike i razinu znanja; raste obukom i iskustvom | Management (HRM, motivacija) | kvaliteta usluge odjela, plaća koju traži, rizik odlaska | 2 | ⬜ |
+| P11 | **Burza rada** | Kandidati s cijenom i vještinama: jeftin početnik koji raste ili skup profesionalac; izvrstan radnik s vremenom traži povišicu | Management (HRM, zapošljavanje) | trošak rada, kvaliteta, fluktuacija | 2 | ⬜ |
+| P12 | **Agencija za strane radnike** | Narudžba skupine radnika (npr. 5), smještaj koji hotel plaća, jezici; pregled koliko donose i koliko koštaju | Management, Economics (trošak rada) | trošak rada i smještaja, kapacitet osoblja, kvaliteta | 2 | ⬜ |
+| P13 | **Tjedni ili mjesečni krug** | Profesor pri stvaranju igre bira krug: tjedan ili mjesec | — (tempo nastave) | duljina razdoblja u svim formulama | 1 (temelj) | ⬜ |
+| P14 | **AI razgovori sa zaposlenicima i gostima** | Slobodan razgovor u situacijama (povišica, upozorenje, žalba gosta); AI ocjenjuje po rubrici, brojke računaju pravila | Management (vođenje), komunikacija | ishod situacije kroz postojeće mehanike | 2 i 4 | ⬜ |
+| P15 | **„Booking" drugih hotela** | Stranica konkurencije s ocjenama i recenzijama drugih hotela iste igre | Marketing, E-Business | nijedne (prikaz) | 4 | ⬜ |
 | P9 | **Profesorov pregled v2** | Usporedba hotela: USALI izvještaj, pokazatelji prema konkurenciji (MPI / ARI / RGI) | sve gore | nijedne | uz slojeve | ⬜ |
 
-## Pretpostavke (🟨 čekaju Leonov pregled)
+## Odluke i pretpostavke
 
-Zapisane u [ADR-026](../records/DECISIONS.md#adr-026): ADR znači prosječnu cijenu prodane sobe; odjeli ovise o hotelu
-(profil određuje ima li spa ili rooftop); zaposlenicima student upravlja, ne samo da ih gleda; recenzije su iz banke
-rečenica po uzroku, AI samo povremeno; slojevi idu redom 0 → 4.
+Leonove odluke su u [ADR-028](../records/DECISIONS.md#adr-028) (ljudi kao u Simsima, burza rada, agencija i smještaj,
+tjedni ili mjesečni krug, AI razgovori, „Booking" drugih hotela, voditelj odjela). Pretpostavke koje čekaju pregled
+(🟨) su u [ADR-026](../records/DECISIONS.md#adr-026) i [ADR-028](../records/DECISIONS.md#adr-028) — među njima
+**pravilo: nacionalnost određuje samo činjenice (jezici, trošak agencije, smještaj, dozvola), nikad vještinu ni
+osobnost**.
 
 ## Vezano
 

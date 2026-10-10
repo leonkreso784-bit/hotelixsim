@@ -1,10 +1,11 @@
 # HotelixSim — model v2 („put B"): hotel od stvari, ne od brojeva
 
-> **Što je ovo:** arhitektura za put B — kako hotel u jezgri od skupa brojeva postaje skup **stvari s imenom i
-> stanjem** (odjeli, zaposlenici, sobe, recenzije), sloj po sloj, a da demo i stare igre ostanu netaknuti.
-> **Što** student dobiva po dodacima piše u [PROSIRENJA.md](../product/PROSIRENJA.md) (P1–P9); **zašto** ovim putem u
+> **Što je ovo:** arhitektura za put B: kako hotel u jezgri od skupa brojeva postaje skup **stvari s imenom i
+> stanjem** (odjeli, ljudi, sobe, recenzije), sloj po sloj, a da demo i stare igre ostanu netaknuti.
+> **Što** student dobiva po dodacima piše u [PROSIRENJA.md](../product/PROSIRENJA.md) (P1–P9). **Zašto** ovim putem piše u
 > [ADR-026](../records/DECISIONS.md#adr-026). Ovdje je samo **kako**.
-> **Status:** 🟨 nacrt arhitekta, čeka Leonov pregled. Ništa od ovoga još nije izgrađeno.
+> **Status:** nacrt arhitekta. Leon je odgovorio na prvih 12 pitanja (§9), a nova pitanja i pretpostavke 🟨 čekaju
+> njegov pregled. Ništa od ovoga još nije izgrađeno.
 > Oznake brojki kao u [istraživanju](../research/HOTELSKI_POKAZATELJI.md): **[P]** provjereno · **[PROC]** procjena.
 
 **Rječnik za ovaj dokument** (pojmovi koji se ponavljaju):
@@ -14,28 +15,39 @@
 | **entitet** | „stvar" u igri s vlastitim imenom i stanjem: soba 214, konobar Marko, restoran |
 | **agregat** | jedan broj za cijeli hotel (npr. moral = 55); danas je hotel samo od agregata |
 | **izvedeno** | ne sprema se, nego se svaki put izračuna iz entiteta (moral hotela = prosjek motivacije ljudi) |
-| **jezgra** | Rust kod koji računa mjesec (`crates/sim-hotel`); ekran samo prikazuje |
+| **jezgra** | Rust kod koji računa krug igre (`crates/sim-hotel`); ekran samo prikazuje |
+| **razdoblje** | jedan krug igre: **tjedan** ili **mjesec**, kako profesor odabere pri stvaranju igre (§4) |
 | **dnevnik** | popis događaja igre u bazi; iz njega se igra uvijek može ponovno složiti (ARHITEKTURA §9.1) |
 | **snimak pravila** | sve brojke iz `content/hotel/*.json` kopirane u igru pri stvaranju; igra ih nosi zauvijek |
 | **sjeme / tok kocke** | broj iz kojeg „slučajnost" nastaje uvijek jednako; svaka svrha ima svoj tok |
 | **USALI** | jedinstveni kontni plan za hotele (Uniform System of Accounts for the Lodging Industry): odjeli, njihovi troškovi, GOP |
+| **rubrika** | popis kriterija po kojima AI ocjenjuje odgovor (danas za slobodan odgovor, ADR-019) |
 
 ---
 
 ## 0 · Sažetak na jednoj stranici
 
-1. **v1 se zamrzava, v2 je novi paket.** Današnja jezgra (`sim-hotel`) ostaje točno kakva jest i dalje vrti demo i sve
-   igre stvorene na njoj. Model v2 živi u novom paketu `sim-hotel-v2`; igra po snimku pravila zna kojim se modelom
-   računa (§4). Tako demo na `main` ne može puknuti zbog puta B.
-2. **v2 i dalje „govori v1".** Svaki v2 mjesec daje i današnji sažetak (sobe, stalni, sezonci, moral, ocjena…) kao
-   **izvedeni** prikaz entiteta. Pet indeksa, mentor, „Zašto", ljestvica i postojeći ekrani rade bez promjene;
-   entiteti se dodaju kao **dubina ispod** njih (§3.8).
-3. **Detalj samo uz uzrok:** svaki novi podatak ulazi u formulu i u objašnjenje jezgre (`Line`), ne samo na ekran.
-4. **Ekvivalencijski test:** v2 podešen kao „jedan odjel, svi ljudi isti, sve sobe iste, bez šuma" mora dati **iste
-   brojke kao v1**. To dokazuje da je v2 proširenje, a ne nova igra (§2, t. 6).
-5. **Vrijeme ostaje mjesec.** Soba ima stanje i noći u mjesecu, ne rezervacije po danu (§6).
-6. **Slojevi:** 0 pokazatelji (S) → 1 odjeli po USALI-ju (L) → 2 zaposlenici (L) → 3 sobe (M) → 4 recenzije (M–L).
-   Najmanji „wow" za profesora = sloj 0 + 1 (§10).
+1. **v1 se zamrzava, v2 je novi paket.** Današnja jezgra (`sim-hotel`) ostaje točno kakva jest. Ona i dalje vrti demo
+   i sve igre stvorene na njoj (Leon: stare igre ostaju igrive). Model v2 živi u novom paketu `sim-hotel-v2`, a igra
+   po snimku pravila zna kojim se modelom računa (§6). Zato demo na `main` ne može puknuti zbog puta B.
+2. **Krug igre je postavka: tjedan ili mjesec.** Profesor bira pri stvaranju igre. v2 računa **razdoblje** od N dana,
+   a svaka brzina (trošenje, plaće, odlasci) zadana je po danu ili po vrsti razdoblja (§4). To ulazi u **temelj
+   sloja 1**, jer je tamo jeftinije nego naknadno.
+3. **v2 i dalje „govori v1".** Svako v2 razdoblje daje i današnji sažetak (sobe, stalni, sezonci, moral, ocjena…) kao
+   **izvedeni** prikaz entiteta. Pet indeksa, mentor, „Zašto" i ljestvica rade dalje, a entiteti dodaju dubinu ispod
+   njih (§3.9).
+4. **Ljudi kao u Simsima:** osobine s dobrim i lošim stranama, traka za svaku vještinu, jezici s razinom, očekivana
+   plaća koja raste s vještinom. Uz to **burza rada**, **agencija za strane radnike** i **smještaj radnika** (§5).
+5. **Nacionalnost određuje samo činjenice:** jezike, naknadu agencije, potrebu za smještajem, trošak i rok dozvole.
+   **Nikad** ne određuje vještinu, pouzdanost, osobnost ni kvalitetu (§2, t. 9).
+6. **Razgovori s AI-jem gotovo uvijek:** pregovori o plaći, upozorenje, motivacijski razgovor, razgovor za posao, gost
+   s pritužbom. AI glumi i ocjenjuje po rubrici, a **brojke računaju pravila** (§5.5). Svaka igra ima gornju granicu
+   troška.
+7. **Konkurencija „kao Booking":** student čita ocjene i recenzije drugih hotela, ali ne vidi njihove ljude (§7.1).
+8. **Detalj samo uz uzrok**, a svaki sloj ima **ekvivalencijski test**: v2 podešen „kao v1" mora dati iste brojke.
+9. **Slojevi:** 0 pokazatelji (S) → 1 temelj v2 + razdoblja + odjeli po USALI-ju (L+) → 2 ljudi (XL, u tri dijela) →
+   3 sobe (M) → 4 recenzije i konkurencija (L). Ukupno ≈ 175–250 sati rada agenata (§8). Najmanji „wow" za profesora
+   su slojevi 0 i 1 (§10).
 
 ---
 
@@ -45,46 +57,52 @@
 |---|---|---|
 | Stanje hotela | 18 polja, sve agregati | `crates/sim-hotel/src/state.rs:24-43` |
 | Sobe | jedan broj `rooms: u16` (120 u sva tri profila) | `state.rs:26`, `content/hotel/profiles.json` |
-| Osoblje | dva broja: `permanent`, `seasonal`; odluka je „ciljani broj sezonaca" | `state.rs:27-28`, `plan.rs:24-33` |
-| Ljudi i oprema | moral, iskustvo, oprema, zadovoljstvo kao bodovi 0–10 000 | `state.rs:31-34` |
-| Ocjena portala | jedan broj, svaki mjesec 25 % prema cilju iz zadovoljstva | `state.rs:35`, `resolve.rs:413-421` |
+| Osoblje | dva broja: `permanent` i `seasonal`; odluka je „ciljani broj sezonaca" | `state.rs:27-28`, `plan.rs:24-33` |
+| Ljudi i oprema | moral, iskustvo, oprema i zadovoljstvo kao bodovi 0–10 000 | `state.rs:31-34` |
+| Ocjena portala | jedan broj; svaki mjesec pomak 25 % prema cilju iz zadovoljstva | `state.rs:35`, `resolve.rs:413-421` |
 | Ostali prihod | ravnih 30 % prihoda od soba (hrana, piće, usluge) | `resolve.rs:266-269`, `catalog.json` `other_revenue_bp: 3000` |
 | Troškovi | plaće + CPOR 22 € po sobi + održavanje + marketing + jedan `fixed_cents` (150 000 € za C) | `resolve.rs:270-296` |
 | Sobe izvan funkcije | izvedeno iz opreme: `(40 − oprema) / 4` | `market.rs:61-63` |
-| Kapacitet osoblja | jedan za hotel: zaposleni × dani × 2,4 | `market.rs:87` |
-| Odlasci osoblja | očekivana vrijednost, bez kocke; obračun mjeseca nema slučajnosti uopće | `resolve.rs:197-199`, potpis `resolve.rs:444-450` |
-| Pokazatelji | računa se samo GOPPAR (po svim sobama × dani); **ADR, RevPAR, TRevPAR ne postoje** ni u jezgri ni na webu | `resolve.rs:309` |
-
-Danas hotel „ima" restoran samo kao 30 % u jednoj formuli, i 58 ljudi samo kao dva broja. Zato student ne može
-djelovati na pojedinca, a profesor ne vidi račun dobiti kakav uči na Accountingu.
+| Kapacitet osoblja | jedan za cijeli hotel: zaposleni × dani × 2,4 | `market.rs:87` |
+| Odlasci osoblja | očekivana vrijednost bez kocke; obračun nema nikakve slučajnosti | `resolve.rs:197-199`, potpis `resolve.rs:444-450` |
+| Vrijeme | krug je uvijek kalendarski mjesec: `Month` (4 mjeseca), tablice `MonthTable<[T; 4]>`; `Month` se koristi u 42 Rust datoteke | `month.rs:12-19`, `month.rs:53` |
+| Plan | bez plana za mjesec vrijedi **zadani** plan, a ne prošlomjesečni | `crates/game/src/game.rs:411-419` |
+| Pokazatelji | računa se samo GOPPAR, po svim sobama × dani; **ADR, RevPAR i TRevPAR ne postoje** | `resolve.rs:309` |
 
 ---
 
 ## 2 · Načela
 
-1. **Dubina samo uz uzrok.** Polje koje ne ulazi ni u jednu formulu ne ulazi ni u model. Ukras (hobi konobara) smije
-   biti u tekstu, ne u stanju.
+1. **Dubina samo uz uzrok.** Polje koje ne ulazi ni u jednu formulu ne ide u stanje. Ukras (hobi, rečenica „o meni")
+   smije biti tekst izveden iz sjemena, ali ne i broj u stanju.
 2. **Jedan izvor istine.** Svako „zašto" (ekran „Zašto", mentor, profesor) dolazi iz retka objašnjenja jezgre
    (`Line`, `crates/sim-hotel/src/explain.rs:59-64`) i iz `game::debrief_facts` (`crates/game/src/mentor.rs:755`),
    kao danas ([ADR-023](../records/DECISIONS.md#adr-023)). Ekran ništa ne računa (ARHITEKTURA §13).
-3. **Determinizam ostaje kakav jest** (ARHITEKTURA §7.2): cijeli brojevi (bodovi 0–10 000, novac u centima), samo
-   uređene mape (`BTreeMap`), redoslijed po ID-u, nikad po vremenu. Nove slučajnosti dobivaju **svaka svoj tok**:
-   `Rng::derive(sjeme, [oznaka svrhe, mjesec, slot hotela, …])` (`crates/engine/src/rng.rs:41`). Postojeći tokovi
-   (`game:robot-plan`, `game:robot-answer`, `crates/game/src/command.rs:93,110`) se ne diraju, pa nova kocka ne pomiče
-   stare.
-4. **Šum s nultim zbrojem.** Gdje kocka daje raznolikost (koja soba, koji gost, tko odlazi), ona raspoređuje, ali ne
-   mijenja zbroj: broj odlazaka i prosjek ocjena recenzija računa formula, kocka bira **tko** i **koja**. Tako balans
-   ostaje stabilan, a pojedinačne priče su različite.
-5. **Stare igre i iskreno obećanje (ARHITEKTURA §17).** Igra se zauvijek računa modelom i jezgrom s kojom je
-   stvorena (§4.2). Ne obećajemo iste brojke stare igre na novoj jezgri — i ne pokušavamo: v1 kod se ne mijenja.
-6. **Ekvivalencija s v1.** Svaki sloj ima test: v2 u „degeneriranom" katalogu (jedan odjel, jednaki ljudi, jednake
-   sobe, šum isključen) daje iste `MonthReport` brojke kao v1 za A, B, C kroz četiri mjeseca. Gdje v2 **namjerno**
-   mijenja pravilo (npr. soba se gasi po vlastitom stanju, ne po prosjeku), test tu razliku navodi poimence, a balans
-   je mjeri.
-7. **Demo je siguran.** Sve na granama `model-v2/…`; `main` dobiva samo sloj 0 (prikaz) nakon demoa, a v2 tek kad
-   Leon kaže, i to uz zadani model v1 dok se izričito ne prebaci.
-8. **Profesorovih pet indeksa ostaje** (G R Z O F, centrirani na referentni hotel, ADR-013). Mijenja se samo odakle
-   indeks čita: iz entiteta umjesto iz spremljenog agregata.
+3. **Determinizam ostaje** (ARHITEKTURA §7.2): cijeli brojevi (bodovi 0–10 000, novac u centima), samo uređene mape
+   (`BTreeMap`), redoslijed po ID-u. Svaka nova slučajnost dobiva **svoj tok**:
+   `Rng::derive(sjeme, [oznaka svrhe, razdoblje, slot hotela, …])` (`crates/engine/src/rng.rs:41`). Postojeći tokovi
+   (`game:robot-plan`, `game:robot-answer`, `crates/game/src/command.rs:93,110`) se ne diraju.
+4. **Šum s nultim zbrojem.** Kocka raspoređuje, a ne mijenja zbroj. Broj odlazaka i prosječnu ocjenu recenzija računa
+   formula; kocka bira **tko** odlazi i **koja** soba ili gost. Balans tako ostaje stabilan, a priče su različite.
+5. **Stare igre i iskreno obećanje (ARHITEKTURA §17).** Igra se zauvijek računa modelom i jezgrom s kojom je stvorena
+   (§6.2).
+6. **Ekvivalencija s v1.** v2 u „degeneriranom" katalogu daje iste brojke kao v1 za A, B i C kroz četiri mjeseca.
+   Degenerirani katalog znači: mjesečna razdoblja, jedan odjel, jednaki ljudi s jednom vještinom, bez jezika i
+   osobina, jednake sobe i bez šuma. Gdje v2 **namjerno** mijenja pravilo, test tu razliku navodi poimence.
+7. **Demo je siguran.** Sve se radi na granama `model-v2/…`. `main` dobiva sloj 0 (samo prikaz) nakon demoa, a v2 tek
+   uz Leonov OK, i to sa zadanim modelom v1 dok se izričito ne prebaci.
+8. **Pet indeksa ostaje** (G R Z O F, centrirani na referentni hotel, ADR-013). Mijenja se samo odakle indeks čita
+   ulaze.
+9. **Nacionalnost određuje samo činjenice, nikad osobu.** Podrijetlo radnika smije odrediti samo **jezike koje govori,
+   naknadu agencije, potrebu za smještajem, trošak radne dozvole i rok dolaska**. Ne smije odrediti vještinu,
+   pouzdanost, osobnost, osobine, kvalitetu rada ni rizik odlaska. Te se vrijednosti za **svakoga** izvlače iz istih
+   raspodjela, a tekstovi i osobine nemaju stereotipa. Ni plaća ne ovisi o podrijetlu: ista vještina u istoj ulozi
+   znači istu tržišnu plaću. **Zašto:** igra je nastavni materijal fakulteta. Student mora naučiti procjenjivati
+   **osobu** po onome što radi i zna, a ne po tome odakle dolazi. Pravilo se provjerava i testom: zamjena podrijetla
+   dvaju kandidata ne smije promijeniti ništa osim navedenih činjenica.
+10. **AI priča, pravila računaju.** AI glumi lik i ocjenjuje po rubrici (kvaliteta 1–5, kriterij ispunjen ili nije,
+    ADR-019). Brojke iz te kvalitete računa jezgra, unutar granica iz kataloga. AI nikad ne zapisuje broj u stanje.
+    Bez AI-ja svaki razgovor ima rezervu s ponuđenim odgovorima.
 
 ---
 
@@ -94,501 +112,680 @@ djelovati na pojedinca, a profesor ne vidi račun dobiti kakav uči na Accountin
 
 ```text
 Hotel (v2)
-├── odjeli        BTreeMap<KodOdjela, Odjel>        8–11 po hotelu (ovisi o profilu)
-├── zaposlenici   BTreeMap<IdZaposlenika, Zaposlenik>  ~55–75 (raste u kolovozu)
-├── sobe          BTreeMap<IdSobe, Soba>            120
-├── recenzije     bazen (zbroj, broj) + recenzije zadnjeg mjeseca u izvješću
-└── ostaje iz v1  kategorija, blagajna, odgođeni učinci, grupe, „obnova već bila", zadovoljstvo (s pamćenjem)
+├── odjeli          BTreeMap<KodOdjela, Odjel>            8–11 po hotelu (ovisi o profilu)
+├── ljudi           BTreeMap<IdZaposlenika, Zaposlenik>   ~55–75 (više u vrhu sezone), uz voditelja svakog odjela
+├── smještaj        Smjestaj                              kreveti za radnike: najam u gradu i/ili sobe hotela
+├── narudžbe        Vec<NarudzbaAgencije>                 strani radnici na putu (dolaze za N dana)
+├── sobe            BTreeMap<IdSobe, Soba>                120
+├── recenzije       bazen (zbroj, broj) + recenzije zadnjeg razdoblja u izvješću
+└── ostaje iz v1    kategorija, blagajna, odgođeni učinci, grupe, zadovoljstvo (ima pamćenje)
 ```
+
+Burza rada (kandidati razdoblja) nije u stanju hotela. **Izvodi se** iz sjemena igre, razdoblja i uloge (§5.1).
 
 ### 3.2 Odjel (sloj 1)
 
-Odjeli prate USALI. Katalog kaže koje **vrste** postoje; profil kaže koje hotel **ima**.
+Odjeli prate USALI. Katalog kaže koje **vrste** odjela postoje, a profil kaže koje hotel **ima**.
 
 | USALI razred | odjeli u igri | prihod | izravni troškovi |
 |---|---|---|---|
-| Rooms (operativni) | Smještaj (recepcija + domaćinstvo) | prodane noći × cijena | plaće, potrošni materijal i rublje po prodanoj sobi (današnji CPOR) |
-| F&B (operativni) | Restoran · Lobby bar / kafić · Rooftop bar · Bar uz bazen | gosti × udio koji koristi × prosječni račun | plaće, trošak namirnica i pića (% prihoda) |
+| Rooms (operativni) | Smještaj (recepcija + domaćinstvo) | prodane noći × cijena | plaće, potrošni materijal i rublje po prodanoj sobi |
+| F&B (operativni) | Restoran · Lobby bar / kafić · Rooftop bar · Bar uz bazen | gosti × udio koji ga koristi × prosječni račun | plaće, trošak namirnica i pića (% prihoda) |
 | Other Operated | Wellness i spa | isto, po tretmanu | plaće, materijal |
 | Rentals / Misc | Parking, najam lokala | fiksno + po gostu | gotovo nikakav |
 | Undistributed | Uprava (A&G) · Prodaja i marketing · Održavanje (POM) · Energija | — | plaće + odluke (marketing, održavanje) + stalni dio |
-| ispod GOP-a | Fiksne naknade (osiguranje, najam, porez na imovinu) | — | stalni iznos → EBITDA |
+| ispod GOP-a | Fiksne naknade (osiguranje, najam, porez na imovinu) | — | stalni iznos → EBITDA (Leon: da, po USALI-ju) |
 
-**Polja odjela.** Spremljeno: `kod`, `otvoren` (da/ne — npr. rooftop zatvoren u lipnju), `stanje` (0–10 000, oprema
-odjela), `razina_cijene` (90–120 % kataloške), `broj_ljudi` (samo u sloju 1; od sloja 2 izvedeno iz zaposlenika).
-Izvedeno svaki mjesec: kapacitet, opterećenje, kvaliteta usluge, udio gostiju koji ga koriste, prihod, troškovi,
-odjelni rezultat.
+**Što student vidi u odjelu** (Leon: *„stisne wellness → stanje prostora, koliko je zaradio, koliko su gosti bili
+zadovoljni"*):
+
+- **stanje prostora** (0–100, troši se i održava);
+- **prihod, trošak i rezultat** po razdoblju;
+- **zadovoljstvo gostiju odjelom**, izvedeno iz kvalitete usluge, stanja prostora i cijene; isti broj ulazi u G;
+- ljudi u odjelu, voditelj, opterećenje i kapacitet.
+
+**Polja odjela.** Spremljeno: `kod`, `otvoren` (npr. rooftop zatvoren u lipnju), `stanje`, `razina_cijene`
+(90–120 % kataloške). Izvedeno svako razdoblje: kapacitet, opterećenje, kvaliteta usluge, udio gostiju koji ga koriste,
+zadovoljstvo gostiju odjelom, prihod, troškovi i rezultat.
 
 **Kvaliteta usluge odjela** je današnja formula kvalitete (`resolve.rs:382-389`: 40 % iskustvo, 30 % moral, 30 %
-manjak opterećenja), ali s ljudima i opterećenjem **tog** odjela. Kvaliteta hotela = prosjek po tome koliko gostiju
-koji odjel dotakne. Kad je hotel jedan odjel, to je točno današnja brojka (načelo 6).
+manjak opterećenja). Razlika je u tome što koristi ljude i opterećenje **tog** odjela, a „iskustvo" postaje vještine
+ljudi u njihovim ulogama (§3.4). Kvaliteta hotela je prosjek odjela, ponderiran brojem gostiju koje odjel dotakne.
 
-**Prijedlog odjela po profilu** [PROC], da se profili razlikuju po priči (DEMO §5):
+**Odjeli po profilu** (Leon: da, otprilike ovako) [PROC]:
 
 | profil | odjeli osim Smještaja i neraspoređenih | zašto |
 |---|---|---|
-| **A** „Ugledni, ali umorni" | Restoran · Lobby bar · Wellness i spa · Rooftop bar · Parking | puno sadržaja nosi ugled, ali i troši premalo ljudi |
+| **A** „Ugledni, ali umorni" | Restoran · Lobby bar · Wellness i spa · Rooftop bar · Parking | puno sadržaja nosi ugled, ali troši ljude kojih je premalo |
 | **B** „Profitabilni, ali zapušteni" | Restoran · Bar uz bazen (stara oprema) · Parking · Najam lokala | malo sadržaja, zdrava blagajna, stara oprema |
 | **C** „Prosječni" | Restoran · Lobby bar · Mali wellness · Parking | referentni hotel |
 
 ### 3.3 Zaposlenik (sloj 2)
 
+Leon: *„kao Sims svijet"*. Svaka osoba ima osobnost, dobre i loše strane i vidljivu traku za svaku vještinu.
+
 | polje | spremljeno / izvedeno | napomena |
 |---|---|---|
-| `id` | spremljeno | redni broj u hotelu (`Z-0001`); novi dobiva sljedeći (`sljedeci_id` u stanju) |
-| `ime`, `prezime` | spremljeno kao **indeks u banku imena** iz snimka | tekst se slaže pri čitanju |
-| `izgled` | izvedeno iz (sjeme profila, `id`) | postojeći `AvatarLook` (`apps/web/src/avatar/`) |
-| `uloga` | spremljeno | recepcioner, sobarica, kuhar, konobar, šanker, terapeut, tehničar, voditelj… (katalog) |
-| `odjel` | spremljeno | premještaj ga mijenja |
-| `ugovor` | spremljeno | stalni · sezonski do mjeseca X |
-| `placa_pct` | spremljeno | prema tržišnoj plaći uloge (danas jedan `wage_pct` za sve, `state.rs:29`) |
-| `iskustvo`, `motivacija` | spremljeno, 0–10 000 | motivacija = današnji moral, ali po osobi |
-| `staz_mjeseci`, `osobina` | spremljeno | jedna osobina iz kataloga (npr. „pouzdan": niži rizik odlaska) |
-| `rizik_odlaska` | izvedeno | današnja `turnover_bp` (`state.rs:76-80`) iz **njegove** motivacije ± osobina |
-| `opterecenje`, `trosak_mjeseca` | izvedeno | iz odjela i plaće |
+| `id` | spremljeno | `Z-0001`…; novi dobiva sljedeći broj (`sljedeci_id` u stanju) |
+| `ime`, `prezime` | spremljeno kao indeks u banku imena | hrvatska i regionalna imena; strana za radnike iz agencije |
+| `izgled` | izveden iz (sjeme profila, `id`) | postojeći `AvatarLook` (`apps/web/src/avatar/`) |
+| `uloga`, `odjel` | spremljeno | recepcioner, sobarica, kuhar, konobar, šanker, terapeut, tehničar, **voditelj odjela** |
+| `ugovor` | spremljeno | stalni · sezonski do datuma · preko agencije |
+| `vjestine` | spremljeno, 0–10 000 po vještini | 3–4 vještine uloge (§3.4); na ekranu traka |
+| `osobine` | spremljeno, 2–3 koda | 1–2 dobre i 0–1 loša; neke skrivene dok se ne otkriju (§5.1) |
+| `jezici` | spremljeno: (jezik, razina 0–4) | 0 nikako · 1 osnovno · 2 komunikativno · 3 tečno · 4 materinji |
+| `motivacija` | spremljeno, 0–10 000 | današnji moral, ali po osobi |
+| `placa` | spremljeno, u centima po mjesecu | ugovorena; mijenja se povišicom ili pregovorom |
+| `ocekivana_placa` | izvedeno | tržišna plaća uloge × faktor vještine (§5.2) |
+| `podrijetlo` | spremljeno | lokalno · iz druge regije · iz inozemstva (agencija); samo za činjenice (§2, t. 9) |
+| `treba_smjestaj` | spremljeno | prebivalište je daleko (Osijek ili inozemstvo); činjenica, ne osobina |
+| `staz_dana`, `obuke` | spremljeno | povijest za profil i rast vještina |
+| `rizik_odlaska` | izvedeno | današnja `turnover_bp` (`state.rs:76-80`) iz **njegove** motivacije, osobina i razlike do očekivane plaće |
+| `opterecenje`, `trosak_razdoblja` | izvedeno | iz odjela, plaće i smještaja |
 
-**Početni ljudi su isti u svakoj igri za isti profil**: generira ih jezgra iz specifikacije profila i **fiksnog sjemena
-profila** (u snimku), uz ispravak da prosjek točno pogodi brojke profila (npr. prosječna motivacija C = 55,00).
-Pravednost: svi studenti s hotelom A imaju iste ljude. (Pitanje 1 u §9.)
+**Isti ljudi za isti profil** (Leon: da). Početne ljude generira jezgra iz specifikacije profila i **fiksnog sjemena
+profila** u snimku. Prosjeci se pritom ispravljaju tako da točno pogode brojke profila (npr. prosječna motivacija
+C = 55,00). Svi studenti s hotelom A imaju iste ljude.
 
 **Profil C u lipnju** [PROC]: Recepcija 7 · Domaćinstvo 18 · Kuhinja 10 · Posluga restorana 9 · Bar 5 · Wellness 3 ·
-Održavanje 3 · Uprava i prodaja 3 = **58** (danas 30 stalnih + 28 sezonaca, `profiles.json`).
+Održavanje 3 · Uprava i prodaja 3 = **58** (danas 30 stalnih + 28 sezonaca). Od njih su 5–6 voditelji odjela.
 
-### 3.4 Soba (sloj 3)
+**Voditelj odjela** (Leon: svakako) ulazi u **prvi prolaz** sloja 2. To je jedna uloga i dvije formule, a bez nje
+lekcija o vođenju (Management) nema nositelja. Vještina „vođenje" voditelja pomiče cilj motivacije cijelog tima
+(±5 bodova [PROC]) i ubrzava rast vještina tima. Odjel bez voditelja trpi kaznu.
+
+### 3.4 Vještine, osobine, jezici (katalog)
+
+**Vještine po ulozi** (3–4, sve 0–100 na ekranu) [PROC]:
+
+| uloga | vještine | gdje djeluju |
+|---|---|---|
+| recepcioner | rad s gostima · sustav (PMS) · prodaja (upsell) · jezici | kvaliteta Smještaja, prihod od nadoplata |
+| sobarica | temeljitost · brzina | kvaliteta i kapacitet domaćinstva, teme „čistoća" |
+| kuhar | kvaliteta jela · brzina · higijena | kvaliteta restorana, trošak namirnica (otpad) |
+| konobar / šanker | brzina usluge · rad s gostima · poznavanje ponude · jezici | kvaliteta F&B, prosječni račun |
+| terapeut | tretmani · prodaja | kvaliteta i prihod wellnessa |
+| tehničar | popravci · prevencija | trošenje soba i odjela, kvarovi |
+| voditelj odjela | vođenje · organizacija + vještine struke | motivacija i rast tima, kapacitet odjela |
+
+**Rast vještine** = iskustvo u ulozi (po danu rada) + obuke, puta brzina učenja. Brzina učenja je osobina pojedinca.
+Početnik kreće nisko i jeftino, a uz obuku i rad postaje sve bolji (Leon). „Iskustvo" iz v1 je prosjek vještina uloge.
+
+**Osobine** (kao BitLife: dobre i loše strane, svaka s konkretnim učinkom iz kataloga) [PROC]:
+
+| dobre | učinak | loše | učinak |
+|---|---|---|---|
+| Pouzdan | rizik odlaska −30 % | Nemiran | rizik odlaska +40 % |
+| Brzo uči | rast vještina +50 % | Kasni | kapacitet −5 %, povremeni incident |
+| Ljubazan | rad s gostima +10 bodova u ocjeni gosta | Svadljiv | motivacija kolega u odjelu −3 dok je tu |
+| Marljiv | kapacitet +5 % | Nestrpljiv s gostima | teme pritužbi „neljubazno osoblje" |
+| Rođeni vođa | vođenje +15 (bitno za voditelja) | Skup | traži povišicu ranije |
+| Timski igrač | motivacija kolega +2 | Neorganiziran | organizacija −10 |
+| Omiljen | ako ode ili bude otpušten, tim to osjeti | | |
+
+Osobine se izvlače **iz iste raspodjele za svakoga** (§2, t. 9). Tekst „osobnosti" na profilu slaže se iz banke
+rečenica po osobinama.
+
+**Jezici.** Katalog ima **jezični sastav gostiju po mjesecu** (npr. njemački, engleski, slovenski, talijanski,
+hrvatski, poljski; izvor DZS i turističke zajednice, pitanje N8). **Pokrivenost** odjela je udio gostiju koje odjel
+može uslužiti na njihovom jeziku barem na razini „komunikativno". Ona pomiče kvalitetu recepcije i F&B-a i daje teme
+recenzija („nitko nije govorio njemački"). Jezik se uči obukom (npr. tečaj hrvatskog ili njemačkog: +1 razina kroz
+nekoliko tjedana).
+
+### 3.5 Soba (sloj 3)
 
 | polje | spremljeno / izvedeno | napomena |
 |---|---|---|
-| `id` | spremljeno, iz tlocrta u katalogu | broj sobe: kat × 100 + redni (`214`) |
-| `tip` | spremljeno | standard · superior s pogledom na more · obiteljska · apartman [PROC 70/30/12/8 sobe] |
-| `stanje` | spremljeno, 0–10 000 | troši se s prodanim noćima te sobe; održavanje i obnova ga vraćaju |
-| `status` | spremljeno | u funkciji · izvan funkcije (uzrok) · u obnovi (do mjeseca) |
-| `obnovljena` | spremljeno | mjesec obnove; donosi doplatu i bolje recenzije |
-| `zadnji_kvar` | spremljeno | tema (klima, kupaonica, namještaj…) za recenzije i karticu sobe |
-| `noci_mjeseca`, `prihod_mjeseca` | u izvješću mjeseca, ne u stanju | iz raspodjele prodanih noći |
+| `id` | spremljeno, iz tlocrta | kat × 100 + redni broj (`214`) |
+| `tip` | spremljeno | standard · superior s pogledom na more · obiteljska · apartman [PROC 70/30/12/8] |
+| `stanje` | spremljeno, 0–10 000 | troši se po prodanoj noći te sobe; održavanje i obnova ga vraćaju |
+| `status` | spremljeno | u funkciji · izvan funkcije (uzrok) · u obnovi (do datuma) · **smještaj radnika** (§5.4) |
+| `obnovljena` | spremljeno | datum obnove; donosi doplatu i bolje recenzije |
+| `zadnji_kvar` | spremljeno | tema (klima, kupaonica, namještaj…) |
+| `noci`, `prihod` | u izvješću razdoblja | iz raspodjele prodanih noći |
 
-### 3.5 Recenzija i segment gosta (sloj 4)
+Cijena: jedna osnovna cijena i fiksne doplate po tipu iz kataloga (Leon: da).
 
-**Recenzija** se sprema **kao kodovi, ne kao tekst**: `id` (`R-jul-037`), mjesec, segment, soba, odjeli koje je gost
-koristio, ocjena (desetinke 1,0–10,0), 1–3 teme s predznakom (`dorucak.spora_usluga −`, `osoblje.ljubazno +`),
-odgovor (ako ga je student dao). Tekst se slaže pri čitanju iz **banke rečenica** u snimku, izborom iz
-(sjeme, `id`) — isti tekst svaki put, nula bajtova teksta u dnevniku. Samo istaknuta recenzija smije imati AI tekst
-(§5, sloj 4).
+### 3.6 Recenzija i segment gosta (sloj 4)
 
-**Segment gosta** je samo podatak iz kataloga (par, obitelj, poslovni, grupa, wellness gost: udio po mjesecu i što mu
-je važno). Segmenti boje recenzije i težine tema; **ne** uvode zasebnu potražnju po segmentu (§8).
+**Recenzija** se sprema **kao kodovi, ne kao tekst**: `id`, razdoblje, segment, jezik gosta, soba, odjeli koje je gost
+koristio, ocjena (1,0–10,0), 1–3 teme s predznakom (`dorucak.spora_usluga −`) i odgovor studenta (izbor pristupa).
+Tekst se slaže pri čitanju iz **banke rečenica**, izborom iz (sjeme, `id`), pa je uvijek isti, a u dnevniku nema
+teksta. AI tekst smije imati samo istaknuta recenzija (§8, sloj 4).
 
-### 3.6 ID-jevi — uvijek iz pravila, nikad slučajni
+**Segment gosta** (par, obitelj, poslovni, grupa, wellness gost) je podatak iz kataloga: udio po mjesecu i što mu je
+važno. Segmenti boje teme recenzija; **ne** uvode zasebnu potražnju (§7.3).
+
+### 3.7 ID-jevi — uvijek iz pravila, nikad slučajni
 
 | entitet | ID | zašto je stabilan |
 |---|---|---|
 | odjel | kod iz kataloga (`restoran`) | katalog je u snimku |
 | soba | broj iz tlocrta (`214`) | tlocrt je u snimku |
-| zaposlenik | `Z-` + redni broj u hotelu | brojač je u stanju; zapošljavanje ide redom naloga |
-| kandidat za posao | (mjesec, uloga, 1–3) | izveden iz sjemena igre i slota hotela |
-| recenzija | (mjesec, redni broj u hotelu) | redoslijed iz raspodjele gostiju |
+| zaposlenik | `Z-` + redni broj u hotelu | brojač je u stanju; naloge jezgra primjenjuje redom |
+| kandidat na burzi | (razdoblje, uloga, redni broj) | izveden iz sjemena igre, isti za sve hotele (§5.1) |
+| narudžba agencije | (razdoblje, redni broj naloga) | redoslijed naloga u planu |
+| recenzija | (razdoblje, redni broj u hotelu) | redoslijed iz raspodjele gostiju |
 
-Nikad uuid ni vrijeme: isti dnevnik daje iste ID-jeve na svakom računalu.
-
-### 3.7 Kako agregati postaju izvedeni
+### 3.8 Kako agregati postaju izvedeni
 
 | polje v1 (`state.rs`) | u v2 | spremljeno? |
 |---|---|---|
-| `rooms` | broj soba | izvedeno |
-| `permanent`, `seasonal` | brojanje zaposlenika po ugovoru | izvedeno |
-| `wage_pct`, `extra_wage_cents` | plaća svake osobe; „svima +x %" ostaje kao skupna radnja | izvedeno (prosjek za prikaz) |
+| `rooms` | broj soba za prodaju (bez soba za radnike) | izvedeno |
+| `permanent`, `seasonal` | brojanje ljudi po ugovoru (agencijski se broje kao sezonci) | izvedeno |
+| `wage_pct`, `extra_wage_cents` | plaća svake osobe; „svima +x %" ostaje kao skupna radnja | izvedeno (prikaz) |
 | `morale_pts` | prosjek motivacije po glavi | izvedeno |
-| `experience_pts` | prosjek iskustva po glavi | izvedeno |
-| `equipment_pts` | 70 % prosjek stanja soba + 30 % prosjek stanja odjela [PROC] | izvedeno |
-| `satisfaction_pts` | anketa gostiju; ima **pamćenje** (pola puta prema cilju, `resolve.rs:405`) | spremljeno, cilj se računa iz odjela i soba |
-| `rating` | bazen recenzija: zbroj i broj, stari dio slabi 25 % mjesečno | spremljeno kao bazen |
-| `load_hundredths`, `turnover_bp` | rezultat mjeseca po odjelu / stvarni odlasci | u izvješću, ne u stanju |
-| `fixed_cents` | neraspoređeni troškovi po odjelu + fiksne naknade | katalog |
-| `cash`, `pending`, `groups`, `renovated`, `category` | isto | spremljeno |
+| `experience_pts` | prosjek vještina uloge po glavi | izvedeno |
+| `equipment_pts` | 70 % stanje soba + 30 % stanje odjela [PROC] | izvedeno |
+| `satisfaction_pts` | anketa s pamćenjem (`resolve.rs:405`); cilj iz zadovoljstva odjelima i soba | spremljeno |
+| `rating` | bazen recenzija | spremljeno kao bazen |
+| `load_hundredths`, `turnover_bp` | po odjelu / stvarni odlasci (preračunato na 30 dana, §4.4) | u izvješću |
+| `fixed_cents` | neraspoređeni troškovi + fiksne naknade (ispod GOP-a) | katalog |
+| `cash`, `pending`, `groups`, `renovated`, `category` | isto (grupe po datumu, ne po mjesecu) | spremljeno |
 
-### 3.8 Pet indeksa na novom modelu
+### 3.9 Pet indeksa na novom modelu
 
-Formule iz DEMO §4 i `crates/sim-hotel/src/indices.rs:82-128` ostaju **iste**; mijenja se samo odakle dolaze ulazi.
+Formule iz DEMO §4 i `crates/sim-hotel/src/indices.rs:82-128` ostaju iste.
 
-| indeks | formula (ne mijenja se) | ulaz u v2 | što student sada vidi ispod |
+| indeks | formula (ne mijenja se) | ulaz u v2 | što student vidi ispod |
 |---|---|---|---|
-| **G** gosti | zadovoljstvo | cilj iz kvalitete odjela, stanja soba i vrijednosti za novac | koji je odjel ili tip sobe vukao dolje |
-| **R** recenzije | (ocjena − 7,0) / 2,8 | ocjena iz bazena recenzija | recenzije i teme koje su je pomaknule |
-| **Z** zaposlenici | 60 % moral + 40 % zadržavanje | prosjek motivacije; stvarni odlasci / prosječni broj | tko je otišao i zašto, tko je u riziku |
-| **O** operativa | 45 % oprema + 30 % iskustvo + 25 % opterećenje | stanje soba i odjela; iskustvo ljudi; opterećenje po odjelu | koje su sobe izvan funkcije, koji je odjel preopterećen |
-| **F** financije | 70 % GOPPAR prema referentnom + 30 % likvidnost | GOP po USALI-ju (zbroj odjela − neraspoređeni) | odjelni rezultati |
+| **G** gosti | zadovoljstvo | iz zadovoljstva odjelima, stanja soba i vrijednosti za novac | koji odjel ili tip sobe vuče dolje |
+| **R** recenzije | (ocjena − 7,0) / 2,8 | bazen recenzija | recenzije i teme |
+| **Z** zaposlenici | 60 % moral + 40 % zadržavanje | motivacija ljudi; odlasci preračunati na 30 dana | tko je otišao i zašto, tko je u riziku |
+| **O** operativa | 45 % oprema + 30 % iskustvo + 25 % opterećenje | stanje soba i odjela, vještine, opterećenje po odjelu | sobe izvan funkcije, preopterećen odjel |
+| **F** financije | 70 % GOPPAR prema referentnom + 30 % likvidnost | GOP po USALI-ju; likvidnost preračunata na 30 dana | odjelni rezultati |
 
 `index_drivers` (`indices.rs:71-80`) dobiva pokretače odjela, ljudi i soba, pa „što je pokrenulo indeks" ide do
-pojedinca: „Z je pao 4 boda: otišli su Marko (restoran) i Ivana (domaćinstvo), oboje motivacija ispod 35".
+pojedinca: „Z je pao 4 boda: otišli su Marko (restoran) i Ivana (domaćinstvo), oboje s motivacijom ispod 35".
 
 ---
 
-## 4 · Kako se v2 uklapa u igru
+## 4 · Razdoblje: tjedan ili mjesec
 
-### 4.1 Paketi
+Leon bi radije igru po **tjednima**, a **profesor bira** pri stvaranju igre. Time pada ranije pravilo „krug je uvijek
+mjesec". Novo pravilo: **v2 računa razdoblje od N dana**. Mjesec je samo jedna od dvije vrste razdoblja.
+
+### 4.1 Kalendar
+
+- Snimak pravila dobiva postavku `razdoblje: tjedan | mjesec`. Iz nje se pri stvaranju igre gradi popis razdoblja
+  (početni dan, broj dana) i sprema se u `GameCreated`.
+- **Mjesec:** 4 razdoblja (30/31/31/30 dana) za punu sezonu; demo i dalje ima dva.
+- **Tjedan:** sezona 1. 6. – 30. 9. ima 122 dana = 16 tjedana od 7 dana + **zadnje razdoblje od 10 dana**
+  (21.–30. 9.) [prijedlog, pitanje N3]. Ukupno 17 krugova.
+- **Sezonske tablice ostaju po mjesecu** u sadržaju (`MonthTable`, `month.rs:53`). Vrijednost za razdoblje je prosjek
+  po danima mjeseci koje dotiče: tjedan 28. 6. – 4. 7. = 3 dana lipnja + 4 dana srpnja. Sadržaj se zato ne mijenja,
+  a mjesečno razdoblje daje točno današnju vrijednost.
+
+### 4.2 Sve brzine po danu ili po vrsti razdoblja
+
+| veličina | v1 (po mjesecu) | v2 |
+|---|---|---|
+| prodaja, kapacitet, trošenje sobe, CPOR | već po danu / noći | isto, puta dani razdoblja |
+| plaće, fiksni troškovi, smještaj radnika | mjesečni iznos | mjesečni iznos × dani / dani mjeseca (zaokruženo na cent, ostatak ide u zadnji dan mjeseca) |
+| marketing, održavanje (odluke) | iznos za mjesec | iznos za razdoblje; granice iz kataloga po vrsti razdoblja |
+| pomak motivacije (30 %), zadovoljstva (50 %), ocjene (25 %) | jedan korak | **koeficijent po vrsti razdoblja iz kataloga** (npr. tjedan: motivacija 8 %, zadovoljstvo 15 %, ocjena 7 % [PROC]); mjesec = današnji |
+| odlasci | rizik po mjesecu | rizik × dani / 30 |
+| obuka | učinak idući mjesec | tečaj traje N dana (osoba je toliko odsutna); učinak nakon završetka |
+| obnova | jedan mjesec | 2–4 tjedna po katu; sobe izvan prodaje točno toliko dana |
+| recenzije | ~80 po mjesecu | ~20 po tjednu (iz istih boravaka) |
+
+Koeficijente pomaka nije moguće točno preračunati cijelim brojevima (to bi tražilo potenciranje). Zato ih katalog
+zadaje izričito i balans ih kalibrira tako da **tjedna i mjesečna igra s istim odlukama daju sličan kraj sezone**.
+To postaje nova provjera balansa.
+
+### 4.3 Što to znači za igru
+
+- **Situacije** danas imaju mjesec (`crates/sim-hotel/src/mechanic.rs:51`). U v2 dobivaju i neobavezan tjedan u
+  mjesecu (1–4); u mjesečnoj igri tjedan se zanemaruje. Prijedlog je 1–2 situacije tjedno.
+- **Grupe** (`state.rs:9-13`) se vežu za raspon datuma, ne za mjesec.
+- **Plan se prenosi.** Danas bez plana vrijedi zadani plan (`game.rs:411-419`). Uz 17 krugova to bi bilo nepodnošljivo,
+  pa u v2 **vrijedi prošli plan dok ga student ne promijeni**, za obje vrste razdoblja. Jednokratni nalozi
+  (zaposli, obnovi) se ne ponavljaju.
+- **Tjedni krug studenta** ima manje odluka po krugu: pogledaj što se dogodilo (3 najveća uzroka), odgovori na 1–2
+  situacije ili razgovora, po želji prilagodi cijenu, ljude i recenzije, pa „Zatvori tjedan". Mjesečna lekcija
+  (USALI izvještaj, mentor u četiri dijela) dolazi **na kraju svakog kalendarskog mjeseca**, i u tjednoj igri.
+- **Indeksi i ljestvica** se računaju na kraju svakog razdoblja. Referentni hotel se vrti po istom kalendaru
+  (`RefTable::compute`, `indices.rs:153-190`, danas po mjesecu). Profesor vidi i mjesečni sažetak.
+- **Pregovori o plaći** ne mogu se ponavljati svaki tjedan: ista osoba traži najviše jednom u 4 tjedna.
+
+### 4.4 Zamke koje treba riješiti u temelju
+
+- **Likvidnost** dijeli blagajnu s troškovima razdoblja (`indices.rs` `raw_indices`, likvidnost). U tjednu bi
+  likvidnost skočila oko 4 puta. Nazivnik se zato preračunava na 30 dana.
+- **Zadržavanje (Z)** koristi mjesečnu stopu odlazaka (DEMO §4: „8 % mjesečno → 0"). U tjednoj igri se koristi stopa
+  zadnjih 30 dana, ne tjedna.
+- **Krug je danas `Month` posvuda:** u `game` (`closed`, `resolved`: `game.rs:78-79`), u događajima
+  (`GameCreated.months`, `crates/game/src/event.rs:22`) i u API putanjama (`/rounds/{month}`,
+  `crates/api/src/games.rs:37`; `/plans/{month}`, `crates/api/src/hotels.rs:85`). v2 uvodi **ključ kruga** kao kod
+  (`jun` za mjesec, `t07` za tjedan). Za v1 ostaje `Month`, a putanje primaju oba koda.
+
+### 4.5 Cijena i preporuka
+
+Tjedni krug **ide u temelj sloja 1**. Ta podjela ionako dira sva mjesta na kojima je `Month` ključ kruga (§6.4), pa
+razdoblje tamo košta **+12–18 h**. Kad bi se dodalo nakon slojeva 2–3, svaka brzina ljudi, soba i recenzija morala bi
+se ponovno pisati i kalibrirati, procjena 30–40 h. **Rizici:** dvostruka kalibracija (balans vrti obje vrste
+razdoblja), mali brojevi po tjednu (više zaokruživanja, zato koeficijenti iz kataloga i ostatak u zadnji dan) i
+17 krugova po igri (AI trošak i vrijeme profesora, §5.5). v1 ostaje samo mjesečni, a v2 mjesečni je put
+ekvivalencije s v1.
+
+---
+
+## 5 · Ljudi: burza rada, agencija, smještaj, razgovori
+
+### 5.1 Burza rada
+
+- Svako razdoblje burza nudi kandidate po ulozi [PROC 2–4 po ulozi; više u lipnju, malo lokalnih u srpnju i kolovozu].
+  Kandidat ima isti oblik kao zaposlenik: vještine, osobine, jezike, traženu plaću, datum od kojeg može početi i
+  potrebu za smještajem.
+- **Vrste kandidata:** *početnik* (niske vještine, niska tražena plaća, često „Brzo uči"), *iskusni profesionalac*
+  (visoke vještine, traži više) i sve između. Sve su to vrijednosti pojedinca, ne podrijetla.
+- **Ista burza za sve hotele u igri** (izvedena iz sjemena igre, ne iz slota). Zaposlenje u jednom hotelu ne uklanja
+  kandidata iz drugih, jer se hoteli još ne natječu za ljude (VIZIJA §3; pitanje N2).
+- **Skrivena osobina:** prije zaposlenja vide se vještine, jezici i jedna osobina. Druga se otkrije **razgovorom za
+  posao** (§5.5) ili nakon prva 4 tjedna rada. Tako razgovor ima vrijednost.
+
+### 5.2 Plaća koja raste s vještinom
 
 ```text
-engine ◄── sim-hotel (v1, ZAMRZNUT) ◄── sim-hotel-v2 (koristi Month, Index, IndexSet, score, calc iz v1)
+očekivana_plaća = tržišna_plaća_uloge × (85 % + 30 % × prosjek_vještina / 100)      [PROC]
+ako je očekivana plaća barem 8 % veća od stvarne → osoba traži povišicu (najviše jednom u 4 tjedna)
+   prihvati  → nova plaća, motivacija +
+   odbij     → motivacija −, rizik odlaska raste dok se razlika ne zatvori
+   pregovaraj (AI razgovor) → kvaliteta 1–5 pomiče prag prihvaćanja i učinak na motivaciju, unutar granica kataloga
+```
+
+To je Leonova petlja: obučiš početnika, on postane izvrstan i tada traži više. Ulaganje u ljude ima cijenu.
+
+### 5.3 Otpuštanje
+
+- **Stalni:** otkazni rok (plaća se, a osoba radi s nižom motivacijom) i otpremnina iz kataloga. **Sezonac:** kraj
+  ugovora bez troška na kraju razdoblja.
+- **Kolege ne gube motivaciju svaki put** (Leon). Gube je samo u iznimkama: otpušten je netko s osobinom „Omiljen" ili
+  s dugim stažem, ili je u istom razdoblju otpušteno više od 20 % odjela [PROC]. Inače nema učinka na tim.
+
+### 5.4 Agencija za strane radnike i smještaj
+
+- **Nalog:** „5 radnika za domaćinstvo". Agencija ih dovodi nakon **roka** (npr. 3 tjedna; iz kataloga, po zemlji).
+  Naplaćuje se **naknada agencije** po osobi i **trošak radne dozvole i administracije**.
+- Agencijski radnik je zaposlenik kao svaki drugi: vještine, osobine i motivacija izvlače se iz **istih raspodjela**.
+  Podrijetlo određuje samo **jezike** (npr. materinji jezik zemlje + engleski na razini izvučenoj za tu osobu;
+  hrvatski u početku 0–1), **rok**, **naknadu**, **dozvolu** i **potrebu za smještajem** (§2, t. 9).
+- **Plaća je ista za istu vještinu.** To je prijedlog arhitekta (pitanje N1). Leon je rekao „jeftinija radna snaga",
+  ali razlika u plaći po podrijetlu bila bi upravo pravilo koje ovaj dokument zabranjuje (a u Hrvatskoj i protuzakonita).
+  Agencija zato nije jeftinija po glavi. Ona daje **ljude kad ih na lokalnoj burzi nema** (u srpnju i kolovozu), uz
+  dodatne troškove. Student vidi ukupni trošak po osobi: plaća + naknada + dozvola + smještaj.
+- **Smještaj radnika** treba svakome s `treba_smjestaj`, bilo da je iz inozemstva ili iz Slavonije. Dvije mogućnosti:
+  1. **najam kreveta u gradu**: trošak po krevetu po danu; više kreveta je skuplje u vrhu sezone [PROC];
+  2. **sobe hotela za radnike**: 2 radnika po sobi. Nema najma, ali soba nije za prodaju. To je **izgubljeni prihod**
+     koji ekran pokazuje („soba 108 bi u kolovozu donijela ~4 900 €").
+- **Ekran agencije** po osobi i po skupini pokazuje koliko donose (kapacitet, kvaliteta odjela, prihod koji bez njih ne
+  bi bio prodan) i koliko koštaju (plaća, naknada, smještaj). Lekcija je trošak radne snage i ograničenja kapaciteta.
+
+### 5.5 Razgovori s AI-jem
+
+Leon: odgovor na recenziju je **izbor bez AI-ja**, ali razgovori s ljudima i s gostima u situacijama trebaju biti
+**s AI-jem gotovo uvijek** (slobodan tekst, zabavno). Postojeći put se koristi i dalje: lik na Haikuu, presuda po
+rubrici na Sonnetu, rezerva bez AI-ja ([ADR-019](../records/DECISIONS.md#adr-019),
+[ADR-024](../records/DECISIONS.md#adr-024)), najviše 6 poruka studenta (`crates/game/src/talk.rs:14`).
+
+| razgovor | kada | što AI dobiva | rubrika ocjenjuje | što pravila iz kvalitete računaju |
+|---|---|---|---|---|
+| **Pregovori o plaći** | osoba traži povišicu (§5.2) ili je student pozove | vještine, osobine, plaća, očekivana plaća, staž | uvažavanje, argumenti, jasna ponuda, poštenje | student upisuje **broj** (nova plaća); prihvaćanje = ponuda ≥ očekivana − tolerancija(q); motivacija Δ ograničena |
+| **Upozorenje** | incident (osobina „Kasni", pritužba gosta na osobu) | incident, povijest | činjenice, bez ponižavanja, jasno očekivanje | ponavljanje incidenta −/+, motivacija Δ; loš razgovor kod „Omiljen" dira tim |
+| **Motivacijski razgovor** | student pozove (ograničeno vrijeme voditelja) | motivacija i njezini uzroci iz jezgre | slušanje, konkretna mjera, praćenje | cilj motivacije +0…+5 kroz 4 tjedna; mjera koju student obeća (npr. obuka) postaje nalog |
+| **Razgovor za posao** | prije zaposlenja kandidata | kandidatove vještine i skrivena osobina | pitanja o radu, jasna očekivanja | otkriva skrivenu osobinu (uvijek); kvaliteta pomiče traženu plaću ±3 % |
+| **Izlazni razgovor** | osoba odlazi | pravi uzrok odlaska iz jezgre | slušanje | ništa u brojkama; student sazna uzrok (mentor ga koristi) |
+| **Gost s pritužbom** (situacija) | iz situacija, kao danas | soba, odjel, tema pritužbe iz jezgre | kao danas (ADR-019) | kao danas: `ServiceRecovery` (DEMO §6.2) |
+
+**AI nikad ne zapisuje broj.** Lik zna samo činjenice koje mu jezgra da. Presuda daje kvalitetu 1–5 i kriterije, a
+učinak je formula kataloga s granicama (DEMO §6.2). Ako AI ne radi, isti razgovor nudi 3–4 ponuđena odgovora.
+
+**Vrijeme voditelja** ograničava broj razgovora koje student pokreće: 3 po tjednu ili 8 po mjesecu [PROC, pitanje N6].
+Razgovori koje pokrene osoba (traži povišicu) ili situacija ne troše to vrijeme.
+
+**Trošak** (cijene iz ADR-024; replika lika ≈ 0,0001 $, presuda ≈ 0,008 $; mentor na Sonnetu ≈ 0,01–0,02 $ [PROC]):
+
+| | mjesečna igra (4 kruga) | tjedna igra (17 krugova) |
+|---|---|---|
+| razgovori (situacije + ljudi) | ~20 × (6 × 0,0001 + 0,008) ≈ 0,18 $ | ~50 × 0,0086 ≈ 0,45 $ |
+| mentor | 4 × ~0,015 ≈ 0,06 $ | 17 × ~0,015 ≈ 0,26 $ (ili samo na kraju mjeseca: 0,06 $) |
+| istaknute recenzije (Haiku) | zanemarivo | zanemarivo |
+| **po studentu po igri** | **≈ 0,25 $** | **≈ 0,45–0,75 $** |
+
+**Gornja granica:** 2 $ po studentu po igri (`ai_usage`, ARHITEKTURA §9.3) [prijedlog]. Iznad toga razgovori prelaze
+na ponuđene odgovore, a profesor to vidi. Za grupu od 30 studenata to je najviše 60 $ po igri.
+
+---
+
+## 6 · Kako se v2 uklapa u igru
+
+### 6.1 Paketi
+
+```text
+engine ◄── sim-hotel (v1, ZAMRZNUT) ◄── sim-hotel-v2 (koristi Index, IndexSet, score, calc, MonthTable iz v1)
                ▲                              ▲
                └──────── game (bira model po snimku) ◄── content (čita i nove datoteke)
 ```
 
-`sim-hotel-v2` počinje kao kopija v1 na početku sloja 1 (sloj 0 ne mijenja brojke, pa ide u v1, §5). Pravila
-ovisnosti (ARHITEKTURA §6.2) i zabrane (`lib.rs:2-7`: bez decimalnih brojeva, bez prelijevanja) vrijede i za v2.
+`sim-hotel-v2` počinje kao kopija v1 na početku sloja 1, uz razdoblje umjesto mjeseca. Sloj 0 ne mijenja brojke, pa
+ide u v1. Pravila ovisnosti (ARHITEKTURA §6.2) i zabrane (`crates/sim-hotel/src/lib.rs:2-7`) vrijede i za v2.
 
-### 4.2 Stare igre — točno što se događa
+### 6.2 Stare igre (Leon: ostaju igrive na v1)
 
-Danas: `GameCreated.core_version` = `sim_hotel::CORE_VERSION` = verzija paketa `0.1.0` (`lib.rs:50`,
-`crates/sim-hotel/Cargo.toml:3`), a obračun se **odbija** ako se ne slaže (`crates/game/src/resolve.rs:111-117`;
-web dobiva grešku 500 preko `crates/app/src/error.rs:170`). Uz to, `fold` pri svakom čitanju igre **ponovno
-računa** referentnu tablicu i početne indekse trenutnim kodom (`crates/game/src/game.rs:131-141`). Posljedica: svaka
-promjena formula u `sim-hotel` tiho bi promijenila početne indekse i napredak **starih** igara. Zato:
+Danas je `GameCreated.core_version` = `sim_hotel::CORE_VERSION` = `0.1.0` (`lib.rs:50`, `Cargo.toml:3`), a obračun se
+odbija ako se verzija ne slaže (`crates/game/src/resolve.rs:111-117`; web dobiva grešku 500 preko
+`crates/app/src/error.rs:170`). Uz to `fold` pri svakom čitanju igre **ponovno računa** referentnu tablicu i početne
+indekse trenutnim kodom (`game.rs:131-141`). Svaka promjena formula u `sim-hotel` zato bi tiho promijenila napredak
+**starih** igara. Odluka:
 
-1. **Snimak pravila dobiva polje `model`** (`"v1"` kad ga nema — sve današnje igre). Novo polje ima
-   `serde(default, skip_serializing_if)`, pa stari otisak (`legacy_fingerprint`, `crates/content/src/lib.rs:607`)
-   ostaje isti.
-2. **v1 igre** se zauvijek čitaju, nastavljaju i ponovno obračunavaju v1 kodom, s istim brojkama. `sim-hotel` ostaje
-   `0.1.0`; „zlatni test" (ista sezona sa sjemenom 7 → isti otisak cijelog izvješća) ruši CI ako se v1 broj pomakne.
-3. **v2 igre** provjeravaju svoju verziju (`sim_hotel_v2::CORE_VERSION`, od `2.0.0`). Unutar v2 svaki sloj diže
-   verziju; v2 igra stvorena u sloju 1 nastavlja se samo jezgrom sloja 1 (poruka „igra je stvorena starijom verzijom",
-   ne 500). Za pilot je to dovoljno: v2 igre prije pilota su probne.
-4. v1 se nikad ne briše dok postoji v1 igra koju netko želi otvoriti.
+1. Snimak dobiva polja `model` (`"v1"` kad ga nema) i `razdoblje`, s `serde(default, skip_serializing_if)`. Zato stari
+   otisak (`legacy_fingerprint`, `crates/content/src/lib.rs:607`) ostaje isti.
+2. **v1 igre** se zauvijek čitaju, nastavljaju i obračunavaju v1 kodom, s istim brojkama. `sim-hotel` ostaje `0.1.0`.
+   „Zlatni test" (ista sezona sa sjemenom 7 → isti otisak izvješća) ruši CI ako se ijedan v1 broj pomakne.
+3. **v2 igre** provjeravaju svoju verziju (od `2.0.0`, raste po sloju). Probna v2 igra iz starijeg sloja dobiva poruku
+   „igra je stvorena starijom verzijom", a ne grešku 500.
+4. v1 se ne briše dok postoji v1 igra.
 
-### 4.3 Dnevnik i događaji (samo dodavanje)
+### 6.3 Dnevnik i događaji (samo dodavanje)
 
 | što | promjena | zašto ovako |
 |---|---|---|
-| `GameCreated.snapshot` | nove datoteke sadržaja (§5) + `model` | puni snimak pravila ostaje u igri (ARHITEKTURA §7.2) |
-| `PlanSet.plan` (`PlanDto`) | novo polje `nalozi: Vec<Nalog>` (zaposli, otpusti, plaća, obuka, premjesti, razina cijene odjela, otvori/zatvori odjel, obnova sobe/kata, soba izvan funkcije, odgovor na recenziju) | nalog je dio plana mjeseca: „zadnji plan vrijedi" ostaje jedino pravilo; roboti ga pišu istim putem |
-| `RoundResolved.hotels[]` | novo polje `detalj` (v2): entiteti **nakon** mjeseca, odjelni račun, noći po sobi, odlasci i dolasci s razlozima, recenzije mjeseca | `report` (v1 oblik) i dalje nosi sažetak, pa postojeći ekrani i mentor rade |
-| `SCHEMA_VER` (`crates/game/src/event.rs:9`) | ostaje 1 dok su sva polja dodatna s `serde(default)` | isti obrazac kao `free_text` (`event.rs:100-102`) |
+| `GameCreated` | snimak s novim datotekama, `model`, `razdoblje`; popis razdoblja | puni snimak pravila ostaje u igri (ARHITEKTURA §7.2) |
+| `PlanSet.plan` | `nalozi: Vec<Nalog>` (zaposli, otpusti, plaća, obuka, premjesti, narudžba agencije, smještaj, razina cijene odjela, otvori/zatvori odjel, obnova, soba izvan funkcije, odgovor na recenziju) | „zadnji plan vrijedi" ostaje jedino pravilo; roboti pišu isto |
+| razgovori s ljudima | isti događaji kao razgovor u situaciji (poruka, odgovor, presuda), s ključem razgovora umjesto koda situacije | jedan put za AI, isti red poslova i rok presude |
+| `RoundResolved.hotels[]` | `detalj` (v2): entiteti nakon razdoblja, odjelni račun, noći po sobi, odlasci i dolasci s razlozima, recenzije | `report` (v1 oblik) i dalje nosi sažetak |
+| `SCHEMA_VER` (`event.rs:9`) | ostaje 1 dok su polja dodatna s `serde(default)` | obrazac kao `free_text` (`event.rs:100-102`) |
 
-Stanje na početku mjeseca (`Game::state_at`, `game.rs:368-386`) za v2 čita `detalj` prethodnog mjeseca umjesto
-`report.after`. Danas se `before` i `after` spremaju oba (`crates/game/src/dto.rs:538-546`); v2 sprema samo `after`
-entiteta (`before` je prethodni `after`), da dnevnik ne raste dvostruko.
+v2 sprema samo stanje entiteta **nakon** razdoblja; danas se spremaju `before` i `after` (`crates/game/src/dto.rs:538-547`).
 
-### 4.4 Gdje je najveći tehnički trošak
+### 6.4 Gdje je najveći tehnički trošak
 
-`game` je danas čvrsto vezan na v1 tipove (`HotelState`, `MonthPlan`, `MonthReportDto` u `fold`, `state_at`,
-`effective_plan`, `robot_moves`, `resolve_round`). Model v2 traži da `game` drži `enum` „stanje v1 ili v2" i grana na
-pet mjesta. To je **prvi posao sloja 1** i najveći pojedinačni komad (§5). Isplati se jer se radi jednom.
+`game` je danas čvrsto vezan na v1 tipove (`HotelState`, `MonthPlan`, `MonthReportDto`) i na `Month` kao ključ kruga
+(`fold`, `state_at`, `effective_plan`, `robot_moves`, `resolve_round`, API putanje). v2 traži da `game` drži „stanje v1
+ili v2" i „ključ kruga" te da grana na tim mjestima. To je **prvi posao sloja 1**: 14–20 h s razdobljem. Ništa drugo u
+sloju 1 ne teče dok ovo nije gotovo.
 
-### 4.5 API (samo dodavanje)
+### 6.5 API (samo dodavanje)
 
-Postojeće putanje ostaju. Nove, samo za vlastiti hotel (i profesora):
+Postojeće putanje ostaju i primaju i kod razdoblja. Nove putanje vrijede za vlastiti hotel (i za profesora):
 
 | putanja | sloj | što vraća |
 |---|---|---|
-| `GET /v1/hotels/{hotel_id}/kpi` | 0 | popunjenost, ADR, RevPAR, TRevPAR, GOPPAR, marža, udio rada, točka pokrića, po mjesecima |
-| `GET /v1/hotels/{hotel_id}/pl?month=` | 1 | račun dobiti po USALI-ju |
-| `GET /v1/hotels/{hotel_id}/departments` · `/{code}` | 1 | odjeli; u odjelu ljudi, prihod, troškovi, stanje, rezultat po mjesecima |
-| `GET /v1/hotels/{hotel_id}/staff` · `/{employee_id}` · `/candidates` | 2 | ljudi, profil s poviješću, kandidati mjeseca |
-| `GET /v1/hotels/{hotel_id}/rooms` · `/{room_id}` | 3 | sve sobe (tlocrt), kartica sobe s poviješću |
-| `GET /v1/hotels/{hotel_id}/reviews?month=&topic=` | 4 | recenzije s tekstom, teme, odgovori |
-| `PUT …/plan` | 1–4 | postojeći, s `nalozi` |
-| `GET /v1/games/{game_id}/compare` | 0–4 | profesor: hoteli jedan uz drugoga (§7) |
-
-Tipovi za web se i dalje generiraju (OpenAPI → klijent); ručnih tipova nema.
-
----
-
-## 5 · Slojevi
-
-Svaki sloj: gradi se na svojoj grani, dokaže (testovi, `cargo run -p balance --release -- --seeds 1000 --check`,
-pregled u pregledniku na mobitelu i laptopu, [ADR-027](../records/DECISIONS.md#adr-027) raspored), pregleda i tek
-onda ide sljedeći. Veličine su sati rada agenata [PROC]; S ≤ 10 h, M 10–25 h, L 25–45 h.
-
-### Sloj 0 — pokazatelji (P2) · **S, 6–10 h**
-
-- **Student vidi:** karticu „Pokazatelji" na Mom hotelu i ekran s tablicom po mjesecima: popunjenost, **ADR**,
-  **RevPAR**, TRevPAR, GOPPAR, GOP marža, udio troška rada, CPOR, **točka pokrića** (pri kojoj popunjenosti GOP = 0).
-  Uz svaki broj jedna rečenica formule („ADR = prihod od soba / prodane noći"). Laptop: tablica; mobitel: kartice
-  koje se listaju po mjesecu.
-- **Mehanika:** nijedna nova. Čiste funkcije u `sim-hotel/src/kpi.rs` nad postojećim `MonthReport`; **ne spremaju
-  se**, računaju se pri čitanju. Brojke igre se ne mijenjaju, zato sloj 0 smije u v1 i u `main` nakon demoa.
-- **Odluka o ponudi soba:** RevPAR i GOPPAR dijele se sa **svim** sobama × dani (kao danas GOPPAR, `resolve.rs:309`),
-  a popunjenost isto, da vrijedi RevPAR = ADR × popunjenost; sobe izvan funkcije prikazuju se zasebno kao
-  „izgubljene noći". Danas web računa popunjenost nad raspoloživim sobama (`HotelScreen.tsx:132`) — mijenja se
-  (pitanje 6 u §9).
-- **Testovi:** RevPAR = ADR × popunjenost (u granici zaokruživanja); dijeljenje nulom (mjesec bez prodaje); ista
-  brojka kroz API i ekran.
-- **Paralelno:** jezgra + API (jedan agent) · ekran (drugi, nad dogovorenim oblikom) · profesorova tablica (treći).
-
-### Sloj 1 — odjeli po USALI-ju (P3, P4) · **L, 30–45 h**
-
-- **Student vidi:** odjeljak **„Dijelovi hotela"**: kartica po odjelu (samo oni koje hotel ima) s prihodom, troškom,
-  rezultatom, brojem ljudi, opterećenjem, stanjem i trendom. Klik → odjel: račun odjela po mjesecima, ljudi (u sloju 1
-  broj po ulozi), stanje opreme, „Zašto se promijenio". Ekran **„Račun dobiti"** u obliku USALI: odjeli → odjelni
-  rezultati → neraspoređeni troškovi → **GOP** → fiksne naknade → EBITDA. Laptop: dva stupca (popis | detalj);
-  mobitel: popis pa puni ekran.
-- **Student radi** (nalozi u planu): broj sezonaca **po odjelu** (zamjenjuje današnji jedan `seasonal_target`);
-  razina cijene odjela 90–120 %; otvori/zatvori sezonski odjel (rooftop u lipnju?); raspodjela održavanja po
-  odjelima.
-- **Mehanika:** gosti u kući = prodane noći × gosti po sobi. Prihod odjela = gosti × udio koji ga koristi × prosječni
-  račun. Udio pada s višom cijenom odjela i nižom kvalitetom. Kapacitet odjela (ljudi × norma) ograničava broj
-  posluženih; višak je izgubljen prihod i kazna opterećenja. Odjelni troškovi = plaće ljudi odjela + trošak robe
-  (% prihoda) + ostalo. Prvi uzročni lanac koji student vidi:
-
-  ```text
-  premalo kuhara u kolovozu → opterećenje kuhinje iznad norme → kvaliteta restorana pada
-     → manje gostiju večera u hotelu (udio 38 % → 31 %) → prihod F&B pada
-     → zadovoljstvo gostiju (G) pada → ocjena portala sporo pada → potražnja iduće mjesece
-  ```
-
-- **Sadržaj:** `content/hotel/departments.json` (vrste, USALI razred, norme, udio korištenja po mjesecu, prosječni
-  račun po kategoriji, trošak robe %, stanje), `profiles.json` (popis odjela profila, ljudi po odjelu),
-  `catalog.json` (raspad `fixed_cents` na neraspoređene troškove i fiksne naknade; `other_revenue_bp` ostaje samo u v1
-  snimku). Kalibracija: za C zbroj ostalih odjela ≈ 30 % prihoda soba (današnja brojka), F&B najveći dio [PROC].
-- **Događaji/API:** `model: "v2"`, `nalozi`, `detalj` s odjelima (§4.3); `/pl`, `/departments`.
-- **Objašnjenje i mentor:** `Line` dobiva `opseg` (hotel · odjel) i nove uzroke (`Odjel(kod)`, `KapacitetOdjela`,
-  `CijenaOdjela`). `debrief_facts` dobiva „odjeli": najveći rast i pad odjelnog rezultata, riječima i u eurima.
-- **Balans (nove provjere):** odjelne marže u pojasu (Smještaj 65–80 %, F&B 15–35 %, wellness 20–40 % [PROC]); udio
-  troška rada 30–40 % prihoda (LRH ≈ 35 % [P]); TRevPAR/RevPAR za C 1,25–1,40; zatvaranje odjela nije dominantna
-  radnja; postojeće §11.1–11.5 i dalje prolaze, s profilima koji se razlikuju po odjelima.
-- **Testovi:** ekvivalencija (jedan odjel = v1); zbroj odjela = ukupno, do centa; model u snimku bira jezgru; v1 zlatni
-  test; stari v1 dnevnik se čita i nastavlja.
-- **Redoslijed i paralelno:** prvo **jedan** agent: kopija jezgre + `game` s dva modela (§4.4, 10–14 h, ništa drugo
-  ne smije teći dok ovo nije gotovo). Zatim paralelno: formule odjela (jezgra) · sadržaj JSON · ekrani nad lažnim
-  podacima · profesorov račun dobiti · provjere balansa.
-
-### Sloj 2 — zaposlenici kao pojedinci (P5, P6) · **L, 30–40 h**
-
-- **Student vidi:** odjeljak **„Ljudi"**: popis po odjelima (lik, ime, uloga, motivacija, iskustvo, plaća, opterećenje,
-  oznaka rizika odlaska), filtri „u riziku", „preopterećeni", „sezonci". Profil osobe: povijest po mjesecima
-  (motivacija, iskustvo, obuke, premještaji), „zašto je motivacija pala" (iz jezgre). Unutar odjela iz sloja 1 broj
-  ljudi postaje stvarni popis.
-- **Student radi** (nalozi): **zaposli** (kandidati mjeseca: po 3 po ulozi, svaki s iskustvom, traženom plaćom i
-  osobinom), **otpusti** (stalni: otkazni rok i otpremnina iz kataloga, kolege u odjelu −motivacija; sezonac: kraj
-  ugovora na kraju mjeseca bez troška), **povisi plaću** jednoj osobi, **pošalji na obuku** (osoba je taj mjesec dio
-  vremena odsutna — manji kapacitet odjela), **premjesti** u drugi odjel (iskustvo u novoj ulozi se prepolovi).
-  Skupne radnje iz v1 ostaju kao prečaci: „svima plaća x %", „obuka cijelog odjela", „sezonci po planu".
-- **Mehanika:** današnje formule po osobi. Cilj motivacije = 55 + 2 × (njegova plaća % − 100) − pola kazne
-  opterećenja **njegovog odjela** + obuka + situacije + osobina; pomak 30 % mjesečno (`resolve.rs:185-196`). Broj
-  odlazaka = zaokruženi zbroj rizika svih ljudi (isti kao v1 kad su svi jednaki); **tko** odlazi bira kocka
-  (`v2:odlasci`, mjesec, slot), ponderirano rizikom. Odlazak se zamjenjuje kandidatom s iskustvom 20 (kao v1,
-  `resolve.rs:199-211`) samo ako je tako zadano; inače odjel ostaje kraći. Lanac:
-
-  ```text
-  Marko, konobar: plaća 92 %, opterećenje restorana 2,3 → motivacija 31 → rizik odlaska 7,4 %
-     → u srpnju odlazi → zamjena s iskustvom 20 → kvaliteta restorana −3 → zadovoljstvo −1
-     → Z pada (odlazak + motivacija), O pada (iskustvo), F trošak zapošljavanja 1 500 €
-  ```
-
-- **Sadržaj:** `roles.json` (uloge, odjel, tržišna plaća, norma), `names.json` (banka hrvatskih i regionalnih imena),
-  osobine u `catalog.json`, generator početnih ljudi po profilu.
-- **Roboti:** svaka strategija dobiva jednostavno pravilo za ljude (Štedljivi: otpušta najskuplje sezonce; Brižni:
-  obuka i povišica najmanje motiviranima; Lovac na popunjenost: zapošljava do kapaciteta; Slučajni: nasumični nalozi
-  unutar granica), da balans mjeri i pojedinačne radnje.
-- **Objašnjenje i mentor:** uzroci `Odlazak(id)`, `Zaposlenje(id)`, `Premjestaj(id)`; činjenice „ljudi": tko je
-  otišao i zašto (najviše tri), tko je najveći rizik idući mjesec.
-- **Balans:** fluktuacija sezonaca 30–50 % sezonski, stalnih 15–25 % godišnje [PROC iz istraživanja]; probe za
-  dominantne radnje: „otpusti najmanje motivirane svaki mjesec", „svima najveća plaća", „sve na obuku" — nijedna ne
-  smije pobijediti za sva tri profila (DEMO §11.4).
-- **Testovi:** ekvivalencija (jednaki ljudi = v1); ista sezona, isto sjeme → isti ljudi odlaze; početni prosjeci =
-  brojke profila; nalog na nepostojeću osobu se odbija pri upisu plana (`MonthPlan::validate`, `plan.rs:83`).
-- **Paralelno:** jezgra (formule po osobi) · sadržaj (imena, uloge) · ekrani popisa i profila · roboti i balans.
-
-### Sloj 3 — sobe sa stanjem (P7) · **M, 15–25 h**
-
-- **Student vidi:** odjeljak **„Sobe"**: tlocrt po katovima (laptop: mreža 120 pločica obojenih po stanju; mobitel:
-  popis po katu s filtrima „izvan funkcije", „najlošije", „tip"). Klik → kartica sobe: tip, stanje, noći i prihod po
-  mjesecu, kvarovi, obnova, recenzije gostiju te sobe (od sloja 4). ADR po tipu sobe na ekranu pokazatelja.
-- **Student radi:** **obnova** kata ili tipa sobe (umjesto današnje jedne obnove cijelog hotela, `catalog.json`
-  `renovation_cents`): sobe su taj mjesec **izvan prodaje**, zatim stanje +40 i doplata „obnovljena"; **prioritet
-  održavanja** (raspodijeli na sve ili na najgore); **ručno izvan funkcije** (soba se popravlja umjesto da gosti pišu).
-- **Mehanika:** prodane noći se raspoređuju po sobama pravilom (tip prema potražnji, pa bolje stanje, pa niži broj) —
-  bez kocke. Trošenje sobe = 150 + 8 × njezine noći [PROC; 30 noći ≈ današnjih −4]. Kvar: soba ispod praga stanja
-  ima šansu kvara (`v2:kvar`, mjesec, slot, soba) → izvan funkcije dok se ne popravi. Stanje sobe ulazi u ocjenu
-  gosta te sobe (sloj 4) i u O kroz prosjek. Lanac učenja o investiciji:
-
-  ```text
-  obnova 3. kata u lipnju: 20 soba izvan prodaje u mjesecu niske potražnje (izgubljeno ≈ 430 noći)
-     → stanje 45 → 85, doplata +15 % → više ADR i bolje recenzije srpanj–rujan
-     → ekran pokazuje povrat ulaganja; ista obnova u kolovozu košta rasprodane noći
-  ```
-
-- **Sadržaj:** `rooms.json` (tlocrt, tipovi, doplate, trošenje, prag kvara, cijena obnove po sobi); profili dobivaju
-  raspodjelu početnog stanja (B: stari 4. kat).
-- **Paralelno sa slojem 2:** da — drugi entiteti, druge datoteke; dijele samo `detalj` u događaju (dogovor oblika
-  unaprijed).
-- **Balans:** udio soba izvan funkcije realan (0–5 % za C [PROC]); obnova nije dominantna; kolovozna obnova lošija od
-  lipanjske (provjera kao S3 u ADR-014).
-
-### Sloj 4 — recenzije s tekstom (P8) · **M–L, 20–30 h** (od toga ~8 h pisanje banke rečenica)
-
-- **Student vidi:** odjeljak **„Recenzije"**: popis po mjesecu (ocjena, segment, tekst, soba, teme), filtri po temi i
-  ocjeni, oblak „o čemu gosti pišu" (koliko puta doručak, čistoća, osoblje…), kretanje ocjene. Laptop: popis | čitanje;
-  mobitel: kartice.
-- **Student radi:** **odgovara na recenziju**: bira pristup (ispriča i konkretna mjera · zahvala · obrana ·
-  šablona) [prvi rez bez AI-ja]; voditelj ima ograničen broj odgovora mjesečno, pa bira na koje. Današnji „odgovaraj na
-  recenzije" (1 500 €, +0,05 ocjene, `catalog.json`) ostaje kao skupna radnja (agencija odgovara na sve, prosječno).
-- **Mehanika:** broj boravaka = prodane noći / prosječni boravak (4,2 [PROC]); recenzija od ~12 % boravaka [PROC]
-  → za C u srpnju ≈ 80 recenzija. Ocjena gosta = očekivana ocjena iz njegove sobe, odjela koje je koristio i
-  vrijednosti za novac (današnji cilj 5,6 + 0,04 × zadovoljstvo, `resolve.rs:413`) + šum s nultim zbrojem; teme su
-  dva najveća pokretača te ocjene. Ocjena portala = bazen: stari dio 75 %, novi mjesec 25 % (isto kao v1). Dobar
-  odgovor na lošu recenziju: mali plus ocjeni i potražnji (gosti čitaju odgovore) [PROC].
-- **AI:** samo „istaknuta recenzija" (jedna mjesečno po hotelu, najlošija ili najbolja) smije dobiti AI tekst na
-  Haikuu, kao događaj s AI metom i rezervom iz banke (isti obrazac kao lik i mentor, ARHITEKTURA §10). Sve ostalo
-  je banka rečenica.
-- **Sadržaj:** `reviews.hr.json`: tema → rečenice po predznaku i segmentu (≈ 30 tema × 2 predznaka × 4 inačice
-  [PROC]); Leon pregledava jezik.
-- **Ovisi o:** slojevima 1–3 (teme pokazuju na odjele i sobe). Bez sloja 3 teme o sobi koriste prosjek opreme.
-- **Balans:** varijacija ocjene mjesec na mjesec ≤ 0,3 za C bez odluka; broj recenzija u pojasu; odgovaranje nije
-  dominantno.
-
-### Tablica veličina
-
-| sloj | veličina | sati [PROC] | najveći komad | smije paralelno s |
-|---|---|---|---|---|
-| 0 | S | 6–10 | ekran i profesorova tablica | sve (ne dira brojke) |
-| 1 | L | 30–45 | `game` s dva modela + kalibracija | — (temelj ostalih) |
-| 2 | L | 30–40 | formule po osobi, nalozi, roboti | slojem 3 |
-| 3 | M | 15–25 | raspodjela noći, obnova, tlocrt | slojem 2 |
-| 4 | M–L | 20–30 | banka rečenica, odgovori | — (treba 1–3) |
-| P9 profesor v2 | M | 10–15 | usporedni pregled | uz svaki sloj |
-
-Ukupno ≈ 110–165 sati rada agenata. S paralelnim agentima to su **tjedni, ne dani**; iskreno: svih pet slojeva nije
-realno prije sredine studenog [PROC].
+| `GET /v1/hotels/{hotel_id}/kpi` | 0 | popunjenost, ADR, RevPAR, TRevPAR, GOPPAR, marža, udio rada, točka pokrića |
+| `GET /v1/hotels/{hotel_id}/pl?period=` | 1 | račun dobiti po USALI-ju |
+| `GET /v1/hotels/{hotel_id}/departments` · `/{code}` | 1 | odjeli: prostor, prihod, zadovoljstvo gostiju, ljudi |
+| `GET /v1/hotels/{hotel_id}/staff` · `/{employee_id}` | 2 | ljudi; profil s vještinama, osobinama, jezicima i poviješću |
+| `GET /v1/games/{game_id}/labour-market?period=` | 2 | burza rada (ista za sve hotele) |
+| `GET /v1/hotels/{hotel_id}/agency` · `/housing` | 2 | narudžbe, troškovi i doprinos agencijskih radnika; kreveti |
+| `POST /v1/hotels/{hotel_id}/talks` (+ poruke, odgovor) | 2 | razgovor s osobom (isti tok kao razgovor u situaciji) |
+| `GET /v1/hotels/{hotel_id}/rooms` · `/{room_id}` | 3 | tlocrt i kartica sobe |
+| `GET /v1/hotels/{hotel_id}/reviews?period=&topic=` | 4 | recenzije s tekstom, teme, odgovori |
+| `GET /v1/games/{game_id}/listing` | 4 | „Booking" svih hotela u igri (§7.1) |
+| `PUT …/plans/{period}` | 1–4 | postojeći, s `nalozi` |
+| `GET /v1/games/{game_id}/compare` | 0–4 | profesor: hoteli jedan uz drugoga |
 
 ---
 
-## 6 · Mjerilo vremena i veličina
+## 7 · Konkurencija, profesor, granice
 
-**Krug ostaje mjesec.** Igra nema dane, pa ni „rezervaciju za 14. srpnja". Sve „dnevno" je prosjek mjeseca:
+### 7.1 Konkurencija „kao Booking" (Leon: da)
 
-| entitet | što znači „stanje" u mjesečnoj igri | što **ne** glumimo |
-|---|---|---|
-| soba | stanje na kraju mjeseca, noći prodane u mjesecu, kvar koji ju je izbacio, mjesec obnove | koji gost je spavao koje noći |
-| zaposlenik | motivacija i iskustvo na kraju mjeseca, opterećenje kao prosjek mjeseca, odsutnost na obuci u danima | smjene, raspored po danu, bolovanja po danu |
-| odjel | gosti posluženi u mjesecu, kapacitet u mjesecu | jelovnik, nabava, zalihe |
-| recenzija | napisana u mjesecu, o boravku u mjesecu | datum i sat |
+Ekran **„Hoteli u okolici"** izgleda kao stranica za rezervacije. Za svaki hotel u igri (student i roboti) prikazuje
+ime, zvjezdice, ocjenu, broj recenzija, cijenu „od" (osnovna cijena razdoblja), sadržaje (odjeli: spa, rooftop…) i
+recenzije koje se mogu čitati, s filtrom po temi. Lekcija je Marketing: pozicioniranje i što gosti hvale kod drugih.
+Uz to stoje MPI/ARI/RGI (vlastito ÷ prosjek ostalih × 100). **Ljudi i račun dobiti drugih hotela su skriveni**
+(pretpostavka 🟨 13). Odgovori na recenzije su izbor pristupa, a ne tekst studenta, pa nema tuđeg osobnog teksta.
+Recenzije robota nastaju istim obračunom, pa ekran traži sloj 4.
 
-**Brojke po hotelu i mjesecu:** 120 soba, 55–75 ljudi, 8–11 odjela, 60–100 recenzija.
-
-| | račun | zaključak |
-|---|---|---|
-| obračun jedne runde (4 hotela) | ~300 soba-ažuriranja + ~300 ljudi + ~400 recenzija | zanemarivo (mikrosekunde) |
-| balans 1 000 sjemena × 3 profila × 4 strategije × 4 mjeseca | ~6 mil. soba, ~3 mil. ljudi, ~4 mil. recenzija (bez teksta) | sekunde; cilj: `--check` ispod 60 s |
-| `RoundResolved` u dnevniku | po hotelu ≈ 5 KB sobe + 8 KB ljudi + 2 KB odjeli + 5 KB recenzije (kodovi) ≈ 20 KB; 4 hotela ≈ 80 KB | za Postgres JSONB sitno; zato tekst recenzija nije u dnevniku |
-| web | 120 pločica, 75 redaka | bez virtualnog popisa |
-
----
-
-## 7 · Profesorov pogled (P9)
-
-Danas profesorovog pogleda nema (DIZAJN §2: „DEMO korak 6"). v2 mu daje ono što prepoznaje s kolegija:
+### 7.2 Profesorov pogled (P9)
 
 | pogled | sadržaj | kolegij |
 |---|---|---|
-| **USALI račun dobiti po hotelu**, hoteli jedan uz drugoga | odjelni prihodi i rezultati, neraspoređeni troškovi, GOP, GOPPAR, EBITDA | Accounting |
-| **Budžet i ostvareno** | referentni hotel (C, zadani plan) jezgra već računa svaki mjesec (`indices.rs:153-190`); prikazan kao „budžet", s odstupanjem po stavci | Accounting (budžetiranje) |
-| **Tablica pokazatelja prema konkurenciji** | popunjenost, ADR, RevPAR; **MPI / ARI / RGI** = vlastito ÷ prosjek ostalih hotela iste igre × 100 | Economics, E-Business |
-| **Ljudi** | fluktuacija, udio troška rada, motivacija po odjelu, tko je otišao | Management (HRM) |
-| **Ugled** | ocjena, broj recenzija, glavne teme, odgovori studenta | Marketing |
-| **Odluke studenta** | nalozi po mjesecu uz učinak iz objašnjenja | sve |
+| **USALI račun dobiti po hotelu**, hoteli jedan uz drugoga | odjelni rezultati, neraspoređeni troškovi, GOP, GOPPAR, fiksne naknade, EBITDA | Accounting |
+| **Budžet i ostvareno** | referentni hotel (`indices.rs:153-190`) prikazan kao „budžet", s odstupanjem po stavci | Accounting (budžetiranje) |
+| **Pokazatelji prema konkurenciji** | popunjenost, ADR, RevPAR, MPI / ARI / RGI | Economics, E-Business |
+| **Ljudi** | fluktuacija, udio troška rada, vještine i motivacija po odjelu, agencija i smještaj, razgovori i njihove presude | Management (HRM, vođenje) |
+| **Ugled** | ocjena, teme, odgovori | Marketing |
+| **AI trošak** | po studentu, koliko je do granice | — |
 
-MPI/ARI/RGI su pošteni i bez zajedničkog tržišta: hoteli ne dijele goste, ali uspoređuju se rezultati istog
-mjeseca pod istim pravilima. Student vidi samo pokazatelje prema konkurenciji i ljestvicu, **ne** ljude ni recenzije
-drugih hotela (pitanje 9).
-
----
-
-## 8 · Rizici i što namjerno ne radimo
-
-**Rizici**
+### 7.3 Rizici i što namjerno ne radimo
 
 | rizik | kako ga držimo |
 |---|---|
-| Balans se raspadne s novim slojem | ekvivalencijski test + `--check` svaki sloj; kalibracija je dio sloja, ne „poslije" |
-| Profili s različitim odjelima nisu fer | §11.3 pravednost mjeri; ako ne prolazi, odjeli se izjednače po vrijednosti (ne po imenu) |
-| Student se utopi u detaljima | „Zašto" pokazuje tri najveća uzroka; dubina je klik niže, nikad na prvom ekranu |
-| `game` s dva modela postane zapetljan | jedno mjesto grananja (enum), testovi za oba modela na istim scenarijima |
-| v1 se slučajno promijeni | zlatni test v1; `sim-hotel` dirati samo dodavanjem (sloj 0) |
-| Pisanje sadržaja (imena, rečenice) traje | počinje odmah paralelno; Leon pregledava jezik po komadima |
-| Profesor ospori brojke [PROC] | svaka brojka u katalogu s oznakom izvora; pitanja u PITANJA_ZA_PROFESORE |
-| Rok prezentacije | linije reza (§10); svaki sloj sam za sebe je pokaziv |
+| Balans se raspadne | ekvivalencijski test + `--check` svaki sloj, za mjesec i tjedan; kalibracija je dio sloja |
+| Profili s različitim odjelima nisu fer | §11.3 pravednost mjeri; ako ne prolazi, odjeli se izjednače po vrijednosti |
+| Student se utopi u detaljima | „Zašto" pokazuje tri najveća uzroka; dubina je klik niže |
+| Stereotip se uvuče kroz sadržaj | načelo 9 + test zamjene podrijetla + Leonov pregled banke rečenica i imena |
+| `game` s dva modela i dvije vrste razdoblja postane zapetljan | jedno mjesto grananja, isti scenariji testirani za oba modela |
+| v1 se slučajno promijeni | zlatni test v1 |
+| AI trošak u tjednoj igri | vrijeme voditelja, gornja granica po studentu, rezerva bez AI-ja |
+| Sadržaja je mnogo (imena, osobine, rečenice, rubrike) | počinje odmah paralelno; Leon pregledava po komadima |
+| Rok prezentacije | linije reza (§10) |
 
-**Namjerno ne radimo**
-
-- **Simulaciju po danu** ni rezervacije po gostu — mjesec ostaje krug igre.
-- **Slobodno izmišljen svijet AI-jem**: AI ne stvara ljude, sobe ni brojke; piše samo tekst istaknute recenzije, lika i
-  mentora, nad brojkama jezgre.
-- **Zajedničko tržište** među hotelima (VIZIJA §3: tek kad je osnovna petlja fer).
-- **Potražnju po segmentu** gostiju, kanale prodaje s provizijama (OTA), raspored smjena, jelovnik i nabavu — dobri
-  kandidati za kasnije, ali svaki je novi sloj.
-- **Uređivanje entiteta mimo pravila** (npr. „dodaj sobu"): hotel se mijenja samo nalozima koje jezgra provjerava.
+**Namjerno ne radimo:** simulaciju po danu i rezervacije po gostu (najmanji krug je tjedan); svijet koji izmišlja AI
+(AI ne stvara ljude, sobe ni brojke); zajedničko tržište gostiju ili radnika među hotelima; potražnju po segmentu i
+OTA kanale; smjene po danu, jelovnik i nabavu; dob zaposlenika (ne mijenja ništa, a otvara diskriminaciju po dobi);
+plaću ili kvalitetu po podrijetlu.
 
 ---
 
-## 9 · Odluke za Leona
+## 8 · Slojevi
 
-Pet pretpostavki iz ADR-026 ovdje se ne ponavlja (§11). Ovo su **nova** proizvodna pitanja; preporuka je prva.
+Svaki sloj: gradi se na svojoj grani, dokaže (testovi, `cargo run -p balance --release -- --seeds 1000 --check`, pregled
+u pregledniku na mobitelu i laptopu, [ADR-027](../records/DECISIONS.md#adr-027)), pregleda, i tek onda ide sljedeći.
+Sati su rad agenata [PROC]: S ≤ 10, M 10–25, L 25–45, XL > 45.
 
-1. **Isti ljudi u svakoj igri za isti profil?** Preporuka: **da** (fiksno sjeme profila) — pravedno i profesor ih može
-   upoznati. Alternativa: druga imena svaku igru, ista statistika.
-2. **Odjeli po profilu kao u §3.2?** Preporuka: A s wellnessom i rooftopom, B s barom uz bazen i najmom, C s malim
-   wellnessom; konačno potvrđuje balans.
-3. **Stare demo igre:** preporuka **nastavljive zauvijek na v1** (§4.2, cijena ~4–6 h u sloju 1). Alternativa: samo
-   za čitanje — jeftinije za 2 h, ali profesorova demo igra ne bi mogla dalje.
-4. **Otpuštanje stalnih radnika usred sezone:** preporuka **dopušteno uz otkazni rok i otpremninu** (iz kataloga, po
-   uzoru na hrvatsko radno pravo) i pad motivacije kolega; sezonci bez troška na kraju mjeseca.
-5. **Broj mjeseci za prezentaciju v2:** preporuka **sva četiri (VI–IX)**, jer se tek tada vidi povrat obnove i
-   fluktuacija; demo ostaje na dva.
-6. **Popunjenost i RevPAR nad svim sobama** (sobe izvan funkcije su „izgubljene noći")? Preporuka: **da**, jer tada
-   RevPAR = ADR × popunjenost točno; pitati i profesora.
-7. **GOP po USALI-ju:** osiguranje, najam i porez idu **ispod** GOP-a (danas su u `fixed_cents`, unutar GOP-a).
-   Preporuka: **da**, uz isti cilj sezonske GOP marže 35–45 % (ADR-013 t. 5) nakon nove kalibracije, a EBITDA ispod;
-   profesor potvrđuje pojas.
-8. **Odgovor na recenziju:** preporuka **izbor pristupa bez AI-ja** u sloju 4; slobodan tekst s AI presudom kasnije
-   (isti put kao slobodan odgovor na situaciju, ali košta).
-9. **Vidi li student ljude i recenzije drugih hotela?** Preporuka: **ne** — samo MPI/ARI/RGI i ljestvicu; profesor
-   vidi sve.
-10. **Cijena po tipu sobe:** preporuka **jedna osnovna cijena + fiksne doplate iz kataloga** u sloju 3; da student
-    sam postavlja cijenu po tipu (lekcija revenue managementa) ide kasnije.
-11. **Imena i osobine:** preporuka hrvatska i regionalna imena, osobine samo o radu (pouzdan, ambiciozan, iskusan
-    početnik…), bez nacionalnosti i stereotipa.
-12. **Voditelj odjela** kao posebna uloga čija motivacija vuče tim (Management: vođenje)? Preporuka: **da, ali u
-    drugom krugu sloja 2**, kad osnovni pojedinci rade.
+### Sloj 0 — pokazatelji (P2) · **S, 6–10 h** (u izradi na zasebnoj grani)
+
+- **Student vidi:** popunjenost, **ADR**, **RevPAR**, TRevPAR, GOPPAR, GOP maržu, udio rada, CPOR i **točku pokrića**,
+  svaki s jednom rečenicom formule.
+- **Mehanika:** nijedna nova. Čiste funkcije nad postojećim izvješćem, računaju se pri čitanju. Smije u v1 i u `main`
+  nakon demoa.
+- **Ponuda soba:** RevPAR i popunjenost računaju se nad **svim** sobama × dani (Leon: da), da vrijedi
+  RevPAR = ADR × popunjenost. Sobe izvan funkcije su „izgubljene noći". Web danas računa nad raspoloživima
+  (`HotelScreen.tsx:132`).
+
+### Sloj 1 — temelj v2, razdoblja, odjeli po USALI-ju (P3, P4) · **L+, 50–70 h**
+
+- **Temelj (jedan agent, prvi):** kopija jezgre u `sim-hotel-v2`; `game` s dva modela i ključem kruga; razdoblje
+  tjedan/mjesec (§4); plan koji se prenosi; zlatni test v1; ekvivalencija. **25–35 h**.
+- **Student vidi:** odjeljak **„Odjeli"** (wellness, restoran, kafić… samo što hotel ima). Klik na odjel pokazuje stanje
+  prostora, prihod, trošak, rezultat, zadovoljstvo gostiju, broj ljudi i „Zašto". Ekran **„Račun dobiti"** po USALI-ju:
+  odjeli → odjelni rezultati → neraspoređeni troškovi → **GOP** → fiksne naknade → EBITDA. Na laptopu popis i detalj,
+  na mobitelu popis pa puni ekran.
+- **Student radi:** sezonce po odjelu (broj, ljudi tek u sloju 2), razinu cijene odjela, otvara ili zatvara sezonski
+  odjel, raspoređuje održavanje po odjelima.
+- **Lanac:**
+
+  ```text
+  premalo kuhara u kolovozu → opterećenje kuhinje iznad norme → kvaliteta restorana pada
+     → manje gostiju večera u hotelu (38 % → 31 %) → prihod F&B pada
+     → zadovoljstvo gostiju restoranom i G padaju → ocjena sporo pada → potražnja sljedećih tjedana
+  ```
+
+- **Sadržaj:** `departments.json`, profili s odjelima, raspad `fixed_cents` na neraspoređene troškove i fiksne naknade
+  ispod GOP-a (Leon: svakako), koeficijenti po vrsti razdoblja. Kalibracija: za C ostali odjeli ≈ 30 % prihoda soba;
+  sezonska GOP marža 35–45 % ostaje cilj nakon raspada (pitanje N9).
+- **Balans:** marže odjela u pojasu (Smještaj 65–80 %, F&B 15–35 %, wellness 20–40 % [PROC]); udio troška rada
+  30–40 % (LRH ≈ 35 % [P]); tjedna i mjesečna igra istih odluka završavaju blizu (nova provjera); §11.1–11.5 prolaze.
+- **Paralelno nakon temelja:** formule odjela · sadržaj · ekrani nad lažnim podacima · profesorov račun dobiti ·
+  balans.
+
+### Sloj 2 — ljudi (P5, P6) · **XL, 80–110 h, u tri dijela**
+
+#### 2a · Pojedinci, vještine, osobine, voditelji, burza, otpuštanje — 40–50 h
+
+- **Student vidi:** odjeljak **„Ljudi"** po odjelima: lik, ime, uloga, trake vještina, osobine (dobre zeleno, loše
+  crveno, skrivene „?"), jezici s razinom, motivacija, plaća prema očekivanoj i oznaka rizika. Profil osobe ima
+  povijest, obuke i „zašto je motivacija pala". **Burza rada** je popis kandidata s filtrima po ulozi, vještini i
+  jeziku.
+- **Student radi:** zaposli s burze, otpusti, povisi plaću, pošalji na obuku (vještina ili jezik), premjesti,
+  postavi voditelja.
+- **Mehanika:** formule iz v1 po osobi. Cilj motivacije = 55 + 2 × (plaća prema očekivanoj − 100) − pola kazne
+  opterećenja odjela + voditelj + obuka + osobine + situacije. Broj odlazaka je zaokruženi zbroj rizika, a tko odlazi
+  bira kocka. Vještine rastu radom i obukom (§3.4), a očekivana plaća s vještinama (§5.2).
+
+  ```text
+  Ana, sobarica, početnica (temeljitost 22, „Brzo uči"), 1 650 € → tečaj + 8 tjedana rada → temeljitost 61
+     → kvaliteta domaćinstva +, tema „čistoća +" u recenzijama → očekivana plaća 1 980 €
+     → traži povišicu → odbijena: rizik odlaska 4 % → 9 % · prihvaćena: trošak, motivacija +
+  ```
+
+- **Roboti:** svaka strategija dobiva jednostavno pravilo za ljude (Štedljivi zapošljava početnike, Brižni obučava i
+  prihvaća povišice, Lovac na popunjenost zapošljava do kapaciteta, Slučajni nasumce unutar granica).
+- **Balans:** fluktuacija sezonaca 30–50 % po sezoni, a stalnih 15–25 % godišnje [PROC]. Nijedna radnja nije
+  dominantna: „samo početnici", „samo profesionalci", „otpusti najslabije", „svima najveća plaća".
+
+#### 2b · Jezici, agencija, smještaj — 15–25 h
+
+- **Student vidi:** pokrivenost jezika po odjelu prema jezicima gostiju tog mjeseca, ekran agencije (narudžbe na putu,
+  trošak i doprinos po osobi) i smještaj (kreveti u gradu, sobe za radnike, izgubljeni prihod).
+- **Testovi:** **test zamjene podrijetla** (§2, t. 9): ista osoba s drugim podrijetlom razlikuje se samo u jezicima,
+  roku, naknadi, dozvoli i smještaju. Zbroj troškova agencije u računu dobiti jednak je zbroju po osobama, do centa.
+
+#### 2c · Razgovori s AI-jem — 25–35 h (od toga ~8 h rubrike i likovi)
+
+- Pregovori o plaći, upozorenje, motivacijski razgovor, razgovor za posao, izlazni razgovor (§5.5), na postojećem
+  putu lika i presude. Rubrike i rezervni odgovori za svaki tip. Vrijeme voditelja i gornja granica troška.
+- **Testovi:** kvaliteta 1–5 daje učinak samo unutar granica kataloga; bez AI-ja isti razgovor radi s ponuđenim
+  odgovorima; presuda koja zakasni ide neutralnim pravilom (ARHITEKTURA §8.3).
+
+### Sloj 3 — sobe (P7) · **M, 15–25 h**
+
+- **Student vidi:** tlocrt po katovima. Na laptopu je to mreža 120 pločica u boji stanja, a na mobitelu popis po katu s
+  filtrima. Kartica sobe pokazuje tip, stanje, noći i prihod, kvarove, obnovu, recenzije te sobe i je li soba za
+  radnike.
+- **Student radi:** obnavlja kat ili tip sobe (2–4 tjedna izvan prodaje), bira prioritet održavanja, stavlja sobu
+  izvan funkcije ili je daje radnicima (§5.4).
+- **Mehanika:** prodane noći se raspoređuju po pravilu (tip, stanje, broj sobe), bez kocke. Trošenje = 150 + 8 ×
+  noći sobe na mjesec [PROC]. Kvar ima šansu ispod praga stanja (tok `v2:kvar`). Lanac učenja o investiciji: obnova
+  u lipnju košta malo izgubljenih noći, a ista obnova u kolovozu košta rasprodane noći.
+- **Paralelno sa slojem 2:** da, ako je oblik `detalj` dogovoren unaprijed.
+
+### Sloj 4 — recenzije i konkurencija (P8) · **L, 30–40 h** (od toga ~10 h banka rečenica)
+
+- **Student vidi:** odjeljak **„Recenzije"** (ocjena, segment, jezik, tekst, soba, teme, kretanje ocjene) i
+  **„Hoteli u okolici"** (§7.1).
+- **Student radi:** odgovara na recenziju izborom pristupa (ispriča i mjera · zahvala · obrana · šablona), **bez AI-ja**
+  (Leon). Broj odgovora je ograničen vremenom voditelja.
+- **Mehanika:** broj boravaka = prodane noći / 4,2; recenziju piše ~12 % boravaka [PROC], pa ~20 tjedno i ~80 mjesečno
+  za C. Ocjena gosta = cilj iz sobe, odjela, jezika i vrijednosti, uz šum s nultim zbrojem. Teme su najveći
+  pokretači. Ocjena portala je bazen s istim pomakom kao v1 na mjesec.
+- **AI:** samo „istaknuta recenzija" po razdoblju (Haiku), uz rezervu iz banke.
+- **Ovisi o:** slojevima 1–3.
+
+### Tablica veličina
+
+| sloj | veličina | sati [PROC] | smije paralelno s |
+|---|---|---|---|
+| 0 | S | 6–10 | sve (ne dira brojke) |
+| 1 | L+ | 50–70 | ništa dok temelj ne stoji |
+| 2a | L | 40–50 | 3 |
+| 2b | M | 15–25 | 2c, 3 |
+| 2c | L | 25–35 | 2b, 3 |
+| 3 | M | 15–25 | 2 |
+| 4 | L | 30–40 | — (treba 1–3) |
+| P9 profesor | M | 12–18 | uz svaki sloj |
+| **ukupno** | | **≈ 195–275** | |
+
+Iskreno: s paralelnim agentima to su **4–6 tjedana sesija**, a ne dana. Svih pet slojeva nije realno prije sredine
+prosinca [PROC]. Sloj 1 je 20–25 h veći nego u prvom nacrtu zbog tjednih razdoblja. Sloj 2 je oko dva i pol puta veći
+zbog vještina, burze, agencije i razgovora.
+
+---
+
+## 9 · Odluke (Leon 10.10.) i nova pitanja
+
+### 9.1 Odlučeno
+
+| # | pitanje | Leonova odluka | gdje u dokumentu |
+|---|---|---|---|
+| 1 | isti ljudi po profilu | **da**, a svi ljudi su razrađeni kao u Simsima: osobnost, dobre i loše strane, traka po vještini | §3.3, §3.4 |
+| 2 | odjeli po profilu | **otprilike da**: odjeljak „Odjeli", u odjelu stanje prostora, zarada, zadovoljstvo gostiju | §3.2 |
+| 3 | stare demo igre | **ostaju igrive na v1** | §6.2 |
+| 4 | otpuštanje | **dopušteno** uz otkazni rok i otpremninu; kolege gube motivaciju samo iznimno. **Novo:** burza rada, rast vještina i plaće, jezici, agencija za strane radnike sa smještajem | §5 |
+| 5 | broj mjeseci | **4 mjeseca** za prezentaciju. **Novo:** krug je tjedan ili mjesec, bira profesor | §4 |
+| 6 | ponuda soba | **sve sobe** | §8 sloj 0 |
+| 7 | GOP po USALI-ju | **svakako da**: osiguranje, najam i porez ispod GOP-a | §3.2 |
+| 8 | odgovor na recenziju | **izbor bez AI-ja**. **Novo:** razgovori s ljudima i gostima gotovo uvijek s AI-jem | §5.5 |
+| 9 | tuđi hoteli | **recenzije drugih hotela vidljive „kao Booking"**; ljudi skriveni (pretpostavka) | §7.1 |
+| 10 | cijena po tipu sobe | **da**: osnovna cijena + doplate | §3.5 |
+| 11 | imena i osobine | hrvatska, regionalna i strana imena; **nacionalnost samo za činjenice** (pravilo voditelja) | §2 t. 9 |
+| 12 | voditelj odjela | **svakako**: ulazi u prvi prolaz sloja 2 | §3.3 |
+
+### 9.2 Nova pitanja (preporuka je prva)
+
+1. **Agencijski radnici „jeftiniji"?** Preporuka: **ista plaća za istu vještinu**. Agencija donosi ljude kad ih nema,
+   uz naknadu, dozvolu i smještaj, pa je ukupno često **skuplja** po glavi. Niža plaća po podrijetlu krši načelo 9 i
+   hrvatski zakon. Jeftini su **početnici**, bez obzira na podrijetlo.
+2. **Burza rada:** preporuka je **ista burza za sve hotele, bez natjecanja** za kandidata. Natjecanje za ljude dolazi
+   tek s međusobnim utjecajem (VIZIJA §3).
+3. **Tjedni kalendar:** preporuka je **16 tjedana + zadnje razdoblje od 10 dana** (21.–30. 9.). Alternativa su
+   17 tjedana s početkom 3. 6., ali onda lipanj nije cijeli.
+4. **Zadana vrsta kruga** za nove v2 igre: preporuka **tjedan** (Leonova želja), a mjesec ostaje izbor profesora i put
+   ekvivalencije s v1.
+5. **Mentor u tjednoj igri:** preporuka je kratko „tri uzroka" svaki tjedan **bez AI-ja** i puni AI mentor **na kraju
+   kalendarskog mjeseca** (manje troška, mjesečna lekcija ostaje).
+6. **Vrijeme voditelja:** preporuka je **3 razgovora tjedno ili 8 mjesečno** koje pokreće student. Razgovori koje
+   pokrenu ljudi ili situacije ne troše vrijeme.
+7. **Gornja granica AI troška:** preporuka je **2 $ po studentu po igri**, zatim ponuđeni odgovori. Profesor može
+   povisiti granicu.
+8. **Jezični sastav gostiju:** preporuka je da ga agent istraži iz DZS-a (dolasci po zemlji) i podataka Kvarnera, a ne
+   da ga pogađamo.
+9. **GOP marža nakon raspada fiksnih:** preporuka je **zadržati cilj 35–45 %** za GOP i EBITDA prikazati ispod. Pojas
+   potvrđuje profesor.
+10. **Sobe za radnike:** preporuka je **dopustiti** ih (lekcija: izgubljena noć prema najmu u gradu), najviše 10 % soba
+    [PROC].
+11. **Skrivena osobina kandidata:** preporuka je **jedna skrivena**, a otkriva je razgovor za posao ili 4 tjedna rada.
 
 ---
 
 ## 10 · Redoslijed i linije reza
 
 ```text
-sad (prije demoa)   ništa na main; sloj 0 na grani
-nakon demoa         sloj 0 → main (samo prikaz)       ◄─ rez A
-                    sloj 1 (temelj v2 + odjeli + USALI) ◄─ rez B: najmanji „wow" za profesora
-                    sloj 2 ║ sloj 3 (paralelno)        ◄─ rez C: „BitLife" osjećaj za studenta
-                    sloj 4                             ◄─ puna slika
+nakon demoa         sloj 0 → main (samo prikaz)                          ◄─ rez A
+                    sloj 1: temelj v2 + tjedan/mjesec + odjeli + USALI   ◄─ rez B: najmanji „wow" za profesora
+                    2a (ljudi, voditelji, burza)  ║  3 (sobe)              ◄─ rez C: „Sims/BitLife" osjećaj
+                    2c (razgovori s AI-jem) ║ 2b (jezici, agencija, smještaj)
+                    4 (recenzije + „Booking")                            ◄─ puna slika
                     P9 profesor raste uz svaki sloj
 ```
 
-| ako vrijeme stane nakon… | što se pokazuje profesoru | zašto je dovoljno |
+| ako vrijeme stane nakon… | što se pokazuje | zašto je dovoljno |
 |---|---|---|
-| **sloja 0** | ADR, RevPAR, GOPPAR, točka pokrića, tablica prema konkurenciji | govori jezikom Economicsa, ali „wow" je slab — hotel je i dalje brojke |
-| **sloja 1** | „Dijelovi hotela" + USALI račun dobiti + budžet i ostvareno, hoteli jedan uz drugoga | profesor vidi **svoj** kolegij u igri; to je najmanji pravi „wow" |
-| **sloja 1 + 2** | uz to profili ljudi, tko je otišao i zašto, zapošljavanje | student dobiva BitLife dubinu; Management + Accounting |
-| **sloja 1 + 2 + 3** | uz to tlocrt soba i povrat obnove | E-Business (PMS) i investicije |
+| **sloja 0** | ADR, RevPAR, GOPPAR, točka pokrića | jezik Economicsa, ali hotel je i dalje brojke |
+| **sloja 1** | Odjeli + USALI račun dobiti + budžet i ostvareno, **igra po tjednima** | profesor vidi svoj kolegij u igri; najmanji pravi „wow" |
+| **1 + 2a** | ljudi s vještinama i osobinama, voditelji, burza, povišice | Sims dubina za studenta; Management + Accounting |
+| **1 + 2a + 2c** | uz to razgovori s ljudima | najjači dojam uživo: student pregovara s konobarom |
+| **1 + 2 + 3** | uz to tlocrt i povrat obnove | E-Business i investicije |
 
-Ako je datum prezentacije blizu, a ostaje vremena za samo jedan veliki sloj nakon prvog: **sloj 2 prije sloja 3**
-(ljudi su ono što je Leon prvo spomenuo i najviše mijenjaju dojam).
+Ako ostaje vremena samo za jedan dio nakon 2a, preporuka je **2c (razgovori) prije 2b i 3**. Pregovor s konobarom
+uživo je najjači trenutak prezentacije.
 
 ---
 
 ## 11 · Pretpostavke (🟨 čekaju Leonov pregled)
 
-**Pet pretpostavki voditelja** (zapisane i u [ADR-026](../records/DECISIONS.md#adr-026)):
+**Pet pretpostavki voditelja** (zapisane u [ADR-026](../records/DECISIONS.md#adr-026); Leon ih je 10.10. potvrdio
+odgovorima u §9.1):
 
-1. **ADR = prosječna cijena prodane sobe** (prihod soba / prodane noći), prikazan uz RevPAR, popunjenost i GOPPAR.
-2. **Odjeli ovise o hotelu** — profili A/B/C imaju različite odjele; katalog određuje.
-3. **Zaposlenicima student upravlja** (zaposli, otpusti, plaća, obuka, premještaj), ne samo gleda.
-4. **Recenzije su pojedinačne, tekst iz banke rečenica po uzroku**, AI samo povremeno; student može odgovoriti.
-5. **Slojevi redom 0 → 4**, svaki se gradi, dokaže i pregleda zasebno.
+1. **ADR = prosječna cijena prodane sobe**, prikazan uz RevPAR, popunjenost i GOPPAR.
+2. **Odjeli ovise o hotelu**; katalog i profil određuju.
+3. **Zaposlenicima student upravlja**, ne samo da ih gleda.
+4. **Recenzije su pojedinačne, tekst iz banke rečenica**, AI samo povremeno; student odgovara izborom.
+5. **Slojevi redom 0 → 4**, svaki zasebno dokazan; sloj 2 sada u tri dijela.
 
-**Pretpostavke arhitekta u ovom dokumentu:**
+**Pretpostavke arhitekta:**
 
-6. v1 se zamrzava, v2 je novi paket; model se bira poljem `model` u snimku pravila (§4).
-7. v2 izvješće uvijek nosi i v1 sažetak, pa postojeći ekrani, indeksi i mentor rade bez promjene (§3.8, §4.3).
-8. Kocka raspoređuje, ne mijenja zbrojeve (šum s nultim zbrojem, §2 t. 4).
-9. Nalozi su dio plana mjeseca; primjenjuju se pri obračunu, ne odmah (§4.3).
-10. Tekst recenzija se ne sprema; slaže se pri čitanju iz banke u snimku (§3.5).
-11. Sve brojke označene [PROC] su procjene za prvu kalibraciju, ne istina.
+6. v1 se zamrzava, a v2 je novi paket. Model i vrsta razdoblja biraju se u snimku pravila (§6).
+7. v2 izvješće uvijek nosi i v1 sažetak (§3.9, §6.3).
+8. Kocka raspoređuje, a ne mijenja zbrojeve (§2, t. 4).
+9. Nalozi su dio plana razdoblja i primjenjuju se pri obračunu. Plan se prenosi u sljedeće razdoblje (§4.3).
+10. Tekst recenzija se ne sprema (§3.6).
+11. Sve brojke [PROC] su procjene za prvu kalibraciju.
+12. Razdoblje ulazi u temelj sloja 1; koeficijenti pomaka zadani su po vrsti razdoblja u katalogu (§4.2).
+13. Ljudi i račun dobiti drugih hotela su skriveni; vide se samo „Booking" podaci i pokazatelji prema konkurenciji (§7.1).
+14. Nacionalnost određuje samo jezike, naknadu, dozvolu, rok i smještaj. Plaća je ista za istu vještinu (§2, t. 9;
+    §9.2 pitanje 1).
+15. Razgovori s ljudima koriste postojeći put lika i presude; AI nikad ne zapisuje broj (§5.5).
+16. Dob zaposlenika se ne modelira (§7.3).

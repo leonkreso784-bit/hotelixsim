@@ -5,6 +5,37 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-028 — Leonove odluke za put B: ljudi kao u Simsima, burza rada, tjedni krug, AI razgovori
+**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** (osim t. 9 i pravila o nacionalnosti — vidi dolje) ·
+**Vezano:** [ADR-026](#adr-026), [MODEL_V2.md](../architecture/MODEL_V2.md) §9, [PROSIRENJA.md](../product/PROSIRENJA.md)
+
+**Kontekst.** Arhitekt je u MODEL_V2 §9 postavio 12 pitanja s preporukama; Leon je odgovorio 10.10. i dodao nove
+mehanike.
+**Odluka (Leon).**
+1. Isti ljudi za isti profil u svakoj igri — ali **svi ljudi razvijeni „kao Sims svijet"**: osobnost, dobre i loše
+   strane, vidljiva traka vještine.
+2. Odjeljak **„Odjeli"**; unutra wellness, restoran, kafić… što hotel ima; klik → stanje prostora, prihod, zadovoljstvo
+   gostiju.
+3. Stare demo igre igraju se dalje na v1.
+4. Otpuštanje dopušteno (otkazni rok, otpremnina), **motivacija kolega pada samo u izvanrednim slučajevima**. Novo:
+   **burza rada** s kandidatima; početnik je jeftin i slab, obukom raste, kad postane izvrstan traži veću plaću;
+   iskusni profesionalac košta više; **jezici** koje osoba govori i koliko dobro; **agencija za strane radnike**
+   (npr. 5 radnika) kojima hotel plaća **smještaj** — student vidi koliko donose, koliko kvalitete dodaju ili oduzimaju
+   i koliko košta smještaj.
+5. Prezentacija v2 na četiri mjeseca; **igra po tjednu ili po mjesecu — bira profesor pri stvaranju igre**.
+6. Popunjenost, RevPAR i GOPPAR nad svim sobama. 7. GOP po USALI-ju (osiguranje, najam, porez ispod GOP-a).
+8. Odgovor na recenziju izborom bez AI-ja; **razgovori sa zaposlenicima i gostima u situacijama s AI-jem gotovo
+   uvijek** (slobodan tekst).
+9. Student **vidi recenzije drugih hotela** („kao Booking drugih hotela").
+10. Jedna osnovna cijena + doplate po tipu sobe. 12. **Voditelj odjela** — svakako.
+**Pravilo voditelja (🟨 ČEKA LEONOV PREGLED), uz t. 4 i 11:** nacionalnost određuje samo **činjenice** — jezike, trošak
+agencije, potrebu za smještajem, dozvolu i rok dolaska; **nikad** vještinu, pouzdanost ni osobnost — one su osobne i
+izvlače se iz istih raspodjela za sve. Razlog: igra je nastavni materijal fakulteta; student uči procijeniti čovjeka,
+ne zastavu. Ljude drugih hotela student ne vidi (pretpostavka; t. 9 govori samo o recenzijama).
+**Cijena ako krivo:** tjedni krug i bogati ljudi povećavaju posao sloja 1 i 2 — nova procjena u MODEL_V2 §5.
+
+---
+
 ## ADR-027 — Raspored za računalo prije demoa
 **Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [ADR-021](#adr-021), [PROSIRENJA.md](../product/PROSIRENJA.md) P1
 
