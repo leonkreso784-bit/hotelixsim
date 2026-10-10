@@ -207,3 +207,40 @@ pub fn july_resolved_bad_chef_game() -> (Game, HotelId) {
     resolve_month_now(&mut g, Month::Jul);
     (g, h)
 }
+
+/// V2 tjedna igra s obračunatim krugovima redom do uključivo `code` (npr. "t05").
+pub fn v2_weekly_game_resolved_through(code: &str) -> Game {
+    use game::command::{GameSettings, new_game_with};
+    let snap = Snapshot::read_v2(&repo_dir()).unwrap();
+    let log: Vec<Recorded> = new_game_with(
+        GameId(Uuid::from_u128(1)),
+        42,
+        &snap,
+        GUEST,
+        hotel_ids(),
+        GameSettings {
+            kind: sim_hotel_v2::PeriodKind::Week,
+        },
+    )
+    .unwrap()
+    .into_iter()
+    .zip(1..)
+    .map(|((actor, event), seq)| Recorded { seq, actor, event })
+    .collect();
+    let mut g = Game::fold(&log).unwrap();
+    let last = RoundKey::parse(code).unwrap();
+    while let Some(r) = g.current_round() {
+        let ev = g.close_round(r).unwrap().unwrap();
+        apply_ev(&mut g, Actor::Guest(GUEST), ev);
+        let ResolveStep::Done(evs) = g.resolve_job(r, false).unwrap() else {
+            panic!("obračun je trebao biti gotov");
+        };
+        for (a, e) in evs {
+            apply_ev(&mut g, a, e);
+        }
+        if r == last {
+            break;
+        }
+    }
+    g
+}

@@ -132,6 +132,9 @@ fn sample_debrief() -> game::DebriefInput {
         round: game::RoundKey::parse("jul").unwrap(),
         next_round: game::RoundKey::parse("aug"),
         prev_round: game::RoundKey::parse("jun"),
+        round_kind: "month".into(),
+        first_date: (1, game::dto::MonthCode::Jul),
+        last_date: (31, game::dto::MonthCode::Jul),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![game::DebriefSituation {
             code: "S2".into(),

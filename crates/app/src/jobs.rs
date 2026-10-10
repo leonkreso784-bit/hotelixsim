@@ -313,10 +313,15 @@ async fn run_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
         return finish(deps, job.game_id, claim).await;
     }
     let input = g.debrief_input(p.hotel_id, m)?;
-    let (text, source, meta) = match deps.ai.debrief(input.clone()).await {
-        Ok(out) => (out.value, AiSource::Ai, Some(out.meta)),
-        Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
-        Err(_) => (game::fallback_debrief(&input), AiSource::Fallback, None),
+    let (text, source, meta) = if game::wants_ai_mentor(&g, m)? {
+        match deps.ai.debrief(input.clone()).await {
+            Ok(out) => (out.value, AiSource::Ai, Some(out.meta)),
+            Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
+            Err(_) => (game::fallback_debrief(&input), AiSource::Fallback, None),
+        }
+    } else {
+        // Tjedan u kojem ne završava mjesec: samo „tri uzroka", AI se ne zove (P3).
+        (game::weekly_summary(&input), AiSource::Fallback, None)
     };
     let hotel = p.hotel_id;
     deps.log

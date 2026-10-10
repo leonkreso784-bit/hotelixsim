@@ -11,7 +11,9 @@ use sim_hotel::{
 };
 
 use crate::ai_input::DebriefInput;
-use crate::dto::{CauseDto, LineDto, MaintenanceCode, TrainingCode, UnitCode, VarCode};
+use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
+use crate::error::GameError;
+use crate::game::Game;
 use crate::round::RoundKey;
 
 const MINUS: char = '\u{2212}';
@@ -23,10 +25,11 @@ pub struct DebriefFacts {
     pub hotel: String,
     /// Mjesec u lokativu s prijedlogom („u srpnju").
     #[serde(rename = "mjesec")]
-    pub month: &'static str,
-    /// `None` = bio je zadnji mjesec igre.
+    /// Za tjedan: „u tjednu od 29. lipnja do 5. srpnja".
+    pub month: String,
+    /// `None` = bio je zadnji krug igre; za tjedan „sljedeći tjedan".
     #[serde(rename = "iduci_mjesec")]
-    pub next_month: Option<&'static str>,
+    pub next_month: Option<String>,
     #[serde(rename = "napredak_od_pocetka")]
     pub progress: String,
     #[serde(rename = "blagajna_na_kraju_mjeseca")]
@@ -179,7 +182,38 @@ fn index_name(i: Index) -> &'static str {
     }
 }
 
-/// Krug u lokativu („u lipnju"); pravi tekst tjedna dolazi u Tasku 8.
+fn month_genitive(m: MonthCode) -> &'static str {
+    match m {
+        MonthCode::Jun => "lipnja",
+        MonthCode::Jul => "srpnja",
+        MonthCode::Aug => "kolovoza",
+        MonthCode::Sep => "rujna",
+    }
+}
+
+/// Gdje u vremenu: mjesec „u lipnju", tjedan „u tjednu od 29. lipnja do 5. srpnja".
+fn place_text(input: &DebriefInput) -> String {
+    match input.round {
+        RoundKey::Month(_) => round_locative(input.round).to_owned(),
+        RoundKey::Week(_) => format!(
+            "u tjednu od {}. {} do {}. {}",
+            input.first_date.0,
+            month_genitive(input.first_date.1),
+            input.last_date.0,
+            month_genitive(input.last_date.1)
+        ),
+    }
+}
+
+/// Idući krug riječima: mjesec u lokativu, tjedan „sljedeći tjedan".
+fn next_text(next: RoundKey) -> String {
+    match next {
+        RoundKey::Month(_) => round_locative(next).to_owned(),
+        RoundKey::Week(_) => "sljedeći tjedan".to_owned(),
+    }
+}
+
+/// Mjesec igre u lokativu („u lipnju"); tjedan se slaže u `place_text`.
 fn round_locative(r: RoundKey) -> &'static str {
     match r {
         RoundKey::Month(Month::Jun) => "u lipnju",
@@ -862,8 +896,8 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
     let progress = round_div(i64::from(input.progress_hundredths), 100);
     DebriefFacts {
         hotel: input.hotel_name.clone(),
-        month: round_locative(input.round),
-        next_month: input.next_round.map(round_locative),
+        month: place_text(input),
+        next_month: input.next_round.map(next_text),
         progress: if progress == 0 {
             "0 bodova".to_owned()
         } else {
@@ -941,12 +975,53 @@ fn why_fell(i: &IndexFact) -> String {
     }
 }
 
+/// Treba li za ovaj krug zvati AI mentora (P3): v1 i mjesečna v2 uvijek; tjedna samo kad u krugu završava mjesec.
+pub fn wants_ai_mentor(g: &Game, r: RoundKey) -> Result<bool, GameError> {
+    let period = g.round_info(r)?.period;
+    Ok(period.kind == sim_hotel_v2::PeriodKind::Month || period.month_ending_in().is_some())
+}
+
+/// Kratki tjedni sažetak bez AI-ja („tri uzroka") za tjedan u kojem ne završava mjesec.
+pub fn weekly_summary(input: &DebriefInput) -> String {
+    let f = debrief_facts(input);
+    let mut out = format!(
+        "{} je napredak tvog hotela od početka igre {}.\n\n",
+        capitalize(&f.month),
+        f.progress
+    );
+    let mut moved: Vec<&IndexFact> = f.indices.iter().filter(|i| i.change != 0).collect();
+    // Stabilno sortiranje: jednaki ostaju u redoslijedu INDEX_ORDER.
+    moved.sort_by_key(|i| std::cmp::Reverse(i.change.abs()));
+    let causes: Vec<String> = moved
+        .iter()
+        .take(3)
+        .map(|i| {
+            if i.change < 0 {
+                why_fell(i)
+            } else {
+                format!(
+                    "Indeks {} porastao je s {} na {}.",
+                    i.name, i.before, i.after
+                )
+            }
+        })
+        .collect();
+    out.push_str("Tri uzroka\n");
+    if causes.is_empty() {
+        out.push_str("Ovaj tjedan se nijedan indeks nije pomaknuo.");
+    } else {
+        out.push_str(&causes.join("\n"));
+    }
+    out.push_str("\n\nPuni pregled s mentorom stiže na kraju mjeseca.");
+    out
+}
+
 /// Mentor bez AI-ja (ARHITEKTURA §8.5 „bez AI-ja"): ista četiri dijela kao AI, iz istih činjenica.
 pub fn fallback_debrief(input: &DebriefInput) -> String {
     let f = debrief_facts(input);
     let mut out = format!(
         "{} je napredak tvog hotela od početka igre {}.\n\n",
-        capitalize(f.month),
+        capitalize(&f.month),
         f.progress
     );
 
@@ -1018,7 +1093,7 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
                 _ => Some(cur),
             })
     });
-    let when = f.next_month.unwrap_or("sljedeći put");
+    let when = f.next_month.as_deref().unwrap_or("sljedeći put");
     if let Some(w) = worst {
         out.push_str(&format!("Što probati {when}\n{}\n\n", advice(w.index)));
     }
