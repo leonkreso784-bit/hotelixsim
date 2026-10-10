@@ -5,6 +5,30 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-024 — Modeli: presuda na Sonnetu 5.5, lik na Haikuu 5.5, mentor na Sonnetu 5.5
+**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** · **Vezano:** [ADR-018](#adr-018) t. 4 (zamijenjeno),
+[ADR-023](#adr-023)
+
+**Kontekst.** Plan AI sloja imao je Leonovu „odluku 4": jači model (Opus 5.5) za presude, Sonnet za lika i mentora.
+Leon 10.10.: *„stavi Sonnet i Haiku koristi, ne treba nam jače od Sonneta da procjenjuje situaciju"*; u anketi je
+odabrao lika na Haikuu, mentor ostaje na Sonnetu.
+
+**Odluka:**
+1. **Zadani modeli** (`ai::Models::default()`): presuda `claude-sonnet-5-5` (effort `high`), lik `claude-haiku-5-5`
+   (effort `low`), mentor `claude-sonnet-5-5` (effort `low`). Varijable okoline `HOTELIXSIM_AI_MODEL_PRESUDA`,
+   `_LIK`, `_MENTOR` i dalje nadjačavaju — promjena modela je jedna varijabla.
+2. **Razlog i trošak** (po milijunu tokena, ulaz/izlaz): Opus 4/20 $, Sonnet 2/10 $, Haiku 0,10/0,50 $. Presuda
+   po rubrici sa strukturiranim izlazom ne traži više od Sonneta; lik je kratka replika.
+3. **Haiku 5.5 nema poslužiteljski rezervni model.** Pravilo je po MODELU, ne po vrsti poziva:
+   `request::supports_server_fallback(model)` je istina samo za `claude-opus-5-5`, `claude-sonnet-5-5`,
+   `claude-opus-5` i `claude-fable-5-1`. Za ostale (svi `claude-haiku-*`, nepoznati) tijelo nema `"fallbacks"` i ne
+   šalje se zaglavlje `anthropic-beta: server-side-fallback-2026-07-01` (`request::beta_header`).
+
+**Cijena ako krivo:** presuda je slabije dosljedna. Provjera: alat `mjerilo` kad Leon ocijeni 40 odgovora
+(`content/hotel/mjerilo/*.json`); ako treba, vratiti presudu na Opus varijablom okoline.
+
+---
+
 ## ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](#adr-019),
 [ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md) (Task 14)
@@ -154,6 +178,7 @@ lik prelazi na izravan poziv u zahtjevu (mijenja se `app/talk.rs` i ruta); ako o
    ponuđeni odgovor; trošak i ostale brojke dolaze od njega. AI nikad ne izmišlja novac.
 3. **Razgovor s likom: najviše 6 poruka studenta po situaciji;** presuditelj vidi cijeli razgovor uz konačni odgovor.
 4. **Pružatelj: Anthropic (Claude)** — jači model za presude, jeftiniji za lika i mentora; ključ u `.env`.
+   *Zamijenjeno [ADR-024](#adr-024): presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5.*
 
 ---
 

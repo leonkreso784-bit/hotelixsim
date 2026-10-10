@@ -236,3 +236,63 @@ fn mentor_prompt_example_is_invented_and_forbids_guessing() {
         assert!(prompt.contains(must), "uputa nema „{must}“");
     }
 }
+
+#[test]
+fn server_fallback_is_a_rule_per_model() {
+    use ai::request::supports_server_fallback as ok;
+    for m in [
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-opus-5",
+        "claude-fable-5-1",
+    ] {
+        assert!(ok(m), "{m}");
+    }
+    for m in [
+        "claude-haiku-5-5",
+        "claude-haiku-4-5",
+        "nepoznati-model",
+        "m",
+    ] {
+        assert!(!ok(m), "{m}");
+    }
+}
+
+#[test]
+fn haiku_requests_carry_no_fallback_field_or_header() {
+    let h = "claude-haiku-5-5";
+    let bodies = [
+        ai::request::assess_body(h, &sample_assess()),
+        ai::request::character_body(h, &sample_character()),
+        ai::request::debrief_body(h, &sample_debrief()),
+    ];
+    for b in &bodies {
+        assert!(b.get("fallbacks").is_none(), "{b}");
+        assert_eq!(ai::request::beta_header(b), None);
+    }
+}
+
+#[test]
+fn sonnet_requests_carry_fallback_field_and_header() {
+    let s = "claude-sonnet-5-5";
+    let bodies = [
+        ai::request::assess_body(s, &sample_assess()),
+        ai::request::character_body(s, &sample_character()),
+        ai::request::debrief_body(s, &sample_debrief()),
+    ];
+    for b in &bodies {
+        assert_eq!(b["fallbacks"], "default");
+        assert_eq!(
+            ai::request::beta_header(b),
+            Some("server-side-fallback-2026-07-01")
+        );
+    }
+}
+
+#[test]
+fn default_models_follow_adr_024() {
+    let m = ai::Models::default();
+    assert_eq!(m.judge, "claude-sonnet-5-5");
+    assert_eq!(m.character, "claude-haiku-5-5");
+    assert_eq!(m.mentor, "claude-sonnet-5-5");
+}
