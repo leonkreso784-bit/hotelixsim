@@ -1,3 +1,4 @@
+import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json } from "../test/fakeApi";
@@ -78,14 +79,19 @@ describe("Moj hotel", () => {
     expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(1);
   });
 
-  it("navigacija na obračun ostaje i kad se ekran zamijeni jer je mjesec postao „closing“", async () => {
+  it("navigacija na obračun preživi odmontiranje potvrde (mjesec postao „closing“ prije odgovora na POST)", async () => {
     let closed = false;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
     const api = standardApi()
       .on("GET", "/v1/games/:game", () =>
         json(200, game({ current: { month: "jun", status: closed ? "closing" : "open", unanswered: 2 } })),
       )
-      .on("POST", "/v1/games/:game/rounds/:month/close", () => {
+      .on("POST", "/v1/games/:game/rounds/:month/close", async () => {
         closed = true;
+        await gate;
         return json(202, { month: "jun", status: "closing", unanswered: 0 });
       });
     renderApp(api);
@@ -93,6 +99,13 @@ describe("Moj hotel", () => {
     const confirm = await screen.findByRole("button", { name: "Zatvori lipanj" });
     fireEvent.click(confirm);
     fireEvent.click(confirm);
+    // Ekran se osvježi dok POST još čeka: potvrda se odmontira, tek onda stiže odgovor.
+    await waitFor(() => expect(closed).toBe(true));
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+    expect(await screen.findByText("Obračun mjeseca „lipanj“ je u tijeku.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Zatvori lipanj" })).toBeNull();
+    release();
     await waitFor(() => expect(window.location.pathname).toBe("/mjesec/jun"));
     expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(1);
   });
