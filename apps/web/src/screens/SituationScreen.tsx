@@ -1,6 +1,6 @@
 import { t } from "@hotelixsim/i18n";
 import { ChevronLeft } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { problemMessage } from "../api/errors";
 import { useSituations } from "../api/queries";
 import type { HotelBody } from "../api/types";
@@ -16,6 +16,16 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const sits = useSituations(hotelId);
   // Je li forma za odgovor bila prikazana: tek tada novi sadržaj (izbor, presuda) prima fokus.
   const answeredHere = useRef(false);
+  const current = sits.data?.items.find((i) => i.code === code);
+  const formShown =
+    sits.data !== undefined &&
+    current !== undefined &&
+    sits.data.open &&
+    current.chosen === null &&
+    current.response === null;
+  useEffect(() => {
+    if (formShown) answeredHere.current = true;
+  }, [formShown]);
   const back = (
     <Link to="/situacije" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink">
       <ChevronLeft size={18} aria-hidden="true" />
@@ -34,7 +44,6 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
     );
   const open = sits.data.open;
   const decided = s.chosen !== null || s.response !== null;
-  if (open && !decided) answeredHere.current = true;
   const answerArea = (
     <div className="space-y-3">
       {s.response && <Verdict response={s.response} focusOnMount={answeredHere.current} />}
