@@ -1,54 +1,55 @@
-import type { ApiClient } from "@hotelixsim/api-client";
-import { indexLabel, t } from "@hotelixsim/i18n";
-import { useQuery } from "@tanstack/react-query";
-import { formatIndex } from "./format";
+// App.tsx — ulaz: gost bez igre vidi početak, inače okvir s ekranom po ruti.
+import { t } from "@hotelixsim/i18n";
+import { isNoGame, problemMessage } from "./api/errors";
+import { useGame, useMe } from "./api/queries";
+import type { HotelBody } from "./api/types";
+import { type Route, useRoute } from "./router";
+import { AvatarGallery } from "./screens/AvatarGallery";
+import { HotelScreen } from "./screens/HotelScreen";
+import { NotFound } from "./screens/NotFound";
+import { StartScreen } from "./screens/StartScreen";
+import { chipText, Layout } from "./ui/Layout";
+import { Button, ErrorText, StatusText } from "./ui/primitives";
 
-const PROFILE = "C";
+function Screen({ route, me }: { route: Route; me: HotelBody }) {
+  switch (route.name) {
+    case "hotel":
+      return <HotelScreen me={me} />;
+    case "avatars":
+      return <AvatarGallery />;
+    default:
+      return <NotFound />;
+  }
+}
 
-export function App({ client }: { client: ApiClient }) {
-  const health = useQuery({
-    queryKey: ["health"],
-    queryFn: async () => {
-      const { data, error, response } = await client.GET("/v1/health");
-      if (data) return data;
-      if (response.status === 503 && error) return error;
-      throw new Error(`health ${response.status}`);
-    },
-  });
-  const indices = useQuery({
-    queryKey: ["indices", PROFILE],
-    queryFn: async () => {
-      const { data, response } = await client.GET("/v1/demo/profiles/{profile}/indices", {
-        params: { path: { profile: PROFILE } },
-      });
-      if (!data) throw new Error(`indices ${response.status}`);
-      return data;
-    },
-  });
-
+function GameShell({ me }: { me: HotelBody }) {
+  const route = useRoute();
+  const game = useGame(me.game_id);
   return (
-    <main>
-      <h1>{t("app.title")}</h1>
-      <p>
-        {health.isPending
-          ? t("status.loading")
-          : health.isError
-            ? t("status.api.error")
-            : health.data.database === "ok"
-              ? t("status.db.ok")
-              : t("status.db.error")}
-      </p>
-      {health.data?.events != null && <p>{t("status.events", { count: health.data.events })}</p>}
-      <h2>{t("profile.heading", { profile: PROFILE })}</h2>
-      {indices.isPending && <p>{t("status.indices.loading")}</p>}
-      {indices.isError && <p>{t("status.indices.error")}</p>}
-      <ul>
-        {indices.data?.indices.map((i) => (
-          <li key={i.code}>
-            <span>{indexLabel(i.code)}</span> <strong>{formatIndex(i.hundredths)}</strong>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <Layout chip={game.data ? chipText(game.data) : null}>
+      <Screen route={route} me={me} />
+    </Layout>
   );
+}
+
+export function App() {
+  const me = useMe();
+  if (me.isPending)
+    return (
+      <div className="mx-auto max-w-md p-6">
+        <StatusText>{t("status.loading")}</StatusText>
+      </div>
+    );
+  if (me.isError) {
+    if (isNoGame(me.error)) return <StartScreen />;
+    return (
+      <div className="mx-auto max-w-md space-y-3 p-6">
+        <ErrorText>{problemMessage(me.error)}</ErrorText>
+        <Button variant="secondary" onClick={() => void me.refetch()}>
+          {t("error.retry")}
+        </Button>
+      </div>
+    );
+  }
+  return <GameShell me={me.data} />;
 }
