@@ -11,13 +11,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const jun = { month: "jun" as const, indices: ix(5300, 5200, 5100, 5400, 4800), progress_hundredths: 800 };
-const jul = { month: "jul" as const, indices: ix(5600, 5100, 5000, 5500, 4900), progress_hundredths: 900 };
+const jun = {
+  month: "jun" as const,
+  round: "jun",
+  indices: ix(5300, 5200, 5100, 5400, 4800),
+  progress_hundredths: 800,
+};
+const jul = {
+  month: "jul" as const,
+  round: "jul",
+  indices: ix(5600, 5100, 5000, 5500, 4900),
+  progress_hundredths: 900,
+};
 
 /** Dva obračunata mjeseca; objašnjenje za srpanj ima drugačiji redak za Zaposlenike. */
 function twoMonths() {
   const julExplanation: ExplanationBody = explanation({
     month: "jul",
+    round: "jul",
     indices: explanation().indices.map((i) =>
       i.code === "Z"
         ? {
