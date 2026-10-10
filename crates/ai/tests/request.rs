@@ -209,6 +209,7 @@ fn mentor_prompt_example_is_invented_and_forbids_guessing() {
     );
     let content: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let mut checked_agencija = false;
     for s in content.as_array().unwrap() {
         let title = s["title"].as_str().unwrap().to_lowercase();
         for word in title
@@ -217,6 +218,16 @@ fn mentor_prompt_example_is_invented_and_forbids_guessing() {
         {
             // Korijen riječi (bez padežnog nastavka), da „kuhinje" uhvati i „kuhinju".
             let stem: String = word.chars().take(word.chars().count() - 2).collect();
+            // Naziv mjeseca je kalendar, ne priča situacije („u kolovozu" u uputi je samo primjer formata).
+            if [
+                "lipan", "lipnj", "srpan", "srpnj", "kolovo", "rujan", "rujn",
+            ]
+            .iter()
+            .any(|m| stem.starts_with(m))
+            {
+                continue;
+            }
+            checked_agencija |= word == "agencija";
             assert!(
                 !prompt.contains(&stem),
                 "uputa spominje „{word}“ iz situacije {}",
@@ -230,6 +241,8 @@ fn mentor_prompt_example_is_invented_and_forbids_guessing() {
             );
         }
     }
+    // Izuzetak za mjesece ne smije progutati ostale riječi naslova (S3 počinje s „Agencija").
+    assert!(checked_agencija, "riječ „agencija“ se više ne provjerava");
     for must in [
         "odluke_u_planu",
         "odabrani_odgovor",
