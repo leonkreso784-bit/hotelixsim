@@ -67,6 +67,38 @@ describe("Moj hotel", () => {
     expect(screen.getByRole("link", { name: /Rezultat: lipanj/ }).getAttribute("href")).toBe("/mjesec/jun");
   });
 
+  it("svaki indeks i svaka kartica vode na detalj pokazatelja", async () => {
+    renderApp(standardApi());
+    await screen.findByRole("heading", { name: "Moj hotel" });
+    const hrefs = [...document.querySelectorAll('a[href^="/pokazatelj"]')].map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual([
+      "/pokazatelj/G",
+      "/pokazatelj/R",
+      "/pokazatelj/Z",
+      "/pokazatelj/O",
+      "/pokazatelj/F",
+      "/pokazatelj/F/sold",
+      "/pokazatelj/F/revenue",
+      "/pokazatelj/F/cash",
+      "/pokazatelj/Z/staff",
+      "/pokazatelj/R/rating",
+    ]);
+    expect(screen.getByRole("link", { name: /Prihod od soba/ }).getAttribute("href")).toBe(
+      "/pokazatelj/F/revenue",
+    );
+    expect(screen.getByRole("link", { name: /^Ocjena na portalima/ }).getAttribute("href")).toBe(
+      "/pokazatelj/R/rating",
+    );
+    expect(screen.getByRole("link", { name: /^Zaposlenici/ }).getAttribute("href")).toBe("/pokazatelj/Z");
+  });
+
+  it("klik na karticu Zaposleni otvara Zaposlenike s istaknutom varijablom", async () => {
+    renderApp(standardApi());
+    fireEvent.click(await screen.findByRole("link", { name: /^Zaposleni(?!c)/ }));
+    expect(await screen.findByRole("heading", { name: "Zaposlenici" })).toBeTruthy();
+    expect(window.location.pathname).toBe("/pokazatelj/Z/staff");
+  });
+
   it("kartice: iznos se ne lomi, a bilješka se prelama umjesto da se reže", async () => {
     renderApp(standardApi());
     expect((await screen.findByText("42.000 €")).className).toContain("whitespace-nowrap");

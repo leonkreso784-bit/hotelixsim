@@ -1,6 +1,6 @@
-// Mali usmjerivač nad History API-jem (ADR-022 t. 1): sedam ruta, bez učitavača.
+// Mali usmjerivač nad History API-jem (ADR-022 t. 1): osam ruta, bez učitavača.
 import { type AnchorHTMLAttributes, type MouseEvent, useSyncExternalStore } from "react";
-import type { MonthCode } from "./api/types";
+import type { DriverCode, IndexCode, MonthCode } from "./api/types";
 
 export type Route =
   | { name: "hotel" }
@@ -8,20 +8,50 @@ export type Route =
   | { name: "situation"; code: string }
   | { name: "plan" }
   | { name: "month"; month: MonthCode }
+  | { name: "indicator"; code: IndexCode; highlight: DriverCode | null }
   | { name: "feed" }
   | { name: "avatars" }
   | { name: "notFound" };
 
 const MONTHS: readonly MonthCode[] = ["jun", "jul", "aug", "sep"];
 
+const INDEX_CODES: readonly IndexCode[] = ["G", "R", "Z", "O", "F"];
+const DRIVER_CODES: readonly DriverCode[] = [
+  "sold",
+  "revenue",
+  "costs",
+  "cash",
+  "staff",
+  "morale",
+  "experience",
+  "equipment",
+  "satisfaction",
+  "rating",
+  "staff_load",
+];
+
+function isIndex(s: string): s is IndexCode {
+  return (INDEX_CODES as readonly string[]).includes(s);
+}
+
+function isDriver(s: string): s is DriverCode {
+  return (DRIVER_CODES as readonly string[]).includes(s);
+}
+
 function isMonth(s: string): s is MonthCode {
   return (MONTHS as readonly string[]).includes(s);
 }
 
 export function matchRoute(pathname: string): Route {
-  const [a, b, ...rest] = pathname.split("/").filter(Boolean);
+  const [a, b, c, ...rest] = pathname.split("/").filter(Boolean);
   if (rest.length > 0) return { name: "notFound" };
   if (a === undefined || (a === "demo" && b === undefined)) return { name: "hotel" };
+  if (a === "pokazatelj") {
+    if (b === undefined || !isIndex(b)) return { name: "notFound" };
+    if (c === undefined) return { name: "indicator", code: b, highlight: null };
+    return isDriver(c) ? { name: "indicator", code: b, highlight: c } : { name: "notFound" };
+  }
+  if (c !== undefined) return { name: "notFound" };
   if (a === "situacije") {
     if (b === undefined) return { name: "situations" };
     try {

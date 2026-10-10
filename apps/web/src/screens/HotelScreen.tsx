@@ -23,27 +23,34 @@ import { Badge, Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
 
 function Stat({
+  to,
   icon,
   label,
   value,
   note,
 }: {
+  to: string;
   icon: ReactNode;
   label: string;
   value: string;
   note?: string;
 }) {
   return (
-    <Card className="space-y-1 p-3">
-      <span className="flex items-center gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
-          {icon}
+    <Link
+      to={to}
+      className="block rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <Card className="space-y-1 p-3">
+        <span className="flex items-center gap-2">
+          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+            {icon}
+          </span>
+          <span className="min-w-0 text-xs text-muted">{label}</span>
         </span>
-        <span className="min-w-0 text-xs text-muted">{label}</span>
-      </span>
-      <strong className="block whitespace-nowrap text-xl tabular-nums">{value}</strong>
-      {note && <span className="line-clamp-2 block text-xs text-muted">{note}</span>}
-    </Card>
+        <strong className="block whitespace-nowrap text-xl tabular-nums">{value}</strong>
+        {note && <span className="line-clamp-2 block text-xs text-muted">{note}</span>}
+      </Card>
+    </Link>
   );
 }
 
@@ -59,7 +66,10 @@ function Row({
   end?: ReactNode | undefined;
 }) {
   return (
-    <Link to={to} className="flex min-h-12 items-center gap-3 py-2">
+    <Link
+      to={to}
+      className="flex min-h-12 items-center gap-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
       <span className="text-accent">{icon}</span>
       <span className="flex-1 font-semibold">{label}</span>
       {end}
@@ -110,38 +120,46 @@ export function HotelScreen({ me }: { me: HotelBody }) {
           indices={latestIndices(h)}
           deltas={deltas}
           deltaLabel={deltas ? t("hotel.fromStart") : null}
+          linked
         />
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
         <Stat
+          to="/pokazatelj/F/sold"
           icon={<BedDouble size={20} aria-hidden="true" />}
           label={t("hotel.occupancy")}
           value={lm ? formatOccupancy(lm.sold, lm.available) : "—"}
           note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
         />
         <Stat
+          to="/pokazatelj/F/revenue"
           icon={<ChartColumn size={20} aria-hidden="true" />}
           label={t("hotel.revenue")}
           value={lm ? formatEuros(lm.rooms_revenue_cents) : "—"}
           note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
         />
         <Stat
+          to="/pokazatelj/F/cash"
           icon={<Wallet size={20} aria-hidden="true" />}
           label={t("hotel.cash")}
           value={formatEuros(priv.now.cash_cents)}
         />
         <Stat
+          to="/pokazatelj/Z/staff"
           icon={<Users size={20} aria-hidden="true" />}
           label={t("hotel.staff")}
           value={String(priv.now.permanent + priv.now.seasonal)}
         />
       </div>
 
-      <Card className="flex items-center gap-3 py-3">
-        <Star size={20} aria-hidden="true" className="text-accent" />
-        <span className="flex-1 font-semibold">{t("hotel.rating")}</span>
-        <strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>
+      <Card className="py-1">
+        <Row
+          to="/pokazatelj/R/rating"
+          icon={<Star size={20} aria-hidden="true" />}
+          label={t("hotel.rating")}
+          end={<strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>}
+        />
       </Card>
 
       <Card className="divide-y divide-line py-1">

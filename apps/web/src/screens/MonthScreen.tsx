@@ -61,7 +61,7 @@ function MonthResult({
 
       <Card>
         <h2 className="pb-2 font-bold">{t("month.indices")}</h2>
-        <IndexBars indices={now} deltas={deltas} deltaLabel={t("month.inMonth")} />
+        <IndexBars indices={now} deltas={deltas} deltaLabel={t("month.inMonth")} linked />
       </Card>
 
       <Card className="flex items-start gap-3 bg-mint">

@@ -4,7 +4,7 @@ import { t } from "@hotelixsim/i18n";
 import { ChevronDown } from "lucide-react";
 import { problemMessage } from "../../api/errors";
 import { useExplanation } from "../../api/queries";
-import type { EffectCode, ExplanationIndexBody, MonthCode } from "../../api/types";
+import type { DriverCode, EffectCode, ExplanationIndexBody, MonthCode } from "../../api/types";
 import { sortIndices } from "../../game";
 import { Delta, INDEX_ICON } from "../../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../../ui/primitives";
@@ -16,6 +16,46 @@ function mostMoved(indices: ExplanationIndexBody[]): ExplanationIndexBody["code"
   let best: ExplanationIndexBody | null = null;
   for (const i of indices) if (!best || Math.abs(i.change) > Math.abs(best.change)) best = i;
   return best?.code ?? null;
+}
+
+/** Varijable koje čine indeks, s redcima i bojom po učinku. Istaknuta (ako je ima) ide na vrh i označena je. */
+export function DriverList({
+  drivers,
+  highlight = null,
+}: {
+  drivers: ExplanationIndexBody["drivers"];
+  highlight?: DriverCode | null;
+}) {
+  const ordered = [...drivers].sort((a, b) => Number(b.var === highlight) - Number(a.var === highlight));
+  return (
+    <div className="space-y-3 pb-3">
+      {ordered.length === 0 && <p className="text-sm text-muted">{t("month.whyNone")}</p>}
+      {ordered.map((d) => (
+        <div
+          key={d.var}
+          aria-current={d.var === highlight ? "true" : undefined}
+          className={d.var === highlight ? "rounded-xl bg-accent-soft p-2" : undefined}
+        >
+          <h3 className="font-semibold">{d.name}</h3>
+          <p className="text-xs text-muted">{d.meaning}</p>
+          <ul className="mt-1 text-sm">
+            {d.lines.map((l) => (
+              <li
+                // Poslužitelj spaja isti uzrok iste varijable u jedan redak, pa je uzrok jedinstven.
+                key={`${l.cause}|${l.amount}`}
+                className="flex flex-wrap justify-between gap-x-3 border-b border-line py-1 last:border-0"
+              >
+                <span className="min-w-0">{l.cause}</span>
+                <span className={`ml-auto text-right font-semibold tabular-nums ${TONE[l.effect]}`}>
+                  {l.amount}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean }) {
@@ -32,29 +72,7 @@ function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean 
         </span>
         <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted group-open:rotate-180" />
       </summary>
-      <div className="space-y-3 pb-3">
-        {index.drivers.length === 0 && <p className="text-sm text-muted">{t("month.whyNone")}</p>}
-        {index.drivers.map((d) => (
-          <div key={d.var}>
-            <h3 className="font-semibold">{d.name}</h3>
-            <p className="text-xs text-muted">{d.meaning}</p>
-            <ul className="mt-1 text-sm">
-              {d.lines.map((l) => (
-                <li
-                  // Poslužitelj spaja isti uzrok iste varijable u jedan redak, pa je uzrok jedinstven.
-                  key={`${l.cause}|${l.amount}`}
-                  className="flex flex-wrap justify-between gap-x-3 border-b border-line py-1 last:border-0"
-                >
-                  <span className="min-w-0">{l.cause}</span>
-                  <span className={`ml-auto text-right font-semibold tabular-nums ${TONE[l.effect]}`}>
-                    {l.amount}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+      <DriverList drivers={index.drivers} />
     </details>
   );
 }

@@ -7,6 +7,7 @@ import { type Route, useRoute } from "./router";
 import { AvatarGallery } from "./screens/AvatarGallery";
 import { FeedScreen } from "./screens/FeedScreen";
 import { HotelScreen } from "./screens/HotelScreen";
+import { IndicatorScreen } from "./screens/IndicatorScreen";
 import { MonthScreen } from "./screens/MonthScreen";
 import { NotFound } from "./screens/NotFound";
 import { PlanScreen } from "./screens/PlanScreen";
@@ -28,6 +29,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
       return <PlanScreen me={me} />;
     case "month":
       return <MonthScreen key={route.month} me={me} month={route.month} />;
+    case "indicator":
+      return <IndicatorScreen key={route.code} me={me} code={route.code} highlight={route.highlight} />;
     case "feed":
       return <FeedScreen me={me} />;
     case "avatars":

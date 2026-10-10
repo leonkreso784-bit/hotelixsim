@@ -20,6 +20,7 @@ export type PlanLimitsBody = S["PlanLimitsBody"];
 export type FeedItemBody = S["FeedItemBody"];
 export type ExplanationBody = S["ExplanationBody"];
 export type ExplanationIndexBody = S["ExplanationIndexBody"];
+export type DriverCode = S["DriverCode"];
 export type EffectCode = S["EffectCode"];
 export type IndexEntry = S["IndexEntry"];
 export type IndexCode = S["IndexCode"];
