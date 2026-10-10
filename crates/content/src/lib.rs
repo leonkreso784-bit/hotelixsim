@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+mod v2;
+
 use sim_hotel::{
     ActionSpec, Catalog, Category, CategorySpec, Economy, LevelEffect, Mechanic, MechanicSpec,
     Month, MonthTable, OfferedAnswer, Profile, ProfileSpec, SituationTemplate, TrainingEffect,
@@ -24,6 +26,21 @@ pub struct Content {
     pub situations: Vec<SituationTemplate>,
     /// Po šifri situacije; svaka situacija ima unos (prazan ako nema AI-ja).
     pub ai: BTreeMap<String, SituationAi>,
+    /// Katalog v2 (`Some` samo za snimak s `model = v2`); `base` je isti `catalog`.
+    pub v2: Option<sim_hotel_v2::Catalog>,
+}
+
+/// Kojim se modelom igra računa. Snimak bez ključa `model` je `v1`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Model {
+    #[default]
+    V1,
+    V2,
+}
+
+fn is_v1(m: &Model) -> bool {
+    *m == Model::V1
 }
 
 /// Lik s kojim student razgovara u situaciji sa slobodnim odgovorom (DEMO §7).
@@ -559,6 +576,11 @@ pub struct Snapshot {
     catalog: CatalogDto,
     profiles: BTreeMap<String, ProfileDto>,
     situations: Vec<SituationDto>,
+    /// Izostavljen za v1, pa stari snimci daju isti zapis i otisak.
+    #[serde(default, skip_serializing_if = "is_v1")]
+    model: Model,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    v2: Option<v2::V2Dto>,
 }
 
 impl Snapshot {
@@ -568,7 +590,34 @@ impl Snapshot {
             catalog: read(dir, "catalog.json")?,
             profiles: read(dir, "profiles.json")?,
             situations: read(dir, "situations.json")?,
+            model: Model::V1,
+            v2: None,
         })
+    }
+
+    /// v1 datoteke iz `dir` + `dir/v2/*.json`; `model = v2`.
+    pub fn read_v2(dir: &Path) -> Result<Snapshot, ContentError> {
+        let mut s = Snapshot::read(dir)?;
+        s.model = Model::V2;
+        s.v2 = Some(v2::read_v2_dir(dir)?);
+        Ok(s)
+    }
+
+    pub fn model(&self) -> Model {
+        self.model
+    }
+
+    /// v2 snimak „kao v1" za ekvivalencijske testove (MODEL_V2 §2 t. 6); odjeljak v2 = `sim_hotel_v2::degenerate`.
+    /// Ako se v1 dio ne da izgraditi, odjeljak ostaje prazan, a `build()` javlja grešku v1 dijela.
+    pub fn degenerate_v2(&self) -> Snapshot {
+        let mut s = self.clone();
+        s.model = Model::V2;
+        let dto = match build_catalog(self.catalog.clone(), self.profiles.clone()) {
+            Ok(base) => v2::degenerate_dto(&base),
+            Err(_) => v2::V2Dto::default(),
+        };
+        s.v2 = Some(dto);
+        s
     }
 
     /// Pretvori snimak u tipove jezgre i provjeri katalog.
@@ -579,10 +628,21 @@ impl Snapshot {
         catalog
             .validate()
             .map_err(|e| ContentError::Invalid(format!("katalog: {e:?}")))?;
+        let v2 = match (s.model, &s.v2) {
+            (Model::V2, Some(dto)) => {
+                let c = v2::build_v2(dto, &catalog)?;
+                c.validate()
+                    .map_err(|e| ContentError::Invalid(format!("katalog v2: {e:?}")))?;
+                Some(c)
+            }
+            (Model::V1, None) => None,
+            _ => return invalid("model i odjeljak v2 se ne slažu".to_string()),
+        };
         Ok(Content {
             catalog,
             situations,
             ai,
+            v2,
         })
     }
 
