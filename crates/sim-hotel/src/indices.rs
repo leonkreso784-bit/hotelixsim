@@ -4,7 +4,8 @@
 use engine::calc::{self as c, Calc, CalcError};
 
 use crate::catalog::{Catalog, Category};
-use crate::index::IndexSet;
+use crate::explain::Var;
+use crate::index::{Index, IndexSet};
 use crate::month::{Month, MonthTable};
 use crate::plan::MonthPlan;
 use crate::resolve::{MonthReport, ResolveError, resolve_month, w};
@@ -40,6 +41,37 @@ pub fn base_labor_cents(s: &HotelState, cat: &Catalog) -> Result<i64, ResolveErr
     Ok(c::narrow(c::add(wage, w(s.extra_wage_cents))?)?)
 }
 
+/// Što pokreće indeks: varijabla iz objašnjenja mjeseca ili opterećenje osoblja, koje nije varijabla
+/// (nema svoje retke) nego stanje iz prodaje i broja ljudi (`resolve::people`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Driver {
+    Var(Var),
+    StaffLoad,
+}
+
+/// Opterećenje (prodane noći po zaposlenom na dan, u stotinkama) iznad kojeg počinje kazna.
+pub const LOAD_LIMIT_HUNDREDTHS: u16 = 180;
+
+/// Kazna opterećenja u stotinkama boda (0–6000): 100 po stotinki iznad praga. Ista u Operativi i moralu.
+pub fn load_penalty(load_hundredths: u16) -> Calc<i32> {
+    let over = c::sub(w(load_hundredths), w(LOAD_LIMIT_HUNDREDTHS))?;
+    c::narrow(c::mul(100, over)?.clamp(0, 6_000))
+}
+
+/// Koji pokretači ulaze u koji indeks u `raw_indices`, da mentor zna što je pokrenulo indeks.
+/// `Staff` stoji uz Z jer odlasci (`turnover_bp`) ulaze u zadržavanje; prodaja i broj ljudi u Operativu
+/// ulaze preko opterećenja. Testovi drže popis uz formulu.
+pub fn index_drivers(i: Index) -> &'static [Driver] {
+    use Driver::{StaffLoad, Var as V};
+    match i {
+        Index::Guests => &[V(Var::Satisfaction)],
+        Index::Reviews => &[V(Var::Rating)],
+        Index::Staff => &[V(Var::Morale), V(Var::Staff)],
+        Index::Operations => &[V(Var::Equipment), V(Var::Experience), StaffLoad],
+        Index::Finance => &[V(Var::Sold), V(Var::Revenue), V(Var::Costs), V(Var::Cash)],
+    }
+}
+
 pub fn raw_indices(
     s: &HotelState,
     goppar_cents: i64,
@@ -49,7 +81,7 @@ pub fn raw_indices(
 ) -> Calc<RawIndices> {
     let retention =
         c::sub(10_000, c::div_round(c::mul(25, w(s.turnover_bp))?, 2)?)?.clamp(0, 10_000);
-    let penalty = c::mul(100, c::sub(w(s.load_hundredths), 180)?)?.clamp(0, 6_000);
+    let penalty = w(load_penalty(s.load_hundredths)?);
     let floor = w(cat.economy.goppar_floor_cents);
     let diff = c::sub(w(goppar_cents), w(ref_goppar_cents))?;
     let gi = c::add(

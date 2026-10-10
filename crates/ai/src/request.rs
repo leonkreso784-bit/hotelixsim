@@ -1,7 +1,7 @@
 //! Tijela zahtjeva za Claude Messages API: čiste funkcije, testabilne bez mreže.
 //! Ne šalju se `thinking`, `temperature`, `top_p` ni `budget_tokens` (modeli ih odbijaju s 400).
 
-use game::{AssessInput, CharacterInput, ChatLine, DebriefInput, Speaker};
+use game::{AssessInput, CharacterInput, ChatLine, DebriefInput, Speaker, debrief_facts};
 use serde_json::{Value, json};
 use std::fmt::Write;
 
@@ -113,8 +113,9 @@ pub fn character_body(model: &str, input: &CharacterInput) -> Value {
     })
 }
 
+/// Mentor dobiva samo pripremljene činjenice u ljudskim jedinicama (ADR-023), nikad sirovi `DebriefInput`.
 pub fn debrief_body(model: &str, input: &DebriefInput) -> Value {
-    let data = serde_json::to_string_pretty(input).unwrap_or_default();
+    let data = serde_json::to_string_pretty(&debrief_facts(input)).unwrap_or_default();
     json!({
         "model": model,
         "max_tokens": 4000,

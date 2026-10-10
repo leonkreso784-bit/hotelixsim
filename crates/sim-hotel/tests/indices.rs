@@ -147,3 +147,107 @@ fn liquidity_has_no_upper_bound_in_raw_f() {
     let raw = raw_indices(&s, 4_163, 11_000_000, 4_163, &cat).unwrap();
     assert_eq!(raw.f, 23_065); // likvidnost 65 217, ADR-014
 }
+
+fn raw_of(r: &RawIndices, i: Index) -> i32 {
+    match i {
+        Index::Guests => r.g,
+        Index::Reviews => r.r,
+        Index::Staff => r.z,
+        Index::Operations => r.o,
+        Index::Finance => r.f,
+    }
+}
+
+/// Čuvar `index_drivers`: pomak svakog pokretača mijenja točno one indekse kojima je upisan.
+#[test]
+fn index_drivers_match_raw_formula() {
+    let cat = test_catalog();
+    let mut base = state_c();
+    // Opterećenje iznad praga, da se kazna stvarno mijenja s njim.
+    base.load_hundredths = LOAD_LIMIT_HUNDREDTHS + 20;
+    let (goppar, labor) = (4_163, 11_000_000);
+    let start = raw_indices(&base, goppar, labor, goppar, &cat).unwrap();
+    let all = [
+        Driver::Var(Var::Sold),
+        Driver::Var(Var::Revenue),
+        Driver::Var(Var::Costs),
+        Driver::Var(Var::Cash),
+        Driver::Var(Var::Staff),
+        Driver::Var(Var::Morale),
+        Driver::Var(Var::Experience),
+        Driver::Var(Var::Equipment),
+        Driver::Var(Var::Satisfaction),
+        Driver::Var(Var::Rating),
+        Driver::StaffLoad,
+    ];
+    for d in all {
+        let mut s = base.clone();
+        let (mut g, mut l) = (goppar, labor);
+        match d {
+            // Prodaja, prihod i troškovi ulaze kroz GOPPAR; troškovi i kroz plaće u likvidnosti.
+            // (Prodaja i broj ljudi u Operativu ulaze preko opterećenja, vidi test ispod.)
+            Driver::Var(Var::Sold | Var::Revenue) => g += 500,
+            Driver::Var(Var::Costs) => {
+                g -= 500;
+                l += 1_000_000;
+            }
+            Driver::Var(Var::Cash) => s.cash_cents += 1_000_000,
+            Driver::Var(Var::Staff) => s.turnover_bp += 400,
+            Driver::Var(Var::Morale) => s.morale_pts += 500,
+            Driver::Var(Var::Experience) => s.experience_pts += 500,
+            Driver::Var(Var::Equipment) => s.equipment_pts += 500,
+            Driver::Var(Var::Satisfaction) => s.satisfaction_pts += 500,
+            Driver::Var(Var::Rating) => s.rating += 20,
+            Driver::StaffLoad => s.load_hundredths += 30,
+        }
+        let moved = raw_indices(&s, g, l, goppar, &cat).unwrap();
+        for i in Index::ALL {
+            let changed = raw_of(&moved, i) != raw_of(&start, i);
+            assert_eq!(
+                changed,
+                index_drivers(i).contains(&d),
+                "{d:?} → {i:?}: formula i index_drivers se ne slažu"
+            );
+        }
+    }
+    // Svaki pokretač pokreće barem jedan indeks.
+    for d in all {
+        assert!(
+            Index::ALL.iter().any(|&i| index_drivers(i).contains(&d)),
+            "{d:?}"
+        );
+    }
+}
+
+/// Opterećenje osoblja (pokretač Operative) raste s prodajom i pada s brojem ljudi, pa prodaja i broj
+/// ljudi u Operativu ulaze preko njega; ispod praga kazne nema.
+#[test]
+fn staff_load_is_fed_by_sales_and_headcount_and_penalised_above_limit() {
+    let cat = test_catalog();
+    let s = state_c();
+    let plan = MonthPlan::default_for(&s, Month::Jul, &cat).unwrap();
+    let load = |p: &MonthPlan| {
+        resolve_month(&s, Month::Jul, p, &[], &cat)
+            .unwrap()
+            .after
+            .load_hundredths
+    };
+    let base = load(&plan);
+    let fewer = MonthPlan {
+        seasonal_target: plan.seasonal_target - 2,
+        ..plan.clone()
+    };
+    assert!(load(&fewer) > base, "manje ljudi → veće opterećenje");
+    let cheaper = MonthPlan {
+        price_cents: plan.price_cents * 80 / 100 / 100 * 100,
+        ..plan.clone()
+    };
+    assert!(
+        load(&cheaper) > base,
+        "jeftinije → više prodanih noći → veće opterećenje"
+    );
+    assert_eq!(load_penalty(LOAD_LIMIT_HUNDREDTHS), Ok(0));
+    assert_eq!(load_penalty(LOAD_LIMIT_HUNDREDTHS - 40), Ok(0));
+    assert_eq!(load_penalty(LOAD_LIMIT_HUNDREDTHS + 25), Ok(2_500));
+    assert_eq!(load_penalty(300), Ok(6_000));
+}
