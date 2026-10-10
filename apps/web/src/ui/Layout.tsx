@@ -16,13 +16,23 @@ export function chipText(game: GameBody): string {
   });
 }
 
-function Logo() {
+/** Znak i ime „HotelixSim“ (UI_PRAVILA §3.5); isti u zaglavlju i na početnom ekranu. */
+export function Wordmark({ size = "md" }: { size?: "md" | "lg" }) {
+  const big = size === "lg";
   return (
-    <Link to="/" className="flex min-h-11 items-center gap-2">
-      <img src="/logo-znak.png" alt="" className="size-9 rounded-xl" />
-      <span className="text-xl font-extrabold tracking-tight">
+    <span className={`flex items-center ${big ? "gap-3" : "gap-2"}`}>
+      <img src="/logo-znak.png" alt="" className={big ? "size-14 rounded-2xl" : "size-9 rounded-xl"} />
+      <span className={`${big ? "text-3xl" : "text-xl"} font-extrabold tracking-tight`}>
         Hotelix<span className="text-accent">Sim</span>
       </span>
+    </span>
+  );
+}
+
+function Logo() {
+  return (
+    <Link to="/" className="flex min-h-11 items-center">
+      <Wordmark />
     </Link>
   );
 }
@@ -49,7 +59,7 @@ function BottomNav({ route }: { route: Route }) {
                 to={tab.to}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold md:min-h-12 md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4 md:text-base ${
-                  active ? "text-accent md:bg-accent-soft" : "text-muted md:hover:bg-sand"
+                  active ? "text-accent-ink md:bg-accent-soft" : "text-muted md:hover:bg-sand"
                 }`}
               >
                 <Icon size={22} aria-hidden="true" />

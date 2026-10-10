@@ -6,7 +6,7 @@ export function NotFound() {
   return (
     <Card>
       <h1 className="text-xl font-bold">{t("notFound.title")}</h1>
-      <Link to="/" className="mt-3 inline-block font-semibold text-accent">
+      <Link to="/" className="mt-3 inline-block font-semibold text-accent-ink">
         {t("notFound.back")}
       </Link>
     </Card>

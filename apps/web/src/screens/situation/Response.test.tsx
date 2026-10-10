@@ -26,7 +26,7 @@ const judged: ResponseBody = {
 };
 
 describe("slobodan odgovor", () => {
-  it("predaja jednom → „AI ocjenjuje…“ → pet redaka ✓/✗ s rečenicom i razlogom, ukupno 4/5", async () => {
+  it("predaja jednom → „AI ocjenjuje…“ → pet redaka ✓/✗ s rečenicom i razlogom, ocjena 4/5", async () => {
     let polls = 0;
     const pending = situations([
       s1({ response: { ...judged, status: "pending", quality: null, criteria: [], rationale: null } }),
@@ -46,7 +46,8 @@ describe("slobodan odgovor", () => {
     fireEvent.click(submit);
     fireEvent.click(submit);
     expect(await screen.findByText("AI ocjenjuje tvoj odgovor…")).toBeTruthy();
-    expect(await screen.findByText("Ukupno 4/5")).toBeTruthy();
+    expect(await screen.findByText("Ocjena 4/5")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "AI obrazloženje" })).toBeTruthy();
     expect(screen.getByText("Ispriča se i pokaže razumijevanje.")).toBeTruthy();
     expect(screen.getByText("Nema poziva sutradan.")).toBeTruthy();
     expect(screen.getAllByText("ispunjeno")).toHaveLength(4);
@@ -75,20 +76,31 @@ describe("slobodan odgovor", () => {
     expect(await screen.findByText("Tekst je prazan ili predug (najviše 2000 znakova).")).toBeTruthy();
   });
 
-  it("neutralna presuda kaže da ide profesoru", async () => {
-    const neutral: ResponseBody = { ...judged, status: "neutral", quality: 3, criteria: [], rationale: null };
+  it("neutralna presuda: naslov „Ocjena 3/5“ i jedna rečenica, bez tehničke rečenice poslužitelja", async () => {
+    const neutral: ResponseBody = {
+      ...judged,
+      status: "neutral",
+      quality: 3,
+      criteria: [],
+      rationale:
+        "AI presuda nije uspjela ni nakon ponovljenih pokušaja; neutralna presuda po pravilu, na pregled profesoru.",
+    };
     const api = standardApi().on(
       "GET",
       "/v1/hotels/:hotel/situations",
       situations([s1({ response: neutral }), s3()]),
     );
     renderApp(api, "/situacije/S1");
+    expect(await screen.findByRole("heading", { name: "Ocjena 3/5" })).toBeTruthy();
     expect(
-      await screen.findByText(
-        "Presuda nije stigla na vrijeme: neutralna ocjena 3, odgovor ide profesoru na pregled.",
+      screen.getByText(
+        "AI ocjena nije stigla na vrijeme: vrijedi neutralna ocjena, a odgovor pregledava profesor.",
       ),
     ).toBeTruthy();
-    expect(screen.getByText("Ukupno 3/5")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "AI obrazloženje" })).toBeNull();
+    expect(screen.queryByText(/AI presuda nije uspjela/)).toBeNull();
+    // m2: konačna neutralna presuda ne nosi napomenu „AI ocjenjuje…“ u sadašnjem vremenu.
+    expect(screen.queryByText("AI ocjenjuje odgovor. Pravila računaju brojke.")).toBeNull();
     // Bez kriterija nema ni praznog okvira popisa.
     expect(document.querySelector("ul.divide-y")).toBeNull();
   });

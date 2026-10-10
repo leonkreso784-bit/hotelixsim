@@ -36,7 +36,7 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
         </Reading>
       );
     case "situation":
-      return <SituationScreen me={me} code={route.code} />;
+      return <SituationScreen key={route.code} me={me} code={route.code} />;
     case "plan":
       return (
         <Reading>

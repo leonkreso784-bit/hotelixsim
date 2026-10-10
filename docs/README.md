@@ -61,6 +61,7 @@
 | [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — čeka Leonovu provjeru |
 | [PITANJA_ZA_PROFESORE.md](./product/PITANJA_ZA_PROFESORE.md) | Pitanja za profesore FMTU-a — čeka Leonov pregled prije slanja |
 | [PROSIRENJA.md](./product/PROSIRENJA.md) | **Put B**: katalog dodataka nakon demoa (odjeli, zaposlenici, sobe, recenzije, pokazatelji, računalo) — što student vidi, što uči, koje brojke mijenja, sloj |
+| [UI_PRAVILA.md](./product/UI_PRAVILA.md) | Obvezni popis za svaki web task: tokeni, brojke s imenom i jedinicom, tekst bez roda, raspored, pristupačnost, obrasci za odjele, račun dobiti i birač kruga |
 
 ## `architecture/` — kako je građeno
 

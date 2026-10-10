@@ -28,6 +28,17 @@ describe("plan mjeseca", () => {
     expect(screen.getByLabelText("Odgovaramo na recenzije")).toBeTruthy();
   });
 
+  it("rasponi imaju jedinicu i grupiranje tisuća; izbor ima vidljiv fokus na oznaci", async () => {
+    renderApp(standardApi(), "/plan");
+    expect(await screen.findByText("Dopušteno: 79–198 €")).toBeTruthy();
+    expect(screen.getByText("Dopušteno: 18–38 osoba")).toBeTruthy();
+    expect(screen.getByText("Dopušteno: 0–40.000 €")).toBeTruthy();
+    expect(screen.getByText("Dopušteno: 90–115 %")).toBeTruthy();
+    const label = screen.getByRole("radio", { name: "redovno" }).closest("label") as HTMLLabelElement;
+    expect(label.className).toContain("has-[:focus-visible]:outline-2");
+    expect(label.className).toContain("has-[:focus-visible]:outline-accent");
+  });
+
   it("spremanje šalje cijeli plan u centima i potvrdi", async () => {
     const api = standardApi().on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) =>
       json(200, body as object),

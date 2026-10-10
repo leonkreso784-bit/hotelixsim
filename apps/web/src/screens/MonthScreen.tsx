@@ -47,9 +47,10 @@ function MonthResult({
         {t("month.title", { month: capitalize(monthName(month)) })}
       </h1>
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
-        {/* Na mobitelu stupci su „contents", a order čuva redoslijed: rezultat, indeksi, mentor, ljestvica, objašnjenje. */}
+        {/* Na mobitelu su stupci „contents", pa redoslijed određuje `order` na SAMIM karticama (na omotaču s
+            `contents` ne djeluje): rezultat, indeksi, mentor, ljestvica, objašnjenje. Od lg vrijede stupci. */}
         <div className="contents lg:block lg:space-y-3">
-          <Card className="bg-accent-soft py-6 text-center">
+          <Card tone="accent" pad="lg" className="text-center">
             <p className={`whitespace-nowrap text-5xl font-extrabold tabular-nums ${progressTone(progress)}`}>
               {formatPointsCount(progress)}
             </p>
@@ -61,16 +62,14 @@ function MonthResult({
             <IndexBars indices={now} deltas={deltas} deltaLabel={t("month.inMonth")} linked />
           </Card>
 
-          <div className="order-2 contents lg:order-none lg:block">
-            <Leaderboard rows={leaderboard(game, month)} />
-          </div>
+          <Leaderboard rows={leaderboard(game, month)} className="order-2 lg:order-none" />
         </div>
 
         <div className="contents lg:block lg:space-y-3">
-          <Card className="order-1 flex items-start gap-3 bg-mint lg:order-none">
+          <Card tone="mint" className="order-1 flex items-start gap-3 lg:order-none">
             <Avatar look={MENTOR_LOOK} size={56} />
             <div>
-              <p className="font-bold text-accent">{t("month.mentor")}</p>
+              <p className="font-bold text-accent-ink">{t("month.mentor")}</p>
               {mentor?.kind === "mentor" ? (
                 <p className="whitespace-pre-line">{mentor.text}</p>
               ) : (
@@ -79,9 +78,7 @@ function MonthResult({
             </div>
           </Card>
 
-          <div className="order-2 contents lg:order-none lg:block">
-            <Explanation hotelId={mine.hotel_id} month={month} />
-          </div>
+          <Explanation hotelId={mine.hotel_id} month={month} className="order-3 lg:order-none" />
         </div>
       </div>
 
@@ -97,7 +94,7 @@ function MonthResult({
           <p className="font-semibold">{t("month.seasonOver")}</p>
           <Link
             to="/"
-            className="flex min-h-12 items-center justify-center rounded-2xl bg-accent-soft font-bold text-accent"
+            className="flex min-h-12 items-center justify-center rounded-2xl bg-accent-soft font-bold text-accent-ink"
           >
             {t("month.back")}
           </Link>
