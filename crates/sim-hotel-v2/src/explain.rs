@@ -1,4 +1,4 @@
-//! Objašnjenje kruga (kopija v1, DEMO §11.6): svaka promjena varijable dobiva uzroke s iznosima.
+//! Objašnjenje kruga (DEMO §11.6): svaka promjena varijable dobiva uzroke s iznosima.
 //! Tipovi redaka (`Line`, `Var`, `Cause`, `Unit`) su v1, jer ulaze u v1 sažetak izvješća.
 
 use engine::calc::{self, self as c, Calc};
@@ -37,7 +37,8 @@ pub(crate) struct Explain<'a> {
     pub(crate) money: &'a MoneyStep,
     pub(crate) guests: &'a GuestStep,
     pub(crate) situations: &'a [(String, Effects)],
-    /// Zbroj novih trajnih povišica iz situacija (u `mo.wage`, ali se objašnjava zasebno).
+    /// Zbroj novih trajnih povišica iz situacija, razmjerno krugu (u `mo.wage`, ali se objašnjava zasebno);
+    /// isti iznosi kao `extra_wage_cents` u `situations`.
     pub(crate) sit_extra_wage: i128,
 }
 
@@ -94,7 +95,7 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
         w(e.plan.marketing_cents),
         cents,
     )?;
-    l.push(Var::Costs, Cause::FixedCosts, w(before.fixed_cents), cents)?;
+    l.push(Var::Costs, Cause::FixedCosts, mo.fixed, cents)?;
     l.push(Var::Costs, Cause::ReplyReviews, mo.reply_cost, cents)?;
     // Novac
     l.push(Var::Cash, Cause::Baseline, w(mo.out.gop_cents), cents)?;
@@ -142,7 +143,7 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     l.push(Var::Morale, Cause::Training, w(e.pend.morale_pts), pts)?;
     l.push(Var::Morale, Cause::Release, p.release_morale, pts)?;
     // Iskustvo
-    l.push(Var::Experience, Cause::Baseline, 300, pts)?;
+    l.push(Var::Experience, Cause::Baseline, p.growth, pts)?;
     l.push(
         Var::Experience,
         Cause::Turnover,
@@ -156,7 +157,7 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
         pts,
     )?;
     // Oprema
-    l.push(Var::Equipment, Cause::Baseline, -400, pts)?;
+    l.push(Var::Equipment, Cause::Baseline, g.wear, pts)?;
     l.push(Var::Equipment, Cause::Load, g.equipment_load, pts)?;
     l.push(Var::Equipment, Cause::Maintenance, g.maintenance_eff, pts)?;
     l.push(

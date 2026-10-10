@@ -1,9 +1,10 @@
-//! Tržište (kopija v1, DEMO §3.1, P9–P15): potražnja, kapacitet osoblja i prodaja u jednom krugu.
+//! Tržište (DEMO §3.1, P9–P15): potražnja, kapacitet osoblja i prodaja u jednom krugu (tjedan ili mjesec).
 //! Izlaz je v1 `MarketOutcome` (ulazi u v1 sažetak izvješća).
 
 use engine::calc::{self as c, Calc};
-use sim_hotel::{MarketOutcome, Month};
+use sim_hotel::{GroupBlock, MarketOutcome};
 
+use crate::calendar::{Period, avg_i64, avg_u16, prorate, prorate_part};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -28,9 +29,22 @@ fn f_marketing_bp(marketing_cents: i64, max_bp: u16, half_cents: i64) -> Calc<i3
     c::narrow(c::add(10_000, lift)?)
 }
 
+/// Noći grupe u ovom krugu: razmjerni dio blokade za dio kruga koji pada u mjesec grupe. Zbroj po svim krugovima
+/// jednog mjeseca je točno blokada; u mjesečnoj igri je to cijela blokada u svom mjesecu, inače 0.
+pub(crate) fn block_nights(g: &GroupBlock, p: &Period) -> Calc<i128> {
+    let mut total: i128 = 0;
+    for part in p.parts().iter().filter(|part| part.month == g.month) {
+        total = c::add(
+            total,
+            i128::from(prorate_part(i64::from(g.room_nights), part)?),
+        )?;
+    }
+    Ok(total)
+}
+
 pub fn market(
     state: &HotelState,
-    month: Month,
+    p: &Period,
     plan: &PeriodPlan,
     staff: u16,
     cat: &sim_hotel::Catalog,
@@ -38,7 +52,7 @@ pub fn market(
     let spec = cat
         .category(state.category)
         .map_err(|_| c::CalcError::BadDivisor)?;
-    let days = i128::from(month.days());
+    let days = i128::from(p.days);
     let rooms = i128::from(state.rooms);
 
     let out_raw = c::div_round(c::sub(4_000, i128::from(state.equipment_pts))?, 400)?;
@@ -47,18 +61,18 @@ pub fn market(
 
     let f_price = f_price_bp(
         plan.price_cents,
-        spec.price_ref_cents.get(month),
+        avg_i64(&spec.price_ref_cents, p)?,
         spec.elasticity_bp,
     )?;
     let f_rep = f_reputation_bp(state.rating)?;
     let f_mkt = f_marketing_bp(
         plan.marketing_cents,
         cat.economy.marketing_max_bp,
-        cat.economy.marketing_half_cents,
+        prorate(cat.economy.marketing_half_cents, p)?,
     )?;
 
     let room_days = c::mul(rooms, days)?;
-    let base_bp = i128::from(spec.base_occupancy_bp.get(month));
+    let base_bp = i128::from(avg_u16(&spec.base_occupancy_bp, p)?);
     let base_product = c::mul(room_days, base_bp)?;
     let base_demand = c::div_round(base_product, 10_000)?;
     let mut product = base_product;
@@ -70,8 +84,8 @@ pub fn market(
     let staff_capacity = c::div_floor(c::mul(c::mul(i128::from(staff), days)?, 24)?, 10)?;
 
     let mut group_nights: i128 = 0;
-    for g in state.groups.iter().filter(|g| g.month == month) {
-        group_nights = c::add(group_nights, i128::from(g.room_nights))?;
+    for g in &state.groups {
+        group_nights = c::add(group_nights, block_nights(g, p)?)?;
     }
 
     let sold = c::add(group_nights, demand)?
@@ -82,8 +96,8 @@ pub fn market(
 
     let mut remaining = group_sold;
     let mut revenue: i128 = 0;
-    for g in state.groups.iter().filter(|g| g.month == month) {
-        let take = i128::from(g.room_nights).min(remaining);
+    for g in &state.groups {
+        let take = block_nights(g, p)?.min(remaining);
         revenue = c::add(revenue, c::mul(take, i128::from(g.price_cents))?)?;
         remaining = c::sub(remaining, take)?;
     }
