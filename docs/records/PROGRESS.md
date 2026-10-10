@@ -4,6 +4,25 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-10 (popodne) — demo na GitHubu, računalo, sloj 0, dizajn puta B, UI čuvar
+
+- Završni pregled grane ekrana (opus) → val popravaka (presuda bez internih brojeva `presuda.v3` + brana u kodu
+  [ADR-025](DECISIONS.md#adr-025) 🟨, utrka „Moj hotel" nakon zatvaranja, jedinice, tekstovi) → ponovni pregled → **spojeno i
+  pushano**; CI je jednom pao na nestabilnom testu („▲ +6" dvaput) — reproducirano i popravljeno, CI zelen.
+- **Računalo** ([ADR-027](DECISIONS.md#adr-027) 🟨): bočni izbornik, dva stupca; **sloj 0 puta B**: 15 pokazatelja (ADR,
+  RevPAR, GOPPAR, točka pokrića…), ruta `/kpi`, ekran `/pokazatelji`; oba pregledana, u `main` i na GitHubu. Kalibracija:
+  sloj 0 procijenjen 6–10 h, agent ga je napravio za 28 min (+14 min popravci).
+- **Put B** (Leon: „kao BitLife, opsežno do bola"): katalog [PROSIRENJA.md](../product/PROSIRENJA.md), arhitektura
+  [MODEL_V2.md](../architecture/MODEL_V2.md), [ADR-026](DECISIONS.md#adr-026)/[ADR-028](DECISIONS.md#adr-028) (Leonove odluke:
+  ljudi kao u Simsima, burza rada, agencija, tjedni ili mjesečni krug, AI razgovori; pravilo: nacionalnost određuje samo
+  činjenice 🟨), istraživanje [JEZICI_GOSTIJU.md](../research/JEZICI_GOSTIJU.md), plan sloja 1 (22 taska) s preflightom (24 nalaza,
+  presude u ledgeru). Izvedba sloja 1 započeta: Task 1 i 2 paralelno.
+- **UI čuvar** (Leon: „pripazi na frontend i cijeli UI"): pregled svih ekrana 360–1920 px (2 blokera, 12 važnih, 22 sitna),
+  pravila `docs/product/UI_PRAVILA.md` (na grani); val popravaka na grani `gradnja/ui-popravci`.
+- Leon: dokumentacija je „srce operacija", planovi od 4000+ redaka su loši → plan preuređenja za paralelnu sesiju
+  (`docs/plan/2026-10-10-dokumentacija.md`, PAUZIRAN dok ta sesija ne krene).
+- AI trošak ove sesije: 0 $ (sve provjere bez ključa).
+
 ## 2026-10-10 — Ekrani igrača (DEMO korak 5), mentor govori ljudski, modeli
 
 - Grana `gradnja/ekrani` (lokalno, **nije pushana**), plan [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md), ledger u

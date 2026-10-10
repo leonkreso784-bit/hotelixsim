@@ -2,6 +2,24 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [0.5.0] — 2026-10-10 — Ekrani igrača, računalo, hotelski pokazatelji (DEMO korak 5 + put B sloj 0)
+
+Verzija bez git taga. Planovi: [archive/2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md); sloj 0 iz
+[MODEL_V2.md](../architecture/MODEL_V2.md).
+
+### Dodano
+
+- Igra u pregledniku: Moj hotel, situacije (razgovor s likom, slobodan odgovor s presudom, ponuđeni odgovori), plan mjeseca,
+  Zatvori mjesec, Mjesec završen (indeksi, mentor, „Zašto se indeksi pomaknuli", ljestvica), Tijek, detalj svakog pokazatelja.
+- Raspored za računalo: bočni izbornik od 768 px, dva stupca od 1024 px; mobitel nepromijenjen.
+- Hotelski pokazatelji (`GET /v1/hotels/{id}/kpi`, ekran „Pokazatelji"): popunjenost, ADR, RevPAR, TRevPAR, GOP, GOP marža,
+  GOPPAR, trošak i udio rada, izravni trošak po noći, točka pokrića — svaki s rečenicom i formulom.
+
+### Promijenjeno
+
+- Presuda (`presuda.v3`) ne spominje redne brojeve ponuđenih odgovora ni kriterija; jezgra takvu presudu odbija.
+- Popunjenost se dijeli sa svim sobama × dani (USALI), izgubljene noći zasebno.
+
 ## [0.4.0] — 2026-10-10 — AI sloj (DEMO korak 4)
 
 Verzija bez git taga. Plan: [archive/2026-10-09-ai-sloj.md](../archive/2026-10-09-ai-sloj.md).
