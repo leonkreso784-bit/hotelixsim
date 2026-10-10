@@ -3,7 +3,7 @@
 use engine::calc::{self as c, Calc};
 use sim_hotel::{GuestOutcome, Pending};
 
-use super::{maintenance_effect, w};
+use super::{maintenance_effect, step_toward, w};
 use crate::calendar::{Period, prorate};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
@@ -91,10 +91,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         10_000,
     )?;
     let sat_now = w(i.state.satisfaction_pts);
-    let satisfaction_gain = c::div_round(
-        c::mul(w(i.satisfaction_step_bp), c::sub(sat_target, sat_now)?)?,
-        10_000,
-    )?;
+    let satisfaction_gain = step_toward(sat_now, sat_target, i.satisfaction_step_bp, p)?;
     let satisfaction = c::sum(&[
         sat_now,
         satisfaction_gain,
@@ -104,10 +101,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     .clamp(0, 10_000);
     let rating_target = c::div_round(c::add(14_000, satisfaction)?, 25)?;
     let rating_now = w(i.state.rating);
-    let rating_gain = c::div_round(
-        c::mul(w(i.rating_step_bp), c::sub(rating_target, rating_now)?)?,
-        10_000,
-    )?;
+    let rating_gain = step_toward(rating_now, rating_target, i.rating_step_bp, p)?;
     let reply_rating = if i.plan.reply_reviews {
         w(prorate(i64::from(cat.actions.reply_rating), p)?)
     } else {

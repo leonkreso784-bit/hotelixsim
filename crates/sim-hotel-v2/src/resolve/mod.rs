@@ -95,6 +95,19 @@ pub(crate) fn neg(x: i128) -> Calc<i128> {
     c::sub(0, x)
 }
 
+/// Pomak stanja prema cilju u krugu: `round(Δ·step_bp/10 000)` (moral, zadovoljstvo, ocjena). Tjedni koeficijenti su
+/// manji od mjesečnih, pa bi se mali razmak zaokružio na 0 i stanje bi zauvijek stalo ispod cilja; zato je u krugu
+/// koji nije cijeli kalendarski mjesec najmanji pomak 1 jedinica prema cilju (nikad preko cilja; 🟨 H1 korak 4).
+/// Mjesečni krug je nepromijenjen (v1).
+pub(super) fn step_toward(now: i128, target: i128, step_bp: u16, p: &Period) -> Calc<i128> {
+    let gap = c::sub(target, now)?;
+    let step = c::div_round(c::mul(w(step_bp), gap)?, 10_000)?;
+    if step == 0 && gap != 0 && !p.is_whole_month() {
+        return Ok(gap.signum());
+    }
+    Ok(step)
+}
+
 /// Obuka za krug: trošak i oba odgođena učinka razmjerno krugu (mjesečni iznosi iz kataloga).
 fn training_effect(t: Training, cat: &sim_hotel::Catalog, p: &Period) -> Calc<TrainingEffect> {
     let monthly = match t {

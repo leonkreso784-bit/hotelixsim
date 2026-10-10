@@ -3,7 +3,7 @@
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{Pending, PeopleOutcome, turnover_bp};
 
-use super::{neg, w};
+use super::{neg, step_toward, w};
 use crate::calendar::{Period, prorate};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
@@ -88,10 +88,7 @@ pub(super) fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep>
     ])?
     .clamp(0, 10_000);
     let morale_now = w(i.state.morale_pts);
-    let morale_gain = c::div_round(
-        c::mul(w(i.morale_step_bp), c::sub(morale_target, morale_now)?)?,
-        10_000,
-    )?;
+    let morale_gain = step_toward(morale_now, morale_target, i.morale_step_bp, i.period)?;
     let morale = c::add(morale_now, morale_gain)?.clamp(0, 10_000);
     let turnover = turnover_bp(c::narrow(morale)?)?;
     // Odlasci: mjesečni broj odlazaka raspoređen po danima kruga (`prorate`; u cijelom mjesecu je identitet), da
