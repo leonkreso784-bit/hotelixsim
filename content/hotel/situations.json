@@ -111,7 +111,7 @@
   {
     "code": "S3",
     "month": "jun",
-    "title": "Agencija nudi grupu od 25 soba za 7 noći (nacrt)",
+    "title": "Agencija nudi grupu od 25 soba za 7 noći",
     "unanswered": [
       {
         "type": "GroupBooking",
@@ -184,7 +184,7 @@
   {
     "code": "S4",
     "month": "aug",
-    "title": "Najava restrikcija vode zbog suše (nacrt)",
+    "title": "Najava restrikcija vode zbog suše",
     "unanswered": [{ "type": "CrisisCommunication", "backup_cents": 0 }],
     "answers": [
       {

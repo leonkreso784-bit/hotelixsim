@@ -40,7 +40,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [dnevnik] **`parse_hotel`/`parse_game`/`parse_month` idu prije `caller.require()`** — anonimac s pokvarenim uuid-om dobiva 404 umjesto 401; bezopasno. (`api/src/hotels.rs:54,107`, `games.rs:222,247,274`; M2)
 - [dnevnik] **`check:api` pada na staged promjenama** (`git status --porcelain` vidi i staged) — gledati samo `??` i nestageano ili zapisati u README. (`scripts/check-clean.mjs:10`, bez try/catch; M5, T11)
 - [dnevnik] **`?` nakon `axum::serve` preskače `worker.abort()`.** (`server/src/main.rs`; T11)
-- [dnevnik] **Neodgovorene u odgovoru na „Zatvori mjesec"** (`unanswered: 0` jer runda nije `open`) — ekran mora upozoriti PRIJE klika. (`app/src/views.rs:187`; M4) Uz to `unanswered` je izveden na dva mjesta (`RoundView`, `schema::SituationsBody`) → jedno polje u `SituationsView`. (T10)
+- [dnevnik] **`unanswered` je izveden na dva mjesta (`RoundView`, `schema::SituationsBody`) → jedno polje u `SituationsView`. (T10)
 - [dnevnik] **Ručni „ponovi obračun" za `failed` posao** (Leon/profesor); `COALESCE(last_error, …)` kod isteka na zadnjem pokušaju čuva stariju poruku. (`store/src/jobs.rs`; T6, T8)
 - [dnevnik] **`game` pomoćnici:** dupli blok čitanja `RoundResolved` u `state_at`/`latest_state` i 5× lookup `HotelResolution` → helper (T3, T4); `apply` ne provjerava poznatu situaciju/indeks odgovora/jedinstvenost slota u `created` i kod duplog odgovora prepiše prije greške (fold ionako pada); `robot_moves` ne provjerava da je mjesec `Open`. (T3)
 - [dnevnik] **`set_plan`/`answer` zovu `game_of_hotel` prije prava** (404 vs 403 otkriva postojanje uuid-a v4 — zanemarivo); `corrupt()` log bez id-a hotela; mapiranje strategija string-matchom paralelno s `game`. (T6, T9)
@@ -64,14 +64,17 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [ekrani]
 
-- [ekrani] **`openapi-fetch` i `application/problem+json`** — provjeriti parsiranje 404 tijela u prvom stvarnom pozivu. (Task 6 #3, L71)
 - [ekrani] **i18n bez lokala i zajedničkog tipa za en rječnik** — `format.ts` ima tvrdo „hr-HR". (Task 7 #1, L77)
-- [ekrani] **`retry` 3 u QueryClientu daje ~7 s „Učitavam…"** kad API ne radi. (Task 7 #2, L78)
 - [ekrani] **Testovi ne pokrivaju pending, 500 na health, skriveni red događaja kad je events null** — lažni fetch pretpostavlja `Request`. (Task 7 #3, L79)
-- [ekrani] **Health redak bez `role="status"`/`aria-live`.** (Task 7 #4, L80)
 - [ekrani] **`t()` parametri nisu tipizirani po poruci** — krivo ime daje vidljiv `{placeholder}`. (Task 7 #5, L82)
-- [ekrani] **`vite build` u CI-ju.** (Final minori, L96)
-- [ekrani] Posao obračuna u statusu `failed` ostavlja rundu u „closing" zauvijek — ekran i profesor trebaju to vidjeti; SSE „runda je obračunata" umjesto ispitivanja (ARHITEKTURA §11).
+- [ekrani] Posao obračuna u statusu `failed` ostavlja rundu u „closing" zauvijek — ekran sad kaže „traje dulje", ali ne razlikuje pad od sporosti, a profesor ne vidi ništa; SSE „runda je obračunata" umjesto ispitivanja (ARHITEKTURA §11).
+- [ekrani] **E2e u CI-ju** — Postgres i poslužitelj u poslu weba (danas e2e pokrećeš samo lokalno).
+- [ekrani] **Ilustracija obale** na ekranu hotela.
+- [ekrani] **409 „Runda nije otvorena" za neobračunat mjesec na ruti objašnjenja** — treba poseban kod `month_not_resolved`.
+- [ekrani] **Moral u `resolve.rs` (~178, ~364)** još tvrdo kodira granicu 180 i formulu kazne (nije na `load_penalty`; vidi [jezgra] „Kazna opterećenja duplicirana").
+- [ekrani] **Popis modela s poslužiteljskim rezervnim modelom tvrdo kodiran** (`supports_server_fallback`).
+- [ekrani] **„0 kad runda nije otvorena" napisano dvaput** u `crates/app/src/views.rs`.
+- [ekrani] **Nema HTTP testa za `/situations.unanswered`.**
 
 ## Odgođeni nalazi — [prije Railwaya]
 
@@ -117,6 +120,14 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Ishod neodgovorene situacije** (kvaliteta 1 + mehanike `unanswered` za S1–S4; S3 ignorirana = ponuda propada bez kazne) — realno? Odgovor: `content/hotel/situations.json` (Task 1 plana), [ADR-015](DECISIONS.md#adr-015) t. 2.
 - [leon] **Ocjene za mjerilo AI-ja** — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1). Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
 - [leon] **Koncept ekrana prema igri** — ocjena na portalima do 10 ili do 5; „1/4" mjeseca ili demo s 2 mjeseca; kratki nazivi kriterija rubrike; avatari likova. Odgovor: [DIZAJN.md](../product/DIZAJN.md) §3.
+- [leon] **Sadržaj situacija:** rezerva lika „Gošća je previše ljuta da bi nastavila razgovor" zvuči kao ocjena studenta — preformulirati neutralno; **PRIJE DEMOA:** S3 nema opisa situacije (samo naslov; DEMO §1.5 obećaje „ponuda agencije (brojke)", a osnovna ponuda nigdje nije rečena — opis traži i polje u API-ju jer je jedini „opis" danas uvodna rečenica lika) — „(nacrt)" je maknut iz naslova S3 i S4 10.10.; `znacenje` za „Zaposleni" je predugo i tehničko za studenta. Odgovor: `content/hotel/situations.json`, `content/hotel/catalog.json`.
+- [leon] **Vizija za razvoj cijele aplikacije (Leon 10.10.)** — ništa od ovoga ne ulazi u demo, za demo je dovoljno što imamo:
+  - više situacija i više od dva mjeseca;
+  - novi likovi: Ivan Gudeljević (zaštitar koji se često opija), Dominik Smurjević („prati sve što je prljavo"), Nikola Magdić, Dr. Tin Šljivović, Leona Krešo — uloge Nikole, Tina i Leone još nisu zadane; pitanje pristanka za prava imena;
+  - profesor pri kreiranju igre bira razdoblje (dani / tjedni / mjeseci), broj AI-situacija, dodaje vlastite situacije, bira vrste situacija i „branšu". Otvoreno: (1) je li branša odjel hotela ili vrsta objekta, (2) AI situacije unaprijed uz profesorovo odobrenje ili u hodu, (3) bira li se duljina igre ili ritam kruga. Ide kroz dizajnerski dokument (arhitektura);
+  - studenti ulaze u igru kodom, kao u Kahootu;
+  - trošak tokena smanjiti „na drugačiji način" — izračunat ćemo kasnije; mjerilo (40 odgovora) za usporedbu modela presude;
+  - uređivač lika ([ADR-021](DECISIONS.md#adr-021)).
 - [leon] **Pretpostavke ADR-019** (AI kroz red poslova, rok presude 120 s, rezerve na zadnjem pokušaju, likovi i nacrti mjerila) čekaju pregled. Odgovor: [ADR-019](DECISIONS.md#adr-019).
 - [leon] **Pretpostavke ADR-017** (odluke voditelja gradnje: identitet preuzimanja posla, 500 za nepoznat profil, provjere pristupa prije tijela, odgovor bez mjeseca u putanji, javne funkcije jezgre, zabrane u `game`) čekaju pregled. Odgovor: [ADR-017](DECISIONS.md#adr-017).
 - [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS.md#adr-015).

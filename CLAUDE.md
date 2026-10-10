@@ -18,12 +18,14 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
   s `/kraj` (dnevnik, ADR-ovi, predaja, `check:docs`, commit).
 - **Gotovo:** DEMO koraci 1–4 — cijela igra preko API-ja na pravom Postgresu (gost, igrač + 3 robota, lipanj i srpanj,
   „Zatvori mjesec", ljestvica, feed) i AI sloj (razgovor s likom, slobodan odgovor s presudom po rubrici, mentor,
-  rezerve bez AI-ja, alat `mjerilo`) ([CHANGELOG](docs/records/CHANGELOG.md)). **Ekrana još nema.** Pretpostavke 🟨:
-  ADR-013, ADR-015, ADR-017, [ADR-019](docs/records/DECISIONS.md#adr-019). Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
+  rezerve bez AI-ja, alat `mjerilo`) ([CHANGELOG](docs/records/CHANGELOG.md)). Ekrani su na grani `gradnja/ekrani`
+  (lokalno, nije u `main`). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS.md#adr-024)).
+  Pretpostavke 🟨: ADR-013, ADR-015, ADR-017, [ADR-019](docs/records/DECISIONS.md#adr-019), ADR-022, ADR-023.
+  Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
 - **AI ključ** je u `.env` (`ANTHROPIC_API_KEY`), nikad u `.env.example` ni u gitu; živi test:
   `cargo test -p ai --test live -- --ignored` (uz `set -a; source .env; set +a`).
-- **Sljedeće:** DEMO korak 5 — ekrani igrača, mobitel prvi, **Tailwind**, po Leonovom konceptu
-  [DIZAJN.md](docs/product/DIZAJN.md) ([ADR-020](docs/records/DECISIONS.md#adr-020)); aktivnog plana još nema.
+- **Sljedeće:** DEMO korak 5 — ekrani igrača su izgrađeni i pregledani po tasku ([plan](docs/plan/2026-10-10-ekrani.md));
+  ostaje završni pregled grane, val popravaka i spajanje u `main` ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)).
   **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); [BACKLOG.md](docs/records/BACKLOG.md)
   → „Otvoreno za Leona" (domena, arhitektura v2, inkubator) i ADR-ovi 🟨 u [DECISIONS.md](docs/records/DECISIONS.md).

@@ -26,8 +26,8 @@ pub struct Models {
 impl Default for Models {
     fn default() -> Self {
         Models {
-            judge: "claude-opus-5-5".into(),
-            character: "claude-sonnet-5-5".into(),
+            judge: "claude-sonnet-5-5".into(),
+            character: "claude-haiku-5-5".into(),
             mentor: "claude-sonnet-5-5".into(),
         }
     }
@@ -82,13 +82,16 @@ impl Anthropic {
     }
 
     async fn post(&self, body: serde_json::Value) -> Result<Reply, AiError> {
-        let resp = self
+        let mut req = self
             .http
             .post(format!("{}/v1/messages", self.base_url))
             .header("x-api-key", &self.key)
             .header("anthropic-version", request::API_VERSION)
-            .header("anthropic-beta", request::FALLBACK_BETA)
-            .header("content-type", "application/json")
+            .header("content-type", "application/json");
+        if let Some(beta) = request::beta_header(&body) {
+            req = req.header("anthropic-beta", beta);
+        }
+        let resp = req
             .json(&body)
             .send()
             .await

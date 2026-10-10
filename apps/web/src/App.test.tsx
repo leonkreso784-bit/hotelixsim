@@ -1,81 +1,76 @@
-import { createApiClient } from "@hotelixsim/api-client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { App } from "./App";
-import { formatIndex } from "./format";
-
-function jsonResponse(status: number, body: unknown) {
-  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
-}
-
-function renderWith(fetchImpl: (req: Request) => Promise<Response>) {
-  vi.stubGlobal("fetch", vi.fn(fetchImpl));
-  const client = createApiClient("http://localhost");
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={qc}>
-      <App client={client} />
-    </QueryClientProvider>,
-  );
-}
+import { FakeApi, json, problem } from "./test/fakeApi";
+import { game, myHotel } from "./test/fixtures";
+import { renderApp } from "./test/renderApp";
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 
-describe("formatIndex", () => {
-  it("prikazuje stotinke hrvatskim zarezom i bez suvišnih nula", () => {
-    expect(formatIndex(5000)).toBe("50");
-    expect(formatIndex(5025)).toBe("50,25");
-    expect(formatIndex(0)).toBe("0");
-    expect(formatIndex(10000)).toBe("100");
+describe("gost", () => {
+  it("bez igre vidi početak, a „Započni igru“ stvori igru jednom i otvori hotel", async () => {
+    let started = false;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const api = new FakeApi()
+      .on("GET", "/v1/me/hotel", () => (started ? json(200, myHotel()) : problem(401, "guest_required")))
+      .on("GET", "/v1/games/:game", game())
+      .on("POST", "/v1/demo", async () => {
+        await gate;
+        started = true;
+        return json(201, { game_id: "g1", hotel_id: "h1" });
+      });
+    renderApp(api, "/demo");
+    const button = await screen.findByRole("button", { name: "Započni igru" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(true));
+    release();
+    expect(await screen.findByRole("heading", { name: /Moj hotel/ })).toBeTruthy();
+    expect(api.posts("/v1/demo")).toHaveLength(1);
+    expect(window.location.pathname).toBe("/");
+  });
+
+  it("greška pri stvaranju igre (503) je hrvatska rečenica", async () => {
+    const api = new FakeApi()
+      .on("GET", "/v1/me/hotel", () => problem(404, "not_in_game"))
+      .on("POST", "/v1/demo", () => problem(503, "storage_unavailable"));
+    renderApp(api);
+    fireEvent.click(await screen.findByRole("button", { name: "Započni igru" }));
+    expect(await screen.findByText("Baza trenutno nije dostupna. Pokušaj ponovno.")).toBeTruthy();
+  });
+
+  it("poslužitelj nedostupan → poruka i „Pokušaj ponovno“", async () => {
+    const api = new FakeApi();
+    api.fetch = async () => {
+      throw new TypeError("Failed to fetch");
+    };
+    renderApp(api);
+    expect(
+      await screen.findByText("Poslužitelj trenutno ne odgovara. Pokušaj ponovno za koju sekundu."),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Pokušaj ponovno" })).toBeTruthy();
   });
 });
 
-describe("App", () => {
-  it("prikazuje spojenu bazu i pet indeksa profila C", async () => {
-    renderWith(async (req) => {
-      const url = new URL(req.url);
-      if (url.pathname === "/v1/health") return jsonResponse(200, { database: "ok", events: 0 });
-      if (url.pathname === "/v1/demo/profiles/C/indices")
-        return jsonResponse(200, {
-          profile: "C",
-          indices: ["G", "R", "Z", "O", "F"].map((code) => ({ code, hundredths: 5000 })),
-        });
-      return jsonResponse(404, {});
-    });
-    expect(await screen.findByText("Baza: spojena")).toBeTruthy();
-    expect(await screen.findByText("Događaja u dnevniku: 0")).toBeTruthy();
-    expect(await screen.findByText("Zadovoljstvo gostiju")).toBeTruthy();
-    expect(screen.getByText("Financije")).toBeTruthy();
-    expect(screen.getAllByText("50")).toHaveLength(5);
+describe("okvir", () => {
+  it("zaglavlje pokazuje oznaku mjeseca, a donja traka tri kartice", async () => {
+    const api = new FakeApi().on("GET", "/v1/me/hotel", myHotel()).on("GET", "/v1/games/:game", game());
+    renderApp(api);
+    expect(await screen.findByText("LIPANJ · 1/2")).toBeTruthy();
+    const nav = screen.getByRole("navigation", { name: "Glavni izbornik" });
+    expect(nav.textContent).toContain("Hotel");
+    expect(nav.textContent).toContain("Situacije");
+    expect(nav.textContent).toContain("Tijek");
   });
 
-  it("javlja nedostupnu bazu kad zdravlje vrati 503", async () => {
-    renderWith(async (req) => {
-      const url = new URL(req.url);
-      if (url.pathname === "/v1/health") return jsonResponse(503, { database: "error", events: null });
-      return jsonResponse(200, { profile: "C", indices: [] });
-    });
-    expect(await screen.findByText("Baza: nije dostupna")).toBeTruthy();
-  });
-
-  it("javlja nedostupne indekse kad indeksi vrate 500, a zdravlje je u redu", async () => {
-    renderWith(async (req) => {
-      const url = new URL(req.url);
-      if (url.pathname === "/v1/health") return jsonResponse(200, { database: "ok", events: 0 });
-      return jsonResponse(500, {});
-    });
-    expect(await screen.findByText("Baza: spojena")).toBeTruthy();
-    expect(await screen.findByText("Indeksi nisu dostupni")).toBeTruthy();
-  });
-
-  it("javlja nedostupan poslužitelj kad mreža padne", async () => {
-    renderWith(async () => {
-      throw new TypeError("Failed to fetch");
-    });
-    expect(await screen.findByText("Poslužitelj nije dostupan")).toBeTruthy();
+  it("nepoznata putanja daje „Ova stranica ne postoji.“", async () => {
+    const api = new FakeApi().on("GET", "/v1/me/hotel", myHotel()).on("GET", "/v1/games/:game", game());
+    renderApp(api, "/nesto");
+    expect(await screen.findByText("Ova stranica ne postoji.")).toBeTruthy();
   });
 });

@@ -2,7 +2,10 @@
 use game::dto::MonthCode;
 use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
-use game::{AiSource, Controller, FreeResponse, Game, GameId, GuestId, HotelId, RoundStatus};
+use game::{
+    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, RoundStatus,
+    debrief_facts,
+};
 use sim_hotel::Month;
 
 use crate::demo::load_game;
@@ -80,6 +83,8 @@ pub struct ResponseView {
 pub struct SituationsView {
     pub month: Option<MonthCode>,
     pub open: bool,
+    /// Koliko ih je bez odgovora (0 kad runda nije otvorena); isto pravilo kao `RoundView::unanswered`.
+    pub unanswered: u8,
     pub items: Vec<SituationItem>,
 }
 
@@ -270,6 +275,7 @@ async fn situations_in_month(
         return Ok(SituationsView {
             month: None,
             open: false,
+            unanswered: 0,
             items: Vec::new(),
         });
     };
@@ -299,11 +305,34 @@ async fn situations_in_month(
             }
         })
         .collect();
+    // Jedno pravilo: isti `Game::unanswered_count` kao `current.unanswered` (broji i ponuđene i slobodne odgovore).
+    let open = g.status(month)? == RoundStatus::Open;
+    let unanswered = if open {
+        g.unanswered_count(hotel, month)?
+    } else {
+        0
+    };
     Ok(SituationsView {
         month: Some(month.into()),
-        open: g.status(month)? == RoundStatus::Open,
+        open,
+        unanswered,
         items,
     })
+}
+
+/// Zašto su se indeksi obračunatog mjeseca pomaknuli: iste činjenice koje dobiva mentor (jedan izvor
+/// istine). Pristup kao dnevnik (samo vlasnik); neobračunat mjesec je `round_not_open`.
+pub async fn explanation(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    month: MonthCode,
+) -> Result<DebriefFacts, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let g = load_game(deps, game_id).await?;
+    require_owner(&g, guest, hotel)?;
+    Ok(debrief_facts(&g.debrief_input(hotel, month.into())?))
 }
 
 pub async fn feed(deps: &Deps, caller: &Caller, hotel: HotelId) -> Result<Vec<FeedItem>, AppError> {

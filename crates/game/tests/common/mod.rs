@@ -172,3 +172,35 @@ pub fn june_resolved_game() -> Game {
 pub fn my_resolution(rr: &RoundResolved) -> &HotelResolution {
     &rr.hotels[0]
 }
+
+fn resolve_month_now(g: &mut Game, m: sim_hotel::Month) {
+    let ev = g.close_round(m).unwrap().unwrap();
+    apply_ev(g, Actor::Guest(GUEST), ev);
+    let ResolveStep::Done(evs) = g.resolve_job(m, false).unwrap() else {
+        panic!("obračun je trebao biti gotov");
+    };
+    for (a, e) in evs {
+        apply_ev(g, a, e);
+    }
+}
+
+/// Stvaran loš srpanj (Leonov primjer): lipanj dobro, u srpnju niže plaće, odgođeno održavanje i
+/// šefu kuhinje (S2) samo bonus bez razgovora (ocjena 2).
+pub fn july_resolved_bad_chef_game() -> (Game, HotelId) {
+    use sim_hotel::{Maintenance, Month};
+    let (mut g, h) = open_june_game();
+    let ev = g.choose_answer(h, "S1", 0).unwrap();
+    apply_ev(&mut g, Actor::Guest(GUEST), ev);
+    let ev = g.choose_answer(h, "S3", 1).unwrap();
+    apply_ev(&mut g, Actor::Guest(GUEST), ev);
+    resolve_month_now(&mut g, Month::Jun);
+    let mut plan = g.effective_plan(h, Month::Jul).unwrap();
+    plan.wage_pct = 95;
+    plan.maintenance = Maintenance::Deferred;
+    let ev = g.set_plan(h, Month::Jul, plan).unwrap();
+    apply_ev(&mut g, Actor::Guest(GUEST), ev);
+    let ev = g.choose_answer(h, "S2", 1).unwrap();
+    apply_ev(&mut g, Actor::Guest(GUEST), ev);
+    resolve_month_now(&mut g, Month::Jul);
+    (g, h)
+}

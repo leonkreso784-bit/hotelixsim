@@ -1,10 +1,10 @@
 //! Ulazi za AI sloj (DEMO korak 4): sve što `ai` smije vidjeti gradi `game` iz dnevnika i sadržaja, a `ai` ne
-//! poznaje ništa drugo. Plus mentor bez AI-ja, deterministički iz brojki (ARHITEKTURA §8.5 „bez AI-ja").
+//! poznaje ništa drugo. Mentor ne dobiva `DebriefInput` nego ljudske činjenice iz `mentor.rs`.
 
 use serde::Serialize;
 use sim_hotel::Month;
 
-use crate::dto::{INDEX_ORDER, IndexCode, LineDto, MonthCode, indices_dto};
+use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::game::{ChatLine, Game, RoundStatus};
 use crate::ids::HotelId;
@@ -49,24 +49,47 @@ pub struct CharacterInput {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefSituation {
+    /// Šifra (npr. `S2`) samo za povezivanje s uzrocima u retcima; mentoru se ne šalje.
+    pub code: String,
     pub title: String,
     pub quality: u8,
     pub free_text: bool,
     pub rationale: Option<String>,
     /// Neutralna presuda (AI nije stigao): ocjena 3 po pravilu.
     pub neutral: bool,
+    /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2).
+    pub unanswered: bool,
+    /// Oznaka ponuđenog odgovora koji je student izabrao; `None` za slobodan odgovor i bez odgovora.
+    pub chosen_label: Option<String>,
 }
 
 /// Ulaz za mentora nakon obračuna mjeseca.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefInput {
     pub month: MonthCode,
+    /// Idući mjesec igre; `None` = ovo je bio zadnji.
+    pub next_month: Option<MonthCode>,
+    /// Prošli mjesec igre; `None` = ovo je prvi mjesec, a „prije" je početno stanje hotela.
+    pub prev_month: Option<MonthCode>,
     pub hotel_name: String,
     pub situations: Vec<DebriefSituation>,
     /// Pet indeksa (stotinke) na početku mjeseca, redoslijedom `INDEX_ORDER`.
     pub indices_before: [u16; 5],
     pub indices_after: [u16; 5],
     pub progress_hundredths: i32,
+    /// Blagajna na kraju mjeseca.
+    pub cash_end_cents: i64,
+    /// Plan koji je stvarno obračunat i uobičajena cijena sobe za taj mjesec (kategorija hotela).
+    pub plan: PlanDto,
+    pub price_ref_cents: i64,
+    /// Sezonci prije mjeseca (plan kaže koliko ih je poslije).
+    pub seasonal_before: u16,
+    /// Opterećenje osoblja (prodane noći po zaposlenom na dan, stotinke) prije i poslije mjeseca.
+    pub load_before_hundredths: u16,
+    pub load_after_hundredths: u16,
+    /// Stopa odlazaka (baze, 300 = 3 % osoblja u mjesecu) prije i poslije mjeseca; ulazi u zadržavanje (Z).
+    pub turnover_before_bp: u16,
+    pub turnover_after_bp: u16,
     pub lines: Vec<LineDto>,
 }
 
@@ -151,7 +174,8 @@ impl Game {
             .iter()
             .position(|&x| x == m)
             .ok_or(GameError::UnknownMonth)?;
-        let indices_before = match pos.checked_sub(1).and_then(|p| self.months.get(p)) {
+        let prev_month = pos.checked_sub(1).and_then(|p| self.months.get(p));
+        let indices_before = match prev_month {
             None => indices_dto(&h.start_indices),
             Some(prev) => {
                 self.resolved
@@ -163,12 +187,21 @@ impl Game {
         };
         let mut situations = Vec::with_capacity(res.situations.len());
         for s in &res.situations {
-            let title = self
+            let t = self
                 .situations_in(m)
                 .into_iter()
                 .find(|t| t.code == s.code)
-                .map(|t| t.title.clone())
                 .ok_or_else(|| corrupt("situacija iz obračuna nije u sadržaju"))?;
+            let chosen_label = match s.answer {
+                Some(i) => Some(
+                    t.answers
+                        .get(usize::from(i))
+                        .ok_or_else(|| corrupt("odgovor iz obračuna nije u sadržaju"))?
+                        .label
+                        .clone(),
+                ),
+                None => None,
+            };
             let verdict = if s.free_text {
                 h.responses
                     .get(&(m, s.code.clone()))
@@ -177,99 +210,46 @@ impl Game {
                 None
             };
             situations.push(DebriefSituation {
-                title,
+                code: s.code.clone(),
+                title: t.title.clone(),
                 quality: s.quality,
                 free_text: s.free_text,
                 rationale: verdict.map(|v| v.rationale.clone()),
                 neutral: verdict.is_some_and(|v| v.nearest_answer.is_none()),
+                unanswered: s.answer.is_none() && !s.free_text,
+                chosen_label,
             });
         }
+        let state = self.state_at(hotel, m)?;
+        let price_ref_cents = self
+            .content
+            .catalog
+            .category(state.category)
+            .map_err(|e| corrupt(format!("{e:?}")))?
+            .price_ref_cents
+            .get(m);
+        let report = &res.report;
         Ok(DebriefInput {
             month: m.into(),
+            next_month: pos
+                .checked_add(1)
+                .and_then(|p| self.months.get(p))
+                .map(|&n| n.into()),
+            prev_month: prev_month.map(|&p| p.into()),
             hotel_name: h.setup.name.clone(),
             situations,
             indices_before,
             indices_after: res.indices,
             progress_hundredths: res.progress_hundredths,
-            lines: res.report.lines.clone(),
+            cash_end_cents: report.after.cash_cents,
+            plan: res.plan.clone(),
+            price_ref_cents,
+            seasonal_before: report.before.seasonal,
+            load_before_hundredths: report.before.load_hundredths,
+            load_after_hundredths: report.after.load_hundredths,
+            turnover_before_bp: report.before.turnover_bp,
+            turnover_after_bp: report.after.turnover_bp,
+            lines: report.lines.clone(),
         })
     }
-}
-
-fn index_name(i: IndexCode) -> &'static str {
-    match i {
-        IndexCode::G => "Zadovoljstvo gostiju",
-        IndexCode::R => "Recenzije",
-        IndexCode::Z => "Zaposlenici",
-        IndexCode::O => "Operativa",
-        IndexCode::F => "Financije",
-    }
-}
-
-/// Mjesec u lokativu („U lipnju…").
-fn month_locative(m: MonthCode) -> &'static str {
-    match m {
-        MonthCode::Jun => "lipnju",
-        MonthCode::Jul => "srpnju",
-        MonthCode::Aug => "kolovozu",
-        MonthCode::Sep => "rujnu",
-    }
-}
-
-/// Stotinke kao „12,05"; `signed` dodaje „+" ili „−" ispred.
-fn fmt_hundredths(v: i32, signed: bool) -> String {
-    let sign = if v < 0 {
-        "-"
-    } else if signed {
-        "+"
-    } else {
-        ""
-    };
-    let a = v.unsigned_abs();
-    format!("{sign}{},{:02}", a / 100, a % 100)
-}
-
-/// Mentor bez AI-ja: deterministički tekst iz brojki (ARHITEKTURA §8.5 „bez AI-ja").
-pub fn fallback_debrief(input: &DebriefInput) -> String {
-    let mut out = format!(
-        "U {} je tvoj napredak u odnosu na početak {} boda.\n",
-        month_locative(input.month),
-        fmt_hundredths(input.progress_hundredths, true)
-    );
-    let moved = INDEX_ORDER
-        .iter()
-        .zip(input.indices_before.iter().zip(&input.indices_after))
-        .map(|(&code, (&b, &a))| (code, i32::from(b), i32::from(a)))
-        .fold(
-            None,
-            |best: Option<(IndexCode, i32, i32)>, cur| match best {
-                Some(b) if (b.2 - b.1).abs() >= (cur.2 - cur.1).abs() => Some(b),
-                _ => Some(cur),
-            },
-        );
-    if let Some((code, b, a)) = moved.filter(|&(_, b, a)| a != b) {
-        out.push_str(&format!(
-            "Najviše se pomaknuo indeks {}: {} → {}.\n",
-            index_name(code),
-            fmt_hundredths(b, false),
-            fmt_hundredths(a, false)
-        ));
-    }
-    if !input.situations.is_empty() {
-        let parts: Vec<String> = input
-            .situations
-            .iter()
-            .map(|s| {
-                let note = if s.neutral {
-                    " (neutralna ocjena, na pregledu)"
-                } else {
-                    ""
-                };
-                format!("„{}\" — ocjena {}/5{note}", s.title, s.quality)
-            })
-            .collect();
-        out.push_str(&format!("Situacije: {}.\n", parts.join("; ")));
-    }
-    out.push_str("Mentor danas govori iz brojki; AI objašnjenje nije bilo dostupno.");
-    out
 }

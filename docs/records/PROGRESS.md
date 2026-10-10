@@ -4,6 +4,26 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-10 — Ekrani igrača (DEMO korak 5), mentor govori ljudski, modeli
+
+- Grana `gradnja/ekrani` (lokalno, **nije pushana**), plan [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md), ledger u
+  `.superpowers/sdd/2026-10-10-ekrani/progress.md` (Rulings 12–23). Svaki task pregledan: 9 (Mjesec završen, + Leonov zahtjev:
+  indeksi s kraja mjeseca, Moj hotel se osvježi nakon obračuna), 10 (tijek, množina), 12 (lica), 13a (dorada izgleda, cijeli
+  brojevi), 13c (README, BACKLOG).
+- Leon: mentor je pisao sirove brojke („4876 na 4269“, „200 bp“, „centi“) → Task 14: činjenice u ljudskim jedinicama, odluke iz
+  plana, izabrani odgovor, četiri dijela, čuvar u testovima ([ADR-023](DECISIONS.md#adr-023) 🟨). Task 16: ruta objašnjenja
+  mjeseca i kartica „Zašto se indeksi pomaknuli“ iz istih činjenica; Task 17: detalj svakog pokazatelja (`/pokazatelj/<kod>`);
+  Task 19: Zaposlenici objašnjeni prema formuli, prvi mjesec „na početku igre“.
+- Nađeno u pregledniku: lažno „Bez odgovora: 1“ (dva pravila brojanja) → Task 15; dvostruki React ključevi u tijeku → Task 16.
+- Leon: presuda na Sonnetu, lik na Haikuu, mentor na Sonnetu ([ADR-024](DECISIONS.md#adr-024) ✅) → Task 18.
+- Provjereno: Rust 310 / web 130 testova, balans 1000 sjemena prolazi, preglednik 390 i 360 px bez vodoravnog pomicanja i bez
+  grešaka u konzoli. Jedan prolaz s pravim AI-jem (lipanj → srpanj): lik, presuda i mentor rade; mentor piše ljudski.
+- Trošak AI-ja ove sesije (dnevnik događaja, od 05:51): Haiku 9 poziva 7.654/748 tokena ≈ 0,001 $; Sonnet 5 poziva
+  16.886/2.451 ≈ 0,058 $; **ukupno ≈ 0,06 $** (dio poziva poslije 05:56 vjerojatno je Leonova igra). Po igri sada ≈ 0,05 $:
+  presuda ≈ 0,008 $, mentor ≈ 0,015 $ po mjesecu (veći ulaz — činjenice), lik ≈ 0,0001 $ po odgovoru.
+- Otvoreno: završni pregled cijele grane (opus) + val popravaka (među njima: presuda piše „ponuđenom odgovoru 0“); Leonova vizija
+  (profesor kreira igru, kod kao u Kahootu, novi likovi, više situacija i mjeseci) u [BACKLOG.md](BACKLOG.md).
+
 ## 2026-10-09/10 — AI sloj (DEMO korak 4) i Leonov dizajn
 
 - Leon kroz anketu: slobodan tekst u S1 i S2, brojke iz najbližeg ponuđenog odgovora, do 6 poruka liku, Anthropic ([ADR-018](DECISIONS.md#adr-018) ✅); pretpostavke [ADR-019](DECISIONS.md#adr-019) 🟨. Plan s 11 taskova ([archive/](../archive/2026-10-09-ai-sloj.md), ledger uz njega).

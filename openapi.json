@@ -433,6 +433,81 @@
         }
       }
     },
+    "/v1/hotels/{hotel_id}/months/{month}/explanation": {
+      "get": {
+        "summary": "Zašto su se indeksi obračunatog mjeseca pomaknuli (iste činjenice kao mentor); samo vlasnik.",
+        "operationId": "explanation",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "description": "Obračunat mjesec",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MonthCode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Objašnjenje mjeseca po indeksima",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Mjesec još nije obračunat",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/hotels/{hotel_id}/plans/{month}": {
       "put": {
         "summary": "Plan za mjesec runde; zadnji zapisani plan vrijedi.",
@@ -1164,6 +1239,144 @@
           },
           "hotel_id": {
             "type": "string"
+          }
+        }
+      },
+      "DriverCode": {
+        "type": "string",
+        "description": "Što pokreće indeks: jedna od varijabli hotela ili `staff_load` (opterećenje osoblja, nije varijabla).",
+        "enum": [
+          "sold",
+          "revenue",
+          "costs",
+          "cash",
+          "staff",
+          "morale",
+          "experience",
+          "equipment",
+          "satisfaction",
+          "rating",
+          "staff_load"
+        ]
+      },
+      "EffectCode": {
+        "type": "string",
+        "description": "Je li redak gurnuo indeks gore ili dolje (boja na ekranu); razina bez smjera je `neutral`.",
+        "enum": [
+          "up",
+          "down",
+          "neutral"
+        ]
+      },
+      "ExplanationBody": {
+        "type": "object",
+        "description": "Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F.",
+        "required": [
+          "month",
+          "progress_text",
+          "indices"
+        ],
+        "properties": {
+          "indices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExplanationIndexBody"
+            }
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "progress_text": {
+            "type": "string",
+            "description": "Napredak od početka igre riječima („−2 boda\")."
+          }
+        }
+      },
+      "ExplanationDriverBody": {
+        "type": "object",
+        "required": [
+          "var",
+          "name",
+          "meaning",
+          "lines"
+        ],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExplanationLineBody"
+            }
+          },
+          "meaning": {
+            "type": "string",
+            "description": "Jedna rečenica: što ova varijabla znači i kako čitati iznose."
+          },
+          "name": {
+            "type": "string"
+          },
+          "var": {
+            "$ref": "#/components/schemas/DriverCode"
+          }
+        }
+      },
+      "ExplanationIndexBody": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "before",
+          "after",
+          "change",
+          "drivers"
+        ],
+        "properties": {
+          "after": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Cijeli bodovi na kraju mjeseca."
+          },
+          "before": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Cijeli bodovi na početku mjeseca."
+          },
+          "change": {
+            "type": "integer",
+            "format": "int64",
+            "description": "`after − before` (razlika zaokruženih vrijednosti, kao na ekranu)."
+          },
+          "code": {
+            "$ref": "#/components/schemas/IndexCode"
+          },
+          "drivers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExplanationDriverBody"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ExplanationLineBody": {
+        "type": "object",
+        "required": [
+          "cause",
+          "amount",
+          "effect"
+        ],
+        "properties": {
+          "amount": {
+            "type": "string",
+            "description": "Iznos s jedinicom, već formatiran („−10 bodova\", „12.346 €\")."
+          },
+          "cause": {
+            "type": "string",
+            "description": "Uzrok riječima („plaće\", „situacija „…\"\")."
+          },
+          "effect": {
+            "$ref": "#/components/schemas/EffectCode"
           }
         }
       },

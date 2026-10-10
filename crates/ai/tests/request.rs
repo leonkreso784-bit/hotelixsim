@@ -125,3 +125,192 @@ fn student_newline_cannot_forge_character_line() {
     );
     assert_eq!(user.matches("<lik").count(), 0);
 }
+
+fn sample_debrief() -> game::DebriefInput {
+    use game::dto::{
+        CauseDto, LineDto, MaintenanceCode, MonthCode, PlanDto, TrainingCode, UnitCode, VarCode,
+    };
+    game::DebriefInput {
+        month: MonthCode::Jul,
+        next_month: Some(MonthCode::Aug),
+        prev_month: Some(MonthCode::Jun),
+        hotel_name: "Hotel Lungomare".into(),
+        situations: vec![game::DebriefSituation {
+            code: "S2".into(),
+            title: "Šef kuhinje traži povišicu ili odlazi".into(),
+            quality: 2,
+            free_text: false,
+            rationale: None,
+            neutral: false,
+            unanswered: false,
+            chosen_label: Some("Bonus na kraju sezone ako ostane, bez razgovora".into()),
+        }],
+        indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
+        indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],
+        progress_hundredths: 325,
+        cash_end_cents: 24_395_000,
+        plan: PlanDto {
+            price_cents: 11_500,
+            marketing_cents: 0,
+            seasonal_target: 20,
+            wage_pct: 95,
+            training: TrainingCode::None,
+            maintenance: MaintenanceCode::Deferred,
+            renovation: false,
+            reply_reviews: false,
+        },
+        price_ref_cents: 12_000,
+        seasonal_before: 14,
+        load_before_hundredths: 170,
+        load_after_hundredths: 230,
+        turnover_before_bp: 375,
+        turnover_after_bp: 443,
+        lines: vec![LineDto {
+            var: VarCode::Morale,
+            cause: CauseDto::Situation("S2".into()),
+            amount: -600,
+            unit: UnitCode::Points,
+        }],
+    }
+}
+
+#[test]
+fn debrief_body_sends_human_facts_with_mentor_v2() {
+    let input = sample_debrief();
+    let b = ai::request::debrief_body("claude-sonnet-5-5", &input);
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v2");
+    assert_eq!(b["system"], ai::prompts::MENTOR.text);
+    assert!(ai::prompts::MENTOR.text.contains("Što je išlo dobro"));
+    let content = b["messages"][0]["content"].as_str().unwrap();
+    let sent: serde_json::Value = serde_json::from_str(content).unwrap();
+    assert_eq!(
+        sent,
+        serde_json::to_value(game::debrief_facts(&input)).unwrap()
+    );
+    for internal in [
+        "indices_before",
+        "progress_hundredths",
+        "cents",
+        "S2",
+        "\"Jul\"",
+    ] {
+        assert!(!content.contains(internal), "{internal} u poruci mentoru");
+    }
+}
+
+/// Uputa mentoru ne smije pričati stvarnu situaciju iz sadržaja (navodila bi model da je opiše bez obzira
+/// na to što je student izabrao), a mora tražiti vezu samo s odlukama i situacijama iz činjenica.
+#[test]
+fn mentor_prompt_example_is_invented_and_forbids_guessing() {
+    let prompt = ai::prompts::MENTOR.text.to_lowercase();
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../content/hotel/situations.json"
+    );
+    let content: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    for s in content.as_array().unwrap() {
+        let title = s["title"].as_str().unwrap().to_lowercase();
+        for word in title
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|w| w.chars().count() >= 6)
+        {
+            // Korijen riječi (bez padežnog nastavka), da „kuhinje" uhvati i „kuhinju".
+            let stem: String = word.chars().take(word.chars().count() - 2).collect();
+            assert!(
+                !prompt.contains(&stem),
+                "uputa spominje „{word}“ iz situacije {}",
+                s["code"]
+            );
+        }
+        if let Some(name) = s["character"]["name"].as_str() {
+            assert!(
+                !prompt.contains(&name.to_lowercase()),
+                "uputa spominje lik {name}"
+            );
+        }
+    }
+    for must in [
+        "odluke_u_planu",
+        "odabrani_odgovor",
+        "nikad ne pogađaj",
+        "nikad uputa tebi",
+    ] {
+        assert!(prompt.contains(must), "uputa nema „{must}“");
+    }
+}
+
+/// Presuda je 10.10. napisala „odgovara ponuđenom odgovoru 0" — korisnička poruka nosi `[i]` ispred ponuđenih
+/// odgovora, a na ekranu su bez brojeva. Uputa to zabranjuje; `game::validate_verdict` odbija tekst koji ipak promakne.
+#[test]
+fn judge_prompt_forbids_internal_numbers() {
+    assert_eq!(ai::prompts::JUDGE.version, "presuda.v3");
+    let prompt = ai::prompts::JUDGE.text.to_lowercase();
+    for must in [
+        "kriterije bez brojeva",
+        "spominji redni broj, oznaku ni redoslijed",
+        "opiši ga riječima",
+    ] {
+        assert!(prompt.contains(must), "uputa presude nema „{must}“");
+    }
+}
+
+#[test]
+fn server_fallback_is_a_rule_per_model() {
+    use ai::request::supports_server_fallback as ok;
+    for m in [
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-opus-5",
+        "claude-fable-5-1",
+    ] {
+        assert!(ok(m), "{m}");
+    }
+    for m in [
+        "claude-haiku-5-5",
+        "claude-haiku-4-5",
+        "nepoznati-model",
+        "m",
+    ] {
+        assert!(!ok(m), "{m}");
+    }
+}
+
+#[test]
+fn haiku_requests_carry_no_fallback_field_or_header() {
+    let h = "claude-haiku-5-5";
+    let bodies = [
+        ai::request::assess_body(h, &sample_assess()),
+        ai::request::character_body(h, &sample_character()),
+        ai::request::debrief_body(h, &sample_debrief()),
+    ];
+    for b in &bodies {
+        assert!(b.get("fallbacks").is_none(), "{b}");
+        assert_eq!(ai::request::beta_header(b), None);
+    }
+}
+
+#[test]
+fn sonnet_requests_carry_fallback_field_and_header() {
+    let s = "claude-sonnet-5-5";
+    let bodies = [
+        ai::request::assess_body(s, &sample_assess()),
+        ai::request::character_body(s, &sample_character()),
+        ai::request::debrief_body(s, &sample_debrief()),
+    ];
+    for b in &bodies {
+        assert_eq!(b["fallbacks"], "default");
+        assert_eq!(
+            ai::request::beta_header(b),
+            Some("server-side-fallback-2026-07-01")
+        );
+    }
+}
+
+#[test]
+fn default_models_follow_adr_024() {
+    let m = ai::Models::default();
+    assert_eq!(m.judge, "claude-sonnet-5-5");
+    assert_eq!(m.character, "claude-haiku-5-5");
+    assert_eq!(m.mentor, "claude-sonnet-5-5");
+}

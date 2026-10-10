@@ -5,6 +5,153 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-025 — Presuda ne spominje redne brojeve ponuđenih odgovora ni kriterija
+**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [ADR-018](#adr-018) t. 10, [ADR-023](#adr-023)
+
+**Kontekst.** U prolazu s pravim AI-jem 10.10. presuda je studentu napisala *„Odgovor odgovara ponuđenom odgovoru 0"*.
+Korisnička poruka presude nosi `[0]`, `[1]`… ispred ponuđenih odgovora (model mora vratiti `nearest_answer` kao broj), a
+student na ekranu vidi ponuđene odgovore i kriterije bez brojeva. Leonovo pravilo: svaka brojka za studenta ima ime
+i jedinicu, bez internih oznaka.
+**Odluka.**
+1. **Uputa `presuda.v3`** (v2 ostaje radi povijesti): ni obrazloženje ni razlozi kriterija ne spominju redni broj,
+   oznaku ni redoslijed ponuđenog odgovora ili kriterija; ponuđeni odgovor se opisuje riječima.
+2. **Brana u kodu (temelj, pretpostavka):** `game::validate_verdict` odbija presudu čiji tekst spominje „odgovor/kriterij
+   + broj", „N. kriterij" ili `[N]`/`(N)` (`VerdictError::InternalNumber`; samo padežni oblici imenica, pa
+   „odgovornost 5" prolazi). Odbijena presuda ide istim putem kao svaki krivi oblik:
+   ponovni AI poziv, a nakon zadnjeg pokušaja neutralna ocjena 3 na pregled profesoru.
+**Cijena ako krivo:** rijetko lažno odbijanje (npr. „u odgovoru 2 puta spominješ…") stoji jedan dodatni poziv presude
+(≈ 0,008 $); ako se ponovi do zadnjeg pokušaja, student dobije neutralnu ocjenu umjesto AI-jeve. Alternativa (prepisati
+broj u tekst ponuđenog odgovora) bila bi tiha izmjena AI-jeva teksta s rizikom krive gramatike.
+
+---
+
+## ADR-024 — Modeli: presuda na Sonnetu 5.5, lik na Haikuu 5.5, mentor na Sonnetu 5.5
+**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** · **Vezano:** [ADR-018](#adr-018) t. 4 (zamijenjeno),
+[ADR-023](#adr-023)
+
+**Kontekst.** Plan AI sloja imao je Leonovu „odluku 4": jači model (Opus 5.5) za presude, Sonnet za lika i mentora.
+Leon 10.10.: *„stavi Sonnet i Haiku koristi, ne treba nam jače od Sonneta da procjenjuje situaciju"*; u anketi je
+odabrao lika na Haikuu, mentor ostaje na Sonnetu.
+
+**Odluka:**
+1. **Zadani modeli** (`ai::Models::default()`): presuda `claude-sonnet-5-5` (effort `high`), lik `claude-haiku-5-5`
+   (effort `low`), mentor `claude-sonnet-5-5` (effort `low`). Varijable okoline `HOTELIXSIM_AI_MODEL_PRESUDA`,
+   `_LIK`, `_MENTOR` i dalje nadjačavaju — promjena modela je jedna varijabla.
+2. **Razlog i trošak** (po milijunu tokena, ulaz/izlaz): Opus 4/20 $, Sonnet 2/10 $, Haiku 0,10/0,50 $. Presuda
+   po rubrici sa strukturiranim izlazom ne traži više od Sonneta; lik je kratka replika.
+3. **Haiku 5.5 nema poslužiteljski rezervni model.** Pravilo je po MODELU, ne po vrsti poziva:
+   `request::supports_server_fallback(model)` je istina samo za `claude-opus-5-5`, `claude-sonnet-5-5`,
+   `claude-opus-5` i `claude-fable-5-1`. Za ostale (svi `claude-haiku-*`, nepoznati) tijelo nema `"fallbacks"` i ne
+   šalje se zaglavlje `anthropic-beta: server-side-fallback-2026-07-01` (`request::beta_header`).
+
+**Cijena ako krivo:** presuda je slabije dosljedna. Provjera: alat `mjerilo` kad Leon ocijeni 40 odgovora
+(`content/hotel/mjerilo/*.json`); ako treba, vratiti presudu na Opus varijablom okoline.
+
+---
+
+## ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
+**Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](#adr-019),
+[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md) (Task 14)
+
+**Kontekst.** Mentor je u srpnju napisao *„najviše je pao treći (s 4876 na 4269) … −600 uz osnovnih −453 i −1000 zbog
+plaća … ugled je smanjio prodaju za 200 bp … 24 395 000 centi"*. Leon: *„indeksi ne smiju biti ‚tvoj hotel je pao za
+−1000‘ … to mora biti dobro objašnjeno. Ovo nije dobro."* Uzrok: AI je dobivao sirovi `DebriefInput` (indeksi kao pet
+brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga.
+
+**Odluka (pretpostavke):**
+1. **AI nikad ne vidi internu jedinicu.** `game::debrief_facts` iz `DebriefInput` gradi činjenice samo s ljudskim
+   vrijednostima i hrvatskim ključevima: indeksi po imenu (G R Z O F), novac u cijelim eurima s točkom za tisuće,
+   bodovi cijelim brojem, ocjena portala s dvije decimale (ljestvica do 10), situacija kao uzrok nosi naslov.
+   `debrief_body` šalje samo njih; upute su `prompts/mentor.v2.md` (v1 ostaje u povijesti).
+2. **Indeksi cijelim brojevima** (pola od nule: 48,50 → 49), **promjena = razlika zaokruženih**, da se slaže s ekranom.
+3. **Što je pokrenulo indeks** je podatak uz formulu (`sim_hotel::index_drivers` → `Driver`, testovi drže popis uz
+   `raw_indices`). Pokretač je varijabla iz objašnjenja ili **opterećenje osoblja** (`Driver::StaffLoad`, nije
+   varijabla, nosi 25 % Operative): činjenice ga pišu riječima („2,3 noćenja po zaposlenom na dan, osoblje je
+   preopterećeno") iz opterećenja prije i poslije mjeseca; prag i kazna su `LOAD_LIMIT_HUNDREDTHS` i `load_penalty`
+   u jezgri, jedna formula za indeks i mentora.
+4. **Četiri dijela** s podnaslovom u retku: Što je išlo dobro · Što nije valjalo · Zašto · Što probati u <idući
+   mjesec>; isto i mentor bez AI-ja (deterministički, iz istih činjenica).
+5. **Brojke samo iz činjenica i uvijek s imenom i jedinicom** („indeks Zaposlenici s 49 na 43"), najviše četiri u
+   tekstu, ukupno do ~170 riječi.
+6. Faktori potražnje (`bp`) pišu se kao **„−2 % potražnje"**, ne „postotni bodovi": u jezgri je to množitelj potražnje
+   (10 000 = 100 %), pa je −200 stvarno 2 % manje gostiju. Kod morala uzroci su **pritisci** prema cilju, a „ukupna
+   promjena morala" je ono što se dogodilo; činjenice to kažu riječima. Retci koji zaokruženo daju nulu izostaju, a isti
+   uzrok iste varijable spaja se u jedan redak. Ljudi se pišu riječima („zaposleno 6 osoba", „otišle 3 osobe").
+7. **Odluke i odabrani odgovori su u činjenicama:** `odluke_u_planu` (cijena prema uobičajenoj za mjesec, marketing,
+   sezonci, plaće kao % uobičajene, obuka, održavanje, obnova, odgovori na recenzije) i `odabrani_odgovor` uz svaku
+   situaciju (oznaka ponuđenog odgovora ili „vlastiti odgovor"). Uputa traži vezu samo s onim što je u činjenicama i
+   zabranjuje pogađanje; primjer u uputi je izmišljen (test pazi da ne spominje stvarnu situaciju iz sadržaja), a sav
+   tekst u JSON-u je podatak, nikad uputa.
+8. **Smjer retka i težina štete** (ekran „Zašto se indeksi pomaknuli" i „Zašto" mentora bez AI-ja, Task 16 i 19):
+   jedno pravilo `push` u `mentor.rs` — `effect` je predznak guranja, `harm` je njegov negativni dio (`harm > 0 ⇔
+   down`). Težina = udio člana u indeksu (%) × promjena člana u stotinkama: Operativa oprema 45, iskustvo 30,
+   opterećenje 25; **Zaposlenici moral 60, zadržavanje 40**. Retci potražnje (cijena, ugled, marketing) pretvaraju
+   postotak u prihod od noćenja i imaju težinu najmanje 1, da se smjer ne izgubi zaokruživanjem.
+   **Zaposlenici:** indeks ne miče broj otišlih nego **stopa odlazaka prema prošlom mjesecu** (za lipanj: početno
+   stanje), jer je zadržavanje = 10 000 − 12,5 · stopa (`sim_hotel::retention`); pokretač „Zaposleni" zato ima redak
+   „udio osoblja koje je dalo otkaz ovaj mjesec: 5,44 %, više nego prošli mjesec" (više → dolje, manje → gore,
+   isto → sivo) i usporedni redak prošlog mjeseca. U prvom mjesecu igre — kaže ga igra (`DebriefInput::prev_month`
+   je `None`), ne kalendar — sve usporedbe u činjenicama (odlasci, opterećenje, sezonci) kažu „na početku igre". Kad su oba
+   mjeseca na 8 % i više (zadržavanje na nuli), redak je siv i to kaže („…, ali od 8 % naviše taj je dio indeksa već
+   na najnižem, pa se ne miče"). Broj zaposlenih i otišlih ostaje siva razina. Stopa nije zasebna poluga: slijedi moral na kraju mjeseca (3 % do 60 bodova morala, iznad toga raste,
+   P21), pa redak to kaže riječima. **Ukupna promjena morala** nosi smjer samo kad je jedini prikazani redak morala;
+   uz pritiske (plaće, opterećenje, obuka, otpuštanje, situacije) je zbroj i ostaje siva, da se ne broji dvaput.
+
+**Cijena ako je krivo.** Tablice naziva i fraza (Rust, `crates/game/src/mentor.rs`) treba držati usklađene s
+`packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Ekran „Mjesec završen"
+prikazuje prijelome redaka mentora (`whitespace-pre-line`, web commit `481d696`). Ako se plan proširi novom
+postavkom, `plan_facts` je treba dobiti, inače je mentor ne vidi.
+
+---
+
+## ADR-022 — Ekrani igrača: pretpostavke plana koraka 5
+**Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-021](#adr-021),
+[DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md)
+
+**Odluka (pretpostavke):**
+1. **Vlastiti mali usmjerivač** (`src/router.tsx`, ~60 redaka, History API) umjesto `react-router` 8 (nova glavna
+   verzija, a trebamo sedam ruta bez učitavača). Cijena ako zatreba više: zamjena jedne datoteke i `Link`-ova.
+2. **Izgled samo kroz tokene:** boje, slova i zaobljenja su `@theme` varijable u `apps/web/src/styles.css`; ekrani
+   koriste imena tokena. Ikone `lucide-react`. Ilustracija obale i „Jadran · 4★" iz koncepta izostaju (nema slike ni
+   regije u API-ju); zaglavlje pokazuje broj soba.
+3. **Gost:** `/` i `/demo` su isti ekran; tko nema igru vidi „Započni igru" (jedan klik → `POST /v1/demo`). Igra se ne
+   stvara sama pri otvaranju, jer bi osvježavanje ili dvostruki efekt u Reactu stvorili dvije igre.
+4. **Opis situacije** = prva rečenica lika (`opening`); sadržaj nema polje opisa. S3 (bez lika) pokazuje samo naslov i
+   ponuđene odgovore; njezin naslov još nosi „(nacrt)" iz sadržaja — to je Leonov sadržaj, ekran ga ne skriva.
+5. **Slobodan odgovor prvi, ponuđeni ispod** („ili izaberi jedan od ponuđenih"); jedno isključuje drugo (poslužitelj
+   ionako vraća `already_answered`).
+6. **Likovi:** izgled (`AvatarLook`) danas daje tablica poznatih likova u kodu ili deterministički izgled iz imena; poslije
+   demoa seli u sadržaj (`character.look`) i profil igrača (API + baza), a uređivač mijenja ta polja. Boje lika su
+   podatak (`src/avatar/palette.ts`), ne tema; novi element palete ide na kraj niza da stari izgledi ostanu isti.
+7. **Promjene indeksa:** na „Moj hotel" od **početka** (ocjena je napredak od početka), na „Mjesec završen" **u tom
+   mjesecu** (prema prethodnom mjesecu, za lipanj prema početku); oba su označena riječima. Uzroci se ne vežu uz
+   indekse (API ih ne veže) nego se prikazuju po varijabli („Prodane noći: cijena −120…").
+8. **Hrvatski tekstovi uzroka, varijabli i grešaka** (`cause.*`, `var.*`, `problem.*`) napisao je Claude.
+9. **Ispitivanje umjesto SSE-a:** razgovor svakih 1,5 s dok lik piše, presuda svake 2 s dok je `pending`, obračun
+   svake 2 s dok je runda `closing`; nakon 150 s obračuna ekran kaže da traje dulje nego inače.
+10. **Provjera u pregledniku** je ručna (Playwright MCP, 390 px) na pravom poslužitelju i bazi; e2e u CI-ju traži
+   Postgres i poslužitelj u poslu weba — BACKLOG `[ekrani]`.
+
+---
+
+## ADR-021 — Koncept ekrana v2 i odluke o prikazu
+**Datum:** 2026-10-10 · **Status:** ✅ ODLUČIO LEON (poruke i anketa 10.10.) · **Vezano:** [ADR-020](#adr-020),
+[DIZAJN.md](../product/DIZAJN.md)
+
+**Odluka.** Leon: *„pusti sada logo i dizajn jer mijenjamo ga"*, zatim *„dao sam ti pood new UI izgled"* — novi koncept
+(v2) zamjenjuje prvi u `docs/product/dizajn/koncept-ekrana.png` (logo isti; nove boje pijesak `#F4E8D5` i menta
+`#D8F0EE`; inicijali umjesto avatara; „50 = prosjek" i ▲/▼ uz indekse). Anketa: (1) ocjena na portalima **„8,4/10"**,
+bez preračuna; (2) demo ima **dva mjeseca**, oznaka „1/2"; (3) AI obrazloženje pokazuje **cijelu rečenicu kriterija**
+s ✓/✗ i razlogom; (4) plan mjeseca pokazuje **svih osam postavki**, cijenu, sezonce i održavanje na vrhu, ostalo pod
+„Više postavki". Zatim Leon: *„trebat cemo napravit razlicite likove u igrici izgledno i to na nacin da cemo kasnije moci
+ih customizat isto kao sto bit life ima"* → anketa (5): **temelj sad, uređivač poslije demoa** — likovi se crtaju iz
+slojeva, izgled je podatak. Zatim *„trebat ce prosirit likove"* → anketa (6): više izgleda (nove osobine i opcije),
+više likova u igri (svako lice u ekranima) i uređivač lika; „dio odmah". Claude: prije demoa izgled i likovi (Task 11–12
+plana), uređivač kao zaseban plan odmah poslije, jer izgled mora na poslužitelj (ADR-022 t. 6).
+**Posljedice.** DIZAJN.md §3 zatvoren; DEMO §1.1 kaže dva mjeseca.
+
+---
+
 ## ADR-020 — Sučelje: Tailwind i Leonov koncept dizajna; gradnja ekrana u sljedećoj sesiji
 **Datum:** 2026-10-10 · **Status:** ✅ ODLUČIO LEON · **Vezano:** [DIZAJN.md](../product/DIZAJN.md), ROADMAP korak 5
 
@@ -65,6 +212,7 @@ lik prelazi na izravan poziv u zahtjevu (mijenja se `app/talk.rs` i ruta); ako o
    ponuđeni odgovor; trošak i ostale brojke dolaze od njega. AI nikad ne izmišlja novac.
 3. **Razgovor s likom: najviše 6 poruka studenta po situaciji;** presuditelj vidi cijeli razgovor uz konačni odgovor.
 4. **Pružatelj: Anthropic (Claude)** — jači model za presude, jeftiniji za lika i mentora; ključ u `.env`.
+   *Zamijenjeno [ADR-024](#adr-024): presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5.*
 
 ---
 

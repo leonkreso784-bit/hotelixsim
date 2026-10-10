@@ -57,7 +57,7 @@
 |---|---|
 | [VIZIJA.md](./product/VIZIJA.md) | Zašto i za koga: dobiveni hotel, fer start, pet osi situacija, AI u četiri uloge, relativna ocjena |
 | [DEMO.md](./product/DEMO.md) | **Spec demoa**: stvarni sloj hotela, pet indeksa, profili A/B/C, mehanike, situacije S1–S8, roboti, provjere (§11), pravila zaokruživanja (§12, nacrt) |
-| [DIZAJN.md](./product/DIZAJN.md) | Leonov logo i koncept ekrana (boje, tri ekrana, gdje se koncept i igra ne slažu); slike u [dizajn/](./product/dizajn/) |
+| [DIZAJN.md](./product/DIZAJN.md) | Leonov logo i koncept ekrana v2 (boje, tri ekrana, likovi, kako su riješena neslaganja s igrom); slike u [dizajn/](./product/dizajn/) |
 | [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — čeka Leonovu provjeru |
 | [PITANJA_ZA_PROFESORE.md](./product/PITANJA_ZA_PROFESORE.md) | Pitanja za profesore FMTU-a — čeka Leonov pregled prije slanja |
 
@@ -73,6 +73,7 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
+| [2026-10-10-ekrani.md](./plan/2026-10-10-ekrani.md) | 🟩 **aktivan** — DEMO korak 5: ekrani igrača (Tailwind, likovi iz slojeva, 11 taskova) |
 
 ## `workflow/` — kako radimo
 

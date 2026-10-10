@@ -97,16 +97,15 @@ fn from_value_rejects_unknown_field() {
 fn legacy_fingerprint_of_step3_snapshot_is_frozen() {
     // Literal je otisak snimka iz koraka 3 (izračunan prije izmjene DTO-a u koraku 4) i NIKAD se ne smije mijenjati:
     // dokazuje da `skip_serializing_if` daje bajt-isti stari zapis pa stvarne igre iz koraka 3 i dalje prolaze.
-    let mut v = snap().to_value();
-    for s in v["situations"].as_array_mut().unwrap() {
-        let o = s.as_object_mut().unwrap();
-        for k in ["rubric", "character", "free_text"] {
-            o.remove(k);
-        }
-        for a in o["answers"].as_array_mut().unwrap() {
-            a.as_object_mut().unwrap().remove("criteria");
-        }
-    }
+    // Ulaz je zamrznuta kopija tog snimka, ne živi sadržaj: igre nose vlastiti snimak, pa se `content/` smije
+    // mijenjati, a test i dalje mjeri samo stari zapis.
+    // Kopija je snimak iz `content/` na 796618f bez polja koraka 4 (rubric, character, free_text, criteria).
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/step3-snapshot.json"
+    );
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let old = Snapshot::from_value(&v).unwrap();
     assert_eq!(
         old.legacy_fingerprint(),

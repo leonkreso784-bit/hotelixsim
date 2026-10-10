@@ -1,7 +1,7 @@
 //! Tijela zahtjeva za Claude Messages API: čiste funkcije, testabilne bez mreže.
 //! Ne šalju se `thinking`, `temperature`, `top_p` ni `budget_tokens` (modeli ih odbijaju s 400).
 
-use game::{AssessInput, CharacterInput, ChatLine, DebriefInput, Speaker};
+use game::{AssessInput, CharacterInput, ChatLine, DebriefInput, Speaker, debrief_facts};
 use serde_json::{Value, json};
 use std::fmt::Write;
 
@@ -9,6 +9,28 @@ use crate::prompts;
 
 pub const API_VERSION: &str = "2023-06-01";
 pub const FALLBACK_BETA: &str = "server-side-fallback-2026-07-01";
+
+/// Poslužiteljski rezervni model postoji samo za ove modele (Haiku i nepoznati ga nemaju); pravilo po modelu,
+/// jer se model mijenja kroz okolinu (ADR-024).
+pub fn supports_server_fallback(model: &str) -> bool {
+    matches!(
+        model,
+        "claude-opus-5-5" | "claude-sonnet-5-5" | "claude-opus-5" | "claude-fable-5-1"
+    )
+}
+
+/// Zaglavlje `anthropic-beta` za tijelo: samo ako tijelo traži rezervni model.
+pub fn beta_header(body: &Value) -> Option<&'static str> {
+    body.get("fallbacks").map(|_| FALLBACK_BETA)
+}
+
+/// Dodaje `fallbacks` samo modelima koji ga podržavaju.
+fn with_fallback(model: &str, mut body: Value) -> Value {
+    if supports_server_fallback(model) {
+        body["fallbacks"] = json!("default");
+    }
+    body
+}
 
 /// `<` → `‹`, `>` → `›`: studentov tekst ne može zatvoriti oznaku u kojoj stoji.
 pub fn quote_student(text: &str) -> String {
@@ -74,14 +96,16 @@ pub fn render_assess(input: &AssessInput) -> String {
 }
 
 pub fn assess_body(model: &str, input: &AssessInput) -> Value {
-    json!({
-        "model": model,
-        "max_tokens": 16000,
-        "system": [{ "type": "text", "text": prompts::JUDGE.text, "cache_control": { "type": "ephemeral" } }],
-        "messages": [{ "role": "user", "content": render_assess(input) }],
-        "output_config": { "effort": "high", "format": { "type": "json_schema", "schema": verdict_schema(input.offered.len()) } },
-        "fallbacks": "default"
-    })
+    with_fallback(
+        model,
+        json!({
+            "model": model,
+            "max_tokens": 16000,
+            "system": [{ "type": "text", "text": prompts::JUDGE.text, "cache_control": { "type": "ephemeral" } }],
+            "messages": [{ "role": "user", "content": render_assess(input) }],
+            "output_config": { "effort": "high", "format": { "type": "json_schema", "schema": verdict_schema(input.offered.len()) } }
+        }),
+    )
 }
 
 /// Preduvjet (jamči pozivatelj): prijepis počinje studentovom porukom, izmjenjuje se i završava studentovom
@@ -103,26 +127,31 @@ pub fn character_body(model: &str, input: &CharacterInput) -> Value {
             Speaker::Character => json!({ "role": "assistant", "content": l.text }),
         })
         .collect();
-    json!({
-        "model": model,
-        "max_tokens": 2000,
-        "system": system,
-        "messages": messages,
-        "output_config": { "effort": "low" },
-        "fallbacks": "default"
-    })
+    with_fallback(
+        model,
+        json!({
+            "model": model,
+            "max_tokens": 2000,
+            "system": system,
+            "messages": messages,
+            "output_config": { "effort": "low" }
+        }),
+    )
 }
 
+/// Mentor dobiva samo pripremljene činjenice u ljudskim jedinicama (ADR-023), nikad sirovi `DebriefInput`.
 pub fn debrief_body(model: &str, input: &DebriefInput) -> Value {
-    let data = serde_json::to_string_pretty(input).unwrap_or_default();
-    json!({
-        "model": model,
-        "max_tokens": 4000,
-        "system": prompts::MENTOR.text,
-        "messages": [{ "role": "user", "content": data }],
-        "output_config": { "effort": "low" },
-        "fallbacks": "default"
-    })
+    let data = serde_json::to_string_pretty(&debrief_facts(input)).unwrap_or_default();
+    with_fallback(
+        model,
+        json!({
+            "model": model,
+            "max_tokens": 4000,
+            "system": prompts::MENTOR.text,
+            "messages": [{ "role": "user", "content": data }],
+            "output_config": { "effort": "low" }
+        }),
+    )
 }
 
 /// JSON Schema presude; zrcali `game::VerdictDraft`. `offered` = broj ponuđenih odgovora.

@@ -67,3 +67,47 @@ fn verdict_shape_is_checked() {
     );
     assert_eq!(g.validate_verdict("S3", ok), Err(VerdictError::NotFreeText));
 }
+
+/// Student ne vidi redne brojeve ponuđenih odgovora ni kriterija (ADR-025): presuda koja ih spominje se odbija
+/// i ponavlja, kao svaki drugi krivi oblik.
+#[test]
+fn verdict_text_never_names_internal_numbers() {
+    let (g, _) = common::open_june_game();
+    let ok = VerdictDraft {
+        criteria: crit([true; 5]),
+        nearest_answer: 0,
+        rationale: "dobro".into(),
+    };
+    for leak in [
+        "Odgovor odgovara ponuđenom odgovoru 0.",
+        "Najbliži je odgovor [2], uz manju nadoknadu.",
+        "Ispunjavaš kriterije 1 i 3, ali ne i ostale.",
+        "Tvoj prijedlog je kao ponuđeni odgovor br. 1.",
+        "Sličan je odgovoru (3).",
+        "Ispunio si 2. kriterij, ali ne i ostale.",
+    ] {
+        let mut rat = ok.clone();
+        rat.rationale = leak.into();
+        assert_eq!(
+            g.validate_verdict("S1", rat),
+            Err(VerdictError::InternalNumber),
+            "{leak}"
+        );
+    }
+    let mut reason = ok.clone();
+    reason.criteria[1].reason = "Kao u kriteriju 2, nudiš popust.".into();
+    assert_eq!(
+        g.validate_verdict("S1", reason),
+        Err(VerdictError::InternalNumber)
+    );
+    for fine in [
+        "Nudiš 20 % popusta i besplatan doručak za 2 osobe.",
+        "Tvoj je odgovor najbliži ponudi da hotel plati drugu noć; ispričao si se gošći.",
+        "Odgovor ima pet dijelova, a nedostaje rok od 24 sata.",
+        "Preuzimaš odgovornost 5 minuta nakon poziva i odgovorio si 2 puta.",
+    ] {
+        let mut rat = ok.clone();
+        rat.rationale = fine.into();
+        assert!(g.validate_verdict("S1", rat).is_ok(), "{fine}");
+    }
+}

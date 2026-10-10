@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}/months/{month}/explanation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Zašto su se indeksi obračunatog mjeseca pomaknuli (iste činjenice kao mentor); samo vlasnik. */
+        get: operations["explanation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hotels/{hotel_id}/plans/{month}": {
         parameters: {
             query?: never;
@@ -313,6 +330,57 @@ export interface components {
         DemoBody: {
             game_id: string;
             hotel_id: string;
+        };
+        /**
+         * @description Što pokreće indeks: jedna od varijabli hotela ili `staff_load` (opterećenje osoblja, nije varijabla).
+         * @enum {string}
+         */
+        DriverCode: "sold" | "revenue" | "costs" | "cash" | "staff" | "morale" | "experience" | "equipment" | "satisfaction" | "rating" | "staff_load";
+        /**
+         * @description Je li redak gurnuo indeks gore ili dolje (boja na ekranu); razina bez smjera je `neutral`.
+         * @enum {string}
+         */
+        EffectCode: "up" | "down" | "neutral";
+        /** @description Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F. */
+        ExplanationBody: {
+            indices: components["schemas"]["ExplanationIndexBody"][];
+            month: components["schemas"]["MonthCode"];
+            /** @description Napredak od početka igre riječima („−2 boda"). */
+            progress_text: string;
+        };
+        ExplanationDriverBody: {
+            lines: components["schemas"]["ExplanationLineBody"][];
+            /** @description Jedna rečenica: što ova varijabla znači i kako čitati iznose. */
+            meaning: string;
+            name: string;
+            var: components["schemas"]["DriverCode"];
+        };
+        ExplanationIndexBody: {
+            /**
+             * Format: int64
+             * @description Cijeli bodovi na kraju mjeseca.
+             */
+            after: number;
+            /**
+             * Format: int64
+             * @description Cijeli bodovi na početku mjeseca.
+             */
+            before: number;
+            /**
+             * Format: int64
+             * @description `after − before` (razlika zaokruženih vrijednosti, kao na ekranu).
+             */
+            change: number;
+            code: components["schemas"]["IndexCode"];
+            drivers: components["schemas"]["ExplanationDriverBody"][];
+            name: string;
+        };
+        ExplanationLineBody: {
+            /** @description Iznos s jedinicom, već formatiran („−10 bodova", „12.346 €"). */
+            amount: string;
+            /** @description Uzrok riječima („plaće", „situacija „…""). */
+            cause: string;
+            effect: components["schemas"]["EffectCode"];
         };
         FeedBody: {
             items: components["schemas"]["FeedItemBody"][];
@@ -983,6 +1051,64 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    explanation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Obračunat mjesec */
+                month: components["schemas"]["MonthCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Objašnjenje mjeseca po indeksima */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplanationBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Mjesec još nije obračunat */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
