@@ -4,7 +4,7 @@
 use serde::Serialize;
 use sim_hotel::Month;
 
-use crate::dto::{LineDto, MonthCode, indices_dto};
+use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::game::{ChatLine, Game, RoundStatus};
 use crate::ids::HotelId;
@@ -59,6 +59,8 @@ pub struct DebriefSituation {
     pub neutral: bool,
     /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2).
     pub unanswered: bool,
+    /// Oznaka ponuđenog odgovora koji je student izabrao; `None` za slobodan odgovor i bez odgovora.
+    pub chosen_label: Option<String>,
 }
 
 /// Ulaz za mentora nakon obračuna mjeseca.
@@ -75,6 +77,14 @@ pub struct DebriefInput {
     pub progress_hundredths: i32,
     /// Blagajna na kraju mjeseca.
     pub cash_end_cents: i64,
+    /// Plan koji je stvarno obračunat i uobičajena cijena sobe za taj mjesec (kategorija hotela).
+    pub plan: PlanDto,
+    pub price_ref_cents: i64,
+    /// Sezonci prije mjeseca (plan kaže koliko ih je poslije).
+    pub seasonal_before: u16,
+    /// Opterećenje osoblja (prodane noći po zaposlenom na dan, stotinke) prije i poslije mjeseca.
+    pub load_before_hundredths: u16,
+    pub load_after_hundredths: u16,
     pub lines: Vec<LineDto>,
 }
 
@@ -171,12 +181,21 @@ impl Game {
         };
         let mut situations = Vec::with_capacity(res.situations.len());
         for s in &res.situations {
-            let title = self
+            let t = self
                 .situations_in(m)
                 .into_iter()
                 .find(|t| t.code == s.code)
-                .map(|t| t.title.clone())
                 .ok_or_else(|| corrupt("situacija iz obračuna nije u sadržaju"))?;
+            let chosen_label = match s.answer {
+                Some(i) => Some(
+                    t.answers
+                        .get(usize::from(i))
+                        .ok_or_else(|| corrupt("odgovor iz obračuna nije u sadržaju"))?
+                        .label
+                        .clone(),
+                ),
+                None => None,
+            };
             let verdict = if s.free_text {
                 h.responses
                     .get(&(m, s.code.clone()))
@@ -186,14 +205,24 @@ impl Game {
             };
             situations.push(DebriefSituation {
                 code: s.code.clone(),
-                title,
+                title: t.title.clone(),
                 quality: s.quality,
                 free_text: s.free_text,
                 rationale: verdict.map(|v| v.rationale.clone()),
                 neutral: verdict.is_some_and(|v| v.nearest_answer.is_none()),
                 unanswered: s.answer.is_none() && !s.free_text,
+                chosen_label,
             });
         }
+        let state = self.state_at(hotel, m)?;
+        let price_ref_cents = self
+            .content
+            .catalog
+            .category(state.category)
+            .map_err(|e| corrupt(format!("{e:?}")))?
+            .price_ref_cents
+            .get(m);
+        let report = &res.report;
         Ok(DebriefInput {
             month: m.into(),
             next_month: pos
@@ -205,8 +234,13 @@ impl Game {
             indices_before,
             indices_after: res.indices,
             progress_hundredths: res.progress_hundredths,
-            cash_end_cents: res.report.after.cash_cents,
-            lines: res.report.lines.clone(),
+            cash_end_cents: report.after.cash_cents,
+            plan: res.plan.clone(),
+            price_ref_cents,
+            seasonal_before: report.before.seasonal,
+            load_before_hundredths: report.before.load_hundredths,
+            load_after_hundredths: report.after.load_hundredths,
+            lines: report.lines.clone(),
         })
     }
 }

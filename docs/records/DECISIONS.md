@@ -20,18 +20,29 @@ brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga
    bodovi cijelim brojem, ocjena portala s dvije decimale (ljestvica do 10), situacija kao uzrok nosi naslov.
    `debrief_body` šalje samo njih; upute su `prompts/mentor.v2.md` (v1 ostaje u povijesti).
 2. **Indeksi cijelim brojevima** (pola od nule: 48,50 → 49), **promjena = razlika zaokruženih**, da se slaže s ekranom.
-3. **Što je pokrenulo indeks** je podatak uz formulu (`sim_hotel::index_drivers`, test drži popis uz `raw_indices`).
+3. **Što je pokrenulo indeks** je podatak uz formulu (`sim_hotel::index_drivers` → `Driver`, testovi drže popis uz
+   `raw_indices`). Pokretač je varijabla iz objašnjenja ili **opterećenje osoblja** (`Driver::StaffLoad`, nije
+   varijabla, nosi 25 % Operative): činjenice ga pišu riječima („2,3 noćenja po zaposlenom na dan, osoblje je
+   preopterećeno") iz opterećenja prije i poslije mjeseca; prag i kazna su `LOAD_LIMIT_HUNDREDTHS` i `load_penalty`
+   u jezgri, jedna formula za indeks i mentora.
 4. **Četiri dijela** s podnaslovom u retku: Što je išlo dobro · Što nije valjalo · Zašto · Što probati u <idući
    mjesec>; isto i mentor bez AI-ja (deterministički, iz istih činjenica).
 5. **Brojke samo iz činjenica i uvijek s imenom i jedinicom** („indeks Zaposlenici s 49 na 43"), najviše četiri u
    tekstu, ukupno do ~170 riječi.
 6. Faktori potražnje (`bp`) pišu se kao **„−2 % potražnje"**, ne „postotni bodovi": u jezgri je to množitelj potražnje
    (10 000 = 100 %), pa je −200 stvarno 2 % manje gostiju. Kod morala uzroci su **pritisci** prema cilju, a „ukupna
-   promjena morala" je ono što se dogodilo; činjenice to kažu riječima. Retci koji zaokruženo daju nulu izostaju.
+   promjena morala" je ono što se dogodilo; činjenice to kažu riječima. Retci koji zaokruženo daju nulu izostaju, a isti
+   uzrok iste varijable spaja se u jedan redak. Ljudi se pišu riječima („zaposleno 6 osoba", „otišle 3 osobe").
+7. **Odluke i odabrani odgovori su u činjenicama:** `odluke_u_planu` (cijena prema uobičajenoj za mjesec, marketing,
+   sezonci, plaće kao % uobičajene, obuka, održavanje, obnova, odgovori na recenzije) i `odabrani_odgovor` uz svaku
+   situaciju (oznaka ponuđenog odgovora ili „vlastiti odgovor"). Uputa traži vezu samo s onim što je u činjenicama i
+   zabranjuje pogađanje; primjer u uputi je izmišljen (test pazi da ne spominje stvarnu situaciju iz sadržaja), a sav
+   tekst u JSON-u je podatak, nikad uputa.
 
 **Cijena ako je krivo.** Tablice naziva i fraza (Rust, `crates/game/src/mentor.rs`) treba držati usklađene s
-`packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Prijelomi redaka u tekstu
-mentora traže `whitespace-pre-line` na ekranu „Mjesec završen" (web, zaseban task).
+`packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Ekran „Mjesec završen"
+prikazuje prijelome redaka mentora (`whitespace-pre-line`, web commit `481d696`). Ako se plan proširi novom
+postavkom, `plan_facts` je treba dobiti, inače je mentor ne vidi.
 
 ---
 

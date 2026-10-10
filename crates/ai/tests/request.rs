@@ -127,7 +127,9 @@ fn student_newline_cannot_forge_character_line() {
 }
 
 fn sample_debrief() -> game::DebriefInput {
-    use game::dto::{CauseDto, LineDto, MonthCode, UnitCode, VarCode};
+    use game::dto::{
+        CauseDto, LineDto, MaintenanceCode, MonthCode, PlanDto, TrainingCode, UnitCode, VarCode,
+    };
     game::DebriefInput {
         month: MonthCode::Jul,
         next_month: Some(MonthCode::Aug),
@@ -140,11 +142,26 @@ fn sample_debrief() -> game::DebriefInput {
             rationale: None,
             neutral: false,
             unanswered: false,
+            chosen_label: Some("Bonus na kraju sezone ako ostane, bez razgovora".into()),
         }],
         indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
         indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],
         progress_hundredths: 325,
         cash_end_cents: 24_395_000,
+        plan: PlanDto {
+            price_cents: 11_500,
+            marketing_cents: 0,
+            seasonal_target: 20,
+            wage_pct: 95,
+            training: TrainingCode::None,
+            maintenance: MaintenanceCode::Deferred,
+            renovation: false,
+            reply_reviews: false,
+        },
+        price_ref_cents: 12_000,
+        seasonal_before: 14,
+        load_before_hundredths: 170,
+        load_after_hundredths: 230,
         lines: vec![LineDto {
             var: VarCode::Morale,
             cause: CauseDto::Situation("S2".into()),
@@ -175,5 +192,47 @@ fn debrief_body_sends_human_facts_with_mentor_v2() {
         "\"Jul\"",
     ] {
         assert!(!content.contains(internal), "{internal} u poruci mentoru");
+    }
+}
+
+/// Uputa mentoru ne smije pričati stvarnu situaciju iz sadržaja (navodila bi model da je opiše bez obzira
+/// na to što je student izabrao), a mora tražiti vezu samo s odlukama i situacijama iz činjenica.
+#[test]
+fn mentor_prompt_example_is_invented_and_forbids_guessing() {
+    let prompt = ai::prompts::MENTOR.text.to_lowercase();
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../content/hotel/situations.json"
+    );
+    let content: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    for s in content.as_array().unwrap() {
+        let title = s["title"].as_str().unwrap().to_lowercase();
+        for word in title
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|w| w.chars().count() >= 6)
+        {
+            // Korijen riječi (bez padežnog nastavka), da „kuhinje" uhvati i „kuhinju".
+            let stem: String = word.chars().take(word.chars().count() - 2).collect();
+            assert!(
+                !prompt.contains(&stem),
+                "uputa spominje „{word}“ iz situacije {}",
+                s["code"]
+            );
+        }
+        if let Some(name) = s["character"]["name"].as_str() {
+            assert!(
+                !prompt.contains(&name.to_lowercase()),
+                "uputa spominje lik {name}"
+            );
+        }
+    }
+    for must in [
+        "odluke_u_planu",
+        "odabrani_odgovor",
+        "nikad ne pogađaj",
+        "nikad uputa tebi",
+    ] {
+        assert!(prompt.contains(must), "uputa nema „{must}“");
     }
 }

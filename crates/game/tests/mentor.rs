@@ -24,10 +24,25 @@ fn sit(code: &str, title: &str, quality: u8) -> DebriefSituation {
         rationale: None,
         neutral: false,
         unanswered: false,
+        chosen_label: None,
+    }
+}
+
+fn july_plan() -> PlanDto {
+    PlanDto {
+        price_cents: 11_500,
+        marketing_cents: 0,
+        seasonal_target: 20,
+        wage_pct: 95,
+        training: TrainingCode::None,
+        maintenance: MaintenanceCode::Deferred,
+        renovation: false,
+        reply_reviews: false,
     }
 }
 
 const CHEF: &str = "Šef kuhinje traži povišicu ili odlazi";
+const CHEF_ANSWER: &str = "Bonus na kraju sezone ako ostane, bez razgovora";
 
 /// Srpanj kao iz Leonova primjera, složen ručno da su brojke poznate.
 fn sample() -> DebriefInput {
@@ -35,11 +50,19 @@ fn sample() -> DebriefInput {
         month: MonthCode::Jul,
         next_month: Some(MonthCode::Aug),
         hotel_name: "Hotel Lungomare".into(),
-        situations: vec![sit("S2", CHEF, 2)],
+        situations: vec![DebriefSituation {
+            chosen_label: Some(CHEF_ANSWER.into()),
+            ..sit("S2", CHEF, 2)
+        }],
         indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
         indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],
         progress_hundredths: 325,
         cash_end_cents: 24_395_000,
+        plan: july_plan(),
+        price_ref_cents: 12_000,
+        seasonal_before: 14,
+        load_before_hundredths: 170,
+        load_after_hundredths: 230,
         lines: vec![
             line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
             line(VarCode::Morale, CauseDto::Wage, -1_000, UnitCode::Points),
@@ -158,8 +181,77 @@ fn amount_for(f: &Value, var: &str, cause_part: &str) -> String {
         .1
 }
 
-/// Čuvar: nijedna interna jedinica, kod indeksa, šifra situacije, engleski mjesec ni sirov broj ≥ 1000.
-fn assert_human(text: &str) {
+/// Jedinice iza kojih broj smije stajati u tekstu (sve ostalo je sirov broj).
+const UNITS: [&str; 14] = [
+    "bodova", "boda", "bod", "€", "%", "ocjene", "osoba", "osobe", "noćenja", "noćenje", "/5",
+    "sezonsk", "soba", "noći",
+];
+
+/// Svaki broj u tekstu ima jedinicu. Iznimka (`index_prose`, samo tekst mentora bez AI-ja): vrijednost
+/// indeksa u rečenici o indeksu („Indeks Zaposlenici pao je s 49 na 43."), jer je indeks sam svoja ljestvica.
+fn assert_numbers_have_units(text: &str, index_prose: bool) {
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if !chars[i].is_ascii_digit() {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < chars.len()
+            && (chars[i].is_ascii_digit()
+                || (matches!(chars[i], '.' | ',')
+                    && chars.get(i + 1).is_some_and(|c| c.is_ascii_digit())))
+        {
+            i += 1;
+        }
+        let run: String = chars[start..i].iter().collect();
+        let mut k = i;
+        while chars.get(k) == Some(&' ') {
+            k += 1;
+        }
+        let rest: String = chars[k..].iter().collect();
+        if let Some(u) = UNITS.iter().find(|u| rest.starts_with(**u)) {
+            i = k + u.chars().count();
+            continue;
+        }
+        let before: String = chars[..start].iter().collect();
+        let sentence = before.rsplit(['.', '\n']).next().unwrap_or("");
+        let index_value = index_prose
+            && (before.ends_with(" s ") || before.ends_with(" na "))
+            && sentence.contains("ndeks ");
+        assert!(index_value, "broj „{run}“ bez jedinice:\n{text}");
+    }
+}
+
+/// Jednoslovni kodovi indeksa (G R Z O F) ne smiju se pojaviti kao riječ.
+fn assert_no_index_codes(text: &str) {
+    let chars: Vec<char> = text.chars().collect();
+    for (i, c) in chars.iter().enumerate() {
+        let alone = |j: Option<usize>| {
+            j.and_then(|j| chars.get(j))
+                .is_none_or(|c| !c.is_alphanumeric())
+        };
+        if matches!(c, 'G' | 'R' | 'Z' | 'F') && alone(i.checked_sub(1)) && alone(Some(i + 1)) {
+            panic!("kod indeksa „{c}“ u tekstu:\n{text}");
+        }
+    }
+    for code in ["G", "R", "Z", "O", "F"] {
+        for prefix in ["ndeks ", "ndeksa ", "ndeksu "] {
+            let bad = format!("{prefix}{code}");
+            let hit = text.match_indices(&bad).any(|(at, _)| {
+                text[at + bad.len()..]
+                    .chars()
+                    .next()
+                    .is_none_or(|c| !c.is_alphanumeric())
+            });
+            assert!(!hit, "„{bad}“ u tekstu:\n{text}");
+        }
+    }
+}
+
+/// Zabranjeni ostaci internih imena (jedinice, kodovi, engleski mjeseci, šifre situacija).
+fn assert_no_internal_words(text: &str) {
     for bad in [
         "bp",
         "cents",
@@ -167,11 +259,6 @@ fn assert_human(text: &str) {
         "hundredths",
         "stotink",
         "rating_",
-        "\"G\"",
-        "\"R\"",
-        "\"Z\"",
-        "\"O\"",
-        "\"F\"",
         "Jun",
         "Jul",
         "Aug",
@@ -192,11 +279,72 @@ fn assert_human(text: &str) {
             "šifra situacije u tekstu:\n{text}"
         );
     }
-    let mut run = 0;
-    for c in &chars {
-        run = if c.is_ascii_digit() { run + 1 } else { 0 };
-        assert!(run < 4, "sirov broj ≥ 1000 (bez točke za tisuće):\n{text}");
+}
+
+/// Čuvar teksta mentora bez AI-ja.
+fn assert_human(text: &str) {
+    assert_no_internal_words(text);
+    assert_no_index_codes(text);
+    assert_numbers_have_units(text, true);
+}
+
+/// Čuvar činjenica: gole brojke samo pod `prije`/`poslije`/`promjena` (0–100), svaki tekst s jedinicama.
+fn assert_human_facts(f: &Value) {
+    fn walk(v: &Value, key: &str) {
+        match v {
+            Value::Number(n) => {
+                let n = n.as_i64().unwrap_or(i64::MAX);
+                let ok = match key {
+                    "prije" | "poslije" => (0..=100).contains(&n),
+                    "promjena" => (-100..=100).contains(&n),
+                    _ => false,
+                };
+                assert!(ok, "gola brojka {n} pod „{key}“");
+            }
+            Value::String(s) => {
+                assert_no_internal_words(s);
+                assert_no_index_codes(s);
+                assert!(
+                    !matches!(s.as_str(), "G" | "R" | "Z" | "O" | "F"),
+                    "kod indeksa pod „{key}“"
+                );
+                assert_numbers_have_units(s, false);
+            }
+            Value::Array(a) => a.iter().for_each(|x| walk(x, key)),
+            Value::Object(o) => o.iter().for_each(|(k, x)| {
+                assert_no_internal_words(k);
+                walk(x, k);
+            }),
+            Value::Bool(_) | Value::Null => {}
+        }
     }
+    walk(f, "");
+}
+
+/// Čuvar mora uhvatiti sirove brojke od tri i manje znamenki i kodove indeksa (Leonov primjer).
+#[test]
+fn guard_catches_short_raw_numbers_and_index_codes() {
+    let caught = |t: &'static str| std::panic::catch_unwind(|| assert_human(t)).is_err();
+    for t in [
+        "Moral je pao za −600 uz osnovnih −453.",
+        "Napredak −245.",
+        "Ugled je smanjio prodaju za 200 bp.",
+        "Najviše je pao indeks G.",
+        "Indeks Z pao je.",
+        "Pao je treći indeks.",
+    ] {
+        assert!(caught(t), "čuvar nije uhvatio: {t}");
+    }
+    assert!(!caught(
+        "Indeks Zaposlenici pao je s 49 na 43. Moral −6 bodova, blagajna 243.950 € (2/5)."
+    ));
+    let fact = |v: Value| std::panic::catch_unwind(|| assert_human_facts(&v)).is_err();
+    assert!(fact(serde_json::json!({ "iznos": -600 })));
+    assert!(fact(serde_json::json!({ "prije": 4876 })));
+    assert!(fact(serde_json::json!({ "iznos": "−453" })));
+    assert!(!fact(
+        serde_json::json!({ "prije": 49, "iznos": "−6 bodova" })
+    ));
 }
 
 #[test]
@@ -278,8 +426,12 @@ fn points_people_and_rating_in_human_units() {
         amount_for(&f, "Ocjena na portalima", "zadovoljstv"),
         "−0,12 ocjene"
     );
-    assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "3 osobe");
-    assert_eq!(amount_for(&f, "Zaposleni", "zapošljavanje"), "+1 osoba");
+    // Ljudi riječima, bez miješanja predznaka unutar istog pokretača.
+    assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "otišle 3 osobe");
+    assert_eq!(
+        amount_for(&f, "Zaposleni", "zapošljavanje"),
+        "zaposlena 1 osoba"
+    );
 }
 
 #[test]
@@ -377,7 +529,7 @@ fn month_next_month_hotel_and_progress_in_words() {
 
 #[test]
 fn facts_for_hand_made_month_are_human() {
-    assert_human(&serde_json::to_string_pretty(&debrief_facts(&sample())).unwrap());
+    assert_human_facts(&facts_json(&sample()));
     assert_human(&fallback_debrief(&sample()));
 }
 
@@ -390,14 +542,14 @@ fn guard_facts_and_fallback_for_real_settled_month_are_human() {
         "u testnom sadržaju srpanj je zadnji"
     );
     let json = serde_json::to_string_pretty(&debrief_facts(&input)).unwrap();
-    assert_human(&json);
+    assert_human_facts(&facts_json(&input));
     let text = fallback_debrief(&input);
     assert_human(&text);
     // Za izvještaj: `cargo test -p game --test mentor -- --nocapture guard`.
     println!("{json}\n-----\n{text}");
     let june = g.debrief_input(h, Month::Jun).unwrap();
     assert_eq!(june.next_month, Some(MonthCode::Jul));
-    assert_human(&serde_json::to_string(&debrief_facts(&june)).unwrap());
+    assert_human_facts(&facts_json(&june));
     assert_human(&fallback_debrief(&june));
 }
 
@@ -407,6 +559,17 @@ fn real_month_input_carries_codes_cash_and_unanswered() {
     let input = g.debrief_input(h, Month::Jul).unwrap();
     let s2 = input.situations.iter().find(|s| s.code == "S2").unwrap();
     assert_eq!((s2.quality, s2.unanswered), (2, false));
+    assert_eq!(s2.chosen_label.as_deref(), Some(CHEF_ANSWER));
+    let july_start = g.state_at(h, Month::Jul).unwrap();
+    assert_eq!(
+        (input.plan.wage_pct, input.seasonal_before),
+        (95, july_start.seasonal)
+    );
+    assert!(input.price_ref_cents > 0);
+    assert_eq!(
+        input.load_after_hundredths,
+        g.latest_state(h).unwrap().load_hundredths
+    );
     let cash = g.latest_state(h).unwrap().cash_cents;
     assert_eq!(input.cash_end_cents, cash);
 }
@@ -456,7 +619,9 @@ fn fallback_good_and_bad_name_indices_and_situations() {
     );
     assert!(bad.contains("Indeks Recenzije pao je s 49 na 48."), "{bad}");
     assert!(
-        bad.contains(&format!("Situacija „{CHEF}“ riješena je loše (2/5).")),
+        bad.contains(&format!(
+            "Situacija „{CHEF}“ riješena je loše (2/5): izabran je odgovor „{CHEF_ANSWER}“."
+        )),
         "{bad}"
     );
     let why = part("Zašto");
@@ -503,4 +668,138 @@ fn fallback_situation_cause_uses_title() {
         )),
         "{text}"
     );
+}
+
+#[test]
+fn chosen_answer_is_in_facts_and_free_text_is_marked() {
+    let f = facts_json(&sample());
+    assert_eq!(f["situacije"][0]["odabrani_odgovor"], CHEF_ANSWER);
+    let mut input = sample();
+    input.situations = vec![
+        DebriefSituation {
+            free_text: true,
+            ..sit("S1", "Klima u sobi obitelji s djecom", 4)
+        },
+        DebriefSituation {
+            unanswered: true,
+            ..sit("S3", "Agencija nudi grupu", 1)
+        },
+    ];
+    let f = facts_json(&input);
+    assert_eq!(
+        f["situacije"][0]["odabrani_odgovor"],
+        "vlastiti odgovor, napisan svojim riječima"
+    );
+    assert!(f["situacije"][1].get("odabrani_odgovor").is_none());
+}
+
+#[test]
+fn plan_decisions_in_words() {
+    let p = &facts_json(&sample())["odluke_u_planu"];
+    assert_eq!(
+        p["cijena_sobe"],
+        "115 € po noći, 4 % ispod uobičajene cijene za ovaj mjesec"
+    );
+    assert_eq!(p["marketing"], "bez marketinga");
+    assert_eq!(
+        p["sezonski_radnici"],
+        "20 sezonskih radnika, više nego prošli mjesec"
+    );
+    assert_eq!(p["place"], "95 % uobičajene plaće (niže od uobičajenih)");
+    assert_eq!(p["obuka"], "bez obuke");
+    assert_eq!(
+        p["odrzavanje"],
+        "odgođeno (oprema se ovaj mjesec nije popravljala)"
+    );
+    assert_eq!(p["obnova"], "ne");
+    assert_eq!(p["odgovori_na_recenzije"], "ne");
+    let mut input = sample();
+    input.plan = PlanDto {
+        price_cents: 12_000,
+        marketing_cents: 500_000,
+        seasonal_target: 1,
+        wage_pct: 100,
+        training: TrainingCode::Basic,
+        maintenance: MaintenanceCode::Intensive,
+        renovation: true,
+        reply_reviews: true,
+    };
+    input.seasonal_before = 1;
+    let p = &facts_json(&input)["odluke_u_planu"];
+    assert_eq!(
+        p["cijena_sobe"],
+        "120 € po noći, kao uobičajena cijena za ovaj mjesec"
+    );
+    assert_eq!(p["marketing"], "5.000 €");
+    assert_eq!(
+        p["sezonski_radnici"],
+        "1 sezonski radnik, isto kao prošli mjesec"
+    );
+    assert_eq!(p["place"], "100 % uobičajene plaće");
+    assert_eq!(p["odrzavanje"], "pojačano");
+    assert_eq!(p["odgovori_na_recenzije"], "da");
+}
+
+#[test]
+fn staff_load_is_an_operations_driver_in_words() {
+    let f = facts_json(&sample());
+    let load = changes(&f, "Opterećenje osoblja");
+    assert_eq!(
+        load,
+        [
+            (
+                "opterećenje u ovom mjesecu".to_owned(),
+                "2,3 noćenja po zaposlenom na dan, osoblje je preopterećeno".to_owned()
+            ),
+            (
+                "opterećenje prošli mjesec".to_owned(),
+                "1,7 noćenja po zaposlenom na dan".to_owned()
+            ),
+        ]
+    );
+    let drivers: Vec<&str> = index(&f, "Operativa")["sto_je_pokrenulo"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| d["sto"].as_str().unwrap())
+        .collect();
+    assert_eq!(drivers, ["Oprema", "Iskustvo", "Opterećenje osoblja"]);
+    // Ispod praga i prije i poslije: opterećenje nije tema.
+    let mut calm = sample();
+    calm.load_before_hundredths = 150;
+    calm.load_after_hundredths = 170;
+    assert!(changes(&facts_json(&calm), "Opterećenje osoblja").is_empty());
+}
+
+#[test]
+fn fallback_blames_overload_when_operations_falls() {
+    let mut input = sample();
+    input.indices_after[3] = 4_500; // Operativa 50 → 45
+    let text = fallback_debrief(&input);
+    assert!(
+        text.contains("Indeks Operativa pao je ponajviše zbog preopterećenog osoblja"),
+        "{text}"
+    );
+    assert_human(&text);
+}
+
+#[test]
+fn same_cause_of_same_variable_is_one_line() {
+    let mut input = sample();
+    input.lines.push(line(
+        VarCode::Costs,
+        CauseDto::Situation("S2".into()),
+        300_000,
+        UnitCode::Cents,
+    ));
+    input.lines.push(line(
+        VarCode::Costs,
+        CauseDto::Situation("S2".into()),
+        150_000,
+        UnitCode::Cents,
+    ));
+    let costs = changes(&facts_json(&input), "Troškovi");
+    let chef: Vec<_> = costs.iter().filter(|(c, _)| c.contains(CHEF)).collect();
+    assert_eq!(chef.len(), 1, "{costs:?}");
+    assert_eq!(chef[0].1, "4.500 €");
 }

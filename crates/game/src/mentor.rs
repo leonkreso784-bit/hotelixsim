@@ -1,59 +1,109 @@
 //! Mentor govori ljudski (ADR-023): iz `DebriefInput` se grade činjenice samo s ljudskim vrijednostima
-//! (imena indeksa, cijeli bodovi, euri, naslovi situacija). I AI mentor i mentor bez AI-ja pišu iz njih,
-//! pa nijedna interna jedinica (stotinke, centi, baze, kodovi) ne izlazi studentu.
+//! (imena indeksa, cijeli bodovi, euri, naslovi situacija, odluke iz plana). I AI mentor i mentor bez AI-ja
+//! pišu iz njih, pa nijedna interna jedinica (stotinke, centi, baze, kodovi) ne izlazi studentu.
+//! Polja su engleska, a JSON ključevi hrvatski (`serde(rename)`), da se čitaju kao rečenice.
 
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use sim_hotel::{Index, Var, index_drivers};
+use sim_hotel::{Driver, Index, LOAD_LIMIT_HUNDREDTHS, index_drivers, load_penalty};
 
 use crate::ai_input::DebriefInput;
-use crate::dto::{CauseDto, LineDto, MonthCode, UnitCode, VarCode};
+use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
 
 const MINUS: char = '\u{2212}';
 
-/// Činjenice za mentora; ključevi se čitaju kao rečenice, vrijednosti su već u ljudskim jedinicama.
+/// Činjenice za mentora; vrijednosti su već u ljudskim jedinicama.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefFacts {
+    #[serde(rename = "hotel")]
     pub hotel: String,
     /// Mjesec u lokativu s prijedlogom („u srpnju").
-    pub mjesec: &'static str,
+    #[serde(rename = "mjesec")]
+    pub month: &'static str,
     /// `None` = bio je zadnji mjesec igre.
-    pub iduci_mjesec: Option<&'static str>,
-    pub napredak_od_pocetka: String,
-    pub blagajna_na_kraju_mjeseca: String,
-    pub ljestvica_indeksa: &'static str,
-    pub indeksi: Vec<IndexFact>,
-    pub situacije: Vec<SituationFact>,
+    #[serde(rename = "iduci_mjesec")]
+    pub next_month: Option<&'static str>,
+    #[serde(rename = "napredak_od_pocetka")]
+    pub progress: String,
+    #[serde(rename = "blagajna_na_kraju_mjeseca")]
+    pub cash_end: String,
+    #[serde(rename = "ljestvica_indeksa")]
+    pub index_scale: &'static str,
+    #[serde(rename = "odluke_u_planu")]
+    pub plan: PlanFacts,
+    #[serde(rename = "indeksi")]
+    pub indices: Vec<IndexFact>,
+    #[serde(rename = "situacije")]
+    pub situations: Vec<SituationFact>,
+}
+
+/// Odluke iz plana mjeseca riječima, da „Zašto" može pad povezati s konkretnom odlukom.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct PlanFacts {
+    #[serde(rename = "cijena_sobe")]
+    pub room_price: String,
+    #[serde(rename = "marketing")]
+    pub marketing: String,
+    #[serde(rename = "sezonski_radnici")]
+    pub seasonal: String,
+    #[serde(rename = "place")]
+    pub wages: String,
+    #[serde(rename = "obuka")]
+    pub training: String,
+    #[serde(rename = "odrzavanje")]
+    pub maintenance: String,
+    #[serde(rename = "obnova")]
+    pub renovation: String,
+    #[serde(rename = "odgovori_na_recenzije")]
+    pub reply_reviews: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct IndexFact {
     #[serde(skip)]
     pub index: Index,
-    pub naziv: &'static str,
-    pub prije: i64,
-    pub poslije: i64,
+    #[serde(rename = "naziv")]
+    pub name: &'static str,
+    #[serde(rename = "prije")]
+    pub before: i64,
+    #[serde(rename = "poslije")]
+    pub after: i64,
     /// Razlika zaokruženih vrijednosti, da se slaže s ekranom.
-    pub promjena: i64,
-    pub smjer: &'static str,
-    pub sto_je_pokrenulo: Vec<DriverFact>,
+    #[serde(rename = "promjena")]
+    pub change: i64,
+    #[serde(rename = "smjer")]
+    pub direction: &'static str,
+    #[serde(rename = "sto_je_pokrenulo")]
+    pub drivers: Vec<DriverFact>,
 }
 
-/// Jedna varijabla koja ulazi u indeks, s promjenama ovog mjeseca.
+/// Odakle je pokretač: varijabla iz objašnjenja mjeseca ili opterećenje osoblja (nije varijabla).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DriverSource {
+    Var(VarCode),
+    StaffLoad,
+}
+
+/// Jedan pokretač indeksa, s promjenama ovog mjeseca.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DriverFact {
     #[serde(skip)]
-    pub var: VarCode,
-    pub sto: &'static str,
-    pub znacenje: &'static str,
-    pub promjene: Vec<ChangeFact>,
+    pub source: DriverSource,
+    #[serde(rename = "sto")]
+    pub what: &'static str,
+    #[serde(rename = "znacenje")]
+    pub meaning: &'static str,
+    #[serde(rename = "promjene")]
+    pub changes: Vec<ChangeFact>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ChangeFact {
-    pub uzrok: String,
-    pub iznos: String,
+    #[serde(rename = "uzrok")]
+    pub cause: String,
+    #[serde(rename = "iznos")]
+    pub amount: String,
     /// Koliko je uzrok gurnuo indeks dolje; uspoređuje se samo unutar istog indeksa. 0 = nije šteta.
     #[serde(skip)]
     pub harm: i64,
@@ -64,18 +114,28 @@ pub struct ChangeFact {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SituationFact {
-    pub naslov: String,
-    pub ocjena: String,
-    pub ocjena_rijecima: &'static str,
-    pub slobodan_odgovor: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    pub bez_odgovora: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub obrazlozenje: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub neutralna_ocjena: Option<&'static str>,
+    #[serde(rename = "naslov")]
+    pub title: String,
+    #[serde(rename = "ocjena")]
+    pub grade: String,
+    #[serde(rename = "ocjena_rijecima")]
+    pub grade_words: &'static str,
+    #[serde(rename = "slobodan_odgovor")]
+    pub free_text: bool,
+    /// Što je student odabrao: oznaka ponuđenog odgovora ili da je napisao vlastiti.
+    #[serde(rename = "odabrani_odgovor", skip_serializing_if = "Option::is_none")]
+    pub chosen: Option<String>,
+    #[serde(rename = "bez_odgovora", skip_serializing_if = "is_false")]
+    pub unanswered: bool,
+    #[serde(rename = "obrazlozenje", skip_serializing_if = "Option::is_none")]
+    pub rationale: Option<String>,
+    #[serde(rename = "neutralna_ocjena", skip_serializing_if = "Option::is_none")]
+    pub neutral: Option<&'static str>,
     #[serde(skip)]
     pub quality: u8,
+    /// Oznaka ponuđenog odgovora (bez slobodnog), za mentora bez AI-ja.
+    #[serde(skip)]
+    pub chosen_label: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -104,35 +164,6 @@ fn month_locative(m: MonthCode) -> &'static str {
     }
 }
 
-fn var_of(v: VarCode) -> Var {
-    match v {
-        VarCode::Sold => Var::Sold,
-        VarCode::Revenue => Var::Revenue,
-        VarCode::Costs => Var::Costs,
-        VarCode::Cash => Var::Cash,
-        VarCode::Staff => Var::Staff,
-        VarCode::Morale => Var::Morale,
-        VarCode::Experience => Var::Experience,
-        VarCode::Equipment => Var::Equipment,
-        VarCode::Satisfaction => Var::Satisfaction,
-        VarCode::Rating => Var::Rating,
-    }
-}
-
-/// Redoslijed kojim se varijable navode uz indeks.
-const VAR_ORDER: [VarCode; 10] = [
-    VarCode::Satisfaction,
-    VarCode::Rating,
-    VarCode::Morale,
-    VarCode::Staff,
-    VarCode::Equipment,
-    VarCode::Experience,
-    VarCode::Sold,
-    VarCode::Revenue,
-    VarCode::Costs,
-    VarCode::Cash,
-];
-
 /// Nazivi kao `var.*` u `packages/i18n/src/hr.ts`.
 fn var_name(v: VarCode) -> &'static str {
     match v {
@@ -149,6 +180,9 @@ fn var_name(v: VarCode) -> &'static str {
     }
 }
 
+const LOAD_NAME: &str = "Opterećenje osoblja";
+const LOAD_MEANING: &str = "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral.";
+
 /// Kako čitati iznose uz varijablu (osobito moral, gdje su uzroci pritisci, a ne cijela promjena).
 fn var_meaning(v: VarCode) -> &'static str {
     match v {
@@ -159,35 +193,38 @@ fn var_meaning(v: VarCode) -> &'static str {
         VarCode::Costs => "Što je hotel platio ovaj mjesec, po vrsti troška.",
         VarCode::Cash => "Kako se mijenjao novac na računu hotela.",
         VarCode::Staff => {
-            "Promjene u broju ljudi; odlasci su ljudi koji su dali otkaz i zamijenjeni su novima."
+            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti."
         }
         VarCode::Morale => {
-            "Raspoloženje i volja tima, od 0 do 100. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
         }
         VarCode::Experience => {
-            "Koliko tim zna i može, od 0 do 100. Raste radom i obukom, pada kad iskusni ljudi odu."
+            "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
         }
         VarCode::Equipment => {
-            "Stanje soba i opreme, od 0 do 100. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
         }
-        VarCode::Satisfaction => "Koliko su gosti zadovoljni boravkom, od 0 do 100.",
+        VarCode::Satisfaction => "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova.",
         VarCode::Rating => {
-            "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do 10."
+            "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
         }
     }
 }
 
-/// Posljedica pada varijable, za rečenicu „zašto" mentora bez AI-ja.
-fn var_consequence(v: VarCode) -> &'static str {
-    match v {
-        VarCode::Morale => "pa je tim slabije raspoložen i lakše odlazi",
-        VarCode::Experience => "pa tim zna i može manje nego prije",
-        VarCode::Equipment => "pa su sobe i oprema u lošijem stanju",
-        VarCode::Costs => "pa je hotel potrošio više",
-        VarCode::Cash => "pa je na računu ostalo manje novca",
-        VarCode::Sold => "pa je prodano manje noćenja",
-        // Kod gostiju i ocjene posljedica je sam indeks; mehanizam već stoji u uzroku.
-        VarCode::Satisfaction | VarCode::Rating | VarCode::Staff | VarCode::Revenue => "",
+/// Posljedica pada pokretača, za rečenicu „zašto" mentora bez AI-ja.
+fn consequence(s: DriverSource) -> &'static str {
+    match s {
+        DriverSource::StaffLoad => "pa osoblje ne stiže sve napraviti kako treba",
+        DriverSource::Var(v) => match v {
+            VarCode::Morale => "pa je tim slabije raspoložen i lakše odlazi",
+            VarCode::Experience => "pa tim zna i može manje nego prije",
+            VarCode::Equipment => "pa su sobe i oprema u lošijem stanju",
+            VarCode::Costs => "pa je hotel potrošio više",
+            VarCode::Cash => "pa je na računu ostalo manje novca",
+            VarCode::Sold => "pa je prodano manje noćenja",
+            // Kod gostiju i ocjene posljedica je sam indeks; mehanizam već stoji u uzroku.
+            VarCode::Satisfaction | VarCode::Rating | VarCode::Staff | VarCode::Revenue => "",
+        },
     }
 }
 
@@ -231,32 +268,51 @@ fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> Strin
     s.to_owned()
 }
 
-/// Uzrok štete u genitivu, za „pao je ponajviše zbog …".
-fn cause_because(v: VarCode, c: &CauseDto, label: &str, titles: &BTreeMap<&str, &str>) -> String {
+/// Uzrok štete u genitivu, za „pao je ponajviše zbog …"; svaki par ima vlastitu frazu.
+fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> String {
     let s = match (v, c) {
         (_, CauseDto::Situation(code)) => {
             return format!("rješenja situacije „{}“", title(titles, code));
         }
         (VarCode::Morale, CauseDto::Wage) => "nižih plaća",
+        (_, CauseDto::Wage) => "plaća",
         (_, CauseDto::Load) => "prevelikog opterećenja osoblja",
         (VarCode::Morale, CauseDto::Release) => "otpuštanja dijela osoblja",
+        (_, CauseDto::Release) => "otpuštanja",
         (VarCode::Experience, CauseDto::Turnover) => "odlaska iskusnih ljudi",
+        (_, CauseDto::Turnover) => "odlazaka zaposlenih",
         (VarCode::Equipment, CauseDto::Baseline) => {
             "trošenja opreme koje održavanje nije nadoknadilo"
         }
-        (VarCode::Equipment, CauseDto::Maintenance) => "slabijeg održavanja",
         (VarCode::Satisfaction, CauseDto::Baseline) => {
             "slabije usluge, opreme ili cijene: gost to osjeti kad je tim umoran ili neiskusan, sobe istrošene ili cijena previsoka za ono što dobije"
         }
         (VarCode::Rating, CauseDto::Baseline) => {
             "nižeg zadovoljstva gostiju: nezadovoljni gosti pišu slabije recenzije"
         }
-        (VarCode::Sold, CauseDto::Price) => "previsoke cijene",
-        (VarCode::Sold, CauseDto::Reputation) => "slabijeg ugleda na portalima",
         (VarCode::Cash, CauseDto::Baseline) => "gubitka u poslovanju (troškovi veći od prihoda)",
+        (VarCode::Morale, CauseDto::Baseline) => "pada morala",
+        (VarCode::Sold, CauseDto::Baseline) => "slabije potražnje u ovom mjesecu",
+        (_, CauseDto::Baseline) => "redovnog tijeka mjeseca",
+        (VarCode::Equipment, CauseDto::Maintenance) => "slabijeg održavanja",
+        (_, CauseDto::Maintenance) => "održavanja",
+        (VarCode::Sold, CauseDto::Price) => "previsoke cijene",
+        (_, CauseDto::Price) => "cijene",
+        (VarCode::Sold, CauseDto::Reputation) => "slabijeg ugleda na portalima",
+        (_, CauseDto::Reputation) => "ugleda",
+        (VarCode::Sold, CauseDto::Marketing) => "premalo marketinga",
+        (_, CauseDto::Marketing) => "marketinga",
+        (_, CauseDto::Groups) => "grupa",
+        (_, CauseDto::Capacity) => "nedostatka slobodnih soba",
+        (_, CauseDto::OtherRevenue) => "ostalih prihoda",
+        (_, CauseDto::Training) => "obuke",
+        (_, CauseDto::Hires) => "zapošljavanja",
         (VarCode::Cash, CauseDto::Renovation) => "ulaganja u obnovu",
+        (_, CauseDto::Renovation) => "obnove",
+        (_, CauseDto::ReplyReviews) => "odgovora na recenzije",
+        (_, CauseDto::FixedCosts) => "fiksnih troškova",
         (VarCode::Cash, CauseDto::Interest) => "kamata na minus na računu",
-        _ => return format!("stavke „{label}“"),
+        (_, CauseDto::Interest) => "kamata",
     };
     s.to_owned()
 }
@@ -293,6 +349,15 @@ fn thousands(n: u64) -> String {
     out
 }
 
+/// Stotinke s decimalnim zarezom bez suvišnih nula: 230 → „2,3", 185 → „1,85", 200 → „2".
+fn decimal_hundredths(n: u64) -> String {
+    match n % 100 {
+        0 => format!("{}", n / 100),
+        r if r.is_multiple_of(10) => format!("{},{}", n / 100, r / 10),
+        r => format!("{},{r:02}", n / 100),
+    }
+}
+
 /// „+" ili „−" ispred (nula bez predznaka) kad je `signed`; inače samo iznos.
 fn with_sign(n: i64, body: String, signed: bool) -> String {
     match (signed, n.signum()) {
@@ -302,16 +367,21 @@ fn with_sign(n: i64, body: String, signed: bool) -> String {
     }
 }
 
-/// Hrvatski oblik uz broj: 1 bod, 2 boda, 5 bodova (21 bod, 12 bodova).
-fn plural(n: u64, one: &'static str, few: &'static str, many: &'static str) -> &'static str {
+/// Indeks hrvatskog oblika uz broj: 0 = jednina (1, 21), 1 = 2–4 (osim 12–14), 2 = ostalo.
+fn plural_class(n: u64) -> usize {
     let (d, h) = (n % 10, n % 100);
     if d == 1 && h != 11 {
-        one
+        0
     } else if (2..=4).contains(&d) && !(12..=14).contains(&h) {
-        few
+        1
     } else {
-        many
+        2
     }
+}
+
+/// Hrvatski oblik uz broj: 1 bod, 2 boda, 5 bodova (21 bod, 12 bodova).
+fn plural(n: u64, forms: [&'static str; 3]) -> &'static str {
+    forms[plural_class(n)]
 }
 
 fn euros(cents: i64, signed: bool) -> String {
@@ -323,14 +393,36 @@ fn points(n: i64) -> String {
     let a = n.unsigned_abs();
     with_sign(
         n,
-        format!("{} {}", thousands(a), plural(a, "bod", "boda", "bodova")),
+        format!("{} {}", thousands(a), plural(a, ["bod", "boda", "bodova"])),
         true,
     )
+}
+
+/// Ljudi riječima, bez predznaka: „zaposleno 6 osoba", „otišle 3 osobe", „otpuštena 1 osoba".
+fn people_text(c: &CauseDto, amount: i64) -> String {
+    let n = amount.unsigned_abs();
+    let k = plural_class(n);
+    let verb = match c {
+        CauseDto::Hires => ["zaposlena", "zaposlene", "zaposleno"][k],
+        CauseDto::Release => ["otpuštena", "otpuštene", "otpušteno"][k],
+        CauseDto::Turnover => ["otišla", "otišle", "otišlo"][k],
+        _ => {
+            return with_sign(
+                amount,
+                format!("{n} {}", ["osoba", "osobe", "osoba"][k]),
+                true,
+            );
+        }
+    };
+    format!("{verb} {n} {}", ["osoba", "osobe", "osoba"][k])
 }
 
 /// Iznos retka u ljudskoj jedinici; `None` kad je (zaokruženo) nula pa se redak izostavlja.
 fn amount_text(l: &LineDto, signed: bool) -> Option<String> {
     let a = l.amount;
+    if a == 0 {
+        return None;
+    }
     let text = match l.unit {
         UnitCode::Cents => {
             if round_div(a, 100) == 0 {
@@ -345,19 +437,12 @@ fn amount_text(l: &LineDto, signed: bool) -> Option<String> {
                 format!(
                     "{} {}",
                     thousands(n),
-                    plural(n, "noćenje", "noćenja", "noćenja")
+                    plural(n, ["noćenje", "noćenja", "noćenja"])
                 ),
                 signed,
             )
         }
-        UnitCode::People => {
-            let n = a.unsigned_abs();
-            with_sign(
-                a,
-                format!("{n} {}", plural(n, "osoba", "osobe", "osoba")),
-                signed,
-            )
-        }
+        UnitCode::People => people_text(&l.cause, a),
         // Stotinke boda na ljestvici 0–100 → cijeli bodovi.
         UnitCode::Points => {
             let p = round_div(a, 100);
@@ -386,22 +471,21 @@ fn amount_text(l: &LineDto, signed: bool) -> Option<String> {
             with_sign(tenths, format!("{pct} % potražnje"), true)
         }
     };
-    (a != 0).then_some(text)
+    Some(text)
 }
 
-/// Iznosi su razine (prihod, troškovi, osnovna potražnja, broj odlazaka), ne promjene: bez predznaka.
+/// Iznosi su razine (prihod, troškovi, osnovna potražnja), ne promjene: bez predznaka.
 fn shows_sign(v: VarCode, c: &CauseDto) -> bool {
     !matches!(
         (v, c),
-        (VarCode::Revenue | VarCode::Costs, _)
-            | (VarCode::Sold, CauseDto::Baseline)
-            | (VarCode::Staff, CauseDto::Turnover)
+        (VarCode::Revenue | VarCode::Costs, _) | (VarCode::Sold, CauseDto::Baseline)
     )
 }
 
-/// Gruba težina štete za usporedbu unutar istog indeksa (mentor bez AI-ja bira najveću).
-/// `room_revenue` (prihod od noćenja) pretvara postotak potražnje u izgubljeni prihod; `maintained`
-/// je koliko su održavanje i obnova vratili opremu, pa trošenje je šteta samo u dijelu koji nisu pokrili.
+/// Gruba težina štete za usporedbu unutar istog indeksa (mentor bez AI-ja bira najveću), u omjeru
+/// težina iz `raw_indices`. `room_revenue` (prihod od noćenja) pretvara postotak potražnje u izgubljeni
+/// prihod; `maintained` je koliko su održavanje i obnova vratili opremu, pa je trošenje šteta samo u
+/// dijelu koji nisu pokrili.
 fn harm(l: &LineDto, room_revenue: i64, maintained: i64) -> i64 {
     let loss = (-l.amount).max(0);
     let h = match (l.var, &l.cause) {
@@ -412,13 +496,68 @@ fn harm(l: &LineDto, room_revenue: i64, maintained: i64) -> i64 {
             room_revenue.max(1).saturating_mul(loss) / 10_000
         }
         (VarCode::Sold, _) => 0,
+        // Operativa: oprema 45 %, iskustvo 30 %, opterećenje 25 % (vidi `load_driver`).
         (VarCode::Equipment, CauseDto::Baseline) => (loss - maintained).max(0) * 45,
-        // Oprema teže ulazi u Operativu od iskustva (45 : 30 u `raw_indices`).
         (VarCode::Equipment, _) => loss * 45,
         (VarCode::Experience, _) => loss * 30,
         _ => loss,
     };
     h.max(0)
+}
+
+/// Isti uzrok iste varijable u jednom retku (npr. trošak situacije i njezina trajna povišica).
+fn merged(lines: &[LineDto]) -> Vec<LineDto> {
+    let mut out: Vec<LineDto> = Vec::new();
+    for l in lines {
+        match out
+            .iter_mut()
+            .find(|o| o.var == l.var && o.cause == l.cause && o.unit == l.unit)
+        {
+            Some(o) => o.amount = o.amount.saturating_add(l.amount),
+            None => out.push(l.clone()),
+        }
+    }
+    out
+}
+
+/// Opterećenje osoblja kao pokretač Operative; izostaje kad je i prije i poslije bilo u redu.
+/// Šteta je porast kazne opterećenja s težinom 25 (njezin udio u Operativi).
+fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
+    if before <= LOAD_LIMIT_HUNDREDTHS && after <= LOAD_LIMIT_HUNDREDTHS {
+        return None;
+    }
+    let per_day = |l: u16| {
+        format!(
+            "{} noćenja po zaposlenom na dan",
+            decimal_hundredths(u64::from(l))
+        )
+    };
+    let state = if after > LOAD_LIMIT_HUNDREDTHS {
+        "osoblje je preopterećeno"
+    } else {
+        "u redu"
+    };
+    let penalty = |l: u16| i64::from(load_penalty(l).unwrap_or_default());
+    let because = "preopterećenog osoblja (premalo ljudi za broj gostiju)".to_owned();
+    Some(DriverFact {
+        source: DriverSource::StaffLoad,
+        what: LOAD_NAME,
+        meaning: LOAD_MEANING,
+        changes: vec![
+            ChangeFact {
+                cause: "opterećenje u ovom mjesecu".to_owned(),
+                amount: format!("{}, {state}", per_day(after)),
+                harm: (penalty(after) - penalty(before)).max(0) * 25,
+                because: because.clone(),
+            },
+            ChangeFact {
+                cause: "opterećenje prošli mjesec".to_owned(),
+                amount: per_day(before),
+                harm: 0,
+                because,
+            },
+        ],
+    })
 }
 
 // ---------------------------------------------------------------- činjenice
@@ -439,20 +578,84 @@ fn direction(change: i64) -> &'static str {
     }
 }
 
+fn plan_facts(input: &DebriefInput) -> PlanFacts {
+    let p = &input.plan;
+    let reference = input.price_ref_cents.max(1);
+    let off = round_div((p.price_cents - reference) * 100, reference);
+    let rel = match off.signum() {
+        0 => "kao uobičajena cijena za ovaj mjesec".to_owned(),
+        1 => format!("{off} % iznad uobičajene cijene za ovaj mjesec"),
+        _ => format!(
+            "{} % ispod uobičajene cijene za ovaj mjesec",
+            off.unsigned_abs()
+        ),
+    };
+    let n = u64::from(p.seasonal_target);
+    let seasonal = if n == 0 {
+        "bez sezonskih radnika".to_owned()
+    } else {
+        format!(
+            "{n} {}",
+            plural(
+                n,
+                ["sezonski radnik", "sezonska radnika", "sezonskih radnika"]
+            )
+        )
+    };
+    let vs_last = match p.seasonal_target.cmp(&input.seasonal_before) {
+        std::cmp::Ordering::Greater => "više nego prošli mjesec",
+        std::cmp::Ordering::Less => "manje nego prošli mjesec",
+        std::cmp::Ordering::Equal => "isto kao prošli mjesec",
+    };
+    let wage_note = match p.wage_pct.cmp(&100) {
+        std::cmp::Ordering::Less => " (niže od uobičajenih)",
+        std::cmp::Ordering::Greater => " (više od uobičajenih)",
+        std::cmp::Ordering::Equal => "",
+    };
+    PlanFacts {
+        room_price: format!("{} po noći, {rel}", euros(p.price_cents, false)),
+        marketing: if p.marketing_cents == 0 {
+            "bez marketinga".to_owned()
+        } else {
+            euros(p.marketing_cents, false)
+        },
+        seasonal: format!("{seasonal}, {vs_last}"),
+        wages: format!("{} % uobičajene plaće{wage_note}", p.wage_pct),
+        training: match p.training {
+            TrainingCode::None => "bez obuke",
+            TrainingCode::Basic => "osnovna obuka (učinak stiže idući mjesec)",
+            TrainingCode::Full => "puna obuka (učinak stiže idući mjesec)",
+        }
+        .to_owned(),
+        maintenance: match p.maintenance {
+            MaintenanceCode::Deferred => "odgođeno (oprema se ovaj mjesec nije popravljala)",
+            MaintenanceCode::Regular => "redovno",
+            MaintenanceCode::Intensive => "pojačano",
+        }
+        .to_owned(),
+        renovation: if p.renovation {
+            "pokrenuta: plaća se sada, a sobe su bolje od idućeg mjeseca"
+        } else {
+            "ne"
+        }
+        .to_owned(),
+        reply_reviews: if p.reply_reviews { "da" } else { "ne" }.to_owned(),
+    }
+}
+
 pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
     let titles: BTreeMap<&str, &str> = input
         .situations
         .iter()
         .map(|s| (s.code.as_str(), s.title.as_str()))
         .collect();
-    let room_revenue: i64 = input
-        .lines
+    let lines = merged(&input.lines);
+    let room_revenue: i64 = lines
         .iter()
         .filter(|l| l.var == VarCode::Revenue && l.cause == CauseDto::Baseline)
         .map(|l| l.amount)
         .sum();
-    let maintained: i64 = input
-        .lines
+    let maintained: i64 = lines
         .iter()
         .filter(|l| {
             l.var == VarCode::Equipment
@@ -460,81 +663,88 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         })
         .map(|l| l.amount.max(0))
         .sum();
-    let drivers_of = |var: VarCode| -> Option<DriverFact> {
-        let promjene: Vec<ChangeFact> = input
-            .lines
+    let var_driver = |var: VarCode| -> Option<DriverFact> {
+        let changes: Vec<ChangeFact> = lines
             .iter()
             .filter(|l| l.var == var)
             .filter_map(|l| {
-                let iznos = amount_text(l, shows_sign(l.var, &l.cause))?;
-                let uzrok = cause_label(l.var, &l.cause, &titles);
                 Some(ChangeFact {
-                    because: cause_because(l.var, &l.cause, &uzrok, &titles),
+                    amount: amount_text(l, shows_sign(l.var, &l.cause))?,
+                    cause: cause_label(l.var, &l.cause, &titles),
+                    because: cause_because(l.var, &l.cause, &titles),
                     harm: harm(l, room_revenue, maintained),
-                    uzrok,
-                    iznos,
                 })
             })
             .collect();
-        (!promjene.is_empty()).then(|| DriverFact {
-            var,
-            sto: var_name(var),
-            znacenje: var_meaning(var),
-            promjene,
+        (!changes.is_empty()).then(|| DriverFact {
+            source: DriverSource::Var(var),
+            what: var_name(var),
+            meaning: var_meaning(var),
+            changes,
         })
     };
-    let indeksi = Index::ALL
+    let indices = Index::ALL
         .iter()
         .zip(input.indices_before.iter().zip(&input.indices_after))
         .map(|(&index, (&b, &a))| {
-            let prije = round_div(i64::from(b), 100);
-            let poslije = round_div(i64::from(a), 100);
-            let drivers = index_drivers(index);
+            let before = round_div(i64::from(b), 100);
+            let after = round_div(i64::from(a), 100);
             IndexFact {
                 index,
-                naziv: index_name(index),
-                prije,
-                poslije,
-                promjena: poslije - prije,
-                smjer: direction(poslije - prije),
-                sto_je_pokrenulo: VAR_ORDER
+                name: index_name(index),
+                before,
+                after,
+                change: after - before,
+                direction: direction(after - before),
+                drivers: index_drivers(index)
                     .iter()
-                    .filter(|&&v| drivers.contains(&var_of(v)))
-                    .filter_map(|&v| drivers_of(v))
+                    .filter_map(|d| match d {
+                        Driver::Var(v) => var_driver(VarCode::from(v)),
+                        Driver::StaffLoad => {
+                            load_driver(input.load_before_hundredths, input.load_after_hundredths)
+                        }
+                    })
                     .collect(),
             }
         })
         .collect();
-    let situacije = input
+    let situations = input
         .situations
         .iter()
         .map(|s| SituationFact {
-            naslov: s.title.clone(),
-            ocjena: format!("{}/5", s.quality),
-            ocjena_rijecima: grade_words(s.quality),
-            slobodan_odgovor: s.free_text,
-            bez_odgovora: s.unanswered,
-            obrazlozenje: s.rationale.clone(),
-            neutralna_ocjena: s.neutral.then_some(
+            title: s.title.clone(),
+            grade: format!("{}/5", s.quality),
+            grade_words: grade_words(s.quality),
+            free_text: s.free_text,
+            chosen: match (&s.chosen_label, s.free_text && !s.unanswered) {
+                (Some(l), _) => Some(l.clone()),
+                (None, true) => Some("vlastiti odgovor, napisan svojim riječima".to_owned()),
+                (None, false) => None,
+            },
+            unanswered: s.unanswered,
+            rationale: s.rationale.clone(),
+            neutral: s.neutral.then_some(
                 "AI nije stigao ocijeniti odgovor, pa je dobio srednju ocjenu 3/5; odgovor čeka pregled.",
             ),
             quality: s.quality,
+            chosen_label: s.chosen_label.clone(),
         })
         .collect();
     let progress = round_div(i64::from(input.progress_hundredths), 100);
     DebriefFacts {
         hotel: input.hotel_name.clone(),
-        mjesec: month_locative(input.month),
-        iduci_mjesec: input.next_month.map(month_locative),
-        napredak_od_pocetka: if progress == 0 {
+        month: month_locative(input.month),
+        next_month: input.next_month.map(month_locative),
+        progress: if progress == 0 {
             "0 bodova".to_owned()
         } else {
             points(progress)
         },
-        blagajna_na_kraju_mjeseca: euros(input.cash_end_cents, false),
-        ljestvica_indeksa: "Indeksi su od 0 do 100; 50 je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
-        indeksi,
-        situacije,
+        cash_end: euros(input.cash_end_cents, false),
+        index_scale: "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+        plan: plan_facts(input),
+        indices,
+        situations,
     }
 }
 
@@ -568,23 +778,23 @@ fn capitalize(s: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Zašto je indeks pao: najveća šteta među njegovim varijablama, rečenicom.
+/// Zašto je indeks pao: najveća šteta među njegovim pokretačima, rečenicom.
 fn why_fell(i: &IndexFact) -> String {
     let worst = i
-        .sto_je_pokrenulo
+        .drivers
         .iter()
-        .flat_map(|d| d.promjene.iter().map(move |c| (d.var, c)))
+        .flat_map(|d| d.changes.iter().map(move |c| (d.source, c)))
         .filter(|(_, c)| c.harm > 0)
         .fold(
             None,
-            |best: Option<(VarCode, &ChangeFact)>, cur| match best {
+            |best: Option<(DriverSource, &ChangeFact)>, cur| match best {
                 Some(b) if b.1.harm >= cur.1.harm => Some(b),
                 _ => Some(cur),
             },
         );
     match worst {
-        Some((var, c)) => {
-            let then = var_consequence(var);
+        Some((source, c)) => {
+            let then = consequence(source);
             let tail = if then.is_empty() {
                 String::new()
             } else {
@@ -592,12 +802,12 @@ fn why_fell(i: &IndexFact) -> String {
             };
             format!(
                 "Indeks {} pao je ponajviše zbog {}{tail}.",
-                i.naziv, c.because
+                i.name, c.because
             )
         }
         None => format!(
             "Indeks {} pao je bez jednog velikog krivca: mjeri se prema usporedivom hotelu, pa pada i kad drugi napreduju brže.",
-            i.naziv
+            i.name
         ),
     }
 }
@@ -607,27 +817,27 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
     let f = debrief_facts(input);
     let mut out = format!(
         "{} je napredak tvog hotela od početka igre {}.\n\n",
-        capitalize(f.mjesec),
-        f.napredak_od_pocetka
+        capitalize(f.month),
+        f.progress
     );
 
-    let mut risen: Vec<&IndexFact> = f.indeksi.iter().filter(|i| i.promjena > 0).collect();
-    risen.sort_by_key(|i| std::cmp::Reverse(i.promjena));
+    let mut risen: Vec<&IndexFact> = f.indices.iter().filter(|i| i.change > 0).collect();
+    risen.sort_by_key(|i| std::cmp::Reverse(i.change));
     let mut good: Vec<String> = risen
         .iter()
         .take(2)
         .map(|i| {
             format!(
                 "Indeks {} porastao je s {} na {}.",
-                i.naziv, i.prije, i.poslije
+                i.name, i.before, i.after
             )
         })
         .collect();
     good.extend(
-        f.situacije
+        f.situations
             .iter()
             .filter(|s| s.quality >= 4)
-            .map(|s| format!("Situacija „{}“ riješena je dobro ({}).", s.naslov, s.ocjena)),
+            .map(|s| format!("Situacija „{}“ riješena je dobro ({}).", s.title, s.grade)),
     );
     if good.is_empty() {
         good.push(
@@ -637,21 +847,24 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
     }
     out.push_str(&format!("Što je išlo dobro\n{}\n\n", good.join(" ")));
 
-    let mut fallen: Vec<&IndexFact> = f.indeksi.iter().filter(|i| i.promjena < 0).collect();
-    fallen.sort_by_key(|i| i.promjena);
+    let mut fallen: Vec<&IndexFact> = f.indices.iter().filter(|i| i.change < 0).collect();
+    fallen.sort_by_key(|i| i.change);
     fallen.truncate(2);
     let mut bad: Vec<String> = fallen
         .iter()
-        .map(|i| format!("Indeks {} pao je s {} na {}.", i.naziv, i.prije, i.poslije))
+        .map(|i| format!("Indeks {} pao je s {} na {}.", i.name, i.before, i.after))
         .collect();
-    bad.extend(f.situacije.iter().filter(|s| s.quality <= 2).map(|s| {
-        if s.bez_odgovora {
-            format!(
+    bad.extend(f.situations.iter().filter(|s| s.quality <= 2).map(|s| {
+        match (s.unanswered, &s.chosen_label) {
+            (true, _) => format!(
                 "Na situaciju „{}“ nije bilo odgovora, pa je dobila najnižu ocjenu ({}).",
-                s.naslov, s.ocjena
-            )
-        } else {
-            format!("Situacija „{}“ riješena je loše ({}).", s.naslov, s.ocjena)
+                s.title, s.grade
+            ),
+            (false, Some(label)) => format!(
+                "Situacija „{}“ riješena je loše ({}): izabran je odgovor „{label}“.",
+                s.title, s.grade
+            ),
+            (false, None) => format!("Situacija „{}“ riješena je loše ({}).", s.title, s.grade),
         }
     }));
     if bad.is_empty() {
@@ -669,24 +882,95 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
 
     // Najgori indeks: najveći pad, a kad ništa nije palo, najniži na kraju mjeseca.
     let worst = fallen.first().copied().or_else(|| {
-        f.indeksi
+        f.indices
             .iter()
             .fold(None, |best: Option<&IndexFact>, cur| match best {
-                Some(b) if b.poslije <= cur.poslije => Some(b),
+                Some(b) if b.after <= cur.after => Some(b),
                 _ => Some(cur),
             })
     });
-    let when = f.iduci_mjesec.unwrap_or("sljedeći put");
+    let when = f.next_month.unwrap_or("sljedeći put");
     if let Some(w) = worst {
         out.push_str(&format!("Što probati {when}\n{}\n\n", advice(w.index)));
     }
 
-    for s in f.situacije.iter().filter(|s| s.neutralna_ocjena.is_some()) {
+    for s in f.situations.iter().filter(|s| s.neutral.is_some()) {
         out.push_str(&format!(
             "Napomena: situacija „{}“ dobila je neutralnu ocjenu {} jer odgovor nije stigao biti ocijenjen; čeka pregled.\n\n",
-            s.naslov, s.ocjena
+            s.title, s.grade
         ));
     }
     out.push_str("AI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki.");
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VARS: [VarCode; 10] = [
+        VarCode::Sold,
+        VarCode::Revenue,
+        VarCode::Costs,
+        VarCode::Cash,
+        VarCode::Staff,
+        VarCode::Morale,
+        VarCode::Experience,
+        VarCode::Equipment,
+        VarCode::Satisfaction,
+        VarCode::Rating,
+    ];
+
+    fn causes() -> Vec<CauseDto> {
+        vec![
+            CauseDto::Baseline,
+            CauseDto::Price,
+            CauseDto::Reputation,
+            CauseDto::Marketing,
+            CauseDto::Groups,
+            CauseDto::Capacity,
+            CauseDto::OtherRevenue,
+            CauseDto::Wage,
+            CauseDto::Load,
+            CauseDto::Training,
+            CauseDto::Hires,
+            CauseDto::Release,
+            CauseDto::Turnover,
+            CauseDto::Maintenance,
+            CauseDto::Renovation,
+            CauseDto::ReplyReviews,
+            CauseDto::FixedCosts,
+            CauseDto::Interest,
+            CauseDto::Situation("S9".into()),
+        ]
+    }
+
+    /// Svaki par varijable i uzroka ima vlastitu frazu u genitivu, bez općeg „stavke …".
+    #[test]
+    fn every_cause_has_its_own_because_phrase() {
+        let titles = BTreeMap::from([("S9", "Izmišljena situacija")]);
+        for v in VARS {
+            for c in causes() {
+                let b = cause_because(v, &c, &titles);
+                assert!(!b.is_empty() && !b.contains("stavk"), "{v:?} {c:?}: {b}");
+                assert!(!b.contains("S9"), "{b}");
+            }
+        }
+        assert_eq!(
+            cause_because(VarCode::Sold, &CauseDto::Marketing, &titles),
+            "premalo marketinga"
+        );
+    }
+
+    #[test]
+    fn decimals_and_plurals() {
+        assert_eq!(decimal_hundredths(230), "2,3");
+        assert_eq!(decimal_hundredths(185), "1,85");
+        assert_eq!(decimal_hundredths(200), "2");
+        assert_eq!(people_text(&CauseDto::Turnover, 3), "otišle 3 osobe");
+        assert_eq!(people_text(&CauseDto::Hires, 6), "zaposleno 6 osoba");
+        assert_eq!(people_text(&CauseDto::Hires, 1), "zaposlena 1 osoba");
+        assert_eq!(people_text(&CauseDto::Release, -2), "otpuštene 2 osobe");
+        assert_eq!(people_text(&CauseDto::Turnover, 21), "otišla 21 osoba");
+    }
 }
