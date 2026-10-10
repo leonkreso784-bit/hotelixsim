@@ -76,7 +76,7 @@
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
 | [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | 🟩 **aktivan** — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
-| [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (u izvođenju; aktivan od Taska 7) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
+| [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | 🟩 **aktivan** (područje: dokumentacija) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 
 ## `workflow/` — kako radimo
 
