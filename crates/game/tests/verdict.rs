@@ -84,6 +84,7 @@ fn verdict_text_never_names_internal_numbers() {
         "Ispunjavaš kriterije 1 i 3, ali ne i ostale.",
         "Tvoj prijedlog je kao ponuđeni odgovor br. 1.",
         "Sličan je odgovoru (3).",
+        "Ispunio si 2. kriterij, ali ne i ostale.",
     ] {
         let mut rat = ok.clone();
         rat.rationale = leak.into();
@@ -103,6 +104,7 @@ fn verdict_text_never_names_internal_numbers() {
         "Nudiš 20 % popusta i besplatan doručak za 2 osobe.",
         "Tvoj je odgovor najbliži ponudi da hotel plati drugu noć; ispričao si se gošći.",
         "Odgovor ima pet dijelova, a nedostaje rok od 24 sata.",
+        "Preuzimaš odgovornost 5 minuta nakon poziva i odgovorio si 2 puta.",
     ] {
         let mut rat = ok.clone();
         rat.rationale = fine.into();

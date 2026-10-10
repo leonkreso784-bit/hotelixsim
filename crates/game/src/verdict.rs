@@ -56,8 +56,25 @@ pub fn quality_from(criteria: &[CriterionVerdict]) -> u8 {
 }
 
 /// Spominje li tekst redni broj ponuđenog odgovora ili kriterija („ponuđenom odgovoru 0", „kriterije 1 i 3",
-/// „[2]"). Student ne vidi te brojeve (ponuđeni odgovori su skriveni, kriteriji nisu numerirani), pa mu ništa ne znače.
+/// „2. kriterij", „[2]"). Na ekranu ni ponuđeni odgovori ni kriteriji nemaju brojeve, pa studentu ništa ne znače.
 fn names_internal_number(text: &str) -> bool {
+    // Padežni oblici imenica; „odgovornost", „odgovorio" nisu poziv na ponuđeni odgovor.
+    const NOUNS: [&str; 14] = [
+        "odgovor",
+        "odgovora",
+        "odgovoru",
+        "odgovorom",
+        "odgovori",
+        "odgovore",
+        "odgovorima",
+        "kriterij",
+        "kriterija",
+        "kriteriju",
+        "kriterijem",
+        "kriteriji",
+        "kriterije",
+        "kriterijima",
+    ];
     let digits = |s: &str| !s.is_empty() && s.chars().all(|c| c.is_ascii_digit());
     let bare = |w: &str| {
         w.trim_matches(|c: char| !c.is_alphanumeric())
@@ -72,15 +89,17 @@ fn names_internal_number(text: &str) -> bool {
         {
             return true;
         }
-        let word = bare(w);
-        if !(word.starts_with("odgovor") || word.starts_with("kriterij")) {
+        if !NOUNS.contains(&bare(w).as_str()) {
             return false;
         }
-        words[i + 1..]
-            .iter()
-            .map(|n| bare(n))
-            .find(|n| !matches!(n.as_str(), "br" | "broj" | "pod"))
-            .is_some_and(|n| digits(&n))
+        // Redni broj ispred imenice: „2. kriterij".
+        let ordinal_before = i > 0 && words[i - 1].strip_suffix('.').is_some_and(&digits);
+        ordinal_before
+            || words[i + 1..]
+                .iter()
+                .map(|n| bare(n))
+                .find(|n| !matches!(n.as_str(), "br" | "broj" | "pod"))
+                .is_some_and(|n| digits(&n))
     })
 }
 

@@ -11,8 +11,8 @@ i koliko to košta), ne po stilu. Ponuđeni odgovori imaju navedene kriterije ko
 Na kraju napiši obrazloženje za studenta (2–3 rečenice, na hrvatskom, obraćaš mu se s „ti"): što je dobro, što
 nedostaje.
 
-Student ne vidi ponuđene odgovore ni brojeve kriterija. Zato ni u obrazloženju ni u razlozima kriterija nikad ne
-spominji redni broj, oznaku ni redoslijed ponuđenog odgovora ili kriterija (ne „ponuđeni odgovor 0", „odgovor [2]",
+Student na ekranu vidi ponuđene odgovore i kriterije bez brojeva, pa mu brojevi ništa ne znače. Zato ni u
+obrazloženju ni u razlozima kriterija nikad ne spominji redni broj, oznaku ni redoslijed ponuđenog odgovora ili kriterija (ne „ponuđeni odgovor 0", „odgovor [2]",
 „kriterij 3", „prvi ponuđeni odgovor"). Ako se pozivaš na ponuđeni odgovor, opiši ga riječima — što hotel u njemu
 napravi; ako se pozivaš na kriterij, reci što traži. Brojke iz same situacije (cijene, postoci, noćenja) smiješ
 navesti, uvijek s jedinicom.
