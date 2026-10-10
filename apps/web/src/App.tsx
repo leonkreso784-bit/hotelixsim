@@ -6,6 +6,7 @@ import type { HotelBody } from "./api/types";
 import { type Route, useRoute } from "./router";
 import { AvatarGallery } from "./screens/AvatarGallery";
 import { HotelScreen } from "./screens/HotelScreen";
+import { MonthScreen } from "./screens/MonthScreen";
 import { NotFound } from "./screens/NotFound";
 import { PlanScreen } from "./screens/PlanScreen";
 import { SituationScreen } from "./screens/SituationScreen";
@@ -24,6 +25,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
       return <SituationScreen me={me} code={route.code} />;
     case "plan":
       return <PlanScreen me={me} />;
+    case "month":
+      return <MonthScreen me={me} month={route.month} />;
     case "avatars":
       return <AvatarGallery />;
     default:

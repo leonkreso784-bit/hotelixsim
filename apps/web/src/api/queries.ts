@@ -3,7 +3,15 @@ import { navigate } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
 import { poll } from "./poll";
-import type { ConversationBody, GameBody, HotelBody, MonthCode, PlanBody, SituationsBody } from "./types";
+import type {
+  ConversationBody,
+  FeedItemBody,
+  GameBody,
+  HotelBody,
+  MonthCode,
+  PlanBody,
+  SituationsBody,
+} from "./types";
 
 export const keys = {
   me: ["me"] as const,
@@ -156,6 +164,38 @@ export function useSavePlan(hotelId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.me });
       void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+  });
+}
+
+/** Igra za ekran „Mjesec završen“: ispituje samo dok je taj mjesec trenutni a moj hotel ga još nema obračunatog. */
+export function useGameUntilResolved(gameId: string, hotelId: string, month: MonthCode) {
+  const api = useApi();
+  return useQuery<GameBody>({
+    queryKey: keys.game(gameId),
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } })),
+    refetchInterval: (q) => {
+      const g = q.state.data;
+      const mine = g?.hotels.find((h) => h.hotel_id === hotelId);
+      if (mine?.months.some((m) => m.month === month)) return false;
+      return g?.current?.month === month ? poll.roundMs : false;
+    },
+  });
+}
+
+/** Dnevnik hotela; uz `untilMentorFor` ispituje dok mentor za taj mjesec ne stigne (najviše `poll.maxFeedPolls` puta). */
+export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = {}) {
+  const api = useApi();
+  return useQuery<FeedItemBody[]>({
+    queryKey: keys.feed(hotelId),
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/hotels/{hotel_id}/feed", { params: { path: { hotel_id: hotelId } } })).items,
+    refetchInterval: (q) => {
+      const m = opts.untilMentorFor;
+      if (!m) return false;
+      const has = q.state.data?.some((i) => i.kind === "mentor" && i.month === m);
+      return has || q.state.dataUpdateCount >= poll.maxFeedPolls ? false : poll.feedMs;
     },
   });
 }
