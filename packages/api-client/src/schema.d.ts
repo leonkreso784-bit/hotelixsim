@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}/kpi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hotelski pokazatelji po obračunatom mjesecu (računaju se pri čitanju); samo vlasnik. */
+        get: operations["kpi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hotels/{hotel_id}/months/{month}/explanation": {
         parameters: {
             query?: never;
@@ -512,7 +529,68 @@ export interface components {
             indices: components["schemas"]["IndexEntry"][];
             profile: components["schemas"]["ProfileCode"];
         };
+        /** @description Obračunati mjeseci redom sezone; prazno prije prvog obračuna. */
+        KpiBody: {
+            months: components["schemas"]["KpiMonthBody"][];
+        };
+        /**
+         * @description Pokazatelji jednog obračunatog mjeseca. Sve „po sobi" dijeli se sa svim sobama × dani (`room_nights`), pa vrijedi
+         *     RevPAR = ADR × popunjenost. Iznosi u centima, udjeli u baznim bodovima (10 000 = 100 %); `null` kad je
+         *     djelitelj nula (npr. ADR u mjesecu bez prodaje).
+         */
+        KpiMonthBody: {
+            /** Format: int64 */
+            adr_cents: number | null;
+            /**
+             * Format: int64
+             * @description Popunjenost pri kojoj bi GOP bio nula, uz isti ADR i iste fiksne troškove; može biti iznad 10 000.
+             */
+            break_even_occupancy_bp: number | null;
+            /** Format: int64 */
+            cpor_cents: number | null;
+            /** Format: int64 */
+            gop_cents: number;
+            /** Format: int64 */
+            gop_margin_bp: number | null;
+            /** Format: int64 */
+            goppar_cents: number | null;
+            /** Format: int64 */
+            labor_cents: number;
+            /** Format: int64 */
+            labor_share_bp: number | null;
+            /**
+             * Format: int32
+             * @description Noći soba izvan funkcije (zbog opreme).
+             */
+            lost_nights: number;
+            month: components["schemas"]["MonthCode"];
+            /** Format: int64 */
+            occupancy_bp: number | null;
+            /** Format: int64 */
+            revpar_cents: number | null;
+            /**
+             * Format: int32
+             * @description Sve sobe × dani mjeseca.
+             */
+            room_nights: number;
+            /** Format: int64 */
+            rooms_revenue_cents: number;
+            /** Format: int32 */
+            sold_nights: number;
+            /**
+             * Format: int64
+             * @description Prihod od soba + ostali prihod.
+             */
+            total_revenue_cents: number;
+            /** Format: int64 */
+            trevpar_cents: number | null;
+        };
         LastMonthBody: {
+            /**
+             * Format: int64
+             * @description Prihod od soba ÷ prodane noći (isti broj kao `/kpi`).
+             */
+            adr_cents: number | null;
             /** Format: int32 */
             available: number;
             /** Format: int64 */
@@ -521,6 +599,16 @@ export interface components {
             goppar_cents: number;
             mentor: string | null;
             month: components["schemas"]["MonthCode"];
+            /**
+             * Format: int64
+             * @description Prodane noći ÷ sve sobe × dani, u baznim bodovima (isti broj kao `/kpi`).
+             */
+            occupancy_bp: number | null;
+            /**
+             * Format: int64
+             * @description Prihod od soba ÷ sve sobe × dani (isti broj kao `/kpi`).
+             */
+            revpar_cents: number | null;
             /** Format: int64 */
             rooms_revenue_cents: number;
             /** Format: int32 */
@@ -1032,6 +1120,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeedBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    kpi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pokazatelji obračunatih mjeseci */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiBody"];
                 };
             };
             401: {

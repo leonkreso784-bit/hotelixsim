@@ -53,6 +53,9 @@ describe("Moj hotel", () => {
             gop_cents: 2_000_000,
             goppar_cents: 55_500,
             mentor: "Usluga je bolja. Prati troškove.",
+            occupancy_bp: 6800,
+            adr_cents: 4003,
+            revpar_cents: 2722,
           },
         }),
       )

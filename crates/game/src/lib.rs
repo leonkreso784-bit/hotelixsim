@@ -10,6 +10,7 @@ pub mod event;
 pub mod feed;
 mod game;
 pub mod ids;
+pub mod kpi;
 mod mentor;
 mod resolve;
 pub mod talk;

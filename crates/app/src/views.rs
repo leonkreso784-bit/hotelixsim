@@ -342,3 +342,16 @@ pub async fn feed(deps: &Deps, caller: &Caller, hotel: HotelId) -> Result<Vec<Fe
     require_owner(&g, guest, hotel)?;
     Ok(g.feed(hotel)?)
 }
+
+/// Sloj 0: pokazatelji svakog obračunatog mjeseca (računaju se pri čitanju); pristup kao dnevnik (samo vlasnik).
+pub async fn hotel_kpi(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+) -> Result<Vec<game::kpi::KpiMonth>, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let g = load_game(deps, game_id).await?;
+    require_owner(&g, guest, hotel)?;
+    Ok(g.hotel_kpi(hotel)?)
+}

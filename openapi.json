@@ -433,6 +433,62 @@
         }
       }
     },
+    "/v1/hotels/{hotel_id}/kpi": {
+      "get": {
+        "summary": "Hotelski pokazatelji po obračunatom mjesecu (računaju se pri čitanju); samo vlasnik.",
+        "operationId": "kpi",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokazatelji obračunatih mjeseci",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/hotels/{hotel_id}/months/{month}/explanation": {
       "get": {
         "summary": "Zašto su se indeksi obračunatog mjeseca pomaknuli (iste činjenice kao mentor); samo vlasnik.",
@@ -1880,6 +1936,147 @@
           }
         }
       },
+      "KpiBody": {
+        "type": "object",
+        "description": "Obračunati mjeseci redom sezone; prazno prije prvog obračuna.",
+        "required": [
+          "months"
+        ],
+        "properties": {
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KpiMonthBody"
+            }
+          }
+        }
+      },
+      "KpiMonthBody": {
+        "type": "object",
+        "description": "Pokazatelji jednog obračunatog mjeseca. Sve „po sobi\" dijeli se sa svim sobama × dani (`room_nights`), pa vrijedi\nRevPAR = ADR × popunjenost. Iznosi u centima, udjeli u baznim bodovima (10 000 = 100 %); `null` kad je\ndjelitelj nula (npr. ADR u mjesecu bez prodaje).",
+        "required": [
+          "month",
+          "room_nights",
+          "sold_nights",
+          "lost_nights",
+          "occupancy_bp",
+          "adr_cents",
+          "revpar_cents",
+          "rooms_revenue_cents",
+          "total_revenue_cents",
+          "trevpar_cents",
+          "gop_cents",
+          "gop_margin_bp",
+          "goppar_cents",
+          "labor_cents",
+          "labor_share_bp",
+          "cpor_cents",
+          "break_even_occupancy_bp"
+        ],
+        "properties": {
+          "adr_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "break_even_occupancy_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Popunjenost pri kojoj bi GOP bio nula, uz isti ADR i iste fiksne troškove; može biti iznad 10 000."
+          },
+          "cpor_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "gop_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "gop_margin_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "goppar_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "labor_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "labor_share_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "lost_nights": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Noći soba izvan funkcije (zbog opreme).",
+            "minimum": 0
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "occupancy_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "revpar_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "room_nights": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Sve sobe × dani mjeseca.",
+            "minimum": 0
+          },
+          "rooms_revenue_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sold_nights": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "total_revenue_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Prihod od soba + ostali prihod."
+          },
+          "trevpar_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
       "LastMonthBody": {
         "type": "object",
         "required": [
@@ -1889,9 +2086,20 @@
           "rooms_revenue_cents",
           "gop_cents",
           "goppar_cents",
-          "mentor"
+          "mentor",
+          "occupancy_bp",
+          "adr_cents",
+          "revpar_cents"
         ],
         "properties": {
+          "adr_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Prihod od soba ÷ prodane noći (isti broj kao `/kpi`)."
+          },
           "available": {
             "type": "integer",
             "format": "int32",
@@ -1913,6 +2121,22 @@
           },
           "month": {
             "$ref": "#/components/schemas/MonthCode"
+          },
+          "occupancy_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Prodane noći ÷ sve sobe × dani, u baznim bodovima (isti broj kao `/kpi`)."
+          },
+          "revpar_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Prihod od soba ÷ sve sobe × dani (isti broj kao `/kpi`)."
           },
           "rooms_revenue_cents": {
             "type": "integer",
