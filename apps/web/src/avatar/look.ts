@@ -63,23 +63,32 @@ function pick<T>(xs: readonly T[], r: (n: number) => number): T {
   return xs[r(xs.length)] as T;
 }
 
+// Zamrznuti bazeni za izgled iz imena. Nove boje/opcije dodaju se u palete i nizove opcija, ali NE ovamo —
+// tako svako ime zadržava isti izgled i kad se palete prošire. Redoslijed izvlačenja je fiksan.
+const SEED_SKIN = [0, 1, 2, 3, 4, 5] as const;
+const SEED_HAIR_STYLES = ["none", "buzz", "short", "side", "curly", "long", "ponytail", "bun"] as const;
+const SEED_HAIR_COLORS = [0, 1, 2, 3, 4] as const; // bez sijede
+const SEED_EYES = ["dot", "happy", "wide"] as const;
+const SEED_MOUTHS = ["smile", "neutral", "worried", "grin"] as const;
+const SEED_FACIAL_HAIR = ["none", "stubble", "mustache", "beard"] as const;
+const SEED_GLASSES = ["none", "round", "square"] as const;
+const SEED_CLOTHES = [0, 1, 2, 3, 4, 5] as const; // bez bijele (kuhar)
+const SEED_BACKDROPS = [0, 1, 2] as const;
+
 export function lookFromSeed(seed: string): AvatarLook {
   const r = rng(seed);
-  const hair = pick(HAIR_STYLES, r);
+  const skin = pick(SEED_SKIN, r);
+  const hair = pick(SEED_HAIR_STYLES, r);
+  const hairColor = pick(SEED_HAIR_COLORS, r);
+  const eyes = pick(SEED_EYES, r);
+  const mouth = pick(SEED_MOUTHS, r);
   // Brada rjeđe od ostalog, kapa vrlo rijetko — „slučajni“ gosti trebaju izgledati obično.
-  const facialHair = r(3) === 0 ? pick(FACIAL_HAIR, r) : "none";
-  return {
-    skin: r(SKIN.length),
-    hair,
-    hairColor: r(HAIR.length - 1), // sijeda (zadnja) samo ručno
-    eyes: pick(EYES, r),
-    mouth: pick(MOUTHS, r),
-    facialHair,
-    glasses: r(4) === 0 ? pick(GLASSES, r) : "none",
-    hat: r(12) === 0 ? "cap" : "none",
-    clothes: r(CLOTHES.length - 1), // bijela (kuhar) samo ručno
-    backdrop: r(BACKDROP.length),
-  };
+  const facialHair = r(3) === 0 ? pick(SEED_FACIAL_HAIR, r) : "none";
+  const glasses = r(4) === 0 ? pick(SEED_GLASSES, r) : "none";
+  const hat = r(12) === 0 ? "cap" : "none";
+  const clothes = pick(SEED_CLOTHES, r);
+  const backdrop = pick(SEED_BACKDROPS, r);
+  return { skin, hair, hairColor, eyes, mouth, facialHair, glasses, hat, clothes, backdrop };
 }
 
 /** Ti — upravitelj hotela. Uređivač (poslije demoa) mijenja upravo ovo. */
@@ -138,5 +147,5 @@ export const KNOWN_LOOKS: Record<string, AvatarLook> = {
 };
 
 export function lookFor(name: string): AvatarLook {
-  return KNOWN_LOOKS[name] ?? lookFromSeed(name);
+  return Object.hasOwn(KNOWN_LOOKS, name) ? (KNOWN_LOOKS[name] as AvatarLook) : lookFromSeed(name);
 }

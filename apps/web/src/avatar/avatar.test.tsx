@@ -18,6 +18,23 @@ describe("izgled lika", () => {
   it("isto ime uvijek daje isti izgled", () => {
     expect(lookFromSeed("Ana Kovač")).toEqual(lookFromSeed("Ana Kovač"));
   });
+  it("izgled iz imena je zamrznut: promjena palete ga ne smije pomaknuti", () => {
+    expect(lookFromSeed("Ana Kovač")).toEqual({
+      skin: 1,
+      hair: "buzz",
+      hairColor: 2,
+      eyes: "happy",
+      mouth: "worried",
+      facialHair: "none",
+      glasses: "none",
+      hat: "none",
+      clothes: 2,
+      backdrop: 2,
+    });
+  });
+  it("ime koje je svojstvo Objecta pada na izgled iz imena", () => {
+    expect(lookFor("constructor")).toEqual(lookFromSeed("constructor"));
+  });
   it("izgled iz imena je uvijek valjan", () => {
     for (let i = 0; i < 300; i++) expect(isValidLook(lookFromSeed(`lik-${i}`))).toBe(true);
   });
