@@ -16,13 +16,19 @@
 //
 // Pokreni: pnpm check:docs   |   korijen se može zadati: node scripts/check-docs.mjs <dir>
 // ili env CHECK_DOCS_ROOT (tako ga testira check-docs.test.mjs nad privremenim mapama).
+// `--popis` (uz ili bez korijena) ne provjerava nego ispisuje veličine svih docs/**/*.md
+// uz granicu (scripts/docs-granice.mjs), silazno; ❌ uz prekoračenje; uvijek exit 0.
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { brojRedaka, granicaZa, jeIznimka } from "./docs-granice.mjs";
+
+const POPIS = process.argv.includes("--popis");
+const ARGUMENTI = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 
 const ROOT = path.resolve(
-  process.argv[2] || process.env.CHECK_DOCS_ROOT || path.join(import.meta.dirname, ".."),
+  ARGUMENTI[0] || process.env.CHECK_DOCS_ROOT || path.join(import.meta.dirname, ".."),
 );
 const rel = (p) => path.relative(ROOT, p).split(path.sep).join("/");
 
@@ -67,6 +73,31 @@ const mdFiles = [...new Set(listed)]
 const read = (r) => fs.readFileSync(path.join(ROOT, r), "utf8");
 // Kod (blokovi i inline) je ilustracija, ne tvrdnja: primjer poveznice ili ćirilični raspon u njemu nije kvar.
 const stripCode = (s) => s.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
+
+// ── --popis: ispis veličina umjesto provjere ────────────────────────
+if (POPIS) {
+  const redovi = mdFiles
+    .filter((r) => r.startsWith("docs/"))
+    .map((r) => {
+      const mapa = path.join(ROOT, r.slice(0, -3));
+      const imaMapu = fs.existsSync(mapa) && fs.statSync(mapa).isDirectory();
+      const g = granicaZa(r, imaMapu);
+      return { r, redaka: brojRedaka(read(r)), g };
+    })
+    .sort((a, b) => b.redaka - a.redaka || a.r.localeCompare(b.r));
+  console.log("redaka  granica  vrsta    datoteka");
+  let preko = 0;
+  for (const { r, redaka, g } of redovi) {
+    const prekoracenje = g && redaka > g.redaka;
+    if (prekoracenje) preko++;
+    const oznaka = prekoracenje ? (jeIznimka(r) ? " ❌ (prijelazna iznimka)" : " ❌") : "";
+    console.log(
+      `${String(redaka).padStart(6)}  ${String(g?.redaka ?? "-").padStart(7)}  ${(g?.vrsta ?? "-").padEnd(7)}  ${r}${oznaka}`,
+    );
+  }
+  console.log(`\n${redovi.length} datoteka, ${preko} preko granice`);
+  process.exit(0);
+}
 
 const problems = [];
 
