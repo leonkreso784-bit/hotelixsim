@@ -81,14 +81,16 @@ describe("Mjesec završen", () => {
     const hero = screen.getByText("Napredak od početka").parentElement as HTMLElement;
     expect(within(hero).getByText("+8 bodova")).toBeTruthy();
     // Pet traka s vrijednostima na kraju lipnja (ne početnih 50) i promjenom u lipnju.
-    expect(screen.getByText("Indeksi na kraju mjeseca")).toBeTruthy();
+    // Upiti unutar sekcije indeksa: „Zašto se indeksi pomaknuli“ se učitava zasebno i pokazuje iste promjene,
+    // pa bi upit po cijelom ekranu ovisio o tome stigne li ona prije provjere (CI 10.10.).
+    const bars = screen.getByText("Indeksi na kraju mjeseca").closest("section") as HTMLElement;
     expect(screen.getByRole("img", { name: "Zadovoljstvo gostiju: 56 od 100" })).toBeTruthy();
     expect(screen.getByRole("img", { name: "Recenzije: 52 od 100" })).toBeTruthy();
     expect(screen.getByRole("img", { name: "Financije: 48 od 100" })).toBeTruthy();
     expect(screen.getByText("50 = prosjek usporedivog hotela")).toBeTruthy();
     expect(screen.getByText("u ovom mjesecu")).toBeTruthy();
-    expect(screen.getByText("▲ +6")).toBeTruthy();
-    expect(screen.getByText("▼ −2")).toBeTruthy();
+    expect(within(bars).getByText("▲ +6")).toBeTruthy();
+    expect(within(bars).getByText("▼ −2")).toBeTruthy();
     expect(await screen.findByText("Usluga je bolja. Prati troškove.")).toBeTruthy();
     // Sirovi retci iz dnevnika (kod situacije, „osnova“) više se ne pokazuju.
     expect(screen.queryByText("Zašto (svaka promjena s uzrokom)")).toBeNull();
