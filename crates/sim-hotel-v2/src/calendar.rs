@@ -173,6 +173,15 @@ impl Period {
             .map(|part| part.month)
     }
 
+    /// Mjesec čiji je prvi dan unutar ovog razdoblja (najviše jedan). To je mjesec situacija koje krug nosi
+    /// (`season::situations_for`, 🟨 P13), pa se s njim obračunavaju njihovi učinci.
+    pub fn month_starting_in(&self) -> Option<Month> {
+        self.parts()
+            .into_iter()
+            .find(|part| part.from_day == 0)
+            .map(|part| part.month)
+    }
+
     /// Prvi dan razdoblja: (dan u mjesecu od 1, mjesec).
     pub fn first_date(&self) -> (u8, Month) {
         match self.parts().first() {

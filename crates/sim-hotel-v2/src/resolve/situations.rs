@@ -36,8 +36,12 @@ pub(super) fn situation_effects(
         i128,
     ) = (0, 0, 0, 0, 0, 0);
     let mut shown_extra: i128 = 0;
+    // Situacija pripada svom mjesecu: krug nosi situacije mjeseca čiji je 1. dan u njemu (`situations_for`), pa
+    // t05 (29. 6. – 5. 7.) obračunava srpanjske situacije sa srpnjem (`GroupInPast`). Krug bez 1. dana mjeseca
+    // nema situacija; zamjena je početni mjesec (u mjesečnom krugu je to uvijek isti mjesec, kao u v1).
+    let month = p.month_starting_in().unwrap_or(p.start_month());
     for o in situations {
-        let e = effects(o, p.start_month(), base, category)?;
+        let e = effects(o, month, base, category)?;
         sat = c::add(sat, w(e.satisfaction_pts))?;
         morale = c::add(morale, w(e.morale_pts))?;
         rating = c::add(rating, w(e.rating))?;

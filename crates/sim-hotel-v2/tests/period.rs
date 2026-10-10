@@ -408,3 +408,71 @@ fn group_block_is_spread_over_at_least_two_weeks() {
         .count();
     assert!(with_groups >= 2, "{with_groups}");
 }
+
+// ---- Ojačanje H1, korak 2: situacija se obračunava s mjesecom situacije, ne s početnim mjesecom kruga
+
+fn group_answer(code: &str, target: Month) -> SituationOutcome {
+    SituationOutcome {
+        code: code.into(),
+        mechanics: vec![Mechanic::GroupBooking {
+            accept: true,
+            rooms: 10,
+            nights: 31,
+            discount_bp: 0,
+            month: target,
+        }],
+        quality: 3,
+    }
+}
+
+#[test]
+fn july_situation_in_week_five_books_its_group_into_july_days() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
+    let r = resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jul)], &c).unwrap();
+    // 310 noćenja u srpnju; t05 nosi srpanjske dane 1.–5. (dani 0–5 od 31), lipanjski dio ne nosi ništa.
+    assert_eq!(r.summary.market.group_room_nights, 310 * 5 / 31);
+    assert_eq!(r.after.groups.len(), 1);
+    assert_eq!(r.after.groups[0].month, Month::Jul);
+}
+
+#[test]
+fn june_group_in_july_situation_of_week_five_is_in_the_past() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
+    assert_eq!(
+        resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jun)], &c),
+        Err(ResolveError::Mechanic(MechanicError::GroupInPast))
+    );
+}
+
+#[test]
+fn june_group_in_june_month_is_still_accepted() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let jun = month_period(Month::Jun);
+    let plan = PeriodPlan::default_for(&s, &jun, &c).unwrap();
+    let r = resolve_period(&s, &jun, &plan, &[group_answer("S1", Month::Jun)], &c).unwrap();
+    assert_eq!(r.summary.market.group_room_nights, 310);
+    assert!(r.after.groups.is_empty());
+}
+
+#[test]
+fn situation_month_of_a_period_is_the_month_whose_situations_it_carries() {
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for p in season_periods(kind) {
+            for m in Month::SEASON {
+                assert_eq!(
+                    calendar::first_period_of_month(kind, m) == p,
+                    p.month_starting_in() == Some(m),
+                    "{} {m:?}",
+                    p.code()
+                );
+            }
+        }
+    }
+}
