@@ -6,7 +6,9 @@ import type { HotelBody } from "../api/types";
 import { Link } from "../router";
 import { ErrorText, StatusText } from "../ui/primitives";
 import { Conversation } from "./situation/Conversation";
+import { FreeResponse } from "./situation/FreeResponse";
 import { ChosenAnswer, OfferedAnswers } from "./situation/OfferedAnswers";
+import { Verdict } from "./situation/Verdict";
 
 export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const hotelId = me.hotel.hotel_id;
@@ -34,7 +36,8 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
       {back}
       <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{s.title}</h1>
       {s.character && <Conversation hotelId={hotelId} code={s.code} canWrite={open && !decided} />}
-      {/* Task 7: slobodan odgovor i presuda */}
+      {s.response && <Verdict response={s.response} />}
+      {open && !decided && s.free_text && <FreeResponse hotelId={hotelId} s={s} />}
       <ChosenAnswer s={s} />
       {open && !decided && (
         <OfferedAnswers

@@ -123,3 +123,21 @@ export function useAnswer(hotelId: string, code: string) {
     },
   });
 }
+
+export function useSubmitResponse(hotelId: string, code: string) {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (text: string) =>
+      unwrap(
+        await api.POST("/v1/hotels/{hotel_id}/situations/{code}/response", {
+          params: { path: { hotel_id: hotelId, code } },
+          body: { text },
+        }),
+      ),
+    onSuccess: (body) => {
+      qc.setQueryData(keys.situations(hotelId), body);
+      void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+  });
+}
