@@ -3,7 +3,6 @@ import { t } from "@hotelixsim/i18n";
 import { useRef } from "react";
 import { problemMessage } from "../api/errors";
 import { useStartDemo } from "../api/queries";
-import { navigate } from "../router";
 import { Button, ErrorText, StatusText } from "../ui/primitives";
 
 export function StartScreen() {
@@ -14,7 +13,6 @@ export function StartScreen() {
     if (start.isPending || inFlight.current) return;
     inFlight.current = true;
     start.mutate(undefined, {
-      onSuccess: () => navigate("/"),
       onSettled: () => {
         inFlight.current = false;
       },

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { navigate } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
 import { poll } from "./poll";
@@ -38,6 +39,9 @@ export function useStartDemo() {
   return useMutation({
     mutationFn: async () => unwrap(await api.POST("/v1/demo")),
     // resetQueries vrati sve upite u početno stanje i ponovno dohvati aktivne (stara igra ne smije ostati na ekranu).
-    onSuccess: () => qc.resetQueries(),
+    onSuccess: () => {
+      navigate("/");
+      return qc.resetQueries();
+    },
   });
 }

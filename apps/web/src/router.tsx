@@ -22,8 +22,14 @@ export function matchRoute(pathname: string): Route {
   const [a, b, ...rest] = pathname.split("/").filter(Boolean);
   if (rest.length > 0) return { name: "notFound" };
   if (a === undefined || (a === "demo" && b === undefined)) return { name: "hotel" };
-  if (a === "situacije")
-    return b === undefined ? { name: "situations" } : { name: "situation", code: decodeURIComponent(b) };
+  if (a === "situacije") {
+    if (b === undefined) return { name: "situations" };
+    try {
+      return { name: "situation", code: decodeURIComponent(b) };
+    } catch {
+      return { name: "notFound" };
+    }
+  }
   if (a === "plan" && b === undefined) return { name: "plan" };
   if (a === "mjesec" && b !== undefined && isMonth(b)) return { name: "month", month: b };
   if (a === "tijek" && b === undefined) return { name: "feed" };

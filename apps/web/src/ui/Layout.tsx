@@ -18,7 +18,7 @@ export function chipText(game: GameBody): string {
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2">
+    <Link to="/" className="flex min-h-11 items-center gap-2">
       <img src="/logo-znak.png" alt="" className="size-9 rounded-xl" />
       <span className="text-xl font-extrabold tracking-tight">
         Hotelix<span className="text-accent">Sim</span>

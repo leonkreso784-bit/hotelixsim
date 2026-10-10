@@ -19,6 +19,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/mjesec/xyz")).toEqual({ name: "notFound" });
     expect(matchRoute("/situacije/S1/x")).toEqual({ name: "notFound" });
     expect(matchRoute("/nesto")).toEqual({ name: "notFound" });
+    expect(matchRoute("/situacije/%")).toEqual({ name: "notFound" });
   });
 });
 
