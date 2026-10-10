@@ -3,7 +3,7 @@ import { navigate } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
 import { poll } from "./poll";
-import type { ConversationBody, GameBody, HotelBody, MonthCode, SituationsBody } from "./types";
+import type { ConversationBody, GameBody, HotelBody, MonthCode, PlanBody, SituationsBody } from "./types";
 
 export const keys = {
   me: ["me"] as const,
@@ -137,6 +137,24 @@ export function useSubmitResponse(hotelId: string, code: string) {
       ),
     onSuccess: (body) => {
       qc.setQueryData(keys.situations(hotelId), body);
+      void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+  });
+}
+
+export function useSavePlan(hotelId: string) {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ month, plan }: { month: MonthCode; plan: PlanBody }) =>
+      unwrap(
+        await api.PUT("/v1/hotels/{hotel_id}/plans/{month}", {
+          params: { path: { hotel_id: hotelId, month } },
+          body: plan,
+        }),
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.me });
       void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
     },
   });
