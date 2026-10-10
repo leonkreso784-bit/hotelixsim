@@ -69,10 +69,14 @@ fn sum_lines(out: &SeasonResult, var: Var, cause: Cause) -> i64 {
 }
 
 fn default_season(kind: PeriodKind) -> SeasonResult {
+    default_season_of(Profile::C, kind)
+}
+
+fn default_season_of(profile: Profile, kind: PeriodKind) -> SeasonResult {
     let c = cat();
     let r = refs(&c, kind);
     run_season_with(
-        Profile::C,
+        profile,
         kind,
         &c,
         &[],
@@ -196,19 +200,88 @@ fn situations_attach_to_period_containing_first_of_month() {
     assert!(situations_for(&t06, &sits).is_empty());
 }
 
+// Profil C je referentni hotel tablice indeksa, pa su njegovi indeksi u zadanoj sezoni po građi 50,00 i u tjednoj i
+// u mjesečnoj igri, kakva god bila pravila razdoblja. Čuvari zato gledaju profile A i B.
+
+/// Indeksi na kraju svakog mjeseca: početni, pa poslije kruga koji sadrži zadnji dan lipnja, srpnja, kolovoza i rujna
+/// (u tjednoj igri to je tjedan koji prelazi u idući mjesec, npr. t05 za lipanj).
+fn month_end_indices(out: &SeasonResult) -> Vec<IndexSet> {
+    let mut v = vec![out.start.clone()];
+    v.extend(
+        out.periods
+            .iter()
+            .filter(|(r, _)| r.period.month_ending_in().is_some())
+            .map(|(_, i)| i.clone()),
+    );
+    assert_eq!(v.len(), 5);
+    v
+}
+
+fn hundredths(set: &IndexSet, i: Index) -> i32 {
+    i32::from(set.get(i).hundredths())
+}
+
+/// Najveća dopuštena razlika tjednog i mjesečnog indeksa na kraju mjeseca (stotinke boda). Izvedeno iz stvarnih
+/// razlika profila A i B (najveće: gosti 0,71, recenzije 3,57, osoblje 0,63, poslovanje 1,50, financije 3,12 boda) uz
+/// rezervu ~30 %; razlika dolazi od tjedna koji na kraju mjeseca već nosi dane idućeg mjeseca.
+fn month_end_tolerance(i: Index) -> i32 {
+    match i {
+        Index::Guests | Index::Staff => 100,
+        Index::Operations => 200,
+        Index::Reviews | Index::Finance => 400,
+    }
+}
+
 #[test]
-fn weekly_and_monthly_default_seasons_end_close() {
-    let w = default_season(PeriodKind::Week);
-    let m = default_season(PeriodKind::Month);
-    let (wi, mi) = (&w.periods.last().unwrap().1, &m.periods.last().unwrap().1);
-    for (i, v) in wi.iter() {
-        let diff = i32::from(v.hundredths()) - i32::from(mi.get(i).hundredths());
-        assert!(
-            diff.abs() <= 1_000,
-            "{i:?}: tjedno {} mjesečno {}",
-            v.hundredths(),
-            mi.get(i).hundredths()
-        );
+fn weekly_and_monthly_default_seasons_stay_close_at_every_month_end() {
+    for p in [Profile::A, Profile::B] {
+        let w = month_end_indices(&default_season_of(p, PeriodKind::Week));
+        let m = month_end_indices(&default_season_of(p, PeriodKind::Month));
+        for k in 1..5 {
+            for i in Index::ALL {
+                let (a, b) = (hundredths(&w[k], i), hundredths(&m[k], i));
+                assert!(
+                    (a - b).abs() <= month_end_tolerance(i),
+                    "{p:?} kraj mjeseca {k} {i:?}: tjedno {a} mjesečno {b}"
+                );
+            }
+        }
+    }
+}
+
+/// Promjena indeksa preko mjeseca je „jasna" kad je u mjesečnoj igri barem 2 boda; manje od toga može biti samo
+/// pomak od tjedna koji na kraju mjeseca nosi dane idućeg mjeseca.
+const CLEAR_MONTHLY_CHANGE: i32 = 200;
+
+#[test]
+fn weekly_and_monthly_default_seasons_move_indices_the_same_way() {
+    for p in [Profile::A, Profile::B] {
+        let w = month_end_indices(&default_season_of(p, PeriodKind::Week));
+        let m = month_end_indices(&default_season_of(p, PeriodKind::Month));
+        for i in Index::ALL {
+            // Cijela sezona: isti smjer za svaki indeks.
+            let (dw, dm) = (
+                hundredths(&w[4], i) - hundredths(&w[0], i),
+                hundredths(&m[4], i) - hundredths(&m[0], i),
+            );
+            assert_eq!(
+                dw.signum(),
+                dm.signum(),
+                "{p:?} {i:?} sezona: tjedno {dw} mjesečno {dm}"
+            );
+            // Svaki mjesec s jasnom mjesečnom promjenom: isti smjer.
+            for k in 1..5 {
+                let dm = hundredths(&m[k], i) - hundredths(&m[k - 1], i);
+                let dw = hundredths(&w[k], i) - hundredths(&w[k - 1], i);
+                if dm.abs() >= CLEAR_MONTHLY_CHANGE {
+                    assert_eq!(
+                        dw.signum(),
+                        dm.signum(),
+                        "{p:?} {i:?} mjesec {k}: tjedno {dw} mjesečno {dm}"
+                    );
+                }
+            }
+        }
     }
 }
 
@@ -252,26 +325,32 @@ fn weekly_departures_are_the_prorated_monthly_departures() {
 
 #[test]
 fn weekly_departures_over_june_match_the_monthly_value_for_stable_staff() {
-    // 56 ljudi, moral na cilju: stopa ~300 bp daje mjesečno 2 odlaska; tjedni zbroj lipnja mora biti 2, ne 0.
+    // 56 ljudi, isti mjesečni broj odlazaka M svaki tjedan: t01–t04 su lipanjski dani 0–28, pa se razmjerni
+    // dijelovi teleskopski zbrajaju u ⌊M·28/30⌋. Staro pravilo (svaki tjedan zasebno zaokružen) daje 0, a
+    // pokvaren `prorate` (pun M po tjednu) daje 4·M.
     let c = cat();
     let mut s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
     s.permanent = 36;
     s.seasonal = 20;
     let mut sum = 0_i64;
-    let mut monthly = 0_i64;
+    let mut monthly = Vec::new();
     for code in ["t01", "t02", "t03", "t04"] {
         let p = period_by_code(PeriodKind::Week, code).unwrap();
         let plan = PeriodPlan::default_for(&s, &p, &c).unwrap();
         let r = resolve_period(&s, &p, &plan, &[], &c).unwrap();
-        monthly = monthly_departures(
+        assert_eq!(r.summary.people.staff, 56, "{code}");
+        monthly.push(monthly_departures(
             i64::from(r.summary.people.staff),
             i64::from(r.summary.people.turnover_bp),
-        );
+        ));
         sum += i64::from(r.summary.people.departures);
         s = r.after;
     }
-    assert!(monthly > 0);
-    assert!(sum > 0, "četiri lipanjska tjedna bez odlazaka");
+    let m = monthly[0];
+    assert!(monthly.iter().all(|&x| x == m), "{monthly:?}");
+    assert_eq!(m, 2);
+    assert_eq!(sum, m * 28 / 30);
+    assert_eq!(sum, 1);
 }
 
 fn season_with(kind: PeriodKind, training: Training, maintenance: Maintenance) -> SeasonResult {
@@ -407,4 +486,176 @@ fn group_block_is_spread_over_at_least_two_weeks() {
         .filter(|(p, _)| p.summary.market.group_room_nights > 0)
         .count();
     assert!(with_groups >= 2, "{with_groups}");
+}
+
+// ---- Ojačanje H1, korak 2: situacija se obračunava s mjesecom situacije, ne s početnim mjesecom kruga
+
+fn group_answer(code: &str, target: Month) -> SituationOutcome {
+    SituationOutcome {
+        code: code.into(),
+        mechanics: vec![Mechanic::GroupBooking {
+            accept: true,
+            rooms: 10,
+            nights: 31,
+            discount_bp: 0,
+            month: target,
+        }],
+        quality: 3,
+    }
+}
+
+#[test]
+fn july_situation_in_week_five_books_its_group_into_july_days() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
+    let r = resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jul)], &c).unwrap();
+    // 310 noćenja u srpnju; t05 nosi srpanjske dane 1.–5. (dani 0–5 od 31), lipanjski dio ne nosi ništa.
+    assert_eq!(r.summary.market.group_room_nights, 310 * 5 / 31);
+    assert_eq!(r.after.groups.len(), 1);
+    assert_eq!(r.after.groups[0].month, Month::Jul);
+}
+
+#[test]
+fn june_group_in_july_situation_of_week_five_is_in_the_past() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
+    assert_eq!(
+        resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jun)], &c),
+        Err(ResolveError::Mechanic(MechanicError::GroupInPast))
+    );
+}
+
+#[test]
+fn june_group_in_june_month_is_still_accepted() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let jun = month_period(Month::Jun);
+    let plan = PeriodPlan::default_for(&s, &jun, &c).unwrap();
+    let r = resolve_period(&s, &jun, &plan, &[group_answer("S1", Month::Jun)], &c).unwrap();
+    assert_eq!(r.summary.market.group_room_nights, 310);
+    assert!(r.after.groups.is_empty());
+}
+
+#[test]
+fn situation_month_of_a_period_is_the_month_whose_situations_it_carries() {
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for p in season_periods(kind) {
+            for m in Month::SEASON {
+                assert_eq!(
+                    calendar::first_period_of_month(kind, m) == p,
+                    p.month_starting_in() == Some(m),
+                    "{} {m:?}",
+                    p.code()
+                );
+            }
+        }
+    }
+}
+
+// ---- Ojačanje H1, korak 4: u krugu koji nije cijeli mjesec mali razmak do cilja ne smije zapeti na 0
+
+struct Gauge {
+    name: &'static str,
+    get: fn(&HotelState) -> i64,
+    set: fn(&mut HotelState, i64),
+    target: fn(&PeriodReport) -> i64,
+}
+
+const GAUGES: [Gauge; 3] = [
+    Gauge {
+        name: "moral",
+        get: |s| i64::from(s.morale_pts),
+        set: |s, v| s.morale_pts = i32::try_from(v).unwrap(),
+        target: |r| i64::from(r.summary.people.morale_target_pts),
+    },
+    Gauge {
+        name: "zadovoljstvo",
+        get: |s| i64::from(s.satisfaction_pts),
+        set: |s, v| s.satisfaction_pts = i32::try_from(v).unwrap(),
+        target: |r| i64::from(r.summary.guests.satisfaction_target_pts),
+    },
+    Gauge {
+        name: "ocjena",
+        get: |s| i64::from(s.rating),
+        set: |s, v| s.rating = u16::try_from(v).unwrap(),
+        target: |r| i64::from(r.summary.guests.rating_target),
+    },
+];
+
+fn resolve_default(c: &Catalog, s: &HotelState, p: &Period) -> PeriodReport {
+    let plan = PeriodPlan::default_for(s, p, c).unwrap();
+    resolve_period(s, p, &plan, &[], c).unwrap()
+}
+
+#[test]
+fn weekly_small_gap_closes_one_unit_per_week_without_overshooting() {
+    let c = cat();
+    let base = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t02 = period_by_code(PeriodKind::Week, "t02").unwrap();
+    // Tjedni koraci 800 / 1 500 / 700 bp: razmak 3 (moral, zadovoljstvo) i 5 (ocjena) zaokruži se na 0.
+    for (g, gap) in GAUGES.iter().zip([3_i64, 3, 5]) {
+        let target = (g.target)(&resolve_default(&c, &base, &t02));
+        for start in [target - gap, target + gap] {
+            let mut s = base.clone();
+            (g.set)(&mut s, start);
+            for week in 0..gap {
+                let r = resolve_default(&c, &s, &t02);
+                assert_eq!((g.target)(&r), target, "{} cilj se pomaknuo", g.name);
+                let (before, after) = ((g.get)(&s), (g.get)(&r.after));
+                assert_eq!(
+                    (target - after).abs(),
+                    (target - before).abs() - 1,
+                    "{} od {start}, tjedan {week}: {before} → {after}, cilj {target}",
+                    g.name
+                );
+                (g.set)(&mut s, after);
+            }
+            assert_eq!((g.get)(&s), target, "{} od {start}", g.name);
+            // Na cilju korak je 0 (ne titra oko cilja).
+            let r = resolve_default(&c, &s, &t02);
+            assert_eq!((g.get)(&r.after), target, "{} na cilju", g.name);
+        }
+    }
+}
+
+#[test]
+fn monthly_small_gap_still_rounds_to_zero_as_in_v1() {
+    let c = cat();
+    let base = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let jun = month_period(Month::Jun);
+    // Mjesečni koraci 3 000 (moral) i 2 500 (ocjena) bp: razmak 1 daje 0 kao u v1.
+    for g in [&GAUGES[0], &GAUGES[2]] {
+        let target = (g.target)(&resolve_default(&c, &base, &jun));
+        let mut s = base.clone();
+        (g.set)(&mut s, target - 1);
+        let r = resolve_default(&c, &s, &jun);
+        assert_eq!((g.target)(&r), target, "{}", g.name);
+        assert_eq!((g.get)(&r.after), target - 1, "{}", g.name);
+    }
+}
+
+#[test]
+fn equipment_wear_and_load_of_t05_are_prorated_across_june_and_july() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let r = resolve_default(&c, &s, &t05);
+    assert!(r.summary.people.load_hundredths > 180);
+    // lipanj: dani 28–29 od 30; srpanj: dani 0–4 od 31; ⌊·⌋ kao `prorate_part` (i za negativne iznose).
+    let split = |m: i64| (m - (m * 28).div_euclid(30)) + (m * 5).div_euclid(31);
+    let line = |cause: Cause| {
+        r.summary
+            .lines
+            .iter()
+            .find(|l| l.var == Var::Equipment && l.cause == cause)
+            .unwrap()
+            .amount
+    };
+    assert_eq!(line(Cause::Baseline), split(-400));
+    assert_eq!(line(Cause::Load), split(-100));
+    assert_eq!(split(-100), -23);
 }

@@ -146,3 +146,17 @@ fn per_month_equivalent_scales_by_start_month_days() {
         700
     );
 }
+
+#[test]
+fn only_monthly_periods_are_whole_months() {
+    assert!(
+        season_periods(PeriodKind::Month)
+            .iter()
+            .all(Period::is_whole_month)
+    );
+    assert!(
+        !season_periods(PeriodKind::Week)
+            .iter()
+            .any(Period::is_whole_month)
+    );
+}
