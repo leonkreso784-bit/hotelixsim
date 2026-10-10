@@ -30,6 +30,11 @@ export function isWeekly(game: GameBody): boolean {
   return game.round_kind === "week";
 }
 
+/** Je li ovaj krug tjedan (za ekrane koji imaju samo krug, ne cijelu igru). */
+export function isWeekRound(r: RoundInfoBody): boolean {
+  return r.kind === "week";
+}
+
 /** Obračun hotela za krug po kodu kruga. */
 function scoreAt(h: PublicHotelBody, code: string) {
   return h.months.find((m) => m.round === code);

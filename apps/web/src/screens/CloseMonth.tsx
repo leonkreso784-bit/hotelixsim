@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useCloseRound } from "../api/queries";
 import type { RoundInfoBody } from "../api/types";
-import { roundPhrase } from "../format";
+import { roundPhrase, tw } from "../format";
+import { isWeekRound } from "../game";
 import { Button, Card, ErrorText } from "../ui/primitives";
 
 /** Gumb s potvrdom za zatvaranje kruga (mjeseca ili tjedna); upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4). */
@@ -20,7 +21,7 @@ export function CloseMonth({
   const close = useCloseRound(gameId);
   const inFlight = useRef(false);
   const name = roundPhrase(round);
-  const weekly = round.kind === "week";
+  const weekly = isWeekRound(round);
   const title = useRef<HTMLHeadingElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
   // Fokus se seli tek nakon korisnikove radnje, ne pri prvom prikazu ekrana.
@@ -64,9 +65,9 @@ export function CloseMonth({
       <h2 ref={title} tabIndex={-1} className="text-lg font-bold">
         {t("close.confirmTitle", { month: name })}
       </h2>
-      <p className="text-sm text-muted">{t(weekly ? "close.confirmText.week" : "close.confirmText")}</p>
+      <p className="text-sm text-muted">{tw(weekly, "close.confirmText")}</p>
       {unanswered > 0 && <ErrorText>{t("close.unanswered", { n: unanswered })}</ErrorText>}
-      {close.isError && <ErrorText>{problemMessage(close.error)}</ErrorText>}
+      {close.isError && <ErrorText>{problemMessage(close.error, weekly)}</ErrorText>}
       <Button disabled={close.isPending} onClick={confirm}>
         {t("close.confirm", { month: name })}
       </Button>

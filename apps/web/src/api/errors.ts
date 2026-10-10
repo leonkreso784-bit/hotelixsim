@@ -1,4 +1,4 @@
-import { isMessageKey, t } from "@hotelixsim/i18n";
+import { isMessageKey, type MessageKey, t } from "@hotelixsim/i18n";
 
 /** Greška API-ja: HTTP status i stabilan kod problema (`Problem.code`) ako ga tijelo ima. */
 export class ApiError extends Error {
@@ -29,9 +29,11 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
   return failureCount < 1;
 }
 
-export function problemMessage(error: unknown): string {
+/** Hrvatska rečenica za grešku; za tjednu igru (`weekly`) bira se inačica "<kod>.week" ako postoji. */
+export function problemMessage(error: unknown, weekly = false): string {
   if (error instanceof ApiError) {
     const key = `problem.${error.code ?? ""}`;
+    if (error.code && weekly && isMessageKey(`${key}.week`)) return t(`${key}.week` as MessageKey);
     if (error.code && isMessageKey(key)) return t(key);
     return error.status >= 500 ? t("error.server") : t("error.generic");
   }

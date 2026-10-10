@@ -11,6 +11,7 @@ import {
   indexDeltas,
   indicesAt,
   indicesBefore,
+  isWeekRound,
   leaderboard,
   nextRound,
   progressAt,
@@ -38,9 +39,8 @@ function MonthResult({
   progress: number;
 }) {
   const code = round.code;
-  const weekly = round.kind === "week";
-  const mentorDue = round.month_ends;
-  const feed = useFeed(mine.hotel_id, { untilMentorFor: mentorDue ? code : undefined });
+  const weekly = isWeekRound(round);
+  const feed = useFeed(mine.hotel_id, { untilMentorFor: code });
   // Isti odgovor poslužitelja ne pokreće ponovni prikaz (TanStack dijeli strukturu), pa „nije se javio“ ima vlastiti sat.
   const [mentorGaveUp, setMentorGaveUp] = useState(false);
   useEffect(() => {
@@ -95,10 +95,10 @@ function MonthResult({
           <Card tone="mint" className="order-1 flex items-start gap-3 lg:order-none">
             <Avatar look={MENTOR_LOOK} size={56} />
             <div>
-              <p className="font-bold text-accent-ink">{t("month.mentor")}</p>
-              {!mentorDue ? (
-                <p>{t("round.mentorLater")}</p>
-              ) : mentor?.kind === "mentor" ? (
+              <p className="font-bold text-accent-ink">
+                {t(weekly && !round.month_ends ? "round.mentorShort" : "month.mentor")}
+              </p>
+              {mentor?.kind === "mentor" ? (
                 <p className="whitespace-pre-line">{mentor.text}</p>
               ) : (
                 <p role="status">{mentorMissing ? t("month.mentorMissing") : t("month.mentorWaiting")}</p>
@@ -106,7 +106,12 @@ function MonthResult({
             </div>
           </Card>
 
-          <Explanation hotelId={mine.hotel_id} round={code} className="order-3 lg:order-none" />
+          <Explanation
+            hotelId={mine.hotel_id}
+            round={code}
+            weekly={weekly}
+            className="order-3 lg:order-none"
+          />
         </div>
       </div>
 
@@ -148,7 +153,7 @@ export function MonthScreen({ me, code }: { me: HotelBody; code: string }) {
   const mine = g.hotels.find((h) => h.hotel_id === hotelId);
   const round = roundInfo(g, code);
   const progress = mine ? progressAt(mine, code) : null;
-  const weekly = round?.kind === "week";
+  const weekly = round ? isWeekRound(round) : false;
 
   if (!round || !mine || progress === null) {
     const closing = g.current?.round.code === code && g.current.status === "closing";

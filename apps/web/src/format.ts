@@ -1,4 +1,4 @@
-import { t } from "@hotelixsim/i18n";
+import { type MessageKey, type MessageParams, t } from "@hotelixsim/i18n";
 import type { MonthCode, RoundInfoBody, StrategyCode } from "./api/types";
 
 const nf2 = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: 2 });
@@ -126,6 +126,13 @@ export function roundTitle(r: RoundInfoBody): string {
 
 export function strategyLabel(code: StrategyCode): string {
   return t(`strategy.${code}` as const);
+}
+
+type WeekBase<K> = K extends `${infer B}.week` ? (B extends MessageKey ? B : never) : never;
+
+/** Tekst za tjedni krug: ako je `weekly`, uzima se `<ključ>.week`, inače `<ključ>` (v1 tekstovi ostaju isti). */
+export function tw(weekly: boolean, base: WeekBase<MessageKey>, params?: MessageParams): string {
+  return t((weekly ? `${base}.week` : base) as MessageKey, params);
 }
 
 const pluralRules = new Intl.PluralRules("hr");

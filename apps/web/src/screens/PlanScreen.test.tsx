@@ -129,3 +129,21 @@ describe("plan tjedna", () => {
     expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1);
   });
 });
+
+describe("plan tjedna: greške", () => {
+  it("krug nije otvoren i prevelik pomak sezonaca govore o tjednu, a v1 ostaje kao prije", async () => {
+    const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => problem(409, "round_not_open"));
+    renderApp(api, "/plan");
+    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
+    expect(await screen.findByText("Tjedan nije otvoren — sad se ne može mijenjati.")).toBeTruthy();
+    cleanup();
+    const api2 = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () =>
+      problem(422, "seasonal_step_too_big"),
+    );
+    renderApp(api2, "/plan");
+    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
+    expect(
+      await screen.findByText("Sezonce možeš mijenjati samo malo odjednom; smanji promjenu."),
+    ).toBeTruthy();
+  });
+});

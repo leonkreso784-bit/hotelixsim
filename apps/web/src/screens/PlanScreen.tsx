@@ -3,7 +3,7 @@ import { type FormEvent, type ReactNode, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatRange, monthName, roundPhrase } from "../format";
+import { formatRange, monthName, roundPhrase, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 
@@ -158,10 +158,8 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   if (!state || !draft)
     return (
       <>
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          {t(weekly ? "plan.title.week" : "plan.title")}
-        </h1>
-        <p className="text-muted">{t(weekly ? "plan.closed.week" : "plan.closed")}</p>
+        <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
+        <p className="text-muted">{tw(weekly, "plan.closed")}</p>
       </>
     );
   const l = state.limits;
@@ -194,9 +192,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const round = info ? roundPhrase(info) : monthName(state.month);
   return (
     <form onSubmit={onSubmit} className="space-y-3">
-      <h1 className="text-3xl font-extrabold tracking-tight">
-        {t(weekly ? "plan.title.week" : "plan.title")}
-      </h1>
+      <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
       <p className="text-sm text-muted">
         {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
       </p>
@@ -280,7 +276,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
         </div>
       </details>
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {save.isError && <ErrorText>{problemMessage(save.error)}</ErrorText>}
+      {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
       <Button type="submit" disabled={save.isPending}>
         {t("plan.save")}

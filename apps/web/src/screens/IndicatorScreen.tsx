@@ -5,24 +5,25 @@ import { useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useExplanation, useGame } from "../api/queries";
 import type { DriverCode, GameBody, HotelBody, IndexCode, IndexEntry } from "../api/types";
-import { formatIndex, monthName, roundPhrase, roundTitle } from "../format";
+import { capitalize, formatIndex, monthName, roundPhrase, roundTitle, tw } from "../format";
 import { indexDeltas, isWeekly, roundInfo } from "../game";
 import { Link } from "../router";
 import { Delta, INDEX_ICON } from "../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
+import { RoundPicker, shortWeek } from "../ui/RoundPicker";
 import { DriverList } from "./month/Explanation";
 
 type HistoryRow = { key: string; label: string; entry: IndexEntry; delta: number | null };
 type Scored = HotelBody["hotel"]["months"][number];
 
-/** Naslov obračunatog kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez kruga u igri ime mjeseca. */
-function scoredTitle(game: GameBody, m: Scored): string {
-  const info = roundInfo(game, m.round);
-  return info ? roundTitle(info) : monthName(m.month);
+/** Naslov obračunatog kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez igre ili kruga u njoj ime mjeseca. */
+function scoredTitle(game: GameBody | undefined, m: Scored): string {
+  const info = game ? roundInfo(game, m.round) : null;
+  return info ? roundTitle(info) : capitalize(monthName(m.month));
 }
 
 /** Početak, pa svaki obračunati krug: vrijednost indeksa i promjena prema prethodnom redu. */
-function historyRows(hotel: HotelBody["hotel"], code: IndexCode, game: GameBody): HistoryRow[] {
+function historyRows(hotel: HotelBody["hotel"], code: IndexCode, game: GameBody | undefined): HistoryRow[] {
   const rows: HistoryRow[] = [];
   let prev: IndexEntry[] | null = null;
   const steps: { key: string; label: string; indices: IndexEntry[] }[] = [
@@ -47,8 +48,8 @@ function History({ rows, code, weekly }: { rows: HistoryRow[]; code: IndexCode; 
   const label = indexLabel(code);
   return (
     <Card>
-      <h2 className="pb-1 text-lg font-bold">{t(weekly ? "indicator.history.week" : "indicator.history")}</h2>
-      <ul aria-label={t(weekly ? "indicator.history.week" : "indicator.history")}>
+      <h2 className="pb-1 text-lg font-bold">{tw(weekly, "indicator.history")}</h2>
+      <ul aria-label={tw(weekly, "indicator.history")}>
         {rows.map((r) => {
           const pct = Math.max(0, Math.min(100, r.entry.hundredths / 100));
           return (
@@ -77,46 +78,18 @@ function History({ rows, code, weekly }: { rows: HistoryRow[]; code: IndexCode; 
   );
 }
 
-/** Izbor obračunatog kruga; tjedni se lome u više redaka (do 17 gumba), mjeseci stanu u jedan. */
-function RoundPicker({
-  rounds,
-  value,
-  weekly,
-  onPick,
-}: {
-  rounds: { code: string; label: string }[];
-  value: string;
-  weekly: boolean;
-  onPick: (code: string) => void;
-}) {
-  return (
-    <fieldset className="flex flex-wrap gap-2 pb-2">
-      <legend className="sr-only">{t(weekly ? "indicator.pickMonth.week" : "indicator.pickMonth")}</legend>
-      {rounds.map((r) => (
-        <button
-          key={r.code}
-          type="button"
-          aria-pressed={r.code === value}
-          onClick={() => onPick(r.code)}
-          className={`min-h-11 rounded-2xl px-4 font-semibold ${r.code === value ? "bg-accent text-white" : "bg-accent-soft text-accent-ink"}`}
-        >
-          {r.label}
-        </button>
-      ))}
-    </fieldset>
-  );
-}
-
 function Why({
   hotelId,
   round,
   code,
   highlight,
+  weekly,
 }: {
   hotelId: string;
   round: string;
   code: IndexCode;
   highlight: DriverCode | null;
+  weekly: boolean;
 }) {
   const q = useExplanation(hotelId, round);
   const index = q.data?.indices.find((i) => i.code === code);
@@ -125,7 +98,7 @@ function Why({
   ) : q.isError ? (
     <ErrorText>{problemMessage(q.error)}</ErrorText>
   ) : (
-    <DriverList drivers={index?.drivers ?? []} highlight={highlight} />
+    <DriverList drivers={index?.drivers ?? []} highlight={highlight} weekly={weekly} />
   );
 }
 
@@ -142,13 +115,17 @@ export function IndicatorScreen({
   const gameQuery = useGame(me.game_id);
   const [picked, setPicked] = useState<string | null>(null);
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (gameQuery.isError && !gameQuery.data) return <ErrorText>{problemMessage(gameQuery.error)}</ErrorText>;
+  // Bez igre (greška) ekran ostaje: imena mjeseci umjesto naslova krugova.
   const game = gameQuery.data;
-  const weekly = isWeekly(game);
-  const scored = hotel.months.map((m) => ({ code: m.round, label: scoredTitle(game, m) }));
+  const weekly = game ? isWeekly(game) : false;
+  const scored = hotel.months.map((m) => ({
+    code: m.round,
+    title: scoredTitle(game, m),
+    short: game && weekly ? shortWeek((roundInfo(game, m.round)?.index ?? 0) + 1) : scoredTitle(game, m),
+  }));
   const last = scored.at(-1)?.code ?? null;
   const round = picked && scored.some((s) => s.code === picked) ? picked : last;
-  const info = round ? roundInfo(game, round) : null;
+  const info = round && game ? roundInfo(game, round) : null;
   return (
     <>
       <Link to="/" className="inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink">
@@ -166,18 +143,26 @@ export function IndicatorScreen({
       <History rows={historyRows(hotel, code, game)} code={code} weekly={weekly} />
       <Card>
         {round === null ? (
-          <p>{t(weekly ? "indicator.noMonthYet.week" : "indicator.noMonthYet")}</p>
+          <p>{tw(weekly, "indicator.noMonthYet")}</p>
         ) : (
           <>
             <h2 className="pb-2 text-lg font-bold">
               {t("indicator.why", {
-                month: info ? roundPhrase(info) : (scored.find((s) => s.code === round)?.label ?? ""),
+                month: info ? roundPhrase(info) : (scored.find((s) => s.code === round)?.title ?? ""),
               })}
             </h2>
             {scored.length > 1 && (
-              <RoundPicker rounds={scored} value={round} weekly={weekly} onPick={setPicked} />
+              <RoundPicker
+                rounds={scored}
+                value={round}
+                onPick={setPicked}
+                many={weekly}
+                legend={tw(weekly, "indicator.pickMonth")}
+                prevLabel={t("round.prev.week")}
+                nextLabel={t("round.next.week")}
+              />
             )}
-            <Why hotelId={hotel.hotel_id} round={round} code={code} highlight={highlight} />
+            <Why hotelId={hotel.hotel_id} round={round} code={code} highlight={highlight} weekly={weekly} />
           </>
         )}
       </Card>

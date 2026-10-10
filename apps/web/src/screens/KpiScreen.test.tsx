@@ -223,3 +223,36 @@ describe("Pokazatelji: tjedna igra", () => {
     expect(await screen.findByText("Pokazatelji se računaju nakon prvog tjedna.")).toBeTruthy();
   });
 });
+
+describe("Pokazatelji: 17 tjedana i pad igre", () => {
+  const weeks = Array.from({ length: 17 }, (_v, i) =>
+    kpiMonth({ round: `t${String(i + 1).padStart(2, "0")}`, days: 7 }),
+  );
+
+  it("tablica: pomična regija dostupna tipkovnicom, prvi stupac ostaje vidljiv, objašnjenja sklopljena", async () => {
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/kpi", { months: weeks }), "/pokazatelji");
+    const region = await screen.findByRole("region", { name: "Pokazatelji po tjednima" });
+    expect(region.getAttribute("tabindex")).toBe("0");
+    expect(region.className).toContain("overflow-x-auto");
+    const first = within(region).getAllByRole("rowheader")[0] as HTMLElement;
+    expect(first.className).toContain("sticky");
+    expect(first.className).toContain("bg-surface");
+    expect(region.querySelectorAll("tbody details").length).toBe(15);
+  });
+
+  it("tjedna mjerila govore o tjednu", async () => {
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/kpi", { months: weeks.slice(0, 1) }), "/pokazatelji");
+    expect(
+      (await screen.findAllByText("Plaće, zapošljavanje novih ljudi i obuka u tjednu.")).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("igra se ne može učitati: pokazatelji se ipak vide, s imenima mjeseci", async () => {
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", () => problem(500, "internal"))
+      .on("GET", "/v1/hotels/:hotel/kpi", { months: [kpiMonth()] });
+    renderApp(api, "/pokazatelji");
+    const table = await screen.findByRole("table", { name: "Pokazatelji po mjesecima" });
+    expect(within(table).getByRole("columnheader", { name: "Lipanj" })).toBeTruthy();
+  });
+});

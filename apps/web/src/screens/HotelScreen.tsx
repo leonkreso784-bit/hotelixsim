@@ -14,6 +14,7 @@ import {
   formatRating,
   monthName,
   roundPhrase,
+  tw,
 } from "../format";
 import { indexDeltas, isWeekly, latestIndices, roundInfo } from "../game";
 import { Link, roundPath } from "../router";
@@ -40,7 +41,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
   const lm = priv.last_month;
   const lastInfo = lastScored ? roundInfo(game.data, lastScored.round) : null;
   const lastNote = lm
-    ? lm.round.kind === "week"
+    ? weekly
       ? t("hotel.lastWeek", { week: roundPhrase(lm.round) })
       : t("hotel.lastMonth", { month: monthName(lm.month) })
     : t(weekly ? "hotel.noWeekYet" : "hotel.noMonthYet");
@@ -135,7 +136,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               <Row
                 to="/situacije"
                 icon={<FileText size={20} aria-hidden="true" />}
-                label={t(weekly ? "hotel.situations.week" : "hotel.situations")}
+                label={tw(weekly, "hotel.situations")}
                 end={
                   sits.data && sits.data.unanswered > 0 ? <Badge>{sits.data.unanswered}</Badge> : undefined
                 }
@@ -145,7 +146,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               <Row
                 to="/plan"
                 icon={<CalendarDays size={20} aria-hidden="true" />}
-                label={t(weekly ? "hotel.plan.week" : "hotel.plan")}
+                label={tw(weekly, "hotel.plan")}
               />
             )}
             {lastScored && (

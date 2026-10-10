@@ -5,6 +5,7 @@ import { useGame, useSituations } from "../api/queries";
 import type { HotelBody, SituationBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { lookFor } from "../avatar/look";
+import { tw } from "../format";
 import { isWeekly } from "../game";
 import { Link } from "../router";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
@@ -26,9 +27,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
   const weekly = game.data ? isWeekly(game.data) : false;
   return (
     <>
-      <h1 className="text-3xl font-extrabold tracking-tight">
-        {t(weekly ? "situations.title.week" : "situations.title")}
-      </h1>
+      <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "situations.title")}</h1>
       {/* Uvijek najviše jedna rečenica o stanju, da se ne proturječe (UI_PRAVILA §7). */}
       {seasonOver ? (
         <div>
@@ -38,9 +37,9 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
           </Link>
         </div>
       ) : sits.data.items.length === 0 ? (
-        <p className="text-muted">{t(weekly ? "situations.none.week" : "situations.none")}</p>
+        <p className="text-muted">{tw(weekly, "situations.none")}</p>
       ) : (
-        !sits.data.open && <p className="text-muted">{t("situations.closed")}</p>
+        !sits.data.open && <p className="text-muted">{tw(weekly, "situations.closed")}</p>
       )}
       {sits.data.items.length > 0 && (
         <ul className="space-y-3">

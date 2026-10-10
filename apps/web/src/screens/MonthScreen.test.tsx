@@ -458,17 +458,32 @@ describe("krug tjedna", () => {
 });
 
 describe("krug tjedna: mentor, ljestvica, nastavak", () => {
-  it("tjedan usred mjeseca: ljestvica i nastavak, mentor se javlja tek na kraju mjeseca", async () => {
-    const api = resolvedWeekApi();
+  it("tjedan usred mjeseca: ljestvica, nastavak i mentorov kratki sažetak tjedna", async () => {
+    const api = resolvedWeekApi().on("GET", "/v1/hotels/:hotel/feed", {
+      items: [
+        {
+          kind: "mentor",
+          seq: 1,
+          month: "jun",
+          round: "t01",
+          text: "Tri uzroka: cijena, popunjenost, plaće.",
+        },
+      ],
+    });
     renderApp(api, "/krug/t01");
-    expect(await screen.findByText("Mentor se javlja na kraju mjeseca, uz mjesečnu lekciju.")).toBeTruthy();
-    expect(screen.queryByText("Mentor piše…")).toBeNull();
+    expect(await screen.findByText("Tri uzroka: cijena, popunjenost, plaće.")).toBeTruthy();
+    expect(screen.getByText("Mentor: sažetak tjedna")).toBeTruthy();
+    expect(screen.queryByText(/javlja na kraju mjeseca/)).toBeNull();
     expect(screen.getByText("Indeksi na kraju tjedna")).toBeTruthy();
     const board = screen.getByRole("list", { name: "Ljestvica napretka" });
     expect(within(board).getAllByRole("listitem")).toHaveLength(4);
     expect(screen.getByRole("link", { name: "Nastavi u tjedan 2 (8. 6. – 14. 6.)" })).toBeTruthy();
-    // Mentor se ne čeka, pa dnevnik nema ponavljanih dohvata.
-    expect(api.calls.filter((c) => c.path.endsWith("/feed")).length).toBeLessThanOrEqual(1);
+  });
+
+  it("tjedan bez mentorova sažetka: „Mentor piše…“, pa „nije se javio“", async () => {
+    renderApp(resolvedWeekApi(), "/krug/t01");
+    expect(await screen.findByText("Mentor piše…")).toBeTruthy();
+    expect(await screen.findByText("Mentor se ovaj put nije javio.")).toBeTruthy();
   });
 
   it("tjedan koji zatvara mjesec (t05): čeka se mentor i prikazuje njegov tekst", async () => {

@@ -1,8 +1,8 @@
 // Redovi ekrana „Pokazatelji“: naziv, rečenica što znači (formula riječima) i vrijednost s jedinicom. Brojke
 // računa poslužitelj (`/v1/hotels/{id}/kpi`); ovdje se samo oblikuju.
-import { t } from "@hotelixsim/i18n";
+import { isMessageKey, t } from "@hotelixsim/i18n";
 import type { KpiMonthBody } from "../../api/types";
-import { formatEuros, formatEurosCents, formatNights, formatPercentBp } from "../../format";
+import { formatEuros, formatEurosCents, formatNights, formatPercentBp, tw } from "../../format";
 
 type KpiKey =
   | "occupancy"
@@ -45,16 +45,18 @@ export function rowLabel(key: KpiKey): string {
   return t(`kpi.${key}` as const);
 }
 
-export function rowMeaning(key: KpiKey): string {
-  return t(`kpi.${key}.mean` as const);
+/** Rečenica što pokazatelj znači; za tjedni krug inačica "<ključ>.mean.week" ako postoji (mjesec → tjedan). */
+export function rowMeaning(key: KpiKey, weekly = false): string {
+  const week = `kpi.${key}.mean.week`;
+  return weekly && isMessageKey(week) ? t(week) : t(`kpi.${key}.mean` as const);
 }
 
 /**
  * Točka pokrića rečenicom: „GOP je nula pri popunjenosti od X %; tvoja popunjenost bila je Y %.“ Posebno: mjesec
  * bez prodaje, GOP pozitivan i bez prodaje, prag iznad onoga što sobe u funkciji dopuštaju, prodaja bez doprinosa.
  */
-export function breakEvenSentence(m: KpiMonthBody): string {
-  if (m.room_nights === 0 || m.sold_nights === 0) return t("kpi.breakEven.noSales");
+export function breakEvenSentence(m: KpiMonthBody, weekly = false): string {
+  if (m.room_nights === 0 || m.sold_nights === 0) return tw(weekly, "kpi.breakEven.noSales");
   const be = m.break_even_occupancy_bp;
   if (be === null) return t("kpi.breakEven.none");
   if (be === 0) return t("kpi.breakEven.zero");
