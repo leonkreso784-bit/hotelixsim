@@ -83,6 +83,7 @@ fn june(spec: &DeptSpec, st: &DeptState, pl: &DeptPlan) -> DeptOutcome {
 #[test]
 fn restaurant_in_june_by_hand() {
     let o = june(&restaurant(), &state(), &plan(10, 100));
+    assert_eq!(o.code, DeptCode("restaurant".into()));
     assert_eq!(
         (o.usage_bp, o.demand_uses, o.capacity_uses, o.served_uses),
         (4_500, 2_100, 2_700, 2_100)
