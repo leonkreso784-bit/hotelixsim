@@ -98,6 +98,25 @@ pub struct DriverFact {
     pub changes: Vec<ChangeFact>,
 }
 
+/// Je li redak gurnuo svoj indeks gore ili dolje; razina bez smjera (prihod, troškovi, osnovna
+/// potražnja, broj ljudi) je `Neutral`. Isto pravilo kao `harm`: dolje je točno kad je `harm > 0`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Effect {
+    Up,
+    Down,
+    Neutral,
+}
+
+impl Effect {
+    fn of(push: i64) -> Self {
+        match push.signum() {
+            1 => Effect::Up,
+            -1 => Effect::Down,
+            _ => Effect::Neutral,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ChangeFact {
     #[serde(rename = "uzrok")]
@@ -107,6 +126,9 @@ pub struct ChangeFact {
     /// Koliko je uzrok gurnuo indeks dolje; uspoređuje se samo unutar istog indeksa. 0 = nije šteta.
     #[serde(skip)]
     pub harm: i64,
+    /// Smjer retka za ekran („Zašto se indeksi pomaknuli"); iz istog guranja kao `harm`.
+    #[serde(skip)]
+    pub effect: Effect,
     /// Uzrok u genitivu („zbog nižih plaća") za mentora bez AI-ja.
     #[serde(skip)]
     pub because: String,
@@ -482,27 +504,36 @@ fn shows_sign(v: VarCode, c: &CauseDto) -> bool {
     )
 }
 
-/// Gruba težina štete za usporedbu unutar istog indeksa (mentor bez AI-ja bira najveću), u omjeru
-/// težina iz `raw_indices`. `room_revenue` (prihod od noćenja) pretvara postotak potražnje u izgubljeni
-/// prihod; `maintained` je koliko su održavanje i obnova vratili opremu, pa je trošenje šteta samo u
-/// dijelu koji nisu pokrili.
-fn harm(l: &LineDto, room_revenue: i64, maintained: i64) -> i64 {
-    let loss = (-l.amount).max(0);
-    let h = match (l.var, &l.cause) {
-        (VarCode::Costs, CauseDto::Situation(_)) => l.amount.max(0),
+/// Koliko je redak gurnuo svoj indeks: + gore, − dolje, 0 razina bez smjera. Gruba težina za usporedbu
+/// unutar istog indeksa (mentor bez AI-ja bira najveću štetu), u omjeru težina iz `raw_indices`.
+/// `room_revenue` (prihod od noćenja) pretvara postotak potražnje u prihod; `maintained` je koliko su
+/// održavanje i obnova vratili opremu, pa trošenje gura dolje samo u dijelu koji nisu pokrili.
+fn push(l: &LineDto, room_revenue: i64, maintained: i64) -> i64 {
+    let a = l.amount;
+    match (l.var, &l.cause) {
+        // Trošak situacije ruši Financije; ostali troškovi i prihod su razine.
+        (VarCode::Costs, CauseDto::Situation(_)) => a.saturating_neg(),
         (VarCode::Revenue | VarCode::Costs | VarCode::Staff, _) => 0,
+        // Ukupna promjena morala je zbroj pritisaka, ne uzrok.
         (VarCode::Morale, CauseDto::Baseline) => 0,
+        // Najmanje 1, da se smjer ne izgubi zaokruživanjem kad je prihod od noćenja malen.
         (VarCode::Sold, CauseDto::Price | CauseDto::Reputation | CauseDto::Marketing) => {
-            room_revenue.max(1).saturating_mul(loss) / 10_000
+            a.signum() * (room_revenue.max(1).saturating_mul(a.saturating_abs()) / 10_000).max(1)
         }
         (VarCode::Sold, _) => 0,
         // Operativa: oprema 45 %, iskustvo 30 %, opterećenje 25 % (vidi `load_driver`).
-        (VarCode::Equipment, CauseDto::Baseline) => (loss - maintained).max(0) * 45,
-        (VarCode::Equipment, _) => loss * 45,
-        (VarCode::Experience, _) => loss * 30,
-        _ => loss,
-    };
-    h.max(0)
+        (VarCode::Equipment, CauseDto::Baseline) if a < 0 => {
+            -(a.saturating_neg() - maintained).max(0) * 45
+        }
+        (VarCode::Equipment, _) => a.saturating_mul(45),
+        (VarCode::Experience, _) => a.saturating_mul(30),
+        _ => a,
+    }
+}
+
+/// Šteta = koliko je redak gurnuo indeks dolje (0 kad nije).
+fn harm_of(push: i64) -> i64 {
+    push.saturating_neg().max(0)
 }
 
 /// Isti uzrok iste varijable u jednom retku (npr. trošak situacije i njezina trajna povišica).
@@ -539,6 +570,8 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
     };
     let penalty = |l: u16| i64::from(load_penalty(l).unwrap_or_default());
     let because = "preopterećenog osoblja (premalo ljudi za broj gostiju)".to_owned();
+    // Veća kazna nego prošli mjesec gura Operativu dolje, manja gore.
+    let pushed = (penalty(before) - penalty(after)) * 25;
     Some(DriverFact {
         source: DriverSource::StaffLoad,
         what: LOAD_NAME,
@@ -547,13 +580,16 @@ fn load_driver(before: u16, after: u16) -> Option<DriverFact> {
             ChangeFact {
                 cause: "opterećenje u ovom mjesecu".to_owned(),
                 amount: format!("{}, {state}", per_day(after)),
-                harm: (penalty(after) - penalty(before)).max(0) * 25,
+                harm: harm_of(pushed),
+                effect: Effect::of(pushed),
                 because: because.clone(),
             },
+            // Prošli mjesec je samo usporedba, ne uzrok.
             ChangeFact {
                 cause: "opterećenje prošli mjesec".to_owned(),
                 amount: per_day(before),
                 harm: 0,
+                effect: Effect::Neutral,
                 because,
             },
         ],
@@ -668,11 +704,13 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
             .iter()
             .filter(|l| l.var == var)
             .filter_map(|l| {
+                let pushed = push(l, room_revenue, maintained);
                 Some(ChangeFact {
                     amount: amount_text(l, shows_sign(l.var, &l.cause))?,
                     cause: cause_label(l.var, &l.cause, &titles),
                     because: cause_because(l.var, &l.cause, &titles),
-                    harm: harm(l, room_revenue, maintained),
+                    harm: harm_of(pushed),
+                    effect: Effect::of(pushed),
                 })
             })
             .collect();

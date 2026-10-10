@@ -106,6 +106,18 @@ pub enum IndexCode {
     F,
 }
 
+impl From<Index> for IndexCode {
+    fn from(i: Index) -> Self {
+        match i {
+            Index::Guests => IndexCode::G,
+            Index::Reviews => IndexCode::R,
+            Index::Staff => IndexCode::Z,
+            Index::Operations => IndexCode::O,
+            Index::Finance => IndexCode::F,
+        }
+    }
+}
+
 /// Redoslijed `Index::ALL`; nizovi `[u16; 5]` u događajima slijede ga.
 pub const INDEX_ORDER: [IndexCode; 5] = [
     IndexCode::G,

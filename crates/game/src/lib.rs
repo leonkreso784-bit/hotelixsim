@@ -25,7 +25,8 @@ pub use event::*;
 pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};
 pub use ids::{GameId, GuestId, HotelId};
 pub use mentor::{
-    ChangeFact, DebriefFacts, DriverFact, IndexFact, SituationFact, debrief_facts, fallback_debrief,
+    ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact, SituationFact,
+    debrief_facts, fallback_debrief,
 };
 pub use resolve::ResolveStep;
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};

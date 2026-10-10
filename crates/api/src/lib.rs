@@ -2,6 +2,7 @@
 
 pub mod auth;
 mod demo;
+mod explanation;
 mod games;
 mod health;
 mod hotels;
@@ -43,6 +44,7 @@ fn parts() -> OpenApiRouter<AppState> {
         .routes(routes!(hotels::conversation))
         .routes(routes!(hotels::submit_response))
         .routes(routes!(hotels::feed))
+        .routes(routes!(explanation::explanation))
         .routes(routes!(games::game))
         .routes(routes!(games::round))
         .routes(routes!(games::close))

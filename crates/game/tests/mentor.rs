@@ -803,3 +803,87 @@ fn same_cause_of_same_variable_is_one_line() {
     assert_eq!(chef.len(), 1, "{costs:?}");
     assert_eq!(chef[0].1, "4.500 €");
 }
+
+/// Smjer retka (boja na ekranu) iz `debrief_facts`: (pokretač, dio uzroka) → smjer.
+fn effect_of(f: &DebriefFacts, what: &str, cause_part: &str) -> Effect {
+    f.indices
+        .iter()
+        .flat_map(|i| &i.drivers)
+        .filter(|d| d.what == what)
+        .flat_map(|d| &d.changes)
+        .find(|c| c.cause.contains(cause_part))
+        .unwrap_or_else(|| panic!("nema retka {what} / {cause_part}"))
+        .effect
+}
+
+#[test]
+fn every_line_says_whether_it_pushed_its_index_up_or_down() {
+    let mut input = sample();
+    input.lines.push(line(
+        VarCode::Costs,
+        CauseDto::Situation("S2".into()),
+        300_000,
+        UnitCode::Cents,
+    ));
+    let f = debrief_facts(&input);
+    for (what, cause, want) in [
+        ("Moral", "plaće", Effect::Down),
+        ("Moral", CHEF, Effect::Down),
+        // Ukupna promjena morala je zbroj, ne uzrok.
+        ("Moral", "ukupna promjena", Effect::Neutral),
+        ("Iskustvo", "stečeno radom", Effect::Up),
+        ("Iskustvo", "novi ljudi", Effect::Down),
+        ("Oprema", "trošenje", Effect::Down),
+        ("Prodane noći", "ugled", Effect::Down),
+        ("Prodane noći", "cijena", Effect::Down),
+        // Razine bez smjera: osnovna potražnja, troškovi, ljudi.
+        ("Prodane noći", "osnovna potražnja", Effect::Neutral),
+        ("Troškovi", "plaće", Effect::Neutral),
+        ("Zaposleni", "odlasci", Effect::Neutral),
+        ("Zaposleni", "zapošljavanje", Effect::Neutral),
+        // Trošak situacije ruši Financije.
+        ("Troškovi", CHEF, Effect::Down),
+        ("Blagajna", "zarada iz poslovanja", Effect::Up),
+        ("Blagajna", "obnova", Effect::Down),
+        ("Ocjena na portalima", "ocjene gostiju", Effect::Down),
+        ("Zadovoljstvo gostiju", "usluga, oprema", Effect::Up),
+        ("Zadovoljstvo gostiju", "obnova", Effect::Up),
+        ("Opterećenje osoblja", "u ovom mjesecu", Effect::Down),
+        ("Opterećenje osoblja", "prošli mjesec", Effect::Neutral),
+    ] {
+        assert_eq!(effect_of(&f, what, cause), want, "{what} / {cause}");
+    }
+    // Jedno pravilo: redak je šteta za mentora točno kad je gurnuo indeks dolje.
+    for c in f
+        .indices
+        .iter()
+        .flat_map(|i| &i.drivers)
+        .flat_map(|d| &d.changes)
+    {
+        assert_eq!(c.harm > 0, c.effect == Effect::Down, "{}", c.cause);
+    }
+    // Manje opterećenje nego prošli mjesec gura Operativu gore.
+    let mut eased = sample();
+    eased.load_before_hundredths = 260;
+    eased.load_after_hundredths = 200;
+    let f = debrief_facts(&eased);
+    assert_eq!(
+        effect_of(&f, "Opterećenje osoblja", "u ovom mjesecu"),
+        Effect::Up
+    );
+}
+
+#[test]
+fn effect_stays_out_of_mentor_json() {
+    let text = serde_json::to_string(&debrief_facts(&sample())).unwrap();
+    for word in ["effect", "harm", "\"up\"", "\"down\"", "neutral\""] {
+        assert!(!text.contains(word), "{word} u mentorovu JSON-u");
+    }
+}
+
+#[test]
+fn index_code_follows_index_order() {
+    let f = debrief_facts(&sample());
+    let codes: Vec<IndexCode> = f.indices.iter().map(|i| i.index.into()).collect();
+    assert_eq!(codes, INDEX_ORDER);
+}
