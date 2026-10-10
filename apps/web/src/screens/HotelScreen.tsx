@@ -15,7 +15,7 @@ import { useGame, useSituations, useStartDemo } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { formatEuros, formatOccupancy, formatRating, monthName } from "../format";
 import { indexDeltas, latestIndices } from "../game";
-import { Link, navigate } from "../router";
+import { Link } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Badge, Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
@@ -84,7 +84,6 @@ export function HotelScreen({ me }: { me: HotelBody }) {
     if (start.isPending || inFlight.current) return;
     inFlight.current = true;
     start.mutate(undefined, {
-      onSuccess: () => navigate("/"),
       onSettled: () => {
         inFlight.current = false;
       },
@@ -168,7 +167,10 @@ export function HotelScreen({ me }: { me: HotelBody }) {
       {current?.status === "closing" && (
         <Card className="space-y-2">
           <p role="status">{t("hotel.closing", { month: monthName(current.month) })}</p>
-          <Link to={`/mjesec/${current.month}`} className="font-semibold text-accent">
+          <Link
+            to={`/mjesec/${current.month}`}
+            className="inline-flex min-h-11 items-center font-semibold text-accent"
+          >
             {t("hotel.closingLink")}
           </Link>
         </Card>

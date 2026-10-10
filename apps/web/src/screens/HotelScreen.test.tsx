@@ -78,6 +78,25 @@ describe("Moj hotel", () => {
     expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(1);
   });
 
+  it("navigacija na obračun ostaje i kad se ekran zamijeni jer je mjesec postao „closing“", async () => {
+    let closed = false;
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", () =>
+        json(200, game({ current: { month: "jun", status: closed ? "closing" : "open", unanswered: 2 } })),
+      )
+      .on("POST", "/v1/games/:game/rounds/:month/close", () => {
+        closed = true;
+        return json(202, { month: "jun", status: "closing", unanswered: 0 });
+      });
+    renderApp(api);
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
+    const confirm = await screen.findByRole("button", { name: "Zatvori lipanj" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(window.location.pathname).toBe("/mjesec/jun"));
+    expect(api.posts("/v1/games/g1/rounds/jun/close")).toHaveLength(1);
+  });
+
   it("„Odustani“ zatvara potvrdu bez zahtjeva", async () => {
     const api = standardApi();
     renderApp(api);

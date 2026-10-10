@@ -67,6 +67,10 @@ export function useCloseMonth(gameId: string) {
           params: { path: { game_id: gameId, month } },
         }),
       ),
-    onSuccess: () => qc.invalidateQueries(),
+    // Navigacija je ovdje, ne u mutate(): ekran se nakon osvježenja zamijeni i per-call onSuccess bi se izgubio.
+    onSuccess: (_data, month) => {
+      navigate(`/mjesec/${month}`);
+      return qc.invalidateQueries();
+    },
   });
 }

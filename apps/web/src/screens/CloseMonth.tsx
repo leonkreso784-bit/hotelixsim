@@ -4,7 +4,6 @@ import { problemMessage } from "../api/errors";
 import { useCloseMonth } from "../api/queries";
 import type { MonthCode } from "../api/types";
 import { monthName } from "../format";
-import { navigate } from "../router";
 import { Button, Card, ErrorText } from "../ui/primitives";
 
 /** Gumb s potvrdom; upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4). */
@@ -26,7 +25,6 @@ export function CloseMonth({
     if (close.isPending || inFlight.current) return;
     inFlight.current = true;
     close.mutate(month, {
-      onSuccess: () => navigate(`/mjesec/${month}`),
       onSettled: () => {
         inFlight.current = false;
       },
