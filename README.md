@@ -44,7 +44,7 @@ Baza (`bash scripts/baza.sh start`), API i sučelje kao u koracima 3 i 4 gore; z
 
 - **Bez AI-ja** (rezerve, bez troška): prije `cargo run -p server -- serve` upiši `unset ANTHROPIC_API_KEY`.
 - **Na mobitelu u istoj mreži:** `corepack pnpm --filter @hotelixsim/web dev --host`. Pazi: tada svatko u istoj mreži vidi igru.
-- **Modeli:** presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5 ([ADR-024](docs/records/DECISIONS.md#adr-024));
+- **Modeli:** presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5 ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md));
   mijenjaju se varijablama `HOTELIXSIM_AI_MODEL_PRESUDA`, `_LIK` i `_MENTOR` (vidi `.env.example`).
 
 Gradnja koristi spremljene podatke iz `.sqlx/` (`SQLX_OFFLINE=true` u `.env`), pa ne treba živu bazu. Nakon promjene SQL upita (baza mora raditi): `cargo sqlx prepare --workspace` i commitaj `.sqlx/`; alat se instalira jednom: `cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked`.

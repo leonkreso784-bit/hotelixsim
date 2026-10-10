@@ -1,6 +1,6 @@
 # Dnevnik, runde i red poslova — plan izgradnje
 
-**Status:** ✅ ISPUNJEN 2026-10-05 · **Otvoren:** 2026-10-05 · **Grana:** `gradnja/dnevnik-runde` · **Rok demoa:** ~14.10. ([ADR-012](../records/DECISIONS.md#adr-012))
+**Status:** ✅ ISPUNJEN 2026-10-05 · **Otvoren:** 2026-10-05 · **Grana:** `gradnja/dnevnik-runde` · **Rok demoa:** ~14.10. ([ADR-012](../records/DECISIONS/ADR-012-ciljani-rok-demoa-14-10-prvo.md))
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -21,7 +21,7 @@ jedna transakcija „zaključaj igru → učitaj tok → odluči (čista funkcij
 
 **Spec:** [DEMO.md](../product/DEMO.md) §1 (demo način, gost, roboti, 15 minuta), §6.1, §7 (raspored), §10 ·
 [ARHITEKTURA.md](../architecture/ARHITEKTURA.md) §6.2, §7.2, §8.1–8.4, §9.1–9.4, §11, §12 · pretpostavke
-[ADR-015](../records/DECISIONS.md#adr-015) · stavke `[dnevnik]` u [BACKLOG.md](../records/BACKLOG.md) ·
+[ADR-015](../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) · stavke `[dnevnik]` u [BACKLOG.md](../records/BACKLOG.md) ·
 oblik plana po uzoru na [plan jezgre](../archive/2026-10-04-jezgra.md) · tok rada [AGENTI.md](../workflow/AGENTI.md).
 
 **Leonove proizvodne odluke (05.10.)** — vrijede kao spec: (1) gost preko poveznice sad samo kao pozadina

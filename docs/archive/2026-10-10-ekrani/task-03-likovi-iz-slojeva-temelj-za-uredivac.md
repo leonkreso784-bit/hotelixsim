@@ -1,7 +1,7 @@
 ### Task 3: Likovi iz slojeva (temelj za uređivač kao u BitLifeu)
 
 Leon (10.10.): *„trebat cemo napravit razlicite likove u igrici izgledno i to na nacin da cemo kasnije moci ih customizat
-isto kao sto bit life ima"* → anketa: **temelj sad, uređivač poslije demoa** ([ADR-021](../../records/DECISIONS.md#adr-021)).
+isto kao sto bit life ima"* → anketa: **temelj sad, uređivač poslije demoa** ([ADR-021](../../records/DECISIONS/ADR-021-koncept-ekrana-v2-i-odluke-o.md)).
 Lik se crta iz SVG slojeva (pozadina, odjeća, vrat, kosa straga, uši, lice, nos, oči, obrve, usta, brada, naočale,
 kosa sprijeda, kapa). **Izgled je podatak** (`AvatarLook`): danas ga daje tablica poznatih likova ili deterministički
 „slučajni“ izgled iz imena; poslije demoa isti podatak dolazi iz sadržaja (`character.look`) i profila igrača, a uređivač

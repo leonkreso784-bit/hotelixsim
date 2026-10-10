@@ -1,7 +1,7 @@
 # HotelixSim — dokumentacija
 
 **Ovo je jedini ulaz.** Sve ostalo je u mapama ispod, složeno **po ulozi dokumenta**, ne po temi
-(model preuzet iz Sokrat Studyja — [ADR-011](./records/DECISIONS.md#adr-011)).
+(model preuzet iz Sokrat Studyja — [ADR-011](records/DECISIONS/ADR-011-dokumentacija-po-sokratovom-sustavu-mape-po.md)).
 
 > **Brzi kontekst za sesiju:** [`../CLAUDE.md`](../CLAUDE.md) (učitava se sam: pravila, trenutno stanje, pokazivači).
 > **Početak sesije:** [SLJEDECA_SESIJA.md](./SLJEDECA_SESIJA.md) (`/newsession`) · **kraj sesije:** `/kraj`.

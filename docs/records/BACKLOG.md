@@ -111,13 +111,13 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Pitanja za profesore** — Leon ih šalje tijekom tjedna 5.–11.10.; pregled prije slanja. Odgovor: [PITANJA_ZA_PROFESORE](../product/PITANJA_ZA_PROFESORE.md).
 - [leon] **Inkubator** — prijava do **16.11.**: nosi li se Sokrat ili simulacija. Odgovor: [ROADMAP](../plan/ROADMAP.md).
 - [leon] **Potvrda ARHITEKTURE v2** — ROADMAP kaže „Leon ih je pregledao", a ARHITEKTURA kaže „prijedlog dok Leon ne potvrdi"; potvrditi ili ostaviti raspravu otvorenom, pa uskladiti oba. Odgovor: [ARHITEKTURA](../architecture/ARHITEKTURA.md).
-- [leon] **Sezonska marža 35,8 % blizu donje granice (35 %)**, lipanj 22,5 %, rujan 20,3 % (rujan nosi 34 sezonca jer plan smije pustiti najviše 10 mjesečno). Odgovor: [ADR-013](DECISIONS.md#adr-013) t. 5 i [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 2.
+- [leon] **Sezonska marža 35,8 % blizu donje granice (35 %)**, lipanj 22,5 %, rujan 20,3 % (rujan nosi 34 sezonca jer plan smije pustiti najviše 10 mjesečno). Odgovor: [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 5 i [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 2.
 - [leon] **B ima fiksne troškove samo 3 % niže od C (145 000 prema 150 000 €)** — §5 kaže „niži fiksni troškovi", ali uz likvidnost bez granice (ADR-014) svaki euro razlike ulazi u blagajnu i F profila B raste sam od sebe: s 112 500 € B je najbolji pod svim strategijama (razlika medijana 8,69), sa 140 000 € tijesno prolazi (4,24). Jasno niži fiksni troškovi traže promjenu formule F ili ocjene napretka (nova odluka). Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 3.
 - [leon] **A: ugled od opreme i iskustva, a premalo ljudi** — A sad ima opremu 75, iskustvo 70, 28 stalnih i početno opterećenje 2,20 (u lipnju ≈ 1,6, pa kazna u O nestane sama). Sa starim podacima A pada na medijan −12,96 (razlika profila 10,4). Prepoznaje li Leon takav hotel? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 4.
 - [leon] **Obnova je i dalje najbolja proba za A i C, ali nije dominantna** — sad košta 6–7 bodova F (prije je F rastao), a napredak je A −0,39 → +5,02, B −3,03 → +2,03, C −0,90 → +6,21; za B je bolja „plaća 115". Treba li obnova od 150 000 € biti dobra odluka već u prvoj sezoni? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 5.
 - [leon] **Najviše sezonaca 50, ne 40** (DEMO §6.1 promijenjen u kalibraciji) — rasprodan kolovoz traži 44 sezonca da marža ostane ≤ 50 %. Realno za 4* od 120 soba? Odgovor: `content/hotel/catalog.json` (`seasonal_max`), DEMO §6.1.
-- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike. Odgovor: `content/hotel/situations.json`, [ADR-013](DECISIONS.md#adr-013) t. 7.
-- [leon] **Ishod neodgovorene situacije** (kvaliteta 1 + mehanike `unanswered` za S1–S4; S3 ignorirana = ponuda propada bez kazne) — realno? Odgovor: `content/hotel/situations.json` (Task 1 plana), [ADR-015](DECISIONS.md#adr-015) t. 2.
+- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike. Odgovor: `content/hotel/situations.json`, [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 7.
+- [leon] **Ishod neodgovorene situacije** (kvaliteta 1 + mehanike `unanswered` za S1–S4; S3 ignorirana = ponuda propada bez kazne) — realno? Odgovor: `content/hotel/situations.json` (Task 1 plana), [ADR-015](DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 2.
 - [leon] **Ocjene za mjerilo AI-ja** — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1). Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
 - [leon] **Koncept ekrana prema igri** — ocjena na portalima do 10 ili do 5; „1/4" mjeseca ili demo s 2 mjeseca; kratki nazivi kriterija rubrike; avatari likova. Odgovor: [DIZAJN.md](../product/DIZAJN.md) §3.
 - [leon] **Sadržaj situacija:** rezerva lika „Gošća je previše ljuta da bi nastavila razgovor" zvuči kao ocjena studenta — preformulirati neutralno; **PRIJE DEMOA:** S3 nema opisa situacije (samo naslov; DEMO §1.5 obećaje „ponuda agencije (brojke)", a osnovna ponuda nigdje nije rečena — opis traži i polje u API-ju jer je jedini „opis" danas uvodna rečenica lika) — „(nacrt)" je maknut iz naslova S3 i S4 10.10.; `znacenje` za „Zaposleni" je predugo i tehničko za studenta. Odgovor: `content/hotel/situations.json`, `content/hotel/catalog.json`.
@@ -129,15 +129,15 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
   - profesor pri kreiranju igre bira razdoblje (dani / tjedni / mjeseci), broj AI-situacija, dodaje vlastite situacije, bira vrste situacija i „branšu". Otvoreno: (1) je li branša odjel hotela ili vrsta objekta, (2) AI situacije unaprijed uz profesorovo odobrenje ili u hodu, (3) bira li se duljina igre ili ritam kruga. Ide kroz dizajnerski dokument (arhitektura);
   - studenti ulaze u igru kodom, kao u Kahootu;
   - trošak tokena smanjiti „na drugačiji način" — izračunat ćemo kasnije; mjerilo (40 odgovora) za usporedbu modela presude;
-  - uređivač lika ([ADR-021](DECISIONS.md#adr-021)).
-- [leon] **Pretpostavke ADR-019** (AI kroz red poslova, rok presude 120 s, rezerve na zadnjem pokušaju, likovi i nacrti mjerila) čekaju pregled. Odgovor: [ADR-019](DECISIONS.md#adr-019).
-- [leon] **Pretpostavke ADR-017** (odluke voditelja gradnje: identitet preuzimanja posla, 500 za nepoznat profil, provjere pristupa prije tijela, odgovor bez mjeseca u putanji, javne funkcije jezgre, zabrane u `game`) čekaju pregled. Odgovor: [ADR-017](DECISIONS.md#adr-017).
-- [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS.md#adr-015).
-- [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS.md#adr-013).
+  - uređivač lika ([ADR-021](DECISIONS/ADR-021-koncept-ekrana-v2-i-odluke-o.md)).
+- [leon] **Pretpostavke ADR-019** (AI kroz red poslova, rok presude 120 s, rezerve na zadnjem pokušaju, likovi i nacrti mjerila) čekaju pregled. Odgovor: [ADR-019](DECISIONS/ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md).
+- [leon] **Pretpostavke ADR-017** (odluke voditelja gradnje: identitet preuzimanja posla, 500 za nepoznat profil, provjere pristupa prije tijela, odgovor bez mjeseca u putanji, javne funkcije jezgre, zabrane u `game`) čekaju pregled. Odgovor: [ADR-017](DECISIONS/ADR-017-odluke-voditelja-gradnje-u-koraku-3.md).
+- [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md).
+- [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md).
 
 ## Drugi val (poslije demoa)
 
-Opseg koji [ADR-013](DECISIONS.md#adr-013) t. 8 odgađa iza demoa; spec je u [DEMO.md](../product/DEMO.md).
+Opseg koji [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 8 odgađa iza demoa; spec je u [DEMO.md](../product/DEMO.md).
 
 - [drugi val] **Splet okolnosti i tragovi (§9)** — odluke ostavljaju tragove koji se kasnije vraćaju.
 - [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
@@ -149,7 +149,7 @@ Opseg koji [ADR-013](DECISIONS.md#adr-013) t. 8 odgađa iza demoa; spec je u [DE
 
 ## Rupe u specu DEMO.md
 
-Presuđene pretpostavkama u [ADR-013](DECISIONS.md#adr-013) (profil C na 50, sezonska marža, pravila zaokruživanja P1–P32, nedefinirano manje); pretpostavke čekaju Leonov pregled (vidi „Otvoreno za Leona").
+Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) (profil C na 50, sezonska marža, pravila zaokruživanja P1–P32, nedefinirano manje); pretpostavke čekaju Leonov pregled (vidi „Otvoreno za Leona").
 
 ## CI i alati
 

@@ -6,7 +6,7 @@ Dio [DEMO.md](../DEMO.md)
 
 ### 1.1 Što demo jest
 
-Jedna igra: **igrač + tri robota**, svaki sa svojim hotelom, kroz **dvije runde** (lipanj, srpanj; Leon 10.10., [ADR-021](../../records/DECISIONS.md#adr-021)). Demo je prvi rez prave
+Jedna igra: **igrač + tri robota**, svaki sa svojim hotelom, kroz **dvije runde** (lipanj, srpanj; Leon 10.10., [ADR-021](../../records/DECISIONS/ADR-021-koncept-ekrana-v2-i-odluke-o.md)). Demo je prvi rez prave
 arhitekture, a ne prototip koji se baca: ista jezgra, isti dnevnik, isti API.
 
 | | demo | pilot (kasnije) |

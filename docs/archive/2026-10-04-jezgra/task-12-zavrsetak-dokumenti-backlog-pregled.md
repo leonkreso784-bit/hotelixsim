@@ -12,5 +12,5 @@
 
 ---
 
-## Dodatak nakon završnog pregleda (Leon, anketa — [ADR-014](../../records/DECISIONS.md#adr-014))
+## Dodatak nakon završnog pregleda (Leon, anketa — [ADR-014](../../records/DECISIONS/ADR-014-kolovoz-rasprodan-lekcija-s3-i-blagajna.md))
 

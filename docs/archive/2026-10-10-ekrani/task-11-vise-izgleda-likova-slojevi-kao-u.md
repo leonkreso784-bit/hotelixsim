@@ -1,7 +1,7 @@
 ### Task 11: Više izgleda likova (slojevi kao u BitLifeu)
 
 Leon (10.10.): *„trebat ce prosirit likove“* → anketa: više izgleda, više likova, uređivač; „dio odmah“
-([ADR-022](../../records/DECISIONS.md#adr-022) t. 6, Ruling 9 u ledgeru). Ovaj task proširuje **samo** `src/avatar/` i galeriju:
+([ADR-022](../../records/DECISIONS/ADR-022-ekrani-igraca-pretpostavke-plana-koraka-5.md) t. 6, Ruling 9 u ledgeru). Ovaj task proširuje **samo** `src/avatar/` i galeriju:
 nove osobine lika i nove opcije postojećih. Gradi se **paralelno** s ekranima u radnom stablu `gradnja/likovi-izgled`
 (od commita 4e66e9e) i spaja u `gradnja/ekrani` kad prođe pregled — zato ne dira ništa izvan svojih datoteka.
 
