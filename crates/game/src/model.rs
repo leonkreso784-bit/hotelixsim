@@ -395,6 +395,38 @@ impl Model {
         }
     }
 
+    /// v2 tijelo plana bez odjela (API do Taska 15): odjeli iz važećeg plana `eff`, pa ukupni sezonci i razina
+    /// održavanja iz tijela (`PeriodPlan::with_totals`), da se studentova promjena ne izgubi. v1 tijelo je cijeli
+    /// plan. Granice provjerava `validate_plan` pri spremanju.
+    pub(crate) fn plan_from_dto_without_departments(
+        self,
+        d: &PlanDto,
+        eff: &CorePlan,
+        s: &CoreState,
+        r: &RoundInfo,
+        c: &Content,
+    ) -> Result<CorePlan, GameError> {
+        match (self, eff, s) {
+            (Model::V1, _, _) => self.plan_from_dto(d),
+            (Model::V2, CorePlan::V2(eff), CoreState::V2(s)) => {
+                let mut full = d.clone();
+                full.departments = PlanDto::from(eff).departments;
+                let plan = PeriodPlan::try_from(&full)?;
+                Ok(CorePlan::V2(
+                    plan.with_totals(
+                        s,
+                        &r.period,
+                        v2_catalog(c)?,
+                        d.seasonal_target,
+                        d.maintenance.into(),
+                    )
+                    .map_err(debug)?,
+                ))
+            }
+            _ => Err(mismatch()),
+        }
+    }
+
     /// Treba li tijelu plana dopuniti postavke odjela iz važećeg plana (v2 zahtjev bez `departments`; do Taska 15
     /// `PlanBody` ih nema). v1 plan nema odjela.
     pub(crate) fn needs_departments(self, d: &PlanDto) -> bool {

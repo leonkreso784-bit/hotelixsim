@@ -212,3 +212,72 @@ fn v2_plan_dto_without_departments_takes_them_from_the_effective_plan() {
     };
     assert_eq!(p.departments, eff.departments);
 }
+
+/// v2 tijelo plana bez odjela (API do Taska 15): ukupni sezonci i održavanje iz tijela se ne gube (popravak 1).
+fn v2_round_one() -> (Game, HotelId, RoundKey, sim_hotel_v2::PeriodPlan) {
+    let g = Game::fold(&v2_events(PeriodKind::Week)).unwrap();
+    let h = common::hotel_ids()[0];
+    let r = g.current_round().unwrap();
+    let CorePlan::V2(eff) = g.effective_plan(h, r).unwrap() else {
+        panic!("v2")
+    };
+    (g, h, r, eff)
+}
+
+fn without_departments(p: &sim_hotel_v2::PeriodPlan) -> dto::PlanDto {
+    let mut dto = CorePlan::V2(p.clone()).to_dto();
+    dto.departments.clear();
+    dto
+}
+
+#[test]
+fn v2_plan_dto_without_departments_keeps_the_seasonal_total() {
+    let (g, h, r, eff) = v2_round_one();
+    let mut dto = without_departments(&eff);
+    dto.seasonal_target = eff.seasonal_total() + 1;
+    let plan = g.plan_from_dto(h, r, &dto).unwrap();
+    let CorePlan::V2(p) = plan.clone() else {
+        panic!("v2")
+    };
+    assert_eq!(p.seasonal_total(), eff.seasonal_total() + 1);
+    for (k, d) in &p.departments {
+        assert_eq!(d.open, eff.departments[k].open, "{}", k.as_str());
+        assert_eq!(d.price_level_pct, eff.departments[k].price_level_pct);
+    }
+    g.set_plan(h, r, plan).unwrap();
+}
+
+#[test]
+fn v2_plan_dto_without_departments_keeps_the_maintenance_level() {
+    let (g, h, r, eff) = v2_round_one();
+    let mut dto = without_departments(&eff);
+    assert_eq!(dto.maintenance, dto::MaintenanceCode::Regular);
+    dto.maintenance = dto::MaintenanceCode::Intensive;
+    let CorePlan::V2(p) = g.plan_from_dto(h, r, &dto).unwrap() else {
+        panic!("v2")
+    };
+    assert!(
+        p.departments
+            .values()
+            .all(|d| d.maintenance == sim_hotel::Maintenance::Intensive)
+    );
+    assert_eq!(p.seasonal_total(), eff.seasonal_total());
+}
+
+#[test]
+fn v2_plan_dto_without_departments_beyond_the_step_is_the_step_error() {
+    let (g, h, r, eff) = v2_round_one();
+    let CoreState::V2(s) = g.state_at(h, r).unwrap() else {
+        panic!("v2")
+    };
+    let now: u16 = s.departments.values().map(|d| d.seasonal).sum();
+    let mut dto = without_departments(&eff);
+    dto.seasonal_target = now + 6; // tjedni korak je 5
+    let plan = g.plan_from_dto(h, r, &dto).unwrap();
+    assert_eq!(
+        g.set_plan(h, r, plan),
+        Err(GameError::PlanV2(
+            sim_hotel_v2::PlanError::SeasonalStepTooBig
+        ))
+    );
+}

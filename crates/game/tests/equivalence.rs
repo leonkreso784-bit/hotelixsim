@@ -41,6 +41,16 @@ fn v2_monthly_degenerate_game_matches_v1_game() {
                 ..hb.plan.clone()
             };
             assert_eq!(ha.plan, v1_part, "{m:?}");
+            // Degenerirani katalog: sve sezonce nosi Smještaj.
+            for (code, d) in &hb.plan.departments {
+                let expected = if code == "rooms" {
+                    ha.plan.seasonal_target
+                } else {
+                    0
+                };
+                assert_eq!(d.seasonal_target, expected, "{m:?} {code}");
+            }
+            assert!(hb.plan.departments.contains_key("rooms"));
             assert_eq!(ha.report, hb.report, "{m:?}");
             assert_eq!(ha.indices, hb.indices, "{m:?}");
             assert_eq!(ha.progress_hundredths, hb.progress_hundredths, "{m:?}");

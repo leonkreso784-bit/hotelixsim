@@ -177,6 +177,36 @@ impl PeriodPlan {
             .map_or(Maintenance::Regular, |d| d.maintenance)
     }
 
+    /// Ovaj plan s ukupnim sezoncima `total` i razinom održavanja `maintenance` iz v1 oblika tijela plana (API bez
+    /// odjela, do Taska 15). Otvorenost i razine cijene odjela ostaju iz ovog plana. Kad se `total` razlikuje od
+    /// `seasonal_total()`, sezonci se raspodijele ispočetka od današnjeg stanja prema planovima odjela (kao zadani
+    /// plan i roboti; zatvoren odjel ne prima nikoga); kad se razina razlikuje od `rooms_maintenance()`, svi odjeli
+    /// dobiju tu razinu. Granice (korak) provjerava `validate`.
+    pub fn with_totals(
+        &self,
+        state: &HotelState,
+        p: &Period,
+        cat: &Catalog,
+        total: u16,
+        maintenance: Maintenance,
+    ) -> Result<PeriodPlan, CatalogError> {
+        let mut out = self.clone();
+        if total != self.seasonal_total() {
+            let plans = dept_seasonal_plans(state, p, cat)?;
+            let open = |k: &DeptCode| self.departments.get(k).is_some_and(|d| d.open);
+            let alloc = allocate(state, &plans, &open, total, cat)?;
+            for (k, d) in out.departments.iter_mut() {
+                d.seasonal_target = alloc.get(k).copied().unwrap_or(0);
+            }
+        }
+        if maintenance != self.rooms_maintenance() {
+            for d in out.departments.values_mut() {
+                d.maintenance = maintenance;
+            }
+        }
+        Ok(out)
+    }
+
     /// Postavke odjela za `total` sezonaca: otvorenost kao u stanju, raspodjela prema planovima odjela, razina
     /// cijene 100, ista razina održavanja svugdje (zadani plan i roboti).
     pub(crate) fn departments_for(
