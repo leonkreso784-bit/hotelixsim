@@ -152,6 +152,7 @@ pub struct DeptPlan {
 }
 
 pub struct DeptInput<'a> {
+    pub code: DeptCode,
     pub period: &'a Period,
     pub spec: &'a DeptSpec,
     pub state: &'a DeptState,
@@ -431,7 +432,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
     };
 
     Ok(DeptOutcome {
-        code: DeptCode(String::new()),
+        code: i.code.clone(),
         class: spec.class,
         open,
         staff,
@@ -505,7 +506,9 @@ pub fn undistributed_step(
     })
 }
 
-/// Raspodjela ukupnog broja sezonaca po odjelima. Kreni od `current` (do `max`; odjel bez `max` ima najviše 0);
+/// Raspodjela ukupnog broja sezonaca po odjelima. Zatvoreni odjel treba proslijediti s `max` 0 (ili bez zapisa u
+/// `max`): funkcija ne zna za zatvaranje.
+/// Kreni od `current` (do `max`; odjel bez `max` ima najviše 0);
 /// dok je zbroj manji od cilja i postoji odjel ispod `max`: +1 odjelu s najvećim `plan − trenutno` (jednaki:
 /// manji kod); dok je veći: −1 odjelu s najvećim `trenutno − plan` među onima s više od 0 (jednaki: manji kod).
 pub fn allocate_seasonal(

@@ -65,6 +65,7 @@ fn plan(seasonal: u16, level: u16) -> DeptPlan {
 fn june(spec: &DeptSpec, st: &DeptState, pl: &DeptPlan) -> DeptOutcome {
     let p = month_period(Month::Jun);
     dept_step(&DeptInput {
+        code: DeptCode("restaurant".into()),
         period: &p,
         spec,
         state: st,
@@ -150,6 +151,7 @@ fn closed_department_has_no_revenue_but_pays_permanent_staff() {
 fn week_two_pays_seven_thirtieths_of_june_payroll() {
     let p = period_by_code(PeriodKind::Week, "t02").unwrap();
     let o = dept_step(&DeptInput {
+        code: DeptCode("restaurant".into()),
         period: &p,
         spec: &restaurant(),
         state: &state(),
