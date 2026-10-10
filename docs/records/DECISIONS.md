@@ -5,6 +5,36 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
+**Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](#adr-019),
+[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md) (Task 14)
+
+**Kontekst.** Mentor je u srpnju napisao *„najviše je pao treći (s 4876 na 4269) … −600 uz osnovnih −453 i −1000 zbog
+plaća … ugled je smanjio prodaju za 200 bp … 24 395 000 centi"*. Leon: *„indeksi ne smiju biti ‚tvoj hotel je pao za
+−1000‘ … to mora biti dobro objašnjeno. Ovo nije dobro."* Uzrok: AI je dobivao sirovi `DebriefInput` (indeksi kao pet
+brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga.
+
+**Odluka (pretpostavke):**
+1. **AI nikad ne vidi internu jedinicu.** `game::debrief_facts` iz `DebriefInput` gradi činjenice samo s ljudskim
+   vrijednostima i hrvatskim ključevima: indeksi po imenu (G R Z O F), novac u cijelim eurima s točkom za tisuće,
+   bodovi cijelim brojem, ocjena portala s dvije decimale (ljestvica do 10), situacija kao uzrok nosi naslov.
+   `debrief_body` šalje samo njih; upute su `prompts/mentor.v2.md` (v1 ostaje u povijesti).
+2. **Indeksi cijelim brojevima** (pola od nule: 48,50 → 49), **promjena = razlika zaokruženih**, da se slaže s ekranom.
+3. **Što je pokrenulo indeks** je podatak uz formulu (`sim_hotel::index_drivers`, test drži popis uz `raw_indices`).
+4. **Četiri dijela** s podnaslovom u retku: Što je išlo dobro · Što nije valjalo · Zašto · Što probati u <idući
+   mjesec>; isto i mentor bez AI-ja (deterministički, iz istih činjenica).
+5. **Brojke samo iz činjenica i uvijek s imenom i jedinicom** („indeks Zaposlenici s 49 na 43"), najviše četiri u
+   tekstu, ukupno do ~170 riječi.
+6. Faktori potražnje (`bp`) pišu se kao **„−2 % potražnje"**, ne „postotni bodovi": u jezgri je to množitelj potražnje
+   (10 000 = 100 %), pa je −200 stvarno 2 % manje gostiju. Kod morala uzroci su **pritisci** prema cilju, a „ukupna
+   promjena morala" je ono što se dogodilo; činjenice to kažu riječima. Retci koji zaokruženo daju nulu izostaju.
+
+**Cijena ako je krivo.** Tablice naziva i fraza (Rust, `crates/game/src/mentor.rs`) treba držati usklađene s
+`packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Prijelomi redaka u tekstu
+mentora traže `whitespace-pre-line` na ekranu „Mjesec završen" (web, zaseban task).
+
+---
+
 ## ADR-022 — Ekrani igrača: pretpostavke plana koraka 5
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-021](#adr-021),
 [DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md)

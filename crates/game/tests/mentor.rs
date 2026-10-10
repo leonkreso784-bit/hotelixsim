@@ -1,0 +1,506 @@
+//! Mentor govori ljudski (Task 14): činjenice za mentora i mentor bez AI-ja nikad ne pokazuju internu jedinicu.
+mod common;
+use common::*;
+use game::dto::*;
+use game::*;
+use serde_json::Value;
+use sim_hotel::Month;
+
+fn line(var: VarCode, cause: CauseDto, amount: i64, unit: UnitCode) -> LineDto {
+    LineDto {
+        var,
+        cause,
+        amount,
+        unit,
+    }
+}
+
+fn sit(code: &str, title: &str, quality: u8) -> DebriefSituation {
+    DebriefSituation {
+        code: code.into(),
+        title: title.into(),
+        quality,
+        free_text: false,
+        rationale: None,
+        neutral: false,
+        unanswered: false,
+    }
+}
+
+const CHEF: &str = "Šef kuhinje traži povišicu ili odlazi";
+
+/// Srpanj kao iz Leonova primjera, složen ručno da su brojke poznate.
+fn sample() -> DebriefInput {
+    DebriefInput {
+        month: MonthCode::Jul,
+        next_month: Some(MonthCode::Aug),
+        hotel_name: "Hotel Lungomare".into(),
+        situations: vec![sit("S2", CHEF, 2)],
+        indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
+        indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],
+        progress_hundredths: 325,
+        cash_end_cents: 24_395_000,
+        lines: vec![
+            line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
+            line(VarCode::Morale, CauseDto::Wage, -1_000, UnitCode::Points),
+            line(
+                VarCode::Morale,
+                CauseDto::Situation("S2".into()),
+                -600,
+                UnitCode::Points,
+            ),
+            line(
+                VarCode::Experience,
+                CauseDto::Turnover,
+                -533,
+                UnitCode::Points,
+            ),
+            line(
+                VarCode::Experience,
+                CauseDto::Baseline,
+                300,
+                UnitCode::Points,
+            ),
+            line(
+                VarCode::Equipment,
+                CauseDto::Baseline,
+                -400,
+                UnitCode::Points,
+            ),
+            line(
+                VarCode::Equipment,
+                CauseDto::Maintenance,
+                0,
+                UnitCode::Points,
+            ),
+            line(VarCode::Equipment, CauseDto::Load, 30, UnitCode::Points),
+            line(VarCode::Sold, CauseDto::Reputation, -200, UnitCode::Bp),
+            line(VarCode::Sold, CauseDto::Price, -250, UnitCode::Bp),
+            line(
+                VarCode::Sold,
+                CauseDto::Baseline,
+                1_240,
+                UnitCode::RoomNights,
+            ),
+            line(VarCode::Costs, CauseDto::Wage, 1_234_567, UnitCode::Cents),
+            line(
+                VarCode::Cash,
+                CauseDto::Baseline,
+                24_395_000,
+                UnitCode::Cents,
+            ),
+            line(
+                VarCode::Cash,
+                CauseDto::Renovation,
+                -300_000_000,
+                UnitCode::Cents,
+            ),
+            line(VarCode::Staff, CauseDto::Turnover, 3, UnitCode::People),
+            line(VarCode::Staff, CauseDto::Hires, 1, UnitCode::People),
+            line(
+                VarCode::Rating,
+                CauseDto::Baseline,
+                -12,
+                UnitCode::RatingHundredths,
+            ),
+            line(
+                VarCode::Satisfaction,
+                CauseDto::Baseline,
+                100,
+                UnitCode::Points,
+            ),
+            line(
+                VarCode::Satisfaction,
+                CauseDto::Renovation,
+                200,
+                UnitCode::Points,
+            ),
+        ],
+    }
+}
+
+fn facts_json(input: &DebriefInput) -> Value {
+    serde_json::to_value(debrief_facts(input)).unwrap()
+}
+
+fn index<'a>(f: &'a Value, name: &str) -> &'a Value {
+    f["indeksi"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["naziv"] == name)
+        .unwrap_or_else(|| panic!("nema indeksa {name}"))
+}
+
+/// Sve promjene jedne varijable (po hrvatskom nazivu) kao (uzrok, iznos).
+fn changes(f: &Value, var: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for i in f["indeksi"].as_array().unwrap() {
+        for d in i["sto_je_pokrenulo"].as_array().unwrap() {
+            if d["sto"] == var {
+                for c in d["promjene"].as_array().unwrap() {
+                    out.push((
+                        c["uzrok"].as_str().unwrap().to_owned(),
+                        c["iznos"].as_str().unwrap().to_owned(),
+                    ));
+                }
+            }
+        }
+    }
+    out
+}
+
+fn amount_for(f: &Value, var: &str, cause_part: &str) -> String {
+    changes(f, var)
+        .into_iter()
+        .find(|(c, _)| c.contains(cause_part))
+        .unwrap_or_else(|| panic!("{var}: nema uzroka „{cause_part}“"))
+        .1
+}
+
+/// Čuvar: nijedna interna jedinica, kod indeksa, šifra situacije, engleski mjesec ni sirov broj ≥ 1000.
+fn assert_human(text: &str) {
+    for bad in [
+        "bp",
+        "cents",
+        "centi",
+        "hundredths",
+        "stotink",
+        "rating_",
+        "\"G\"",
+        "\"R\"",
+        "\"Z\"",
+        "\"O\"",
+        "\"F\"",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "june",
+        "july",
+        "baseline",
+        "Baseline",
+        "treći indeks",
+        "indeks 3",
+    ] {
+        assert!(!text.contains(bad), "„{bad}“ u tekstu:\n{text}");
+    }
+    let chars: Vec<char> = text.chars().collect();
+    for w in chars.windows(2) {
+        assert!(
+            !(w[0] == 'S' && w[1].is_ascii_digit()),
+            "šifra situacije u tekstu:\n{text}"
+        );
+    }
+    let mut run = 0;
+    for c in &chars {
+        run = if c.is_ascii_digit() { run + 1 } else { 0 };
+        assert!(run < 4, "sirov broj ≥ 1000 (bez točke za tisuće):\n{text}");
+    }
+}
+
+#[test]
+fn indices_are_whole_numbers_rounded_half_away_and_change_is_difference_of_rounded() {
+    let mut input = sample();
+    input.indices_before = [4_850, 4_849, 5_000, 5_049, 5_050];
+    input.indices_after = [4_849, 4_850, 4_950, 5_150, 5_050];
+    let f = facts_json(&input);
+    let names: Vec<&str> = f["indeksi"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i["naziv"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "Zadovoljstvo gostiju",
+            "Recenzije",
+            "Zaposlenici",
+            "Operativa",
+            "Financije"
+        ]
+    );
+    let g = index(&f, "Zadovoljstvo gostiju");
+    assert_eq!(
+        (&g["prije"], &g["poslije"], &g["promjena"]),
+        (&49.into(), &48.into(), &(-1).into())
+    );
+    assert_eq!(g["smjer"], "pao");
+    let r = index(&f, "Recenzije");
+    assert_eq!(
+        (&r["prije"], &r["poslije"], &r["promjena"]),
+        (&48.into(), &49.into(), &1.into())
+    );
+    assert_eq!(r["smjer"], "porastao");
+    // 5000 → 50, 4950 → 50: razlika zaokruženih je 0 iako se stotinke razlikuju.
+    let z = index(&f, "Zaposlenici");
+    assert_eq!(
+        (&z["prije"], &z["poslije"], &z["promjena"]),
+        (&50.into(), &50.into(), &0.into())
+    );
+    assert_eq!(z["smjer"], "isti");
+    let o = index(&f, "Operativa");
+    assert_eq!(
+        (&o["prije"], &o["poslije"], &o["promjena"]),
+        (&50.into(), &52.into(), &2.into())
+    );
+    assert_eq!(index(&f, "Financije")["prije"], 51);
+}
+
+#[test]
+fn money_is_whole_euros_with_dot_for_thousands() {
+    let f = facts_json(&sample());
+    assert_eq!(f["blagajna_na_kraju_mjeseca"], "243.950 €");
+    assert_eq!(amount_for(&f, "Troškovi", "plaće"), "12.346 €");
+    assert_eq!(amount_for(&f, "Blagajna", "obnova"), "−3.000.000 €");
+    assert_eq!(amount_for(&f, "Blagajna", "zarada"), "+243.950 €");
+}
+
+#[test]
+fn demand_factors_are_percent_of_demand() {
+    let f = facts_json(&sample());
+    assert_eq!(amount_for(&f, "Prodane noći", "ugled"), "−2 % potražnje");
+    assert_eq!(amount_for(&f, "Prodane noći", "cijena"), "−2,5 % potražnje");
+    assert_eq!(amount_for(&f, "Prodane noći", "osnovna"), "1.240 noćenja");
+}
+
+#[test]
+fn points_people_and_rating_in_human_units() {
+    let f = facts_json(&sample());
+    assert_eq!(amount_for(&f, "Moral", "plaće"), "−10 bodova");
+    assert_eq!(amount_for(&f, "Moral", "ukupna"), "−5 bodova");
+    assert_eq!(amount_for(&f, "Iskustvo", "otišli"), "−5 bodova");
+    assert_eq!(amount_for(&f, "Iskustvo", "radom"), "+3 boda");
+    assert_eq!(amount_for(&f, "Zadovoljstvo gostiju", "obnova"), "+2 boda");
+    assert_eq!(amount_for(&f, "Zadovoljstvo gostiju", "usluga"), "+1 bod");
+    assert_eq!(
+        amount_for(&f, "Ocjena na portalima", "zadovoljstv"),
+        "−0,12 ocjene"
+    );
+    assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "3 osobe");
+    assert_eq!(amount_for(&f, "Zaposleni", "zapošljavanje"), "+1 osoba");
+}
+
+#[test]
+fn situation_as_cause_carries_its_title_not_code() {
+    let f = facts_json(&sample());
+    let (cause, amount) = changes(&f, "Moral")
+        .into_iter()
+        .find(|(c, _)| c.contains(CHEF))
+        .expect("situacija kao uzrok morala");
+    assert_eq!(cause, format!("situacija „{CHEF}“"));
+    assert_eq!(amount, "−6 bodova");
+    assert!(!f.to_string().contains("S2"));
+}
+
+#[test]
+fn zero_lines_and_lines_that_round_to_zero_are_left_out() {
+    let f = facts_json(&sample());
+    let equipment = changes(&f, "Oprema");
+    assert_eq!(equipment.len(), 1, "samo trošenje: {equipment:?}");
+    assert_eq!(equipment[0].1, "−4 boda");
+    let mut input = sample();
+    input.lines = vec![line(
+        VarCode::Morale,
+        CauseDto::Baseline,
+        0,
+        UnitCode::Points,
+    )];
+    assert!(changes(&facts_json(&input), "Moral").is_empty());
+    // Varijabla bez ijedne promjene ne pojavljuje se uz indeks.
+    let f = facts_json(&input);
+    assert!(
+        index(&f, "Zaposlenici")["sto_je_pokrenulo"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn situations_have_grade_in_words_free_text_rationale_and_neutral_flag() {
+    let mut input = sample();
+    input.situations = vec![
+        DebriefSituation {
+            free_text: true,
+            rationale: Some("Ispričao si se i odmah ponudio rješenje.".into()),
+            ..sit("S1", "Klima u sobi obitelji s djecom", 4)
+        },
+        DebriefSituation {
+            free_text: true,
+            neutral: true,
+            ..sit("S2", CHEF, 3)
+        },
+        DebriefSituation {
+            unanswered: true,
+            ..sit("S3", "Agencija nudi grupu", 1)
+        },
+    ];
+    let f = facts_json(&input);
+    let s = f["situacije"].as_array().unwrap();
+    assert_eq!(s[0]["naslov"], "Klima u sobi obitelji s djecom");
+    assert_eq!(s[0]["ocjena"], "4/5");
+    assert_eq!(s[0]["ocjena_rijecima"], "dobro");
+    assert_eq!(s[0]["slobodan_odgovor"], true);
+    assert_eq!(
+        s[0]["obrazlozenje"],
+        "Ispričao si se i odmah ponudio rješenje."
+    );
+    assert!(s[0].get("neutralna_ocjena").is_none());
+    assert_eq!(s[1]["ocjena_rijecima"], "srednje");
+    assert!(
+        s[1]["neutralna_ocjena"]
+            .as_str()
+            .unwrap()
+            .contains("nije stigao")
+    );
+    assert_eq!(s[2]["ocjena_rijecima"], "loše");
+    assert_eq!(s[2]["bez_odgovora"], true);
+}
+
+#[test]
+fn month_next_month_hotel_and_progress_in_words() {
+    let f = facts_json(&sample());
+    assert_eq!(f["hotel"], "Hotel Lungomare");
+    assert_eq!(f["mjesec"], "u srpnju");
+    assert_eq!(f["iduci_mjesec"], "u kolovozu");
+    assert_eq!(f["napredak_od_pocetka"], "+3 boda");
+    let mut last = sample();
+    last.month = MonthCode::Sep;
+    last.next_month = None;
+    last.progress_hundredths = -1_150;
+    let f = facts_json(&last);
+    assert_eq!(f["iduci_mjesec"], Value::Null);
+    assert_eq!(f["napredak_od_pocetka"], "−12 bodova");
+}
+
+#[test]
+fn facts_for_hand_made_month_are_human() {
+    assert_human(&serde_json::to_string_pretty(&debrief_facts(&sample())).unwrap());
+    assert_human(&fallback_debrief(&sample()));
+}
+
+#[test]
+fn guard_facts_and_fallback_for_real_settled_month_are_human() {
+    let (g, h) = july_resolved_bad_chef_game();
+    let input = g.debrief_input(h, Month::Jul).unwrap();
+    assert_eq!(
+        input.next_month, None,
+        "u testnom sadržaju srpanj je zadnji"
+    );
+    let json = serde_json::to_string_pretty(&debrief_facts(&input)).unwrap();
+    assert_human(&json);
+    let text = fallback_debrief(&input);
+    assert_human(&text);
+    // Za izvještaj: `cargo test -p game --test mentor -- --nocapture guard`.
+    println!("{json}\n-----\n{text}");
+    let june = g.debrief_input(h, Month::Jun).unwrap();
+    assert_eq!(june.next_month, Some(MonthCode::Jul));
+    assert_human(&serde_json::to_string(&debrief_facts(&june)).unwrap());
+    assert_human(&fallback_debrief(&june));
+}
+
+#[test]
+fn real_month_input_carries_codes_cash_and_unanswered() {
+    let (g, h) = july_resolved_bad_chef_game();
+    let input = g.debrief_input(h, Month::Jul).unwrap();
+    let s2 = input.situations.iter().find(|s| s.code == "S2").unwrap();
+    assert_eq!((s2.quality, s2.unanswered), (2, false));
+    let cash = g.latest_state(h).unwrap().cash_cents;
+    assert_eq!(input.cash_end_cents, cash);
+}
+
+#[test]
+fn fallback_has_four_parts_and_honest_last_line() {
+    let text = fallback_debrief(&sample());
+    let heads: Vec<&str> = text.lines().filter(|l| !l.ends_with('.')).collect();
+    assert_eq!(
+        heads
+            .iter()
+            .filter(|l| !l.is_empty())
+            .copied()
+            .collect::<Vec<_>>(),
+        [
+            "Što je išlo dobro",
+            "Što nije valjalo",
+            "Zašto",
+            "Što probati u kolovozu"
+        ]
+    );
+    assert!(text.starts_with("U srpnju je napredak tvog hotela od početka igre +3 boda."));
+    assert!(text.ends_with("AI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."));
+}
+
+#[test]
+fn fallback_good_and_bad_name_indices_and_situations() {
+    let text = fallback_debrief(&sample());
+    let part = |head: &str| -> String {
+        let start = text.find(&format!("{head}\n")).unwrap() + head.len() + 1;
+        let rest = &text[start..];
+        rest[..rest.find("\n\n").unwrap_or(rest.len())].to_owned()
+    };
+    let good = part("Što je išlo dobro");
+    // Porasli: Financije 56 → 61 (+5) prije Zadovoljstva gostiju 52 → 54 (+2).
+    let fin = good
+        .find("Indeks Financije porastao je s 56 na 61.")
+        .unwrap();
+    let sat = good
+        .find("Indeks Zadovoljstvo gostiju porastao je s 52 na 54.")
+        .unwrap();
+    assert!(fin < sat);
+    let bad = part("Što nije valjalo");
+    assert!(
+        bad.contains("Indeks Zaposlenici pao je s 49 na 43."),
+        "{bad}"
+    );
+    assert!(bad.contains("Indeks Recenzije pao je s 49 na 48."), "{bad}");
+    assert!(
+        bad.contains(&format!("Situacija „{CHEF}“ riješena je loše (2/5).")),
+        "{bad}"
+    );
+    let why = part("Zašto");
+    // Najveći negativni uzrok Zaposlenika je plaća (−10 bodova pritiska) ispred situacije (−6).
+    assert!(
+        why.contains("Indeks Zaposlenici pao je ponajviše zbog nižih plaća"),
+        "{why}"
+    );
+    assert!(
+        why.contains("Indeks Recenzije pao je ponajviše zbog nižeg zadovoljstva gostiju"),
+        "{why}"
+    );
+    let tip = part("Što probati u kolovozu");
+    assert!(
+        tip.contains("plaća") || tip.contains("tim"),
+        "savjet za Zaposlenike: {tip}"
+    );
+}
+
+#[test]
+fn fallback_says_honestly_when_nothing_moved() {
+    let mut input = sample();
+    input.indices_after = input.indices_before;
+    input.situations = vec![sit("S2", CHEF, 3)];
+    let text = fallback_debrief(&input);
+    assert!(
+        text.contains("Ovaj mjesec nijedan indeks nije porastao"),
+        "{text}"
+    );
+    assert!(text.contains("Nijedan indeks nije pao"), "{text}");
+    assert_human(&text);
+}
+
+#[test]
+fn fallback_situation_cause_uses_title() {
+    let mut input = sample();
+    input
+        .lines
+        .retain(|l| !(l.var == VarCode::Morale && l.cause == CauseDto::Wage));
+    let text = fallback_debrief(&input);
+    assert!(
+        text.contains(&format!(
+            "Indeks Zaposlenici pao je ponajviše zbog rješenja situacije „{CHEF}“"
+        )),
+        "{text}"
+    );
+}

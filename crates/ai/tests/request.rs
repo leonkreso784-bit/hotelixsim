@@ -125,3 +125,55 @@ fn student_newline_cannot_forge_character_line() {
     );
     assert_eq!(user.matches("<lik").count(), 0);
 }
+
+fn sample_debrief() -> game::DebriefInput {
+    use game::dto::{CauseDto, LineDto, MonthCode, UnitCode, VarCode};
+    game::DebriefInput {
+        month: MonthCode::Jul,
+        next_month: Some(MonthCode::Aug),
+        hotel_name: "Hotel Lungomare".into(),
+        situations: vec![game::DebriefSituation {
+            code: "S2".into(),
+            title: "Šef kuhinje traži povišicu ili odlazi".into(),
+            quality: 2,
+            free_text: false,
+            rationale: None,
+            neutral: false,
+            unanswered: false,
+        }],
+        indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
+        indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],
+        progress_hundredths: 325,
+        cash_end_cents: 24_395_000,
+        lines: vec![LineDto {
+            var: VarCode::Morale,
+            cause: CauseDto::Situation("S2".into()),
+            amount: -600,
+            unit: UnitCode::Points,
+        }],
+    }
+}
+
+#[test]
+fn debrief_body_sends_human_facts_with_mentor_v2() {
+    let input = sample_debrief();
+    let b = ai::request::debrief_body("claude-sonnet-5-5", &input);
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v2");
+    assert_eq!(b["system"], ai::prompts::MENTOR.text);
+    assert!(ai::prompts::MENTOR.text.contains("Što je išlo dobro"));
+    let content = b["messages"][0]["content"].as_str().unwrap();
+    let sent: serde_json::Value = serde_json::from_str(content).unwrap();
+    assert_eq!(
+        sent,
+        serde_json::to_value(game::debrief_facts(&input)).unwrap()
+    );
+    for internal in [
+        "indices_before",
+        "progress_hundredths",
+        "cents",
+        "S2",
+        "\"Jul\"",
+    ] {
+        assert!(!content.contains(internal), "{internal} u poruci mentoru");
+    }
+}
