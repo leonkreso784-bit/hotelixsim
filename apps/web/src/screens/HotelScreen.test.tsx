@@ -1,10 +1,11 @@
 import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json } from "../test/fakeApi";
 import { game, ix, myHotel, standardApi } from "../test/fixtures";
-import { renderApp } from "../test/renderApp";
+import { fastPolling, renderApp } from "../test/renderApp";
 
+beforeEach(fastPolling);
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -60,6 +61,25 @@ describe("Moj hotel", () => {
     expect(screen.getByText("68 %")).toBeTruthy();
     expect(screen.getByText("98.000 €")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Rezultat: lipanj/ }).getAttribute("href")).toBe("/mjesec/jun");
+  });
+
+  it("mjesec se obračuna u pozadini: Moj hotel sam osvježi indekse bez ručnog osvježavanja", async () => {
+    let gameCalls = 0;
+    const closing = game({ current: { month: "jun", status: "closing", unanswered: 0 } });
+    const open = game({ current: { month: "jul", status: "open", unanswered: 1 } });
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", () => {
+        gameCalls += 1;
+        return json(200, gameCalls < 3 ? closing : open);
+      })
+      .on("GET", "/v1/me/hotel", () =>
+        json(200, gameCalls < 3 ? myHotel() : myHotel({ months: [junScore], planMonth: "jul" })),
+      );
+    renderApp(api);
+    expect(await screen.findByRole("heading", { name: "Moj hotel" })).toBeTruthy();
+    expect(screen.queryByText("od početka")).toBeNull();
+    expect(await screen.findByText("▲ +3")).toBeTruthy();
+    expect(screen.getByText("od početka")).toBeTruthy();
   });
 
   it("„Zatvori mjesec“ traži potvrdu s upozorenjem, šalje jednom i vodi na obračun", async () => {

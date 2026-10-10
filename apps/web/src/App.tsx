@@ -26,7 +26,7 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
     case "plan":
       return <PlanScreen me={me} />;
     case "month":
-      return <MonthScreen me={me} month={route.month} />;
+      return <MonthScreen key={route.month} me={me} month={route.month} />;
     case "avatars":
       return <AvatarGallery />;
     default:

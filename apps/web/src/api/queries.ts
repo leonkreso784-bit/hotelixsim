@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 import { navigate } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
@@ -29,13 +30,32 @@ export function useMe() {
   });
 }
 
+type Api = ReturnType<typeof useApi>;
+
+/**
+ * Jedino mjesto koje dohvaća igru. Mjesec se obračuna u pozadini, nakon što je „Zatvori mjesec“ već vratio 202 i
+ * invalidirao upite; kad ispitivanje vidi da je runda iz „closing“ prešla dalje, sve što ovisi o obračunu
+ * (moj hotel: indeksi, gotovina, zadnji mjesec; situacije; dnevnik) se mora ponovno dohvatiti.
+ */
+async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<GameBody> {
+  const before = qc.getQueryData<GameBody>(keys.game(gameId));
+  const next = unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } }));
+  const was = before?.current;
+  if (was?.status === "closing" && (next.current?.status !== "closing" || next.current.month !== was.month)) {
+    void qc.invalidateQueries({ queryKey: keys.me });
+    void qc.invalidateQueries({ queryKey: ["situations"] });
+    void qc.invalidateQueries({ queryKey: ["feed"] });
+  }
+  return next;
+}
+
 /** Igra; dok se mjesec obračunava, ispituje svakih `poll.roundMs`. */
 export function useGame(gameId: string) {
   const api = useApi();
+  const qc = useQueryClient();
   return useQuery<GameBody>({
     queryKey: keys.game(gameId),
-    queryFn: async () =>
-      unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } })),
+    queryFn: () => fetchGame(api, qc, gameId),
     refetchInterval: (q) => (q.state.data?.current?.status === "closing" ? poll.roundMs : false),
   });
 }
@@ -171,10 +191,10 @@ export function useSavePlan(hotelId: string) {
 /** Igra za ekran „Mjesec završen“: ispituje samo dok je taj mjesec trenutni a moj hotel ga još nema obračunatog. */
 export function useGameUntilResolved(gameId: string, hotelId: string, month: MonthCode) {
   const api = useApi();
+  const qc = useQueryClient();
   return useQuery<GameBody>({
     queryKey: keys.game(gameId),
-    queryFn: async () =>
-      unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } })),
+    queryFn: () => fetchGame(api, qc, gameId),
     refetchInterval: (q) => {
       const g = q.state.data;
       const mine = g?.hotels.find((h) => h.hotel_id === hotelId);
@@ -187,6 +207,9 @@ export function useGameUntilResolved(gameId: string, hotelId: string, month: Mon
 /** Dnevnik hotela; uz `untilMentorFor` ispituje dok mentor za taj mjesec ne stigne (najviše `poll.maxFeedPolls` puta). */
 export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = {}) {
   const api = useApi();
+  const qc = useQueryClient();
+  // Budžet se računa „od sada“: dnevnik je mogao biti dohvaćen i prije nego što je ovaj ekran montiran.
+  const startCount = useRef(qc.getQueryState(keys.feed(hotelId))?.dataUpdateCount ?? 0);
   return useQuery<FeedItemBody[]>({
     queryKey: keys.feed(hotelId),
     queryFn: async () =>
@@ -195,7 +218,7 @@ export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = 
       const m = opts.untilMentorFor;
       if (!m) return false;
       const has = q.state.data?.some((i) => i.kind === "mentor" && i.month === m);
-      return has || q.state.dataUpdateCount >= poll.maxFeedPolls ? false : poll.feedMs;
+      return has || q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
     },
   });
 }
