@@ -7,6 +7,8 @@ import { type Route, useRoute } from "./router";
 import { AvatarGallery } from "./screens/AvatarGallery";
 import { HotelScreen } from "./screens/HotelScreen";
 import { NotFound } from "./screens/NotFound";
+import { SituationScreen } from "./screens/SituationScreen";
+import { SituationsScreen } from "./screens/SituationsScreen";
 import { StartScreen } from "./screens/StartScreen";
 import { chipText, Layout } from "./ui/Layout";
 import { Button, ErrorText, StatusText } from "./ui/primitives";
@@ -15,6 +17,10 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
   switch (route.name) {
     case "hotel":
       return <HotelScreen me={me} />;
+    case "situations":
+      return <SituationsScreen me={me} />;
+    case "situation":
+      return <SituationScreen me={me} code={route.code} />;
     case "avatars":
       return <AvatarGallery />;
     default:

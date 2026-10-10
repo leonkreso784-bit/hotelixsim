@@ -3,7 +3,7 @@ import { navigate } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
 import { poll } from "./poll";
-import type { GameBody, HotelBody, MonthCode, SituationsBody } from "./types";
+import type { ConversationBody, GameBody, HotelBody, MonthCode, SituationsBody } from "./types";
 
 export const keys = {
   me: ["me"] as const,
@@ -71,6 +71,55 @@ export function useCloseMonth(gameId: string) {
     onSuccess: (_data, month) => {
       navigate(`/mjesec/${month}`);
       return qc.invalidateQueries();
+    },
+  });
+}
+
+/** Razgovor s likom; dok lik još odgovara, ispituje svakih `poll.conversationMs`. */
+export function useConversation(hotelId: string, code: string, enabled: boolean) {
+  const api = useApi();
+  return useQuery<ConversationBody>({
+    queryKey: keys.conversation(hotelId, code),
+    enabled,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/v1/hotels/{hotel_id}/situations/{code}/conversation", {
+          params: { path: { hotel_id: hotelId, code } },
+        }),
+      ),
+    refetchInterval: (q) => (q.state.data?.awaiting_reply ? poll.conversationMs : false),
+  });
+}
+
+export function useSendMessage(hotelId: string, code: string) {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (text: string) =>
+      unwrap(
+        await api.POST("/v1/hotels/{hotel_id}/situations/{code}/messages", {
+          params: { path: { hotel_id: hotelId, code } },
+          body: { text },
+        }),
+      ),
+    onSuccess: (conv) => qc.setQueryData(keys.conversation(hotelId, code), conv),
+  });
+}
+
+export function useAnswer(hotelId: string, code: string) {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (answer: number) =>
+      unwrap(
+        await api.POST("/v1/hotels/{hotel_id}/situations/{code}/answer", {
+          params: { path: { hotel_id: hotelId, code } },
+          body: { answer },
+        }),
+      ),
+    onSuccess: (body) => {
+      qc.setQueryData(keys.situations(hotelId), body);
+      void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
     },
   });
 }
