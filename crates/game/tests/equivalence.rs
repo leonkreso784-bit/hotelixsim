@@ -34,7 +34,13 @@ fn v2_monthly_degenerate_game_matches_v1_game() {
     for m in [Month::Jun, Month::Jul] {
         let (ra, rb) = (&a.resolved[&m.into()], &b.resolved[&m.into()]);
         for (ha, hb) in ra.hotels.iter().zip(&rb.hotels) {
-            assert_eq!(ha.plan, hb.plan, "{m:?}");
+            // v2 plan nosi i postavke odjela (Task 11); v1 dio plana mora biti isti.
+            assert!(ha.plan.departments.is_empty() && !hb.plan.departments.is_empty());
+            let v1_part = dto::PlanDto {
+                departments: std::collections::BTreeMap::new(),
+                ..hb.plan.clone()
+            };
+            assert_eq!(ha.plan, v1_part, "{m:?}");
             assert_eq!(ha.report, hb.report, "{m:?}");
             assert_eq!(ha.indices, hb.indices, "{m:?}");
             assert_eq!(ha.progress_hundredths, hb.progress_hundredths, "{m:?}");

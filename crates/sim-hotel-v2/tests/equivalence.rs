@@ -1,6 +1,7 @@
 mod common;
 
 use sim_hotel_v2::calendar::{PeriodKind, season_periods};
+use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::{Profile, Strategy};
 
 #[test]
@@ -75,17 +76,22 @@ fn v2_copy_equals_v1_with_renovation_full_training_and_negative_cash() {
                 &r2,
                 &mut |s, per| {
                     let m = per.start_month();
-                    Ok(sim_hotel_v2::PeriodPlan {
-                        price_cents: v2.base.category(s.category)?.price_ref_cents.get(m) * 60
-                            / 100,
-                        marketing_cents: v2.base.actions.marketing_max_cents,
-                        seasonal_target: (s.seasonal + 10).min(v2.base.actions.seasonal_max),
-                        wage_pct: v2.base.actions.wage_max_pct,
-                        training: Training::Full,
-                        maintenance: Maintenance::Intensive,
-                        renovation: m == Month::Jun,
-                        reply_reviews: true,
-                    })
+                    // Isti plan kao v1; u degeneriranom katalogu sezonce i održavanje nosi Smještaj (Task 11).
+                    let mut plan = sim_hotel_v2::PeriodPlan::default_for(s, per, &v2)?;
+                    plan.price_cents =
+                        v2.base.category(s.category)?.price_ref_cents.get(m) * 60 / 100;
+                    plan.marketing_cents = v2.base.actions.marketing_max_cents;
+                    plan.wage_pct = v2.base.actions.wage_max_pct;
+                    plan.training = Training::Full;
+                    plan.renovation = m == Month::Jun;
+                    plan.reply_reviews = true;
+                    for d in plan.departments.values_mut() {
+                        d.maintenance = Maintenance::Intensive;
+                    }
+                    let rooms = plan.departments.get_mut(&DeptCode::rooms()).unwrap();
+                    rooms.seasonal_target =
+                        (s.summary().seasonal + 10).min(v2.base.actions.seasonal_max);
+                    Ok(plan)
                 },
                 &mut |_| Ok(0),
             )

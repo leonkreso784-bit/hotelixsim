@@ -42,20 +42,27 @@ pub(crate) fn block_nights(g: &GroupBlock, p: &Period) -> Calc<i128> {
     Ok(total)
 }
 
+/// Tržište kruga. Kapacitet osoblja daje Smještaj: `staff` su zaposleni Smještaja, `capacity_tenths` njegova
+/// korištenja po zaposlenom na dan u desetinkama (v1: 24); sobe izvan prodaje ovise o stanju prostora Smještaja.
 pub fn market(
     state: &HotelState,
     p: &Period,
     plan: &PeriodPlan,
     staff: u16,
+    capacity_tenths: u16,
     cat: &sim_hotel::Catalog,
 ) -> Calc<MarketOutcome> {
     let spec = cat
         .category(state.category)
         .map_err(|_| c::CalcError::BadDivisor)?;
+    let equipment = state
+        .rooms_state()
+        .map_err(|_| c::CalcError::BadDivisor)?
+        .condition_pts;
     let days = i128::from(p.days);
     let rooms = i128::from(state.rooms);
 
-    let out_raw = c::div_round(c::sub(4_000, i128::from(state.equipment_pts))?, 400)?;
+    let out_raw = c::div_round(c::sub(4_000, i128::from(equipment))?, 400)?;
     let rooms_out = out_raw.clamp(0, rooms);
     let available = c::mul(c::sub(rooms, rooms_out)?, days)?;
 
@@ -81,7 +88,13 @@ pub fn market(
     }
     let demand = c::div_round(product, 10_000_000_000_000_000)?.max(0);
 
-    let staff_capacity = c::div_floor(c::mul(c::mul(i128::from(staff), days)?, 24)?, 10)?;
+    let staff_capacity = c::div_floor(
+        c::mul(
+            c::mul(i128::from(staff), days)?,
+            i128::from(capacity_tenths),
+        )?,
+        10,
+    )?;
 
     let mut group_nights: i128 = 0;
     for g in &state.groups {

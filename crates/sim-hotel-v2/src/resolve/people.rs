@@ -1,10 +1,11 @@
-//! Faze osoblja (1) i ljudi (3): sezonci na cilj, opterećenje, moral, odlasci i iskustvo.
+//! Faze osoblja (1) i ljudi (3): sezonci po odjelima na cilj, opterećenje Smještaja, moral, odlasci i iskustvo.
 
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{Pending, PeopleOutcome, turnover_bp};
 
 use super::{neg, step_toward, w};
 use crate::calendar::{Period, prorate};
+use crate::department::DeptCode;
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -14,19 +15,43 @@ pub(super) struct Staffing {
     pub(super) state: HotelState,
     pub(super) hires: u16,
     pub(super) released: u16,
+    /// Svi zaposleni hotela (odlasci, iskustvo, sažetak).
     pub(super) staff: u16,
+    /// Zaposleni Smještaja (kapacitet tržišta i opterećenje).
+    pub(super) rooms_staff: u16,
 }
 
-/// Sezonci se dovode na cilj, plaća se postavlja; `pending` se troši ovaj mjesec (zato ga ovdje čistimo).
+/// Sezonci svakog odjela se dovode na cilj iz plana (najam i puštanje po odjelu), otvorenost odjela se prepisuje iz
+/// plana, plaća se postavlja; `pending` se troši ovaj krug (zato ga ovdje čistimo).
 pub(super) fn staffing(state: &HotelState, plan: &PeriodPlan) -> Calc<Staffing> {
     let mut s = state.clone();
-    let hires = plan.seasonal_target.saturating_sub(state.seasonal);
-    let released = state.seasonal.saturating_sub(plan.seasonal_target);
-    s.seasonal = plan.seasonal_target;
+    let (mut hires, mut released) = (0_u16, 0_u16);
+    for (code, d) in s.departments.iter_mut() {
+        // `validate` jamči da plan ima točno odjele stanja.
+        let Some(pl) = plan.departments.get(code) else {
+            continue;
+        };
+        hires = hires
+            .checked_add(pl.seasonal_target.saturating_sub(d.seasonal))
+            .ok_or(CalcError::Overflow)?;
+        released = released
+            .checked_add(d.seasonal.saturating_sub(pl.seasonal_target))
+            .ok_or(CalcError::Overflow)?;
+        d.seasonal = pl.seasonal_target;
+        d.open = pl.open;
+    }
     s.wage_pct = plan.wage_pct;
-    let staff = s
-        .permanent
-        .checked_add(s.seasonal)
+    let mut staff: u16 = 0;
+    for d in s.departments.values() {
+        staff = staff
+            .checked_add(d.permanent)
+            .and_then(|x| x.checked_add(d.seasonal))
+            .ok_or(CalcError::Overflow)?;
+    }
+    let rooms_staff = s
+        .departments
+        .get(&DeptCode::rooms())
+        .map_or(Some(0), |d| d.permanent.checked_add(d.seasonal))
         .ok_or(CalcError::Overflow)?;
     s.pending = Pending::default();
     Ok(Staffing {
@@ -34,6 +59,7 @@ pub(super) fn staffing(state: &HotelState, plan: &PeriodPlan) -> Calc<Staffing> 
         hires,
         released,
         staff,
+        rooms_staff,
     })
 }
 
@@ -53,6 +79,9 @@ pub(crate) struct PeopleStep {
 pub(super) struct PeopleIn<'a> {
     pub(super) state: &'a HotelState,
     pub(super) staff: u16,
+    /// Zaposleni i kapacitet (desetinke korištenja po zaposlenom na dan) Smještaja: opterećenje.
+    pub(super) rooms_staff: u16,
+    pub(super) rooms_capacity_tenths: u16,
     pub(super) hires: u16,
     pub(super) released: u16,
     pub(super) sold: u32,
@@ -66,10 +95,13 @@ pub(super) struct PeopleIn<'a> {
 pub(super) fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
     let days = w(i.period.days);
     let staff = w(i.staff);
-    let load = if staff == 0 {
+    // Opterećenje Smještaja: pri punom kapacitetu 240 (kao `dept_step`); uz 2,4 noći po zaposlenom na dan to je
+    // točno v1 `sold·100/(staff·days)`.
+    let denom = c::mul(c::mul(w(i.rooms_staff), days)?, w(i.rooms_capacity_tenths))?;
+    let load = if denom == 0 {
         300
     } else {
-        c::div_round(c::mul(w(i.sold), 100)?, c::mul(staff, days)?)?.clamp(0, 300)
+        c::div_round(c::mul(w(i.sold), 2_400)?, denom)?.clamp(0, 300)
     };
     let penalty = c::mul(100, c::sub(load, 180)?)?.clamp(0, 6_000);
     let release_morale = if i.released > 0 {

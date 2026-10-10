@@ -209,12 +209,9 @@ impl Model {
                     sim_hotel::HotelState::from_profile(spec).map_err(debug)?,
                 ))
             }
-            Model::V2 => {
-                let spec = v2_catalog(c)?.base.profile(p).map_err(debug)?;
-                Ok(CoreState::V2(Box::new(
-                    sim_hotel_v2::HotelState::from_profile(spec).map_err(debug)?,
-                )))
-            }
+            Model::V2 => Ok(CoreState::V2(Box::new(
+                sim_hotel_v2::HotelState::from_profile(v2_catalog(c)?, p).map_err(debug)?,
+            ))),
         }
     }
 
@@ -389,10 +386,21 @@ impl Model {
         }
     }
 
+    /// v2 plan traži postavke odjela (`seasonal_target` i `maintenance` iz DTO-a se ne čitaju); bez njih je to
+    /// pokvaren dnevnik. Zahtjev bez odjela dopunjuje `Game::plan_from_dto` (`needs_departments`).
     pub(crate) fn plan_from_dto(self, d: &PlanDto) -> Result<CorePlan, GameError> {
         match self {
             Model::V1 => Ok(CorePlan::V1(MonthPlan::from(d))),
-            Model::V2 => Ok(CorePlan::V2(PeriodPlan::from(d))),
+            Model::V2 => Ok(CorePlan::V2(PeriodPlan::try_from(d)?)),
+        }
+    }
+
+    /// Treba li tijelu plana dopuniti postavke odjela iz važećeg plana (v2 zahtjev bez `departments`; do Taska 15
+    /// `PlanBody` ih nema). v1 plan nema odjela.
+    pub(crate) fn needs_departments(self, d: &PlanDto) -> bool {
+        match self {
+            Model::V1 => false,
+            Model::V2 => d.departments.is_empty(),
         }
     }
 

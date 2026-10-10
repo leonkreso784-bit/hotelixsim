@@ -1,6 +1,8 @@
 //! Serde-zrcala tipova jezgre (jezgra nema serde). Polje za polje; iscrpni matchevi bez `_`, da nova varijanta
 //! u jezgri ne prevede tiho.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use sim_hotel::{
     Category, Cause, GroupBlock, GuestOutcome, HotelState, Index, IndexSet, Line, Maintenance,
@@ -8,6 +10,7 @@ use sim_hotel::{
     Unit, Var,
 };
 
+use crate::dto_v2::DeptPlanDto;
 use crate::error::{GameError, corrupt};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -142,6 +145,9 @@ pub struct PlanDto {
     pub maintenance: MaintenanceCode,
     pub renovation: bool,
     pub reply_reviews: bool,
+    /// Postavke po odjelu (samo v2, ključ je kod odjela); v1 plan ga nema, pa se njegov JSON ne mijenja.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub departments: BTreeMap<String, DeptPlanDto>,
 }
 
 impl From<&MonthPlan> for PlanDto {
@@ -155,6 +161,7 @@ impl From<&MonthPlan> for PlanDto {
             maintenance: p.maintenance.into(),
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
+            departments: BTreeMap::new(),
         }
     }
 }

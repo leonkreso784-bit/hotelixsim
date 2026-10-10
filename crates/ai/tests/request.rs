@@ -159,6 +159,7 @@ fn sample_debrief() -> game::DebriefInput {
             maintenance: MaintenanceCode::Deferred,
             renovation: false,
             reply_reviews: false,
+            departments: std::collections::BTreeMap::new(),
         },
         price_ref_cents: 12_000,
         seasonal_before: 14,

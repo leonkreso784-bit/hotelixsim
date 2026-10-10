@@ -24,6 +24,7 @@ fn plan() -> PlanDto {
         maintenance: MaintenanceCode::Regular,
         renovation: false,
         reply_reviews: true,
+        departments: std::collections::BTreeMap::new(),
     }
 }
 

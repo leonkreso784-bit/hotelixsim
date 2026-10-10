@@ -1,12 +1,62 @@
-//! Faza novca (4): prihodi, troškovi, obnova, kamata i GOPPAR kruga.
+//! Faza novca (4): prihodi, troškovi, obnova, kamata i GOPPAR kruga. Plaće su zbroj plaća svih odjela, stalni trošak
+//! zbroj neraspoređenih odjela, ostali prihod zbroj odjela koji nose udio prihoda soba (Task 11; prihod ostalih
+//! odjela dolazi u Tasku 12).
 
 use engine::calc::{self as c, Calc};
 use sim_hotel::{CategorySpec, MarketOutcome, MoneyOutcome};
 
-use super::{maintenance_effect, neg, training_effect, w};
+use super::{ResolveError, maintenance_effect, neg, training_effect, w};
 use crate::calendar::{Period, prorate};
+use crate::catalog::Catalog;
+use crate::department::{DeptCode, RevenueModel};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
+
+/// Novčani ulazi iz odjela (stanje nakon faze osoblja).
+pub(super) struct DeptMoney {
+    /// Σ zaposleni odjela · ⌊plaća odjela / 100⌋ (mjesečno, prije postotka plaće).
+    pub(super) wage_units: i128,
+    /// Σ stalni dio neraspoređenih odjela, svaki razmjerno krugu.
+    pub(super) fixed: i128,
+    /// Udjeli prihoda soba (bp) odjela s `RevenueModel::ShareOfRooms`.
+    pub(super) share_bp: Vec<u16>,
+}
+
+/// Plaća Smještaja je plaća kategorije hotela (Task 9 pregled, t. a); ostali odjeli plaćaju svojom `wage_cents`.
+pub(super) fn dept_money(
+    state: &HotelState,
+    p: &Period,
+    cat: &Catalog,
+    spec: &CategorySpec,
+) -> Result<DeptMoney, ResolveError> {
+    let mut wage_units: i128 = 0;
+    let mut share_bp = Vec::new();
+    for (code, d) in &state.departments {
+        let dept = cat.dept(code)?;
+        let wage_cents = if *code == DeptCode::rooms() {
+            spec.wage_cents
+        } else {
+            dept.wage_cents
+        };
+        let staff = c::add(w(d.permanent), w(d.seasonal))?;
+        wage_units = c::add(
+            wage_units,
+            c::mul(staff, c::div_floor(w(wage_cents), 100)?)?,
+        )?;
+        if let RevenueModel::ShareOfRooms { bp } = dept.revenue {
+            share_bp.push(bp);
+        }
+    }
+    let mut fixed: i128 = 0;
+    for monthly in state.undistributed_fixed_cents.values() {
+        fixed = c::add(fixed, w(prorate(*monthly, p)?))?;
+    }
+    Ok(DeptMoney {
+        wage_units,
+        fixed,
+        share_bp,
+    })
+}
 
 pub(crate) struct MoneyStep {
     pub(crate) out: MoneyOutcome,
@@ -26,7 +76,7 @@ pub(super) struct MoneyIn<'a> {
     pub(super) state: &'a HotelState,
     pub(super) market: &'a MarketOutcome,
     pub(super) plan: &'a PeriodPlan,
-    pub(super) staff: u16,
+    pub(super) depts: &'a DeptMoney,
     pub(super) hires: u16,
     pub(super) departures: u16,
     pub(super) period: &'a Period,
@@ -41,13 +91,12 @@ pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         c::mul(w(m.individual_sold), w(i.plan.price_cents))?,
         w(m.group_revenue_cents),
     )?;
-    let other = c::div_round(
-        c::mul(rooms_revenue, w(cat.economy.other_revenue_bp))?,
-        10_000,
-    )?;
-    let wage_unit = c::div_floor(w(spec.wage_cents), 100)?;
+    let mut other: i128 = 0;
+    for bp in &i.depts.share_bp {
+        other = c::add(other, c::div_round(c::mul(rooms_revenue, w(*bp))?, 10_000)?)?;
+    }
     let monthly_wage = c::add(
-        c::mul(c::mul(w(i.staff), wage_unit)?, w(i.plan.wage_pct))?,
+        c::mul(i.depts.wage_units, w(i.plan.wage_pct))?,
         w(i.state.extra_wage_cents),
     )?;
     let wage = w(prorate(c::narrow(monthly_wage)?, p)?);
@@ -58,8 +107,8 @@ pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
     let training_cost = w(training_effect(i.plan.training, cat, p)?.cost_cents);
     let labor = c::sum(&[wage, hire_cost, training_cost])?;
     let cpor_total = c::mul(w(spec.cpor_cents), w(m.sold))?;
-    let maintenance_cost = w(maintenance_effect(i.plan.maintenance, cat, p)?.cost_cents);
-    let fixed = w(prorate(i.state.fixed_cents, p)?);
+    let maintenance_cost = w(maintenance_effect(i.plan.rooms_maintenance(), cat, p)?.cost_cents);
+    let fixed = i.depts.fixed;
     let reply_cost = if i.plan.reply_reviews {
         w(prorate(cat.actions.reply_cents, p)?)
     } else {

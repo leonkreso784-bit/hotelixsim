@@ -188,6 +188,14 @@ impl From<GameError> for AppError {
                 PlanErrorV2::WageOutOfRange => C::WageOutOfRange,
                 PlanErrorV2::RenovationTwice => C::RenovationTwice,
                 PlanErrorV2::Calc => C::Internal,
+                // Task 15: `department_plan_invalid`. Do tada su kroz API nedostižne: odjeli se samo dopunjuju iz
+                // važećeg plana (`Game::plan_from_dto`).
+                PlanErrorV2::DepartmentUnknown
+                | PlanErrorV2::DepartmentMissing
+                | PlanErrorV2::DepartmentCannotClose
+                | PlanErrorV2::DepartmentSeasonalOutOfRange
+                | PlanErrorV2::ClosedWithSeasonal
+                | PlanErrorV2::PriceLevelOutOfRange => C::Internal,
             },
             GameError::Outdated { .. } => C::GameOutdated,
             GameError::InvalidSettings => C::InvalidSettings,

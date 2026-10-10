@@ -17,7 +17,7 @@ pub(crate) use money::MoneyStep;
 pub(crate) use people::PeopleStep;
 
 use guests::{GuestIn, guests};
-use money::{MoneyIn, money};
+use money::{MoneyIn, dept_money, money};
 use people::{PeopleIn, people, staffing};
 use situations::{group_done, situation_effects};
 
@@ -30,6 +30,7 @@ use sim_hotel::{Maintenance, Training};
 
 use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
+use crate::department::DeptCode;
 use crate::explain::{Explain, Lines, explain};
 use crate::market::market;
 use crate::plan::{PeriodPlan, PlanError};
@@ -154,17 +155,24 @@ pub fn resolve_period(
 
     let sit = situation_effects(situations, p, base, state.category)?;
 
+    // Task 11: obračun koristi samo Smještaj (tržište, opterećenje, oprema); ostali odjeli se nose, a njihove plaće
+    // i stalni troškovi ulaze u novac. Prihod ostalih odjela dolazi u Tasku 12.
+    let rooms_capacity = cat.dept(&DeptCode::rooms())?.capacity_tenths_per_staff_day;
+    let equipment_before = state.rooms_state()?.condition_pts;
     let st = staffing(state, plan)?;
     let mut s = st.state;
     s.groups.extend(sit.groups);
     s.extra_wage_cents = c::narrow(c::add(w(s.extra_wage_cents), sit.extra_wage)?)?;
-    let mkt = market(&s, p, plan, st.staff, base)?;
+    let depts = dept_money(&s, p, cat, spec)?;
+    let mkt = market(&s, p, plan, st.rooms_staff, rooms_capacity, base)?;
     s.groups.retain(|g| !group_done(g.month, p));
 
     let pe = people(
         &PeopleIn {
             state: &s,
             staff: st.staff,
+            rooms_staff: st.rooms_staff,
+            rooms_capacity_tenths: rooms_capacity,
             hires: st.hires,
             released: st.released,
             sold: mkt.sold,
@@ -182,7 +190,7 @@ pub fn resolve_period(
             state: &s,
             market: &mkt,
             plan,
-            staff: st.staff,
+            depts: &depts,
             hires: st.hires,
             departures: pe.out.departures,
             period: p,
@@ -194,6 +202,7 @@ pub fn resolve_period(
         &GuestIn {
             state: &s,
             plan,
+            equipment_pts: equipment_before,
             pend: &pend,
             period: p,
             satisfaction_step_bp: coeffs.satisfaction_step_bp,
@@ -229,7 +238,11 @@ pub fn resolve_period(
     let mut after = s;
     after.morale_pts = c::narrow(pe.morale)?;
     after.experience_pts = c::narrow(pe.experience)?;
-    after.equipment_pts = c::narrow(gu.equipment)?;
+    after
+        .departments
+        .get_mut(&DeptCode::rooms())
+        .ok_or_else(|| CatalogError::Missing("state.departments.rooms".to_string()))?
+        .condition_pts = c::narrow(gu.equipment)?;
     after.satisfaction_pts = c::narrow(gu.satisfaction)?;
     after.rating = c::narrow(gu.rating)?;
     after.cash_cents = c::narrow(mo.cash)?;

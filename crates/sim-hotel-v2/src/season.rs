@@ -71,7 +71,7 @@ pub fn run_season_with(
     planner: &mut dyn FnMut(&HotelState, &Period) -> Result<PeriodPlan, ResolveError>,
     chooser: &mut dyn FnMut(&SituationTemplate) -> Result<usize, ResolveError>,
 ) -> Result<SeasonResult, ResolveError> {
-    let mut state = HotelState::from_profile(cat.base.profile(profile)?)?;
+    let mut state = HotelState::from_profile(cat, profile)?;
     let start = start_indices(&state, cat, refs)?;
     let all = season_periods(kind);
     let mut periods: Vec<(PeriodReport, IndexSet)> = Vec::with_capacity(all.len());

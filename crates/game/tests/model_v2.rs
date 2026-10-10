@@ -195,3 +195,20 @@ fn dispatch_lives_in_one_place() {
         }
     }
 }
+
+#[test]
+fn v2_plan_dto_without_departments_takes_them_from_the_effective_plan() {
+    let g = Game::fold(&v2_events(PeriodKind::Week)).unwrap();
+    let h = common::hotel_ids()[0];
+    let r = g.current_round().unwrap();
+    let CorePlan::V2(eff) = g.effective_plan(h, r).unwrap() else {
+        panic!("v2")
+    };
+    let mut dto = CorePlan::V2(eff.clone()).to_dto();
+    assert!(!dto.departments.is_empty());
+    dto.departments.clear();
+    let CorePlan::V2(p) = g.plan_from_dto(h, r, &dto).unwrap() else {
+        panic!("v2")
+    };
+    assert_eq!(p.departments, eff.departments);
+}

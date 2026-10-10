@@ -184,6 +184,7 @@ impl From<&PlanBody> for PlanDto {
             maintenance: p.maintenance.into(),
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
+            departments: std::collections::BTreeMap::new(),
         }
     }
 }

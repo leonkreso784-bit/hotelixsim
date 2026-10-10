@@ -99,11 +99,11 @@ fn weekly_fixed_costs_over_season_equal_monthly() {
 #[test]
 fn wages_of_week_two_are_the_prorated_june_wage() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t02 = period_by_code(PeriodKind::Week, "t02").unwrap();
     let plan = PeriodPlan::default_for(&s, &t02, &c).unwrap();
     let r = resolve_period(&s, &t02, &plan, &[], &c).unwrap();
-    let staff = i64::from(plan.seasonal_target) + i64::from(s.permanent);
+    let staff = i64::from(plan.seasonal_total()) + i64::from(s.summary().permanent);
     let monthly = staff
         * (c.base.category(Category::Four).unwrap().wage_cents / 100)
         * i64::from(plan.wage_pct);
@@ -143,7 +143,7 @@ fn group_nights_split_across_weeks_sum_to_the_block() {
 #[test]
 fn carried_price_is_clamped_into_new_period_bounds() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let aug = month_period(Month::Aug);
     let mut plan = PeriodPlan::default_for(&s, &aug, &c).unwrap();
     let aug_max = PeriodPlan::limits(&s, &aug, &c).unwrap().price_max_cents;
@@ -162,7 +162,7 @@ fn carried_price_is_clamped_into_new_period_bounds() {
 #[test]
 fn default_weekly_price_is_day_weighted_reference_in_whole_euros() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let june = c
         .base
@@ -329,9 +329,13 @@ fn weekly_departures_over_june_match_the_monthly_value_for_stable_staff() {
     // dijelovi teleskopski zbrajaju u ⌊M·28/30⌋. Staro pravilo (svaki tjedan zasebno zaokružen) daje 0, a
     // pokvaren `prorate` (pun M po tjednu) daje 4·M.
     let c = cat();
-    let mut s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
-    s.permanent = 36;
-    s.seasonal = 20;
+    let mut s = HotelState::from_profile(&c, Profile::C).unwrap();
+    let rooms = s
+        .departments
+        .get_mut(&department::DeptCode::rooms())
+        .unwrap();
+    rooms.permanent = 36;
+    rooms.seasonal = 20;
     let mut sum = 0_i64;
     let mut monthly = Vec::new();
     for code in ["t01", "t02", "t03", "t04"] {
@@ -365,7 +369,9 @@ fn season_with(kind: PeriodKind, training: Training, maintenance: Maintenance) -
         &mut |s, p| {
             let mut plan = PeriodPlan::default_for(s, p, &c)?;
             plan.training = training;
-            plan.maintenance = maintenance;
+            for d in plan.departments.values_mut() {
+                d.maintenance = maintenance;
+            }
             Ok(plan)
         },
         &mut |_| Ok(0),
@@ -392,11 +398,11 @@ fn weekly_maintenance_training_and_fixed_sums_equal_four_months() {
 #[test]
 fn wage_of_t05_is_prorated_across_june_and_july() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
     let r = resolve_period(&s, &t05, &plan, &[], &c).unwrap();
-    let staff = i64::from(plan.seasonal_target) + i64::from(s.permanent);
+    let staff = i64::from(plan.seasonal_total()) + i64::from(s.summary().permanent);
     let m = staff
         * (c.base.category(Category::Four).unwrap().wage_cents / 100)
         * i64::from(plan.wage_pct);
@@ -415,7 +421,7 @@ fn wage_of_t05_is_prorated_across_june_and_july() {
 #[test]
 fn weekly_interest_is_days_over_month_days_of_the_monthly_interest() {
     let c = cat();
-    let mut s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let mut s = HotelState::from_profile(&c, Profile::C).unwrap();
     s.cash_cents = -50_000_000;
     let t02 = period_by_code(PeriodKind::Week, "t02").unwrap();
     let plan = PeriodPlan::default_for(&s, &t02, &c).unwrap();
@@ -507,7 +513,7 @@ fn group_answer(code: &str, target: Month) -> SituationOutcome {
 #[test]
 fn july_situation_in_week_five_books_its_group_into_july_days() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
     let r = resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jul)], &c).unwrap();
@@ -520,7 +526,7 @@ fn july_situation_in_week_five_books_its_group_into_july_days() {
 #[test]
 fn june_group_in_july_situation_of_week_five_is_in_the_past() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
     assert_eq!(
@@ -532,7 +538,7 @@ fn june_group_in_july_situation_of_week_five_is_in_the_past() {
 #[test]
 fn june_group_in_june_month_is_still_accepted() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let jun = month_period(Month::Jun);
     let plan = PeriodPlan::default_for(&s, &jun, &c).unwrap();
     let r = resolve_period(&s, &jun, &plan, &[group_answer("S1", Month::Jun)], &c).unwrap();
@@ -594,7 +600,7 @@ fn resolve_default(c: &Catalog, s: &HotelState, p: &Period) -> PeriodReport {
 #[test]
 fn weekly_small_gap_closes_one_unit_per_week_without_overshooting() {
     let c = cat();
-    let base = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let base = HotelState::from_profile(&c, Profile::C).unwrap();
     let t02 = period_by_code(PeriodKind::Week, "t02").unwrap();
     // Tjedni koraci 800 / 1 500 / 700 bp: razmak 3 (moral, zadovoljstvo) i 5 (ocjena) zaokruži se na 0.
     for (g, gap) in GAUGES.iter().zip([3_i64, 3, 5]) {
@@ -625,7 +631,7 @@ fn weekly_small_gap_closes_one_unit_per_week_without_overshooting() {
 #[test]
 fn monthly_small_gap_still_rounds_to_zero_as_in_v1() {
     let c = cat();
-    let base = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let base = HotelState::from_profile(&c, Profile::C).unwrap();
     let jun = month_period(Month::Jun);
     // Mjesečni koraci 3 000 (moral) i 2 500 (ocjena) bp: razmak 1 daje 0 kao u v1.
     for g in [&GAUGES[0], &GAUGES[2]] {
@@ -641,7 +647,7 @@ fn monthly_small_gap_still_rounds_to_zero_as_in_v1() {
 #[test]
 fn equipment_wear_and_load_of_t05_are_prorated_across_june_and_july() {
     let c = cat();
-    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let r = resolve_default(&c, &s, &t05);
     assert!(r.summary.people.load_hundredths > 180);

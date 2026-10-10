@@ -1,4 +1,5 @@
-//! Faza opreme i gostiju (5): trošenje i održavanje opreme, kvaliteta, vrijednost, zadovoljstvo i ocjena.
+//! Faza opreme i gostiju (5): trošenje i održavanje stanja prostora Smještaja (v1 pravila opreme, razina održavanja
+//! Smještaja), kvaliteta, vrijednost, zadovoljstvo i ocjena.
 
 use engine::calc::{self as c, Calc};
 use sim_hotel::{GuestOutcome, Pending};
@@ -27,6 +28,8 @@ pub(crate) struct GuestStep {
 pub(super) struct GuestIn<'a> {
     pub(super) state: &'a HotelState,
     pub(super) plan: &'a PeriodPlan,
+    /// Stanje prostora Smještaja na početku kruga (v1 „oprema").
+    pub(super) equipment_pts: i32,
     pub(super) pend: &'a Pending,
     pub(super) period: &'a Period,
     pub(super) satisfaction_step_bp: u16,
@@ -43,7 +46,7 @@ pub(super) struct GuestIn<'a> {
 
 pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let p = i.period;
-    let maintenance_eff = w(maintenance_effect(i.plan.maintenance, cat, p)?.equipment_pts);
+    let maintenance_eff = w(maintenance_effect(i.plan.rooms_maintenance(), cat, p)?.equipment_pts);
     // v1 mjesečna konstanta -400, razmjerno krugu.
     let wear = w(prorate(-400, p)?);
     let equipment_load = if i.load > 180 {
@@ -60,7 +63,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         (0, 0)
     };
     let equipment = c::sum(&[
-        w(i.state.equipment_pts),
+        w(i.equipment_pts),
         wear,
         equipment_load,
         maintenance_eff,
