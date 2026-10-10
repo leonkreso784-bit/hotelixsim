@@ -20,6 +20,7 @@ pub mod robots;
 pub mod season;
 pub mod state;
 pub mod streams;
+pub mod usali;
 
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
