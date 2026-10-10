@@ -690,18 +690,10 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
     type Error = Problem;
 
     fn try_from(v: &app::SituationsView) -> Result<Self, Problem> {
-        let unanswered = if v.open {
-            v.items.iter().filter(|i| i.chosen.is_none()).count()
-        } else {
-            0
-        };
         Ok(SituationsBody {
             month: v.month.map(Into::into),
             open: v.open,
-            unanswered: u8::try_from(unanswered).map_err(|_| {
-                tracing::error!(unanswered, "previše situacija u mjesecu");
-                Problem::new(StatusCode::INTERNAL_SERVER_ERROR, ProblemCode::Internal)
-            })?,
+            unanswered: v.unanswered,
             items: v
                 .items
                 .iter()

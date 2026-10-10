@@ -36,6 +36,41 @@ fn s1_response(s: &app::SituationsView) -> app::ResponseView {
         .unwrap()
 }
 
+/// Jedno pravilo „bez odgovora": pogled situacija i `current.unanswered` igre moraju se slagati.
+async fn assert_unanswered(deps: &Deps, caller: &Caller, hotel: HotelId, game: GameId, n: u8) {
+    let s = app::situations(deps, caller, hotel).await.unwrap();
+    let g = app::game_view(deps, caller, game).await.unwrap();
+    assert_eq!(s.unanswered, n);
+    assert_eq!(g.current.unwrap().unanswered, n);
+}
+
+#[tokio::test]
+async fn submitted_free_response_counts_as_answered_in_situations() {
+    let (deps, _mem) = app::memory::deps(snapshot());
+    let (caller, hotel, game) = start(&deps).await;
+    assert_unanswered(&deps, &caller, hotel, game, 2).await;
+    // slobodan odgovor (predan, presuda još čeka) računa se kao odgovor
+    app::submit_response(&deps, &caller, hotel, "S1", "Ispričam se.".into())
+        .await
+        .unwrap();
+    assert_unanswered(&deps, &caller, hotel, game, 1).await;
+    // ponuđeni odgovor 0 na S3
+    app::answer(&deps, &caller, hotel, "S3", 0).await.unwrap();
+    assert_unanswered(&deps, &caller, hotel, game, 0).await;
+}
+
+#[tokio::test]
+async fn unsubmitted_free_response_stays_unanswered() {
+    let (deps, _mem) = app::memory::deps(snapshot());
+    let (caller, hotel, game) = start(&deps).await;
+    // samo razgovor s likom nije odgovor
+    app::send_message(&deps, &caller, hotel, "S1", "Halo?".into())
+        .await
+        .unwrap();
+    app::answer(&deps, &caller, hotel, "S3", 0).await.unwrap();
+    assert_unanswered(&deps, &caller, hotel, game, 1).await;
+}
+
 #[tokio::test]
 async fn chat_message_gets_character_reply_through_job() {
     let (deps, _mem) = app::memory::deps(snapshot());
