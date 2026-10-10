@@ -116,7 +116,7 @@ describe("situacija s likom (otvorena izravno, kao nakon osvježavanja)", () => 
       }),
     );
     renderApp(api, "/situacije/S1");
-    expect(await screen.findByText("Potrošio si sve poruke. Sad odgovori.")).toBeTruthy();
+    expect(await screen.findByText("Poruke za ovaj razgovor su potrošene. Sad odgovori.")).toBeTruthy();
     expect(screen.queryByRole("textbox", { name: "Poruka liku" })).toBeNull();
   });
 });

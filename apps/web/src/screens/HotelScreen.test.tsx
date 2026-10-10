@@ -22,7 +22,7 @@ describe("Moj hotel", () => {
     renderApp(standardApi());
     expect(await screen.findByRole("heading", { name: "Moj hotel" })).toBeTruthy();
     expect(screen.getByText("120 soba")).toBeTruthy();
-    expect(screen.getByText("Ti, upravitelj")).toBeTruthy();
+    expect(screen.getByText("Ti vodiš ovaj hotel")).toBeTruthy();
     const head = screen.getByRole("heading", { name: "Moj hotel" }).parentElement
       ?.parentElement as HTMLElement;
     expect(head.querySelector("svg[aria-hidden='true']:not(.lucide)")).not.toBeNull();
