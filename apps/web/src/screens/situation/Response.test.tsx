@@ -99,6 +99,8 @@ describe("slobodan odgovor", () => {
     ).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "AI obrazloženje" })).toBeNull();
     expect(screen.queryByText(/AI presuda nije uspjela/)).toBeNull();
+    // m2: konačna neutralna presuda ne nosi napomenu „AI ocjenjuje…“ u sadašnjem vremenu.
+    expect(screen.queryByText("AI ocjenjuje odgovor. Pravila računaju brojke.")).toBeNull();
     // Bez kriterija nema ni praznog okvira popisa.
     expect(document.querySelector("ul.divide-y")).toBeNull();
   });

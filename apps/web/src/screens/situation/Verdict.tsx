@@ -1,13 +1,27 @@
 import { t } from "@hotelixsim/i18n";
 import { Check, Info, Sparkles, X } from "lucide-react";
+import { useEffect, useRef } from "react";
 import type { ResponseBody } from "../../api/types";
 import { Card, StatusText } from "../../ui/primitives";
 
-export function Verdict({ response }: { response: ResponseBody }) {
+/** `focusOnMount`: odgovor je upravo predan na ovom ekranu, pa fokus ide na njegov prikaz (UI_PRAVILA §6.5). */
+export function Verdict({
+  response,
+  focusOnMount = false,
+}: {
+  response: ResponseBody;
+  focusOnMount?: boolean;
+}) {
+  const title = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (focusOnMount) title.current?.focus();
+  }, [focusOnMount]);
   return (
     <section className="space-y-3">
       <Card className="space-y-1">
-        <p className="text-sm font-bold text-accent-ink">{t("response.title")}</p>
+        <p ref={title} tabIndex={-1} className="text-sm font-bold text-accent-ink">
+          {t("response.title")}
+        </p>
         <p>{response.text}</p>
       </Card>
       {response.status === "pending" ? (
@@ -50,10 +64,12 @@ export function Verdict({ response }: { response: ResponseBody }) {
           {response.rationale && <p className="text-sm">{response.rationale}</p>}
         </Card>
       )}
-      <p className="flex items-center gap-2 text-xs text-muted">
-        <Info size={14} aria-hidden="true" />
-        {t("verdict.note")}
-      </p>
+      {response.status === "judged" && (
+        <p className="flex items-center gap-2 text-xs text-muted">
+          <Info size={14} aria-hidden="true" />
+          {t("verdict.note")}
+        </p>
+      )}
     </section>
   );
 }

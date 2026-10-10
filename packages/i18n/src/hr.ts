@@ -121,6 +121,7 @@ export const hr = {
   "answers.orTitle": "Ili izaberi jedan od ponuđenih",
   "answers.choose": "Izaberi ovaj odgovor",
   "answers.chosen": "Tvoj izbor",
+  "answers.picked": "Označeno",
   "answers.confirmTitle": "Izabrani odgovor",
   "answers.confirmText": "Odgovor se predaje jednom i nakon toga se više ne mijenja.",
   "answers.confirm": "Potvrdi izbor",

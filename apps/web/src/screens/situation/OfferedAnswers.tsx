@@ -64,7 +64,7 @@ export function OfferedAnswers({
                 disabled={answer.isPending}
                 onClick={() => setPicked(i)}
               >
-                {t("answers.choose")}
+                {picked === i ? t("answers.picked") : t("answers.choose")}
               </Button>
             </Card>
           </li>
@@ -90,11 +90,19 @@ export function OfferedAnswers({
   );
 }
 
-export function ChosenAnswer({ s }: { s: SituationBody }) {
+/** `focusOnMount`: izbor je upravo potvrđen na ovom ekranu, pa fokus ide na novi sadržaj (UI_PRAVILA §6.5). */
+export function ChosenAnswer({ s, focusOnMount = false }: { s: SituationBody; focusOnMount?: boolean }) {
+  const label = useRef<HTMLParagraphElement>(null);
+  const chosen = s.chosen;
+  useEffect(() => {
+    if (focusOnMount && chosen !== null) label.current?.focus();
+  }, [focusOnMount, chosen]);
   if (s.chosen === null) return null;
   return (
     <Card emphasis className="space-y-1">
-      <p className="text-sm font-bold text-accent-ink">{t("answers.chosen")}</p>
+      <p ref={label} tabIndex={-1} className="text-sm font-bold text-accent-ink">
+        {t("answers.chosen")}
+      </p>
       <p>{s.answers[s.chosen]}</p>
     </Card>
   );

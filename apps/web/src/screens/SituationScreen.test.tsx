@@ -34,6 +34,8 @@ describe("popis situacija nakon kraja sezone", () => {
     expect(screen.getByRole("link", { name: "Otvori Tijek" }).getAttribute("href")).toBe("/tijek");
     expect(screen.queryByText("Ovaj mjesec nema situacija.")).toBeNull();
     expect(screen.queryByText("Mjesec je zatvoren — situacije su samo za čitanje.")).toBeNull();
+    // m4: bez situacija nema ni praznog popisa.
+    expect(document.querySelector("main ul")).toBeNull();
   });
 
   it("zatvoren mjesec usred sezone: samo rečenica „samo za čitanje“", async () => {
@@ -175,6 +177,38 @@ describe("ponuđeni odgovori (S3, bez lika)", () => {
     expect(api.posts("/v1/hotels/h1/situations/S3/answer")).toHaveLength(1);
     expect(api.posts("/v1/hotels/h1/situations/S3/answer")[0]?.body).toEqual({ answer: 1 });
     await waitFor(() => expect(screen.queryByRole("button", { name: "Izaberi ovaj odgovor" })).toBeNull());
+  });
+
+  it("m1: nakon „Potvrdi izbor“ fokus ide na „Tvoj izbor“, ne na <body>", async () => {
+    const api = standardApi().on("POST", "/v1/hotels/:hotel/situations/:code/answer", () =>
+      json(200, situations([s1(), s3({ chosen: 1 })])),
+    );
+    renderApp(api, "/situacije/S3");
+    const buttons = await screen.findAllByRole("button", { name: "Izaberi ovaj odgovor" });
+    fireEvent.click(buttons[1] as HTMLElement);
+    fireEvent.click(await screen.findByRole("button", { name: "Potvrdi izbor" }));
+    const chosen = await screen.findByText("Tvoj izbor");
+    await waitFor(() => expect(document.activeElement).toBe(chosen));
+  });
+
+  it("m1: već izabran odgovor otvoren izravno ne otima fokus", async () => {
+    const api = standardApi().on(
+      "GET",
+      "/v1/hotels/:hotel/situations",
+      situations([s1(), s3({ chosen: 1 })]),
+    );
+    renderApp(api, "/situacije/S3");
+    const chosen = await screen.findByText("Tvoj izbor");
+    expect(document.activeElement).not.toBe(chosen);
+  });
+
+  it("m3: izabrana kartica ima svoju oznaku „Označeno“, ostale ostaju „Izaberi ovaj odgovor“", async () => {
+    renderApp(standardApi(), "/situacije/S3");
+    const buttons = await screen.findAllByRole("button", { name: "Izaberi ovaj odgovor" });
+    fireEvent.click(buttons[2] as HTMLElement);
+    await screen.findByRole("heading", { name: "Izabrani odgovor" });
+    expect(buttons[2]?.textContent).toBe("Označeno");
+    expect(screen.getAllByRole("button", { name: "Izaberi ovaj odgovor" })).toHaveLength(3);
   });
 
   it("„Odustani“ u potvrdi izbora: bez zahtjeva, fokus natrag na isti gumb", async () => {
