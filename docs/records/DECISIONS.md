@@ -122,7 +122,7 @@ odabrao lika na Haikuu, mentor ostaje na Sonnetu.
 
 ## ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](#adr-019),
-[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md) (Task 14)
+[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md) (Task 14)
 
 **Kontekst.** Mentor je u srpnju napisao *„najviše je pao treći (s 4876 na 4269) … −600 uz osnovnih −453 i −1000 zbog
 plaća … ugled je smanjio prodaju za 200 bp … 24 395 000 centi"*. Leon: *„indeksi ne smiju biti ‚tvoj hotel je pao za
@@ -177,7 +177,7 @@ postavkom, `plan_facts` je treba dobiti, inače je mentor ne vidi.
 
 ## ADR-022 — Ekrani igrača: pretpostavke plana koraka 5
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-021](#adr-021),
-[DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md)
+[DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md)
 
 **Odluka (pretpostavke):**
 1. **Vlastiti mali usmjerivač** (`src/router.tsx`, ~60 redaka, History API) umjesto `react-router` 8 (nova glavna

@@ -24,7 +24,7 @@ jedno mjesto). Pokretanje i provjere prije commita: [README.md](README.md) → �
   Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
 - **AI ključ** je u `.env` (`ANTHROPIC_API_KEY`), nikad u `.env.example` ni u gitu; živi test:
   `cargo test -p ai --test live -- --ignored` (uz `set -a; source .env; set +a`).
-- **Sljedeće:** DEMO korak 5 — ekrani igrača su izgrađeni i pregledani po tasku ([plan](docs/plan/2026-10-10-ekrani.md));
+- **Sljedeće:** DEMO korak 5 — ekrani igrača su izgrađeni i pregledani po tasku ([plan](docs/archive/2026-10-10-ekrani.md));
   ostaje završni pregled grane, val popravaka i spajanje u `main` ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)).
   **Rok demoa ~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) — [ADR-012](docs/records/DECISIONS.md#adr-012).
 - **Čeka Leona:** ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); [BACKLOG.md](docs/records/BACKLOG.md)

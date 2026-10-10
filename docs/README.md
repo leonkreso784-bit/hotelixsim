@@ -75,7 +75,6 @@
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
-| [2026-10-10-ekrani.md](./plan/2026-10-10-ekrani.md) | 🟩 **aktivan** — DEMO korak 5: ekrani igrača (Tailwind, likovi iz slojeva, 11 taskova) |
 
 ## `workflow/` — kako radimo
 
@@ -114,4 +113,6 @@
 | [2026-10-05-dnevnik-runde-ledger.md](./archive/2026-10-05-dnevnik-runde-ledger.md) | ✅ Radni ledger koraka 3: odluke, nalazi pregleda, sažetak završnog pregleda |
 | [2026-10-09-ai-sloj.md](./archive/2026-10-09-ai-sloj.md) | ✅ Plan „AI sloj" (11 taskova, DEMO korak 4) |
 | [2026-10-09-ai-sloj-ledger.md](./archive/2026-10-09-ai-sloj-ledger.md) | ✅ Radni ledger koraka 4: preflight, presude voditelja, odgođeni nalazi, završni pregled |
+| [2026-10-10-ekrani.md](./archive/2026-10-10-ekrani.md) | ✅ Plan „ekrani igrača" (DEMO korak 5; taskovi 1–20, spojen u `main`) |
+| [2026-10-10-ekrani-ledger.md](./archive/2026-10-10-ekrani-ledger.md) | ✅ Radni ledger koraka 5: presude voditelja 1–26, odgođeni nalazi, završni pregled i val popravaka |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |
