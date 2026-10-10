@@ -2,8 +2,8 @@
 use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
 use game::{
-    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, RoundKey,
-    RoundStatus, debrief_facts,
+    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, Model,
+    RoundInfo, RoundKey, RoundStatus, debrief_facts,
 };
 
 use crate::demo::load_game;
@@ -18,7 +18,7 @@ pub struct HotelView {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RoundView {
-    pub round: RoundKey,
+    pub round: RoundInfo,
     pub status: RoundStatus,
     pub unanswered: u8,
 }
@@ -27,6 +27,9 @@ pub struct RoundView {
 pub struct GameView {
     pub game_id: GameId,
     pub months: Vec<RoundKey>,
+    pub model: Model,
+    /// Kalendar svih krugova igre (isti redoslijed kao `months`).
+    pub rounds: Vec<RoundInfo>,
     pub current: Option<RoundView>,
     pub my_hotel: HotelId,
     pub hotels: Vec<PublicHotel>,
@@ -112,7 +115,7 @@ pub(crate) fn round_view(g: &Game, m: RoundKey, mine: HotelId) -> Result<RoundVi
         0
     };
     Ok(RoundView {
-        round: m,
+        round: g.round_info(m)?,
         status,
         unanswered,
     })
@@ -193,6 +196,8 @@ pub async fn game_view(
     Ok(GameView {
         game_id,
         months: g.rounds.clone(),
+        model: g.model(),
+        rounds: g.rounds_info(),
         current,
         my_hotel: mine,
         hotels,

@@ -2,10 +2,6 @@ mod common;
 use common::*;
 use serde_json::json;
 
-async fn run_worker(d: &app::Deps) {
-    while app::run_next_job(d).await.unwrap() {}
-}
-
 #[tokio::test]
 async fn game_view_lists_four_hotels_and_open_june() {
     let (app, _, _) = app();
@@ -15,7 +11,9 @@ async fn game_view_lists_four_hotels_and_open_june() {
     assert_eq!(r.body["months"], json!(["jun", "jul"]));
     assert_eq!(
         r.body["current"],
-        json!({"month": "jun", "status": "open", "unanswered": 2})
+        json!({"month": "jun", "status": "open", "unanswered": 2,
+               "round": {"code": "jun", "kind": "month", "index": 0, "days": 30, "first_day": 1,
+                         "first_month": "jun", "last_day": 30, "last_month": "jun", "month_ends": true}})
     );
     assert_eq!(r.body["my_hotel_id"], hotel.as_str());
     assert_eq!(r.body["hotels"].as_array().unwrap().len(), 4);

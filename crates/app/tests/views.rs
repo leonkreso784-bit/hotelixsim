@@ -8,7 +8,9 @@ fn setup() -> (Deps, Arc<Memory>) {
 }
 
 async fn guest(d: &Deps) -> (Caller, DemoStarted) {
-    let s = start_demo(d, None).await.unwrap();
+    let s = start_demo(d, None, NewGameSettings::default())
+        .await
+        .unwrap();
     let c = caller(d, s.new_token.as_deref()).await.unwrap();
     (c, s)
 }
@@ -27,10 +29,14 @@ fn robot_hotel(mem: &Memory, game: GameId) -> HotelId {
 #[tokio::test]
 async fn start_demo_creates_guest_then_reuses_it() {
     let (d, _) = setup();
-    let first = start_demo(&d, None).await.unwrap();
+    let first = start_demo(&d, None, NewGameSettings::default())
+        .await
+        .unwrap();
     let tok = first.new_token.clone().expect("novi gost dobiva token");
     assert_eq!(tok.len(), 32);
-    let second = start_demo(&d, Some(&tok)).await.unwrap();
+    let second = start_demo(&d, Some(&tok), NewGameSettings::default())
+        .await
+        .unwrap();
     assert_eq!(
         second.new_token, None,
         "postojeći gost ne dobiva novi kolačić"
@@ -42,9 +48,13 @@ async fn start_demo_creates_guest_then_reuses_it() {
         second.game_id,
         "moj hotel = zadnja igra"
     );
-    let unknown = start_demo(&d, Some("0123456789abcdef0123456789abcdef"))
-        .await
-        .unwrap();
+    let unknown = start_demo(
+        &d,
+        Some("0123456789abcdef0123456789abcdef"),
+        NewGameSettings::default(),
+    )
+    .await
+    .unwrap();
     assert!(unknown.new_token.is_some(), "nepoznat token = novi gost");
 }
 
@@ -90,7 +100,7 @@ async fn game_view_lists_four_hotels_with_open_june() {
     assert_eq!(g.my_hotel, s.hotel_id);
     let r = g.current.unwrap();
     assert_eq!(
-        (r.round, r.status, r.unanswered),
+        (r.round.key, r.status, r.unanswered),
         (
             game::RoundKey::Month(sim_hotel::Month::Jun),
             game::RoundStatus::Open,

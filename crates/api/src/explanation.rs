@@ -103,6 +103,8 @@ pub struct ExplanationIndexBody {
 #[derive(Serialize, ToSchema)]
 pub struct ExplanationBody {
     pub month: MonthCode,
+    /// Kod kruga (`jun`... ili `t01`...).
+    pub round: String,
     /// Napredak od početka igre riječima („−2 boda").
     pub progress_text: String,
     pub indices: Vec<ExplanationIndexBody>,
@@ -143,9 +145,10 @@ impl From<&IndexFact> for ExplanationIndexBody {
 }
 
 impl ExplanationBody {
-    fn new(month: MonthCode, f: &DebriefFacts) -> Self {
+    fn new(month: MonthCode, round: String, f: &DebriefFacts) -> Self {
         ExplanationBody {
             month,
+            round,
             progress_text: f.progress.clone(),
             indices: f.indices.iter().map(Into::into).collect(),
         }
@@ -158,7 +161,7 @@ impl ExplanationBody {
     path = "/v1/hotels/{hotel_id}/months/{month}/explanation",
     params(
         ("hotel_id" = String, Path, description = "Hotel (uuid)"),
-        ("month" = MonthCode, Path, description = "Obračunat mjesec")
+        ("month" = String, Path, description = "Kod kruga: jun…sep ili t01…t17")
     ),
     responses(
         (status = 200, description = "Objašnjenje mjeseca po indeksima", body = ExplanationBody),
@@ -177,5 +180,9 @@ pub async fn explanation(
     let hotel = parse_hotel(&id)?;
     let month = parse_round(&month)?;
     let f = app::explanation(&s.deps, &caller, hotel, month).await?;
-    Ok(Json(ExplanationBody::new(calendar_month(month)?, &f)))
+    Ok(Json(ExplanationBody::new(
+        calendar_month(month)?,
+        month.code(),
+        &f,
+    )))
 }

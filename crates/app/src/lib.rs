@@ -32,6 +32,8 @@ pub struct Deps {
     pub ai: Arc<dyn AiPort>,
     pub ids: Arc<dyn Ids>,
     pub snapshot: Arc<content::Snapshot>,
+    /// Pravila modela v2 (`Snapshot::read_v2`); nova igra iz `NewGameSettings { model: V2, .. }` ide iz njih.
+    pub snapshot_v2: Arc<content::Snapshot>,
 }
 
 pub type BoxFut<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;

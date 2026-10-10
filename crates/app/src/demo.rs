@@ -1,7 +1,8 @@
-use game::command::new_game;
+use game::command::{GameSettings, new_game_with};
 use game::{Actor, Game, GameEvent, GameId, GuestId, HotelId, Recorded, SCHEMA_VER};
 use sha2::{Digest, Sha256};
 use sim_hotel::{Index, Profile};
+use sim_hotel_v2::PeriodKind;
 
 use crate::{AppError, Deps, ErrorCode, NewEvent, NewGame, NewHotel, RawEvent};
 
@@ -38,21 +39,57 @@ pub struct DemoStarted {
     pub new_token: Option<String>,
 }
 
+/// Postavke nove igre: model pravila i (neobavezno) vrsta kruga.
+/// v1 + `None`|`Month` → v1 mjesečna (lipanj–srpanj); v1 + `Week` → `InvalidSettings`;
+/// v2 + `None` → tjedna cijela sezona (🟨 P2); v2 + vrsta → ta vrsta.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NewGameSettings {
+    pub model: content::Model,
+    pub kind: Option<PeriodKind>,
+}
+
+impl Default for NewGameSettings {
+    fn default() -> Self {
+        NewGameSettings {
+            model: content::Model::V1,
+            kind: None,
+        }
+    }
+}
+
 /// `POST /v1/demo` (DEMO §1.4): gost (postojeći ili novi) i nova igra s tri robota. Igra se stvara u jednoj
 /// transakciji, ali gost se upisuje prije nje (dvije zasebne radnje; siroče gost je opisan u BACKLOG-u).
-pub async fn start_demo(deps: &Deps, token: Option<&str>) -> Result<DemoStarted, AppError> {
-    let (guest, new_token) = match caller(deps, token).await?.guest {
+pub async fn start_demo(
+    deps: &Deps,
+    token: Option<&str>,
+    settings: NewGameSettings,
+) -> Result<DemoStarted, AppError> {
+    let (guest, new_guest) = match caller(deps, token).await?.guest {
         Some(g) => (g, None),
-        None => {
-            let id = GuestId(deps.ids.uuid());
-            let tok = deps.ids.uuid().simple().to_string();
-            deps.guests.create_guest(id, token_hash(&tok)).await?;
-            (id, Some(tok))
-        }
+        None => (
+            GuestId(deps.ids.uuid()),
+            Some(deps.ids.uuid().simple().to_string()),
+        ),
     };
     let game_id = GameId(deps.ids.uuid());
     let hotel_ids = [(); 4].map(|_| HotelId(deps.ids.uuid()));
-    let events = new_game(game_id, deps.ids.seed(), &deps.snapshot, guest, hotel_ids)?;
+    let (snapshot, default_kind) = match settings.model {
+        content::Model::V1 => (&deps.snapshot, PeriodKind::Month),
+        content::Model::V2 => (&deps.snapshot_v2, PeriodKind::Week),
+    };
+    let kind = settings.kind.unwrap_or(default_kind);
+    // Postavke se provjere prije upisa gosta: odbijena igra ne ostavlja siroče gosta.
+    let events = new_game_with(
+        game_id,
+        deps.ids.seed(),
+        snapshot,
+        guest,
+        hotel_ids,
+        GameSettings { kind },
+    )?;
+    if let Some(tok) = &new_guest {
+        deps.guests.create_guest(guest, token_hash(tok)).await?;
+    }
     let hotels = hotel_ids
         .iter()
         .zip(1_i16..)
@@ -73,7 +110,7 @@ pub async fn start_demo(deps: &Deps, token: Option<&str>) -> Result<DemoStarted,
     Ok(DemoStarted {
         game_id,
         hotel_id: hotel_ids[0],
-        new_token,
+        new_token: new_guest,
     })
 }
 

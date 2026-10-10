@@ -7,7 +7,7 @@ use axum::response::Json;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{GameBody, MonthCode, RoundBody, parse_game, parse_round};
+use crate::schema::{GameBody, RoundBody, parse_game, parse_round};
 
 /// Igra u kojoj sudjeluješ: mjeseci, trenutna runda i javni podaci četiriju hotela.
 #[utoipa::path(
@@ -37,7 +37,7 @@ pub async fn game(
     path = "/v1/games/{game_id}/rounds/{month}",
     params(
         ("game_id" = String, Path, description = "Igra (uuid)"),
-        ("month" = MonthCode, Path, description = "Mjesec runde")
+        ("month" = String, Path, description = "Kod kruga: jun…sep ili t01…t17")
     ),
     responses(
         (status = 200, description = "Stanje runde", body = RoundBody),
@@ -62,7 +62,7 @@ pub async fn round(
     path = "/v1/games/{game_id}/rounds/{month}/close",
     params(
         ("game_id" = String, Path, description = "Igra (uuid)"),
-        ("month" = MonthCode, Path, description = "Mjesec runde")
+        ("month" = String, Path, description = "Kod kruga: jun…sep ili t01…t17")
     ),
     responses(
         (status = 202, description = "Zatvoreno sad; obračun čeka radnika", body = RoundBody),

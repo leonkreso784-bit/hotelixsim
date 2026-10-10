@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{MonthCode, calendar_month, parse_hotel};
+use crate::schema::{MonthCode, calendar_month, parse_hotel, round_days};
 
 /// Pokazatelji jednog obračunatog mjeseca. Sve „po sobi" dijeli se sa svim sobama × dani (`room_nights`), pa vrijedi
 /// RevPAR = ADR × popunjenost. Iznosi u centima, udjeli u baznim bodovima (10 000 = 100 %); `null` kad je
@@ -18,6 +18,10 @@ use crate::schema::{MonthCode, calendar_month, parse_hotel};
 #[derive(Serialize, ToSchema)]
 pub struct KpiMonthBody {
     pub month: MonthCode,
+    /// Kod kruga (`jun`... ili `t01`...).
+    pub round: String,
+    /// Dani kruga (mjesec ili tjedan).
+    pub days: u8,
     /// Sve sobe × dani mjeseca.
     pub room_nights: u32,
     pub sold_nights: u32,
@@ -62,6 +66,8 @@ impl TryFrom<&KpiMonth> for KpiMonthBody {
         let k = &m.kpi;
         Ok(KpiMonthBody {
             month: calendar_month(m.round)?,
+            round: m.round.code(),
+            days: round_days(m.round)?,
             room_nights: k.room_nights,
             sold_nights: k.sold_nights,
             lost_nights: k.lost_nights,

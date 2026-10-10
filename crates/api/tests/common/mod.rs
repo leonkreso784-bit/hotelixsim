@@ -77,6 +77,21 @@ pub async fn demo(app: &Router) -> (String, String, String) {
     )
 }
 
+/// Vrijednost kolačića `hotelixsim_guest=…` do `;`.
+pub fn cookie_value(set_cookie: &str) -> String {
+    set_cookie
+        .split(';')
+        .next()
+        .unwrap()
+        .strip_prefix("hotelixsim_guest=")
+        .unwrap()
+        .to_owned()
+}
+
+pub async fn run_worker(d: &app::Deps) {
+    while app::run_next_job(d).await.unwrap() {}
+}
+
 pub fn robot_hotel(mem: &Memory, game: &str) -> String {
     let g = app::GameId(game.parse().unwrap());
     mem.events(g)[0].payload["hotels"][1]["hotel_id"]
