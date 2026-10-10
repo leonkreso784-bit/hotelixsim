@@ -6,8 +6,21 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const ENGINE_LIB = "crates/engine/src/lib.rs";
 const HOTEL_LIB = "crates/sim-hotel/src/lib.rs";
+const HOTEL_V2_LIB = "crates/sim-hotel-v2/src/lib.rs";
 
-const CLIPPY = ["clippy", "-p", "engine", "-p", "sim-hotel", "--all-targets", "--", "-D", "warnings"];
+const CLIPPY = [
+  "clippy",
+  "-p",
+  "engine",
+  "-p",
+  "sim-hotel",
+  "-p",
+  "sim-hotel-v2",
+  "--all-targets",
+  "--",
+  "-D",
+  "warnings",
+];
 
 const MUTACIJE = [
   {
@@ -31,6 +44,14 @@ const MUTACIJE = [
     nadi: "pub mod index;",
     zamijeni:
       "pub mod index;\npub fn probe() -> std::collections::HashSet<u8> { std::collections::HashSet::new() }",
+    ocekuj: /disallowed type/,
+  },
+  {
+    ime: "HashSet u sim-hotel-v2",
+    datoteka: HOTEL_V2_LIB,
+    nadi: "pub mod calendar;",
+    zamijeni:
+      "pub mod calendar;\npub fn probe() -> std::collections::HashSet<u8> { std::collections::HashSet::new() }",
     ocekuj: /disallowed type/,
   },
   {
@@ -101,12 +122,18 @@ const MUTACIJE = [
 
 let neuspjeh = 0;
 
-// Dva clippy.toml moraju ostati bajt za bajt isti (jedan po jezgrenom crateu).
+// Svi clippy.toml jezgrenih crateova moraju ostati bajt za bajt isti.
 {
-  const a = readFileSync("crates/engine/clippy.toml", "utf8");
-  const b = readFileSync("crates/sim-hotel/clippy.toml", "utf8");
-  if (a !== b) {
-    console.error("PROBOJ [clippy.toml] clippy.toml se razlikuju (crates/engine vs crates/sim-hotel)");
+  const CLIPPY_TOML = [
+    "crates/engine/clippy.toml",
+    "crates/sim-hotel/clippy.toml",
+    "crates/sim-hotel-v2/clippy.toml",
+  ];
+  const [prvi, ...ostali] = CLIPPY_TOML;
+  const uzor = readFileSync(prvi, "utf8");
+  const razliciti = ostali.filter((f) => readFileSync(f, "utf8") !== uzor);
+  if (razliciti.length > 0) {
+    console.error(`PROBOJ [clippy.toml] razlikuju se od ${prvi}: ${razliciti.join(", ")}`);
     neuspjeh += 1;
   } else {
     console.log("OK    [clippy.toml identični]");
