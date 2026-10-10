@@ -50,6 +50,9 @@ fn sample() -> DebriefInput {
         round: RoundKey::parse("jul").unwrap(),
         next_round: RoundKey::parse("aug"),
         prev_round: RoundKey::parse("jun"),
+        round_kind: "month".into(),
+        first_date: (1, MonthCode::Jul),
+        last_date: (31, MonthCode::Jul),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![DebriefSituation {
             chosen_label: Some(CHEF_ANSWER.into()),

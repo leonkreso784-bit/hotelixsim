@@ -375,3 +375,44 @@ async fn expired_lease_on_last_attempt_fails_job() {
     assert_eq!(mem.jobs()[0].status, JobStatus::Failed);
     assert!(d.jobs.claim(30).await.unwrap().is_none());
 }
+
+#[tokio::test]
+async fn weekly_debrief_calls_ai_only_at_month_end() {
+    let ai = Arc::new(app::memory::FakeAi::good());
+    let (d, mem) = app::memory::deps_with_ai(Snapshot::read(&repo_dir()).unwrap(), ai.clone());
+    let settings = NewGameSettings {
+        model: content::Model::V2,
+        kind: Some(sim_hotel_v2::PeriodKind::Week),
+    };
+    let s = start_demo(&d, None, settings).await.unwrap();
+    let me = caller(&d, s.new_token.as_deref()).await.unwrap();
+    for n in 1..=5 {
+        assert!(
+            close_round(&d, &me, s.game_id, game::RoundKey::Week(n))
+                .await
+                .unwrap()
+                .accepted,
+            "t0{n}"
+        );
+        while run_next_job(&d).await.unwrap() {}
+    }
+    let debriefs: Vec<_> = mem
+        .events(s.game_id)
+        .into_iter()
+        .filter(|e| e.kind == "DebriefRecorded")
+        .collect();
+    assert_eq!(debriefs.len(), 5);
+    assert_eq!(ai.calls().2, 1); // samo t05 (završava lipanj)
+    for e in &debriefs[..4] {
+        assert_eq!(e.payload["source"], "fallback");
+        assert!(e.payload["text"].as_str().unwrap().contains("Tri uzroka"));
+        assert!(
+            !e.payload["text"]
+                .as_str()
+                .unwrap()
+                .contains("Što je išlo dobro")
+        );
+    }
+    assert_eq!(debriefs[4].payload["month"], "t05");
+    assert_eq!(debriefs[4].payload["source"], "ai");
+}

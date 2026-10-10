@@ -30,7 +30,7 @@ pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};
 pub use ids::{GameId, GuestId, HotelId};
 pub use mentor::{
     ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact, SituationFact,
-    debrief_facts, fallback_debrief,
+    debrief_facts, fallback_debrief, wants_ai_mentor, weekly_summary,
 };
 pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;

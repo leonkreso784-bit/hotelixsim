@@ -4,7 +4,7 @@
 use crate::round::RoundKey;
 use serde::Serialize;
 
-use crate::dto::{LineDto, PlanDto, indices_dto};
+use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::game::{ChatLine, Game, RoundStatus};
 use crate::ids::HotelId;
@@ -71,6 +71,11 @@ pub struct DebriefInput {
     pub next_round: Option<RoundKey>,
     /// Prošli mjesec igre; `None` = ovo je prvi mjesec, a „prije" je početno stanje hotela.
     pub prev_round: Option<RoundKey>,
+    /// Vrsta kruga: "month" | "week".
+    pub round_kind: String,
+    /// Prvi i zadnji dan kruga: (dan u mjesecu od 1, mjesec).
+    pub first_date: (u8, MonthCode),
+    pub last_date: (u8, MonthCode),
     pub hotel_name: String,
     pub situations: Vec<DebriefSituation>,
     /// Pet indeksa (stotinke) na početku mjeseca, redoslijedom `INDEX_ORDER`.
@@ -220,10 +225,16 @@ impl Game {
             self.model()
                 .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
+        let period = self.round_info(m)?.period;
+        let (fd, fm) = period.first_date();
+        let (ld, lm) = period.last_date();
         Ok(DebriefInput {
             round: m,
             next_round: pos.checked_add(1).and_then(|p| self.rounds.get(p)).copied(),
             prev_round: prev_round.copied(),
+            round_kind: period.kind.code().to_owned(),
+            first_date: (fd, fm.into()),
+            last_date: (ld, lm.into()),
             hotel_name: h.setup.name.clone(),
             situations,
             indices_before,
