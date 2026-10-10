@@ -5,6 +5,85 @@ Svaka značajna odluka: kontekst → odluka → posljedice. Najnovija na vrhu. *
 
 ---
 
+## ADR-028 — Leonove odluke za put B: ljudi kao u Simsima, burza rada, tjedni krug, AI razgovori
+**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** (osim t. 9 i pravila o nacionalnosti — vidi dolje) ·
+**Vezano:** [ADR-026](#adr-026), [MODEL_V2.md](../architecture/MODEL_V2.md) §9, [PROSIRENJA.md](../product/PROSIRENJA.md)
+
+**Kontekst.** Arhitekt je u MODEL_V2 §9 postavio 12 pitanja s preporukama; Leon je odgovorio 10.10. i dodao nove
+mehanike.
+**Odluka (Leon).**
+1. Isti ljudi za isti profil u svakoj igri — ali **svi ljudi razvijeni „kao Sims svijet"**: osobnost, dobre i loše
+   strane, vidljiva traka vještine.
+2. Odjeljak **„Odjeli"**; unutra wellness, restoran, kafić… što hotel ima; klik → stanje prostora, prihod, zadovoljstvo
+   gostiju.
+3. Stare demo igre igraju se dalje na v1.
+4. Otpuštanje dopušteno (otkazni rok, otpremnina), **motivacija kolega pada samo u izvanrednim slučajevima**. Novo:
+   **burza rada** s kandidatima; početnik je jeftin i slab, obukom raste, kad postane izvrstan traži veću plaću;
+   iskusni profesionalac košta više; **jezici** koje osoba govori i koliko dobro; **agencija za strane radnike**
+   (npr. 5 radnika) kojima hotel plaća **smještaj** — student vidi koliko donose, koliko kvalitete dodaju ili oduzimaju
+   i koliko košta smještaj.
+5. Prezentacija v2 na četiri mjeseca; **igra po tjednu ili po mjesecu — bira profesor pri stvaranju igre**.
+6. Popunjenost, RevPAR i GOPPAR nad svim sobama. 7. GOP po USALI-ju (osiguranje, najam, porez ispod GOP-a).
+8. Odgovor na recenziju izborom bez AI-ja; **razgovori sa zaposlenicima i gostima u situacijama s AI-jem gotovo
+   uvijek** (slobodan tekst).
+9. Student **vidi recenzije drugih hotela** („kao Booking drugih hotela").
+10. Jedna osnovna cijena + doplate po tipu sobe. 12. **Voditelj odjela** — svakako.
+**Pravilo voditelja (🟨 ČEKA LEONOV PREGLED), uz t. 4 i 11:** nacionalnost određuje samo **činjenice** — jezike, trošak
+agencije, potrebu za smještajem, dozvolu i rok dolaska; **nikad** vještinu, pouzdanost ni osobnost — one su osobne i
+izvlače se iz istih raspodjela za sve. Razlog: igra je nastavni materijal fakulteta; student uči procijeniti čovjeka,
+ne zastavu. Ljude drugih hotela student ne vidi (pretpostavka; t. 9 govori samo o recenzijama).
+**Odgovori na 11 novih pitanja arhitekta (Leon 10.10., MODEL_V2 §9):** (1) strani radnici: **ista plaća za istu
+vještinu** — agencija daje dostupnost uz naknadu i smještaj; (2) **zajednička burza rada** — kandidata kojeg zaposli
+jedan hotel drugi više ne mogu (suprotno preporuci); (3) tjedni kalendar **16 × 7 dana + završnih 10 dana**; (4) nova v2
+igra je **tjedna** po zadanom; (5) mentor tjedno kratko bez AI-ja, **AI mentor na kraju mjeseca**; (6) broj AI razgovora
+**bira profesor** pri stvaranju igre; (7) granica AI troška **2 $ po studentu po igri**, zatim ponuđeni odgovori;
+(8) mješavinu jezika gostiju **istražuje agent** (DZS, Kvarner); (9) ciljna GOP marža **35–45 %**, profesor potvrđuje;
+(10) sobe hotela kao smještaj osoblja **do 10 % soba**; (11) **jedna skrivena osobina** kandidata, otkriva je razgovor
+za posao ili 4 tjedna rada.
+**Cijena ako krivo:** tjedni krug i bogati ljudi povećavaju posao sloja 1 i 2 — nova procjena u MODEL_V2 §5.
+
+---
+
+## ADR-027 — Raspored za računalo prije demoa
+**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [ADR-021](#adr-021), [PROSIRENJA.md](../product/PROSIRENJA.md) P1
+
+**Kontekst.** Leon 10.10.: *„prilagodio bi kompjuteru da paše UI isto, ne samo mobitelu"*. Ekrani su bili zaključani
+na širinu mobitela (`max-w-md`); profesor će demo najvjerojatnije gledati na laptopu ili projektoru.
+**Odluka (pretpostavka).** Mobitel (< 768 px) ostaje kakav jest. Od 768 px izbornik prelazi u bočnu traku, od 1024 px
+Moj hotel, Mjesec završen i Situacija dobivaju dva stupca; ostali ekrani jedan stupac ograničene širine čitanja. Samo
+web, bez promjene igre, prije demoa (14.10.).
+**Cijena ako krivo:** pola dana rada; Leon možda želi drukčiji raspored za računalo — mijenja se samo `ui/Layout.tsx`
+i četiri ekrana.
+
+---
+
+## ADR-026 — Put B: hotel od brojeva postaje skup stvari, u slojevima
+**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (smjer je Leonov, pretpostavke Claudeove) ·
+**Vezano:** [PROSIRENJA.md](../product/PROSIRENJA.md), [MODEL_V2.md](../architecture/MODEL_V2.md), [ADR-023](#adr-023)
+
+**Kontekst.** Leon 10.10.: igra treba biti *„kao BitLife — opsežno do bola"*: profili zaposlenika, sve sobe sa stanjem,
+dijelovi hotela (spa, restoran, kafić, rooftop) sa zaposlenicima, zaradom i održavanjem, recenzije koje se čitaju, ADR.
+Danas je hotel u jezgri skup brojeva (sobe = jedan broj, zaposleni = stalni + sezonci, „ostali prihod" = 30 % prihoda
+od soba, recenzije = jedna ocjena). Ponuđena su dva puta: A — profili izvedeni iz zbroja (jeftino, student ne može
+djelovati na pojedinca) i B — pravi entiteti u simulaciji. Leon je izabrao **B**.
+**Odluka.**
+1. **Put B u slojevima**, svaki se gradi, dokaže (testovi, balans, preglednik) i pregleda zasebno: 0 pokazatelji (ADR,
+   RevPAR, GOPPAR), 1 odjeli po USALI-ju, 2 zaposlenici kao pojedinci, 3 sobe sa stanjem, 4 recenzije s tekstom.
+2. **Detalj samo uz uzrok:** svaki novi podatak mijenja brojke, a objašnjenje dolazi iz jezgre (isti izvor kao mentor).
+3. **Demo je siguran:** sve se gradi na granama; `main` ostaje igriv za demo 14.10. Stare igre zadržavaju svoj snimak
+   i verziju jezgre.
+4. **Pretpostavke (🟨):** ADR = prosječna cijena prodane sobe; odjeli ovise o hotelu (profil određuje ima li spa ili
+   rooftop); zaposlenicima student upravlja (zaposli, otpusti, plaća, obuka, premještaj); recenzije iz banke rečenica
+   po uzroku, AI samo povremeno; cilj je prezentacija profesoru nakon demoa.
+5. **Arhitektura ([MODEL_V2.md](../architecture/MODEL_V2.md) §11, t. 6–11, 🟨):** v1 se zamrzava, v2 je novi paket
+   `sim-hotel-v2` birano poljem `model` u snimku pravila; v2 uvijek daje i v1 sažetak (indeksi, mentor, ekrani rade
+   dalje); kocka raspoređuje, ne mijenja zbrojeve; nalozi su dio plana mjeseca; tekst recenzija se ne sprema.
+   Procjena: 110–165 sati rada agenata za slojeve 0–4 — tjedni, ne dani; najmanji „wow" je sloj 0 + 1.
+**Cijena ako krivo:** put B je najveća promjena modela od početka — tjedni rada ako se slojevi rade temeljito; ako
+Leon odluči drukčiji redoslijed, mijenja se samo redoslijed slojeva, ne model.
+
+---
+
 ## ADR-025 — Presuda ne spominje redne brojeve ponuđenih odgovora ni kriterija
 **Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [ADR-018](#adr-018) t. 10, [ADR-023](#adr-023)
 
@@ -51,7 +130,7 @@ odabrao lika na Haikuu, mentor ostaje na Sonnetu.
 
 ## ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](#adr-019),
-[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md) (Task 14)
+[ADR-022](#adr-022) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md) (Task 14)
 
 **Kontekst.** Mentor je u srpnju napisao *„najviše je pao treći (s 4876 na 4269) … −600 uz osnovnih −453 i −1000 zbog
 plaća … ugled je smanjio prodaju za 200 bp … 24 395 000 centi"*. Leon: *„indeksi ne smiju biti ‚tvoj hotel je pao za
@@ -106,7 +185,7 @@ postavkom, `plan_facts` je treba dobiti, inače je mentor ne vidi.
 
 ## ADR-022 — Ekrani igrača: pretpostavke plana koraka 5
 **Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-021](#adr-021),
-[DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md)
+[DIZAJN.md](../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md)
 
 **Odluka (pretpostavke):**
 1. **Vlastiti mali usmjerivač** (`src/router.tsx`, ~60 redaka, History API) umjesto `react-router` 8 (nova glavna

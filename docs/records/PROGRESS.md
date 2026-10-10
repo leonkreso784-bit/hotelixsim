@@ -6,7 +6,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ## 2026-10-10 — Ekrani igrača (DEMO korak 5), mentor govori ljudski, modeli
 
-- Grana `gradnja/ekrani` (lokalno, **nije pushana**), plan [2026-10-10-ekrani.md](../plan/2026-10-10-ekrani.md), ledger u
+- Grana `gradnja/ekrani` (lokalno, **nije pushana**), plan [2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md), ledger u
   `.superpowers/sdd/2026-10-10-ekrani/progress.md` (Rulings 12–23). Svaki task pregledan: 9 (Mjesec završen, + Leonov zahtjev:
   indeksi s kraja mjeseca, Moj hotel se osvježi nakon obračuna), 10 (tijek, množina), 12 (lica), 13a (dorada izgleda, cijeli
   brojevi), 13c (README, BACKLOG).

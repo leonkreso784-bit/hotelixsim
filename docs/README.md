@@ -60,6 +60,7 @@
 | [DIZAJN.md](./product/DIZAJN.md) | Leonov logo i koncept ekrana v2 (boje, tri ekrana, likovi, kako su riješena neslaganja s igrom); slike u [dizajn/](./product/dizajn/) |
 | [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — čeka Leonovu provjeru |
 | [PITANJA_ZA_PROFESORE.md](./product/PITANJA_ZA_PROFESORE.md) | Pitanja za profesore FMTU-a — čeka Leonov pregled prije slanja |
+| [PROSIRENJA.md](./product/PROSIRENJA.md) | **Put B**: katalog dodataka nakon demoa (odjeli, zaposlenici, sobe, recenzije, pokazatelji, računalo) — što student vidi, što uči, koje brojke mijenja, sloj |
 
 ## `architecture/` — kako je građeno
 
@@ -67,13 +68,14 @@
 |---|---|
 | [ARHITEKTURA.md](./architecture/ARHITEKTURA.md) | Arhitektura v2: Rust (jezgra + backend) + TypeScript (sučelje), granice crateova, determinizam, dnevnik događaja, AI iza porta, redoslijed gradnje (§20) |
 | [RASPRAVA_ARHITEKTURE.md](./architecture/RASPRAVA_ARHITEKTURE.md) | Zapis rasprave o nacrtu: primjedbe, odgovori, otvoreni upiti |
+| [MODEL_V2.md](./architecture/MODEL_V2.md) | **Put B**: kako hotel od brojeva postaje skup stvari (odjeli, zaposlenici, sobe, recenzije) — entiteti, slojevi, determinizam, stare igre |
 
 ## `plan/` — što sada
 
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
-| [2026-10-10-ekrani.md](./plan/2026-10-10-ekrani.md) | 🟩 **aktivan** — DEMO korak 5: ekrani igrača (Tailwind, likovi iz slojeva, 11 taskova) |
+| [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | 🟩 **aktivan** — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
 
 ## `workflow/` — kako radimo
 
@@ -112,4 +114,6 @@
 | [2026-10-05-dnevnik-runde-ledger.md](./archive/2026-10-05-dnevnik-runde-ledger.md) | ✅ Radni ledger koraka 3: odluke, nalazi pregleda, sažetak završnog pregleda |
 | [2026-10-09-ai-sloj.md](./archive/2026-10-09-ai-sloj.md) | ✅ Plan „AI sloj" (11 taskova, DEMO korak 4) |
 | [2026-10-09-ai-sloj-ledger.md](./archive/2026-10-09-ai-sloj-ledger.md) | ✅ Radni ledger koraka 4: preflight, presude voditelja, odgođeni nalazi, završni pregled |
+| [2026-10-10-ekrani.md](./archive/2026-10-10-ekrani.md) | ✅ Plan „ekrani igrača" (DEMO korak 5; taskovi 1–20, spojen u `main`) |
+| [2026-10-10-ekrani-ledger.md](./archive/2026-10-10-ekrani-ledger.md) | ✅ Radni ledger koraka 5: presude voditelja 1–26, odgođeni nalazi, završni pregled i val popravaka |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |
