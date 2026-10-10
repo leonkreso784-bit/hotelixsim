@@ -115,101 +115,107 @@ export function HotelScreen({ me }: { me: HotelBody }) {
         </div>
       </div>
 
-      <Card>
-        <IndexBars
-          indices={latestIndices(h)}
-          deltas={deltas}
-          deltaLabel={deltas ? t("hotel.fromStart") : null}
-          linked
-        />
-      </Card>
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
+        <Card>
+          <IndexBars
+            indices={latestIndices(h)}
+            deltas={deltas}
+            deltaLabel={deltas ? t("hotel.fromStart") : null}
+            linked
+          />
+        </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Stat
-          to="/pokazatelj/F/sold"
-          icon={<BedDouble size={20} aria-hidden="true" />}
-          label={t("hotel.occupancy")}
-          value={lm ? formatOccupancy(lm.sold, lm.available) : "—"}
-          note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
-        />
-        <Stat
-          to="/pokazatelj/F/revenue"
-          icon={<ChartColumn size={20} aria-hidden="true" />}
-          label={t("hotel.revenue")}
-          value={lm ? formatEuros(lm.rooms_revenue_cents) : "—"}
-          note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
-        />
-        <Stat
-          to="/pokazatelj/F/cash"
-          icon={<Wallet size={20} aria-hidden="true" />}
-          label={t("hotel.cash")}
-          value={formatEuros(priv.now.cash_cents)}
-        />
-        <Stat
-          to="/pokazatelj/Z/staff"
-          icon={<Users size={20} aria-hidden="true" />}
-          label={t("hotel.staff")}
-          value={formatCount(priv.now.permanent + priv.now.seasonal, "person")}
-        />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat
+              to="/pokazatelj/F/sold"
+              icon={<BedDouble size={20} aria-hidden="true" />}
+              label={t("hotel.occupancy")}
+              value={lm ? formatOccupancy(lm.sold, lm.available) : "—"}
+              note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
+            />
+            <Stat
+              to="/pokazatelj/F/revenue"
+              icon={<ChartColumn size={20} aria-hidden="true" />}
+              label={t("hotel.revenue")}
+              value={lm ? formatEuros(lm.rooms_revenue_cents) : "—"}
+              note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
+            />
+            <Stat
+              to="/pokazatelj/F/cash"
+              icon={<Wallet size={20} aria-hidden="true" />}
+              label={t("hotel.cash")}
+              value={formatEuros(priv.now.cash_cents)}
+            />
+            <Stat
+              to="/pokazatelj/Z/staff"
+              icon={<Users size={20} aria-hidden="true" />}
+              label={t("hotel.staff")}
+              value={formatCount(priv.now.permanent + priv.now.seasonal, "person")}
+            />
+          </div>
+
+          <Card className="py-1">
+            <Row
+              to="/pokazatelj/R/rating"
+              icon={<Star size={20} aria-hidden="true" />}
+              label={t("hotel.rating")}
+              end={<strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>}
+            />
+          </Card>
+
+          <Card className="divide-y divide-line py-1">
+            {current && (
+              <Row
+                to="/situacije"
+                icon={<FileText size={20} aria-hidden="true" />}
+                label={t("hotel.situations")}
+                end={
+                  sits.data && sits.data.unanswered > 0 ? <Badge>{sits.data.unanswered}</Badge> : undefined
+                }
+              />
+            )}
+            {current?.status === "open" && (
+              <Row to="/plan" icon={<CalendarDays size={20} aria-hidden="true" />} label={t("hotel.plan")} />
+            )}
+            {lastScored && (
+              <Row
+                to={`/mjesec/${lastScored.month}`}
+                icon={<ChartColumn size={20} aria-hidden="true" />}
+                label={t("hotel.result", { month: monthName(lastScored.month) })}
+              />
+            )}
+          </Card>
+
+          {current?.status === "open" && (
+            <CloseMonth
+              gameId={me.game_id}
+              month={current.month}
+              unanswered={sits.data?.unanswered ?? current.unanswered}
+            />
+          )}
+          {current?.status === "closing" && (
+            <Card className="space-y-2">
+              <p role="status">{t("hotel.closing", { month: monthName(current.month) })}</p>
+              <Link
+                to={`/mjesec/${current.month}`}
+                className="inline-flex min-h-11 items-center font-semibold text-accent"
+              >
+                {t("hotel.closingLink")}
+              </Link>
+            </Card>
+          )}
+          {!current && (
+            <Card className="space-y-3">
+              <p className="text-lg font-bold">{t("hotel.seasonOver")}</p>
+              {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
+              <Button disabled={start.isPending} onClick={newGame}>
+                {t("hotel.newGame")}
+              </Button>
+            </Card>
+          )}
+        </div>
       </div>
-
-      <Card className="py-1">
-        <Row
-          to="/pokazatelj/R/rating"
-          icon={<Star size={20} aria-hidden="true" />}
-          label={t("hotel.rating")}
-          end={<strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>}
-        />
-      </Card>
-
-      <Card className="divide-y divide-line py-1">
-        {current && (
-          <Row
-            to="/situacije"
-            icon={<FileText size={20} aria-hidden="true" />}
-            label={t("hotel.situations")}
-            end={sits.data && sits.data.unanswered > 0 ? <Badge>{sits.data.unanswered}</Badge> : undefined}
-          />
-        )}
-        {current?.status === "open" && (
-          <Row to="/plan" icon={<CalendarDays size={20} aria-hidden="true" />} label={t("hotel.plan")} />
-        )}
-        {lastScored && (
-          <Row
-            to={`/mjesec/${lastScored.month}`}
-            icon={<ChartColumn size={20} aria-hidden="true" />}
-            label={t("hotel.result", { month: monthName(lastScored.month) })}
-          />
-        )}
-      </Card>
-
-      {current?.status === "open" && (
-        <CloseMonth
-          gameId={me.game_id}
-          month={current.month}
-          unanswered={sits.data?.unanswered ?? current.unanswered}
-        />
-      )}
-      {current?.status === "closing" && (
-        <Card className="space-y-2">
-          <p role="status">{t("hotel.closing", { month: monthName(current.month) })}</p>
-          <Link
-            to={`/mjesec/${current.month}`}
-            className="inline-flex min-h-11 items-center font-semibold text-accent"
-          >
-            {t("hotel.closingLink")}
-          </Link>
-        </Card>
-      )}
-      {!current && (
-        <Card className="space-y-3">
-          <p className="text-lg font-bold">{t("hotel.seasonOver")}</p>
-          {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
-          <Button disabled={start.isPending} onClick={newGame}>
-            {t("hotel.newGame")}
-          </Button>
-        </Card>
-      )}
     </>
   );
 }
