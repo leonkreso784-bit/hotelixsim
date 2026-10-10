@@ -37,10 +37,10 @@
 
 ### Pravila (čuva ih `corepack pnpm check:docs`, i u CI-ju)
 
-1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku ili mapu koje nema pada. Isto vrijedi za `.md`, `.png` i `.mjs`.
+1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku ili mapu koje nema pada. Isto vrijedi za bilo koju
+   datoteku (npr. sliku ili skriptu).
 2. **Svaki `.md` pod `docs/` je naveden u svom indeksu.** Dokument koji nigdje nije naveden je „duh". Dokumenti u
-   `docs/<uloga>/` navedeni su ovdje; dijelovi u mapi `X/` navedeni su u `X.md` (a `X.md` je naveden ovdje).
-   Više od jedne razine mapa (`X/Y/…`) je zabranjeno.
+   `docs/<uloga>/` navedeni su ovdje; dijelovi u mapi `X/` navedeni su u `X.md`.
 3. **Jedan aktivni plan po području.** Svaki plan u zaglavlju ima `**Područje:** kod` ili `**Područje:** dokumentacija`
    (bez tog retka znači `kod`). U `plan/` smije biti najviše jedan aktivan plan za svako područje, uz `ROADMAP.md`.
    Plan koji čeka nosi `**Status:** ⏸️ PAUZIRAN`. Dvije sesije smiju raditi usporedno samo na različitim područjima.
@@ -48,13 +48,12 @@
 5. **`CLAUDE.md` ima budžet znakova** (vidi tablicu), jer se učitava svaku sesiju.
 6. **Nema ćirilice** u tekstu izvan koda (slovo-dvojnik zna ući kopiranjem).
 7. **Arhiva ne smije biti živa.** Plan u `plan/` ne smije proglasiti plan iz `archive/` aktivnim.
-8. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1) su izuzeta
+8. **Podindeks:** `X.md` uz mapu `X/` mora postojati i biti naveden ovdje. Više od jedne razine mapa (`X/Y/…`) je zabranjeno.
+9. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1) su izuzeta
    dok sloj traje.
-9. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
-   `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
-10. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
-
-(Brojevi pravila ovdje nisu isti kao u komentaru na vrhu `scripts/check-docs.mjs`, koji je izvor istine.)
+10. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
+    `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
+11. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
 
 ### Granice veličine
 
@@ -64,7 +63,7 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 | vrsta | gdje | granica | zašto |
 |---|---|---|---|
 | predaja | `docs/SLJEDECA_SESIJA.md` | 60 | već pravilo `/kraj`, sad i brana |
-| ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 63 (ADR-015) |
+| ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 60 (ADR-015) |
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
 | živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
 | arhiva | `docs/archive/**` | 1100 | zamrznuto; task se ne reže na pola |

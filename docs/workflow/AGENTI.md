@@ -8,7 +8,7 @@
 
 1. **Brainstorming** (`superpowers:brainstorming`) — što i zašto; arhitektura kroz dokument i raspravu, ne kroz anketu.
 2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** kod|dokumentacija`. Najviše jedan aktivni plan **po području**;
-   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan do 300 redaka smije biti jedna datoteka. Veći se **prije
+   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan unutar granice živog dokumenta ([tablica](../README.md#granice-veličine)) smije biti jedna datoteka. Veći se **prije
    aktivacije** razdvaja u pregled + mapu taskova: prvo `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa
    `corepack pnpm docs:plan <plan.md>`. Granice veličine: [tablica](../README.md#granice-veličine).
 3. **Gradnja** (`superpowers:subagent-driven-development`) na zasebnoj grani (npr. `gradnja/<ime>`): jedan izvođač po tasku.
