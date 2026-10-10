@@ -107,6 +107,10 @@ pub fn period_indices(
     cat: &Catalog,
     refs: &RefTable,
 ) -> Result<IndexSet, ResolveError> {
+    // Izvješće se ne smije ocjenjivati prema tablici druge vrste kruga (tjedan prema mjesečnoj i obratno).
+    if refs.periods.get(usize::from(r.period.index)) != Some(&r.period) {
+        return Err(CatalogError::Missing(format!("ref_table.{}", r.period.code())).into());
+    }
     let p = refs
         .points
         .get(usize::from(r.period.index))

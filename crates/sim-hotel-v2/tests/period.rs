@@ -1,6 +1,6 @@
 mod common;
 
-use sim_hotel_v2::calendar::{PeriodKind, month_period, period_by_code, season_periods};
+use sim_hotel_v2::calendar::{self, PeriodKind, month_period, period_by_code, season_periods};
 use sim_hotel_v2::*;
 
 fn cat() -> Catalog {
@@ -218,4 +218,193 @@ fn weekly_lines_explain_every_period_of_a_default_season() {
     for (r, _) in &w.periods {
         common::assert_lines_explain(&r.summary);
     }
+}
+
+// ---- Popravak 1: tjedni retci koje mjesečna ekvivalencija ne razlikuje od "bez prorate"
+
+fn monthly_departures(staff: i64, turnover_bp: i64) -> i64 {
+    (2 * staff * turnover_bp + 10_000) / 20_000 // div_round(staff·turnover, 10_000)
+}
+
+#[test]
+fn weekly_departures_are_the_prorated_monthly_departures() {
+    let w = default_season(PeriodKind::Week);
+    let mut total = 0_i64;
+    for (r, _) in &w.periods {
+        let monthly = monthly_departures(
+            i64::from(r.summary.people.staff),
+            i64::from(r.summary.people.turnover_bp),
+        );
+        let expected = calendar::prorate(monthly, &r.period).unwrap();
+        assert_eq!(
+            i64::from(r.summary.people.departures),
+            expected,
+            "{}",
+            r.period.code()
+        );
+        total += i64::from(r.summary.people.departures);
+    }
+    assert!(
+        total > 0,
+        "tjedni odlasci nikad ne smiju biti nula cijelu sezonu"
+    );
+}
+
+#[test]
+fn weekly_departures_over_june_match_the_monthly_value_for_stable_staff() {
+    // 56 ljudi, moral na cilju: stopa ~300 bp daje mjesečno 2 odlaska; tjedni zbroj lipnja mora biti 2, ne 0.
+    let c = cat();
+    let mut s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    s.permanent = 36;
+    s.seasonal = 20;
+    let mut sum = 0_i64;
+    let mut monthly = 0_i64;
+    for code in ["t01", "t02", "t03", "t04"] {
+        let p = period_by_code(PeriodKind::Week, code).unwrap();
+        let plan = PeriodPlan::default_for(&s, &p, &c).unwrap();
+        let r = resolve_period(&s, &p, &plan, &[], &c).unwrap();
+        monthly = monthly_departures(
+            i64::from(r.summary.people.staff),
+            i64::from(r.summary.people.turnover_bp),
+        );
+        sum += i64::from(r.summary.people.departures);
+        s = r.after;
+    }
+    assert!(monthly > 0);
+    assert!(sum > 0, "četiri lipanjska tjedna bez odlazaka");
+}
+
+fn season_with(kind: PeriodKind, training: Training, maintenance: Maintenance) -> SeasonResult {
+    let c = cat();
+    let r = refs(&c, kind);
+    run_season_with(
+        Profile::C,
+        kind,
+        &c,
+        &[],
+        &r,
+        &mut |s, p| {
+            let mut plan = PeriodPlan::default_for(s, p, &c)?;
+            plan.training = training;
+            plan.maintenance = maintenance;
+            Ok(plan)
+        },
+        &mut |_| Ok(0),
+    )
+    .unwrap()
+}
+
+#[test]
+fn weekly_maintenance_training_and_fixed_sums_equal_four_months() {
+    let w = season_with(PeriodKind::Week, Training::Full, Maintenance::Intensive);
+    let m = season_with(PeriodKind::Month, Training::Full, Maintenance::Intensive);
+    for cause in [Cause::Maintenance, Cause::Training, Cause::FixedCosts] {
+        let (a, b) = (
+            sum_lines(&w, Var::Costs, cause.clone()),
+            sum_lines(&m, Var::Costs, cause.clone()),
+        );
+        assert!(b > 0, "{cause:?}");
+        assert_eq!(a, b, "{cause:?}");
+    }
+    assert_eq!(sum_lines(&w, Var::Costs, Cause::Maintenance), 4 * 3_000_000);
+    assert_eq!(sum_lines(&w, Var::Costs, Cause::Training), 4 * 1_000_000);
+}
+
+#[test]
+fn wage_of_t05_is_prorated_across_june_and_july() {
+    let c = cat();
+    let s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
+    let r = resolve_period(&s, &t05, &plan, &[], &c).unwrap();
+    let staff = i64::from(plan.seasonal_target) + i64::from(s.permanent);
+    let m = staff
+        * (c.base.category(Category::Four).unwrap().wage_cents / 100)
+        * i64::from(plan.wage_pct);
+    // lipanj: dani 28–29 od 30; srpanj: dani 0–4 od 31
+    let expected = (m - m * 28 / 30) + m * 5 / 31;
+    let wage = r
+        .summary
+        .lines
+        .iter()
+        .find(|l| l.var == Var::Costs && l.cause == Cause::Wage)
+        .unwrap()
+        .amount;
+    assert_eq!(wage, expected);
+}
+
+#[test]
+fn weekly_interest_is_days_over_month_days_of_the_monthly_interest() {
+    let c = cat();
+    let mut s = HotelState::from_profile(c.base.profile(Profile::C).unwrap()).unwrap();
+    s.cash_cents = -50_000_000;
+    let t02 = period_by_code(PeriodKind::Week, "t02").unwrap();
+    let plan = PeriodPlan::default_for(&s, &t02, &c).unwrap();
+    let r = resolve_period(&s, &t02, &plan, &[], &c).unwrap();
+    let m = &r.summary.money;
+    let before_interest = s.cash_cents + m.gop_cents - m.capex_cents;
+    assert!(before_interest < 0);
+    let monthly = -before_interest * i64::from(c.base.economy.interest_bp);
+    let expected = (2 * monthly * 7 + 2 * 10_000 * 30 / 2) / (2 * 10_000 * 30); // zaokruženo
+    assert!(m.interest_cents > 0);
+    assert!(
+        (m.interest_cents - expected).abs() <= 1,
+        "{} vs {expected}",
+        m.interest_cents
+    );
+}
+
+#[test]
+fn weekly_lines_explain_with_situations_for_every_strategy() {
+    let c = cat();
+    let r = refs(&c, PeriodKind::Week);
+    for s in Strategy::ALL {
+        let out = run_season(
+            Profile::C,
+            s,
+            7,
+            PeriodKind::Week,
+            &c,
+            &common::test_situations(),
+            &r,
+        )
+        .unwrap();
+        for (rep, _) in &out.periods {
+            common::assert_lines_explain(&rep.summary);
+        }
+    }
+}
+
+#[test]
+fn weekly_report_against_monthly_ref_table_is_an_error_not_wrong_indices() {
+    let c = cat();
+    let weekly = default_season(PeriodKind::Week);
+    let monthly_refs = refs(&c, PeriodKind::Month);
+    let first = &weekly.periods[0].0;
+    assert!(matches!(
+        period_indices(first, &c, &monthly_refs),
+        Err(ResolveError::Catalog(_))
+    ));
+}
+
+#[test]
+fn group_block_is_spread_over_at_least_two_weeks() {
+    let c = cat();
+    let r = refs(&c, PeriodKind::Week);
+    let out = run_season(
+        Profile::C,
+        Strategy::Caring,
+        7,
+        PeriodKind::Week,
+        &c,
+        &common::test_situations(),
+        &r,
+    )
+    .unwrap();
+    let with_groups = out
+        .periods
+        .iter()
+        .filter(|(p, _)| p.summary.market.group_room_nights > 0)
+        .count();
+    assert!(with_groups >= 2, "{with_groups}");
 }

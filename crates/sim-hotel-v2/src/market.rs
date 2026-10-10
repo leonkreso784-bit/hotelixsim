@@ -45,7 +45,6 @@ pub(crate) fn block_nights(g: &GroupBlock, p: &Period) -> Calc<i128> {
 pub fn market(
     state: &HotelState,
     p: &Period,
-
     plan: &PeriodPlan,
     staff: u16,
     cat: &sim_hotel::Catalog,

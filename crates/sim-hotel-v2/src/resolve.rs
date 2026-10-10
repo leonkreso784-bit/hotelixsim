@@ -195,12 +195,10 @@ fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
     )?;
     let morale = c::add(morale_now, morale_gain)?.clamp(0, 10_000);
     let turnover = turnover_bp(c::narrow(morale)?)?;
-    // Odlasci: mjesečna stopa odlazaka razmjerno danima kruga (nazivnik su dani mjeseca u kojem krug počinje).
-    let departures = c::div_round(
-        c::mul(c::mul(staff, w(turnover))?, days)?,
-        c::mul(10_000, w(i.period.month_days_at_start()))?,
-    )?
-    .clamp(0, staff);
+    // Odlasci: mjesečni broj odlazaka raspoređen po danima kruga (`prorate`; u cijelom mjesecu je identitet), da
+    // tjedni krug ne zaokružuje svaki tjedan zasebno na 0.
+    let monthly_departures = c::div_round(c::mul(staff, w(turnover))?, 10_000)?;
+    let departures = w(prorate(c::narrow(monthly_departures)?, i.period)?).clamp(0, staff);
     let replaced = c::add(departures, w(i.hires))?.min(staff);
     let exp_now = w(i.state.experience_pts);
     let exp_mix = if staff == 0 {
