@@ -25,6 +25,17 @@ fn statement_identities_hold() {
 }
 
 #[test]
+fn statement_matches_hand_computed_figures() {
+    let s = statement(&fixtures::june_accounts()).unwrap();
+    assert_eq!(s.departmental_profit_cents, 25_587_100);
+    assert_eq!(s.total_undistributed_cents, 15_260_200);
+    assert_eq!(s.gop_cents, 10_326_900);
+    assert_eq!(s.ebitda_cents, 4_826_900);
+    assert_eq!(s.goppar_cents, Some(2_869));
+    assert_eq!((s.interest_cents, s.capex_cents), (300_000, 1_000_000));
+}
+
+#[test]
 fn rooms_come_first_and_rentals_have_no_departmental_expense() {
     let s = statement(&fixtures::june_accounts()).unwrap();
     let codes: Vec<&str> = s.departments.iter().map(|d| d.code.as_str()).collect();

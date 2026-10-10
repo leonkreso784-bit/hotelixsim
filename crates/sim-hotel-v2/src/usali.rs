@@ -275,6 +275,8 @@ pub enum LineKind {
     Result,
 }
 
+/// `is_total` označava samo retke "total" sekcija s više redaka; GOP i EBITDA su pojedinačni retci vrste `Result` s
+/// `is_total = false` — sučelje ih mora isticati po sekciji/vrsti, ne po `is_total`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VarianceLine {
     pub section: Section,
