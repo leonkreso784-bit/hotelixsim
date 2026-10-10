@@ -13,6 +13,8 @@ export const hr = {
   "index.Z": "Zaposlenici",
   "index.O": "Operativa",
   "index.F": "Financije",
+  "index.scale": "50 = prosjek usporedivog hotela",
+  "index.bar": "{label}: {value} od 100",
   "month.jun": "lipanj",
   "month.jul": "srpanj",
   "month.aug": "kolovoz",

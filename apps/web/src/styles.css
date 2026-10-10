@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+
+/* Izgled HotelixSima: mijenja se OVDJE, ne u ekranima (DIZAJN.md §1, ADR-022 t. 2). */
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --color-accent: #246bfd;
+  --color-accent-soft: #eaf1ff;
+  --color-ink: #151b2b;
+  --color-muted: #5d6679;
+  --color-line: #e2e8f3;
+  --color-canvas: #f5f8fd;
+  --color-surface: #ffffff;
+  --color-sand: #f4e8d5;
+  --color-mint: #d8f0ee;
+  --color-up: #15924a;
+  --color-down: #dc2f2f;
+  --radius-card: 1.25rem;
+}
+
+html {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
