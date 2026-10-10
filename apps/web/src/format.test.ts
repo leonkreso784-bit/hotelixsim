@@ -3,8 +3,11 @@ import {
   capitalize,
   formatCount,
   formatEuros,
+  formatEurosCents,
   formatIndex,
+  formatNights,
   formatOccupancy,
+  formatPercentBp,
   formatPointsCount,
   formatRating,
   formatWholeSigned,
@@ -62,6 +65,18 @@ describe("novac i ocjena", () => {
   it("formatOccupancy je postotak prodanih, a bez kapaciteta crtica", () => {
     expect(formatOccupancy(2448, 3600)).toBe("68 %");
     expect(formatOccupancy(0, 0)).toBe("—");
+  });
+  it("pokazatelji: postotak iz baznih bodova, euri s centima, noći; null je crtica", () => {
+    expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual(["68 %", "31,7 %", "121,2 %", "−4,5 %"]);
+    expect(formatPercentBp(null)).toBe("—");
+    expect([4003, 123_456, -5500, 0].map(formatEurosCents)).toEqual([
+      "40,03 €",
+      "1.234,56 €",
+      "−55,00 €",
+      "0,00 €",
+    ]);
+    expect(formatEurosCents(null)).toBe("—");
+    expect([1, 3, 60, 3600].map(formatNights)).toEqual(["1 noć", "3 noći", "60 noći", "3.600 noći"]);
   });
 });
 

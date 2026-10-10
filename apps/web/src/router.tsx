@@ -1,4 +1,4 @@
-// Mali usmjerivač nad History API-jem (ADR-022 t. 1): osam ruta, bez učitavača.
+// Mali usmjerivač nad History API-jem (ADR-022 t. 1): devet ruta, bez učitavača.
 import { type AnchorHTMLAttributes, type MouseEvent, useSyncExternalStore } from "react";
 import type { DriverCode, IndexCode, MonthCode } from "./api/types";
 
@@ -9,6 +9,7 @@ export type Route =
   | { name: "plan" }
   | { name: "month"; month: MonthCode }
   | { name: "indicator"; code: IndexCode; highlight: DriverCode | null }
+  | { name: "kpi" }
   | { name: "feed" }
   | { name: "avatars" }
   | { name: "notFound" };
@@ -61,6 +62,7 @@ export function matchRoute(pathname: string): Route {
     }
   }
   if (a === "plan" && b === undefined) return { name: "plan" };
+  if (a === "pokazatelji" && b === undefined) return { name: "kpi" };
   if (a === "mjesec" && b !== undefined && isMonth(b)) return { name: "month", month: b };
   if (a === "tijek" && b === undefined) return { name: "feed" };
   if (a === "likovi" && b === undefined) return { name: "avatars" };

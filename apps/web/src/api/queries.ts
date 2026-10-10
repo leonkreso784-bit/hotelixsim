@@ -10,6 +10,7 @@ import type {
   FeedItemBody,
   GameBody,
   HotelBody,
+  KpiBody,
   MonthCode,
   PlanBody,
   SituationsBody,
@@ -22,6 +23,7 @@ export const keys = {
   conversation: (hotelId: string, code: string) => ["conversation", hotelId, code] as const,
   feed: (hotelId: string) => ["feed", hotelId] as const,
   explanation: (hotelId: string, month: MonthCode) => ["explanation", hotelId, month] as const,
+  kpi: (hotelId: string) => ["kpi", hotelId] as const,
 };
 
 export function useMe() {
@@ -50,6 +52,7 @@ async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<Gam
     void qc.invalidateQueries({ queryKey: keys.me });
     void qc.invalidateQueries({ queryKey: ["situations"] });
     void qc.invalidateQueries({ queryKey: ["feed"] });
+    void qc.invalidateQueries({ queryKey: ["kpi"] });
   }
   return next;
 }
@@ -239,5 +242,15 @@ export function useExplanation(hotelId: string, month: MonthCode) {
           params: { path: { hotel_id: hotelId, month } },
         }),
       ),
+  });
+}
+
+/** Hotelski pokazatelji obračunatih mjeseci (ADR, RevPAR, GOPPAR…); računa ih poslužitelj, web samo prikazuje. */
+export function useKpi(hotelId: string) {
+  const api = useApi();
+  return useQuery<KpiBody>({
+    queryKey: keys.kpi(hotelId),
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/hotels/{hotel_id}/kpi", { params: { path: { hotel_id: hotelId } } })),
   });
 }

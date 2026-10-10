@@ -1,82 +1,25 @@
 import { t } from "@hotelixsim/i18n";
-import {
-  BedDouble,
-  CalendarDays,
-  ChartColumn,
-  ChevronRight,
-  FileText,
-  Star,
-  Users,
-  Wallet,
-} from "lucide-react";
-import { type ReactNode, useRef } from "react";
+import { BedDouble, CalendarDays, ChartColumn, FileText, Gauge, Star, Users, Wallet } from "lucide-react";
+import { useRef } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSituations, useStartDemo } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { PLAYER_LOOK } from "../avatar/look";
-import { formatCount, formatEuros, formatOccupancy, formatRating, monthName } from "../format";
+import {
+  formatCount,
+  formatEuros,
+  formatEurosCents,
+  formatPercentBp,
+  formatRating,
+  monthName,
+} from "../format";
 import { indexDeltas, latestIndices } from "../game";
 import { Link } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Badge, Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
-
-function Stat({
-  to,
-  icon,
-  label,
-  value,
-  note,
-}: {
-  to: string;
-  icon: ReactNode;
-  label: string;
-  value: string;
-  note?: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="block rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-    >
-      <Card className="space-y-1 p-3">
-        <span className="flex items-center gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
-            {icon}
-          </span>
-          <span className="min-w-0 text-xs text-muted">{label}</span>
-        </span>
-        <strong className="block whitespace-nowrap text-xl tabular-nums">{value}</strong>
-        {note && <span className="line-clamp-2 block text-xs text-muted">{note}</span>}
-      </Card>
-    </Link>
-  );
-}
-
-function Row({
-  to,
-  icon,
-  label,
-  end,
-}: {
-  to: string;
-  icon: ReactNode;
-  label: string;
-  end?: ReactNode | undefined;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex min-h-12 items-center gap-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-    >
-      <span className="text-accent">{icon}</span>
-      <span className="flex-1 font-semibold">{label}</span>
-      {end}
-      <ChevronRight size={18} aria-hidden="true" className="text-muted" />
-    </Link>
-  );
-}
+import { Row, Stat } from "./hotel/links";
 
 export function HotelScreen({ me }: { me: HotelBody }) {
   const game = useGame(me.game_id);
@@ -131,7 +74,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               to="/pokazatelj/F/sold"
               icon={<BedDouble size={20} aria-hidden="true" />}
               label={t("hotel.occupancy")}
-              value={lm ? formatOccupancy(lm.sold, lm.available) : "—"}
+              value={lm ? formatPercentBp(lm.occupancy_bp) : "—"}
               note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
             />
             <Stat
@@ -155,12 +98,27 @@ export function HotelScreen({ me }: { me: HotelBody }) {
             />
           </div>
 
-          <Card className="py-1">
+          <Card className="divide-y divide-line py-1">
             <Row
               to="/pokazatelj/R/rating"
               icon={<Star size={20} aria-hidden="true" />}
               label={t("hotel.rating")}
               end={<strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>}
+            />
+            <Row
+              to="/pokazatelji"
+              icon={<Gauge size={20} aria-hidden="true" />}
+              label={t("hotel.kpi")}
+              end={
+                lm ? (
+                  <span className="text-right text-sm text-muted tabular-nums">
+                    {t("hotel.kpiValues", {
+                      adr: formatEurosCents(lm.adr_cents),
+                      revpar: formatEurosCents(lm.revpar_cents),
+                    })}
+                  </span>
+                ) : undefined
+              }
             />
           </Card>
 
