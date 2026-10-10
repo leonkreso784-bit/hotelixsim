@@ -1,5 +1,6 @@
 // App.tsx — ulaz: gost bez igre vidi početak, inače okvir s ekranom po ruti.
 import { t } from "@hotelixsim/i18n";
+import type { ReactNode } from "react";
 import { isNoGame, problemMessage } from "./api/errors";
 import { useGame, useMe } from "./api/queries";
 import type { HotelBody } from "./api/types";
@@ -17,26 +18,51 @@ import { StartScreen } from "./screens/StartScreen";
 import { chipText, Layout } from "./ui/Layout";
 import { Button, ErrorText, StatusText } from "./ui/primitives";
 
+/** Ekrani s jednim stupcem dobivaju ograničenu širinu čitanja; hotel, mjesec i situacija sami slažu dva stupca. */
+function Reading({ children }: { children: ReactNode }) {
+  return <div className="mx-auto max-w-2xl space-y-3">{children}</div>;
+}
+
 function Screen({ route, me }: { route: Route; me: HotelBody }) {
   switch (route.name) {
     case "hotel":
       return <HotelScreen me={me} />;
     case "situations":
-      return <SituationsScreen me={me} />;
+      return (
+        <Reading>
+          <SituationsScreen me={me} />
+        </Reading>
+      );
     case "situation":
       return <SituationScreen me={me} code={route.code} />;
     case "plan":
-      return <PlanScreen me={me} />;
+      return (
+        <Reading>
+          <PlanScreen me={me} />
+        </Reading>
+      );
     case "month":
       return <MonthScreen key={route.month} me={me} month={route.month} />;
     case "indicator":
-      return <IndicatorScreen key={route.code} me={me} code={route.code} highlight={route.highlight} />;
+      return (
+        <Reading>
+          <IndicatorScreen key={route.code} me={me} code={route.code} highlight={route.highlight} />
+        </Reading>
+      );
     case "feed":
-      return <FeedScreen me={me} />;
+      return (
+        <Reading>
+          <FeedScreen me={me} />
+        </Reading>
+      );
     case "avatars":
       return <AvatarGallery />;
     default:
-      return <NotFound />;
+      return (
+        <Reading>
+          <NotFound />
+        </Reading>
+      );
   }
 }
 
@@ -54,14 +80,14 @@ export function App() {
   const me = useMe();
   if (me.isPending)
     return (
-      <div className="mx-auto max-w-md p-6">
+      <div className="mx-auto max-w-md p-6 md:max-w-xl">
         <StatusText>{t("status.loading")}</StatusText>
       </div>
     );
   if (me.isError) {
     if (isNoGame(me.error)) return <StartScreen />;
     return (
-      <div className="mx-auto max-w-md space-y-3 p-6">
+      <div className="mx-auto max-w-md space-y-3 p-6 md:max-w-xl">
         <ErrorText>{problemMessage(me.error)}</ErrorText>
         <Button variant="secondary" onClick={() => void me.refetch()}>
           {t("error.retry")}

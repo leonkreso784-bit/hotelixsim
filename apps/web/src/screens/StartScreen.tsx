@@ -20,7 +20,7 @@ export function StartScreen() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-6 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col md:max-w-xl justify-center gap-6 px-6 py-10">
       <img src="/logo-znak.png" alt="" className="size-16 rounded-2xl" />
       <h1 className="text-4xl leading-tight font-extrabold tracking-tight">
         {t("start.title1")} <span className="text-accent">{t("start.title2")}</span>

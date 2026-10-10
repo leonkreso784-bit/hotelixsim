@@ -35,18 +35,32 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
     <>
       {back}
       <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{s.title}</h1>
-      {s.character && <Conversation hotelId={hotelId} code={s.code} canWrite={open && !decided} />}
-      {s.response && <Verdict response={s.response} />}
-      {open && !decided && s.free_text && <FreeResponse hotelId={hotelId} s={s} />}
-      <ChosenAnswer s={s} />
-      {open && !decided && (
-        <OfferedAnswers
-          hotelId={hotelId}
-          s={s}
-          heading={s.free_text ? t("answers.orTitle") : t("answers.title")}
-        />
-      )}
-      {!open && !decided && <p className="font-semibold">{t("answers.missed")}</p>}
+      <div
+        className={
+          s.character
+            ? "space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0"
+            : "mx-auto max-w-2xl space-y-3"
+        }
+      >
+        {s.character && (
+          <div>
+            <Conversation hotelId={hotelId} code={s.code} canWrite={open && !decided} />
+          </div>
+        )}
+        <div className="space-y-3">
+          {s.response && <Verdict response={s.response} />}
+          {open && !decided && s.free_text && <FreeResponse hotelId={hotelId} s={s} />}
+          <ChosenAnswer s={s} />
+          {open && !decided && (
+            <OfferedAnswers
+              hotelId={hotelId}
+              s={s}
+              heading={s.free_text ? t("answers.orTitle") : t("answers.title")}
+            />
+          )}
+          {!open && !decided && <p className="font-semibold">{t("answers.missed")}</p>}
+        </div>
+      </div>
     </>
   );
 }
