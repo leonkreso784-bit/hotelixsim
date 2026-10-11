@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 
 use engine::calc::{self as c, Calc, CalcError};
-use sim_hotel::{LevelEffect, Maintenance, MonthTable, load_penalty};
+use sim_hotel::{Category, LevelEffect, Maintenance, MonthTable, load_penalty};
 
 use crate::calendar::{Period, avg_u16, prorate};
 
@@ -110,6 +110,15 @@ pub enum RevenueModel {
     None,
 }
 
+/// Norma osoblja odjela za jednu kategoriju hotela: raspon ljudi (stalni + sezonci) na 100 soba, u desetinkama
+/// (Smještaj 4*: 170–250 = 17–25 ljudi na 100 soba). Provjerava se samo na početnom stanju profila
+/// (`Catalog::validate`); obračun kruga je ne koristi.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StaffingNorm {
+    pub min_tenths_per_100_rooms: u16,
+    pub max_tenths_per_100_rooms: u16,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DeptSpec {
     pub name: String,
@@ -129,6 +138,8 @@ pub struct DeptSpec {
     pub seasonal_max: u16,
     pub seasonal_plan: MonthTable<u16>,
     pub can_close: bool,
+    /// Norma osoblja po kategoriji hotela; prazno = odjel bez norme (hrana i piće, energija, degenerirani katalog).
+    pub staffing: BTreeMap<Category, StaffingNorm>,
 }
 
 /// `class` se prepisuje iz `DeptSpec` pri stvaranju stanja i ne mijenja se; služi da `HotelState::summary(&self)`

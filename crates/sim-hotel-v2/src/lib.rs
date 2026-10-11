@@ -26,6 +26,7 @@ pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
     Catalog, DeptStart, EconomyV2, FixedChargeSpec, PeriodCoefficients, ProfileV2, degenerate,
 };
+pub use department::StaffingNorm;
 pub use indices::{RefTable, period_indices, start_indices};
 pub use plan::{PeriodPlan, PlanError, PlanLimits};
 pub use resolve::{PeriodReport, ResolveError, resolve_period};

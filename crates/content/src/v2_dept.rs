@@ -4,8 +4,8 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-use sim_hotel::{LevelEffect, MonthTable};
-use sim_hotel_v2::department::{DeptCode, DeptSpec, RevenueModel, UsaliClass};
+use sim_hotel::{Category, LevelEffect, MonthTable};
+use sim_hotel_v2::department::{DeptCode, DeptSpec, RevenueModel, StaffingNorm, UsaliClass};
 use sim_hotel_v2::{DeptStart, EconomyV2, FixedChargeSpec, ProfileV2};
 
 use crate::ContentError;
@@ -87,6 +87,10 @@ pub(crate) struct DeptDto {
     seasonal_max: u16,
     seasonal_plan: MonthsDto<u16>,
     can_close: bool,
+    /// Norma osoblja po kategoriji hotela (ključ = v1 `category`): `[min, max]` ljudi na 100 soba u desetinkama.
+    /// Bez ključa (stari snimci, degenerirani katalog) odjel nema normu.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    staffing_tenths_per_100_rooms: BTreeMap<String, [u16; 2]>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -211,6 +215,16 @@ pub(crate) fn dept_to_dto(d: &DeptSpec) -> DeptDto {
         seasonal_max: d.seasonal_max,
         seasonal_plan: MonthsDto::from_table(&d.seasonal_plan),
         can_close: d.can_close,
+        staffing_tenths_per_100_rooms: d
+            .staffing
+            .iter()
+            .map(|(c, n)| {
+                (
+                    c.code().to_string(),
+                    [n.min_tenths_per_100_rooms, n.max_tenths_per_100_rooms],
+                )
+            })
+            .collect(),
     }
 }
 
@@ -222,6 +236,21 @@ pub(crate) fn build_dept(code: &str, d: &DeptDto) -> Result<DeptSpec, ContentErr
             d.class
         )));
     };
+    let mut staffing = BTreeMap::new();
+    for (k, [min, max]) in &d.staffing_tenths_per_100_rooms {
+        let Some(category) = Category::from_code(k) else {
+            return Err(ContentError::Invalid(format!(
+                "v2.departments.{code}.staffing_tenths_per_100_rooms: nepoznata kategorija '{k}'"
+            )));
+        };
+        staffing.insert(
+            category,
+            StaffingNorm {
+                min_tenths_per_100_rooms: *min,
+                max_tenths_per_100_rooms: *max,
+            },
+        );
+    }
     Ok(DeptSpec {
         name: d.name.clone(),
         class,
@@ -241,6 +270,7 @@ pub(crate) fn build_dept(code: &str, d: &DeptDto) -> Result<DeptSpec, ContentErr
         seasonal_max: d.seasonal_max,
         seasonal_plan: d.seasonal_plan.table(),
         can_close: d.can_close,
+        staffing,
     })
 }
 

@@ -17,7 +17,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 30,
     "seasonal_plan": { "jun": 14, "jul": 17, "aug": 22, "sep": 17 },
-    "can_close": false
+    "can_close": false,
+    "staffing_tenths_per_100_rooms": { "4": [170, 250] }
   },
   "restaurant": {
     "name": "Restoran",
@@ -207,7 +208,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "staffing_tenths_per_100_rooms": { "4": [50, 70] }
   },
   "sales": {
     "name": "Prodaja i marketing",
@@ -227,7 +229,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "staffing_tenths_per_100_rooms": { "4": [15, 30] }
   },
   "maintenance": {
     "name": "Održavanje",
@@ -247,7 +250,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "staffing_tenths_per_100_rooms": { "4": [30, 60] }
   },
   "energy": {
     "name": "Energija i voda",

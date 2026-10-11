@@ -39,6 +39,7 @@ fn restaurant() -> DeptSpec {
         seasonal_max: 20,
         seasonal_plan: MonthTable([10, 12, 15, 12]),
         can_close: false,
+        staffing: BTreeMap::new(),
     }
 }
 

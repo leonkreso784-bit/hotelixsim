@@ -82,7 +82,8 @@ impl From<MechanicError> for ResolveError {
         ResolveError::Mechanic(e)
     }
 }
-/// v1 funkcije koje v2 ponovno koristi (`Strategy::choose`, `base_labor_cents`) vraćaju v1 grešku.
+/// v1 funkcija koju v2 ponovno koristi (`Strategy::choose`) vraća v1 grešku. (Početni trošak rada v2 računa sam,
+/// `indices::start_labor_cents`, umjesto v1 `base_labor_cents`.)
 impl From<sim_hotel::ResolveError> for ResolveError {
     fn from(e: sim_hotel::ResolveError) -> Self {
         match e {
