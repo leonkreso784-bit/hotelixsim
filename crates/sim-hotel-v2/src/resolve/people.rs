@@ -8,7 +8,7 @@ use sim_hotel::{Pending, PeopleOutcome, load_penalty, turnover_bp};
 
 use super::{neg, step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
-use crate::department::{DeptCode, split_departures};
+use crate::department::{DeptCode, split_season_departures};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -69,20 +69,23 @@ pub(super) fn staffing(state: &HotelState, plan: &PeriodPlan) -> Calc<Staffing> 
 // ---------------------------------------------------------------- faza 3: ljudi
 
 /// Hotelski odlasci kruga po odjelima prema ljudima odjela nakon faze osoblja (stalni + sezonci; zbroj je `staff`
-/// hotela). Broj, trošak zamjene (Uprava) i iskustvo ostaju hotelski; ovo samo kaže iz kojeg su odjela otišli.
+/// hotela), razmjerno kroz cijelu sezonu (`split_season_departures` s dosadašnjim odlascima odjela). Broj, trošak
+/// zamjene (Uprava) i iskustvo ostaju hotelski; ovo samo kaže iz kojeg su odjela otišli.
 pub(super) fn department_departures(
     state: &HotelState,
     departures: u16,
 ) -> Calc<BTreeMap<DeptCode, u16>> {
     let mut staff = BTreeMap::new();
+    let mut so_far = BTreeMap::new();
     for (code, d) in &state.departments {
         let n = d
             .permanent
             .checked_add(d.seasonal)
             .ok_or(CalcError::Overflow)?;
         staff.insert(code.clone(), n);
+        so_far.insert(code.clone(), d.season_departures);
     }
-    split_departures(departures, &staff)
+    split_season_departures(departures, &staff, &so_far)
 }
 
 pub(crate) struct PeopleStep {

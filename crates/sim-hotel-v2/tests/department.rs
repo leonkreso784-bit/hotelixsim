@@ -51,6 +51,7 @@ fn state() -> DeptState {
         seasonal: 10,
         condition_pts: 7_000,
         satisfaction_pts: 7_000,
+        season_departures: 0,
     }
 }
 
@@ -202,6 +203,7 @@ fn undistributed_admin_by_hand() {
         seasonal: 0,
         condition_pts: 10_000,
         satisfaction_pts: 0,
+        season_departures: 0,
     };
     let assigned = AssignedCosts {
         training_cents: 500_000,
@@ -502,5 +504,61 @@ fn split_departures_gives_nothing_to_departments_without_people() {
     assert_eq!(
         split_departures(0, &staff_of(&[("rooms", 0)])),
         Ok(staff_of(&[("rooms", 0)]))
+    );
+}
+
+#[test]
+fn season_departures_follow_people_over_the_season() {
+    // Svaki krug 1 odlazak na 24/16/7 ljudi (47): bez pamćenja bi svaki išao Smještaju. Kroz sezonu kvote do sada
+    // (najveći ostatak nad zbrojem) daju odlaske i Restoranu i Upravi.
+    let staff = staff_of(&[("admin", 7), ("restaurant", 16), ("rooms", 24)]);
+    let mut so_far = staff_of(&[("admin", 0), ("restaurant", 0), ("rooms", 0)]);
+    for _ in 0..12 {
+        let out = split_season_departures(1, &staff, &so_far).unwrap();
+        assert_eq!(out.values().map(|v| u32::from(*v)).sum::<u32>(), 1);
+        for (k, n) in out {
+            *so_far.get_mut(&k).unwrap() += n;
+        }
+    }
+    // 12 odlazaka razmjerno: 12·24/47 = 6,13; 12·16/47 = 4,09; 12·7/47 = 1,79 → 6 / 4 / 2 (najveći ostatak Upravi).
+    assert_eq!(
+        so_far,
+        staff_of(&[("admin", 2), ("restaurant", 4), ("rooms", 6)])
+    );
+}
+
+#[test]
+fn season_departures_always_sum_to_round_total() {
+    // Odjel koji je ranije dobio „previše" (kvota do sada ispod već dodijeljenog) dobiva 0, a višak se uzima od
+    // odjela s najvećim viškom prema točnom udjelu; zbroj je uvijek hotelski broj kruga.
+    let staff = staff_of(&[("restaurant", 10), ("rooms", 10), ("spa", 1)]);
+    let so_far = staff_of(&[("restaurant", 0), ("rooms", 0), ("spa", 3)]);
+    let out = split_season_departures(2, &staff, &so_far).unwrap();
+    assert_eq!(out.values().map(|v| u32::from(*v)).sum::<u32>(), 2);
+    assert_eq!(out.get(&DeptCode("spa".into())), Some(&0));
+    // T = 3 + 2 = 5: kvote 3/2/0 (jednaki ostaci 8/21 → Restoran po kodu) → 3/2/0, Σ 5 > 2. Višak prema točnom
+    // udjelu (u 21-inama): Restoran 3·21 − 50 = 13, Smještaj −8 → Restoran na 2 (−8); jednaki višak → Restoran
+    // (kod) na 1, pa Smještaj na 1.
+    assert_eq!(
+        out,
+        staff_of(&[("restaurant", 1), ("rooms", 1), ("spa", 0)])
+    );
+    // Odjel ne gubi više ljudi nego ih ima; ostatak ide odjelima s najvećim manjkom.
+    // T = 6 + 4 = 10, kvote 5/5: Smještaj bi trebao 5, a ima 3 → 3; Wellness je već dao 6 → 0; Σ 3 < 4, pa
+    // jedan ide jedinom odjelu koji još ima ljudi (Wellness).
+    let staff = staff_of(&[("rooms", 3), ("spa", 3)]);
+    let so_far = staff_of(&[("rooms", 0), ("spa", 6)]);
+    let out = split_season_departures(4, &staff, &so_far).unwrap();
+    assert_eq!(out, staff_of(&[("rooms", 3), ("spa", 1)]));
+    // Bez odlazaka kruga nitko ne odlazi; odjel bez ljudi nikad.
+    let staff = staff_of(&[("energy", 0), ("rooms", 24)]);
+    let so_far = staff_of(&[("energy", 0), ("rooms", 5)]);
+    assert_eq!(
+        split_season_departures(0, &staff, &so_far),
+        Ok(staff_of(&[("energy", 0), ("rooms", 0)]))
+    );
+    assert_eq!(
+        split_season_departures(2, &staff, &so_far),
+        Ok(staff_of(&[("energy", 0), ("rooms", 2)]))
     );
 }

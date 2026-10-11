@@ -297,6 +297,9 @@ pub struct DeptStateDto {
     pub seasonal: u16,
     pub condition_pts: i32,
     pub satisfaction_pts: i32,
+    /// Odlasci odjela u dosadašnjim krugovima sezone; stari dnevnici ga nemaju (čita se kao 0).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub season_departures: u16,
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::DeptPlan` (postavke jednog odjela u planu kruga).
@@ -342,6 +345,7 @@ impl From<&DeptState> for DeptStateDto {
             seasonal: d.seasonal,
             condition_pts: d.condition_pts,
             satisfaction_pts: d.satisfaction_pts,
+            season_departures: d.season_departures,
         }
     }
 }
@@ -358,6 +362,7 @@ impl TryFrom<&DeptStateDto> for DeptState {
             seasonal: d.seasonal,
             condition_pts: d.condition_pts,
             satisfaction_pts: d.satisfaction_pts,
+            season_departures: d.season_departures,
         })
     }
 }
