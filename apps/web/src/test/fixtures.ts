@@ -12,11 +12,15 @@ import type {
   PlanLimitsBody,
   PublicHotelBody,
   RoundBody,
+  RoundInfoBody,
   SituationBody,
   SituationsBody,
   StrategyCode,
 } from "../api/types";
-import { FakeApi } from "./fakeApi";
+import { FakeApi, json, problem } from "./fakeApi";
+
+export const HOTEL_ID = "h1";
+export const GAME_ID = "g1";
 
 const MONTH_DAYS = { jun: 30, jul: 31, aug: 31, sep: 30 } as const;
 const MONTH_INDEX = { jun: 0, jul: 1, aug: 2, sep: 3 } as const;
@@ -74,7 +78,7 @@ export function limits(): PlanLimitsBody {
 
 export function myPublic(months: MonthScoreBody[] = []): PublicHotelBody {
   return {
-    hotel_id: "h1",
+    hotel_id: HOTEL_ID,
     slot: 1,
     name: "Tvoj hotel",
     seat: { kind: "human", strategy: null },
@@ -110,7 +114,7 @@ export function myHotel(
 ): HotelBody {
   const planMonth = opts.planMonth === undefined ? "jun" : opts.planMonth;
   return {
-    game_id: "g1",
+    game_id: GAME_ID,
     hotel: myPublic(opts.months ?? []),
     private: {
       profile: "C",
@@ -136,7 +140,7 @@ export function myHotel(
 
 export function game(opts: { current?: RoundBody | null; hotels?: PublicHotelBody[] } = {}): GameBody {
   return {
-    game_id: "g1",
+    game_id: GAME_ID,
     model: "v1",
     round_kind: "month",
     rounds: [roundInfo("jun"), roundInfo("jul")],
@@ -145,7 +149,7 @@ export function game(opts: { current?: RoundBody | null; hotels?: PublicHotelBod
       opts.current === undefined
         ? { month: "jun", round: roundInfo("jun"), status: "open", unanswered: 2 }
         : opts.current,
-    my_hotel_id: "h1",
+    my_hotel_id: HOTEL_ID,
     hotels: opts.hotels ?? [
       myPublic(),
       robot("h2", 2, "Štediša", "stedisa"),
@@ -383,4 +387,109 @@ export function standardApi(): FakeApi {
     .on("GET", "/v1/hotels/:hotel/feed", { items: [] })
     .on("GET", "/v1/hotels/:hotel/months/:month/explanation", explanation())
     .on("GET", "/v1/hotels/:hotel/kpi", { months: [] });
+}
+
+const SEASON_MONTHS = ["jun", "jul", "aug", "sep"] as const;
+
+/** Dan sezone (0 = 1. 6.) → kalendarski dan i mjesec. */
+function seasonDay(offset: number): { day: number; month: (typeof SEASON_MONTHS)[number] } {
+  let left = offset;
+  for (const m of SEASON_MONTHS) {
+    if (left < MONTH_DAYS[m]) return { day: left + 1, month: m };
+    left -= MONTH_DAYS[m];
+  }
+  throw new Error("izvan sezone");
+}
+
+/** Kalendar tjednog kruga tNN (n = 1…17): 16 tjedana po 7 dana, zadnji ima 10 dana (do 30. 9.). */
+export function weekInfo(n: number): RoundInfoBody {
+  const first = (n - 1) * 7;
+  const days = n === 17 ? 10 : 7;
+  const a = seasonDay(first);
+  const b = seasonDay(first + days - 1);
+  return {
+    code: `t${String(n).padStart(2, "0")}`,
+    kind: "week",
+    index: n - 1,
+    days,
+    first_day: a.day,
+    first_month: a.month,
+    last_day: b.day,
+    last_month: b.month,
+    month_ends: a.month !== b.month || b.day === MONTH_DAYS[b.month],
+  };
+}
+
+/** Tjedna v2 igra: 17 krugova, trenutni je tjedan `week` (zadano t01, otvoren). */
+export function weeklyGame(
+  opts: { week?: number; status?: RoundBody["status"]; hotels?: PublicHotelBody[] } = {},
+): GameBody {
+  const info = weekInfo(opts.week ?? 1);
+  return {
+    ...game(opts.hotels ? { hotels: opts.hotels } : {}),
+    model: "v2",
+    round_kind: "week",
+    rounds: Array.from({ length: 17 }, (_v, i) => weekInfo(i + 1)),
+    months: [...SEASON_MONTHS],
+    current: { month: info.first_month, round: info, status: opts.status ?? "open", unanswered: 2 },
+  };
+}
+
+/** Moj hotel u tjednoj igri: plan za krug `week`. */
+export function weeklyHotel(
+  opts: { week?: number; months?: MonthScoreBody[]; lastMonth?: LastMonthBody | null } = {},
+): HotelBody {
+  const code = weekInfo(opts.week ?? 1).code;
+  const base = myHotel({ months: opts.months ?? [], lastMonth: opts.lastMonth ?? null });
+  return {
+    ...base,
+    private: base.private
+      ? {
+          ...base.private,
+          plan: { month: weekInfo(opts.week ?? 1).first_month, round: code, plan: plan(), limits: limits() },
+        }
+      : base.private,
+  };
+}
+
+/** Tjedna igra u kojoj je t01 obračunat (napredak +8), a trenutni je t02. */
+export function resolvedWeekApi(): FakeApi {
+  const scored: MonthScoreBody[] = [
+    { month: "jun", round: "t01", indices: ix(5300, 5200, 5100, 5400, 4800), progress_hundredths: 800 },
+  ];
+  return v2Api()
+    .on("GET", "/v1/me/hotel", weeklyHotel({ week: 2, months: scored }))
+    .on(
+      "GET",
+      "/v1/games/:game",
+      weeklyGame({
+        week: 2,
+        hotels: [
+          myPublic(scored),
+          robot("h2", 2, "Štediša", "stedisa", scored),
+          robot("h3", 3, "Brižni", "brizni", scored),
+          robot("h4", 4, "Lovac na popunjenost", "lovac", scored),
+        ],
+      }),
+    );
+}
+
+/** Kostur v2 igre: kao `standardApi()`, ali tjedna igra u krugu t01 (Taskovi 19–21 dodaju rute odjela i računa). */
+export function v2Api(): FakeApi {
+  return standardApi()
+    .on("GET", "/v1/games/:game", weeklyGame())
+    .on("GET", "/v1/me/hotel", weeklyHotel())
+    .on("GET", "/v1/hotels/:hotel/situations", situations(undefined, { month: "jun", round: "t01" }));
+}
+
+/** Gost bez igre: `/v1/me/hotel` je 404 `not_in_game` dok `POST /v1/demo` ne stvori igru, zatim moj hotel. */
+export function startApi(): FakeApi {
+  let started = false;
+  return new FakeApi()
+    .on("GET", "/v1/me/hotel", () => (started ? json(200, myHotel()) : problem(404, "not_in_game")))
+    .on("GET", "/v1/games/:game", game())
+    .on("POST", "/v1/demo", () => {
+      started = true;
+      return json(201, { game_id: GAME_ID, hotel_id: HOTEL_ID });
+    });
 }

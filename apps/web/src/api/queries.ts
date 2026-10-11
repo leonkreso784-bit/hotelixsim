@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
-import { navigate } from "../router";
+import { navigate, roundPath } from "../router";
 import { useApi } from "./ApiContext";
 import { unwrap } from "./errors";
 import { poll } from "./poll";
@@ -11,7 +11,7 @@ import type {
   GameBody,
   HotelBody,
   KpiBody,
-  MonthCode,
+  NewGameBody,
   PlanBody,
   SituationsBody,
 } from "./types";
@@ -22,7 +22,7 @@ export const keys = {
   situations: (hotelId: string) => ["situations", hotelId] as const,
   conversation: (hotelId: string, code: string) => ["conversation", hotelId, code] as const,
   feed: (hotelId: string) => ["feed", hotelId] as const,
-  explanation: (hotelId: string, month: MonthCode) => ["explanation", hotelId, month] as const,
+  explanation: (hotelId: string, round: string) => ["explanation", hotelId, round] as const,
   kpi: (hotelId: string) => ["kpi", hotelId] as const,
 };
 
@@ -37,9 +37,9 @@ export function useMe() {
 type Api = ReturnType<typeof useApi>;
 
 /**
- * Jedino mjesto koje dohvaća igru. Mjesec se obračuna u pozadini, nakon što je „Zatvori mjesec“ već vratio 202 i
+ * Jedino mjesto koje dohvaća igru. Krug (mjesec ili tjedan) se obračuna u pozadini, nakon što je „Zatvori“ već vratio 202 i
  * invalidirao upite (a radnik može biti brži od tog dohvata, pa se „closing“ nikad ne vidi). Zato se sve što ovisi
- * o obračunu (moj hotel: indeksi, gotovina, zadnji mjesec; situacije; dnevnik) ponovno dohvaća kad god se mjesec
+ * o obračunu (moj hotel: indeksi, gotovina, zadnji krug; situacije; dnevnik) ponovno dohvaća kad god se krug
  * ILI stanje runde razlikuje od spremljene igre (i kad se sezona završi). Prvi dohvat ne invalidira: podaci su svježi.
  */
 async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<GameBody> {
@@ -47,7 +47,8 @@ async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<Gam
   const next = unwrap(await api.GET("/v1/games/{game_id}", { params: { path: { game_id: gameId } } }));
   if (
     before &&
-    (before.current?.month !== next.current?.month || before.current?.status !== next.current?.status)
+    (before.current?.round.code !== next.current?.round.code ||
+      before.current?.status !== next.current?.status)
   ) {
     void qc.invalidateQueries({ queryKey: keys.me });
     void qc.invalidateQueries({ queryKey: ["situations"] });
@@ -68,12 +69,16 @@ export function useGame(gameId: string) {
   });
 }
 
-/** Nova demo igra (i gost, ako ga nema). Nakon nje sve se čita ispočetka. */
+/**
+ * Nova igra (i gost, ako ga nema). Bez postavki ide prazan zahtjev (demo model, kao prije); postavke profesora
+ * (`model`, `round_kind`) idu u tijelu. Nakon nje sve se čita ispočetka.
+ */
 export function useStartDemo() {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async () => unwrap(await api.POST("/v1/demo")),
+    mutationFn: async (settings?: NewGameBody) =>
+      unwrap(await (settings ? api.POST("/v1/demo", { body: settings }) : api.POST("/v1/demo"))),
     // resetQueries vrati sve upite u početno stanje i ponovno dohvati aktivne (stara igra ne smije ostati na ekranu).
     onSuccess: () => {
       navigate("/");
@@ -93,19 +98,20 @@ export function useSituations(hotelId: string) {
   });
 }
 
-export function useCloseMonth(gameId: string) {
+/** Zatvara krug po kodu (mjesec „jun“ ili tjedan „t05“). */
+export function useCloseRound(gameId: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (month: MonthCode) =>
+    mutationFn: async (round: string) =>
       unwrap(
         await api.POST("/v1/games/{game_id}/rounds/{month}/close", {
-          params: { path: { game_id: gameId, month } },
+          params: { path: { game_id: gameId, month: round } },
         }),
       ),
     // Navigacija je ovdje, ne u mutate(): ekran se nakon osvježenja zamijeni i per-call onSuccess bi se izgubio.
-    onSuccess: (_data, month) => {
-      navigate(`/mjesec/${month}`);
+    onSuccess: (_data, round) => {
+      navigate(roundPath(round));
       return qc.invalidateQueries();
     },
   });
@@ -182,10 +188,10 @@ export function useSavePlan(hotelId: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ month, plan }: { month: MonthCode; plan: PlanBody }) =>
+    mutationFn: async ({ round, plan }: { round: string; plan: PlanBody }) =>
       unwrap(
         await api.PUT("/v1/hotels/{hotel_id}/plans/{month}", {
-          params: { path: { hotel_id: hotelId, month } },
+          params: { path: { hotel_id: hotelId, month: round } },
           body: plan,
         }),
       ),
@@ -196,8 +202,8 @@ export function useSavePlan(hotelId: string) {
   });
 }
 
-/** Igra za ekran „Mjesec završen“: ispituje samo dok je taj mjesec trenutni a moj hotel ga još nema obračunatog. */
-export function useGameUntilResolved(gameId: string, hotelId: string, month: MonthCode) {
+/** Igra za ekran „Krug završen“: ispituje samo dok je taj krug trenutni a moj hotel ga još nema obračunatog. */
+export function useGameUntilResolved(gameId: string, hotelId: string, round: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useQuery<GameBody>({
@@ -206,14 +212,14 @@ export function useGameUntilResolved(gameId: string, hotelId: string, month: Mon
     refetchInterval: (q) => {
       const g = q.state.data;
       const mine = g?.hotels.find((h) => h.hotel_id === hotelId);
-      if (mine?.months.some((m) => m.month === month)) return false;
-      return g?.current?.month === month ? poll.roundMs : false;
+      if (mine?.months.some((m) => m.round === round)) return false;
+      return g?.current?.round.code === round ? poll.roundMs : false;
     },
   });
 }
 
 /** Dnevnik hotela; uz `untilMentorFor` ispituje dok mentor za taj mjesec ne stigne (najviše `poll.maxFeedPolls` puta). */
-export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = {}) {
+export function useFeed(hotelId: string, opts: { untilMentorFor?: string | undefined } = {}) {
   const api = useApi();
   const qc = useQueryClient();
   // Budžet se računa „od sada“: dnevnik je mogao biti dohvaćen i prije nego što je ovaj ekran montiran.
@@ -225,21 +231,21 @@ export function useFeed(hotelId: string, opts: { untilMentorFor?: MonthCode } = 
     refetchInterval: (q) => {
       const m = opts.untilMentorFor;
       if (!m) return false;
-      const has = q.state.data?.some((i) => i.kind === "mentor" && i.month === m);
+      const has = q.state.data?.some((i) => i.kind === "mentor" && i.round === m);
       return has || q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
     },
   });
 }
 
-/** Zašto su se indeksi obračunatog mjeseca pomaknuli; obračunat mjesec se više ne mijenja, pa nema ispitivanja. */
-export function useExplanation(hotelId: string, month: MonthCode) {
+/** Zašto su se indeksi obračunatog kruga pomaknuli; obračunat krug se više ne mijenja, pa nema ispitivanja. */
+export function useExplanation(hotelId: string, round: string) {
   const api = useApi();
   return useQuery<ExplanationBody>({
-    queryKey: keys.explanation(hotelId, month),
+    queryKey: keys.explanation(hotelId, round),
     queryFn: async () =>
       unwrap(
         await api.GET("/v1/hotels/{hotel_id}/months/{month}/explanation", {
-          params: { path: { hotel_id: hotelId, month } },
+          params: { path: { hotel_id: hotelId, month: round } },
         }),
       ),
   });

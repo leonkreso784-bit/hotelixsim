@@ -3,14 +3,16 @@ import type { GameBody, IndexEntry, PublicHotelBody } from "./api/types";
 import {
   indexDeltas,
   indicesBefore,
+  isV2,
   latestIndices,
   leaderboard,
-  monthPosition,
-  nextMonth,
+  nextRound,
   progressAt,
+  roundInfo as roundOf,
+  roundPosition,
   sortIndices,
 } from "./game";
-import { roundInfo } from "./test/fixtures";
+import { roundInfo, weeklyGame } from "./test/fixtures";
 
 const ix = (g: number, r: number, z: number, o: number, f: number): IndexEntry[] => [
   { code: "G", hundredths: g },
@@ -105,12 +107,31 @@ describe("napredak i ljestvica", () => {
     expect(rows[0]?.mine).toBe(true);
     expect(rows[1]?.strategy).toBe("stedisa");
   });
-  it("monthPosition daje mjesec, redni broj i ukupno; null na kraju sezone", () => {
-    expect(monthPosition(game)).toEqual({ month: "jul", index: 1, total: 2 });
-    expect(monthPosition({ ...game, current: null })).toBeNull();
+  it("roundPosition daje krug, redni broj i ukupno; null na kraju sezone", () => {
+    expect(roundPosition(game)).toEqual({ round: roundInfo("jul"), index: 1, total: 2 });
+    expect(roundPosition({ ...game, current: null })).toBeNull();
+    expect(roundPosition(weeklyGame({ week: 5 }))?.index).toBe(4);
+    expect(roundPosition(weeklyGame({ week: 5 }))?.total).toBe(17);
   });
-  it("nextMonth daje sljedeći mjesec igre ili null", () => {
-    expect(nextMonth(["jun", "jul"], "jun")).toBe("jul");
-    expect(nextMonth(["jun", "jul"], "jul")).toBeNull();
+  it("nextRound daje sljedeći krug igre ili null", () => {
+    expect(nextRound(["jun", "jul"], "jun")).toBe("jul");
+    expect(nextRound(["jun", "jul"], "jul")).toBeNull();
+  });
+  it("roundInfo traži krug po kodu, a isV2 čita model", () => {
+    expect(roundOf(game, "jul")).toEqual(roundInfo("jul"));
+    expect(roundOf(game, "t01")).toBeNull();
+    expect(isV2(game)).toBe(false);
+    expect(isV2(weeklyGame())).toBe(true);
+  });
+  it("ljestvica tjedne igre čita kod kruga", () => {
+    const wk = (p: number) => ({
+      month: "jun" as const,
+      round: "t01",
+      indices: jun.indices,
+      progress_hundredths: p,
+    });
+    const g = weeklyGame({ hotels: [hotel("h1", 1, [wk(300)]), hotel("h2", 2, [wk(900)])] });
+    expect(leaderboard(g, "t01").map((r) => r.hotelId)).toEqual(["h2", "h1"]);
+    expect(leaderboard(g, "t02")).toEqual([]);
   });
 });

@@ -11,7 +11,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/situacije")).toEqual({ name: "situations" });
     expect(matchRoute("/situacije/S1")).toEqual({ name: "situation", code: "S1" });
     expect(matchRoute("/plan")).toEqual({ name: "plan" });
-    expect(matchRoute("/mjesec/jun")).toEqual({ name: "month", month: "jun" });
+    expect(matchRoute("/mjesec/jun")).toEqual({ name: "round", code: "jun" });
     expect(matchRoute("/tijek/")).toEqual({ name: "feed" });
     expect(matchRoute("/likovi")).toEqual({ name: "avatars" });
     expect(matchRoute("/pokazatelji")).toEqual({ name: "kpi" });
@@ -60,5 +60,13 @@ describe("Link i useRoute", () => {
     window.history.replaceState(null, "", "/situacije");
     fireEvent(window, new PopStateEvent("popstate"));
     expect(screen.getByText("ruta:situations")).toBeTruthy();
+  });
+});
+
+describe("krugovi", () => {
+  it("krug po kodu i stari put mjeseca", () => {
+    expect(matchRoute("/krug/t05")).toEqual({ name: "round", code: "t05" });
+    expect(matchRoute("/mjesec/jun")).toEqual({ name: "round", code: "jun" });
+    expect(matchRoute("/krug/t18")).toEqual({ name: "notFound" });
   });
 });

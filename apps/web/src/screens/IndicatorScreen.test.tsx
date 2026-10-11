@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExplanationBody } from "../api/types";
-import { json } from "../test/fakeApi";
-import { explanation, game, ix, myHotel, standardApi } from "../test/fixtures";
+import { json, problem } from "../test/fakeApi";
+import { explanation, game, ix, myHotel, standardApi, v2Api, weeklyHotel } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -181,5 +181,106 @@ describe("Detalj pokazatelja", () => {
     );
     expect((await screen.findByRole("alert")).textContent).not.toMatch(/undefined|storage_unavailable/);
     expect(screen.getByRole("list", { name: "Kroz mjesece" })).toBeTruthy();
+  });
+});
+
+describe("pokazatelj: tjedna igra", () => {
+  it("povijest i izbor kruga su tjedni; objašnjenje se traži za izabrani kod", async () => {
+    const wk = (round: string, g: number) => ({
+      month: "jun" as const,
+      round,
+      indices: ix(g, 5000, 5000, 5000, 5000),
+      progress_hundredths: 100,
+    });
+    const scored = [wk("t01", 5300), wk("t02", 5600)];
+    const api = v2Api().on("GET", "/v1/me/hotel", weeklyHotel({ week: 3, months: scored }));
+    renderApp(api, "/pokazatelj/G");
+    expect(await screen.findByRole("heading", { name: "Kroz tjedne" })).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)",
+      }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tjedan 1 (1. 6. – 7. 6.)" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 1 (1. 6. – 7. 6.)",
+      }),
+    ).toBeTruthy();
+    expect(api.calls.some((c) => c.path.endsWith("/months/t01/explanation"))).toBe(true);
+  });
+});
+
+describe("pokazatelj: birač tjedana i pad igre", () => {
+  const wk = (round: string, g: number) => ({
+    month: "jun" as const,
+    round,
+    indices: ix(g, 5000, 5000, 5000, 5000),
+    progress_hundredths: 100,
+  });
+  const weekApi = () =>
+    v2Api().on(
+      "GET",
+      "/v1/me/hotel",
+      weeklyHotel({ week: 4, months: [wk("t01", 5300), wk("t02", 5600), wk("t03", 5700)] }),
+    );
+
+  it("mobitel: prethodni/sljedeći i izbornik svih krugova; računalo: sažeti čipovi s punim nazivom", async () => {
+    const api = weekApi();
+    renderApp(api, "/pokazatelj/G");
+    const select = (await screen.findByRole("combobox", { name: "Tjedan obračuna" })) as HTMLSelectElement;
+    expect(select.value).toBe("t03");
+    expect(within(select).getAllByRole("option")).toHaveLength(3);
+    fireEvent.click(screen.getByRole("button", { name: "Prethodni tjedan" }));
+    expect(select.value).toBe("t02");
+    expect(
+      await screen.findByRole("heading", {
+        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)",
+      }),
+    ).toBeTruthy();
+    fireEvent.change(select, { target: { value: "t01" } });
+    expect((screen.getByRole("button", { name: "Prethodni tjedan" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    const chip = screen.getByRole("button", { name: "Tjedan 3 (15. 6. – 21. 6.)" });
+    expect(chip.textContent).toBe("T3");
+    expect(chip.getAttribute("title")).toBe("Tjedan 3 (15. 6. – 21. 6.)");
+    fireEvent.click(chip);
+    expect(select.value).toBe("t03");
+  });
+
+  it("mobitel: birač može nauzak (min-w-0 na fieldsetu i u redu), jer ga najduža opcija ne smije širiti", async () => {
+    renderApp(weekApi(), "/pokazatelj/G");
+    const select = await screen.findByRole("combobox", { name: "Tjedan obračuna" });
+    const row = select.parentElement as HTMLElement;
+    const fieldset = row.closest("fieldset") as HTMLElement;
+    expect(fieldset.className).toContain("min-w-0");
+    expect(row.className).toContain("min-w-0");
+    expect(select.className).toContain("min-w-0");
+  });
+
+  it("mobitel: kad ‹ ili › postane onemogućen, fokus prelazi na izbornik, ne na body", async () => {
+    renderApp(weekApi(), "/pokazatelj/G");
+    const select = await screen.findByRole("combobox", { name: "Tjedan obračuna" });
+    const prev = screen.getByRole("button", { name: "Prethodni tjedan" });
+    prev.focus();
+    fireEvent.click(prev);
+    fireEvent.click(prev);
+    expect((prev as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).toBe(select);
+    const next = screen.getByRole("button", { name: "Sljedeći tjedan" });
+    next.focus();
+    fireEvent.click(next);
+    fireEvent.click(next);
+    expect((next as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).toBe(select);
+  });
+
+  it("igra se ne može učitati: ekran se ipak prikaže s imenima mjeseci", async () => {
+    const api = standardApi()
+      .on("GET", "/v1/games/:game", () => problem(500, "internal"))
+      .on("GET", "/v1/me/hotel", myHotel({ months: [jun] }));
+    renderApp(api, "/pokazatelj/G");
+    expect(await screen.findByRole("heading", { name: "Kroz mjesece" })).toBeTruthy();
   });
 });

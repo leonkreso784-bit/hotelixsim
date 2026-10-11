@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { conversation, game, s1, s3, situations, standardApi } from "../test/fixtures";
+import { conversation, game, s1, s3, situations, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -260,5 +260,29 @@ describe("ponuđeni odgovori (S3, bez lika)", () => {
     renderApp(standardApi(), "/situacije/S9");
     expect(await screen.findByText("Ta situacija nije u ovom mjesecu.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Sve situacije" }).getAttribute("href")).toBe("/situacije");
+  });
+});
+
+describe("situacije u tjednoj igri", () => {
+  const closedWeek = () =>
+    v2Api().on(
+      "GET",
+      "/v1/hotels/:hotel/situations",
+      situations([s3({ chosen: 1 }), s1()], { open: false, month: "jun", round: "t01" }),
+    );
+
+  it("zatvoren tjedan: rečenice govore o tjednu, ne o mjesecu", async () => {
+    renderApp(closedWeek(), "/situacije");
+    expect(await screen.findByText("Tjedan je zatvoren — situacije su samo za čitanje.")).toBeTruthy();
+  });
+
+  it("zatvoren tjedan, neodgovorena situacija: „Tjedan je zatvoren bez odgovora.“", async () => {
+    renderApp(closedWeek(), "/situacije/S1");
+    expect(await screen.findByText("Tjedan je zatvoren bez odgovora.")).toBeTruthy();
+  });
+
+  it("nepoznata situacija u tjednu: „nije u ovom tjednu“", async () => {
+    renderApp(closedWeek(), "/situacije/S9");
+    expect(await screen.findByText("Ta situacija nije u ovom tjednu.")).toBeTruthy();
   });
 });

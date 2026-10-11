@@ -1,32 +1,34 @@
 import { t } from "@hotelixsim/i18n";
 import { useEffect, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
-import { useCloseMonth } from "../api/queries";
-import type { MonthCode } from "../api/types";
-import { monthName } from "../format";
+import { useCloseRound } from "../api/queries";
+import type { RoundInfoBody } from "../api/types";
+import { roundPhrase, tw } from "../format";
+import { isWeekRound } from "../game";
 import { Button, Card, ErrorText } from "../ui/primitives";
 
-/** Gumb s potvrdom; upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4). */
+/** Gumb s potvrdom za zatvaranje kruga (mjeseca ili tjedna); upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4). */
 export function CloseMonth({
   gameId,
-  month,
+  round,
   unanswered,
 }: {
   gameId: string;
-  month: MonthCode;
+  round: RoundInfoBody;
   unanswered: number;
 }) {
   const [asking, setAsking] = useState(false);
-  const close = useCloseMonth(gameId);
+  const close = useCloseRound(gameId);
   const inFlight = useRef(false);
-  const name = monthName(month);
+  const name = roundPhrase(round);
+  const weekly = isWeekRound(round);
   const title = useRef<HTMLHeadingElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
   // Fokus se seli tek nakon korisnikove radnje, ne pri prvom prikazu ekrana.
   const moved = useRef(false);
 
   // Kliknuti gumb nestaje: fokus ide na naslov potvrde i ona se pomakne u vidno polje (iznad donje trake),
-  // a nakon „Odustani“ fokus se vraća na „Zatvori mjesec“ (UI_PRAVILA §6.5).
+  // a nakon „Odustani“ fokus se vraća na gumb za zatvaranje (UI_PRAVILA §6.5).
   useEffect(() => {
     if (!moved.current) return;
     if (asking) {
@@ -45,7 +47,7 @@ export function CloseMonth({
   function confirm() {
     if (close.isPending || inFlight.current) return;
     inFlight.current = true;
-    close.mutate(month, {
+    close.mutate(round.code, {
       onSettled: () => {
         inFlight.current = false;
       },
@@ -55,7 +57,7 @@ export function CloseMonth({
   if (!asking)
     return (
       <Button ref={openButton} onClick={() => ask(true)}>
-        {t("close.button")}
+        {t(weekly ? "close.week" : "close.button")}
       </Button>
     );
   return (
@@ -63,9 +65,9 @@ export function CloseMonth({
       <h2 ref={title} tabIndex={-1} className="text-lg font-bold">
         {t("close.confirmTitle", { month: name })}
       </h2>
-      <p className="text-sm text-muted">{t("close.confirmText")}</p>
+      <p className="text-sm text-muted">{tw(weekly, "close.confirmText")}</p>
       {unanswered > 0 && <ErrorText>{t("close.unanswered", { n: unanswered })}</ErrorText>}
-      {close.isError && <ErrorText>{problemMessage(close.error)}</ErrorText>}
+      {close.isError && <ErrorText>{problemMessage(close.error, weekly)}</ErrorText>}
       <Button disabled={close.isPending} onClick={confirm}>
         {t("close.confirm", { month: name })}
       </Button>

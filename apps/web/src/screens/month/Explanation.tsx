@@ -4,7 +4,8 @@ import { t } from "@hotelixsim/i18n";
 import { ChevronDown } from "lucide-react";
 import { problemMessage } from "../../api/errors";
 import { useExplanation } from "../../api/queries";
-import type { DriverCode, EffectCode, ExplanationIndexBody, MonthCode } from "../../api/types";
+import type { DriverCode, EffectCode, ExplanationIndexBody } from "../../api/types";
+import { tw } from "../../format";
 import { sortIndices } from "../../game";
 import { Delta, INDEX_ICON } from "../../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../../ui/primitives";
@@ -22,14 +23,17 @@ function mostMoved(indices: ExplanationIndexBody[]): ExplanationIndexBody["code"
 export function DriverList({
   drivers,
   highlight = null,
+  weekly = false,
 }: {
   drivers: ExplanationIndexBody["drivers"];
   highlight?: DriverCode | null;
+  /** Tjedni krug: rečenice govore o tjednu. */
+  weekly?: boolean;
 }) {
   const ordered = [...drivers].sort((a, b) => Number(b.var === highlight) - Number(a.var === highlight));
   return (
     <div className="space-y-3 pb-3">
-      {ordered.length === 0 && <p className="text-sm text-muted">{t("month.whyNone")}</p>}
+      {ordered.length === 0 && <p className="text-sm text-muted">{tw(weekly, "month.whyNone")}</p>}
       {ordered.map((d) => (
         <div
           key={d.var}
@@ -58,7 +62,7 @@ export function DriverList({
   );
 }
 
-function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean }) {
+function IndexWhy({ index, open, weekly }: { index: ExplanationIndexBody; open: boolean; weekly: boolean }) {
   return (
     <details open={open} className="group border-b border-line last:border-0">
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-2 [&::-webkit-details-marker]:hidden">
@@ -72,22 +76,25 @@ function IndexWhy({ index, open }: { index: ExplanationIndexBody; open: boolean 
         </span>
         <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted group-open:rotate-180" />
       </summary>
-      <DriverList drivers={index.drivers} />
+      <DriverList drivers={index.drivers} weekly={weekly} />
     </details>
   );
 }
 
 export function Explanation({
   hotelId,
-  month,
+  round,
+  weekly = false,
   className = "",
 }: {
   hotelId: string;
-  month: MonthCode;
+  /** Kod kruga: mjesec („jun“) ili tjedan („t05“). */
+  round: string;
+  weekly?: boolean;
   /** Samo raspored (npr. `order-*` na mobitelu). */
   className?: string;
 }) {
-  const q = useExplanation(hotelId, month);
+  const q = useExplanation(hotelId, round);
   const indices = q.data ? sortIndices(q.data.indices) : [];
   const open = mostMoved(indices);
   return (
@@ -98,7 +105,7 @@ export function Explanation({
       ) : q.isError ? (
         <ErrorText>{problemMessage(q.error)}</ErrorText>
       ) : (
-        indices.map((i) => <IndexWhy key={i.code} index={i} open={i.code === open} />)
+        indices.map((i) => <IndexWhy key={i.code} index={i} open={i.code === open} weekly={weekly} />)
       )}
     </Card>
   );

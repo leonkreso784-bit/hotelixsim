@@ -28,3 +28,7 @@ export type IndexEntry = S["IndexEntry"];
 export type IndexCode = S["IndexCode"];
 export type MonthCode = S["MonthCode"];
 export type StrategyCode = S["StrategyCode"];
+export type RoundInfoBody = S["RoundInfoBody"];
+export type ModelCode = S["ModelCode"];
+export type RoundKindCode = S["RoundKindCode"];
+export type NewGameBody = S["NewGameBody"];

@@ -2,8 +2,10 @@ import { t } from "@hotelixsim/i18n";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { problemMessage } from "../api/errors";
-import { useSituations } from "../api/queries";
+import { useGame, useSituations } from "../api/queries";
 import type { HotelBody } from "../api/types";
+import { tw } from "../format";
+import { isWeekly } from "../game";
 import { Link } from "../router";
 import { ErrorText, StatusText } from "../ui/primitives";
 import { Conversation } from "./situation/Conversation";
@@ -14,6 +16,8 @@ import { Verdict } from "./situation/Verdict";
 export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const hotelId = me.hotel.hotel_id;
   const sits = useSituations(hotelId);
+  const gameData = useGame(me.game_id).data;
+  const weekly = gameData ? isWeekly(gameData) : false;
   // Je li forma za odgovor bila prikazana: tek tada novi sadržaj (izbor, presuda) prima fokus.
   const answeredHere = useRef(false);
   const current = sits.data?.items.find((i) => i.code === code);
@@ -39,7 +43,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
     return (
       <>
         {back}
-        <p>{t("situation.missing")}</p>
+        <p>{tw(weekly, "situation.missing")}</p>
       </>
     );
   const open = sits.data.open;
@@ -56,7 +60,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
           heading={s.free_text ? t("answers.orTitle") : t("answers.title")}
         />
       )}
-      {!open && !decided && <p className="font-semibold">{t("answers.missed")}</p>}
+      {!open && !decided && <p className="font-semibold">{tw(weekly, "answers.missed")}</p>}
     </div>
   );
   const title = <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{s.title}</h1>;

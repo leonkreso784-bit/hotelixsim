@@ -13,9 +13,11 @@ import {
   formatPercentBp,
   formatRating,
   monthName,
+  roundPhrase,
+  tw,
 } from "../format";
-import { indexDeltas, latestIndices } from "../game";
-import { Link } from "../router";
+import { indexDeltas, isWeekly, latestIndices, roundInfo } from "../game";
+import { Link, roundPath } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Badge, Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
@@ -33,9 +35,16 @@ export function HotelScreen({ me }: { me: HotelBody }) {
 
   const h = me.hotel;
   const current = game.data.current;
+  const weekly = isWeekly(game.data);
   const lastScored = h.months.at(-1);
   const deltas = lastScored ? indexDeltas(h.start, lastScored.indices) : null;
   const lm = priv.last_month;
+  const lastInfo = lastScored ? roundInfo(game.data, lastScored.round) : null;
+  const lastNote = lm
+    ? weekly
+      ? t("hotel.lastWeek", { week: roundPhrase(lm.round) })
+      : t("hotel.lastMonth", { month: monthName(lm.month) })
+    : t(weekly ? "hotel.noWeekYet" : "hotel.noMonthYet");
 
   function newGame() {
     if (start.isPending || inFlight.current) return;
@@ -75,14 +84,14 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               icon={<BedDouble size={20} aria-hidden="true" />}
               label={t("hotel.occupancy")}
               value={lm ? formatPercentBp(lm.occupancy_bp) : "—"}
-              note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
+              note={lastNote}
             />
             <Stat
               to="/pokazatelj/F/revenue"
               icon={<ChartColumn size={20} aria-hidden="true" />}
               label={t("hotel.revenue")}
               value={lm ? formatEuros(lm.rooms_revenue_cents) : "—"}
-              note={lm ? t("hotel.lastMonth", { month: monthName(lm.month) }) : t("hotel.noMonthYet")}
+              note={lastNote}
             />
             <Stat
               to="/pokazatelj/F/cash"
@@ -127,20 +136,26 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               <Row
                 to="/situacije"
                 icon={<FileText size={20} aria-hidden="true" />}
-                label={t("hotel.situations")}
+                label={tw(weekly, "hotel.situations")}
                 end={
                   sits.data && sits.data.unanswered > 0 ? <Badge>{sits.data.unanswered}</Badge> : undefined
                 }
               />
             )}
             {current?.status === "open" && (
-              <Row to="/plan" icon={<CalendarDays size={20} aria-hidden="true" />} label={t("hotel.plan")} />
+              <Row
+                to="/plan"
+                icon={<CalendarDays size={20} aria-hidden="true" />}
+                label={tw(weekly, "hotel.plan")}
+              />
             )}
             {lastScored && (
               <Row
-                to={`/mjesec/${lastScored.month}`}
+                to={roundPath(lastScored.round)}
                 icon={<ChartColumn size={20} aria-hidden="true" />}
-                label={t("hotel.result", { month: monthName(lastScored.month) })}
+                label={t("hotel.result", {
+                  month: lastInfo ? roundPhrase(lastInfo) : monthName(lastScored.month),
+                })}
               />
             )}
           </Card>
@@ -148,15 +163,19 @@ export function HotelScreen({ me }: { me: HotelBody }) {
           {current?.status === "open" && (
             <CloseMonth
               gameId={me.game_id}
-              month={current.month}
+              round={current.round}
               unanswered={sits.data?.unanswered ?? current.unanswered}
             />
           )}
           {current?.status === "closing" && (
             <Card className="space-y-2">
-              <p role="status">{t("hotel.closing", { month: monthName(current.month) })}</p>
+              <p role="status">
+                {weekly
+                  ? t("hotel.closing.week", { round: roundPhrase(current.round) })
+                  : t("hotel.closing", { month: monthName(current.month) })}
+              </p>
               <Link
-                to={`/mjesec/${current.month}`}
+                to={roundPath(current.round.code)}
                 className="inline-flex min-h-11 items-center font-semibold text-accent-ink"
               >
                 {t("hotel.closingLink")}

@@ -2,7 +2,18 @@ import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { game, ix, myHotel, roundInfo, standardApi } from "../test/fixtures";
+import {
+  GAME_ID,
+  game,
+  ix,
+  myHotel,
+  resolvedWeekApi,
+  roundInfo,
+  standardApi,
+  v2Api,
+  weekInfo,
+  weeklyGame,
+} from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -289,5 +300,53 @@ describe("Moj hotel", () => {
     expect(screen.getByRole("link", { name: /Rezultat: srpanj/ })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Nova igra" }));
     await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+  });
+});
+
+describe("Moj hotel: krugovi", () => {
+  it("tjedna igra: čip TJEDAN 1 · 1/17 i gumb Zatvori tjedan", async () => {
+    renderApp(standardApi().on("GET", "/v1/games/:game", weeklyGame()), "/");
+    expect(await screen.findByText("TJEDAN 1 · 1/17")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Zatvori tjedan" })).toBeTruthy();
+  });
+  it("v1 igra izgleda kao prije: LIPANJ · 1/2 i Zatvori mjesec", async () => {
+    renderApp(standardApi(), "/");
+    expect(await screen.findByText("LIPANJ · 1/2")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Zatvori mjesec" })).toBeTruthy();
+  });
+});
+
+describe("Moj hotel: tjedna igra", () => {
+  it("zatvaranje tjedna: potvrda s datumima, jedan zahtjev za t01, prelazak na /krug/t01", async () => {
+    const api = v2Api().on("POST", "/v1/games/:game/rounds/:month/close", () =>
+      json(202, { month: "jun", round: weekInfo(1), status: "closing", unanswered: 0 }),
+    );
+    renderApp(api);
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(screen.getByRole("heading", { name: "Zatvaraš tjedan 1 (1. 6. – 7. 6.)." })).toBeTruthy();
+    expect(
+      screen.getByText("Tjedan se obračunava za sve hotele odjednom i nakon toga se više ne mijenja."),
+    ).toBeTruthy();
+    const confirm = screen.getByRole("button", { name: "Zatvori tjedan 1 (1. 6. – 7. 6.)" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(window.location.pathname).toBe("/krug/t01"));
+    expect(api.posts(`/v1/games/${GAME_ID}/rounds/t01/close`)).toHaveLength(1);
+  });
+
+  it("izbornik kaže tjedan; rezultat zadnjeg tjedna vodi na /krug/t01", async () => {
+    renderApp(resolvedWeekApi());
+    expect(await screen.findByText("TJEDAN 2 · 2/17")).toBeTruthy();
+    expect(screen.getByText("Plan tjedna")).toBeTruthy();
+    expect(screen.getByText("Situacije tjedna")).toBeTruthy();
+    const link = screen.getByRole("link", { name: /Rezultat: tjedan 1 \(1\. 6\. – 7\. 6\.\)/ });
+    expect(link.getAttribute("href")).toBe("/krug/t01");
+  });
+
+  it("obračun tjedna u tijeku: rečenica s datumima i poveznica na krug", async () => {
+    const api = v2Api().on("GET", "/v1/games/:game", weeklyGame({ status: "closing" }));
+    renderApp(api);
+    expect(await screen.findByText("Obračun je u tijeku: tjedan 1 (1. 6. – 7. 6.).")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Pogledaj obračun" }).getAttribute("href")).toBe("/krug/t01");
   });
 });

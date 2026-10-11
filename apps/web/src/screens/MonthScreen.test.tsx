@@ -3,7 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
-import { explanation, game, ix, myHotel, myPublic, robot, roundInfo, standardApi } from "../test/fixtures";
+import {
+  explanation,
+  game,
+  ix,
+  myHotel,
+  myPublic,
+  resolvedWeekApi,
+  robot,
+  roundInfo,
+  standardApi,
+  v2Api,
+  weeklyGame,
+  weeklyHotel,
+} from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -432,5 +445,77 @@ describe("Mjesec završen: zašto se indeksi pomaknuli", () => {
     );
     const hero = (await screen.findByText("Napredak od početka")).parentElement as HTMLElement;
     expect(within(hero).getByText(shown).className).toContain(tone);
+  });
+});
+
+describe("krug tjedna", () => {
+  it("završen tjedan na /krug/t01", async () => {
+    renderApp(resolvedWeekApi(), "/krug/t01");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Tjedan 1 završen (1. 6. – 7. 6.)" }),
+    ).toBeTruthy();
+  });
+});
+
+describe("krug tjedna: mentor, ljestvica, nastavak", () => {
+  it("tjedan usred mjeseca: ljestvica, nastavak i mentorov kratki sažetak tjedna", async () => {
+    const api = resolvedWeekApi().on("GET", "/v1/hotels/:hotel/feed", {
+      items: [
+        {
+          kind: "mentor",
+          seq: 1,
+          month: "jun",
+          round: "t01",
+          text: "Tri uzroka: cijena, popunjenost, plaće.",
+        },
+      ],
+    });
+    renderApp(api, "/krug/t01");
+    expect(await screen.findByText("Tri uzroka: cijena, popunjenost, plaće.")).toBeTruthy();
+    expect(screen.getByText("Mentor: sažetak tjedna")).toBeTruthy();
+    expect(screen.queryByText(/javlja na kraju mjeseca/)).toBeNull();
+    expect(screen.getByText("Indeksi na kraju tjedna")).toBeTruthy();
+    const board = screen.getByRole("list", { name: "Ljestvica napretka" });
+    expect(within(board).getAllByRole("listitem")).toHaveLength(4);
+    expect(screen.getByRole("link", { name: "Nastavi u tjedan 2 (8. 6. – 14. 6.)" })).toBeTruthy();
+  });
+
+  it("tjedan bez mentorova sažetka: „Mentor piše…“, pa „nije se javio“", async () => {
+    renderApp(resolvedWeekApi(), "/krug/t01");
+    expect(await screen.findByText("Mentor piše…")).toBeTruthy();
+    expect(await screen.findByText("Mentor se ovaj put nije javio.")).toBeTruthy();
+  });
+
+  it("tjedan koji zatvara mjesec (t05): čeka se mentor i prikazuje njegov tekst", async () => {
+    const scored = [
+      {
+        month: "jun" as const,
+        round: "t05",
+        indices: ix(5600, 5200, 5000, 5400, 4800),
+        progress_hundredths: 800,
+      },
+    ];
+    const api = resolvedWeekApi()
+      .on("GET", "/v1/me/hotel", weeklyHotel({ week: 6, months: scored }))
+      .on("GET", "/v1/games/:game", weeklyGame({ week: 6, hotels: [myPublic(scored)] }))
+      .on("GET", "/v1/hotels/:hotel/feed", {
+        items: [{ kind: "mentor", seq: 1, month: "jun", round: "t05", text: "Lipanj je gotov." }],
+      });
+    renderApp(api, "/krug/t05");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Tjedan 5 završen (29. 6. – 5. 7.)" }),
+    ).toBeTruthy();
+    expect(await screen.findByText("Lipanj je gotov.")).toBeTruthy();
+  });
+
+  it("tjedan koji još nije zatvoren: rečenica o tjednu", async () => {
+    renderApp(resolvedWeekApi(), "/krug/t03");
+    expect(await screen.findByText("Ovaj tjedan još nije zatvoren.")).toBeTruthy();
+  });
+
+  it("tjedan u obračunu: naslov s brojem tjedna", async () => {
+    const api = v2Api().on("GET", "/v1/games/:game", weeklyGame({ status: "closing" }));
+    renderApp(api, "/krug/t01");
+    expect(await screen.findByText("Obračunavam tjedan 1…")).toBeTruthy();
   });
 });
