@@ -10,7 +10,7 @@ import { indexDeltas, isWeekly, roundInfo } from "../game";
 import { Link } from "../router";
 import { Delta, INDEX_ICON } from "../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
-import { RoundPicker, shortWeek } from "../ui/RoundPicker";
+import { RoundPicker, shortWeek, weekGroup } from "../ui/RoundPicker";
 import { DriverList } from "./month/Explanation";
 
 type HistoryRow = { key: string; label: string; entry: IndexEntry; delta: number | null };
@@ -118,11 +118,15 @@ export function IndicatorScreen({
   // Bez igre (greška) ekran ostaje: imena mjeseci umjesto naslova krugova.
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
-  const scored = hotel.months.map((m) => ({
-    code: m.round,
-    title: scoredTitle(game, m),
-    short: game && weekly ? shortWeek((roundInfo(game, m.round)?.index ?? 0) + 1) : scoredTitle(game, m),
-  }));
+  const scored = hotel.months.map((m) => {
+    const info = game && weekly ? roundInfo(game, m.round) : null;
+    return {
+      code: m.round,
+      title: scoredTitle(game, m),
+      short: game && weekly ? shortWeek((info?.index ?? 0) + 1) : scoredTitle(game, m),
+      ...(info ? { group: weekGroup(info) } : {}),
+    };
+  });
   const last = scored.at(-1)?.code ?? null;
   const round = picked && scored.some((s) => s.code === picked) ? picked : last;
   const info = round && game ? roundInfo(game, round) : null;

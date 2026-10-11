@@ -54,7 +54,7 @@ describe("Odjeli", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Restoran" }).closest("[data-layout] > div")?.className,
     ).toMatch(/min-w-0/);
-    const region = screen.getByRole("region", { name: "Rezultat odjela po krugovima" });
+    const region = screen.getByRole("region", { name: "Rezultat odjela po tjednima" });
     expect(region.className).toMatch(/overflow-x-auto/);
     expect(region.getAttribute("tabindex")).toBe("0");
   });

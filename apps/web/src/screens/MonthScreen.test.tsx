@@ -2,6 +2,7 @@ import { act, cleanup, configure, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { poll } from "../api/poll";
 import type { FeedItemBody } from "../api/types";
+import { keepRoundTogether } from "../format";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
 import {
@@ -465,7 +466,10 @@ describe("krug tjedna", () => {
   it("završen tjedan na /krug/t01", async () => {
     renderApp(resolvedWeekApi(), "/krug/t01");
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Tjedan 1 završen (1. 6. – 7. 6.)" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: keepRoundTogether("Tjedan 1 završen (1. 6. – 7. 6.)"),
+      }),
     ).toBeTruthy();
   });
 });
@@ -490,7 +494,9 @@ describe("krug tjedna: mentor, ljestvica, nastavak", () => {
     expect(screen.getByText("Indeksi na kraju tjedna")).toBeTruthy();
     const board = screen.getByRole("list", { name: "Ljestvica napretka" });
     expect(within(board).getAllByRole("listitem")).toHaveLength(4);
-    expect(screen.getByRole("link", { name: "Nastavi u tjedan 2 (8. 6. – 14. 6.)" })).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: keepRoundTogether("Nastavi u tjedan 2 (8. 6. – 14. 6.)") }),
+    ).toBeTruthy();
   });
 
   it("tjedan bez mentorova sažetka: „Mentor piše…“, pa „nije se javio“", async () => {
@@ -516,7 +522,10 @@ describe("krug tjedna: mentor, ljestvica, nastavak", () => {
       });
     renderApp(api, "/krug/t05");
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Tjedan 5 završen (29. 6. – 5. 7.)" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: keepRoundTogether("Tjedan 5 završen (29. 6. – 5. 7.)"),
+      }),
     ).toBeTruthy();
     expect(await screen.findByText("Lipanj je gotov.")).toBeTruthy();
   });
@@ -529,6 +538,8 @@ describe("krug tjedna: mentor, ljestvica, nastavak", () => {
   it("tjedan u obračunu: naslov s brojem tjedna", async () => {
     const api = v2Api().on("GET", "/v1/games/:game", weeklyGame({ status: "closing" }));
     renderApp(api, "/krug/t01");
-    expect(await screen.findByText("Obračunavam tjedan 1…")).toBeTruthy();
+    const closing = await screen.findByText("Obračunavam tjedan 1…");
+    // Broj tjedna je vezan nerazdvojnim razmakom, naslov se ne lomi između riječi i broja.
+    expect(closing.textContent).toBe("Obračunavam tjedan\u00a01…");
   });
 });

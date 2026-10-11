@@ -3,8 +3,9 @@ import { type FormEvent, type ReactNode, useCallback, useRef, useState } from "r
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
+import { formatCount, formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
+import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
 import { DepartmentPlan, type DeptPlans } from "./plan/DepartmentPlan";
@@ -38,13 +39,16 @@ function int(s: string, min: number, max: number): number | null {
   return n >= min && n <= max ? n : null;
 }
 
+/** Ukupan broj sezonaca u planu odjela (poslužitelj ga drži unutar `seasonal_max` iz granica). */
+function seasonalTotal(depts: DeptPlans): number {
+  return Object.values(depts).reduce((sum, x) => sum + x.seasonal_target, 0);
+}
+
 function toPlan(d: Draft, l: PlanLimitsBody, depts: DeptPlans | null): PlanBody | null {
   const price = int(d.price, l.price_min_cents / 100, l.price_max_cents / 100);
   const marketing = int(d.marketing, 0, l.marketing_max_cents / 100);
   // v2: sezonci i održavanje su po odjelu; ukupni sezonci i održavanje Smještaja izvode se iz njih (kao na poslužitelju).
-  const seasonal = depts
-    ? Object.values(depts).reduce((sum, x) => sum + x.seasonal_target, 0)
-    : int(d.seasonal, l.seasonal_min, l.seasonal_max);
+  const seasonal = depts ? seasonalTotal(depts) : int(d.seasonal, l.seasonal_min, l.seasonal_max);
   const wage = int(d.wage, l.wage_min_pct, l.wage_max_pct);
   if (price === null || marketing === null || seasonal === null || wage === null) return null;
   return {
@@ -122,14 +126,19 @@ function Toggle(props: {
 export function PlanScreen({ me }: { me: HotelBody }) {
   const state = me.private?.plan ?? null;
   const save = useSavePlan(me.hotel.hotel_id);
-  const game = useGame(me.game_id).data;
+  const gameQuery = useGame(me.game_id);
+  const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
   const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
   const [depts, setDepts] = useState<DeptPlans | null>(state?.plan.departments ?? null);
   const [deptsReady, setDeptsReady] = useState(false);
   const onDeptsReady = useCallback((ready: boolean) => setDeptsReady(ready), []);
-  const [invalid, setInvalid] = useState(false);
+  // „range“: neki broj je izvan raspona; „total“: odjeli zajedno imaju više sezonaca nego što hotel smije.
+  const [invalid, setInvalid] = useState<"range" | "total" | null>(null);
+  // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
+  if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
   if (!state || !draft)
     return (
       <>
@@ -141,16 +150,20 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const v2 = depts !== null && !!l.departments;
   const set = (patch: Partial<Draft>) => {
     setDraft({ ...draft, ...patch });
-    setInvalid(false);
+    setInvalid(null);
     save.reset();
   };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!state || !draft || save.isPending || inFlight.current || (v2 && !deptsReady)) return;
+    if (v2 && depts && seasonalTotal(depts) > l.seasonal_max) {
+      setInvalid("total");
+      return;
+    }
     const plan = toPlan(draft, l, v2 ? depts : null);
     if (!plan) {
-      setInvalid(true);
+      setInvalid("range");
       return;
     }
     inFlight.current = true;
@@ -217,7 +230,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           onReady={onDeptsReady}
           onChange={(next) => {
             setDepts(next);
-            setInvalid(false);
+            setInvalid(null);
             save.reset();
           }}
         />
@@ -270,7 +283,10 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           />
         </div>
       </details>
-      {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
+      {invalid === "range" && <ErrorText>{t("plan.invalid")}</ErrorText>}
+      {invalid === "total" && (
+        <ErrorText>{t("plan.dept.tooMany", { n: formatCount(l.seasonal_max, "seasonalWorker") })}</ErrorText>
+      )}
       {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
       <Button type="submit" disabled={save.isPending || (v2 && !deptsReady)}>

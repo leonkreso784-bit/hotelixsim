@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../../test/fakeApi";
-import { HOTEL_ID, standardApi, v2Api } from "../../test/fixtures";
+import { HOTEL_ID, standardApi, v2Api, v2PlanHotel } from "../../test/fixtures";
 import { renderApp } from "../../test/renderApp";
 
 afterEach(() => {
@@ -53,7 +53,7 @@ describe("Plan po odjelima", () => {
     const open = within(bar).getByRole("checkbox", { name: "Otvoren" });
     fireEvent.click(open);
     expect(screen.getByText("Ovaj tjedan se može promijeniti još za 2 sezonca")).toBeTruthy();
-    for (const b of within(bar).getAllByRole("button")) expect((b as HTMLButtonElement).disabled).toBe(true);
+    for (const b of within(bar).getAllByRole("button")) expect(b.getAttribute("aria-disabled")).toBe("true");
     for (const r of within(bar).getAllByRole("radio")) expect((r as HTMLInputElement).disabled).toBe(true);
     fireEvent.click(open);
     expect(screen.getByText("Ovaj tjedan se može promijeniti još za 5 sezonaca")).toBeTruthy();
@@ -74,8 +74,8 @@ describe("Plan po odjelima", () => {
     renderApp(api, "/plan");
     const bar = await screen.findByRole("group", { name: "Lobby bar" });
     fireEvent.click(within(bar).getByRole("checkbox", { name: "Otvoren" }));
-    expect((within(bar).getByRole("button", { name: "Više sezonaca" }) as HTMLButtonElement).disabled).toBe(
-      true,
+    expect(within(bar).getByRole("button", { name: "Više sezonaca" }).getAttribute("aria-disabled")).toBe(
+      "true",
     );
     const save = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(save);
@@ -104,7 +104,21 @@ describe("Plan po odjelima", () => {
     const plus = within(rest).getByRole("button", { name: "Više sezonaca" });
     for (let i = 0; i < 5; i++) fireEvent.click(plus);
     expect(screen.getByText("Ovaj tjedan sezonce više ne možeš mijenjati.")).toBeTruthy();
-    expect((plus as HTMLButtonElement).disabled).toBe(true);
+    expect(plus.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("gumb koji dosegne granicu zadržava fokus (nije disabled), klik na njega ne radi ništa", async () => {
+    renderApp(echoApi(), "/plan");
+    const rest = await screen.findByRole("group", { name: "Restoran" });
+    const plus = within(rest).getByRole("button", { name: "Više sezonaca" });
+    plus.focus();
+    for (let i = 0; i < 5; i++) fireEvent.click(plus);
+    expect(plus.getAttribute("aria-disabled")).toBe("true");
+    expect(plus.hasAttribute("disabled")).toBe(false);
+    expect(document.activeElement).toBe(plus);
+    const shown = rest.querySelector("output")?.textContent;
+    fireEvent.click(plus);
+    expect(rest.querySelector("output")?.textContent).toBe(shown);
   });
 
   it("zatvaranje koje ne stane u preostali korak je onemogućeno", async () => {
@@ -116,6 +130,26 @@ describe("Plan po odjelima", () => {
     expect((within(bar).getByRole("checkbox", { name: "Otvoren" }) as HTMLInputElement).disabled).toBe(true);
   });
 
+  it("zbroj sezonaca iznad najvećeg broja hotela: jasna rečenica, bez zahtjeva", async () => {
+    const hotel = v2PlanHotel();
+    if (hotel.private?.plan) hotel.private.plan.limits.seasonal_max = 24;
+    const api = echoApi().on("GET", "/v1/me/hotel", hotel);
+    renderApp(api, "/plan");
+    const rest = await screen.findByRole("group", { name: "Restoran" });
+    const plus = within(rest).getByRole("button", { name: "Više sezonaca" });
+    fireEvent.click(plus);
+    fireEvent.click(plus);
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    expect(
+      await screen.findByText(
+        "Odjeli zajedno imaju previše sezonaca: hotel smije imati najviše 24 sezonca. Smanji ih u nekom odjelu.",
+      ),
+    ).toBeTruthy();
+    expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(0);
+    fireEvent.click(within(rest).getByRole("button", { name: "Manje sezonaca" }));
+    expect(screen.queryByText(/previše sezonaca/)).toBeNull();
+  });
+
   it("razina cijene u koracima od 5 do granice; održavanje se šalje po odjelu", async () => {
     const api = echoApi();
     renderApp(api, "/plan");
@@ -125,7 +159,7 @@ describe("Plan po odjelima", () => {
     const up = within(rest).getByRole("button", { name: "Više cijene" });
     for (let i = 0; i < 6; i++) fireEvent.click(up);
     expect(within(rest).getByText("120 %")).toBeTruthy();
-    expect((up as HTMLButtonElement).disabled).toBe(true);
+    expect(up.getAttribute("aria-disabled")).toBe("true");
     fireEvent.click(within(rest).getByRole("radio", { name: "pojačano" }));
     fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     await waitFor(() => expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1));

@@ -1,9 +1,11 @@
 // ui/RoundPicker.tsx — izbor kruga (UI_PRAVILA §8); jedna komponenta za sve ekrane s krugovima.
 // Mjeseci (`many` je false): gumbi u redu na svim širinama. Tjedni (`many`): ispod 1024 px ‹ › i izbornik,
-// od 1024 px sažeti čipovi („T5“) s punim nazivom u `aria-label` i `title`.
+// od 1024 px sažeti čipovi („T5“) s punim nazivom u `aria-label` i `title`, grupirani po mjesecima (§8).
 import { t } from "@hotelixsim/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
+import type { RoundInfoBody } from "../api/types";
+import { capitalize, monthName } from "../format";
 
 export type PickerRound = {
   code: string;
@@ -11,7 +13,26 @@ export type PickerRound = {
   title: string;
   /** Sažetak za čip: „T5“. */
   short: string;
+  /** Mjesec u kojem tjedan počinje („Lipanj“): čipovi na računalu stoje u grupama po mjesecima. */
+  group?: string;
 };
+
+/** Mjesec kojem tjedan pripada za grupiranje čipova (onaj u kojem počinje). */
+export function weekGroup(info: RoundInfoBody): string {
+  return capitalize(monthName(info.first_month));
+}
+
+/** Uzastopni krugovi istog mjeseca u jednoj grupi; bez oznake mjeseca na svim krugovima ostaje jedna grupa bez imena. */
+function groupRounds(rounds: PickerRound[]): { name: string | null; rounds: PickerRound[] }[] {
+  const groups: { name: string | null; rounds: PickerRound[] }[] = [];
+  for (const r of rounds) {
+    const name = r.group ?? null;
+    const last = groups.at(-1);
+    if (last && last.name === name) last.rounds.push(r);
+    else groups.push({ name, rounds: [r] });
+  }
+  return groups;
+}
 
 const BASE = "min-h-11 rounded-2xl font-semibold";
 const ON = "bg-accent text-white";
@@ -102,19 +123,34 @@ export function RoundPicker({
           <ChevronRight size={20} aria-hidden="true" />
         </button>
       </div>
-      <div className="hidden flex-wrap gap-2 lg:flex">
-        {rounds.map((r) => (
-          <button
-            key={r.code}
-            type="button"
-            aria-label={r.title}
-            title={r.title}
-            aria-pressed={r.code === value}
-            onClick={() => onPick(r.code)}
-            className={`${BASE} ${FOCUS} min-w-11 px-3 ${r.code === value ? ON : OFF}`}
+      <div className="hidden flex-wrap gap-x-5 gap-y-2 lg:flex">
+        {groupRounds(rounds).map((g) => (
+          // biome-ignore lint/a11y/useSemanticElements: unutar fieldseta birača; grupa mjeseca nosi samo ime
+          <div
+            key={g.name ?? "svi"}
+            role="group"
+            aria-label={g.name ?? legend}
+            className="flex flex-wrap items-center gap-2"
           >
-            {r.short}
-          </button>
+            {g.name && (
+              <span aria-hidden="true" className="text-sm font-semibold text-muted">
+                {g.name}
+              </span>
+            )}
+            {g.rounds.map((r) => (
+              <button
+                key={r.code}
+                type="button"
+                aria-label={r.title}
+                title={r.title}
+                aria-pressed={r.code === value}
+                onClick={() => onPick(r.code)}
+                className={`${BASE} ${FOCUS} min-w-11 px-3 ${r.code === value ? ON : OFF}`}
+              >
+                {r.short}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </fieldset>

@@ -16,7 +16,7 @@ type DeptLimits = NonNullable<PlanLimitsBody["departments"]>[string];
 const PRICE_STEP = 5;
 
 const STEP_BUTTON =
-  "inline-flex size-11 items-center justify-center rounded-xl border border-line bg-surface text-xl font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex size-11 items-center justify-center rounded-xl border border-line bg-surface text-xl font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-40";
 
 /** Koliko je sezonaca ukupno pomaknuto od sadašnjeg stanja (Σ |cilj − sada|), kako računa poslužitelj. */
 function movedSeasonals(plans: DeptPlans, now: Record<string, number>): number {
@@ -26,6 +26,10 @@ function movedSeasonals(plans: DeptPlans, now: Record<string, number>): number {
   );
 }
 
+/**
+ * Gumb +/− ostaje u redu tipkovnice i kad ne smije dalje: pravi `disabled` bi uzeo fokus pa bi pao na `<body>`
+ * (UI_PRAVILA §9.4). Onemogućenost čitaču daje `aria-disabled`, klik ne radi ništa.
+ */
 function Stepper(props: {
   label: string;
   value: string;
@@ -46,8 +50,8 @@ function Stepper(props: {
           type="button"
           aria-label={props.lessLabel}
           aria-describedby={props.describedBy}
-          disabled={props.lessDisabled}
-          onClick={props.onLess}
+          aria-disabled={props.lessDisabled}
+          onClick={props.lessDisabled ? undefined : props.onLess}
           className={STEP_BUTTON}
         >
           <span aria-hidden="true">−</span>
@@ -59,8 +63,8 @@ function Stepper(props: {
           type="button"
           aria-label={props.moreLabel}
           aria-describedby={props.describedBy}
-          disabled={props.moreDisabled}
-          onClick={props.onMore}
+          aria-disabled={props.moreDisabled}
+          onClick={props.moreDisabled ? undefined : props.onMore}
           className={STEP_BUTTON}
         >
           <span aria-hidden="true">+</span>

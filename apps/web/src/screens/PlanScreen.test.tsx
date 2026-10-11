@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
 import { HOTEL_ID, myHotel, plan, standardApi, v2Api } from "../test/fixtures";
+import { joined } from "../test/joined";
 import { renderApp } from "../test/renderApp";
 
 afterEach(() => {
@@ -119,13 +120,17 @@ describe("plan tjedna", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Plan tjedna" })).toBeTruthy();
     expect(
       screen.getByText(
-        "Za tjedan 1 (1. 6. – 7. 6.). Vrijedi od zatvaranja tjedna; zadnji spremljeni plan pobjeđuje.",
+        joined(
+          "Za tjedan 1 (1. 6. – 7. 6.). Vrijedi od zatvaranja tjedna; zadnji spremljeni plan pobjeđuje.",
+        ),
       ),
     ).toBeTruthy();
+    // „Spremi plan“ čeka popis odjela, koji se učitava tek kad ekran dobije igru.
+    await screen.findByRole("group", { name: "Restoran" });
     const button = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(button);
     fireEvent.click(button);
-    expect(await screen.findByText("Plan za tjedan 1 (1. 6. – 7. 6.) je spremljen.")).toBeTruthy();
+    expect(await screen.findByText(joined("Plan za tjedan 1 (1. 6. – 7. 6.) je spremljen."))).toBeTruthy();
     expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1);
   });
 });

@@ -7,6 +7,7 @@ import type { HotelBody } from "../api/types";
 import { tw } from "../format";
 import { isWeekly } from "../game";
 import { Link } from "../router";
+import { GameError } from "../ui/GameError";
 import { ErrorText, StatusText } from "../ui/primitives";
 import { Conversation } from "./situation/Conversation";
 import { FreeResponse } from "./situation/FreeResponse";
@@ -16,7 +17,8 @@ import { Verdict } from "./situation/Verdict";
 export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const hotelId = me.hotel.hotel_id;
   const sits = useSituations(hotelId);
-  const gameData = useGame(me.game_id).data;
+  const gameQuery = useGame(me.game_id);
+  const gameData = gameQuery.data;
   const weekly = gameData ? isWeekly(gameData) : false;
   // Je li forma za odgovor bila prikazana: tek tada novi sadržaj (izbor, presuda) prima fokus.
   const answeredHere = useRef(false);
@@ -36,7 +38,8 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
       {t("situation.back")}
     </Link>
   );
-  if (sits.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (sits.isPending || gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (!gameData) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
   if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
   const s = sits.data.items.find((i) => i.code === code);
   if (!s)
@@ -51,12 +54,13 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const answerArea = (
     <div className="space-y-3">
       {s.response && <Verdict response={s.response} focusOnMount={answeredHere.current} />}
-      {open && !decided && s.free_text && <FreeResponse hotelId={hotelId} s={s} />}
+      {open && !decided && s.free_text && <FreeResponse hotelId={hotelId} s={s} weekly={weekly} />}
       <ChosenAnswer s={s} focusOnMount={answeredHere.current} />
       {open && !decided && (
         <OfferedAnswers
           hotelId={hotelId}
           s={s}
+          weekly={weekly}
           heading={s.free_text ? t("answers.orTitle") : t("answers.title")}
         />
       )}
@@ -79,7 +83,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
       {title}
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
         <div>
-          <Conversation hotelId={hotelId} code={s.code} canWrite={open && !decided} />
+          <Conversation hotelId={hotelId} code={s.code} canWrite={open && !decided} weekly={weekly} />
         </div>
         {answerArea}
       </div>

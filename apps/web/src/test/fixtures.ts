@@ -486,7 +486,7 @@ type DeptPlanBody = NonNullable<PlanBody["departments"]>[string];
 type DeptLimitsBody = NonNullable<PlanLimitsBody["departments"]>[string];
 
 /** Moj hotel u v2 igri: plan kruga t01 s postavkama odjela i granicama (korak ukupno 5 sezonaca). */
-function v2PlanHotel(): HotelBody {
+export function v2PlanHotel(): HotelBody {
   const base = weeklyHotel();
   const dept = (seasonal_target: number, open = true): DeptPlanBody => ({
     open,

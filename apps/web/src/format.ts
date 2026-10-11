@@ -129,21 +129,26 @@ export function monthName(code: MonthCode): string {
  */
 export function roundWithoutGame(round: string, month: MonthCode): string {
   const week = /^t(\d+)$/.exec(round);
-  return week ? t("round.weekBare", { n: Number(week[1]) }) : monthName(month);
+  return week ? keepRoundTogether(t("round.weekBare", { n: Number(week[1]) })) : monthName(month);
 }
 
 const NBSP = "\u00a0";
 const WORD_JOINER = "\u2060";
 
+/** Datumi u zagradi nelomljivi: razmaci postaju nerazdvojni, a iza crtice dolazi spojnik riječi. Idempotentno. */
+function keepDatesTogether(dates: string): string {
+  return dates.replace(/ /g, NBSP).replace(/–\u2060?/g, `–${WORD_JOINER}`);
+}
+
 /**
  * Naslov kruga bez neželjenih prijeloma: „tjedan 4“ i sve u zagradi (datumi) postaju jedna nelomljiva cjelina, a
  * smije se prijeći u novi redak samo ispred zagrade. Iza crtice dolazi spojnik riječi (U+2060): bez njega preglednik
- * smije prelomiti iza „–“ čak i kad iza nje stoji nerazdvojni razmak.
+ * smije prelomiti iza „–“ čak i kad iza nje stoji nerazdvojni razmak. Može se pozvati više puta na isti tekst.
  */
 export function keepRoundTogether(text: string): string {
   return text
     .replace(/(tjedan|tjedna|tjednu) (\d+)/gi, `$1${NBSP}$2`)
-    .replace(/\([^)]*\)/g, (paren) => paren.replace(/ /g, NBSP).replace(/–/g, `–${WORD_JOINER}`));
+    .replace(/\([^)]*\)/g, keepDatesTogether);
 }
 
 export function capitalize(s: string): string {
@@ -152,21 +157,26 @@ export function capitalize(s: string): string {
 
 const MONTH_NUMBER: Record<MonthCode, number> = { jun: 6, jul: 7, aug: 8, sep: 9 };
 
-/** Mjesec: „lipanj“; tjedan: „29. 6. – 5. 7.“. Datumi dolaze iz tijela kruga, ekran ne računa kalendar. */
+/**
+ * Mjesec: „lipanj“; tjedan: „29. 6. – 5. 7.“ (s nerazdvojnim razmacima, vidi `keepRoundTogether`). Datumi dolaze iz
+ * tijela kruga, ekran ne računa kalendar.
+ */
 export function roundDates(r: RoundInfoBody): string {
   if (r.kind === "month") return monthName(r.first_month);
-  return t("round.dates", {
-    d1: r.first_day,
-    m1: MONTH_NUMBER[r.first_month],
-    d2: r.last_day,
-    m2: MONTH_NUMBER[r.last_month],
-  });
+  return keepDatesTogether(
+    t("round.dates", {
+      d1: r.first_day,
+      m1: MONTH_NUMBER[r.first_month],
+      d2: r.last_day,
+      m2: MONTH_NUMBER[r.last_month],
+    }),
+  );
 }
 
 /** Krug usred rečenice: „lipanj“ ili „tjedan 5 (29. 6. – 5. 7.)“. */
 export function roundPhrase(r: RoundInfoBody): string {
   if (r.kind === "month") return monthName(r.first_month);
-  return t("round.weekPhrase", { n: r.index + 1, dates: roundDates(r) });
+  return keepRoundTogether(t("round.weekPhrase", { n: r.index + 1, dates: roundDates(r) }));
 }
 
 /** Krug kao naslov: „Lipanj“ ili „Tjedan 5 (29. 6. – 5. 7.)“. */

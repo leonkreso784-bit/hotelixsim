@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { keepRoundTogether } from "../format";
 import { problem } from "../test/fakeApi";
 import { game, ix, kpiMonth, myHotel, roundInfo, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
@@ -189,7 +190,7 @@ describe("Pokazatelji", () => {
     renderApp(api);
     const link = await screen.findByRole("link", { name: /^Pokazatelji/ });
     expect(link.getAttribute("href")).toBe("/pokazatelji");
-    expect(link.textContent).toContain("ADR 132,45 € · RevPAR 90,07 €");
+    expect(link.textContent).toContain("ADR\u00a0132,45 € · RevPAR\u00a090,07 €");
     fireEvent.click(link);
     expect(await screen.findByRole("heading", { level: 1, name: "Pokazatelji" })).toBeTruthy();
     expect(window.location.pathname).toBe("/pokazatelji");
@@ -214,7 +215,11 @@ describe("Pokazatelji: tjedna igra", () => {
       within(table)
         .getAllByRole("columnheader")
         .map((c) => c.textContent),
-    ).toEqual(["Pokazatelj", "Tjedan 1 (1. 6. – 7. 6.)", "Tjedan 2 (8. 6. – 14. 6.)"]);
+    ).toEqual([
+      "Pokazatelj",
+      keepRoundTogether("Tjedan 1 (1. 6. – 7. 6.)"),
+      keepRoundTogether("Tjedan 2 (8. 6. – 14. 6.)"),
+    ]);
     expect(screen.getByText(/dani u tjednu/)).toBeTruthy();
   });
 

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExplanationBody } from "../api/types";
+import { keepRoundTogether } from "../format";
 import { json, problem } from "../test/fakeApi";
 import { explanation, game, ix, myHotel, standardApi, v2Api, weeklyHotel } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
@@ -198,13 +199,13 @@ describe("pokazatelj: tjedna igra", () => {
     expect(await screen.findByRole("heading", { name: "Kroz tjedne" })).toBeTruthy();
     expect(
       await screen.findByRole("heading", {
-        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)",
+        name: keepRoundTogether("Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)"),
       }),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Tjedan 1 (1. 6. – 7. 6.)" }));
+    fireEvent.click(screen.getByRole("button", { name: keepRoundTogether("Tjedan 1 (1. 6. – 7. 6.)") }));
     expect(
       await screen.findByRole("heading", {
-        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 1 (1. 6. – 7. 6.)",
+        name: keepRoundTogether("Od čega se sastoji i što ga je pomaknulo: tjedan 1 (1. 6. – 7. 6.)"),
       }),
     ).toBeTruthy();
     expect(api.calls.some((c) => c.path.endsWith("/months/t01/explanation"))).toBe(true);
@@ -235,18 +236,42 @@ describe("pokazatelj: birač tjedana i pad igre", () => {
     expect(select.value).toBe("t02");
     expect(
       await screen.findByRole("heading", {
-        name: "Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)",
+        name: keepRoundTogether("Od čega se sastoji i što ga je pomaknulo: tjedan 2 (8. 6. – 14. 6.)"),
       }),
     ).toBeTruthy();
     fireEvent.change(select, { target: { value: "t01" } });
     expect((screen.getByRole("button", { name: "Prethodni tjedan" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
-    const chip = screen.getByRole("button", { name: "Tjedan 3 (15. 6. – 21. 6.)" });
+    const chip = screen.getByRole("button", { name: keepRoundTogether("Tjedan 3 (15. 6. – 21. 6.)") });
     expect(chip.textContent).toBe("T3");
-    expect(chip.getAttribute("title")).toBe("Tjedan 3 (15. 6. – 21. 6.)");
+    expect(chip.getAttribute("title")).toBe(keepRoundTogether("Tjedan 3 (15. 6. – 21. 6.)"));
     fireEvent.click(chip);
     expect(select.value).toBe("t03");
+  });
+
+  it("računalo: čipovi su grupirani po mjesecima u kojima tjedni počinju", async () => {
+    const codes = ["t01", "t02", "t03", "t04", "t05", "t06"];
+    renderApp(
+      v2Api().on(
+        "GET",
+        "/v1/me/hotel",
+        weeklyHotel({ week: 7, months: codes.map((c, i) => wk(c, 5300 + i * 100)) }),
+      ),
+      "/pokazatelj/G",
+    );
+    const june = await screen.findByRole("group", { name: "Lipanj" });
+    const july = screen.getByRole("group", { name: "Srpanj" });
+    expect(
+      within(june)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["T1", "T2", "T3", "T4", "T5"]);
+    expect(
+      within(july)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["T6"]);
   });
 
   it("mobitel: birač može nauzak (min-w-0 na fieldsetu i u redu), jer ga najduža opcija ne smije širiti", async () => {

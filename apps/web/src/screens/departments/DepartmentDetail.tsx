@@ -17,11 +17,14 @@ export function DepartmentDetail({
   hotelId,
   code,
   game,
+  gamePending,
   weekly,
 }: {
   hotelId: string;
   code: string;
   game: GameBody | undefined;
+  /** Igra još nije stigla: tekstovi ovise o tome je li igra tjedna, pa se čeka kao i odjel. */
+  gamePending: boolean;
   weekly: boolean;
 }) {
   const q = useDepartment(hotelId, code);
@@ -39,7 +42,7 @@ export function DepartmentDetail({
     </Link>
   );
   // Povratak i naslov prve razine stoje iznad svakog stanja (učitavanje, greška, nepoznat odjel).
-  if (q.isPending)
+  if (q.isPending || gamePending)
     return (
       <div className="space-y-3">
         {back}

@@ -10,10 +10,12 @@ export function OfferedAnswers({
   hotelId,
   s,
   heading,
+  weekly,
 }: {
   hotelId: string;
   s: SituationBody;
   heading: string;
+  weekly: boolean;
 }) {
   const answer = useAnswer(hotelId, s.code);
   const inFlight = useRef(false);
@@ -77,7 +79,7 @@ export function OfferedAnswers({
           </h3>
           <p>{s.answers[picked]}</p>
           <p className="text-sm text-muted">{t("answers.confirmText")}</p>
-          {answer.isError && <ErrorText>{problemMessage(answer.error)}</ErrorText>}
+          {answer.isError && <ErrorText>{problemMessage(answer.error, weekly)}</ErrorText>}
           <Button disabled={answer.isPending} onClick={confirm}>
             {t("answers.confirm")}
           </Button>

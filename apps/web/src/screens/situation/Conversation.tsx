@@ -11,17 +11,19 @@ export function Conversation({
   hotelId,
   code,
   canWrite,
+  weekly,
 }: {
   hotelId: string;
   code: string;
   canWrite: boolean;
+  weekly: boolean;
 }) {
   const conv = useConversation(hotelId, code, true);
   const send = useSendMessage(hotelId, code);
   const inFlight = useRef(false);
   const [text, setText] = useState("");
   if (conv.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (conv.isError && !conv.data) return <ErrorText>{problemMessage(conv.error)}</ErrorText>;
+  if (conv.isError && !conv.data) return <ErrorText>{problemMessage(conv.error, weekly)}</ErrorText>;
   const c = conv.data;
   const used = c.lines.filter((l) => l.from === "student").length;
   const total = used + c.remaining;
@@ -80,7 +82,7 @@ export function Conversation({
           ))}
         </div>
       </div>
-      {send.isError && <ErrorText>{problemMessage(send.error)}</ErrorText>}
+      {send.isError && <ErrorText>{problemMessage(send.error, weekly)}</ErrorText>}
       {canWrite && c.open && c.remaining === 0 && <p className="text-sm font-semibold">{t("chat.limit")}</p>}
       {canWrite && c.open && c.remaining > 0 && (
         <form onSubmit={submit} className="flex gap-2">

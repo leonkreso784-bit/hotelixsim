@@ -6,7 +6,14 @@ import { useFeed, useGameUntilResolved } from "../api/queries";
 import type { GameBody, HotelBody, PublicHotelBody, RoundInfoBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import { formatPointsCount, progressTone, roundDates, roundPhrase, roundTitle } from "../format";
+import {
+  formatPointsCount,
+  keepRoundTogether,
+  progressTone,
+  roundDates,
+  roundPhrase,
+  roundTitle,
+} from "../format";
 import {
   indexDeltas,
   indicesAt,
@@ -60,10 +67,12 @@ function MonthResult({
     <>
       <h1 className="text-3xl font-extrabold tracking-tight">
         {weekly
-          ? t("round.withDates", {
-              title: t("round.done.week", { n: round.index + 1 }),
-              dates: roundDates(round),
-            })
+          ? keepRoundTogether(
+              t("round.withDates", {
+                title: t("round.done.week", { n: round.index + 1 }),
+                dates: roundDates(round),
+              }),
+            )
           : t("month.title", { month: roundTitle(round) })}
       </h1>
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
@@ -162,7 +171,7 @@ export function MonthScreen({ me, code }: { me: HotelBody; code: string }) {
       <Card className="space-y-2">
         <h1 role="status" className="text-2xl font-extrabold">
           {weekly
-            ? t("round.closingTitle.week", { n: round.index + 1 })
+            ? keepRoundTogether(t("round.closingTitle.week", { n: round.index + 1 }))
             : t("month.closingTitle", { month: roundPhrase(round) })}
         </h1>
         <p className="text-muted">{t("month.closingText")}</p>
