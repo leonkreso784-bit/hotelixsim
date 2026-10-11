@@ -1,17 +1,23 @@
-// Ekran jednog odjela: povratak, naslov, kartice Prostor/Gosti/Novac/Ljudi (ili trošak službe) i povijest po krugovima.
+// Ekran jednog odjela: povratak, naslov, ocjena i tri sastavnice, što mu fali i u čemu je dobar, odluke za otvoreni
+// krug, kartice Prostor/Gosti/Novac/Ljudi (ili trošak službe) i povijest po krugovima.
 import { t } from "@hotelixsim/i18n";
 import { ChevronLeft } from "lucide-react";
 import { ApiError, problemMessage } from "../../api/errors";
 import { useDepartment } from "../../api/queries";
-import type { GameBody } from "../../api/types";
+import type { GameBody, PlanStateBody } from "../../api/types";
 import { roundTitle, tw } from "../../format";
 import { roundInfo } from "../../game";
 import { Link } from "../../router";
 import { Badge, Button, Card, ErrorText, StatusText } from "../../ui/primitives";
+import { DepartmentDecisions } from "./DepartmentDecisions";
 import { DepartmentFacts, People } from "./DepartmentFacts";
 import { DepartmentHistory } from "./DepartmentHistory";
+import { DepartmentInsights } from "./DepartmentInsights";
 import { FOCUS, isService } from "./helpers";
+import { DeptIcon } from "./icons";
+import { ScoreCard } from "./ScoreCard";
 import { ServiceCosts } from "./ServiceCard";
+import { deptScore } from "./score";
 
 export function DepartmentDetail({
   hotelId,
@@ -19,6 +25,7 @@ export function DepartmentDetail({
   game,
   gamePending,
   weekly,
+  planState,
 }: {
   hotelId: string;
   code: string;
@@ -26,6 +33,8 @@ export function DepartmentDetail({
   /** Igra još nije stigla: tekstovi ovise o tome je li igra tjedna, pa se čeka kao i odjel. */
   gamePending: boolean;
   weekly: boolean;
+  /** Plan otvorenog kruga (moj hotel) za odluke odjela; `null` kad krug nije otvoren. */
+  planState: PlanStateBody | null;
 }) {
   const q = useDepartment(hotelId, code);
   const titleOf = (round: string) => {
@@ -75,14 +84,21 @@ export function DepartmentDetail({
   const { department: dept, history } = q.data;
   const service = isService(dept.class);
   const empty = service ? dept.service_last === null : dept.last === null;
+  const score = deptScore(dept);
   return (
     <div className="space-y-3">
       {back}
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-3xl font-extrabold tracking-tight">{dept.name}</h1>
+        <DeptIcon code={dept.code} />
+        <h1 className="min-w-0 text-3xl font-extrabold tracking-tight">{dept.name}</h1>
         {!dept.open && <Badge tone="muted">{t("dept.closed")}</Badge>}
       </div>
-      {empty && (
+      {score && <ScoreCard score={score} />}
+      {!service && <DepartmentInsights r={dept.last} weekly={weekly} />}
+      {!service && (
+        <DepartmentDecisions hotelId={hotelId} dept={dept} planState={planState} weekly={weekly} />
+      )}
+      {service && empty && (
         <Card>
           <p>{tw(weekly, "dept.noResult")}</p>
         </Card>

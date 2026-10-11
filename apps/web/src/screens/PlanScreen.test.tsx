@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
-import { HOTEL_ID, myHotel, plan, standardApi, v2Api } from "../test/fixtures";
+import { HOTEL_ID, myHotel, plan, standardApi, v2Api, v2PlanHotel } from "../test/fixtures";
 import { joined } from "../test/joined";
 import { renderApp } from "../test/renderApp";
 
@@ -125,8 +125,6 @@ describe("plan tjedna", () => {
         ),
       ),
     ).toBeTruthy();
-    // „Spremi plan“ čeka popis odjela, koji se učitava tek kad ekran dobije igru.
-    await screen.findByRole("group", { name: "Restoran" });
     const button = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(button);
     fireEvent.click(button);
@@ -135,22 +133,70 @@ describe("plan tjedna", () => {
   });
 });
 
+describe("plan tjedna: odjeli", () => {
+  const echo = () =>
+    v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) => json(200, body as object));
+
+  it("plan nema kontrole odjela ni sezonske radnike, nego sažetak s poveznicom na odjele", async () => {
+    renderApp(echo(), "/plan");
+    expect(await screen.findByRole("heading", { level: 2, name: "Odjeli" })).toBeTruthy();
+    expect(await screen.findByText("Odjeli ovaj tjedan rade kao dosad.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Svi odjeli" }).getAttribute("href")).toBe("/odjeli");
+    expect(screen.queryByRole("group", { name: "Restoran" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /sezonskog radnika/ })).toBeNull();
+    expect(screen.queryByLabelText("Sezonski radnici")).toBeNull();
+    expect(screen.queryByRole("radio", { name: "redovno" })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/sezonc/i);
+  });
+
+  it("sažetak promjena po odjelu vodi na detalj odjela", async () => {
+    const hotel = v2PlanHotel();
+    const p = hotel.private?.plan?.plan;
+    if (p?.departments?.restaurant)
+      p.departments.restaurant = { ...p.departments.restaurant, seasonal_target: 4, price_level_pct: 105 };
+    renderApp(echo().on("GET", "/v1/me/hotel", hotel), "/plan");
+    const link = await screen.findByRole("link", { name: "Restoran: +2 sezonska radnika, cijene 105 %" });
+    expect(link.getAttribute("href")).toBe("/odjeli/restaurant");
+  });
+
+  it("spremanje plana hotela šalje svježi plan kruga s nepromijenjenim odjelima", async () => {
+    let reads = 0;
+    const fresh = v2PlanHotel();
+    const fp = fresh.private?.plan?.plan;
+    if (fp?.departments?.restaurant)
+      fp.departments.restaurant = { ...fp.departments.restaurant, seasonal_target: 4 };
+    const api = echo().on("GET", "/v1/me/hotel", () => {
+      reads += 1;
+      return json(200, reads === 1 ? v2PlanHotel() : fresh);
+    });
+    renderApp(api, "/plan");
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    await waitFor(() => expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1));
+    expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)[0]?.body).toEqual({ ...fp, price_cents: 14_000 });
+  });
+
+  it("v1 igra nema dio Odjeli", async () => {
+    renderApp(standardApi(), "/plan");
+    expect(await screen.findByRole("heading", { level: 1 })).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 2, name: "Odjeli" })).toBeNull();
+  });
+});
+
 describe("plan tjedna: greške", () => {
-  it("krug nije otvoren i prevelik pomak sezonaca govore o tjednu, a v1 ostaje kao prije", async () => {
+  it("krug nije otvoren i prevelik pomak sezonskih radnika govore o tjednu, a v1 ostaje kao prije", async () => {
     const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => problem(409, "round_not_open"));
     renderApp(api, "/plan");
-    await screen.findByRole("group", { name: "Restoran" });
-    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
     expect(await screen.findByText("Tjedan nije otvoren — sad se ne može mijenjati.")).toBeTruthy();
     cleanup();
     const api2 = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () =>
       problem(422, "seasonal_step_too_big"),
     );
     renderApp(api2, "/plan");
-    await screen.findByRole("group", { name: "Restoran" });
-    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
     expect(
-      await screen.findByText("Sezonce možeš mijenjati samo malo odjednom; smanji promjenu."),
+      await screen.findByText("Broj sezonskih radnika možeš mijenjati samo malo odjednom; smanji promjenu."),
     ).toBeTruthy();
   });
 });

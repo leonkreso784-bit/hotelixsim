@@ -124,6 +124,7 @@ export function People({
           />
         )}
       </Lines>
+      <p className="text-sm text-muted">{t("dept.staff.note")}</p>
       {r && <p>{t("dept.load", { load: formatLoad(r.load_hundredths) })}</p>}
       {departures !== null && departures > 0 && (
         <p className="text-sm text-muted">{t("dept.departures.note")}</p>

@@ -17,12 +17,58 @@ describe("Odjeli", () => {
     const spa = (await screen.findByRole("link", { name: /Mali wellness/ })).closest(
       "article",
     ) as HTMLElement;
-    expect(within(spa).getByText("Stanje prostora")).toBeTruthy();
-    expect(within(spa).getByText("65/100")).toBeTruthy();
-    expect(within(spa).getByText("Zadovoljstvo gostiju")).toBeTruthy();
+    // Jedna traka „Ocjena odjela“: prosjek kvalitete 70, prostora 65 i zadovoljstva 74 = 70, uz broj i riječ.
+    expect(within(spa).getByText("Ocjena odjela")).toBeTruthy();
+    expect(within(spa).getByText("70/100 · dobro")).toBeTruthy();
+    expect(within(spa).getAllByRole("img")).toHaveLength(1);
+    expect(within(spa).getByRole("img").getAttribute("aria-label")).toBe("Ocjena odjela: 70 od 100, dobro");
     expect(within(spa).getByText("Ljudi: 2 stalna, 1 sezonski")).toBeTruthy();
     expect(screen.queryByText("Rooftop bar")).toBeNull();
     expect(screen.getByRole("heading", { name: "Službe bez prihoda" })).toBeTruthy();
+  });
+
+  it("kartice i službe imaju ikonu odjela uz ime; službe nemaju traku ocjene", async () => {
+    renderApp(v2Api(), "/odjeli");
+    const rest = (await screen.findByRole("link", { name: "Restoran" })).closest("article") as HTMLElement;
+    const icon = rest.querySelector("[data-dept-icon='restaurant']");
+    expect(icon?.getAttribute("aria-hidden")).toBe("true");
+    expect(rest.querySelector("[data-dept-icon='rooms']")).toBeNull();
+    const admin = screen.getByRole("link", { name: /Uprava/ });
+    expect(admin.querySelector("[data-dept-icon='admin']")?.getAttribute("aria-hidden")).toBe("true");
+    expect(within(admin).queryByRole("img")).toBeNull();
+  });
+
+  it("detalj: ocjena i tri sastavnice, što mu fali i u čemu je dobar iz zadnjeg tjedna", async () => {
+    renderApp(v2Api(), "/odjeli/restaurant");
+    const h1 = await screen.findByRole("heading", { level: 1, name: "Restoran" });
+    // Stupac detalja (popis lijevo ima svoju karticu Restorana s istom ocjenom).
+    const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
+    expect(detail.getByRole("img", { name: "Ocjena odjela: 70 od 100, dobro" })).toBeTruthy();
+    expect(detail.getByText("70/100 · dobro")).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Kvaliteta usluge: 70 od 100" })).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Stanje prostora: 69 od 100" })).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Zadovoljstvo gostiju: 69 od 100" })).toBeTruthy();
+    const weak = screen
+      .getByRole("heading", { level: 2, name: "Što mu fali" })
+      .closest("section") as HTMLElement;
+    expect(within(weak).getByText("Premalo ljudi: odjel radi na 106 % svojih mogućnosti")).toBeTruthy();
+    expect(within(weak).getByText("Prijedlog: zaposli više sezonskih radnika u ovom odjelu.")).toBeTruthy();
+    expect(within(weak).getByText("Zadovoljstvo gostiju palo s 70/100 na 69/100")).toBeTruthy();
+    const strong = screen
+      .getByRole("heading", { level: 2, name: "U čemu je dobar" })
+      .closest("section") as HTMLElement;
+    expect(
+      within(strong).getByText("Posluženi su svi gosti koji su htjeli doći (2.100 korištenja)"),
+    ).toBeTruthy();
+    expect(within(strong).getByText("Odjel je ovaj tjedan u dobiti (+7.896 €)")).toBeTruthy();
+  });
+
+  it("detalj bez obračunatog kruga: slabe i jake strane vide se nakon prvog tjedna", async () => {
+    renderApp(v2Api(), "/odjeli/parking");
+    expect(
+      await screen.findByText("Slabe i jake strane odjela vide se nakon prvog obračunatog tjedna."),
+    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Što mu fali" })).toBeNull();
   });
 
   it("detalj odjela izravno na putanji: prostor, gosti, novac, ljudi", async () => {

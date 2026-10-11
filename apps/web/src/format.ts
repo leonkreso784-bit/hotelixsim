@@ -197,18 +197,30 @@ export function tw(weekly: boolean, base: WeekBase<MessageKey>, params?: Message
 
 const pluralRules = new Intl.PluralRules("hr");
 
+/** Hrvatski množinski oblik broja („one“: 1, 21; „few“: 2–4, 22–24, necijeli; „other“: ostalo). */
+export function pluralForm(n: number): "one" | "few" | "other" {
+  const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
+  return category === "one" || category === "few" ? category : "other";
+}
+
 /**
  * Broj s imenicom u ispravnom hrvatskom množinskom obliku: 1 bod, 3 boda, 8 bodova.
  * Necijeli brojevi (8,25) uzimaju oblik uz 2–4 („8,25 boda“).
  */
 export function formatCount(
   n: number,
-  noun: "point" | "person" | "night" | "guest" | "permanent" | "seasonal" | "seasonalWorker",
+  noun:
+    | "point"
+    | "person"
+    | "night"
+    | "guest"
+    | "permanent"
+    | "seasonal"
+    | "seasonalWorker"
+    | "seasonalWorkerAcc",
   shown: string = nf2.format(n),
 ): string {
-  const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
-  const form = category === "one" || category === "few" ? category : "other";
-  return `${shown} ${t(`plural.${noun}.${form}` as const)}`;
+  return `${shown} ${t(`plural.${noun}.${pluralForm(n)}` as const)}`;
 }
 
 /** Noći s grupiranjem i množinom: 1 noć, 3 noći, 3.600 noći. */

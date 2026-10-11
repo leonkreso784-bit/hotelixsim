@@ -6,6 +6,7 @@ import { formatEuros, tw } from "../../format";
 import { Link } from "../../router";
 import { Card } from "../../ui/primitives";
 import { FOCUS } from "./helpers";
+import { DeptIcon } from "./icons";
 
 export function ServiceList({
   services,
@@ -31,6 +32,7 @@ export function ServiceList({
               aria-current={s.code === selected ? "page" : undefined}
               className={`flex min-h-12 items-center gap-3 rounded-xl py-2 ${s.code === selected ? "bg-accent-soft px-2" : ""} ${FOCUS}`}
             >
+              <DeptIcon code={s.code} />
               <span className="min-w-0 flex-1 font-semibold">{s.name}</span>
               <span className="text-right text-sm">
                 <span className="block text-muted">{tw(weekly, "dept.cost")}</span>

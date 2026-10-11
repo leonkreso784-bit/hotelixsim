@@ -1,14 +1,17 @@
+// Plan kruga: odluke za cijeli hotel (cijena sobe, marketing, plaće, obuka, obnova, recenzije). U v1 igri i sezonski
+// radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo sažetak promjena po odjelima.
 import { t } from "@hotelixsim/i18n";
-import { type FormEvent, type ReactNode, useCallback, useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatCount, formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
+import { roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
-import { DepartmentPlan, type DeptPlans } from "./plan/DepartmentPlan";
+import { DepartmentSummary } from "./plan/DepartmentSummary";
+import { NumberField, Toggle } from "./plan/fields";
 
 type Draft = {
   price: string;
@@ -39,88 +42,25 @@ function int(s: string, min: number, max: number): number | null {
   return n >= min && n <= max ? n : null;
 }
 
-/** Ukupan broj sezonaca u planu odjela (poslužitelj ga drži unutar `seasonal_max` iz granica). */
-function seasonalTotal(depts: DeptPlans): number {
-  return Object.values(depts).reduce((sum, x) => sum + x.seasonal_target, 0);
-}
-
-function toPlan(d: Draft, l: PlanLimitsBody, depts: DeptPlans | null): PlanBody | null {
+/**
+ * Odluke hotela iz obrasca kao izmjena plana kruga; null kad neki broj nije u rasponu. U v2 se sezonski radnici,
+ * održavanje i odjeli ne diraju: ostaju iz svježeg plana kruga (odlučuju se na ekranu odjela).
+ */
+function hotelPatch(d: Draft, l: PlanLimitsBody, v2: boolean): Partial<PlanBody> | null {
   const price = int(d.price, l.price_min_cents / 100, l.price_max_cents / 100);
   const marketing = int(d.marketing, 0, l.marketing_max_cents / 100);
-  // v2: sezonci i održavanje su po odjelu; ukupni sezonci i održavanje Smještaja izvode se iz njih (kao na poslužitelju).
-  const seasonal = depts ? seasonalTotal(depts) : int(d.seasonal, l.seasonal_min, l.seasonal_max);
   const wage = int(d.wage, l.wage_min_pct, l.wage_max_pct);
+  const seasonal = v2 ? 0 : int(d.seasonal, l.seasonal_min, l.seasonal_max);
   if (price === null || marketing === null || seasonal === null || wage === null) return null;
-  return {
+  const hotel: Partial<PlanBody> = {
     price_cents: price * 100,
     marketing_cents: marketing * 100,
-    seasonal_target: seasonal,
     wage_pct: wage,
     training: d.training,
-    maintenance: depts?.rooms?.maintenance ?? d.maintenance,
     renovation: d.renovation,
     reply_reviews: d.reply,
-    ...(depts ? { departments: depts } : {}),
   };
-}
-
-function NumberField(props: {
-  id: string;
-  label: string;
-  value: string;
-  min: number;
-  max: number;
-  /** Jedinica raspona ispod polja (UI_PRAVILA §2.1: broj ima ime i jedinicu, i u rasponu). */
-  unit: "euro" | "percent" | "person";
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={props.id} className="block font-semibold">
-        {props.label}
-      </label>
-      <input
-        id={props.id}
-        type="number"
-        inputMode="numeric"
-        step={1}
-        min={props.min}
-        max={props.max}
-        value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
-        className="min-h-12 w-full rounded-2xl border border-line bg-surface px-3 text-lg tabular-nums"
-      />
-      <p className="text-xs text-muted">
-        {t("plan.range", { range: formatRange(props.min, props.max, props.unit) })}
-      </p>
-    </div>
-  );
-}
-
-function Toggle(props: {
-  id: string;
-  label: string;
-  checked: boolean;
-  disabled?: boolean | undefined;
-  note?: ReactNode | undefined;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div>
-      <label htmlFor={props.id} className="flex min-h-11 items-center gap-3 font-semibold">
-        <input
-          id={props.id}
-          type="checkbox"
-          checked={props.checked}
-          disabled={props.disabled}
-          onChange={(e) => props.onChange(e.target.checked)}
-          className="size-5 accent-accent"
-        />
-        {props.label}
-      </label>
-      {props.note}
-    </div>
-  );
+  return v2 ? hotel : { ...hotel, seasonal_target: seasonal, maintenance: d.maintenance };
 }
 
 export function PlanScreen({ me }: { me: HotelBody }) {
@@ -131,11 +71,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
   const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
-  const [depts, setDepts] = useState<DeptPlans | null>(state?.plan.departments ?? null);
-  const [deptsReady, setDeptsReady] = useState(false);
-  const onDeptsReady = useCallback((ready: boolean) => setDeptsReady(ready), []);
-  // „range“: neki broj je izvan raspona; „total“: odjeli zajedno imaju više sezonaca nego što hotel smije.
-  const [invalid, setInvalid] = useState<"range" | "total" | null>(null);
+  const [invalid, setInvalid] = useState(false);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
@@ -147,28 +83,25 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       </>
     );
   const l = state.limits;
+  const depts = state.plan.departments ?? null;
   const v2 = depts !== null && !!l.departments;
   const set = (patch: Partial<Draft>) => {
     setDraft({ ...draft, ...patch });
-    setInvalid(null);
+    setInvalid(false);
     save.reset();
   };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!state || !draft || save.isPending || inFlight.current || (v2 && !deptsReady)) return;
-    if (v2 && depts && seasonalTotal(depts) > l.seasonal_max) {
-      setInvalid("total");
-      return;
-    }
-    const plan = toPlan(draft, l, v2 ? depts : null);
-    if (!plan) {
-      setInvalid("range");
+    if (!state || !draft || save.isPending || inFlight.current) return;
+    const hotel = hotelPatch(draft, l, v2);
+    if (!hotel) {
+      setInvalid(true);
       return;
     }
     inFlight.current = true;
     save.mutate(
-      { round: state.round, plan },
+      { round: state.round, patch: (cur) => ({ ...cur, ...hotel }) },
       {
         onSettled: () => {
           inFlight.current = false;
@@ -220,21 +153,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           </>
         )}
       </Card>
-      {v2 && depts && l.departments && (
-        <DepartmentPlan
-          hotelId={me.hotel.hotel_id}
-          plan={depts}
-          limits={l.departments}
-          stepTotal={l.seasonal_step_total ?? 0}
-          weekly={weekly}
-          onReady={onDeptsReady}
-          onChange={(next) => {
-            setDepts(next);
-            setInvalid(null);
-            save.reset();
-          }}
-        />
-      )}
+      {v2 && depts && <DepartmentSummary hotelId={me.hotel.hotel_id} plans={depts} weekly={weekly} />}
       <details className="rounded-card border border-line bg-surface p-4">
         <summary className="min-h-11 cursor-pointer font-bold">{t("plan.more")}</summary>
         <div className="mt-3 space-y-4">
@@ -283,13 +202,10 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           />
         </div>
       </details>
-      {invalid === "range" && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {invalid === "total" && (
-        <ErrorText>{t("plan.dept.tooMany", { n: formatCount(l.seasonal_max, "seasonalWorker") })}</ErrorText>
-      )}
+      {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
       {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
-      <Button type="submit" disabled={save.isPending || (v2 && !deptsReady)}>
+      <Button type="submit" disabled={save.isPending}>
         {t("plan.save")}
       </Button>
     </form>

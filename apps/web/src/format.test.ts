@@ -189,11 +189,17 @@ describe("formatLoad i množina ljudi", () => {
 });
 
 describe("plan odjela", () => {
-  it("sezonci s množinom, razina cijene kao cijeli postotak", () => {
+  it("sezonski radnici s množinom (i u akuzativu), razina cijene kao cijeli postotak", () => {
     expect([1, 3, 5].map((n) => formatCount(n, "seasonalWorker"))).toEqual([
-      "1 sezonac",
-      "3 sezonca",
-      "5 sezonaca",
+      "1 sezonski radnik",
+      "3 sezonska radnika",
+      "5 sezonskih radnika",
+    ]);
+    expect([1, 3, 5, 21].map((n) => formatCount(n, "seasonalWorkerAcc"))).toEqual([
+      "1 sezonskog radnika",
+      "3 sezonska radnika",
+      "5 sezonskih radnika",
+      "21 sezonskog radnika",
     ]);
     expect(formatPercentWhole(110)).toBe("110 %");
   });

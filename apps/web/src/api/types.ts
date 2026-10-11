@@ -17,6 +17,7 @@ export type ResponseBody = S["ResponseBody"];
 export type CriterionBody = S["CriterionBody"];
 export type PlanBody = S["PlanBody"];
 export type PlanLimitsBody = S["PlanLimitsBody"];
+export type PlanStateBody = S["PlanStateBody"];
 export type FeedItemBody = S["FeedItemBody"];
 export type ExplanationBody = S["ExplanationBody"];
 export type KpiBody = S["KpiBody"];
