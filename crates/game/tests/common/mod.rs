@@ -210,6 +210,15 @@ pub fn july_resolved_bad_chef_game() -> (Game, HotelId) {
 
 /// V2 tjedna igra s obračunatim krugovima redom do uključivo `code` (npr. "t05"); `"none"` = nijedan obračun.
 pub fn v2_weekly_game_resolved_through(code: &str) -> Game {
+    v2_game_resolved_through(sim_hotel_v2::PeriodKind::Week, code)
+}
+
+/// V2 mjesečna igra s obračunatim krugovima redom do uključivo `code` (npr. "sep"); `"none"` = nijedan obračun.
+pub fn v2_monthly_game_resolved_through(code: &str) -> Game {
+    v2_game_resolved_through(sim_hotel_v2::PeriodKind::Month, code)
+}
+
+fn v2_game_resolved_through(kind: sim_hotel_v2::PeriodKind, code: &str) -> Game {
     use game::command::{GameSettings, new_game_with};
     let snap = Snapshot::read_v2(&repo_dir()).unwrap();
     let log: Vec<Recorded> = new_game_with(
@@ -218,9 +227,7 @@ pub fn v2_weekly_game_resolved_through(code: &str) -> Game {
         &snap,
         GUEST,
         hotel_ids(),
-        GameSettings {
-            kind: sim_hotel_v2::PeriodKind::Week,
-        },
+        GameSettings { kind },
     )
     .unwrap()
     .into_iter()
