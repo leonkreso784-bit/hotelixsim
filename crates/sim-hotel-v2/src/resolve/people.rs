@@ -1,9 +1,10 @@
-//! Faze osoblja (1) i ljudi (3): sezonci po odjelima na cilj, opterećenje Smještaja, moral, odlasci i iskustvo.
+//! Faze osoblja (1) i ljudi (3): sezonci po odjelima na cilj, opterećenje hotela (ponderirano osobljem odjela),
+//! moral, odlasci i iskustvo.
 
 use engine::calc::{self as c, Calc, CalcError};
-use sim_hotel::{Pending, PeopleOutcome, turnover_bp};
+use sim_hotel::{Pending, PeopleOutcome, load_penalty, turnover_bp};
 
-use super::{neg, step_toward, w};
+use super::{neg, step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
 use crate::department::DeptCode;
 use crate::plan::PeriodPlan;
@@ -70,21 +71,57 @@ pub(crate) struct PeopleStep {
     pub(crate) morale: i128,
     pub(crate) experience: i128,
     pub(crate) penalty: i128,
-    pub(crate) load: i128,
     pub(crate) release_morale: i128,
     /// Rast iskustva u ovom krugu (mjesečnih +300 razmjerno).
     pub(crate) growth: i128,
 }
 
+/// Opterećenje Smještaja (stotinke): pri punom kapacitetu 240 (kao `dept_step`); uz 2,4 noći po zaposlenom na dan to
+/// je točno v1 `sold·100/(staff·days)`. Bez osoblja ili kapaciteta 300 (v1).
+pub(super) fn rooms_load(sold: u32, staff: u16, capacity_tenths: u16, p: &Period) -> Calc<i128> {
+    let denom = c::mul(c::mul(w(staff), w(p.days))?, w(capacity_tenths))?;
+    if denom == 0 {
+        return Ok(300);
+    }
+    Ok(c::div_round(c::mul(w(sold), 2_400)?, denom)?.clamp(0, 300))
+}
+
+/// Opterećenje jednog odjela s ljudima koji služe goste: zaposleni, kapacitet (desetinke po zaposlenom na dan) i
+/// opterećenje u stotinkama.
+pub(super) struct LoadUnit {
+    pub(super) staff: u16,
+    pub(super) capacity_tenths: u16,
+    pub(super) load: i128,
+}
+
+/// Opterećenje i kazna hotela: prosjek opterećenja i kazni odjela s kapacitetom i osobljem (`capacity_tenths > 0`,
+/// `staff > 0`), ponderiran brojem zaposlenih. Bez takvog odjela vrijedi opterećenje Smještaja `fallback` (v1: 300 bez
+/// osoblja). U degeneriranom katalogu jedini takav odjel je Smještaj, pa je to točno v1.
+pub(super) fn hotel_load(units: &[LoadUnit], fallback: i128) -> Calc<(i128, i128)> {
+    let mut loads: Vec<(u32, i128)> = Vec::with_capacity(units.len());
+    let mut penalties: Vec<(u32, i128)> = Vec::with_capacity(units.len());
+    for u in units
+        .iter()
+        .filter(|u| u.capacity_tenths > 0 && u.staff > 0)
+    {
+        loads.push((u32::from(u.staff), u.load));
+        penalties.push((u32::from(u.staff), w(load_penalty(c::narrow(u.load)?)?)));
+    }
+    let fallback_penalty = w(load_penalty(c::narrow(fallback)?)?);
+    Ok((
+        weighted(&loads, fallback)?,
+        weighted(&penalties, fallback_penalty)?,
+    ))
+}
+
 pub(super) struct PeopleIn<'a> {
     pub(super) state: &'a HotelState,
     pub(super) staff: u16,
-    /// Zaposleni i kapacitet (desetinke korištenja po zaposlenom na dan) Smještaja: opterećenje.
-    pub(super) rooms_staff: u16,
-    pub(super) rooms_capacity_tenths: u16,
+    /// Opterećenje i kazna hotela (`hotel_load`).
+    pub(super) load: i128,
+    pub(super) penalty: i128,
     pub(super) hires: u16,
     pub(super) released: u16,
-    pub(super) sold: u32,
     pub(super) period: &'a Period,
     pub(super) morale_step_bp: u16,
     pub(super) wage_pct: u16,
@@ -93,17 +130,8 @@ pub(super) struct PeopleIn<'a> {
 }
 
 pub(super) fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep> {
-    let days = w(i.period.days);
     let staff = w(i.staff);
-    // Opterećenje Smještaja: pri punom kapacitetu 240 (kao `dept_step`); uz 2,4 noći po zaposlenom na dan to je
-    // točno v1 `sold·100/(staff·days)`.
-    let denom = c::mul(c::mul(w(i.rooms_staff), days)?, w(i.rooms_capacity_tenths))?;
-    let load = if denom == 0 {
-        300
-    } else {
-        c::div_round(c::mul(w(i.sold), 2_400)?, denom)?.clamp(0, 300)
-    };
-    let penalty = c::mul(100, c::sub(load, 180)?)?.clamp(0, 6_000);
+    let (load, penalty) = (i.load, i.penalty);
     let release_morale = if i.released > 0 {
         w(cat.actions.release_morale_pts)
     } else {
@@ -158,7 +186,6 @@ pub(super) fn people(i: &PeopleIn, cat: &sim_hotel::Catalog) -> Calc<PeopleStep>
         morale,
         experience,
         penalty,
-        load,
         release_morale,
         growth,
     })
