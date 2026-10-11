@@ -4,6 +4,10 @@ export function Choice<T extends string>(props: {
   value: T;
   options: { v: T; label: string }[];
   onChange: (v: T) => void;
+  /** Onemogući sve izbore (zatvoren odjel). */
+  disabled?: boolean;
+  /** Id elementa koji imenuje skupinu (ime odjela), da ponovljeni izbori budu razlikovni (UI_PRAVILA §6.6). */
+  describedBy?: string;
 }) {
   return (
     <fieldset className="space-y-1">
@@ -21,6 +25,8 @@ export function Choice<T extends string>(props: {
               name={props.name}
               value={o.v}
               checked={props.value === o.v}
+              disabled={props.disabled}
+              aria-describedby={props.describedBy}
               onChange={() => props.onChange(o.v)}
               className="sr-only"
             />

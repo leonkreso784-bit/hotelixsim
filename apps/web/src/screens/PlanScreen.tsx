@@ -1,5 +1,5 @@
 import { t } from "@hotelixsim/i18n";
-import { type FormEvent, type ReactNode, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useCallback, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
@@ -127,6 +127,8 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const inFlight = useRef(false);
   const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
   const [depts, setDepts] = useState<DeptPlans | null>(state?.plan.departments ?? null);
+  const [deptsReady, setDeptsReady] = useState(false);
+  const onDeptsReady = useCallback((ready: boolean) => setDeptsReady(ready), []);
   const [invalid, setInvalid] = useState(false);
   if (!state || !draft)
     return (
@@ -145,7 +147,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!state || !draft || save.isPending || inFlight.current) return;
+    if (!state || !draft || save.isPending || inFlight.current || (v2 && !deptsReady)) return;
     const plan = toPlan(draft, l, v2 ? depts : null);
     if (!plan) {
       setInvalid(true);
@@ -211,6 +213,8 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           plan={depts}
           limits={l.departments}
           stepTotal={l.seasonal_step_total ?? 0}
+          weekly={weekly}
+          onReady={onDeptsReady}
           onChange={(next) => {
             setDepts(next);
             setInvalid(false);
@@ -269,7 +273,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
       {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
-      <Button type="submit" disabled={save.isPending}>
+      <Button type="submit" disabled={save.isPending || (v2 && !deptsReady)}>
         {t("plan.save")}
       </Button>
     </form>

@@ -1,11 +1,13 @@
 // DepartmentPlan — dio „Odjeli“ u planu kruga (samo v2). Kontrolirana komponenta: ne šalje ništa sama, plan šalje
 // ekran jednim „Spremi“. Granice (sezonci, razina cijene, smije li se zatvoriti, ukupni korak) dolaze od poslužitelja.
 import { t } from "@hotelixsim/i18n";
+import { useEffect } from "react";
 import { problemMessage } from "../../api/errors";
 import { useDepartments } from "../../api/queries";
 import type { PlanBody, PlanLimitsBody } from "../../api/types";
-import { formatCount, formatPercentWhole, formatRange } from "../../format";
+import { formatCount, formatPercentWhole, formatRange, tw } from "../../format";
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
+import { FOCUS, isService } from "../departments/helpers";
 import { Choice } from "./Choice";
 
 export type DeptPlans = NonNullable<PlanBody["departments"]>;
@@ -31,28 +33,32 @@ function Stepper(props: {
   lessLabel: string;
   moreDisabled: boolean;
   lessDisabled: boolean;
+  /** Id legende odjela: gumbi se razlikuju po opisu, vidljiva imena ostaju kratka (UI_PRAVILA §6.6). */
+  describedBy: string;
   onMore: () => void;
   onLess: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="min-w-0 font-semibold">{props.label}</span>
-      <div className="flex shrink-0 items-center gap-2">
+    <div className="space-y-1">
+      <p className="font-semibold">{props.label}</p>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label={props.lessLabel}
+          aria-describedby={props.describedBy}
           disabled={props.lessDisabled}
           onClick={props.onLess}
           className={STEP_BUTTON}
         >
           <span aria-hidden="true">−</span>
         </button>
-        <output className="min-w-20 text-center text-base font-bold tabular-nums whitespace-nowrap">
+        <output className="min-w-0 flex-1 text-center text-base font-bold tabular-nums whitespace-nowrap">
           {props.value}
         </output>
         <button
           type="button"
           aria-label={props.moreLabel}
+          aria-describedby={props.describedBy}
           disabled={props.moreDisabled}
           onClick={props.onMore}
           className={STEP_BUTTON}
@@ -70,10 +76,17 @@ export function DepartmentPlan(props: {
   limits: NonNullable<PlanLimitsBody["departments"]>;
   /** Ukupna najveća promjena sezonaca u krugu (`seasonal_step_total`). */
   stepTotal: number;
+  weekly: boolean;
   onChange: (next: DeptPlans) => void;
+  /** Javlja jesu li odjeli učitani (dok nisu, ekran ne dopušta spremanje). */
+  onReady: (ready: boolean) => void;
 }) {
-  const { plan, limits, stepTotal, onChange } = props;
+  const { plan, limits, stepTotal, onChange, onReady, weekly } = props;
   const list = useDepartments(props.hotelId);
+  const ready = list.isSuccess;
+  useEffect(() => {
+    onReady(ready);
+  }, [ready, onReady]);
   if (list.isPending)
     return (
       <Card className="space-y-2">
@@ -92,7 +105,7 @@ export function DepartmentPlan(props: {
       </Card>
     );
 
-  const rows = list.data.departments.filter((d) => plan[d.code] && limits[d.code]);
+  const rows = list.data.departments.filter((d) => !isService(d.class) && plan[d.code] && limits[d.code]);
   const now: Record<string, number> = Object.fromEntries(
     list.data.departments.map((d) => [d.code, d.seasonal]),
   );
@@ -109,11 +122,11 @@ export function DepartmentPlan(props: {
         <p className="text-sm text-muted">{t("plan.dept.intro")}</p>
         <p role="status" className="text-sm font-semibold">
           {left > 0
-            ? t("plan.dept.stepLeft", { n: formatCount(left, "seasonalWorker") })
-            : t("plan.dept.stepNone")}
+            ? tw(weekly, "plan.dept.stepLeft", { n: formatCount(left, "seasonalWorker") })
+            : tw(weekly, "plan.dept.stepNone")}
         </p>
       </div>
-      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0">
+      <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0">
         {rows.map((d) => {
           const p = plan[d.code];
           const l: DeptLimits | undefined = limits[d.code];
@@ -125,10 +138,14 @@ export function DepartmentPlan(props: {
             p.open && target >= l.seasonal_min && target <= l.seasonal_max && cost(target) <= left;
           // Zatvaranje (cilj 0) smije samo ako stane u preostali korak.
           const closeFits = cost(0) <= left;
+          const legendId = `dept-name-${d.code}`;
+          const off = !p.open;
           const fixedPrice = l.price_level_min_pct === l.price_level_max_pct;
           return (
             <fieldset key={d.code} className="min-w-0 space-y-3 rounded-2xl border border-line p-3">
-              <legend className="px-1 text-base font-bold">{d.name}</legend>
+              <legend id={legendId} className="px-1 text-base font-bold">
+                {d.name}
+              </legend>
               {l.can_close && (
                 <div>
                   <label
@@ -140,15 +157,23 @@ export function DepartmentPlan(props: {
                       type="checkbox"
                       checked={p.open}
                       disabled={p.open && !closeFits}
+                      aria-describedby={legendId}
                       onChange={(e) =>
-                        set(d.code, e.target.checked ? { open: true } : { open: false, seasonal_target: 0 })
+                        set(
+                          d.code,
+                          e.target.checked
+                            ? { open: true, seasonal_target: base }
+                            : { open: false, seasonal_target: 0 },
+                        )
                       }
-                      className="size-5 accent-accent"
+                      className={`size-5 accent-accent ${FOCUS}`}
                     />
                     {t("plan.dept.open")}
                   </label>
                   {!p.open && <p className="text-sm text-muted">{t("plan.dept.closedNote")}</p>}
-                  {p.open && !closeFits && <p className="text-sm text-muted">{t("plan.dept.noClose")}</p>}
+                  {p.open && !closeFits && (
+                    <p className="text-sm text-muted">{tw(weekly, "plan.dept.noClose")}</p>
+                  )}
                 </div>
               )}
               <Stepper
@@ -156,6 +181,7 @@ export function DepartmentPlan(props: {
                 value={formatCount(p.seasonal_target, "seasonalWorker")}
                 moreLabel={t("plan.dept.moreSeasonal")}
                 lessLabel={t("plan.dept.lessSeasonal")}
+                describedBy={legendId}
                 moreDisabled={!canMove(p.seasonal_target + 1)}
                 lessDisabled={!canMove(p.seasonal_target - 1)}
                 onMore={() => set(d.code, { seasonal_target: p.seasonal_target + 1 })}
@@ -164,10 +190,11 @@ export function DepartmentPlan(props: {
               {!fixedPrice && (
                 <div className="space-y-1">
                   <Stepper
-                    label={t("plan.dept.price", { pct: formatPercentWhole(p.price_level_pct) })}
+                    label={t("plan.dept.price")}
                     value={formatPercentWhole(p.price_level_pct)}
                     moreLabel={t("plan.dept.morePrice")}
                     lessLabel={t("plan.dept.lessPrice")}
+                    describedBy={legendId}
                     moreDisabled={!p.open || p.price_level_pct + PRICE_STEP > l.price_level_max_pct}
                     lessDisabled={!p.open || p.price_level_pct - PRICE_STEP < l.price_level_min_pct}
                     onMore={() => set(d.code, { price_level_pct: p.price_level_pct + PRICE_STEP })}
@@ -184,6 +211,8 @@ export function DepartmentPlan(props: {
                 legend={t("plan.dept.maintenance")}
                 name={`dept-maintenance-${d.code}`}
                 value={p.maintenance}
+                disabled={off}
+                describedBy={legendId}
                 options={[
                   { v: "deferred", label: t("maintenance.deferred") },
                   { v: "regular", label: t("maintenance.regular") },
