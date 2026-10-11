@@ -55,6 +55,17 @@ export function formatEuros(cents: number): string {
   return `${euros < 0 ? MINUS : ""}${nf0.format(Math.abs(euros))} €`;
 }
 
+/** Iznos s predznakom, cijeli euri: 789 600 → "+7.896 €", −80 000 → "−800 €", 0 → "0 €". */
+export function formatEurosSigned(cents: number): string {
+  const euros = Math.round(cents / 100);
+  return `${euros > 0 ? "+" : ""}${formatEuros(cents)}`;
+}
+
+/** Gostiju po zaposlenom na dan (stotinke): 190 → "1,9 gosta", 100 → "1 gost". */
+export function formatLoad(hundredths: number): string {
+  return formatCount(hundredths / 100, "guest", nf1.format(hundredths / 100));
+}
+
 /** Centi → euri s centima (pokazatelji po sobi): 4003 → "40,03 €"; bez vrijednosti crtica. */
 export function formatEurosCents(cents: number | null): string {
   if (cents === null) return NONE;
@@ -143,7 +154,7 @@ const pluralRules = new Intl.PluralRules("hr");
  */
 export function formatCount(
   n: number,
-  noun: "point" | "person" | "night",
+  noun: "point" | "person" | "night" | "guest" | "permanent" | "seasonal",
   shown: string = nf2.format(n),
 ): string {
   const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";

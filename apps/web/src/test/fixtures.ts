@@ -1,6 +1,10 @@
 // test/fixtures.ts — tipizirani primjerci odgovora API-ja (oblik iz openapi.json).
 import type {
   ConversationBody,
+  DepartmentBody,
+  DepartmentDetailBody,
+  DepartmentsBody,
+  DeptRoundBody,
   ExplanationBody,
   GameBody,
   HotelBody,
@@ -13,6 +17,7 @@ import type {
   PublicHotelBody,
   RoundBody,
   RoundInfoBody,
+  ServiceRoundBody,
   SituationBody,
   SituationsBody,
   StrategyCode,
@@ -479,7 +484,134 @@ export function v2Api(): FakeApi {
   return standardApi()
     .on("GET", "/v1/games/:game", weeklyGame())
     .on("GET", "/v1/me/hotel", weeklyHotel())
-    .on("GET", "/v1/hotels/:hotel/situations", situations(undefined, { month: "jun", round: "t01" }));
+    .on("GET", "/v1/hotels/:hotel/situations", situations(undefined, { month: "jun", round: "t01" }))
+    .on("GET", "/v1/hotels/:hotel/departments", departmentsBody())
+    .on("GET", "/v1/hotels/:hotel/departments/:code", (_req, params) => {
+      const body = departmentDetailBody(params.code ?? "");
+      return body ? json(200, body) : problem(404, "unknown_department");
+    });
+}
+
+/** Rezultat jednog odjela u t01; brojke restorana iz Taska 9 (prihod 67.200 €, plaće 37.800 €, namirnice 21.504 €). */
+function deptRound(over: Partial<DeptRoundBody> = {}): DeptRoundBody {
+  return {
+    round: "t01",
+    revenue_cents: 6_720_000,
+    payroll_cents: 3_780_000,
+    cost_of_sales_cents: 2_150_400,
+    other_cents: 0,
+    profit_cents: 789_600,
+    margin_bp: 1175,
+    served: 2100,
+    capacity: 2400,
+    load_hundredths: 190,
+    usage_bp: 4500,
+    quality_pts: 7000,
+    price_level_pct: 100,
+    condition_before_pts: 7000,
+    wear_pts: -300,
+    load_wear_pts: -100,
+    maintenance_pts: 300,
+    condition_after_pts: 6900,
+    maintenance_cents: 400_000,
+    value_pts: 7000,
+    satisfaction_before_pts: 7000,
+    satisfaction_after_pts: 6949,
+    ...over,
+  };
+}
+
+function serviceRound(total: number): ServiceRoundBody {
+  return {
+    round: "t01",
+    payroll_cents: total - 700_000,
+    fixed_cents: 500_000,
+    per_room_cents: 0,
+    marketing_cents: 0,
+    reply_cents: 0,
+    maintenance_cents: 200_000,
+    training_cents: 0,
+    hiring_cents: 0,
+    situation_cents: 0,
+    total_cents: total,
+  };
+}
+
+function dept(
+  over: Partial<DepartmentBody> & Pick<DepartmentBody, "code" | "name" | "class">,
+): DepartmentBody {
+  return {
+    open: true,
+    can_close: false,
+    permanent: 4,
+    seasonal: 2,
+    condition_pts: 6900,
+    guest_satisfaction_pts: 6949,
+    last: deptRound(),
+    service_last: null,
+    ...over,
+  };
+}
+
+/** Hotel bez Rooftop bara: smještaj, restoran, wellness, parking (zatvoren) i četiri službe bez prihoda. */
+export function departmentsBody(): DepartmentsBody {
+  const service = (code: string, name: string, cls: DepartmentBody["class"], total: number) =>
+    dept({
+      code,
+      name,
+      class: cls,
+      condition_pts: 8000,
+      guest_satisfaction_pts: null,
+      last: null,
+      service_last: serviceRound(total),
+    });
+  return {
+    round: "t01",
+    departments: [
+      dept({
+        code: "rooms",
+        name: "Smještaj",
+        class: "rooms",
+        permanent: 8,
+        seasonal: 10,
+        condition_pts: 7200,
+        guest_satisfaction_pts: 7400,
+        last: deptRound({ revenue_cents: 9_800_000, profit_cents: 3_100_000 }),
+      }),
+      dept({ code: "restaurant", name: "Restoran", class: "food_beverage" }),
+      dept({
+        code: "spa",
+        name: "Mali wellness",
+        class: "other_operated",
+        permanent: 2,
+        seasonal: 1,
+        condition_pts: 6500,
+        guest_satisfaction_pts: 7400,
+        last: deptRound({ revenue_cents: 1_800_000, profit_cents: 400_000, margin_bp: 2222 }),
+      }),
+      dept({
+        code: "parking",
+        name: "Parking",
+        class: "rentals",
+        open: false,
+        can_close: true,
+        permanent: 0,
+        seasonal: 0,
+        last: null,
+      }),
+      service("admin", "Uprava", "admin_general", 5_905_000),
+      service("sales", "Prodaja i marketing", "sales_marketing", 2_400_000),
+      service("maintenance", "Održavanje", "maintenance", 1_900_000),
+      service("energy", "Energija i voda", "utilities", 3_100_000),
+    ],
+  };
+}
+
+/** Odjel s rezultatima po obračunatim krugovima (jedan krug: t01); nepoznat kod vraća null. */
+export function departmentDetailBody(code: string): DepartmentDetailBody | null {
+  const department = departmentsBody().departments.find((d) => d.code === code);
+  if (!department) return null;
+  return { department, history: department.last ? [department.last] : [] };
 }
 
 /** Gost bez igre: `/v1/me/hotel` je 404 `not_in_game` dok `POST /v1/demo` ne stvori igru, zatim moj hotel. */

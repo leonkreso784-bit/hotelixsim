@@ -1,4 +1,4 @@
-// Mali usmjerivač nad History API-jem (ADR-022 t. 1): devet ruta (krug: /krug/:kod, a stari /mjesec/:kod vrijedi i dalje), bez učitavača.
+// Mali usmjerivač nad History API-jem (ADR-022 t. 1): jedanaest ruta (krug: /krug/:kod, a stari /mjesec/:kod vrijedi i dalje), bez učitavača.
 import { type AnchorHTMLAttributes, type MouseEvent, useSyncExternalStore } from "react";
 import type { DriverCode, IndexCode } from "./api/types";
 
@@ -11,6 +11,8 @@ export type Route =
   | { name: "indicator"; code: IndexCode; highlight: DriverCode | null }
   | { name: "kpi" }
   | { name: "feed" }
+  | { name: "departments" }
+  | { name: "department"; code: string }
   | { name: "avatars" }
   | { name: "notFound" };
 
@@ -71,6 +73,14 @@ export function matchRoute(pathname: string): Route {
   if (a === "plan" && b === undefined) return { name: "plan" };
   if (a === "pokazatelji" && b === undefined) return { name: "kpi" };
   if ((a === "krug" || a === "mjesec") && b !== undefined && isRound(b)) return { name: "round", code: b };
+  if (a === "odjeli") {
+    if (b === undefined) return { name: "departments" };
+    try {
+      return { name: "department", code: decodeURIComponent(b) };
+    } catch {
+      return { name: "notFound" };
+    }
+  }
   if (a === "tijek" && b === undefined) return { name: "feed" };
   if (a === "likovi" && b === undefined) return { name: "avatars" };
   return { name: "notFound" };
