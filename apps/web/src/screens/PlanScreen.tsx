@@ -5,6 +5,7 @@ import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
 import { formatCount, formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
+import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
 import { DepartmentPlan, type DeptPlans } from "./plan/DepartmentPlan";
@@ -137,6 +138,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const [invalid, setInvalid] = useState<"range" | "total" | null>(null);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
   if (!state || !draft)
     return (
       <>

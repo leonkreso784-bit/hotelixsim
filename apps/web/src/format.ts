@@ -129,7 +129,7 @@ export function monthName(code: MonthCode): string {
  */
 export function roundWithoutGame(round: string, month: MonthCode): string {
   const week = /^t(\d+)$/.exec(round);
-  return week ? t("round.weekBare", { n: Number(week[1]) }) : monthName(month);
+  return week ? keepRoundTogether(t("round.weekBare", { n: Number(week[1]) })) : monthName(month);
 }
 
 const NBSP = "\u00a0";

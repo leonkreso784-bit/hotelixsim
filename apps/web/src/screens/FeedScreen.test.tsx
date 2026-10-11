@@ -213,8 +213,8 @@ describe("Tijek: tjedna igra", () => {
       })
       .on("GET", "/v1/hotels/:hotel/feed", { items: weekItems });
     renderApp(api, "/tijek");
-    expect(await screen.findByRole("heading", { name: "Tjedan 1" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Tjedan 2" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: keepRoundTogether("Tjedan 1") })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: keepRoundTogether("Tjedan 2") })).toBeTruthy();
     expect(screen.queryByText(/lipanj/i)).toBeNull();
     release();
     expect(

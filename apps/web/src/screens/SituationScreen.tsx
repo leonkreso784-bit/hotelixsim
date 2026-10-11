@@ -7,6 +7,7 @@ import type { HotelBody } from "../api/types";
 import { tw } from "../format";
 import { isWeekly } from "../game";
 import { Link } from "../router";
+import { GameError } from "../ui/GameError";
 import { ErrorText, StatusText } from "../ui/primitives";
 import { Conversation } from "./situation/Conversation";
 import { FreeResponse } from "./situation/FreeResponse";
@@ -38,6 +39,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
     </Link>
   );
   if (sits.isPending || gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (!gameData) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
   if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
   const s = sits.data.items.find((i) => i.code === code);
   if (!s)

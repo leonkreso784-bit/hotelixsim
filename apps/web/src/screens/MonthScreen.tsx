@@ -171,7 +171,7 @@ export function MonthScreen({ me, code }: { me: HotelBody; code: string }) {
       <Card className="space-y-2">
         <h1 role="status" className="text-2xl font-extrabold">
           {weekly
-            ? t("round.closingTitle.week", { n: round.index + 1 })
+            ? keepRoundTogether(t("round.closingTitle.week", { n: round.index + 1 }))
             : t("month.closingTitle", { month: roundPhrase(round) })}
         </h1>
         <p className="text-muted">{t("month.closingText")}</p>

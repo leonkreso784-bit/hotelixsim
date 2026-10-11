@@ -1,6 +1,6 @@
 // Tjedni tekstovi na ekranima koji ovise o igri (m2, m5, m7): dok igra ne stigne ne smije se pokazati mjesečni tekst ni
 // sirovi kod kruga, greške u tjednoj igri govore o tjednu, a greška popisa odjela ne krije detalj odjela.
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../test/fakeApi";
 import { s1, s3, situations, v2Api, v2PlApi, weeklyGame } from "../test/fixtures";
@@ -82,5 +82,28 @@ describe("popis odjela s greškom (m5)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Restoran" })).toBeTruthy();
     expect(await screen.findByRole("button", { name: "Pokušaj ponovno" })).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Novac" })).toBeTruthy();
+  });
+});
+
+describe("igra se ne učita: ekran ima izlaz", () => {
+  const failingGame = () => v2Api().on("GET", "/v1/games/:game", () => problem(500, "internal"));
+
+  it("Račun dobiti: rečenica i „Pokušaj ponovno“ koji ponovno traži igru", async () => {
+    const api = v2PlApi().on("GET", "/v1/games/:game", () => problem(500, "internal"));
+    renderApp(api, "/racun-dobiti");
+    const retry = await screen.findByRole("button", { name: "Pokušaj ponovno" });
+    expect(screen.getByText("Greška na poslužitelju. Pokušaj ponovno.")).toBeTruthy();
+    const gameCalls = () => api.calls.filter((c) => c.path === "/v1/games/g1").length;
+    const before = gameCalls();
+    fireEvent.click(retry);
+    await waitFor(() => expect(gameCalls()).toBeGreaterThan(before));
+  });
+
+  it("Plan, Situacija i Odjeli nude „Pokušaj ponovno“", async () => {
+    for (const path of ["/plan", "/situacije/S1", "/odjeli", "/odjeli/restaurant"]) {
+      renderApp(failingGame(), path);
+      expect(await screen.findByRole("button", { name: "Pokušaj ponovno" }), path).toBeTruthy();
+      cleanup();
+    }
   });
 });

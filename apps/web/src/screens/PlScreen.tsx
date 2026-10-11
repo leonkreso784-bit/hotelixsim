@@ -8,6 +8,7 @@ import type { GameBody, HotelBody, PlBody, PlScopeCode } from "../api/types";
 import { keepRoundTogether, roundDates, roundTitle, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { navigate } from "../router";
+import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { type PickerRound, RoundPicker, shortWeek, weekGroup } from "../ui/RoundPicker";
 import { PlCards } from "./pl/PlCards";
@@ -81,7 +82,7 @@ export function PlScreen({ me, code }: { me: HotelBody; code: string | null }) {
   // Naslov se pokazuje tek s podacima (ili s rečenicom o grešci): naslov kruga ovisi o odgovoru poslužitelja.
   // Igra se čeka kao i odgovor: bez nje ne zna se ni je li igra tjedna (tekstovi, birač) ni kako se krug zove.
   if (q.isPending || gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (!game) return <ErrorText>{problemMessage(gameQuery.error)}</ErrorText>;
+  if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
   if (!pl) {
     // 409 (stara igra, još nema obračunatog kruga) i 404 su očekivani ishodi: rečenica, ne kvar.
     const expected = q.error instanceof ApiError && q.error.status < 500;

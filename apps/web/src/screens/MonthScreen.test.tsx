@@ -538,6 +538,8 @@ describe("krug tjedna: mentor, ljestvica, nastavak", () => {
   it("tjedan u obračunu: naslov s brojem tjedna", async () => {
     const api = v2Api().on("GET", "/v1/games/:game", weeklyGame({ status: "closing" }));
     renderApp(api, "/krug/t01");
-    expect(await screen.findByText("Obračunavam tjedan 1…")).toBeTruthy();
+    const closing = await screen.findByText("Obračunavam tjedan 1…");
+    // Broj tjedna je vezan nerazdvojnim razmakom, naslov se ne lomi između riječi i broja.
+    expect(closing.textContent).toBe("Obračunavam tjedan\u00a01…");
   });
 });

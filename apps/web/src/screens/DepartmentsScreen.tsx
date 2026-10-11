@@ -6,6 +6,7 @@ import { useDepartments, useGame } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { tw } from "../format";
 import { isWeekly } from "../game";
+import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { DepartmentCard } from "./departments/DepartmentCard";
 import { DepartmentDetail } from "./departments/DepartmentDetail";
@@ -18,6 +19,8 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
   const gameQuery = useGame(me.game_id);
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
+  // Igra se nije učitala: tekstovi ovise o njoj, pa ekran nudi ponovni pokušaj umjesto mjesečnih tekstova.
+  const gameFailed = gameQuery.isError && !game;
   const Heading = code === null ? "h1" : "h2";
 
   const departments = list.data?.departments ?? [];
@@ -46,6 +49,9 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
               </Button>
             </>
           )
+        ) : gameFailed ? (
+          // Uz otvoren detalj ponovni pokušaj nudi stupac detalja, da gumb ne bude dvaput na ekranu.
+          code === null && <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />
         ) : list.isPending || gameQuery.isPending ? (
           <StatusText>{t("status.loading")}</StatusText>
         ) : (
@@ -76,6 +82,11 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
           <Card>
             <p className="text-muted">{t("dept.pick")}</p>
           </Card>
+        ) : gameFailed ? (
+          <div className="space-y-3">
+            <h1 className="sr-only">{t("dept.detail.title")}</h1>
+            <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />
+          </div>
         ) : (
           <DepartmentDetail
             key={code}

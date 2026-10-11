@@ -21,6 +21,7 @@ import {
   roundDates,
   roundPhrase,
   roundTitle,
+  roundWithoutGame,
   strategyLabel,
 } from "./format";
 
@@ -195,6 +196,13 @@ describe("plan odjela", () => {
       "5 sezonaca",
     ]);
     expect(formatPercentWhole(110)).toBe("110 %");
+  });
+});
+
+describe("roundWithoutGame", () => {
+  it("tjedan bez igre: „tjedan 5“ s nerazdvojnim razmakom, mjesec ostaje ime mjeseca", () => {
+    expect(roundWithoutGame("t05", "jun")).toBe("tjedan\u00a05");
+    expect(roundWithoutGame("jul", "jul")).toBe("srpanj");
   });
 });
 
