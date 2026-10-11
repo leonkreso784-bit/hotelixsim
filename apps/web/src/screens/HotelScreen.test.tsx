@@ -298,8 +298,12 @@ describe("Moj hotel", () => {
     expect(screen.queryByRole("button", { name: "Zatvori mjesec" })).toBeNull();
     expect(screen.queryByRole("link", { name: /Plan mjeseca/ })).toBeNull();
     expect(screen.getByRole("link", { name: /Rezultat: srpanj/ })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Nova igra" }));
-    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    // „Nova igra“ je poveznica na početni ekran s izborom; zahtjev ne šalje (v1 se ne pokreće tiho).
+    const link = screen.getByRole("link", { name: "Nova igra" });
+    expect(link.getAttribute("href")).toBe("/nova");
+    fireEvent.click(link);
+    expect(await screen.findByRole("button", { name: "Započni igru" })).toBeTruthy();
+    expect(api.posts("/v1/demo")).toHaveLength(0);
   });
 });
 

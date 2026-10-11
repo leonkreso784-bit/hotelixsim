@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useStartDemo } from "../api/queries";
 import type { ModelCode, NewGameBody, RoundKindCode } from "../api/types";
+import { Link } from "../router";
 import { Wordmark } from "../ui/Layout";
 import { Button, ErrorText, StatusText } from "../ui/primitives";
 
@@ -106,7 +107,11 @@ function ProfessorSettings({
   );
 }
 
-export function StartScreen() {
+/**
+ * Početni ekran. Uz `inGame` (ruta „/nova“, iz igre) igra koja traje ostaje dok igrač ne započne novu, pa ekran
+ * nema vlastiti okvir i ima izlaz „Natrag na igru“ koji ne šalje zahtjev.
+ */
+export function StartScreen({ inGame = false }: { inGame?: boolean }) {
   const start = useStartDemo();
   const inFlight = useRef(false);
   const [model, setModel] = useState<ModelCode>("v1");
@@ -122,6 +127,32 @@ export function StartScreen() {
     });
   }
 
+  const body = (
+    <>
+      {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
+      {start.isPending && <StatusText>{t("start.busy")}</StatusText>}
+      <Button disabled={start.isPending} onClick={begin}>
+        {t("start.button")}
+      </Button>
+      <ProfessorSettings model={model} kind={kind} onModel={setModel} onKind={setKind} />
+    </>
+  );
+
+  if (inGame)
+    return (
+      <div className="mx-auto max-w-md space-y-4 md:max-w-xl">
+        <h1 className="text-3xl font-extrabold tracking-tight">{t("start.newTitle")}</h1>
+        <p className="text-muted">{t("start.newLead")}</p>
+        {body}
+        <Link
+          to="/"
+          className="flex min-h-12 items-center justify-center rounded-2xl bg-accent-soft font-bold text-accent-ink"
+        >
+          {t("start.back")}
+        </Link>
+      </div>
+    );
+
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col md:max-w-xl justify-center gap-6 px-6 py-10">
       <Wordmark size="lg" />
@@ -130,12 +161,7 @@ export function StartScreen() {
       </h1>
       <p className="text-lg text-muted">{t("start.lead")}</p>
       <p className="font-semibold">{t("start.measure")}</p>
-      {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
-      {start.isPending && <StatusText>{t("start.busy")}</StatusText>}
-      <Button disabled={start.isPending} onClick={begin}>
-        {t("start.button")}
-      </Button>
-      <ProfessorSettings model={model} kind={kind} onModel={setModel} onKind={setKind} />
+      {body}
     </main>
   );
 }

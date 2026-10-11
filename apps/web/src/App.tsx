@@ -70,6 +70,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
       return <PlScreen me={me} code={route.code} />;
     case "avatars":
       return <AvatarGallery />;
+    case "new":
+      return <StartScreen inGame />;
     default:
       return (
         <Reading>
