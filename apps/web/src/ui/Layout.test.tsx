@@ -32,5 +32,16 @@ describe("Layout", () => {
       </Layout>,
     );
     expect(screen.queryByRole("link", { name: "Odjeli" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Račun dobiti" })).toBeNull();
+  });
+
+  it("stavka „Račun dobiti“ je u v2 igri i aktivna je na svojoj ruti", () => {
+    window.history.pushState({}, "", "/racun-dobiti");
+    render(
+      <Layout chip={null} withDepartments>
+        <p>sadržaj</p>
+      </Layout>,
+    );
+    expect(screen.getByRole("link", { name: "Račun dobiti" }).getAttribute("aria-current")).toBe("page");
   });
 });

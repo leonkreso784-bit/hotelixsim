@@ -14,6 +14,9 @@ import type {
   MonthScoreBody,
   PlanBody,
   PlanLimitsBody,
+  PlBody,
+  PlLineBody,
+  PlScopeCode,
   PublicHotelBody,
   RoundBody,
   RoundInfoBody,
@@ -624,4 +627,95 @@ export function startApi(): FakeApi {
       started = true;
       return json(201, { game_id: GAME_ID, hotel_id: HOTEL_ID });
     });
+}
+
+function plLine(
+  code: string,
+  name: string,
+  kind: PlLineBody["kind"],
+  actual: number,
+  budget: number,
+): PlLineBody {
+  const variance = actual - budget;
+  // Prihod i rezultat su povoljni kad su ≥ budžeta, trošak kad je ≤ budžeta.
+  const favorable = kind === "expense" ? variance <= 0 : variance >= 0;
+  return {
+    code,
+    name,
+    kind,
+    actual_cents: actual,
+    budget_cents: budget,
+    variance_cents: variance,
+    favorable,
+  };
+}
+
+/** Račun dobiti: sezona do sada ima veće zbrojeve od jednog kruga; prihod soba je +1.200 €, restoran −800 € od budžeta. */
+export function plBody(scope: PlScopeCode = "round"): PlBody {
+  const k = scope === "season" ? 2 : 1;
+  const line = (code: string, name: string, kind: PlLineBody["kind"], a: number, b: number) =>
+    plLine(code, name, kind, a * k, b * k);
+  return {
+    round: "t01",
+    scope,
+    days: scope === "season" ? 14 : 7,
+    room_nights: scope === "season" ? 1_120 : 560,
+    rounds: ["t01"],
+    sections: [
+      {
+        section: "revenue",
+        lines: [
+          line("rooms", "Smještaj", "revenue", 5_040_000, 4_920_000),
+          line("restaurant", "Restoran", "revenue", 6_720_000, 6_800_000),
+        ],
+        total: line("revenue", "Ukupni prihodi", "revenue", 11_760_000, 11_720_000),
+      },
+      {
+        section: "departmental_expenses",
+        lines: [
+          line("rooms_cost", "Troškovi smještaja", "expense", 1_500_000, 1_450_000),
+          line("restaurant_cost", "Troškovi restorana", "expense", 5_930_400, 5_930_400),
+        ],
+        total: line("expenses", "Ukupni troškovi odjela", "expense", 7_430_400, 7_380_400),
+      },
+      {
+        section: "departmental_profit",
+        lines: [],
+        total: line("dept_profit", "Rezultat odjela", "result", 4_329_600, 4_339_600),
+      },
+      {
+        section: "undistributed",
+        lines: [
+          line("admin", "Uprava", "expense", 590_500, 590_500),
+          line("energy", "Energija i voda", "expense", 310_000, 300_000),
+        ],
+        total: line("undistributed", "Ukupno zajednički troškovi", "expense", 900_500, 890_500),
+      },
+      {
+        section: "gop",
+        lines: [],
+        total: line("gop", "Bruto operativna dobit (GOP)", "result", 3_429_100, 3_449_100),
+      },
+      {
+        section: "fixed_charges",
+        lines: [line("insurance", "Osiguranje i pristojbe", "expense", 400_000, 400_000)],
+        total: line("fixed", "Ukupno fiksni troškovi", "expense", 400_000, 400_000),
+      },
+      {
+        section: "ebitda",
+        lines: [],
+        total: line("ebitda", "EBITDA", "result", 3_029_100, 3_049_100),
+      },
+    ],
+    gop_margin_bp: { actual: 2916, budget: 2943 },
+    goppar_cents: { actual: 6_123, budget: 6_159 },
+    ebitda_margin_bp: { actual: 2576, budget: 2602 },
+  };
+}
+
+/** `v2Api()` + račun dobiti: `scope=season` vraća drugo tijelo od `scope=round`. */
+export function v2PlApi(): FakeApi {
+  return v2Api().on("GET", "/v1/hotels/:hotel/pl", (req) =>
+    json(200, plBody(new URL(req.url).searchParams.get("scope") === "season" ? "season" : "round")),
+  );
 }
