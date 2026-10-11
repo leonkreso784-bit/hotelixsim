@@ -1,10 +1,10 @@
 //! Indeksi centrirani na referentni hotel (DEMO §4, ADR-013 t. 1–2). Formule su v1 (`raw_indices`,
-//! `centred`, `base_labor_cents` nad `HotelState::summary()`); v2 drži referentnu tablicu po krugovima.
-//! Rad u likvidnosti ulazi kao mjesečni ekvivalent (`per_month_equiv`), da tjedni krug daje isti raspon.
+//! `centred` nad `HotelState::summary()`); v2 drži referentnu tablicu po krugovima. Rad u likvidnosti na početku je
+//! `start_labor_cents` (plaće odjela v2), u krugu mjesečni ekvivalent stvarnog rada (`per_month_equiv`), da tjedni
+//! krug daje isti raspon.
 
-use sim_hotel::{
-    CatalogError, Category, IndexSet, RefPoint, base_labor_cents, centred, raw_indices,
-};
+use engine::calc as c;
+use sim_hotel::{CatalogError, Category, IndexSet, RefPoint, centred, raw_indices};
 
 use crate::calendar::{Period, per_month_equiv};
 use crate::catalog::Catalog;
@@ -19,6 +19,19 @@ pub struct RefTable {
     pub start: RefPoint,
     pub points: Vec<RefPoint>,
     pub periods: Vec<Period>,
+}
+
+/// Mjesečni rad na početku (likvidnost u početnim indeksima): Σ po odjelima zaposleni · ⌊plaća odjela / 100⌋ ·
+/// postotak plaće, plus trajne povišice — isto pravilo kao plaće odjela u krugu. U degeneriranom katalogu svi su
+/// ljudi u Smještaju s plaćom v1 kategorije, pa je to točno v1 `base_labor_cents`.
+pub fn start_labor_cents(s: &HotelState, cat: &Catalog) -> Result<i64, ResolveError> {
+    let mut wage: i128 = 0;
+    for (code, d) in &s.departments {
+        let staff = c::add(i128::from(d.permanent), i128::from(d.seasonal))?;
+        let unit = c::div_floor(i128::from(cat.dept(code)?.wage_cents), 100)?;
+        wage = c::add(wage, c::mul(c::mul(staff, unit)?, i128::from(s.wage_pct))?)?;
+    }
+    Ok(c::narrow(c::add(wage, i128::from(s.extra_wage_cents))?)?)
 }
 
 /// GOPPAR prognoze prvog kruga uz zadani plan, bez situacija.
@@ -50,13 +63,7 @@ impl RefTable {
         let mut s = HotelState::from_profile(cat, profile)?;
         let g0 = first_goppar(&s, first, cat)?;
         let start = RefPoint {
-            raw: raw_indices(
-                &s.summary(),
-                g0,
-                base_labor_cents(&s.summary(), base)?,
-                g0,
-                base,
-            )?,
+            raw: raw_indices(&s.summary(), g0, start_labor_cents(&s, cat)?, g0, base)?,
             goppar_cents: g0,
         };
         let mut points = Vec::with_capacity(periods.len());
@@ -95,7 +102,7 @@ pub fn start_indices(
     let raw = raw_indices(
         &summary,
         g,
-        base_labor_cents(&summary, base)?,
+        start_labor_cents(s, cat)?,
         refs.start.goppar_cents,
         base,
     )?;

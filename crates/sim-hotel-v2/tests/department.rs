@@ -349,20 +349,44 @@ fn validate_rejects_staffed_operated_department_without_capacity() {
     );
 }
 
-#[test]
-fn validate_rejects_staff_that_differs_from_v1_profile() {
-    use sim_hotel::{CatalogError, Profile};
+/// Profil C degeneriranog kataloga s izmjenom jednog odjela (`f` dobiva početak odjela `code`).
+fn degenerate_with(
+    code: &str,
+    f: impl FnOnce(&mut sim_hotel_v2::DeptStart),
+) -> sim_hotel_v2::Catalog {
     let mut c = sim_hotel_v2::degenerate(&common_base());
-    c.profiles
-        .get_mut(&Profile::C)
+    f(c.profiles
+        .get_mut(&sim_hotel::Profile::C)
         .unwrap()
         .departments
-        .get_mut(&DeptCode::rooms())
-        .unwrap()
-        .permanent += 1;
-    assert!(
-        matches!(c.validate(), Err(CatalogError::OutOfRange(f)) if f == "v2.profiles.C.departments.staff")
-    );
+        .get_mut(&DeptCode(code.into()))
+        .unwrap());
+    c
+}
+
+fn staff_error(c: &sim_hotel_v2::Catalog) -> bool {
+    matches!(c.validate(), Err(sim_hotel::CatalogError::OutOfRange(f)) if f == "v2.profiles.C.departments.staff")
+}
+
+#[test]
+fn validate_accepts_extra_permanent_staff_in_undistributed_departments() {
+    let c = degenerate_with("admin", |d| d.permanent += 4);
+    assert_eq!(c.validate(), Ok(()));
+}
+
+#[test]
+fn validate_rejects_extra_staff_outside_undistributed_departments() {
+    assert!(staff_error(&degenerate_with("rooms", |d| d.permanent += 1)));
+}
+
+#[test]
+fn validate_rejects_fewer_staff_than_v1_profile() {
+    assert!(staff_error(&degenerate_with("rooms", |d| d.permanent -= 1)));
+}
+
+#[test]
+fn validate_rejects_seasonal_staff_that_differs_from_v1_profile() {
+    assert!(staff_error(&degenerate_with("rooms", |d| d.seasonal -= 1)));
 }
 
 #[test]

@@ -50,15 +50,24 @@ fn profiles_have_the_departments_from_model_v2() {
     );
 }
 
+/// Sezonci su točno v1 profil; stalnih je barem koliko u v1, a višak je samo u neraspoređenim odjelima.
 #[test]
-fn staff_per_profile_matches_v1_profile() {
+fn staff_per_profile_covers_v1_profile() {
     let c = v2();
     for p in Profile::ALL {
         let v = c.profile_v2(p).unwrap();
         let perm: u16 = v.departments.values().map(|d| d.permanent).sum();
         let seas: u16 = v.departments.values().map(|d| d.seasonal).sum();
+        let operated: u16 = v
+            .departments
+            .iter()
+            .filter(|(k, _)| !c.dept(k).unwrap().class.is_undistributed())
+            .map(|(_, d)| d.permanent)
+            .sum();
         let base = c.base.profile(p).unwrap();
-        assert_eq!((perm, seas), (base.permanent, base.seasonal), "{p:?}");
+        assert_eq!(seas, base.seasonal, "{p:?}");
+        assert!(perm >= base.permanent, "{p:?}");
+        assert!(operated <= base.permanent, "{p:?}");
     }
 }
 

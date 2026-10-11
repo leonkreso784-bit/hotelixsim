@@ -63,7 +63,8 @@ pub(super) fn operated(i: &OperatedIn) -> Result<BTreeMap<DeptCode, DeptOutcome>
     Ok(out)
 }
 
-/// Plaće Smještaja: zaposleni · ⌊plaća kategorije / 100⌋ · postotak plaće, plus trajne povišice iz situacija
+/// Plaće Smještaja: zaposleni · ⌊plaća odjela Smještaj / 100⌋ · postotak plaće (degenerirani katalog: plaća v1
+/// kategorije), plus trajne povišice iz situacija
 /// (🟨 P12: u sloju 1 sve idu Smještaju), razmjerno krugu.
 pub(super) fn rooms_payroll(
     staff: u16,

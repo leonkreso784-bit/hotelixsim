@@ -287,7 +287,7 @@ pub fn resolve_period(
         revenue_cents: rooms_revenue,
         payroll_cents: rooms_payroll(
             st.rooms_staff,
-            spec.wage_cents,
+            cat.dept(&DeptCode::rooms())?.wage_cents,
             plan.wage_pct,
             s.extra_wage_cents,
             p,

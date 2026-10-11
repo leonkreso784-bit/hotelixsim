@@ -216,3 +216,80 @@ fn every_week_of_seasons_with_departments_adds_up() {
         }
     }
 }
+
+/// Lipanj profila C uz katalog `c` (zadani plan, bez situacija).
+fn june_with(c: &Catalog) -> PeriodReport {
+    let s = HotelState::from_profile(c, Profile::C).unwrap();
+    let p = month_period(Month::Jun);
+    let plan = PeriodPlan::default_for(&s, &p, c).unwrap();
+    resolve_period(&s, &p, &plan, &[], c).unwrap()
+}
+
+#[test]
+fn rooms_payroll_reads_the_rooms_department_wage() {
+    let (c, r) = june_c();
+    let mut raised = c.clone();
+    raised
+        .departments
+        .get_mut(&DeptCode::rooms())
+        .unwrap()
+        .wage_cents += 10_000;
+    let r2 = june_with(&raised);
+    let (a, b) = (
+        &r.accounts.departments[&DeptCode::rooms()],
+        &r2.accounts.departments[&DeptCode::rooms()],
+    );
+    // +100 € mjesečno po zaposlenom Smještaja, cijeli lipanj: zaposleni · 100 · postotak plaće (u centima)
+    let wage_pct = i64::from(r.after.wage_pct);
+    assert_eq!(
+        b.payroll_cents - a.payroll_cents,
+        i64::from(a.staff) * 100 * wage_pct
+    );
+    assert_eq!(b.revenue_cents, a.revenue_cents);
+    for (k, o) in &r.accounts.departments {
+        if *k != DeptCode::rooms() {
+            assert_eq!(o, &r2.accounts.departments[k], "{}", k.as_str());
+        }
+    }
+}
+
+#[test]
+fn rooms_payroll_ignores_the_v1_category_wage() {
+    let (c, r) = june_c();
+    let mut other = c.clone();
+    for spec in other.base.categories.values_mut() {
+        spec.wage_cents += 10_000;
+    }
+    let r2 = june_with(&other);
+    assert_eq!(
+        r2.accounts.departments[&DeptCode::rooms()].payroll_cents,
+        r.accounts.departments[&DeptCode::rooms()].payroll_cents
+    );
+}
+
+#[test]
+fn start_labor_is_v1_base_labor_in_the_degenerate_catalog() {
+    let c = degenerate(&common::test_catalog());
+    for p in Profile::ALL {
+        let s = HotelState::from_profile(&c, p).unwrap();
+        assert_eq!(
+            sim_hotel_v2::indices::start_labor_cents(&s, &c).unwrap(),
+            sim_hotel::base_labor_cents(&s.summary(), &c.base).unwrap(),
+            "{p:?}"
+        );
+    }
+}
+
+#[test]
+fn start_labor_reads_department_wages() {
+    let mut c = common::catalog_with_departments();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
+    let before = sim_hotel_v2::indices::start_labor_cents(&s, &c).unwrap();
+    let code = DeptCode("restaurant".into());
+    c.departments.get_mut(&code).unwrap().wage_cents += 10_000;
+    let d = &s.departments[&code];
+    assert_eq!(
+        sim_hotel_v2::indices::start_labor_cents(&s, &c).unwrap() - before,
+        i64::from(d.permanent + d.seasonal) * 100 * i64::from(s.wage_pct)
+    );
+}
