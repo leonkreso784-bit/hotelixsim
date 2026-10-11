@@ -16,7 +16,9 @@ type DeptLimits = NonNullable<PlanLimitsBody["departments"]>[string];
 const PRICE_STEP = 5;
 
 const STEP_BUTTON =
-  "inline-flex size-11 items-center justify-center rounded-xl border border-line bg-surface text-xl font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-40";
+  "group inline-flex size-11 items-center justify-center rounded-xl border border-line bg-surface text-xl font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-disabled:cursor-not-allowed aria-disabled:border-line/40";
+// Prigušuje se samo znak (i obrub gumba), ne cijeli gumb: obris fokusa ostaje punog kontrasta (UI_PRAVILA §9.4).
+const STEP_MARK = "group-aria-disabled:opacity-40";
 
 /** Koliko je sezonaca ukupno pomaknuto od sadašnjeg stanja (Σ |cilj − sada|), kako računa poslužitelj. */
 function movedSeasonals(plans: DeptPlans, now: Record<string, number>): number {
@@ -54,7 +56,9 @@ function Stepper(props: {
           onClick={props.lessDisabled ? undefined : props.onLess}
           className={STEP_BUTTON}
         >
-          <span aria-hidden="true">−</span>
+          <span aria-hidden="true" className={STEP_MARK}>
+            −
+          </span>
         </button>
         <output className="min-w-0 flex-1 text-center text-base font-bold tabular-nums whitespace-nowrap">
           {props.value}
@@ -67,7 +71,9 @@ function Stepper(props: {
           onClick={props.moreDisabled ? undefined : props.onMore}
           className={STEP_BUTTON}
         >
-          <span aria-hidden="true">+</span>
+          <span aria-hidden="true" className={STEP_MARK}>
+            +
+          </span>
         </button>
       </div>
     </div>
