@@ -249,6 +249,33 @@ describe("pokazatelj: birač tjedana i pad igre", () => {
     expect(select.value).toBe("t03");
   });
 
+  it("mobitel: birač može nauzak (min-w-0 na fieldsetu i u redu), jer ga najduža opcija ne smije širiti", async () => {
+    renderApp(weekApi(), "/pokazatelj/G");
+    const select = await screen.findByRole("combobox", { name: "Tjedan obračuna" });
+    const row = select.parentElement as HTMLElement;
+    const fieldset = row.closest("fieldset") as HTMLElement;
+    expect(fieldset.className).toContain("min-w-0");
+    expect(row.className).toContain("min-w-0");
+    expect(select.className).toContain("min-w-0");
+  });
+
+  it("mobitel: kad ‹ ili › postane onemogućen, fokus prelazi na izbornik, ne na body", async () => {
+    renderApp(weekApi(), "/pokazatelj/G");
+    const select = await screen.findByRole("combobox", { name: "Tjedan obračuna" });
+    const prev = screen.getByRole("button", { name: "Prethodni tjedan" });
+    prev.focus();
+    fireEvent.click(prev);
+    fireEvent.click(prev);
+    expect((prev as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).toBe(select);
+    const next = screen.getByRole("button", { name: "Sljedeći tjedan" });
+    next.focus();
+    fireEvent.click(next);
+    fireEvent.click(next);
+    expect((next as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).toBe(select);
+  });
+
   it("igra se ne može učitati: ekran se ipak prikaže s imenima mjeseci", async () => {
     const api = standardApi()
       .on("GET", "/v1/games/:game", () => problem(500, "internal"))

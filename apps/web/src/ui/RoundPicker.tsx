@@ -3,6 +3,7 @@
 // od 1024 px sažeti čipovi („T5“) s punim nazivom u `aria-label` i `title`.
 import { t } from "@hotelixsim/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 
 export type PickerRound = {
   code: string;
@@ -35,9 +36,10 @@ export function RoundPicker({
   /** Mnogo krugova (tjedni): ‹ › i izbornik na mobitelu, čipovi na računalu. */
   many: boolean;
 }) {
+  const selectRef = useRef<HTMLSelectElement>(null);
   if (!many)
     return (
-      <fieldset className="flex flex-wrap gap-2 pb-2">
+      <fieldset className="flex min-w-0 flex-wrap gap-2 pb-2">
         <legend className="sr-only">{legend}</legend>
         {rounds.map((r) => (
           <button
@@ -59,12 +61,15 @@ export function RoundPicker({
   );
   const step = (d: number) => {
     const next = rounds[index + d];
-    if (next) onPick(next.code);
+    if (!next) return;
+    onPick(next.code);
+    // Gumb koji sad postaje onemogućen ne smije odnijeti fokus: prelazi na izbornik.
+    if (index + d === 0 || index + d === rounds.length - 1) selectRef.current?.focus();
   };
   return (
-    <fieldset className="pb-2">
+    <fieldset className="min-w-0 pb-2">
       <legend className="sr-only">{legend}</legend>
-      <div className="flex items-center gap-2 lg:hidden">
+      <div className="flex min-w-0 items-center gap-2 lg:hidden">
         <button
           type="button"
           aria-label={prevLabel}
@@ -75,6 +80,7 @@ export function RoundPicker({
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
         <select
+          ref={selectRef}
           aria-label={legend}
           value={value}
           onChange={(e) => onPick(e.target.value)}

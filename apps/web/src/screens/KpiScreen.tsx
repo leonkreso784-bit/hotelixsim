@@ -48,7 +48,11 @@ function KpiTable({ game, weekly, months }: View) {
                 {t("kpi.indicator")}
               </th>
               {months.map((m) => (
-                <th key={m.round} scope="col" className={`${CELL} min-w-28 px-3 py-2 text-right font-bold`}>
+                <th
+                  key={m.round}
+                  scope="col"
+                  className={`${CELL} min-w-28 whitespace-nowrap px-3 py-2 text-right font-bold`}
+                >
                   {roundLabel(game, m)}
                 </th>
               ))}
@@ -67,7 +71,7 @@ function KpiTable({ game, weekly, months }: View) {
                   <details className="text-sm text-muted">
                     <summary
                       aria-describedby={`kpi-${r.key}`}
-                      className="cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      className="inline-flex min-h-11 cursor-pointer items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
                       {t("kpi.whatMeans")}
                     </summary>

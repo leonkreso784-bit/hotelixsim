@@ -25,7 +25,6 @@ import { Leaderboard } from "./month/Leaderboard";
 
 /**
  * Dio ekrana poslije obračuna. Montira se tek kad je moj krug obračunat, pa dnevnik i sat za mentora kreću tek tada.
- * Mentor se javlja samo na kraju mjeseca; tjedan usred mjeseca ga ne čeka.
  */
 function MonthResult({
   game,

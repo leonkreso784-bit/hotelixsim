@@ -240,6 +240,14 @@ describe("Pokazatelji: 17 tjedana i pad igre", () => {
     expect(region.querySelectorAll("tbody details").length).toBe(15);
   });
 
+  it("naslovi stupaca se ne lome usred datuma, a „Što znači?“ je meta od 44 px", async () => {
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/kpi", { months: weeks.slice(0, 2) }), "/pokazatelji");
+    const region = await screen.findByRole("region", { name: "Pokazatelji po tjednima" });
+    for (const th of region.querySelectorAll("thead th[scope=col]:not(:first-child)"))
+      expect(th.className).toContain("whitespace-nowrap");
+    for (const sm of region.querySelectorAll("tbody summary")) expect(sm.className).toContain("min-h-11");
+  });
+
   it("tjedna mjerila govore o tjednu", async () => {
     renderApp(v2Api().on("GET", "/v1/hotels/:hotel/kpi", { months: weeks.slice(0, 1) }), "/pokazatelji");
     expect(
