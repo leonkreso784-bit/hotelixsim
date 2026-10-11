@@ -13,6 +13,9 @@ describe("matchRoute", () => {
     expect(matchRoute("/plan")).toEqual({ name: "plan" });
     expect(matchRoute("/mjesec/jun")).toEqual({ name: "round", code: "jun" });
     expect(matchRoute("/tijek/")).toEqual({ name: "feed" });
+    expect(matchRoute("/odjeli")).toEqual({ name: "departments" });
+    expect(matchRoute("/odjeli/restaurant")).toEqual({ name: "department", code: "restaurant" });
+    expect(matchRoute("/odjeli/a/b")).toEqual({ name: "notFound" });
     expect(matchRoute("/likovi")).toEqual({ name: "avatars" });
     expect(matchRoute("/pokazatelji")).toEqual({ name: "kpi" });
     expect(matchRoute("/pokazatelj/Z")).toEqual({ name: "indicator", code: "Z", highlight: null });

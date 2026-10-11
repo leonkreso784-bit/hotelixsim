@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { isNoGame, problemMessage } from "./api/errors";
 import { useGame, useMe } from "./api/queries";
 import type { HotelBody } from "./api/types";
+import { isV2 } from "./game";
 import { type Route, useRoute } from "./router";
 import { AvatarGallery } from "./screens/AvatarGallery";
+import { DepartmentsScreen } from "./screens/DepartmentsScreen";
 import { FeedScreen } from "./screens/FeedScreen";
 import { HotelScreen } from "./screens/HotelScreen";
 import { IndicatorScreen } from "./screens/IndicatorScreen";
@@ -59,6 +61,10 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
           <FeedScreen me={me} />
         </Reading>
       );
+    case "departments":
+      return <DepartmentsScreen me={me} code={null} />;
+    case "department":
+      return <DepartmentsScreen me={me} code={route.code} />;
     case "avatars":
       return <AvatarGallery />;
     default:
@@ -74,7 +80,10 @@ function GameShell({ me }: { me: HotelBody }) {
   const route = useRoute();
   const game = useGame(me.game_id);
   return (
-    <Layout chip={game.data ? chipText(game.data) : null}>
+    <Layout
+      chip={game.data ? chipText(game.data) : null}
+      withDepartments={game.data ? isV2(game.data) : false}
+    >
       <Screen route={route} me={me} />
     </Layout>
   );

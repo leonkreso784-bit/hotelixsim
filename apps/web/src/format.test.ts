@@ -4,7 +4,9 @@ import {
   formatCount,
   formatEuros,
   formatEurosCents,
+  formatEurosSigned,
   formatIndex,
+  formatLoad,
   formatNights,
   formatPercentBp,
   formatPointsCount,
@@ -151,5 +153,29 @@ describe("oznaka kruga", () => {
     } as const;
     expect(roundDates(jun)).toBe("lipanj");
     expect(roundTitle(jun)).toBe("Lipanj");
+  });
+});
+
+describe("formatEurosSigned", () => {
+  it("predznak i cijeli euri, nula bez predznaka", () => {
+    expect(formatEurosSigned(789_600)).toBe("+7.896 €");
+    expect(formatEurosSigned(-80_000)).toBe("−800 €");
+    expect(formatEurosSigned(0)).toBe("0 €");
+  });
+});
+
+describe("formatLoad i množina ljudi", () => {
+  it("gosti po zaposlenom: zarez i oblik uz decimale", () => {
+    expect(formatLoad(190)).toBe("1,9 gosta");
+    expect(formatLoad(100)).toBe("1 gost");
+    expect(formatLoad(500)).toBe("5 gostiju");
+  });
+  it("stalni i sezonski: 1, 2–4, 5+", () => {
+    expect([1, 2, 5].map((n) => formatCount(n, "permanent"))).toEqual(["1 stalni", "2 stalna", "5 stalnih"]);
+    expect([1, 2, 10].map((n) => formatCount(n, "seasonal"))).toEqual([
+      "1 sezonski",
+      "2 sezonska",
+      "10 sezonskih",
+    ]);
   });
 });

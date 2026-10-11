@@ -6,6 +6,8 @@ import { unwrap } from "./errors";
 import { poll } from "./poll";
 import type {
   ConversationBody,
+  DepartmentDetailBody,
+  DepartmentsBody,
   ExplanationBody,
   FeedItemBody,
   GameBody,
@@ -24,6 +26,8 @@ export const keys = {
   feed: (hotelId: string) => ["feed", hotelId] as const,
   explanation: (hotelId: string, round: string) => ["explanation", hotelId, round] as const,
   kpi: (hotelId: string) => ["kpi", hotelId] as const,
+  departments: (hotelId: string) => ["departments", hotelId] as const,
+  department: (hotelId: string, code: string) => ["departments", hotelId, code] as const,
 };
 
 export function useMe() {
@@ -54,6 +58,7 @@ async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<Gam
     void qc.invalidateQueries({ queryKey: ["situations"] });
     void qc.invalidateQueries({ queryKey: ["feed"] });
     void qc.invalidateQueries({ queryKey: ["kpi"] });
+    void qc.invalidateQueries({ queryKey: ["departments"] });
   }
   return next;
 }
@@ -258,5 +263,29 @@ export function useKpi(hotelId: string) {
     queryKey: keys.kpi(hotelId),
     queryFn: async () =>
       unwrap(await api.GET("/v1/hotels/{hotel_id}/kpi", { params: { path: { hotel_id: hotelId } } })),
+  });
+}
+
+/** Odjeli hotela (v2): stanje, zadovoljstvo i rezultat zadnjeg obračunatog kruga. U v1 igri poslužitelj vraća 409 `model_v1`. */
+export function useDepartments(hotelId: string) {
+  const api = useApi();
+  return useQuery<DepartmentsBody>({
+    queryKey: keys.departments(hotelId),
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/hotels/{hotel_id}/departments", { params: { path: { hotel_id: hotelId } } })),
+  });
+}
+
+/** Jedan odjel s rezultatima po obračunatim krugovima. */
+export function useDepartment(hotelId: string, code: string) {
+  const api = useApi();
+  return useQuery<DepartmentDetailBody>({
+    queryKey: keys.department(hotelId, code),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/v1/hotels/{hotel_id}/departments/{code}", {
+          params: { path: { hotel_id: hotelId, code } },
+        }),
+      ),
   });
 }
