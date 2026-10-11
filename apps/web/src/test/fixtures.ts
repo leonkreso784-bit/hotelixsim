@@ -482,11 +482,70 @@ export function resolvedWeekApi(): FakeApi {
     );
 }
 
+type DeptPlanBody = NonNullable<PlanBody["departments"]>[string];
+type DeptLimitsBody = NonNullable<PlanLimitsBody["departments"]>[string];
+
+/** Moj hotel u v2 igri: plan kruga t01 s postavkama odjela i granicama (korak ukupno 5 sezonaca). */
+function v2PlanHotel(): HotelBody {
+  const base = weeklyHotel();
+  const dept = (seasonal_target: number, open = true): DeptPlanBody => ({
+    open,
+    seasonal_target,
+    price_level_pct: 100,
+    maintenance: "regular",
+  });
+  const lim = (seasonal_max: number, can_close: boolean, rooms = false): DeptLimitsBody => ({
+    seasonal_min: 0,
+    seasonal_max,
+    price_level_min_pct: rooms ? 100 : 90,
+    price_level_max_pct: rooms ? 100 : 120,
+    can_close,
+  });
+  const p = base.private;
+  if (!p?.plan) return base;
+  return {
+    ...base,
+    private: {
+      ...p,
+      plan: {
+        ...p.plan,
+        plan: {
+          ...p.plan.plan,
+          departments: {
+            rooms: dept(10),
+            restaurant: dept(2),
+            lobby_bar: dept(3),
+            parking: dept(0, false),
+            admin: dept(2),
+            sales: dept(2),
+            maintenance: dept(2),
+            energy: dept(2),
+          },
+        },
+        limits: {
+          ...p.plan.limits,
+          seasonal_step_total: 5,
+          departments: {
+            rooms: lim(20, false, true),
+            restaurant: lim(12, false),
+            lobby_bar: lim(8, true),
+            parking: lim(2, true),
+            admin: lim(6, false),
+            sales: lim(6, false),
+            maintenance: lim(6, false),
+            energy: lim(6, false),
+          },
+        },
+      },
+    },
+  };
+}
+
 /** Kostur v2 igre: kao `standardApi()`, ali tjedna igra u krugu t01 (Taskovi 19–21 dodaju rute odjela i računa). */
 export function v2Api(): FakeApi {
   return standardApi()
     .on("GET", "/v1/games/:game", weeklyGame())
-    .on("GET", "/v1/me/hotel", weeklyHotel())
+    .on("GET", "/v1/me/hotel", v2PlanHotel())
     .on("GET", "/v1/hotels/:hotel/situations", situations(undefined, { month: "jun", round: "t01" }))
     .on("GET", "/v1/hotels/:hotel/departments", departmentsBody())
     .on("GET", "/v1/hotels/:hotel/departments/:code", (_req, params) => {
@@ -582,6 +641,7 @@ export function departmentsBody(): DepartmentsBody {
         last: deptRound({ revenue_cents: 9_800_000, profit_cents: 3_100_000 }),
       }),
       dept({ code: "restaurant", name: "Restoran", class: "food_beverage" }),
+      dept({ code: "lobby_bar", name: "Lobby bar", class: "food_beverage", can_close: true, seasonal: 3 }),
       dept({
         code: "spa",
         name: "Mali wellness",

@@ -10,6 +10,7 @@ import {
   formatNights,
   formatPercentBp,
   formatPercentBpFixed,
+  formatPercentWhole,
   formatPointsCount,
   formatRange,
   formatRating,
@@ -180,5 +181,16 @@ describe("formatLoad i množina ljudi", () => {
       "2 sezonska",
       "10 sezonskih",
     ]);
+  });
+});
+
+describe("plan odjela", () => {
+  it("sezonci s množinom, razina cijene kao cijeli postotak", () => {
+    expect([1, 3, 5].map((n) => formatCount(n, "seasonalWorker"))).toEqual([
+      "1 sezonac",
+      "3 sezonca",
+      "5 sezonaca",
+    ]);
+    expect(formatPercentWhole(110)).toBe("110 %");
   });
 });

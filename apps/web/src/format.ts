@@ -94,6 +94,11 @@ export function formatRating(hundredths: number): string {
   return `${nfRating.format(hundredths / 100)}/10`;
 }
 
+/** Cijeli postotak (razina cijene u odjelu): 110 → "110 %". */
+export function formatPercentWhole(pct: number): string {
+  return `${formatWhole(pct)} %`;
+}
+
 /** Cijeli broj s grupiranjem, bez jedinice (samo kao dio oznake s jedinicom): 40000 → "40.000". */
 export function formatWhole(n: number): string {
   return `${n < 0 ? MINUS : ""}${nf0.format(Math.abs(n))}`;
@@ -165,7 +170,7 @@ const pluralRules = new Intl.PluralRules("hr");
  */
 export function formatCount(
   n: number,
-  noun: "point" | "person" | "night" | "guest" | "permanent" | "seasonal",
+  noun: "point" | "person" | "night" | "guest" | "permanent" | "seasonal" | "seasonalWorker",
   shown: string = nf2.format(n),
 ): string {
   const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
