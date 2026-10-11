@@ -20,13 +20,22 @@ pub fn report_kpi(r: &MonthReportDto, cat: &Catalog) -> Result<MonthKpi, GameErr
     round_kpi(r, Month::from(r.month).days(), cat)
 }
 
-/// Pokazatelji kruga od `days` dana (tjedan ili mjesec; `RoundInfo::period.days`).
+/// Pokazatelji kruga od `days` dana (tjedan ili mjesec; `RoundInfo::period.days`), s izravnim troškom po noći
+/// iz v1 kataloga (v1 igra). Igra koja može biti v2 zove `Game::round_kpi_of`.
 pub fn round_kpi(r: &MonthReportDto, days: u8, cat: &Catalog) -> Result<MonthKpi, GameError> {
-    let category = Category::from_code(&r.before.category)
-        .ok_or_else(|| corrupt(format!("kategorija {}", r.before.category)))?;
+    let category = report_category(r)?;
     let spec = cat
         .category(category)
         .map_err(|e| corrupt(format!("{e:?}")))?;
+    kpi_with_cpor(r, days, spec.cpor_cents)
+}
+
+fn report_category(r: &MonthReportDto) -> Result<Category, GameError> {
+    Category::from_code(&r.before.category)
+        .ok_or_else(|| corrupt(format!("kategorija {}", r.before.category)))
+}
+
+fn kpi_with_cpor(r: &MonthReportDto, days: u8, cpor_cents: i64) -> Result<MonthKpi, GameError> {
     let input = KpiInput {
         rooms: r.before.rooms,
         days,
@@ -37,12 +46,26 @@ pub fn round_kpi(r: &MonthReportDto, days: u8, cat: &Catalog) -> Result<MonthKpi
         labor_cents: r.money.labor_cents,
         costs_cents: r.money.costs_cents,
         gop_cents: r.money.gop_cents,
-        cpor_cents: spec.cpor_cents,
+        cpor_cents,
     };
     kpi(&input).map_err(|e| corrupt(format!("pokazatelji: {e:?}")))
 }
 
 impl Game {
+    /// Pokazatelji kruga igre: dani razdoblja iz kalendara kruga, izravni trošak po noći iz modela igre
+    /// (v1 kategorija, v2 odjel Smještaj; `Model::rooms_direct_cost`).
+    pub(crate) fn round_kpi_of(
+        &self,
+        r: &MonthReportDto,
+        round: RoundKey,
+    ) -> Result<MonthKpi, GameError> {
+        let days = self.round_info(round)?.period.days;
+        let cpor = self
+            .model()
+            .rooms_direct_cost(&self.content, report_category(r)?)?;
+        kpi_with_cpor(r, days, cpor)
+    }
+
     /// Pokazatelji svakog obračunatog mjeseca hotela, redom sezone; neobračunati mjeseci se preskaču.
     pub fn hotel_kpi(&self, id: HotelId) -> Result<Vec<KpiMonth>, GameError> {
         self.hotel(id)?;
@@ -58,11 +81,7 @@ impl Game {
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
             out.push(KpiMonth {
                 round: rr.month,
-                kpi: round_kpi(
-                    &res.report,
-                    self.round_info(rr.month)?.period.days,
-                    self.model().catalog(&self.content)?,
-                )?,
+                kpi: self.round_kpi_of(&res.report, rr.month)?,
             });
         }
         Ok(out)

@@ -200,6 +200,10 @@ impl From<GameError> for AppError {
             GameError::Outdated { .. } => C::GameOutdated,
             GameError::InvalidSettings => C::InvalidSettings,
             GameError::WrongModel => C::WrongModel,
+            // Posebni kodovi (`unknown_department`, `nothing_resolved`) dolaze s API-jem u Tasku 15; do tada ova dva
+            // zajednička koda daju iste vrste odgovora (404 / 409).
+            GameError::UnknownDepartment => C::UnknownMonth,
+            GameError::NothingResolved => C::RoundNotOpen,
             GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };
         AppError {

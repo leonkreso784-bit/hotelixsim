@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use engine::{Rng, label};
 use sim_hotel::{Catalog, HotelState, Month, Profile, euro_bounds, seasonal_range};
 use sim_hotel_v2::PeriodKind;
@@ -226,8 +228,18 @@ impl Game {
     }
 }
 
-/// Granice izbornika radnji za ekran.
+/// Granice jednog odjela u planu v2 (zrcalo `sim_hotel_v2::plan::DeptLimits`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DeptLimitsView {
+    pub seasonal_min: u16,
+    pub seasonal_max: u16,
+    pub price_level_min_pct: u16,
+    pub price_level_max_pct: u16,
+    pub can_close: bool,
+}
+
+/// Granice izbornika radnji za ekran.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlanLimits {
     pub price_min_cents: i64,
     pub price_max_cents: i64,
@@ -237,6 +249,10 @@ pub struct PlanLimits {
     pub wage_min_pct: u16,
     pub wage_max_pct: u16,
     pub renovation_available: bool,
+    /// v2: najveći Σ|cilj − trenutno| sezonaca po odjelima u krugu (`coeffs(kind).seasonal_step`); v1: `None`.
+    pub seasonal_step_total: Option<u16>,
+    /// v2: granice po kodu odjela (svi odjeli plana); v1: prazno.
+    pub departments: BTreeMap<String, DeptLimitsView>,
 }
 
 /// Iste brojke koje `MonthPlan::validate` provjerava (test ih veže); koristi jezgrine funkcije, ne kopije.
@@ -267,5 +283,7 @@ pub fn plan_limits(s: &HotelState, m: Month, cat: &Catalog) -> Result<PlanLimits
         wage_min_pct: a.wage_min_pct,
         wage_max_pct: a.wage_max_pct,
         renovation_available: !s.renovated,
+        seasonal_step_total: None,
+        departments: BTreeMap::new(),
     })
 }
