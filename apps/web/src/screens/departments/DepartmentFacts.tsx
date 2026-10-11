@@ -10,6 +10,7 @@ import {
   formatPercentBp,
   formatWhole,
   formatWholeSigned,
+  tw,
 } from "../../format";
 import { Card } from "../../ui/primitives";
 import { resultText, shownChanges } from "./helpers";
@@ -100,10 +101,12 @@ export function People({
   dept,
   r,
   departures,
+  weekly,
 }: {
   dept: DepartmentBody;
   r: DeptRoundBody | null;
   departures: number | null;
+  weekly: boolean;
 }) {
   return (
     <Card className="space-y-2">
@@ -116,7 +119,7 @@ export function People({
         )}
         {departures !== null && (
           <Line
-            label={t("dept.departures")}
+            label={tw(weekly, "dept.departures")}
             value={departures > 0 ? formatCount(departures, "person") : t("dept.departures.none")}
           />
         )}
@@ -129,13 +132,21 @@ export function People({
   );
 }
 
-export function DepartmentFacts({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody }) {
+export function DepartmentFacts({
+  dept,
+  r,
+  weekly,
+}: {
+  dept: DepartmentBody;
+  r: DeptRoundBody;
+  weekly: boolean;
+}) {
   return (
     <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
       <Space r={r} />
       <Guests r={r} />
       <Money r={r} foodAndBeverage={dept.class === "food_beverage"} />
-      <People dept={dept} r={r} departures={r.departures} />
+      <People dept={dept} r={r} departures={r.departures} weekly={weekly} />
     </div>
   );
 }

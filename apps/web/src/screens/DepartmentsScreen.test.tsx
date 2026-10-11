@@ -1,7 +1,7 @@
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { departmentDetailBody, departmentsBody, standardApi, v2Api } from "../test/fixtures";
+import { departmentDetailBody, departmentsBody, game, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -127,7 +127,7 @@ describe("Odjeli", () => {
     renderApp(v2Api(), "/odjeli/rooms");
     expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
     const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
-    expect(within(people).getByText("Otišlo u krugu")).toBeTruthy();
+    expect(within(people).getByText("Otišlo u tjednu")).toBeTruthy();
     expect(within(people).getByText("2 osobe")).toBeTruthy();
     expect(
       within(people).getByText("Tko ode, zamijeni se novim zaposlenim; trošak zamjene je u Upravi."),
@@ -136,9 +136,17 @@ describe("Odjeli", () => {
     renderApp(v2Api(), "/odjeli/restaurant");
     expect(await screen.findByRole("heading", { level: 1, name: "Restoran" })).toBeTruthy();
     const quiet = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
-    expect(within(quiet).getByText("Otišlo u krugu")).toBeTruthy();
+    expect(within(quiet).getByText("Otišlo u tjednu")).toBeTruthy();
     expect(within(quiet).getByText("nitko")).toBeTruthy();
     expect(within(quiet).queryByText(/trošak zamjene/)).toBeNull();
+  });
+
+  it("ljudi u mjesečnoj v2 igri: odlasci u mjesecu", async () => {
+    renderApp(v2Api().on("GET", "/v1/games/:game", { ...game(), model: "v2" }), "/odjeli/rooms");
+    expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("Otišlo u mjesecu")).toBeTruthy();
+    expect(within(people).queryByText("Otišlo u tjednu")).toBeNull();
   });
 
   it("služba: odlasci iz zadnjeg troška službe", async () => {

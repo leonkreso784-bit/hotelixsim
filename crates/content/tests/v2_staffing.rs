@@ -131,3 +131,23 @@ fn degenerate_catalog_has_no_norm_and_still_validates() {
     assert!(d.departments.values().all(|s| s.staffing.is_empty()));
     assert_eq!(d.validate(), Ok(()));
 }
+
+#[test]
+fn lower_bound_is_inclusive() {
+    // Profil A na 140 soba: Uprava 7 ljudi je točno na donjoj granici 4* (5 na 100 soba · 140 = 7,0) → prolazi;
+    // jedna osoba manje (6) → odbijeno. Ostali odjeli s normom su na 140 soba u rasponu.
+    let mut c = v2();
+    c.base.profiles.get_mut(&Profile::A).unwrap().rooms = 140;
+    assert_eq!(c.validate(), Ok(()));
+    c.profiles
+        .get_mut(&Profile::A)
+        .unwrap()
+        .departments
+        .get_mut(&code("admin"))
+        .unwrap()
+        .permanent = 6;
+    assert_eq!(
+        c.validate(),
+        out_of_range("v2.profiles.A.departments.admin.staffing")
+    );
+}
