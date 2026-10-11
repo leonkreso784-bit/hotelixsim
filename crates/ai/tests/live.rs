@@ -42,3 +42,41 @@ async fn judge_verdict_for_s1_passes_validation() {
     assert_eq!(out.meta.prompt, "presuda.v3");
     assert!(g.validate_verdict("S1", out.value).is_ok());
 }
+
+/// Lik govori samo svoje riječi: bez opisa radnji (`*…*`), bez svog imena na početku i bez izlaska iz uloge
+/// (Leon 12.10.: „Marko, gledam ga pravo…" — lik.v1 je miješao pripovijedanje i ulogu upravitelja).
+#[tokio::test]
+#[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
+async fn character_speaks_only_its_own_words() {
+    let key = std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY nije postavljen");
+    let ai = ai::Anthropic::new(key, ai::Models::default());
+    let input = CharacterInput {
+        situation: "S1".into(),
+        title: "Šef kuhinje traži povišicu".into(),
+        character: CharacterCard {
+            name: "Marko Babić".into(),
+            role: "šef kuhinje, u hotelu sedam sezona".into(),
+            brief: "Konkurentski hotel nudi ti 20 % veću plaću. Pravi razlog je da radiš 12 sati dnevno bez \
+                    slobodnog dana i da te nitko nije pitao za mišljenje o jelovniku."
+                .into(),
+            opening: "Šefe, imam ponudu iz hotela preko puta, 20 % više. Ili mi dignete plaću ili odlazim na kraju \
+                      mjeseca."
+                .into(),
+        },
+        transcript: vec![ChatLine {
+            from: Speaker::Student,
+            text: "Žao mi je to čuti, koje su vaše želje i preporuke.".into(),
+        }],
+    };
+    for _ in 0..3 {
+        let out = ai.character(input.clone()).await.expect("odgovor lika");
+        assert_eq!(out.meta.prompt, "lik.v2");
+        let t = out.value.trim().to_lowercase();
+        assert!(!t.contains('*'), "opis radnje: {t}");
+        assert!(!t.starts_with("marko"), "ime na početku: {t}");
+        assert!(
+            !t.contains("glumim") && !t.contains("kao lik"),
+            "izlazak iz uloge: {t}"
+        );
+    }
+}
