@@ -15,6 +15,7 @@ pub enum ErrorCode {
     UnknownSituation,
     UnknownAnswer,
     UnknownProfile,
+    UnknownDepartment,
     RoundNotOpen,
     AlreadyAnswered,
     NotFreeText,
@@ -30,6 +31,9 @@ pub enum ErrorCode {
     RenovationTwice,
     GameOutdated,
     InvalidSettings,
+    DepartmentPlanInvalid,
+    InvalidBody,
+    NoResolvedRound,
     WrongModel,
     StorageUnavailable,
     Internal,
@@ -47,7 +51,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 27] = [
+    pub const ALL: [ErrorCode; 31] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -57,6 +61,7 @@ impl ErrorCode {
         ErrorCode::UnknownSituation,
         ErrorCode::UnknownAnswer,
         ErrorCode::UnknownProfile,
+        ErrorCode::UnknownDepartment,
         ErrorCode::RoundNotOpen,
         ErrorCode::AlreadyAnswered,
         ErrorCode::NotFreeText,
@@ -72,6 +77,9 @@ impl ErrorCode {
         ErrorCode::RenovationTwice,
         ErrorCode::GameOutdated,
         ErrorCode::InvalidSettings,
+        ErrorCode::DepartmentPlanInvalid,
+        ErrorCode::InvalidBody,
+        ErrorCode::NoResolvedRound,
         ErrorCode::WrongModel,
         ErrorCode::StorageUnavailable,
         ErrorCode::Internal,
@@ -82,14 +90,23 @@ impl ErrorCode {
         match self {
             GuestRequired => ErrorKind::Unauthorized,
             NotInGame | NotYourHotel => ErrorKind::Forbidden,
-            UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile => {
-                ErrorKind::NotFound
-            }
+            UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile
+            | UnknownDepartment => ErrorKind::NotFound,
             RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply | GameOutdated
-            | WrongModel => ErrorKind::Conflict,
-            UnknownAnswer | NotFreeText | BadText | PriceNotWholeEuro | PriceOutOfRange
-            | MarketingOutOfRange | SeasonalOutOfRange | SeasonalStepTooBig | WageOutOfRange
-            | RenovationTwice | InvalidSettings => ErrorKind::Invalid,
+            | WrongModel | NoResolvedRound => ErrorKind::Conflict,
+            UnknownAnswer
+            | NotFreeText
+            | BadText
+            | PriceNotWholeEuro
+            | PriceOutOfRange
+            | MarketingOutOfRange
+            | SeasonalOutOfRange
+            | SeasonalStepTooBig
+            | WageOutOfRange
+            | RenovationTwice
+            | InvalidSettings
+            | DepartmentPlanInvalid
+            | InvalidBody => ErrorKind::Invalid,
             StorageUnavailable => ErrorKind::Unavailable,
             Internal => ErrorKind::Internal,
         }
@@ -108,6 +125,7 @@ impl ErrorCode {
             UnknownSituation => "unknown_situation",
             UnknownAnswer => "unknown_answer",
             UnknownProfile => "unknown_profile",
+            UnknownDepartment => "unknown_department",
             RoundNotOpen => "round_not_open",
             AlreadyAnswered => "already_answered",
             NotFreeText => "not_free_text",
@@ -123,6 +141,9 @@ impl ErrorCode {
             RenovationTwice => "renovation_twice",
             GameOutdated => "game_outdated",
             InvalidSettings => "invalid_settings",
+            DepartmentPlanInvalid => "department_plan_invalid",
+            InvalidBody => "invalid_body",
+            NoResolvedRound => "no_resolved_round",
             WrongModel => "model_v1",
             StorageUnavailable => "storage_unavailable",
             Internal => "internal",
@@ -188,22 +209,18 @@ impl From<GameError> for AppError {
                 PlanErrorV2::WageOutOfRange => C::WageOutOfRange,
                 PlanErrorV2::RenovationTwice => C::RenovationTwice,
                 PlanErrorV2::Calc => C::Internal,
-                // Task 15: `department_plan_invalid`. Do tada su kroz API nedostižne: odjeli se samo dopunjuju iz
-                // važećeg plana (`Game::plan_from_dto`).
                 PlanErrorV2::DepartmentUnknown
                 | PlanErrorV2::DepartmentMissing
                 | PlanErrorV2::DepartmentCannotClose
                 | PlanErrorV2::DepartmentSeasonalOutOfRange
                 | PlanErrorV2::ClosedWithSeasonal
-                | PlanErrorV2::PriceLevelOutOfRange => C::Internal,
+                | PlanErrorV2::PriceLevelOutOfRange => C::DepartmentPlanInvalid,
             },
             GameError::Outdated { .. } => C::GameOutdated,
             GameError::InvalidSettings => C::InvalidSettings,
             GameError::WrongModel => C::WrongModel,
-            // Posebni kodovi (`unknown_department`, `nothing_resolved`) dolaze s API-jem u Tasku 15; do tada ova dva
-            // zajednička koda daju iste vrste odgovora (404 / 409).
-            GameError::UnknownDepartment => C::UnknownMonth,
-            GameError::NothingResolved => C::RoundNotOpen,
+            GameError::UnknownDepartment => C::UnknownDepartment,
+            GameError::NothingResolved => C::NoResolvedRound,
             GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };
         AppError {

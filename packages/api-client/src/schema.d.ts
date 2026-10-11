@@ -123,6 +123,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Odjeli hotela sa stanjem i zadnjim rezultatom; samo vlasnik, samo v2 igra. */
+        get: operations["departments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hotels/{hotel_id}/departments/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jedan odjel s poviješću rezultata; samo vlasnik, samo v2 igra. */
+        get: operations["department"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hotels/{hotel_id}/feed": {
         parameters: {
             query?: never;
@@ -166,6 +200,23 @@ export interface paths {
         };
         /** Zašto su se indeksi obračunatog mjeseca pomaknuli (iste činjenice kao mentor); samo vlasnik. */
         get: operations["explanation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hotels/{hotel_id}/pl": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Račun dobiti po USALI-ju s budžetom (ostvareno, budžet i razlika po retku); samo vlasnik, samo v2 igra. */
+        get: operations["pl"];
         put?: never;
         post?: never;
         delete?: never;
@@ -347,6 +398,117 @@ export interface components {
         DemoBody: {
             game_id: string;
             hotel_id: string;
+        };
+        DepartmentBody: {
+            can_close: boolean;
+            class: components["schemas"]["DeptClassCode"];
+            code: string;
+            /**
+             * Format: int32
+             * @description Stanje prostora 0–10 000 (na ekranu 0–100).
+             */
+            condition_pts: number;
+            /**
+             * Format: int32
+             * @description Zadovoljstvo gostiju odjelom 0–10 000; `null` za odjele bez gostiju.
+             */
+            guest_satisfaction_pts: number | null;
+            last: components["schemas"]["DeptRoundBody"] | null;
+            name: string;
+            open: boolean;
+            /** Format: int32 */
+            permanent: number;
+            /** Format: int32 */
+            seasonal: number;
+            service_last: components["schemas"]["ServiceRoundBody"] | null;
+        };
+        DepartmentDetailBody: {
+            department: components["schemas"]["DepartmentBody"];
+            /** @description Rezultati po obračunatim krugovima, redom sezone. */
+            history: components["schemas"]["DeptRoundBody"][];
+        };
+        DepartmentsBody: {
+            departments: components["schemas"]["DepartmentBody"][];
+            /** @description Zadnji obračunati krug; `null` prije prvog obračuna. */
+            round: string | null;
+        };
+        /** @enum {string} */
+        DeptClassCode: "rooms" | "food_beverage" | "other_operated" | "rentals" | "admin_general" | "sales_marketing" | "maintenance" | "utilities";
+        /** @description Granice postavki jednog odjela. */
+        DeptLimitsBody: {
+            can_close: boolean;
+            /** Format: int32 */
+            price_level_max_pct: number;
+            /** Format: int32 */
+            price_level_min_pct: number;
+            /** Format: int32 */
+            seasonal_max: number;
+            /** Format: int32 */
+            seasonal_min: number;
+        };
+        /** @description Postavke jednog odjela u planu kruga. */
+        DeptPlanBody: {
+            maintenance: components["schemas"]["MaintenanceCode"];
+            open: boolean;
+            /** Format: int32 */
+            price_level_pct: number;
+            /** Format: int32 */
+            seasonal_target: number;
+        };
+        /** @description Rezultat jednog odjela u jednom obračunatom krugu. */
+        DeptRoundBody: {
+            /**
+             * Format: int32
+             * @description Kapacitet u korištenjima za krug.
+             */
+            capacity: number;
+            /** Format: int32 */
+            condition_after_pts: number;
+            /** Format: int32 */
+            condition_before_pts: number;
+            /** Format: int64 */
+            cost_of_sales_cents: number;
+            /**
+             * Format: int32
+             * @description Gostiju po zaposlenom na dan, u stotinkama.
+             */
+            load_hundredths: number;
+            /** Format: int32 */
+            load_wear_pts: number;
+            /** Format: int64 */
+            maintenance_cents: number;
+            /** Format: int32 */
+            maintenance_pts: number;
+            /** Format: int64 */
+            margin_bp: number | null;
+            /** Format: int64 */
+            other_cents: number;
+            /** Format: int64 */
+            payroll_cents: number;
+            /** Format: int32 */
+            price_level_pct: number;
+            /** Format: int64 */
+            profit_cents: number;
+            /** Format: int32 */
+            quality_pts: number;
+            /** Format: int64 */
+            revenue_cents: number;
+            round: string;
+            /** Format: int32 */
+            satisfaction_after_pts: number;
+            /** Format: int32 */
+            satisfaction_before_pts: number;
+            /**
+             * Format: int32
+             * @description Posluženo korištenja (noćenja, obroci…).
+             */
+            served: number;
+            /** Format: int32 */
+            usage_bp: number;
+            /** Format: int32 */
+            value_pts: number;
+            /** Format: int32 */
+            wear_pts: number;
         };
         /**
          * @description Što pokreće indeks: jedna od varijabli hotela ili `staff_load` (opterećenje osoblja, nije varijabla).
@@ -673,8 +835,60 @@ export interface components {
             model?: components["schemas"]["ModelCode"] | null;
             round_kind?: components["schemas"]["RoundKindCode"] | null;
         };
+        PlBody: {
+            /** Format: int32 */
+            days: number;
+            ebitda_margin_bp: components["schemas"]["PlRatioBody"];
+            gop_margin_bp: components["schemas"]["PlRatioBody"];
+            goppar_cents: components["schemas"]["PlRatioBody"];
+            /** Format: int32 */
+            room_nights: number;
+            round: string;
+            /** @description Obračunati krugovi (za izbornik), redom. */
+            rounds: string[];
+            scope: components["schemas"]["PlScopeCode"];
+            sections: components["schemas"]["PlSectionBody"][];
+        };
+        /**
+         * @description Jedan redak računa dobiti: ostvareno, budžet i razlika (`variance = actual − budget`). `favorable`: prihod i
+         *     rezultat su povoljni kad su ≥ budžeta, trošak kad je ≤ budžeta.
+         */
+        PlLineBody: {
+            /** Format: int64 */
+            actual_cents: number;
+            /** Format: int64 */
+            budget_cents: number;
+            code: string;
+            favorable: boolean;
+            kind: components["schemas"]["PlLineKindCode"];
+            name: string;
+            /** Format: int64 */
+            variance_cents: number;
+        };
+        /** @enum {string} */
+        PlLineKindCode: "revenue" | "expense" | "result";
+        /** @description Ostvareno i budžet jednog omjera ili iznosa; `null` kad je djelitelj nula. */
+        PlRatioBody: {
+            /** Format: int64 */
+            actual: number | null;
+            /** Format: int64 */
+            budget: number | null;
+        };
+        /** @enum {string} */
+        PlScopeCode: "round" | "season";
+        PlSectionBody: {
+            lines: components["schemas"]["PlLineBody"][];
+            section: components["schemas"]["PlSectionCode"];
+            total: components["schemas"]["PlLineBody"] | null;
+        };
+        /** @enum {string} */
+        PlSectionCode: "revenue" | "departmental_expenses" | "departmental_profit" | "undistributed" | "gop" | "fixed_charges" | "ebitda";
         /** @description Plan mjeseca: tijelo zahtjeva i dio odgovora. */
         PlanBody: {
+            /** @description Postavke po odjelu (samo v2, ključ je kod odjela). Bez njih se zadržavaju odjeli važećeg plana. */
+            departments?: {
+                [key: string]: components["schemas"]["DeptPlanBody"];
+            } | null;
             maintenance: components["schemas"]["MaintenanceCode"];
             /** Format: int64 */
             marketing_cents: number;
@@ -690,6 +904,10 @@ export interface components {
         };
         /** @description Granice izbornika radnji za ekran. */
         PlanLimitsBody: {
+            /** @description Granice po odjelu (v2); izostavljeno u v1 igri. */
+            departments?: {
+                [key: string]: components["schemas"]["DeptLimitsBody"];
+            } | null;
             /** Format: int64 */
             marketing_max_cents: number;
             /** Format: int64 */
@@ -701,6 +919,11 @@ export interface components {
             seasonal_max: number;
             /** Format: int32 */
             seasonal_min: number;
+            /**
+             * Format: int32
+             * @description Najveća ukupna promjena sezonaca u jednom krugu (v2); `null` u v1 igri.
+             */
+            seasonal_step_total?: number | null;
             /** Format: int32 */
             wage_max_pct: number;
             /** Format: int32 */
@@ -730,7 +953,7 @@ export interface components {
          * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
          * @enum {string}
          */
-        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
         /** @enum {string} */
         ProfileCode: "A" | "B" | "C";
         /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
@@ -820,6 +1043,30 @@ export interface components {
         };
         /** @enum {string} */
         SeatKind: "human" | "robot";
+        /** @description Neraspoređeni odjel: trošak kruga po stavkama. */
+        ServiceRoundBody: {
+            /** Format: int64 */
+            fixed_cents: number;
+            /** Format: int64 */
+            hiring_cents: number;
+            /** Format: int64 */
+            maintenance_cents: number;
+            /** Format: int64 */
+            marketing_cents: number;
+            /** Format: int64 */
+            payroll_cents: number;
+            /** Format: int64 */
+            per_room_cents: number;
+            /** Format: int64 */
+            reply_cents: number;
+            round: string;
+            /** Format: int64 */
+            situation_cents: number;
+            /** Format: int64 */
+            total_cents: number;
+            /** Format: int64 */
+            training_cents: number;
+        };
         /** @description Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze. */
         SituationBody: {
             /** @description Oznake ponuđenih odgovora; indeks u popisu je broj odgovora. */
@@ -1187,6 +1434,121 @@ export interface operations {
             };
         };
     };
+    departments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Odjeli hotela */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepartmentsBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Igra je na starom modelu (model_v1) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    department: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Kod odjela, npr. rooms ili restaurant */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Odjel s poviješću */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepartmentDetailBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Hotel ili odjel ne postoji (unknown_department) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Igra je na starom modelu (model_v1) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     feed: {
         parameters: {
             query?: never;
@@ -1329,6 +1691,67 @@ export interface operations {
                 };
             };
             /** @description Mjesec još nije obračunat */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    pl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Kod kruga (t01…); bez njega zadnji obračunati krug. */
+                round: string | null;
+                /** @description `round` (zadano) ili `season` (zbroj od prvog kruga do traženog). */
+                scope: components["schemas"]["PlScopeCode"] | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Račun dobiti */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Hotel ili krug ne postoji */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Igra je na starom modelu (model_v1), krug nije obračunat ili još nijedan nije (no_resolved_round) */
             409: {
                 headers: {
                     [name: string]: unknown;

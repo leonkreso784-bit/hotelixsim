@@ -25,7 +25,9 @@ pub use actor::{Actor, strategy_from_code};
 pub use ai_input::{
     AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, OfferedForJudge,
 };
-pub use departments::{DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView};
+pub use departments::{
+    DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,
+};
 pub use error::GameError;
 pub use event::*;
 pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};

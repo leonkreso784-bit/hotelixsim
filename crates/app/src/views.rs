@@ -358,3 +358,58 @@ pub async fn hotel_kpi(
     require_owner(&g, guest, hotel)?;
     Ok(g.hotel_kpi(hotel)?)
 }
+
+/// Odjeli vlastitog hotela sa stanjem i zadnjim rezultatom (samo v2; v1 igra je `WrongModel`).
+pub async fn hotel_departments(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+) -> Result<game::DepartmentsView, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let g = load_game(deps, game_id).await?;
+    require_owner(&g, guest, hotel)?;
+    Ok(g.departments(hotel)?)
+}
+
+/// Jedan odjel vlastitog hotela s poviješću rezultata po obračunatim krugovima.
+pub async fn hotel_department(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    code: &str,
+) -> Result<game::DepartmentDetail, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let g = load_game(deps, game_id).await?;
+    require_owner(&g, guest, hotel)?;
+    Ok(g.department(hotel, code)?)
+}
+
+/// Račun dobiti s budžetom plus popis obračunatih krugova za izbornik.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProfitAndLossView {
+    pub pl: game::PlView,
+    pub rounds: Vec<RoundKey>,
+}
+
+pub async fn hotel_profit_and_loss(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    round: Option<RoundKey>,
+    scope: game::PlScope,
+) -> Result<ProfitAndLossView, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let g = load_game(deps, game_id).await?;
+    require_owner(&g, guest, hotel)?;
+    let pl = g.profit_and_loss(hotel, round, scope)?;
+    let rounds = g
+        .rounds
+        .iter()
+        .copied()
+        .filter(|r| g.status(*r).is_ok_and(|s| s == RoundStatus::Resolved))
+        .collect();
+    Ok(ProfitAndLossView { pl, rounds })
+}

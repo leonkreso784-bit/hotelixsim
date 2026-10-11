@@ -156,6 +156,19 @@ pub struct PlanBody {
     pub maintenance: MaintenanceCode,
     pub renovation: bool,
     pub reply_reviews: bool,
+    /// Postavke po odjelu (samo v2, ključ je kod odjela). Bez njih se zadržavaju odjeli važećeg plana.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub departments: Option<std::collections::BTreeMap<String, DeptPlanBody>>,
+}
+
+/// Postavke jednog odjela u planu kruga.
+#[derive(Clone, Serialize, Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct DeptPlanBody {
+    pub open: bool,
+    pub seasonal_target: u16,
+    pub price_level_pct: u16,
+    pub maintenance: MaintenanceCode,
 }
 
 impl From<&PlanDto> for PlanBody {
@@ -169,6 +182,22 @@ impl From<&PlanDto> for PlanBody {
             maintenance: p.maintenance.into(),
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
+            departments: (!p.departments.is_empty()).then(|| {
+                p.departments
+                    .iter()
+                    .map(|(k, d)| {
+                        (
+                            k.clone(),
+                            DeptPlanBody {
+                                open: d.open,
+                                seasonal_target: d.seasonal_target,
+                                price_level_pct: d.price_level_pct,
+                                maintenance: d.maintenance.into(),
+                            },
+                        )
+                    })
+                    .collect()
+            }),
         }
     }
 }
@@ -184,7 +213,22 @@ impl From<&PlanBody> for PlanDto {
             maintenance: p.maintenance.into(),
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
-            departments: std::collections::BTreeMap::new(),
+            departments: p
+                .departments
+                .iter()
+                .flatten()
+                .map(|(k, d)| {
+                    (
+                        k.clone(),
+                        game::dto_v2::DeptPlanDto {
+                            open: d.open,
+                            seasonal_target: d.seasonal_target,
+                            price_level_pct: d.price_level_pct,
+                            maintenance: d.maintenance.into(),
+                        },
+                    )
+                })
+                .collect(),
         }
     }
 }
@@ -200,6 +244,22 @@ pub struct PlanLimitsBody {
     pub wage_min_pct: u16,
     pub wage_max_pct: u16,
     pub renovation_available: bool,
+    /// Najveća ukupna promjena sezonaca u jednom krugu (v2); `null` u v1 igri.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seasonal_step_total: Option<u16>,
+    /// Granice po odjelu (v2); izostavljeno u v1 igri.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub departments: Option<std::collections::BTreeMap<String, DeptLimitsBody>>,
+}
+
+/// Granice postavki jednog odjela.
+#[derive(Serialize, ToSchema)]
+pub struct DeptLimitsBody {
+    pub seasonal_min: u16,
+    pub seasonal_max: u16,
+    pub price_level_min_pct: u16,
+    pub price_level_max_pct: u16,
+    pub can_close: bool,
 }
 
 impl From<&PlanLimits> for PlanLimitsBody {
@@ -213,6 +273,24 @@ impl From<&PlanLimits> for PlanLimitsBody {
             wage_min_pct: l.wage_min_pct,
             wage_max_pct: l.wage_max_pct,
             renovation_available: l.renovation_available,
+            seasonal_step_total: l.seasonal_step_total,
+            departments: (!l.departments.is_empty()).then(|| {
+                l.departments
+                    .iter()
+                    .map(|(k, d)| {
+                        (
+                            k.clone(),
+                            DeptLimitsBody {
+                                seasonal_min: d.seasonal_min,
+                                seasonal_max: d.seasonal_max,
+                                price_level_min_pct: d.price_level_min_pct,
+                                price_level_max_pct: d.price_level_max_pct,
+                                can_close: d.can_close,
+                            },
+                        )
+                    })
+                    .collect()
+            }),
         }
     }
 }

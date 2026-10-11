@@ -404,6 +404,148 @@
         }
       }
     },
+    "/v1/hotels/{hotel_id}/departments": {
+      "get": {
+        "summary": "Odjeli hotela sa stanjem i zadnjim rezultatom; samo vlasnik, samo v2 igra.",
+        "operationId": "departments",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Odjeli hotela",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentsBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Igra je na starom modelu (model_v1)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/departments/{code}": {
+      "get": {
+        "summary": "Jedan odjel s poviješću rezultata; samo vlasnik, samo v2 igra.",
+        "operationId": "department",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Kod odjela, npr. rooms ili restaurant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Odjel s poviješću",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentDetailBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hotel ili odjel ne postoji (unknown_department)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Igra je na starom modelu (model_v1)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/hotels/{hotel_id}/feed": {
       "get": {
         "summary": "Dnevnik hotela, od najstarijeg: osnova vremenske crte; samo vlasnik.",
@@ -580,6 +722,101 @@
           },
           "409": {
             "description": "Mjesec još nije obračunat",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hotels/{hotel_id}/pl": {
+      "get": {
+        "summary": "Račun dobiti po USALI-ju s budžetom (ostvareno, budžet i razlika po retku); samo vlasnik, samo v2 igra.",
+        "operationId": "pl",
+        "parameters": [
+          {
+            "name": "hotel_id",
+            "in": "path",
+            "description": "Hotel (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "round",
+            "in": "path",
+            "description": "Kod kruga (t01…); bez njega zadnji obračunati krug.",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "scope",
+            "in": "path",
+            "description": "`round` (zadano) ili `season` (zbroj od prvog kruga do traženog).",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PlScopeCode"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Račun dobiti",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Hotel ili krug ne postoji",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Igra je na starom modelu (model_v1), krug nije obračunat ili još nijedan nije (no_resolved_round)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1322,6 +1559,331 @@
           },
           "hotel_id": {
             "type": "string"
+          }
+        }
+      },
+      "DepartmentBody": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "class",
+          "open",
+          "can_close",
+          "permanent",
+          "seasonal",
+          "condition_pts",
+          "guest_satisfaction_pts",
+          "last",
+          "service_last"
+        ],
+        "properties": {
+          "can_close": {
+            "type": "boolean"
+          },
+          "class": {
+            "$ref": "#/components/schemas/DeptClassCode"
+          },
+          "code": {
+            "type": "string"
+          },
+          "condition_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Stanje prostora 0–10 000 (na ekranu 0–100)."
+          },
+          "guest_satisfaction_pts": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Zadovoljstvo gostiju odjelom 0–10 000; `null` za odjele bez gostiju."
+          },
+          "last": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DeptRoundBody",
+                "description": "Rezultat u zadnjem obračunatom krugu; `null` prije prvog obračuna i za neraspoređene odjele."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "open": {
+            "type": "boolean"
+          },
+          "permanent": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "service_last": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ServiceRoundBody",
+                "description": "Neraspoređeni odjel: trošak zadnjeg kruga po stavkama."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "DepartmentDetailBody": {
+        "type": "object",
+        "required": [
+          "department",
+          "history"
+        ],
+        "properties": {
+          "department": {
+            "$ref": "#/components/schemas/DepartmentBody"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeptRoundBody"
+            },
+            "description": "Rezultati po obračunatim krugovima, redom sezone."
+          }
+        }
+      },
+      "DepartmentsBody": {
+        "type": "object",
+        "required": [
+          "round",
+          "departments"
+        ],
+        "properties": {
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepartmentBody"
+            }
+          },
+          "round": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Zadnji obračunati krug; `null` prije prvog obračuna."
+          }
+        }
+      },
+      "DeptClassCode": {
+        "type": "string",
+        "enum": [
+          "rooms",
+          "food_beverage",
+          "other_operated",
+          "rentals",
+          "admin_general",
+          "sales_marketing",
+          "maintenance",
+          "utilities"
+        ]
+      },
+      "DeptLimitsBody": {
+        "type": "object",
+        "description": "Granice postavki jednog odjela.",
+        "required": [
+          "seasonal_min",
+          "seasonal_max",
+          "price_level_min_pct",
+          "price_level_max_pct",
+          "can_close"
+        ],
+        "properties": {
+          "can_close": {
+            "type": "boolean"
+          },
+          "price_level_max_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "price_level_min_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_max": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_min": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "DeptPlanBody": {
+        "type": "object",
+        "description": "Postavke jednog odjela u planu kruga.",
+        "required": [
+          "open",
+          "seasonal_target",
+          "price_level_pct",
+          "maintenance"
+        ],
+        "properties": {
+          "maintenance": {
+            "$ref": "#/components/schemas/MaintenanceCode"
+          },
+          "open": {
+            "type": "boolean"
+          },
+          "price_level_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_target": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeptRoundBody": {
+        "type": "object",
+        "description": "Rezultat jednog odjela u jednom obračunatom krugu.",
+        "required": [
+          "round",
+          "revenue_cents",
+          "payroll_cents",
+          "cost_of_sales_cents",
+          "other_cents",
+          "profit_cents",
+          "margin_bp",
+          "served",
+          "capacity",
+          "load_hundredths",
+          "usage_bp",
+          "quality_pts",
+          "price_level_pct",
+          "condition_before_pts",
+          "wear_pts",
+          "load_wear_pts",
+          "maintenance_pts",
+          "condition_after_pts",
+          "maintenance_cents",
+          "value_pts",
+          "satisfaction_before_pts",
+          "satisfaction_after_pts"
+        ],
+        "properties": {
+          "capacity": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Kapacitet u korištenjima za krug.",
+            "minimum": 0
+          },
+          "condition_after_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "condition_before_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cost_of_sales_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "load_hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Gostiju po zaposlenom na dan, u stotinkama.",
+            "minimum": 0
+          },
+          "load_wear_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maintenance_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maintenance_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "margin_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "other_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "payroll_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price_level_pct": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "profit_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "quality_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "round": {
+            "type": "string"
+          },
+          "satisfaction_after_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "satisfaction_before_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "served": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Posluženo korištenja (noćenja, obroci…).",
+            "minimum": 0
+          },
+          "usage_bp": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "value_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wear_pts": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2341,6 +2903,180 @@
         },
         "additionalProperties": false
       },
+      "PlBody": {
+        "type": "object",
+        "required": [
+          "round",
+          "scope",
+          "days",
+          "room_nights",
+          "rounds",
+          "sections",
+          "gop_margin_bp",
+          "goppar_cents",
+          "ebitda_margin_bp"
+        ],
+        "properties": {
+          "days": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "ebitda_margin_bp": {
+            "$ref": "#/components/schemas/PlRatioBody"
+          },
+          "gop_margin_bp": {
+            "$ref": "#/components/schemas/PlRatioBody"
+          },
+          "goppar_cents": {
+            "$ref": "#/components/schemas/PlRatioBody"
+          },
+          "room_nights": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "round": {
+            "type": "string"
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Obračunati krugovi (za izbornik), redom."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PlScopeCode"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlSectionBody"
+            }
+          }
+        }
+      },
+      "PlLineBody": {
+        "type": "object",
+        "description": "Jedan redak računa dobiti: ostvareno, budžet i razlika (`variance = actual − budget`). `favorable`: prihod i\nrezultat su povoljni kad su ≥ budžeta, trošak kad je ≤ budžeta.",
+        "required": [
+          "code",
+          "name",
+          "kind",
+          "actual_cents",
+          "budget_cents",
+          "variance_cents",
+          "favorable"
+        ],
+        "properties": {
+          "actual_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "budget_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "code": {
+            "type": "string"
+          },
+          "favorable": {
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlLineKindCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "variance_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PlLineKindCode": {
+        "type": "string",
+        "enum": [
+          "revenue",
+          "expense",
+          "result"
+        ]
+      },
+      "PlRatioBody": {
+        "type": "object",
+        "description": "Ostvareno i budžet jednog omjera ili iznosa; `null` kad je djelitelj nula.",
+        "required": [
+          "actual",
+          "budget"
+        ],
+        "properties": {
+          "actual": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "budget": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "PlScopeCode": {
+        "type": "string",
+        "enum": [
+          "round",
+          "season"
+        ]
+      },
+      "PlSectionBody": {
+        "type": "object",
+        "required": [
+          "section",
+          "lines",
+          "total"
+        ],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlLineBody"
+            }
+          },
+          "section": {
+            "$ref": "#/components/schemas/PlSectionCode"
+          },
+          "total": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PlLineBody",
+                "description": "Zbroj sekcije (sekcije s više redaka); GOP i EBITDA su jedan redak u `lines`, pa je `null`."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PlSectionCode": {
+        "type": "string",
+        "enum": [
+          "revenue",
+          "departmental_expenses",
+          "departmental_profit",
+          "undistributed",
+          "gop",
+          "fixed_charges",
+          "ebitda"
+        ]
+      },
       "PlanBody": {
         "type": "object",
         "description": "Plan mjeseca: tijelo zahtjeva i dio odgovora.",
@@ -2355,6 +3091,19 @@
           "reply_reviews"
         ],
         "properties": {
+          "departments": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Postavke po odjelu (samo v2, ključ je kod odjela). Bez njih se zadržavaju odjeli važećeg plana.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DeptPlanBody"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
           "maintenance": {
             "$ref": "#/components/schemas/MaintenanceCode"
           },
@@ -2402,6 +3151,19 @@
           "renovation_available"
         ],
         "properties": {
+          "departments": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Granice po odjelu (v2); izostavljeno u v1 igri.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DeptLimitsBody"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
           "marketing_max_cents": {
             "type": "integer",
             "format": "int64"
@@ -2425,6 +3187,15 @@
           "seasonal_min": {
             "type": "integer",
             "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_step_total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Najveća ukupna promjena sezonaca u jednom krugu (v2); `null` u v1 igri.",
             "minimum": 0
           },
           "wage_max_pct": {
@@ -2539,6 +3310,7 @@
           "unknown_situation",
           "unknown_answer",
           "unknown_profile",
+          "unknown_department",
           "round_not_open",
           "already_answered",
           "not_free_text",
@@ -2554,6 +3326,8 @@
           "renovation_twice",
           "game_outdated",
           "invalid_settings",
+          "department_plan_invalid",
+          "no_resolved_round",
           "model_v1",
           "storage_unavailable",
           "internal",
@@ -2850,6 +3624,68 @@
           "human",
           "robot"
         ]
+      },
+      "ServiceRoundBody": {
+        "type": "object",
+        "description": "Neraspoređeni odjel: trošak kruga po stavkama.",
+        "required": [
+          "round",
+          "payroll_cents",
+          "fixed_cents",
+          "per_room_cents",
+          "marketing_cents",
+          "reply_cents",
+          "maintenance_cents",
+          "training_cents",
+          "hiring_cents",
+          "situation_cents",
+          "total_cents"
+        ],
+        "properties": {
+          "fixed_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hiring_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maintenance_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "marketing_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "payroll_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "per_room_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reply_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "round": {
+            "type": "string"
+          },
+          "situation_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "training_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       },
       "SituationBody": {
         "type": "object",

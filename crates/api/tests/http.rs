@@ -132,10 +132,13 @@ fn openapi_documents_contract() {
         "chat_limit",
         "awaiting_reply",
         "bad_text",
+        "unknown_department",
+        "department_plan_invalid",
+        "no_resolved_round",
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
-    assert_eq!(codes.len(), 29);
+    assert_eq!(codes.len(), 32);
     let schemas = &doc["components"]["schemas"];
     assert!(schemas["FeedItemBody"]["oneOf"].is_array());
     assert_eq!(
