@@ -146,6 +146,7 @@ pub(super) fn rooms_outcome(i: &RoomsIn) -> Calc<DeptOutcome> {
         satisfaction_target_pts: c::narrow(g.rooms_target)?,
         satisfaction_after_pts: c::narrow(g.rooms_satisfaction)?,
         guest_weight: i.guest_nights,
+        departures: 0,
     })
 }
 

@@ -23,7 +23,7 @@ use departments::{
 };
 use guests::{GuestIn, guests};
 use money::{MoneyIn, decisions, money, rooms_maintenance_cost};
-use people::{LoadUnit, PeopleIn, hotel_load, people, rooms_load, staffing};
+use people::{LoadUnit, PeopleIn, department_departures, hotel_load, people, rooms_load, staffing};
 use situations::{group_done, situation_effects};
 
 use engine::calc::{self as c, Calc, CalcError};
@@ -324,6 +324,13 @@ pub fn resolve_period(
         interest_cents: 0,
         capex_cents: 0,
     };
+    for (code, n) in department_departures(&s, pe.out.departures)? {
+        if let Some(o) = accounts.departments.get_mut(&code) {
+            o.departures = n;
+        } else if let Some(u) = accounts.undistributed.get_mut(&code) {
+            u.departures = n;
+        }
+    }
 
     // 7. v1 sažetak novca iz računa
     let mo = money(

@@ -197,6 +197,8 @@ pub struct DeptOutcome {
     pub satisfaction_after_pts: i32,
     /// Težina u kvaliteti i zadovoljstvu hotela: korištenja (Smještaj: noćenja gostiju); 0 = ne dotiče goste.
     pub guest_weight: u32,
+    /// Odlasci zaposlenih ovog odjela u krugu (dio hotelskog broja, `split_departures`); popunjava ih obračun kruga.
+    pub departures: u16,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -219,6 +221,8 @@ pub struct UndistributedOutcome {
     pub per_room_cents: i64,
     pub assigned: AssignedCosts,
     pub total_cents: i64,
+    /// Odlasci zaposlenih ovog odjela u krugu (dio hotelskog broja, `split_departures`); popunjava ih obračun kruga.
+    pub departures: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -460,6 +464,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         satisfaction_target_pts: target,
         satisfaction_after_pts: sat_after,
         guest_weight,
+        departures: 0,
     })
 }
 
@@ -503,7 +508,43 @@ pub fn undistributed_step(
         per_room_cents,
         assigned,
         total_cents: c::narrow(total)?,
+        departures: 0,
     })
+}
+
+/// Raspodjela hotelskih odlazaka kruga po odjelima prema broju ljudi odjela (metoda najvećeg ostatka): odjel dobiva
+/// cijeli dio kvote `ukupno·ljudi/svi`, a preostali odlasci idu odjelima s najvećim ostatkom; jednaki ostaci →
+/// manji kod. Zbroj je točno `total`; odjel bez ljudi dobiva 0. Bez slučajnosti, pa ne mijenja nijedan tok kocke.
+pub fn split_departures(
+    total: u16,
+    staff: &BTreeMap<DeptCode, u16>,
+) -> Calc<BTreeMap<DeptCode, u16>> {
+    let all = staff.values().try_fold(0_i128, |a, n| c::add(a, w(*n)))?;
+    let mut out: BTreeMap<DeptCode, u16> = staff.keys().map(|k| (k.clone(), 0)).collect();
+    if total == 0 {
+        return Ok(out);
+    }
+    if all == 0 {
+        return Err(CalcError::BadDivisor);
+    }
+    let mut given: i128 = 0;
+    let mut remainders: Vec<(i128, &DeptCode)> = Vec::with_capacity(staff.len());
+    for (k, n) in staff.iter().filter(|(_, n)| **n > 0) {
+        let share = c::mul(w(total), w(*n))?;
+        let whole = c::div_floor(share, all)?;
+        given = c::add(given, whole)?;
+        out.insert(k.clone(), c::narrow(whole)?);
+        remainders.push((c::sub(share, c::mul(whole, all)?)?, k));
+    }
+    // Najveći ostatak prvi; `sort_by_key` je stabilan, a popis ide po kodu, pa jednaki ostaci ostaju redom koda.
+    remainders.sort_by_key(|r| std::cmp::Reverse(r.0));
+    let left: usize = c::narrow(c::sub(w(total), given)?)?;
+    for (_, k) in remainders.into_iter().take(left) {
+        if let Some(v) = out.get_mut(k) {
+            *v = v.checked_add(1).ok_or(CalcError::Overflow)?;
+        }
+    }
+    Ok(out)
 }
 
 /// Raspodjela ukupnog broja sezonaca po odjelima. Zatvoreni odjel treba proslijediti s `max` 0 (ili bez zapisa u

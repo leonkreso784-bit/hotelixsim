@@ -579,11 +579,12 @@ function deptRound(over: Partial<DeptRoundBody> = {}): DeptRoundBody {
     value_pts: 7000,
     satisfaction_before_pts: 7000,
     satisfaction_after_pts: 6949,
+    departures: 0,
     ...over,
   };
 }
 
-function serviceRound(total: number): ServiceRoundBody {
+function serviceRound(total: number, departures = 0): ServiceRoundBody {
   return {
     round: "t01",
     payroll_cents: total - 700_000,
@@ -596,6 +597,7 @@ function serviceRound(total: number): ServiceRoundBody {
     hiring_cents: 0,
     situation_cents: 0,
     total_cents: total,
+    departures,
   };
 }
 
@@ -617,7 +619,7 @@ function dept(
 
 /** Hotel bez Rooftop bara: smještaj, restoran, wellness, parking (zatvoren) i četiri službe bez prihoda. */
 export function departmentsBody(): DepartmentsBody {
-  const service = (code: string, name: string, cls: DepartmentBody["class"], total: number) =>
+  const service = (code: string, name: string, cls: DepartmentBody["class"], total: number, departures = 0) =>
     dept({
       code,
       name,
@@ -625,7 +627,7 @@ export function departmentsBody(): DepartmentsBody {
       condition_pts: 8000,
       guest_satisfaction_pts: null,
       last: null,
-      service_last: serviceRound(total),
+      service_last: serviceRound(total, departures),
     });
   return {
     round: "t01",
@@ -638,7 +640,7 @@ export function departmentsBody(): DepartmentsBody {
         seasonal: 10,
         condition_pts: 7200,
         guest_satisfaction_pts: 7400,
-        last: deptRound({ revenue_cents: 9_800_000, profit_cents: 3_100_000 }),
+        last: deptRound({ revenue_cents: 9_800_000, profit_cents: 3_100_000, departures: 2 }),
       }),
       dept({ code: "restaurant", name: "Restoran", class: "food_beverage" }),
       dept({ code: "lobby_bar", name: "Lobby bar", class: "food_beverage", can_close: true, seasonal: 3 }),
@@ -662,7 +664,7 @@ export function departmentsBody(): DepartmentsBody {
         seasonal: 0,
         last: null,
       }),
-      service("admin", "Uprava", "admin_general", 5_905_000),
+      service("admin", "Uprava", "admin_general", 5_905_000, 1),
       service("sales", "Prodaja i marketing", "sales_marketing", 2_400_000),
       service("maintenance", "Održavanje", "maintenance", 1_900_000),
       service("energy", "Energija i voda", "utilities", 3_100_000),

@@ -86,7 +86,13 @@ export function DepartmentDetail({
       )}
       {dept.service_last && <ServiceCosts cost={dept.service_last} />}
       {!service && dept.last && <DepartmentFacts dept={dept} r={dept.last} />}
-      {(service || empty) && <People dept={dept} r={service ? null : dept.last} />}
+      {(service || empty) && (
+        <People
+          dept={dept}
+          r={service ? null : dept.last}
+          departures={service ? (dept.service_last?.departures ?? null) : (dept.last?.departures ?? null)}
+        />
+      )}
       <DepartmentHistory history={history} titleOf={titleOf} weekly={weekly} />
     </div>
   );

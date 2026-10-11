@@ -92,8 +92,19 @@ function Money({ r, foodAndBeverage }: { r: DeptRoundBody; foodAndBeverage: bool
   );
 }
 
-/** Ljudi odjela; kapacitet i opterećenje se pokazuju samo kad postoji obračunati krug. */
-export function People({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody | null }) {
+/**
+ * Ljudi odjela; kapacitet i opterećenje se pokazuju samo kad postoji obračunati krug. Odlasci zadnjeg kruga
+ * (`departures`, `null` prije prvog obračuna) stoje i kad je 0 („nitko“): i mirno osoblje je ishod.
+ */
+export function People({
+  dept,
+  r,
+  departures,
+}: {
+  dept: DepartmentBody;
+  r: DeptRoundBody | null;
+  departures: number | null;
+}) {
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.staff")}</h2>
@@ -103,8 +114,17 @@ export function People({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody | n
         {r && (
           <Line label={t("dept.capacity")} value={t("dept.capacityUses", { n: formatWhole(r.capacity) })} />
         )}
+        {departures !== null && (
+          <Line
+            label={t("dept.departures")}
+            value={departures > 0 ? formatCount(departures, "person") : t("dept.departures.none")}
+          />
+        )}
       </Lines>
       {r && <p>{t("dept.load", { load: formatLoad(r.load_hundredths) })}</p>}
+      {departures !== null && departures > 0 && (
+        <p className="text-sm text-muted">{t("dept.departures.note")}</p>
+      )}
     </Card>
   );
 }
@@ -115,7 +135,7 @@ export function DepartmentFacts({ dept, r }: { dept: DepartmentBody; r: DeptRoun
       <Space r={r} />
       <Guests r={r} />
       <Money r={r} foodAndBeverage={dept.class === "food_beverage"} />
-      <People dept={dept} r={r} />
+      <People dept={dept} r={r} departures={r.departures} />
     </div>
   );
 }

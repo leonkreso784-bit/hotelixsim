@@ -122,4 +122,29 @@ describe("Odjeli", () => {
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Odjeli" }).length).toBeGreaterThan(1));
     expect(screen.getByRole("status")).toBeTruthy();
   });
+
+  it("ljudi: odlasci odjela u zadnjem krugu, i kad nitko nije otišao", async () => {
+    renderApp(v2Api(), "/odjeli/rooms");
+    expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("Otišlo u krugu")).toBeTruthy();
+    expect(within(people).getByText("2 osobe")).toBeTruthy();
+    expect(
+      within(people).getByText("Tko ode, zamijeni se novim zaposlenim; trošak zamjene je u Upravi."),
+    ).toBeTruthy();
+    cleanup();
+    renderApp(v2Api(), "/odjeli/restaurant");
+    expect(await screen.findByRole("heading", { level: 1, name: "Restoran" })).toBeTruthy();
+    const quiet = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(quiet).getByText("Otišlo u krugu")).toBeTruthy();
+    expect(within(quiet).getByText("nitko")).toBeTruthy();
+    expect(within(quiet).queryByText(/trošak zamjene/)).toBeNull();
+  });
+
+  it("služba: odlasci iz zadnjeg troška službe", async () => {
+    renderApp(v2Api(), "/odjeli/admin");
+    expect(await screen.findByRole("heading", { level: 1, name: "Uprava" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("1 osoba")).toBeTruthy();
+  });
 });

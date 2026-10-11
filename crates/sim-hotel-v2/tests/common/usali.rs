@@ -42,6 +42,7 @@ fn dept(
         satisfaction_target_pts: 0,
         satisfaction_after_pts: 0,
         guest_weight: 0,
+        departures: 0,
     };
     (code, outcome)
 }
@@ -65,6 +66,7 @@ fn undistributed(
         per_room_cents: per_room,
         assigned,
         total_cents: total,
+        departures: 0,
     };
     (code, outcome)
 }

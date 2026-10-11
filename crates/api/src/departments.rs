@@ -71,6 +71,8 @@ pub struct DeptRoundBody {
     pub value_pts: i32,
     pub satisfaction_before_pts: i32,
     pub satisfaction_after_pts: i32,
+    /// Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
+    pub departures: u16,
 }
 
 impl DeptRoundBody {
@@ -98,6 +100,7 @@ impl DeptRoundBody {
             value_pts: o.value_pts,
             satisfaction_before_pts: o.satisfaction_before_pts,
             satisfaction_after_pts: o.satisfaction_after_pts,
+            departures: o.departures,
         }
     }
 }
@@ -116,6 +119,8 @@ pub struct ServiceRoundBody {
     pub hiring_cents: i64,
     pub situation_cents: i64,
     pub total_cents: i64,
+    /// Zaposleni službe koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
+    pub departures: u16,
 }
 
 impl ServiceRoundBody {
@@ -132,6 +137,7 @@ impl ServiceRoundBody {
             hiring_cents: u.assigned.hiring_cents,
             situation_cents: u.assigned.situation_cents,
             total_cents: u.total_cents,
+            departures: u.departures,
         }
     }
 }

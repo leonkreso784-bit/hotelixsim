@@ -1,12 +1,14 @@
 //! Faze osoblja (1) i ljudi (3): sezonci po odjelima na cilj, opterećenje hotela (ponderirano osobljem odjela),
 //! moral, odlasci i iskustvo.
 
+use std::collections::BTreeMap;
+
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{Pending, PeopleOutcome, load_penalty, turnover_bp};
 
 use super::{neg, step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
-use crate::department::DeptCode;
+use crate::department::{DeptCode, split_departures};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -65,6 +67,23 @@ pub(super) fn staffing(state: &HotelState, plan: &PeriodPlan) -> Calc<Staffing> 
 }
 
 // ---------------------------------------------------------------- faza 3: ljudi
+
+/// Hotelski odlasci kruga po odjelima prema ljudima odjela nakon faze osoblja (stalni + sezonci; zbroj je `staff`
+/// hotela). Broj, trošak zamjene (Uprava) i iskustvo ostaju hotelski; ovo samo kaže iz kojeg su odjela otišli.
+pub(super) fn department_departures(
+    state: &HotelState,
+    departures: u16,
+) -> Calc<BTreeMap<DeptCode, u16>> {
+    let mut staff = BTreeMap::new();
+    for (code, d) in &state.departments {
+        let n = d
+            .permanent
+            .checked_add(d.seasonal)
+            .ok_or(CalcError::Overflow)?;
+        staff.insert(code.clone(), n);
+    }
+    split_departures(departures, &staff)
+}
 
 pub(crate) struct PeopleStep {
     pub(crate) out: PeopleOutcome,

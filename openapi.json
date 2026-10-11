@@ -1774,7 +1774,8 @@
           "maintenance_cents",
           "value_pts",
           "satisfaction_before_pts",
-          "satisfaction_after_pts"
+          "satisfaction_after_pts",
+          "departures"
         ],
         "properties": {
           "capacity": {
@@ -1794,6 +1795,12 @@
           "cost_of_sales_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "departures": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).",
+            "minimum": 0
           },
           "load_hundredths": {
             "type": "integer",
@@ -3629,9 +3636,16 @@
           "training_cents",
           "hiring_cents",
           "situation_cents",
-          "total_cents"
+          "total_cents",
+          "departures"
         ],
         "properties": {
+          "departures": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Zaposleni službe koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).",
+            "minimum": 0
+          },
           "fixed_cents": {
             "type": "integer",
             "format": "int64"
