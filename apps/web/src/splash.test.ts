@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import indexHtml from "../index.html?raw";
 import { dismissSplash, SPLASH_FADE_MS, SPLASH_ID, SPLASH_MIN_MS, SPLASH_SEEN_KEY } from "./splash";
 
 type Job = { fn: () => void; ms: number };
@@ -138,5 +139,76 @@ describe("dismissSplash", () => {
     runNext(jobs);
     runNext(jobs);
     expect(document.getElementById(SPLASH_ID)).toBeNull();
+  });
+});
+
+/** Skripta uvoda iz `index.html` (bez `type="module"`): pokrene se nad istim oznakama kao u pregledniku. */
+function runIndexScript() {
+  const page = new DOMParser().parseFromString(indexHtml, "text/html");
+  const script = [...page.querySelectorAll("script")].find((s) => !s.type);
+  if (!script) throw new Error("nema skripte uvoda u index.html");
+  page.querySelectorAll("script").forEach((s) => {
+    s.remove();
+  });
+  document.body.innerHTML = page.body.innerHTML;
+  new Function(script.textContent ?? "")();
+}
+
+const FAIL_TEXT = "Učitavanje traje dulje nego obično. Osvježi stranicu.";
+
+describe("sigurnosni rok u index.html (aplikacija se ne učita)", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.useFakeTimers({ toFake: ["setTimeout", "requestAnimationFrame"] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("uvod ode, zapamti se kao viđen i ostane kratka poruka umjesto prazne stranice", () => {
+    runIndexScript();
+    expect(root()?.hasAttribute("inert")).toBe(true);
+    vi.advanceTimersByTime(16 + 9000);
+    expect(document.getElementById(SPLASH_ID)?.classList.contains("is-leaving")).toBe(true);
+    expect(sessionStorage.getItem(SPLASH_SEEN_KEY)).toBe("1");
+    vi.advanceTimersByTime(SPLASH_FADE_MS);
+    expect(document.getElementById(SPLASH_ID)).toBeNull();
+    expect(root()?.hasAttribute("inert")).toBe(false);
+    expect(root()?.textContent).toBe(FAIL_TEXT);
+  });
+
+  it("aplikacija je stigla kasno, ali prije uklanjanja: poruke nema", () => {
+    runIndexScript();
+    vi.advanceTimersByTime(16 + 9000);
+    const app = document.createElement("main");
+    app.textContent = "Započni igru";
+    root()?.append(app);
+    vi.advanceTimersByTime(SPLASH_FADE_MS);
+    expect(root()?.textContent).toBe("Započni igru");
+  });
+
+  it("izlaz već vodi splash.ts: rok ne radi ništa", () => {
+    runIndexScript();
+    document.getElementById(SPLASH_ID)?.classList.add("is-leaving");
+    vi.advanceTimersByTime(16 + 9000 + SPLASH_FADE_MS);
+    expect(sessionStorage.getItem(SPLASH_SEEN_KEY)).toBeNull();
+    expect(root()?.textContent).toBe("");
+  });
+});
+
+describe("vrata u index.html", () => {
+  const css = indexHtml.slice(indexHtml.indexOf("<style>"), indexHtml.indexOf("</style>"));
+  const commands = (d: string) => d.replace(/[^A-Za-z]/g, "");
+
+  it("oblik vrata (CSS d) prelazi iz zatvorenog u otvoreni s istim naredbama putanje, inače se ne animira", () => {
+    const paths = [...css.matchAll(/d: path\("([^"]+)"\)/g)].map((m) => m[1] ?? "");
+    const door = paths.filter((p) => p !== "M0 0");
+    expect(door).toHaveLength(2);
+    expect(commands(door[0] ?? "")).toBe(commands(door[1] ?? ""));
+  });
+
+  it("smanjeni pokreti gase i animaciju oblika (pravilo stoji iza @supports)", () => {
+    expect(css.indexOf("@supports (d:")).toBeGreaterThan(-1);
+    expect(css.indexOf("@supports (d:")).toBeLessThan(css.indexOf("prefers-reduced-motion"));
   });
 });

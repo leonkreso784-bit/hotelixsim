@@ -44,6 +44,15 @@
         letter-spacing: -0.01em;
         color: #151b2b;
       }
+      /* Poruka kad se aplikacija ne učita (sigurnosni rok niže); styles.css tada možda nije stigao. */
+      .hx-fail {
+        margin: 0;
+        padding: 40vh 16px 0;
+        text-align: center;
+        font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+        font-size: 16px;
+        color: #151b2b;
+      }
       .hx-sr {
         position: absolute;
         width: 1px;
@@ -83,7 +92,8 @@
       .hx-flare {
         animation: hx-fade 0.3s ease-out 1.1s both;
       }
-      /* Vrata na šarki lijevo; osnovni stil je završno stanje (otvorena), da ga vide i smanjeni pokreti. */
+      /* Vrata na šarki lijevo; osnovni stil je završno stanje (otvorena), da ga vide i smanjeni pokreti.
+         Ovo suženje (scaleX) je rezerva za preglednike bez CSS svojstva d (Safari); ostali crtaju pravi oblik niže. */
       .hx-door {
         fill: #cfe0ff;
         transform-origin: 0% 50%;
@@ -160,6 +170,25 @@
           opacity: 0;
           transform: translateY(6px);
           letter-spacing: 0.04em;
+        }
+      }
+
+      /* Vrata starim oblikom (Leonove SMIL putanje): slobodni rub se pri otvaranju skrati, pa se krilo čita kao
+         zakrenuto prema unutra, a ne kao uska elipsa. Isti sat kao rezerva gore; gotovo u 2,24 s, prije izlaza (2,8 s).
+         Stoji ispred pravila za smanjene pokrete, da ih ono i dalje gasi (tada ostaje otvoreni oblik). */
+      @supports (d: path("M0 0")) {
+        .hx-door {
+          transform: none;
+          d: path("M50.5 94 L50.5 73.5 C50.5 67.5 53.2 63.6 56.6 63 C59 63.4 60.5 65.6 60.5 68.6 L60.5 90.6 Z");
+          animation:
+            hx-fade 0.2s ease-out 1.2s both,
+            hx-door-d 0.62s cubic-bezier(0.65, 0, 0.25, 1) 1.62s both;
+        }
+        @keyframes hx-door-d {
+          from {
+            fill: #9dbfff;
+            d: path("M50.5 94 L50.5 73.5 C50.5 66 56.5 60 64 60 C71.5 60 77.5 66 77.5 73.5 L77.5 94 Z");
+          }
         }
       }
 
@@ -269,14 +298,25 @@
         root.setAttribute("inert", "");
         // Prvo crtanje uvoda: odavde src/splash.ts broji SPLASH_MIN_MS, a ovdje teče sigurnosni rok —
         // ako se aplikacija ne učita za 9 s, uvod izblijedi i ode sam (blijeđenje samo jednom, vidi splash.ts).
+        // Rok i zapamti da je uvod viđen (splash.ts tada više nema uvoda pa to ne bi upisao), a ako aplikacija
+        // ni tada ništa nije nacrtala, ostavi kratku poruku (React je pri prvom crtanju zamijeni svojim sadržajem).
         requestAnimationFrame((t) => {
           splash.dataset.start = String(t);
           setTimeout(() => {
             if (!splash.isConnected || splash.classList.contains("is-leaving")) return;
             splash.classList.add("is-leaving");
+            try {
+              sessionStorage.setItem("hx-uvod", "1");
+            } catch {}
             setTimeout(() => {
               splash.remove();
               root.removeAttribute("inert");
+              if (root.hasChildNodes()) return;
+              var poruka = document.createElement("p");
+              poruka.className = "hx-fail";
+              poruka.setAttribute("role", "status");
+              poruka.textContent = "Učitavanje traje dulje nego obično. Osvježi stranicu.";
+              root.append(poruka);
             }, 320);
           }, 9000);
         });

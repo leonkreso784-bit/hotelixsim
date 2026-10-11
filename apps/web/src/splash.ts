@@ -1,10 +1,12 @@
 // Uvodna animacija logotipa živi u `index.html` (crta se dok se aplikacija učitava).
 // Ovdje je samo izlaz: kad je aplikacija spremna, uvod pričeka da se priča završi i izblijedi.
 // Skripta u `index.html` upiše trenutak prvog crtanja uvoda (`data-start`), stavi `inert` na `#root` dok je uvod
-// vidljiv i drži sigurnosni rok (9 s od prvog crtanja) ako se aplikacija nikad ne učita.
+// vidljiv i drži sigurnosni rok (9 s od prvog crtanja) ako se aplikacija nikad ne učita — tada uvod makne sama,
+// zapamti ga kao viđen i, ako je `#root` još prazan, ostavi kratku poruku.
 
 export const SPLASH_ID = "hx-splash";
-/** Ključ u sessionStorage: uvod se u istoj kartici prikazuje jednom (skripta u `index.html` ga čita). */
+/** Ključ u sessionStorage: uvod se u istoj kartici prikazuje jednom (skripta u `index.html` ga čita, a upiše ga i
+ * sigurnosni rok kad sam makne uvod). */
 export const SPLASH_SEEN_KEY = "hx-uvod";
 /**
  * Koliko dugo se uvod vidi prije izlaza, od prvog crtanja: zadnja faza (svjetlo pred vratima) završi u 2,48 s,
