@@ -16,7 +16,7 @@ export type Handler = (req: Request, params: Params, body: unknown) => Response 
 type RouteEntry = { method: string; pattern: RegExp; names: string[]; handler: Handler };
 
 export class FakeApi {
-  readonly calls: { method: string; path: string; body: unknown }[] = [];
+  readonly calls: { method: string; path: string; search: string; body: unknown }[] = [];
   private routes: RouteEntry[] = [];
 
   /** `path` kao "/v1/hotels/:hotel/situations"; tijelo umjesto funkcije = 200 JSON. Kasnija ruta pobjeđuje. */
@@ -42,7 +42,7 @@ export class FakeApi {
     const url = new URL(req.url);
     const text = req.method === "GET" ? "" : await req.clone().text();
     const body: unknown = text ? JSON.parse(text) : undefined;
-    this.calls.push({ method: req.method, path: url.pathname, body });
+    this.calls.push({ method: req.method, path: url.pathname, search: url.search, body });
     for (const r of this.routes) {
       if (r.method !== req.method) continue;
       const m = r.pattern.exec(url.pathname);

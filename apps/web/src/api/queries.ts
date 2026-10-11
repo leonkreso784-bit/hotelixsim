@@ -1,4 +1,10 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRef } from "react";
 import { navigate, roundPath } from "../router";
 import { useApi } from "./ApiContext";
@@ -15,6 +21,8 @@ import type {
   KpiBody,
   NewGameBody,
   PlanBody,
+  PlBody,
+  PlScopeCode,
   SituationsBody,
 } from "./types";
 
@@ -28,6 +36,7 @@ export const keys = {
   kpi: (hotelId: string) => ["kpi", hotelId] as const,
   departments: (hotelId: string) => ["departments", hotelId] as const,
   department: (hotelId: string, code: string) => ["departments", hotelId, code] as const,
+  pl: (hotelId: string, code: string | null, scope: PlScopeCode) => ["pl", hotelId, code, scope] as const,
 };
 
 export function useMe() {
@@ -59,6 +68,7 @@ async function fetchGame(api: Api, qc: QueryClient, gameId: string): Promise<Gam
     void qc.invalidateQueries({ queryKey: ["feed"] });
     void qc.invalidateQueries({ queryKey: ["kpi"] });
     void qc.invalidateQueries({ queryKey: ["departments"] });
+    void qc.invalidateQueries({ queryKey: ["pl"] });
   }
   return next;
 }
@@ -285,6 +295,27 @@ export function useDepartment(hotelId: string, code: string) {
       unwrap(
         await api.GET("/v1/hotels/{hotel_id}/departments/{code}", {
           params: { path: { hotel_id: hotelId, code } },
+        }),
+      ),
+  });
+}
+
+/** Račun dobiti (v2) za krug ili sezonu do sada; bez `code` poslužitelj uzima zadnji obračunati krug. */
+export function usePl(hotelId: string, code: string | null, scope: PlScopeCode) {
+  const api = useApi();
+  return useQuery<PlBody>({
+    queryKey: keys.pl(hotelId, code, scope),
+    // Dok stiže drugi krug ili sezona, prethodni prikaz ostaje (zamućen), da izbornik ne treperi.
+    placeholderData: keepPreviousData,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/v1/hotels/{hotel_id}/pl", {
+          // openapi.json (utoipa) vodi `round` i `scope` kao path-parametre iako su query: Task 15 ih je tako
+          // opisao, a poslužitelj ih čita iz upita. Pa se šalju kao upit uz uski izlaz iz tipa (vidi izvještaj Taska 20).
+          params: {
+            path: { hotel_id: hotelId, round: code, scope },
+            query: { scope, ...(code ? { round: code } : {}) } as never,
+          },
         }),
       ),
   });

@@ -110,6 +110,19 @@ fn openapi_documents_contract() {
         assert!(doc["paths"][path][method].is_object(), "{method} {path}");
     }
     assert!(doc["paths"]["/v1/health"]["get"]["responses"]["503"].is_object());
+    let pl_params = doc["paths"]["/v1/hotels/{hotel_id}/pl"]["get"]["parameters"]
+        .as_array()
+        .unwrap();
+    for (name, place) in [("hotel_id", "path"), ("round", "query"), ("scope", "query")] {
+        let p = pl_params
+            .iter()
+            .find(|p| p["name"] == name)
+            .unwrap_or_else(|| panic!("/pl parametar {name}"));
+        assert_eq!(p["in"], place, "/pl {name}");
+        if place == "query" {
+            assert_ne!(p["required"], json!(true), "/pl {name} nije obavezan");
+        }
+    }
     let not_found = &doc["paths"]["/v1/hotels/{hotel_id}"]["get"]["responses"]["404"]["content"];
     assert!(not_found["application/problem+json"].is_object());
     let required = doc["components"]["schemas"]["HealthBody"]["required"]

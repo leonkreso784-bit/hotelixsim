@@ -180,7 +180,9 @@ impl Catalog {
                     ))));
                 }
             }
-            let (mut permanent, mut seasonal) = (0_u32, 0_u32);
+            // Sezonci su točno v1 profil (sezonski plan hotela je v1 kategorija); stalnih smije biti više od v1, ali
+            // višak smije biti samo u neraspoređenim odjelima (Uprava, Prodaja, Održavanje, Energija).
+            let (mut permanent, mut seasonal, mut operated) = (0_u32, 0_u32, 0_u32);
             for (code, s) in &p.departments {
                 let Some(d) = self.departments.get(code) else {
                     return Err(CatalogError::Missing(format!(
@@ -212,8 +214,15 @@ impl Catalog {
                 }
                 permanent = permanent.saturating_add(u32::from(s.permanent));
                 seasonal = seasonal.saturating_add(u32::from(s.seasonal));
+                if !d.class.is_undistributed() {
+                    operated = operated.saturating_add(u32::from(s.permanent));
+                }
             }
-            if permanent != u32::from(spec.permanent) || seasonal != u32::from(spec.seasonal) {
+            let v1_permanent = u32::from(spec.permanent);
+            if permanent < v1_permanent
+                || operated > v1_permanent
+                || seasonal != u32::from(spec.seasonal)
+            {
                 return Err(CatalogError::OutOfRange(label("departments.staff")));
             }
             for name in p.fixed_charges_cents.keys() {

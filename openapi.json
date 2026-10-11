@@ -749,30 +749,20 @@
           },
           {
             "name": "round",
-            "in": "path",
+            "in": "query",
             "description": "Kod kruga (t01…); bez njega zadnji obračunati krug.",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
             "name": "scope",
-            "in": "path",
+            "in": "query",
             "description": "`round` (zadano) ili `season` (zbroj od prvog kruga do traženog).",
-            "required": true,
+            "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/PlScopeCode"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/PlScopeCode"
             }
           }
         ],
