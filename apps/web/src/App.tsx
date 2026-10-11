@@ -15,6 +15,7 @@ import { KpiScreen } from "./screens/KpiScreen";
 import { MonthScreen } from "./screens/MonthScreen";
 import { NotFound } from "./screens/NotFound";
 import { PlanScreen } from "./screens/PlanScreen";
+import { PlScreen } from "./screens/PlScreen";
 import { SituationScreen } from "./screens/SituationScreen";
 import { SituationsScreen } from "./screens/SituationsScreen";
 import { StartScreen } from "./screens/StartScreen";
@@ -65,6 +66,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
       return <DepartmentsScreen me={me} code={null} />;
     case "department":
       return <DepartmentsScreen me={me} code={route.code} />;
+    case "pl":
+      return <PlScreen me={me} code={route.code} />;
     case "avatars":
       return <AvatarGallery />;
     default:

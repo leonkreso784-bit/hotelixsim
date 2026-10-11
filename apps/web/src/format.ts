@@ -13,6 +13,11 @@ const nfCents = new Intl.NumberFormat("hr-HR", {
 const nfRating = new Intl.NumberFormat("hr-HR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const MINUS = "−";
 const NONE = "—";
+const nfFixed1 = new Intl.NumberFormat("hr-HR", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+  useGrouping: "always",
+});
 
 /**
  * Jedino pravilo za bodove na ekranu: stotinke → cijeli bodovi, pola od nule (4850 → 49, 4849 → 48, −450 → −5).
@@ -76,6 +81,12 @@ export function formatEurosCents(cents: number | null): string {
 export function formatPercentBp(bp: number | null): string {
   if (bp === null) return NONE;
   return `${bp < 0 ? MINUS : ""}${nf1.format(Math.abs(bp) / 100)} %`;
+}
+
+/** Bazni bodovi → postotak, uvijek jedna decimala (usporedba ostvareno/budžet u istom retku): 1300 → "13,0 %". */
+export function formatPercentBpFixed(bp: number | null): string {
+  if (bp === null) return NONE;
+  return `${bp < 0 ? MINUS : ""}${nfFixed1.format(Math.abs(bp) / 100)} %`;
 }
 
 /** Ocjena u stotinkama na ljestvici do 10, uvijek jedna decimala: 840 → "8,4/10", 800 → "8,0/10", 898 → "9,0/10". */

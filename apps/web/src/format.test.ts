@@ -9,6 +9,7 @@ import {
   formatLoad,
   formatNights,
   formatPercentBp,
+  formatPercentBpFixed,
   formatPointsCount,
   formatRange,
   formatRating,
@@ -80,6 +81,8 @@ describe("novac i ocjena", () => {
   it("pokazatelji: postotak iz baznih bodova, euri s centima, noći; null je crtica", () => {
     expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual(["68 %", "31,7 %", "121,2 %", "−4,5 %"]);
     expect(formatPercentBp(null)).toBe("—");
+    expect([1300, 1590, -450].map(formatPercentBpFixed)).toEqual(["13,0 %", "15,9 %", "−4,5 %"]);
+    expect(formatPercentBpFixed(null)).toBe("—");
     expect([4003, 123_456, -5500, 0].map(formatEurosCents)).toEqual([
       "40,03 €",
       "1.234,56 €",

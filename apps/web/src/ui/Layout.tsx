@@ -1,5 +1,5 @@
 import { t } from "@hotelixsim/i18n";
-import { Building2, ChartNoAxesColumn, House, MessageCircle } from "lucide-react";
+import { Building2, ChartNoAxesColumn, House, MessageCircle, Receipt } from "lucide-react";
 import type { ReactNode } from "react";
 import type { GameBody } from "../api/types";
 import { monthName } from "../format";
@@ -53,15 +53,18 @@ const DEPARTMENTS_TAB = {
   match: ["departments", "department"],
 } as const;
 
+/** Račun dobiti: također samo v2; stoji poslije „Odjeli“. */
+const PL_TAB = { to: "/racun-dobiti", label: "nav.pl", icon: Receipt, match: ["pl"] } as const;
+
 function BottomNav({ route, withDepartments }: { route: Route; withDepartments: boolean }) {
-  const tabs = withDepartments ? [TABS[0], TABS[1], DEPARTMENTS_TAB, TABS[2]] : TABS;
+  const tabs = withDepartments ? [TABS[0], TABS[1], DEPARTMENTS_TAB, PL_TAB, TABS[2]] : TABS;
   return (
     <nav
       aria-label={t("nav.label")}
       className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:inset-x-auto md:top-28 md:bottom-auto md:left-0 md:w-60 md:border-t-0 md:bg-transparent md:px-3 md:pb-0"
     >
       <ul
-        className={`mx-auto grid max-w-md ${withDepartments ? "grid-cols-4" : "grid-cols-3"} md:block md:max-w-none md:space-y-1`}
+        className={`mx-auto grid max-w-md ${withDepartments ? "grid-cols-5" : "grid-cols-3"} md:block md:max-w-none md:space-y-1`}
       >
         {tabs.map((tab) => {
           const active = (tab.match as readonly string[]).includes(route.name);
@@ -71,7 +74,7 @@ function BottomNav({ route, withDepartments }: { route: Route; withDepartments: 
               <Link
                 to={tab.to}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold md:min-h-12 md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4 md:text-base ${
+                className={`flex min-h-14 flex-col items-center justify-start gap-0.5 pt-2 text-center text-xs leading-tight font-semibold md:min-h-12 md:flex-row md:justify-start md:pt-0 md:gap-3 md:rounded-2xl md:px-4 md:text-base ${
                   active ? "text-accent-ink md:bg-accent-soft" : "text-muted md:hover:bg-sand"
                 }`}
               >
