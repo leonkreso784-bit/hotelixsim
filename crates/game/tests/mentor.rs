@@ -72,6 +72,9 @@ fn sample() -> DebriefInput {
         turnover_before_bp: 375,
         turnover_after_bp: 443,
         department_departures: Vec::new(),
+        wage_before_pct: 95,
+        wage_start_pct: 95,
+        plan_before: Some(july_plan()),
         lines: vec![
             line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
             line(VarCode::Morale, CauseDto::Wage, -1_000, UnitCode::Points),
@@ -717,11 +720,15 @@ fn plan_decisions_in_words() {
         p["sezonski_radnici"],
         "20 sezonskih radnika, više nego prošli mjesec"
     );
-    assert_eq!(p["place"], "95 % uobičajene plaće (niže od uobičajenih)");
-    assert_eq!(p["obuka"], "bez obuke");
+    // Plaće su od početka 95 %: mentor ne smije reći da ih je student spustio (Sloj 1/OT-2).
+    assert_eq!(
+        p["place"],
+        "95 % uobičajene plaće (niže od uobičajenih; takve su od početka, student ih nije mijenjao)"
+    );
+    assert_eq!(p["obuka"], "bez obuke, isto kao prošli mjesec");
     assert_eq!(
         p["odrzavanje"],
-        "odgođeno (oprema se ovaj mjesec nije popravljala)"
+        "odgođeno (oprema se ovaj mjesec nije popravljala), isto kao prošli mjesec"
     );
     assert_eq!(p["obnova"], "ne");
     assert_eq!(p["odgovori_na_recenzije"], "ne");
@@ -748,8 +755,18 @@ fn plan_decisions_in_words() {
         p["sezonski_radnici"],
         "1 sezonski radnik, isto kao prošli mjesec"
     );
-    assert_eq!(p["place"], "100 % uobičajene plaće");
-    assert_eq!(p["odrzavanje"], "pojačano");
+    assert_eq!(
+        p["place"],
+        "100 % uobičajene plaće (student ih je podigao sa 95 % na 100 %)"
+    );
+    assert_eq!(
+        p["obuka"],
+        "osnovna obuka (učinak stiže idući mjesec), promijenjeno u odnosu na prošli mjesec"
+    );
+    assert_eq!(
+        p["odrzavanje"],
+        "pojačano, promijenjeno u odnosu na prošli mjesec"
+    );
     assert_eq!(p["odgovori_na_recenzije"], "da");
 }
 
@@ -965,6 +982,7 @@ fn mentions_last_month(input: &DebriefInput) -> Vec<String> {
 fn first_month_never_says_last_month_anywhere() {
     let mut first = sample();
     first.prev_round = None;
+    first.plan_before = None;
     assert_eq!(mentions_last_month(&first), Vec::<String>::new());
     let f = facts_json(&first);
     assert_eq!(
@@ -1337,10 +1355,13 @@ fn weekly_round_texts_never_say_month() {
         p["sezonski_radnici"],
         "20 sezonskih radnika, više nego prošli tjedan"
     );
-    assert_eq!(p["obuka"], "puna obuka (učinak stiže idući tjedan)");
+    assert_eq!(
+        p["obuka"],
+        "puna obuka (učinak stiže idući tjedan), promijenjeno u odnosu na prošli tjedan"
+    );
     assert_eq!(
         p["odrzavanje"],
-        "odgođeno (oprema se ovaj tjedan nije popravljala)"
+        "odgođeno (oprema se ovaj tjedan nije popravljala), isto kao prošli tjedan"
     );
     assert_eq!(
         p["obnova"],
@@ -1522,4 +1543,75 @@ fn breakdown_that_does_not_add_up_to_the_hotel_number_is_left_out() {
     let input = with_departures(vec![dep("Smještaj", 5)]);
     let f = facts_json(&input);
     assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "otišle 3 osobe");
+}
+
+// ------------------------------------------------------------ mentor ne pripisuje studentu preuzeto stanje (OT-2)
+
+fn wages_text(input: &DebriefInput) -> String {
+    facts_json(input)["odluke_u_planu"]["place"]
+        .as_str()
+        .unwrap()
+        .to_owned()
+}
+
+#[test]
+fn wages_from_profile_are_not_attributed_to_the_student() {
+    // Hotel s profilom od 95 % plaća, student ih nije dirao.
+    let input = sample();
+    assert_eq!((input.wage_start_pct, input.wage_before_pct), (95, 95));
+    let text = wages_text(&input);
+    assert!(
+        text.contains("takve su od početka, student ih nije mijenjao"),
+        "{text}"
+    );
+    assert!(!text.contains("spustio"), "{text}");
+}
+
+#[test]
+fn wages_the_student_lowered_say_so() {
+    let mut input = sample();
+    input.wage_start_pct = 100;
+    input.wage_before_pct = 100;
+    assert_eq!(
+        wages_text(&input),
+        "95 % uobičajene plaće (niže od uobičajenih; student ih je spustio sa 100 % na 95 %)"
+    );
+}
+
+#[test]
+fn wages_changed_earlier_and_kept_this_round_say_so() {
+    let mut input = sample();
+    input.wage_start_pct = 100;
+    input.wage_before_pct = 95;
+    assert_eq!(
+        wages_text(&input),
+        "95 % uobičajene plaće (niže od uobičajenih; student ih je ranije promijenio sa 100 % na 95 %, a prošli mjesec ih nije mijenjao)"
+    );
+}
+
+#[test]
+fn usual_wages_unchanged_have_no_note() {
+    let mut input = sample();
+    input.plan.wage_pct = 100;
+    input.wage_start_pct = 100;
+    input.wage_before_pct = 100;
+    assert_eq!(wages_text(&input), "100 % uobičajene plaće");
+}
+
+#[test]
+fn real_v1_game_tells_who_set_the_wages() {
+    // Stvarna igra: u lipnju student ne dira plaće, u srpnju ih spušta sa 100 % na 95 %.
+    let (g, h) = july_resolved_bad_chef_game();
+    let june = g.debrief_input(h, Month::Jun).unwrap();
+    assert_eq!(june.wage_before_pct, june.wage_start_pct);
+    let text = wages_text(&june);
+    assert!(
+        !text.contains("spustio") && !text.contains("podigao"),
+        "{text}"
+    );
+    let july = g.debrief_input(h, Month::Jul).unwrap();
+    assert_eq!(
+        wages_text(&july),
+        "95 % uobičajene plaće (niže od uobičajenih; student ih je spustio sa 100 % na 95 %)"
+    );
 }

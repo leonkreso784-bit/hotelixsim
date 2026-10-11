@@ -168,6 +168,9 @@ fn sample_debrief() -> game::DebriefInput {
         turnover_before_bp: 375,
         turnover_after_bp: 443,
         department_departures: Vec::new(),
+        wage_before_pct: 95,
+        wage_start_pct: 95,
+        plan_before: None,
         lines: vec![LineDto {
             var: VarCode::Morale,
             cause: CauseDto::Situation("S2".into()),
@@ -178,12 +181,14 @@ fn sample_debrief() -> game::DebriefInput {
 }
 
 #[test]
-fn debrief_body_sends_human_facts_with_mentor_v2() {
+fn debrief_body_sends_human_facts_with_mentor_v3() {
     let input = sample_debrief();
     let b = ai::request::debrief_body("claude-sonnet-5-5", &input);
-    assert_eq!(ai::prompts::MENTOR.version, "mentor.v2");
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v3");
     assert_eq!(b["system"], ai::prompts::MENTOR.text);
     assert!(ai::prompts::MENTOR.text.contains("Što je išlo dobro"));
+    // OT-2: uputa zabranjuje pripisivanje nepromijenjenih odluka studentu.
+    assert!(ai::prompts::MENTOR.text.contains("nepromijenjenu"));
     let content = b["messages"][0]["content"].as_str().unwrap();
     let sent: serde_json::Value = serde_json::from_str(content).unwrap();
     assert_eq!(

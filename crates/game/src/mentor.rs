@@ -817,6 +817,44 @@ fn direction(change: i64) -> &'static str {
     }
 }
 
+/// Plaće riječima uz podatak tko ih je postavio: mentor ne smije studentu pripisati stanje koje je preuzeo s profilom
+/// hotela („takve su od početka") niti promjenu koju je napravio netko drugi.
+fn wage_note(input: &DebriefInput, before_round: &str) -> String {
+    let now = input.plan.wage_pct;
+    let level = match now.cmp(&100) {
+        std::cmp::Ordering::Less => Some("niže od uobičajenih"),
+        std::cmp::Ordering::Greater => Some("više od uobičajenih"),
+        std::cmp::Ordering::Equal => None,
+    };
+    let (was, start) = (input.wage_before_pct, input.wage_start_pct);
+    let history = if now != was {
+        let verb = if now < was { "spustio" } else { "podigao" };
+        Some(format!("student ih je {verb} sa {was} % na {now} %"))
+    } else if now == start {
+        // Nepromijenjene plaće se pripisuju profilu samo kad odstupaju od uobičajenih.
+        level.map(|_| "takve su od početka, student ih nije mijenjao".to_owned())
+    } else {
+        Some(format!(
+            "student ih je ranije promijenio sa {start} % na {now} %, a {before_round} ih nije mijenjao"
+        ))
+    };
+    match (level, history) {
+        (Some(l), Some(h)) => format!(" ({l}; {h})"),
+        (Some(l), None) => format!(" ({l})"),
+        (None, Some(h)) => format!(" ({h})"),
+        (None, None) => String::new(),
+    }
+}
+
+/// Je li odluka ista kao u prošlom krugu; `None` u prvom krugu (nema prošle odluke, samo početno stanje).
+fn unchanged_note(same: Option<bool>, before_round: &str) -> String {
+    match same {
+        Some(true) => format!(", isto kao {before_round}"),
+        Some(false) => format!(", promijenjeno u odnosu na {before_round}"),
+        None => String::new(),
+    }
+}
+
 fn plan_facts(input: &DebriefInput) -> PlanFacts {
     let weekly = is_weekly(input);
     let p = &input.plan;
@@ -848,11 +886,11 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
         input.prev_round.is_none(),
         weekly,
     );
-    let wage_note = match p.wage_pct.cmp(&100) {
-        std::cmp::Ordering::Less => " (niže od uobičajenih)",
-        std::cmp::Ordering::Greater => " (više od uobičajenih)",
-        std::cmp::Ordering::Equal => "",
-    };
+    let before = per(weekly, "prošli mjesec", "prošli tjedan");
+    let wage_note = wage_note(input, before);
+    let prev = input.plan_before.as_ref();
+    let training_note = unchanged_note(prev.map(|b| b.training == p.training), before);
+    let maintenance_note = unchanged_note(prev.map(|b| b.maintenance == p.maintenance), before);
     PlanFacts {
         room_price: format!("{} po noći, {rel}", euros(p.price_cents, false)),
         marketing: if p.marketing_cents == 0 {
@@ -875,7 +913,8 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
                 "puna obuka (učinak stiže idući tjedan)",
             ),
         }
-        .to_owned(),
+        .to_owned()
+            + &training_note,
         maintenance: match p.maintenance {
             MaintenanceCode::Deferred => per(
                 weekly,
@@ -885,7 +924,8 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
             MaintenanceCode::Regular => "redovno",
             MaintenanceCode::Intensive => "pojačano",
         }
-        .to_owned(),
+        .to_owned()
+            + &maintenance_note,
         renovation: if p.renovation {
             per(
                 weekly,

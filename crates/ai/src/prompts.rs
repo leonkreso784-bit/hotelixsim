@@ -14,6 +14,6 @@ pub const CHARACTER: Prompt = Prompt {
     text: include_str!("../../../prompts/lik.v2.md"),
 };
 pub const MENTOR: Prompt = Prompt {
-    version: "mentor.v2",
-    text: include_str!("../../../prompts/mentor.v2.md"),
+    version: "mentor.v3",
+    text: include_str!("../../../prompts/mentor.v3.md"),
 };

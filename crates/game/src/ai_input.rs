@@ -105,6 +105,12 @@ pub struct DebriefInput {
     /// Odlasci po odjelu u krugu, od najvećeg broja (pa po šifri odjela); odjeli bez odlazaka se ne navode.
     /// Prazno za v1 igru i za krug bez odlazaka; zbroj je hotelski broj odlazaka.
     pub department_departures: Vec<DepartmentDepartures>,
+    /// Plaće (% uobičajenih) kakve je hotel imao na početku kruga i kakve je imao na početku igre (profil), da mentor
+    /// ne pripisuje studentu stanje koje je preuzeo.
+    pub wage_before_pct: u16,
+    pub wage_start_pct: u16,
+    /// Plan prošlog kruga; `None` u prvom krugu (prije njega je samo početno stanje profila).
+    pub plan_before: Option<PlanDto>,
     pub lines: Vec<LineDto>,
 }
 
@@ -236,6 +242,14 @@ impl Game {
                 .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
         let department_departures = self.department_departures(hotel, res)?;
+        let plan_before = match prev_round {
+            None => None,
+            Some(prev) => self
+                .resolved
+                .get(prev)
+                .and_then(|r| r.hotels.iter().find(|x| x.hotel_id == hotel))
+                .map(|x| x.plan.clone()),
+        };
         let period = self.round_info(m)?.period;
         let (fd, fm) = period.first_date();
         let (ld, lm) = period.last_date();
@@ -260,6 +274,9 @@ impl Game {
             turnover_before_bp: report.before.turnover_bp,
             turnover_after_bp: report.after.turnover_bp,
             department_departures,
+            wage_before_pct: report.before.wage_pct,
+            wage_start_pct: h.start_state.summary().wage_pct,
+            plan_before,
             lines: report.lines.clone(),
         })
     }
