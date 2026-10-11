@@ -1,127 +1,119 @@
-//! Faza novca (4): prihodi, troškovi, obnova, kamata i GOPPAR kruga. Plaće su zbroj plaća svih odjela, stalni trošak
-//! zbroj neraspoređenih odjela, ostali prihod zbroj odjela koji nose udio prihoda soba (Task 11; prihod ostalih
-//! odjela dolazi u Tasku 12).
+//! Faza novca (4): troškovi odluka kruga i v1 sažetak novca složen iz računa odjela (prihodi, troškovi, GOP), pa
+//! blagajna nakon fiksnih naknada i obnove, kamata i GOPPAR kruga.
 
 use engine::calc::{self as c, Calc};
-use sim_hotel::{CategorySpec, MarketOutcome, MoneyOutcome};
+use sim_hotel::MoneyOutcome;
 
-use super::{ResolveError, maintenance_effect, neg, training_effect, w};
+use super::departments::Decisions;
+use super::{maintenance_effect, neg, training_effect, w};
 use crate::calendar::{Period, prorate};
-use crate::catalog::Catalog;
-use crate::department::{DeptCode, RevenueModel};
+use crate::department::{DeptCode, PeriodAccounts};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
-/// Novčani ulazi iz odjela (stanje nakon faze osoblja).
-pub(super) struct DeptMoney {
-    /// Σ zaposleni odjela · ⌊plaća odjela / 100⌋ (mjesečno, prije postotka plaće).
-    pub(super) wage_units: i128,
-    /// Σ stalni dio neraspoređenih odjela, svaki razmjerno krugu.
-    pub(super) fixed: i128,
-    /// Udjeli prihoda soba (bp) odjela s `RevenueModel::ShareOfRooms`.
-    pub(super) share_bp: Vec<u16>,
+/// Troškovi odluka kruga: marketing (iznos iz plana je za krug), odgovaranje na recenzije i obuka razmjerno,
+/// zapošljavanje (najam i odlasci) i situacije u punom iznosu; održavanje je zbroj odjela (`maintenance`).
+pub(super) fn decisions(
+    plan: &PeriodPlan,
+    (hires, departures): (u16, u16),
+    maintenance: i64,
+    sit_cost: i128,
+    p: &Period,
+    cat: &sim_hotel::Catalog,
+) -> Calc<Decisions> {
+    let hiring = c::mul(c::add(w(hires), w(departures))?, w(cat.economy.hire_cents))?;
+    let reply = if plan.reply_reviews {
+        prorate(cat.actions.reply_cents, p)?
+    } else {
+        0
+    };
+    Ok(Decisions {
+        marketing: plan.marketing_cents,
+        reply,
+        maintenance,
+        training: training_effect(plan.training, cat, p)?.cost_cents,
+        hiring: c::narrow(hiring)?,
+        situation: c::narrow(sit_cost)?,
+    })
 }
 
-/// Plaća Smještaja je plaća kategorije hotela (Task 9 pregled, t. a); ostali odjeli plaćaju svojom `wage_cents`.
-pub(super) fn dept_money(
-    state: &HotelState,
+/// Trošak održavanja Smještaja u krugu (razina iz plana, v1 cijene održavanja).
+pub(super) fn rooms_maintenance_cost(
+    plan: &PeriodPlan,
     p: &Period,
-    cat: &Catalog,
-    spec: &CategorySpec,
-) -> Result<DeptMoney, ResolveError> {
-    let mut wage_units: i128 = 0;
-    let mut share_bp = Vec::new();
-    for (code, d) in &state.departments {
-        let dept = cat.dept(code)?;
-        let wage_cents = if *code == DeptCode::rooms() {
-            spec.wage_cents
-        } else {
-            dept.wage_cents
-        };
-        let staff = c::add(w(d.permanent), w(d.seasonal))?;
-        wage_units = c::add(
-            wage_units,
-            c::mul(staff, c::div_floor(w(wage_cents), 100)?)?,
-        )?;
-        if let RevenueModel::ShareOfRooms { bp } = dept.revenue {
-            share_bp.push(bp);
-        }
-    }
-    let mut fixed: i128 = 0;
-    for monthly in state.undistributed_fixed_cents.values() {
-        fixed = c::add(fixed, w(prorate(*monthly, p)?))?;
-    }
-    Ok(DeptMoney {
-        wage_units,
-        fixed,
-        share_bp,
-    })
+    cat: &sim_hotel::Catalog,
+) -> Calc<i64> {
+    Ok(maintenance_effect(plan.rooms_maintenance(), cat, p)?.cost_cents)
 }
 
 pub(crate) struct MoneyStep {
     pub(crate) out: MoneyOutcome,
     pub(crate) cash: i128,
+    /// Σ plaće svih odjela (Smještaj s povišicama iz situacija).
     pub(crate) wage: i128,
     pub(crate) hire_cost: i128,
     pub(crate) training_cost: i128,
-    pub(crate) cpor_total: i128,
+    /// Σ nabavna vrijednost + Σ ostali izravni troškovi odjela + Σ trošak po prodanoj sobi neraspoređenih.
+    pub(crate) direct: i128,
+    /// Σ održavanje svih odjela (knjiženo u „Održavanju").
     pub(crate) maintenance_cost: i128,
     pub(crate) reply_cost: i128,
+    /// Σ prihodi odjela osim Smještaja.
     pub(crate) other: i128,
+    /// Σ stalni dio neraspoređenih odjela.
     pub(crate) fixed: i128,
+    /// Σ fiksne naknade (ispod GOP-a).
+    pub(crate) charges: i128,
 }
 
 pub(super) struct MoneyIn<'a> {
-    pub(super) spec: &'a CategorySpec,
     pub(super) state: &'a HotelState,
-    pub(super) market: &'a MarketOutcome,
     pub(super) plan: &'a PeriodPlan,
-    pub(super) depts: &'a DeptMoney,
-    pub(super) hires: u16,
-    pub(super) departures: u16,
+    pub(super) accounts: &'a PeriodAccounts,
+    pub(super) decisions: &'a Decisions,
     pub(super) period: &'a Period,
-    pub(super) sit_cost: i128,
 }
 
+/// v1 sažetak novca iz računa odjela: prihod soba = Smještaj, ostali prihod = Σ ostalih odjela; trošak = rad (Σ
+/// plaće + zapošljavanje + obuka) + izravni + održavanje + marketing + odgovaranje + stalni neraspoređeni +
+/// situacije, što je točno Σ rashodi odjela + Σ neraspoređeni; GOP = prihod − trošak; blagajna = blagajna + GOP −
+/// fiksne naknade − obnova, pa kamata na negativnu blagajnu.
 pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
     let p = i.period;
-    let spec = i.spec;
-    let m = i.market;
-    let rooms_revenue = c::add(
-        c::mul(w(m.individual_sold), w(i.plan.price_cents))?,
-        w(m.group_revenue_cents),
-    )?;
-    let mut other: i128 = 0;
-    for bp in &i.depts.share_bp {
-        other = c::add(other, c::div_round(c::mul(rooms_revenue, w(*bp))?, 10_000)?)?;
+    let a = i.accounts;
+    let d = i.decisions;
+    let (mut rooms_revenue, mut other, mut wage, mut direct, mut maintenance_cost) =
+        (0_i128, 0_i128, 0_i128, 0_i128, 0_i128);
+    for (code, o) in &a.departments {
+        if *code == DeptCode::rooms() {
+            rooms_revenue = c::add(rooms_revenue, w(o.revenue_cents))?;
+        } else {
+            other = c::add(other, w(o.revenue_cents))?;
+        }
+        wage = c::add(wage, w(o.payroll_cents))?;
+        direct = c::sum(&[direct, w(o.cost_of_sales_cents), w(o.other_direct_cents)])?;
+        maintenance_cost = c::add(maintenance_cost, w(o.maintenance_cents))?;
     }
-    let monthly_wage = c::add(
-        c::mul(i.depts.wage_units, w(i.plan.wage_pct))?,
-        w(i.state.extra_wage_cents),
-    )?;
-    let wage = w(prorate(c::narrow(monthly_wage)?, p)?);
-    let hire_cost = c::mul(
-        c::add(w(i.hires), w(i.departures))?,
-        w(cat.economy.hire_cents),
-    )?;
-    let training_cost = w(training_effect(i.plan.training, cat, p)?.cost_cents);
+    let mut fixed: i128 = 0;
+    for u in a.undistributed.values() {
+        wage = c::add(wage, w(u.payroll_cents))?;
+        direct = c::add(direct, w(u.per_room_cents))?;
+        fixed = c::add(fixed, w(u.fixed_cents))?;
+    }
+    let mut charges: i128 = 0;
+    for v in a.fixed_charges.values() {
+        charges = c::add(charges, w(*v))?;
+    }
+    let (hire_cost, training_cost, reply_cost) = (w(d.hiring), w(d.training), w(d.reply));
     let labor = c::sum(&[wage, hire_cost, training_cost])?;
-    let cpor_total = c::mul(w(spec.cpor_cents), w(m.sold))?;
-    let maintenance_cost = w(maintenance_effect(i.plan.rooms_maintenance(), cat, p)?.cost_cents);
-    let fixed = i.depts.fixed;
-    let reply_cost = if i.plan.reply_reviews {
-        w(prorate(cat.actions.reply_cents, p)?)
-    } else {
-        0
-    };
     let costs = c::sum(&[
         labor,
-        cpor_total,
+        direct,
         maintenance_cost,
-        w(i.plan.marketing_cents),
+        w(d.marketing),
         fixed,
         reply_cost,
-        i.sit_cost,
+        w(d.situation),
     ])?;
     let gop = c::sub(c::add(rooms_revenue, other)?, costs)?;
     let capex = if i.plan.renovation {
@@ -129,7 +121,7 @@ pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
     } else {
         0
     };
-    let mut cash = c::sub(c::add(w(i.state.cash_cents), gop)?, capex)?;
+    let mut cash = c::sub(c::sub(c::add(w(i.state.cash_cents), gop)?, charges)?, capex)?;
     let mut interest = 0;
     if cash < 0 {
         // Mjesečna kamata razmjerno danima kruga (nazivnik su dani mjeseca u kojem krug počinje).
@@ -156,10 +148,11 @@ pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         wage,
         hire_cost,
         training_cost,
-        cpor_total,
+        direct,
         maintenance_cost,
         reply_cost,
         other,
         fixed,
+        charges,
     })
 }

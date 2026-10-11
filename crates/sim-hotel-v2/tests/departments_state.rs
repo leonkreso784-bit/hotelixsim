@@ -135,7 +135,7 @@ fn robots_produce_valid_department_plans_every_week() {
     }
 }
 
-// ---- Obračun Taska 11: samo Smještaj, ostali odjeli se nose
+// ---- Obračun s odjelima (Task 11: osoblje i tržište; Task 12: računi odjela)
 
 fn june_with_hold_plan() -> (Catalog, HotelState, PeriodPlan, PeriodReport) {
     let c = common::catalog_with_departments();
@@ -156,14 +156,33 @@ fn line(r: &PeriodReport, var: Var, cause: Cause) -> i64 {
 }
 
 #[test]
-fn market_capacity_and_load_come_from_rooms_staff_only() {
-    let (_, s, _, r) = june_with_hold_plan();
+fn market_capacity_comes_from_rooms_staff_and_hotel_load_is_staff_weighted() {
+    let (c, s, _, r) = june_with_hold_plan();
     let rooms = &s.departments[&DeptCode::rooms()];
     let rooms_staff = u32::from(rooms.permanent + rooms.seasonal); // 12 + 6
     assert_eq!(r.summary.market.staff_capacity, rooms_staff * 30 * 24 / 10);
     assert_eq!(r.summary.people.staff, s.staff()); // odlasci i iskustvo: cijeli hotel
+    // Opterećenje Smještaja (v1 formula) je u njegovom računu.
     let load = (r.summary.market.sold * 100 + rooms_staff * 30 / 2) / (rooms_staff * 30);
-    assert_eq!(u32::from(r.summary.people.load_hundredths), load.min(300));
+    let rooms_acc = &r.accounts.departments[&DeptCode::rooms()];
+    assert_eq!(u32::from(rooms_acc.load_hundredths), load.min(300));
+    // Task 12: opterećenje hotela je prosjek odjela s kapacitetom i osobljem, ponderiran osobljem.
+    let (num, den) = r
+        .accounts
+        .departments
+        .iter()
+        .filter(|(k, o)| c.dept(k).unwrap().capacity_tenths_per_staff_day > 0 && o.staff > 0)
+        .fold((0_u32, 0_u32), |(n, d), (_, o)| {
+            (
+                n + u32::from(o.load_hundredths) * u32::from(o.staff),
+                d + u32::from(o.staff),
+            )
+        });
+    assert_eq!(
+        u32::from(r.summary.people.load_hundredths),
+        (num + den / 2) / den
+    );
+    assert!(r.summary.people.load_hundredths < rooms_acc.load_hundredths);
 }
 
 #[test]
@@ -192,27 +211,52 @@ fn fixed_costs_are_the_undistributed_departments() {
     let undistributed: i64 = s.undistributed_fixed_cents.values().sum();
     assert_eq!(undistributed, 8_000_000);
     assert_eq!(line(&r, Var::Costs, Cause::FixedCosts), undistributed);
-    // Bez udjela prihoda soba (nema odjela `ShareOfRooms`): ostali prihod dolazi u Tasku 12.
-    assert_eq!(r.summary.money.other_revenue_cents, 0);
+    // Task 12: ostali prihod je zbroj prihoda odjela osim Smještaja; fiksne naknade su ispod GOP-a (redak
+    // blagajne, ne trošak).
+    let other: i64 = r
+        .accounts
+        .departments
+        .iter()
+        .filter(|(k, _)| **k != DeptCode::rooms())
+        .map(|(_, o)| o.revenue_cents)
+        .sum();
+    assert!(other > 0);
+    assert_eq!(r.summary.money.other_revenue_cents, other);
+    let charges: i64 = s.fixed_charges_cents.values().sum();
+    assert_eq!(line(&r, Var::Cash, Cause::FixedCosts), -charges);
 }
 
 #[test]
-fn rooms_condition_is_the_equipment_and_other_departments_are_carried() {
+fn department_conditions_follow_their_accounts_and_services_are_carried() {
     let (_, s, _, r) = june_with_hold_plan();
-    let rooms = DeptCode::rooms();
-    // Retci opreme u objašnjenju opisuju promjenu stanja prostora Smještaja (v1 pravila opreme).
-    let line_sum = line(&r, Var::Equipment, Cause::Baseline)
-        + line(&r, Var::Equipment, Cause::Load)
-        + line(&r, Var::Equipment, Cause::Maintenance);
-    assert_eq!(
-        i64::from(r.after.departments[&rooms].condition_pts),
-        i64::from(s.departments[&rooms].condition_pts) + line_sum
-    );
+    // Task 12: svaki odjel s računom prenosi stanje prostora i zadovoljstvo iz svog računa; neraspoređeni odjeli
+    // (bez računa odjela) se nose.
     for (k, d) in &s.departments {
-        if *k != rooms {
-            assert_eq!(r.after.departments[k], *d, "{}", k.as_str());
+        let after = &r.after.departments[k];
+        match r.accounts.departments.get(k) {
+            Some(o) => {
+                assert_eq!(o.condition_before_pts, d.condition_pts, "{}", k.as_str());
+                assert_eq!(after.condition_pts, o.condition_after_pts, "{}", k.as_str());
+                assert_eq!(
+                    after.satisfaction_pts,
+                    o.satisfaction_after_pts,
+                    "{}",
+                    k.as_str()
+                );
+            }
+            None => assert_eq!(after, d, "{}", k.as_str()),
         }
     }
+    // Smještaj: v1 pravila opreme (trošenje, opterećenje, održavanje; bez obnove i situacija).
+    let rooms = &r.accounts.departments[&DeptCode::rooms()];
+    assert_eq!(
+        rooms.condition_after_pts - rooms.condition_before_pts,
+        rooms.wear_pts + rooms.load_wear_pts + rooms.maintenance_pts
+    );
+    assert_eq!(
+        i64::from(rooms.wear_pts),
+        line(&r, Var::Equipment, Cause::Baseline)
+    );
 }
 
 #[test]

@@ -1,17 +1,25 @@
 //! Faza opreme i gostiju (5): trošenje i održavanje stanja prostora Smještaja (v1 pravila opreme, razina održavanja
-//! Smještaja), kvaliteta, vrijednost, zadovoljstvo i ocjena.
+//! Smještaja), kvaliteta, vrijednost i zadovoljstvo Smještaja, pa kvaliteta, zadovoljstvo i ocjena hotela.
+//! Kvaliteta i cilj zadovoljstva hotela su prosjeci odjela ponderirani gostima (Smještaj: noćenja; ostali:
+//! usluženi); u degeneriranom katalogu goste ima samo Smještaj, pa je to točno v1.
 
 use engine::calc::{self as c, Calc};
 use sim_hotel::{GuestOutcome, Pending};
 
-use super::{maintenance_effect, step_toward, w};
+use super::{maintenance_effect, step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
 pub(crate) struct GuestStep {
+    /// Kvaliteta i cilj zadovoljstva u `out` su hotelski (ponderirani); vrijednost je Smještaja.
     pub(crate) out: GuestOutcome,
+    /// Stanje prostora Smještaja nakon kruga (v1 „oprema").
     pub(crate) equipment: i128,
+    /// Kvaliteta, cilj zadovoljstva i zadovoljstvo Smještaja nakon kruga (račun odjela).
+    pub(crate) rooms_quality: i128,
+    pub(crate) rooms_target: i128,
+    pub(crate) rooms_satisfaction: i128,
     pub(crate) satisfaction: i128,
     pub(crate) rating: i128,
     pub(crate) maintenance_eff: i128,
@@ -35,8 +43,15 @@ pub(super) struct GuestIn<'a> {
     pub(super) satisfaction_step_bp: u16,
     pub(super) rating_step_bp: u16,
     pub(super) price_ref_cents: i64,
-    pub(super) load: i128,
-    pub(super) penalty: i128,
+    /// Opterećenje i kazna Smještaja (trošenje prostora i kvaliteta Smještaja).
+    pub(super) rooms_load: i128,
+    pub(super) rooms_penalty: i128,
+    /// Zadovoljstvo gostiju Smještajem na početku kruga.
+    pub(super) rooms_satisfaction_pts: i32,
+    /// Noćenja gostiju: težina Smještaja u kvaliteti i zadovoljstvu hotela.
+    pub(super) guest_nights: u32,
+    /// Ostali odjeli s gostima: (težina, kvaliteta, cilj zadovoljstva).
+    pub(super) others: &'a [(u32, i32, i32)],
     pub(super) morale: i128,
     pub(super) experience: i128,
     pub(super) sit_equipment: i128,
@@ -49,7 +64,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let maintenance_eff = w(maintenance_effect(i.plan.rooms_maintenance(), cat, p)?.equipment_pts);
     // v1 mjesečna konstanta -400, razmjerno krugu.
     let wear = w(prorate(-400, p)?);
-    let equipment_load = if i.load > 180 {
+    let equipment_load = if i.rooms_load > 180 {
         w(prorate(-100, p)?)
     } else {
         0
@@ -75,7 +90,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         c::sum(&[
             c::mul(4_000, i.experience)?,
             c::mul(3_000, i.morale)?,
-            c::mul(3_000, c::sub(10_000, i.penalty)?)?,
+            c::mul(3_000, c::sub(10_000, i.rooms_penalty)?)?,
         ])?,
         10_000,
     )?;
@@ -85,7 +100,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         reference,
     )?;
     let value = c::sub(7_000, off_ref)?.clamp(0, 10_000);
-    let sat_target = c::div_round(
+    let rooms_target = c::div_round(
         c::sum(&[
             c::mul(4_500, quality)?,
             c::mul(3_000, equipment)?,
@@ -93,6 +108,21 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         ])?,
         10_000,
     )?;
+    let rooms_sat_now = w(i.rooms_satisfaction_pts);
+    let rooms_satisfaction = c::add(
+        rooms_sat_now,
+        step_toward(rooms_sat_now, rooms_target, i.satisfaction_step_bp, p)?,
+    )?
+    .clamp(0, 10_000);
+    // Hotel: prosjek odjela ponderiran gostima; bez gostiju vrijedi Smještaj (v1).
+    let mut qualities = vec![(i.guest_nights, quality)];
+    let mut targets = vec![(i.guest_nights, rooms_target)];
+    for (weight, q, t) in i.others {
+        qualities.push((*weight, w(*q)));
+        targets.push((*weight, w(*t)));
+    }
+    let hotel_quality = weighted(&qualities, quality)?;
+    let sat_target = weighted(&targets, rooms_target)?;
     let sat_now = w(i.state.satisfaction_pts);
     let satisfaction_gain = step_toward(sat_now, sat_target, i.satisfaction_step_bp, p)?;
     let satisfaction = c::sum(&[
@@ -113,12 +143,15 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let rating = c::sum(&[rating_now, rating_gain, reply_rating, i.sit_rating])?.clamp(100, 1_000);
     Ok(GuestStep {
         out: GuestOutcome {
-            quality_pts: c::narrow(quality)?,
+            quality_pts: c::narrow(hotel_quality)?,
             value_pts: c::narrow(value)?,
             satisfaction_target_pts: c::narrow(sat_target)?,
             rating_target: c::narrow(rating_target)?,
         },
         equipment,
+        rooms_quality: quality,
+        rooms_target,
+        rooms_satisfaction,
         satisfaction,
         rating,
         maintenance_eff,

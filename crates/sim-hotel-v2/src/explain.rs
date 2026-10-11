@@ -1,5 +1,6 @@
 //! Objašnjenje kruga (DEMO §11.6): svaka promjena varijable dobiva uzroke s iznosima.
-//! Tipovi redaka (`Line`, `Var`, `Cause`, `Unit`) su v1, jer ulaze u v1 sažetak izvješća.
+//! Tipovi redaka (`Line`, `Var`, `Cause`, `Unit`) su v1, jer ulaze u v1 sažetak izvješća. Iznosi novca dolaze iz
+//! računa odjela (Task 12); fiksne naknade su redak blagajne ispod GOP-a.
 
 use engine::calc::{self, self as c, Calc};
 use sim_hotel::{Cause, Effects, Line, MarketOutcome, Pending, Unit, Var};
@@ -40,6 +41,9 @@ pub(crate) struct Explain<'a> {
     /// Zbroj novih trajnih povišica iz situacija, razmjerno krugu (u `mo.wage`, ali se objašnjava zasebno);
     /// isti iznosi kao `extra_wage_cents` u `situations`.
     pub(crate) sit_extra_wage: i128,
+    /// Dio promjene „opreme" sažetka (70 % Smještaj, 30 % ostali operativni odjeli) koji ne dolazi od promjene
+    /// stanja prostora Smještaja; objašnjava se u retku održavanja (u degeneriranom katalogu 0).
+    pub(crate) equipment_others: i128,
 }
 
 pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
@@ -87,7 +91,9 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     )?;
     l.push(Var::Costs, Cause::Hires, mo.hire_cost, cents)?;
     l.push(Var::Costs, Cause::Training, mo.training_cost, cents)?;
-    l.push(Var::Costs, Cause::Baseline, mo.cpor_total, cents)?;
+    // Izravni troškovi odjela: nabavna vrijednost, ostali izravni (Smještaj: trošak po prodanoj sobi) i trošak po
+    // prodanoj sobi neraspoređenih odjela.
+    l.push(Var::Costs, Cause::Baseline, mo.direct, cents)?;
     l.push(Var::Costs, Cause::Maintenance, mo.maintenance_cost, cents)?;
     l.push(
         Var::Costs,
@@ -99,6 +105,7 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     l.push(Var::Costs, Cause::ReplyReviews, mo.reply_cost, cents)?;
     // Novac
     l.push(Var::Cash, Cause::Baseline, w(mo.out.gop_cents), cents)?;
+    l.push(Var::Cash, Cause::FixedCosts, neg(mo.charges)?, cents)?;
     l.push(
         Var::Cash,
         Cause::Renovation,
@@ -159,7 +166,12 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     // Oprema
     l.push(Var::Equipment, Cause::Baseline, g.wear, pts)?;
     l.push(Var::Equipment, Cause::Load, g.equipment_load, pts)?;
-    l.push(Var::Equipment, Cause::Maintenance, g.maintenance_eff, pts)?;
+    l.push(
+        Var::Equipment,
+        Cause::Maintenance,
+        c::add(g.maintenance_eff, e.equipment_others)?,
+        pts,
+    )?;
     l.push(
         Var::Equipment,
         Cause::Renovation,
