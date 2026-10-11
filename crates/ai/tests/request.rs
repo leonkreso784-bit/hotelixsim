@@ -170,6 +170,7 @@ fn sample_debrief() -> game::DebriefInput {
         department_departures: Vec::new(),
         wage_before_pct: 95,
         wage_start_pct: 95,
+        wage_ever_changed: false,
         plan_before: None,
         lines: vec![LineDto {
             var: VarCode::Morale,

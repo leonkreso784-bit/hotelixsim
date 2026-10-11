@@ -74,6 +74,7 @@ fn sample() -> DebriefInput {
         department_departures: Vec::new(),
         wage_before_pct: 95,
         wage_start_pct: 95,
+        wage_ever_changed: false,
         plan_before: Some(july_plan()),
         lines: vec![
             line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
@@ -1530,11 +1531,8 @@ fn v1_text_has_no_departments_and_is_unchanged() {
     let real = g.debrief_input(h, Month::Jul).unwrap();
     assert!(real.department_departures.is_empty());
     let json = serde_json::to_string(&facts_json(&real)).unwrap();
-    assert!(
-        !json.contains("osob") || !json.contains("osobe ("),
-        "{json}"
-    );
     assert!(!json.contains("osoba ("), "{json}");
+    assert!(!json.contains("osobe ("), "{json}");
 }
 
 #[test]
@@ -1613,5 +1611,60 @@ fn real_v1_game_tells_who_set_the_wages() {
     assert_eq!(
         wages_text(&july),
         "95 % uobičajene plaće (niže od uobičajenih; student ih je spustio sa 100 % na 95 %)"
+    );
+}
+
+#[test]
+fn wages_changed_and_returned_to_start_are_not_called_untouched() {
+    // Početno 95 %, student je mijenjao pa vratio: ne smije stajati „nije mijenjao" ni „spustio".
+    let mut input = sample();
+    input.wage_ever_changed = true;
+    let text = wages_text(&input);
+    assert_eq!(
+        text,
+        "95 % uobičajene plaće (niže od uobičajenih; kao na početku igre)"
+    );
+    assert!(!text.contains("nije mijenjao"), "{text}");
+}
+
+#[test]
+fn real_game_never_changed_wages_flag_follows_the_log() {
+    let (g, h) = july_resolved_bad_chef_game();
+    // Lipanj i srpanj: do srpnja nijedan prošli plan nije imao druge plaće.
+    assert!(!g.debrief_input(h, Month::Jun).unwrap().wage_ever_changed);
+    assert!(!g.debrief_input(h, Month::Jul).unwrap().wage_ever_changed);
+}
+
+/// Mjesečna v2 igra (ne samo tjedna): isti tekst o odlascima po odjelu iz računa kruga.
+#[test]
+fn real_monthly_v2_departures_name_departments_and_add_up() {
+    let g = v2_monthly_game_resolved_through("sep");
+    let mut with_breakdown = 0;
+    for h in hotel_ids() {
+        for r in g.rounds.clone() {
+            let input = g.debrief_input(h, r).unwrap();
+            let hotel_total: i64 = input
+                .lines
+                .iter()
+                .filter(|l| l.var == VarCode::Staff && l.cause == CauseDto::Turnover)
+                .map(|l| l.amount)
+                .sum();
+            let by_dept: i64 = input
+                .department_departures
+                .iter()
+                .map(|d| i64::from(d.count))
+                .sum();
+            assert_eq!(by_dept, hotel_total, "{}", r.code());
+            if hotel_total > 0 {
+                with_breakdown += 1;
+                let f = facts_json(&input);
+                let text = amount_for(&f, "Zaposleni", "odlasci");
+                assert!(text.ends_with(')') && text.contains(" ("), "{text}");
+            }
+        }
+    }
+    assert!(
+        with_breakdown > 0,
+        "mjesečna sezona bez odlazaka ne provjerava ništa"
     );
 }

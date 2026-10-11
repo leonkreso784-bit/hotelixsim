@@ -109,6 +109,8 @@ pub struct DebriefInput {
     /// ne pripisuje studentu stanje koje je preuzeo.
     pub wage_before_pct: u16,
     pub wage_start_pct: u16,
+    /// Je li student u nekom od prošlih krugova imao plan s drugim plaćama od početnih (pa i ako ih je vratio).
+    pub wage_ever_changed: bool,
     /// Plan prošlog kruga; `None` u prvom krugu (prije njega je samo početno stanje profila).
     pub plan_before: Option<PlanDto>,
     pub lines: Vec<LineDto>,
@@ -242,6 +244,17 @@ impl Game {
                 .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
         let department_departures = self.department_departures(hotel, res)?;
+        let wage_start_pct = h.start_state.summary().wage_pct;
+        let wage_ever_changed = self
+            .rounds
+            .iter()
+            .take(pos)
+            .filter_map(|r| {
+                self.resolved
+                    .get(r)
+                    .and_then(|rr| rr.hotels.iter().find(|x| x.hotel_id == hotel))
+            })
+            .any(|x| x.plan.wage_pct != wage_start_pct);
         let plan_before = match prev_round {
             None => None,
             Some(prev) => self
@@ -275,7 +288,8 @@ impl Game {
             turnover_after_bp: report.after.turnover_bp,
             department_departures,
             wage_before_pct: report.before.wage_pct,
-            wage_start_pct: h.start_state.summary().wage_pct,
+            wage_start_pct,
+            wage_ever_changed,
             plan_before,
             lines: report.lines.clone(),
         })

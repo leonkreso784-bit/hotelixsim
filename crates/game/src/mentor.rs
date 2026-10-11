@@ -830,6 +830,9 @@ fn wage_note(input: &DebriefInput, before_round: &str) -> String {
     let history = if now != was {
         let verb = if now < was { "spustio" } else { "podigao" };
         Some(format!("student ih je {verb} sa {was} % na {now} %"))
+    } else if now == start && input.wage_ever_changed {
+        // Student ih je mijenjao pa vratio: ne tvrdi se ni da ih nije dirao ni da ih je on postavio.
+        Some("kao na početku igre".to_owned())
     } else if now == start {
         // Nepromijenjene plaće se pripisuju profilu samo kad odstupaju od uobičajenih.
         level.map(|_| "takve su od početka, student ih nije mijenjao".to_owned())
