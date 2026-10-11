@@ -132,6 +132,20 @@ async fn pl_before_any_resolution_is_409() {
         (r.status.as_u16(), r.body["code"].as_str()),
         (409, Some("no_resolved_round"))
     );
+    // ZP-9: naslov je neutralan („krug"), jer vrijedi i za mjesečnu v2 igru.
+    assert_eq!(
+        r.body["title"],
+        "Još nijedan krug nije obračunan, pa nema računa dobiti."
+    );
+}
+
+#[test]
+fn seasonal_step_title_names_the_round_not_the_month() {
+    // ZP-9: ista šifra vrijedi za tjedni i mjesečni krug.
+    assert_eq!(
+        api::problem::ProblemCode::SeasonalStepTooBig.title(),
+        "Prevelika promjena broja sezonaca u jednom krugu"
+    );
 }
 
 #[tokio::test]

@@ -14,6 +14,23 @@ fn catalog_with_departments_is_valid() {
 }
 
 #[test]
+fn rooms_direct_cost_has_one_source() {
+    // ZP-8: obračun Smještaja i KPI čitaju `cpor_cents` kategorije; drukčiji `direct_per_use_cents` Smještaja je
+    // greška sadržaja, ne druga brojka na ekranu.
+    let mut c = common::catalog_with_departments();
+    c.departments
+        .get_mut(&DeptCode::rooms())
+        .unwrap()
+        .direct_per_use_cents += 100;
+    assert_eq!(
+        c.validate(),
+        Err(CatalogError::OutOfRange(
+            "v2.departments.rooms.direct_per_use_cents".into()
+        ))
+    );
+}
+
+#[test]
 fn summary_counts_staff_from_departments() {
     let c = common::catalog_with_departments();
     let s = HotelState::from_profile(&c, Profile::C).unwrap();

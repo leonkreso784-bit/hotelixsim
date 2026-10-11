@@ -9,7 +9,7 @@ use sim_hotel::{
     month_indices, resolve_month,
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
-use sim_hotel_v2::department::{DeptCode, PeriodAccounts};
+use sim_hotel_v2::department::PeriodAccounts;
 use sim_hotel_v2::{
     Period, PeriodKind, PeriodPlan, ResolveError, period_indices, resolve_period, run_season_with,
 };
@@ -576,19 +576,18 @@ impl Model {
             .collect())
     }
 
-    /// Izravni trošak po prodanoj noći: v1 `cpor_cents` kategorije, v2 izravni trošak po korištenju odjela Smještaj.
+    /// Izravni trošak po prodanoj noći: `cpor_cents` kategorije, isto polje koje čita obračun (v1 i v2 Smještaj;
+    /// `Catalog::validate` v2 traži da je `direct_per_use_cents` Smještaja isti broj).
     pub(crate) fn rooms_direct_cost(
         self,
         c: &Content,
         category: Category,
     ) -> Result<i64, GameError> {
-        match self {
-            Model::V1 => Ok(c.catalog.category(category).map_err(debug)?.cpor_cents),
-            Model::V2 => Ok(v2_catalog(c)?
-                .dept(&DeptCode::rooms())
-                .map_err(debug)?
-                .direct_per_use_cents),
-        }
+        let base = match self {
+            Model::V1 => &c.catalog,
+            Model::V2 => &v2_catalog(c)?.base,
+        };
+        Ok(base.category(category).map_err(debug)?.cpor_cents)
     }
 
     /// Situacije kruga: v1 po mjesecu, v2 u krugu koji sadrži 1. dan mjeseca situacije (🟨 P13).

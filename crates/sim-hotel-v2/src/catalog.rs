@@ -128,6 +128,23 @@ impl Catalog {
         if !rooms_ok {
             return Err(CatalogError::Missing("v2.departments.rooms".to_string()));
         }
+        // Izravni trošak po prodanoj noći ima jedan izvor: obračun Smještaja i KPI čitaju v1 `cpor_cents`
+        // kategorije; `direct_per_use_cents` Smještaja u departments.json mora biti isti broj, inače bi ekran
+        // odjela i obračun pričali dvije priče.
+        let rooms_direct = self
+            .departments
+            .get(&DeptCode::rooms())
+            .map_or(0, |d| d.direct_per_use_cents);
+        if self
+            .base
+            .categories
+            .values()
+            .any(|c| c.cpor_cents != rooms_direct)
+        {
+            return Err(CatalogError::OutOfRange(
+                "v2.departments.rooms.direct_per_use_cents".to_string(),
+            ));
+        }
         for kind in UNDISTRIBUTED {
             let n = self
                 .departments

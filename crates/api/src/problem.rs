@@ -108,7 +108,7 @@ impl ProblemCode {
             Self::PriceOutOfRange => "Cijena je izvan dopuštenog raspona",
             Self::MarketingOutOfRange => "Marketing je izvan dopuštenog raspona",
             Self::SeasonalOutOfRange => "Broj sezonaca je izvan dopuštenog raspona",
-            Self::SeasonalStepTooBig => "Prevelika promjena broja sezonaca u jednom mjesecu",
+            Self::SeasonalStepTooBig => "Prevelika promjena broja sezonaca u jednom krugu",
             Self::WageOutOfRange => "Plaća je izvan dopuštenog raspona",
             Self::RenovationTwice => "Obnova je moguća samo jednom u sezoni",
             Self::GameOutdated => "Igra je stvorena starijom verzijom igre. Započni novu igru.",
@@ -116,7 +116,7 @@ impl ProblemCode {
             Self::DepartmentPlanInvalid => {
                 "Postavke odjela nisu dopuštene: provjeri broj sezonaca, razinu cijena i odjele koji se ne smiju zatvoriti."
             }
-            Self::NoResolvedRound => "Još nijedan tjedan nije obračunan, pa nema računa dobiti.",
+            Self::NoResolvedRound => "Još nijedan krug nije obračunan, pa nema računa dobiti.",
             Self::ModelV1 => "Ova igra je na starom modelu i nema ovaj prikaz.",
             Self::StorageUnavailable => "Baza nije dostupna",
             Self::Internal => "Greška sustava",
