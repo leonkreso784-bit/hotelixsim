@@ -5,7 +5,7 @@
     "revenue": { "type": "rooms" },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 2200,
-    "wage_cents": 200000,
+    "wage_cents": 250000,
     "capacity_tenths_per_staff_day": 55,
     "wear_pts_per_month": 400,
     "maintenance": {
@@ -195,7 +195,7 @@
     "revenue": { "type": "none" },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 0,
-    "wage_cents": 300000,
+    "wage_cents": 350000,
     "capacity_tenths_per_staff_day": 0,
     "wear_pts_per_month": 0,
     "maintenance": {
@@ -215,7 +215,7 @@
     "revenue": { "type": "none" },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 0,
-    "wage_cents": 280000,
+    "wage_cents": 330000,
     "capacity_tenths_per_staff_day": 0,
     "wear_pts_per_month": 0,
     "maintenance": {
@@ -235,7 +235,7 @@
     "revenue": { "type": "none" },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 0,
-    "wage_cents": 240000,
+    "wage_cents": 290000,
     "capacity_tenths_per_staff_day": 0,
     "wear_pts_per_month": 0,
     "maintenance": {

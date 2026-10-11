@@ -39,27 +39,27 @@
       },
       "admin": {
         "open": true,
-        "permanent": 2,
+        "permanent": 7,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 3700000
+        "fixed_monthly_cents": 1850000
       },
       "sales": {
         "open": true,
-        "permanent": 1,
+        "permanent": 3,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1300000
+        "fixed_monthly_cents": 590000
       },
       "maintenance": {
         "open": true,
-        "permanent": 2,
+        "permanent": 6,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 2300000
+        "fixed_monthly_cents": 1240000
       },
       "energy": {
         "open": true,
@@ -67,7 +67,7 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 3500000
+        "fixed_monthly_cents": 3800000
       }
     },
     "fixed_charges_cents": { "insurance": 900000, "lease": 4500000, "property_tax": 800000 }
@@ -111,11 +111,11 @@
       },
       "admin": {
         "open": true,
-        "permanent": 3,
+        "permanent": 7,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 2600000
+        "fixed_monthly_cents": 1050000
       },
       "sales": {
         "open": true,
@@ -123,15 +123,15 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 520000
+        "fixed_monthly_cents": 420000
       },
       "maintenance": {
         "open": true,
-        "permanent": 2,
+        "permanent": 4,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1400000
+        "fixed_monthly_cents": 720000
       },
       "energy": {
         "open": true,
@@ -184,27 +184,27 @@
       },
       "admin": {
         "open": true,
-        "permanent": 2,
+        "permanent": 7,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 3000000
+        "fixed_monthly_cents": 1150000
       },
       "sales": {
-        "open": true,
-        "permanent": 1,
-        "seasonal": 0,
-        "condition_pts": 10000,
-        "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1000000
-      },
-      "maintenance": {
         "open": true,
         "permanent": 3,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1500000
+        "fixed_monthly_cents": 290000
+      },
+      "maintenance": {
+        "open": true,
+        "permanent": 6,
+        "seasonal": 0,
+        "condition_pts": 10000,
+        "satisfaction_pts": 0,
+        "fixed_monthly_cents": 480000
       },
       "energy": {
         "open": true,
