@@ -1,59 +1,84 @@
-// screens/StartScreen.tsx — gost bez igre (DEMO §1.4, ADR-022 t. 3); sklopivi dio „Za profesora“ bira model igre
+// screens/StartScreen.tsx — gost bez igre (DEMO §1.4, ADR-022 t. 3); student bira tjednu ili mjesečnu igru (novi model), sklopivi „Za profesora“ vraća stari model
 import { t } from "@hotelixsim/i18n";
 import { ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useStartDemo } from "../api/queries";
-import type { ModelCode, NewGameBody, RoundKindCode } from "../api/types";
+import type { NewGameBody, RoundKindCode } from "../api/types";
 import { Link } from "../router";
 import { Wordmark } from "../ui/Layout";
 import { Button, ErrorText, StatusText } from "../ui/primitives";
 
-/** Zadani model je demo (prazno tijelo); tijelo se šalje samo kad je izabran novi model. */
-function settingsFor(model: ModelCode, kind: RoundKindCode): NewGameBody | undefined {
-  return model === "v2" ? { model, round_kind: kind } : undefined;
+/** Zadani model je novi (v2); stari (v1) se šalje praznim tijelom i bira se samo kod profesora. */
+function settingsFor(legacy: boolean, kind: RoundKindCode): NewGameBody | undefined {
+  return legacy ? undefined : { model: "v2", round_kind: kind };
 }
 
-function Choice({
-  name,
+/** Izbor vrste igre: kartica s radio gumbom, imenom i kratkim opisom (opis je `aria-describedby`, ne dio imena). */
+function KindChoice({
   value,
   checked,
   label,
+  help,
   onChange,
 }: {
-  name: string;
-  value: string;
+  value: RoundKindCode;
   checked: boolean;
   label: string;
+  help: string;
   onChange: () => void;
 }) {
+  const nameId = `round-kind-${value}-name`;
+  const helpId = `round-kind-${value}-help`;
   return (
-    <label className="flex min-h-11 items-center gap-3 rounded-2xl px-1 font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
+    <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-3 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
       <input
         type="radio"
-        name={name}
+        name="round-kind"
         value={value}
         checked={checked}
         onChange={onChange}
-        className="size-5 shrink-0 accent-accent"
+        aria-labelledby={nameId}
+        aria-describedby={helpId}
+        className="mt-0.5 size-5 shrink-0 accent-accent"
       />
-      {label}
+      <span className="min-w-0">
+        <span id={nameId} className="block font-bold">
+          {label}
+        </span>
+        <span id={helpId} className="block text-sm text-muted">
+          {help}
+        </span>
+      </span>
     </label>
   );
 }
 
-/** Postavke nove igre za profesora: model (demo ili novi) i, za novi, duljina kruga. */
-function ProfessorSettings({
-  model,
-  kind,
-  onModel,
-  onKind,
-}: {
-  model: ModelCode;
-  kind: RoundKindCode;
-  onModel: (m: ModelCode) => void;
-  onKind: (k: RoundKindCode) => void;
-}) {
+/** Student odmah bira tjednu ili mjesečnu igru; obje su novi model (odjeli i račun dobiti). */
+function KindPicker({ kind, onKind }: { kind: RoundKindCode; onKind: (k: RoundKindCode) => void }) {
+  return (
+    <fieldset className="space-y-2">
+      <legend className="pb-1 text-sm font-bold">{t("start.kind.legend")}</legend>
+      <KindChoice
+        value="week"
+        checked={kind === "week"}
+        label={t("start.kind.week")}
+        help={t("start.kind.week.help")}
+        onChange={() => onKind("week")}
+      />
+      <KindChoice
+        value="month"
+        checked={kind === "month"}
+        label={t("start.kind.month")}
+        help={t("start.kind.month.help")}
+        onChange={() => onKind("month")}
+      />
+    </fieldset>
+  );
+}
+
+/** Sklopivo „Za profesora“: jedino mjesto s kojeg se pokreće stari model (v1) radi usporedbe. */
+function ProfessorSettings({ legacy, onLegacy }: { legacy: boolean; onLegacy: (v: boolean) => void }) {
   return (
     <details className="group rounded-card border border-line bg-surface">
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-card px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
@@ -64,44 +89,20 @@ function ProfessorSettings({
           className="shrink-0 transition-transform group-open:rotate-180"
         />
       </summary>
-      <div className="space-y-4 px-4 pb-4">
-        <fieldset className="space-y-1">
-          <legend className="pb-1 text-sm font-bold">{t("start.model.legend")}</legend>
-          <Choice
-            name="model"
-            value="v1"
-            checked={model === "v1"}
-            label={t("start.model.v1")}
-            onChange={() => onModel("v1")}
+      <div className="space-y-1 px-4 pb-4">
+        <label className="flex min-h-12 items-center gap-3 rounded-2xl font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
+          <input
+            type="checkbox"
+            checked={legacy}
+            onChange={(e) => onLegacy(e.target.checked)}
+            aria-describedby="legacy-help"
+            className="size-5 shrink-0 accent-accent"
           />
-          <Choice
-            name="model"
-            value="v2"
-            checked={model === "v2"}
-            label={t("start.model.v2")}
-            onChange={() => onModel("v2")}
-          />
-        </fieldset>
-        {model === "v2" && (
-          <fieldset className="space-y-1">
-            <legend className="pb-1 text-sm font-bold">{t("start.kind.legend")}</legend>
-            <Choice
-              name="round-kind"
-              value="week"
-              checked={kind === "week"}
-              label={t("start.kind.week")}
-              onChange={() => onKind("week")}
-            />
-            <Choice
-              name="round-kind"
-              value="month"
-              checked={kind === "month"}
-              label={t("start.kind.month")}
-              onChange={() => onKind("month")}
-            />
-            <p className="pt-1 text-sm text-muted">{t("start.kind.help")}</p>
-          </fieldset>
-        )}
+          {t("start.model.v1")}
+        </label>
+        <p id="legacy-help" className="text-sm text-muted">
+          {t("start.model.v1.help")}
+        </p>
       </div>
     </details>
   );
@@ -114,13 +115,13 @@ function ProfessorSettings({
 export function StartScreen({ inGame = false }: { inGame?: boolean }) {
   const start = useStartDemo();
   const inFlight = useRef(false);
-  const [model, setModel] = useState<ModelCode>("v1");
+  const [legacy, setLegacy] = useState(false);
   const [kind, setKind] = useState<RoundKindCode>("week");
 
   function begin() {
     if (start.isPending || inFlight.current) return;
     inFlight.current = true;
-    start.mutate(settingsFor(model, kind), {
+    start.mutate(settingsFor(legacy, kind), {
       onSettled: () => {
         inFlight.current = false;
       },
@@ -129,12 +130,14 @@ export function StartScreen({ inGame = false }: { inGame?: boolean }) {
 
   const body = (
     <>
+      {!legacy && <KindPicker kind={kind} onKind={setKind} />}
+      {legacy && <p className="text-sm text-muted">{t("start.model.v1.active")}</p>}
       {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
       {start.isPending && <StatusText>{t("start.busy")}</StatusText>}
       <Button disabled={start.isPending} onClick={begin}>
         {t("start.button")}
       </Button>
-      <ProfessorSettings model={model} kind={kind} onModel={setModel} onKind={setKind} />
+      <ProfessorSettings legacy={legacy} onLegacy={setLegacy} />
     </>
   );
 

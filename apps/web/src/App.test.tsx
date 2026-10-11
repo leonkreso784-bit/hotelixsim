@@ -89,48 +89,53 @@ describe("okvir", () => {
   });
 });
 
-describe("početni ekran: postavke za profesora", () => {
-  it("Započni igru bez postavki šalje prazno tijelo", async () => {
+describe("početni ekran: izbor tjedne ili mjesečne igre", () => {
+  it("student odmah vidi izbor vrste igre, tjedna je zadana, a zahtjev još nije poslan", async () => {
     const api = startApi();
     renderApp(api, "/");
-    fireEvent.click(await screen.findByRole("button", { name: "Započni igru" }));
-    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
-    expect(api.posts("/v1/demo")[0]?.body).toBeUndefined();
+    const week = (await screen.findByRole("radio", { name: "Tjedna igra" })) as HTMLInputElement;
+    const month = screen.getByRole("radio", { name: "Mjesečna igra" }) as HTMLInputElement;
+    expect(week.checked).toBe(true);
+    expect(month.checked).toBe(false);
+    // Radio grupa ima legendu, a kratki opisi stoje uz svaki izbor.
+    expect(screen.getByRole("group", { name: "Kako želiš igrati?" })).toBeTruthy();
+    expect(week.getAttribute("aria-describedby")).toBeTruthy();
+    expect(screen.getByText(/17 kraćih krugova/)).toBeTruthy();
+    expect(screen.getByText(/4 kruga/)).toBeTruthy();
+    expect(api.posts("/v1/demo")).toHaveLength(0);
   });
 
-  it("novi model po tjednima šalje jednom tijelo s modelom", async () => {
+  it("zadano šalje novi model po tjednima, jedan zahtjev", async () => {
     const api = startApi();
     renderApp(api, "/");
-    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
-    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
-    expect(
-      (screen.getByRole("radio", { name: "Po tjednima (preporučeno)" }) as HTMLInputElement).checked,
-    ).toBe(true);
-    const start = screen.getByRole("button", { name: "Započni igru" });
+    const start = await screen.findByRole("button", { name: "Započni igru" });
     fireEvent.click(start);
     fireEvent.click(start);
     await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
     expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "week" });
   });
 
-  it("novi model po mjesecima šalje round_kind month", async () => {
+  it("mjesečna igra šalje novi model s round_kind month", async () => {
     const api = startApi();
     renderApp(api, "/");
-    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
-    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Po mjesecima" }));
+    fireEvent.click(await screen.findByRole("radio", { name: "Mjesečna igra" }));
     fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
     await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
     expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "month" });
   });
 
-  it("povratak na demo model skriva vrstu kruga i opet šalje prazno tijelo", async () => {
+  it("stari model postoji samo pod „Za profesora“ i šalje prazno tijelo", async () => {
     const api = startApi();
     renderApp(api, "/");
-    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
-    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Demo (dva mjeseca, bez odjela)" }));
-    expect(screen.queryByRole("radio", { name: "Po tjednima (preporučeno)" })).toBeNull();
+    await screen.findByRole("radio", { name: "Tjedna igra" });
+    // Stari model nije među glavnim izborima; nalazi se unutar sklopivog dijela.
+    const pro = screen.getByText("Za profesora").closest("details") as HTMLElement;
+    expect(pro).toBeTruthy();
+    const legacy = screen.getByRole("checkbox", { name: "Stari model (usporedba)" });
+    expect(pro.contains(legacy)).toBe(true);
+    fireEvent.click(screen.getByText("Za profesora"));
+    fireEvent.click(legacy);
+    expect(screen.queryByRole("radio", { name: "Tjedna igra" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
     await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
     expect(api.posts("/v1/demo")[0]?.body).toBeUndefined();
@@ -144,24 +149,23 @@ describe("Nova igra iz igre", () => {
       .on("GET", "/v1/games/:game", game({ current: null }));
   }
 
-  it("„Nova igra“ ne šalje zahtjev, pokazuje izbor modela, a „Natrag na igru“ vraća na igru bez zahtjeva", async () => {
+  it("„Nova igra“ ne šalje zahtjev, pokazuje izbor vrste igre, a „Natrag na igru“ vraća na igru bez zahtjeva", async () => {
     const api = seasonOverApi();
     renderApp(api, "/");
     fireEvent.click(await screen.findByRole("link", { name: "Nova igra" }));
     expect(await screen.findByRole("heading", { name: "Nova igra" })).toBeTruthy();
-    fireEvent.click(screen.getByText("Za profesora: postavke nove igre"));
-    expect(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Tjedna igra" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Mjesečna igra" })).toBeTruthy();
     fireEvent.click(screen.getByRole("link", { name: "Natrag na igru" }));
     expect(await screen.findByText("Sezona je završena.")).toBeTruthy();
     expect(window.location.pathname).toBe("/");
     expect(api.posts("/v1/demo")).toHaveLength(0);
   });
 
-  it("izbor „Novi model / Po tjednima“ šalje postavke kao početni ekran i otvara novu igru", async () => {
+  it("tjedna igra iz „Nova igra“ šalje novi model kao početni ekran i otvara novu igru", async () => {
     const api = seasonOverApi();
     renderApp(api, "/nova");
-    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
-    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
+    await screen.findByRole("radio", { name: "Tjedna igra" });
     fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
     await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
     expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "week" });
