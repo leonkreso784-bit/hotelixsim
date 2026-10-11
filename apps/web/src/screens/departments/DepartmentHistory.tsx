@@ -5,8 +5,10 @@ import { formatIndex, formatPercentBp, tw } from "../../format";
 import { Card } from "../../ui/primitives";
 import { resultText } from "./helpers";
 
-const NUM = "whitespace-nowrap px-3 py-2 text-right tabular-nums";
-const HEAD = "whitespace-nowrap border-b border-line px-3 py-2 text-right text-sm font-semibold text-muted";
+const NUM = "whitespace-nowrap px-2 py-2 text-right tabular-nums";
+// Zaglavlja stupaca se smiju prelomiti i ćelije imaju uži razmak (px-2), da tablica na 1280 px stane u stupac detalja
+// od 550 px (izmjereno: prije 674 px, s prelamanjem 585 px, s px-2 550 px); ne lomi se samo naziv kruga.
+const HEAD = "border-b border-line px-2 py-2 text-right text-sm font-semibold text-muted";
 
 function points(pts: number): string {
   return t("dept.outOf", { n: formatIndex(pts) });
@@ -37,7 +39,7 @@ export function DepartmentHistory({
           <caption className="sr-only">{t("dept.history.table")}</caption>
           <thead>
             <tr>
-              <th scope="col" className="border-b border-line px-3 py-2 text-sm font-semibold text-muted">
+              <th scope="col" className="border-b border-line px-2 py-2 text-sm font-semibold text-muted">
                 {t("dept.history.round")}
               </th>
               <th scope="col" className={HEAD}>
@@ -57,7 +59,7 @@ export function DepartmentHistory({
           <tbody>
             {history.map((h) => (
               <tr key={h.round} className="border-b border-line">
-                <th scope="row" className="whitespace-nowrap px-3 py-2 font-semibold">
+                <th scope="row" className="whitespace-nowrap px-2 py-2 font-semibold">
                   {titleOf(h.round)}
                 </th>
                 <td className={NUM}>{resultText(h.profit_cents)}</td>

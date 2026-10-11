@@ -474,4 +474,9 @@ export const hr = {
   "dept.cost.hiring": "Zapošljavanje",
   "dept.cost.situation": "Odluke u situacijama",
   "dept.cost.total": "Ukupno",
+  // Odlasci odjela u zadnjem obračunatom krugu (Task 23a)
+  "dept.departures": "Otišlo u mjesecu",
+  "dept.departures.week": "Otišlo u tjednu",
+  "dept.departures.none": "nitko",
+  "dept.departures.note": "Tko ode, zamijeni se novim zaposlenim; trošak zamjene je u Upravi.",
 } as const;

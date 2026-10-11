@@ -225,12 +225,58 @@ impl Catalog {
             {
                 return Err(CatalogError::OutOfRange(label("departments.staff")));
             }
+            self.validate_staffing(*profile, spec, p)?;
             for name in p.fixed_charges_cents.keys() {
                 if !e.fixed_charges.contains_key(name) {
                     return Err(CatalogError::Missing(format!(
                         "v2.economy.fixed_charges.{name}"
                     )));
                 }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Catalog {
+    /// Norma osoblja (🟨 Task 23b): za svaki odjel s normom početni ljudi profila (stalni + sezonci) moraju biti
+    /// u rasponu kategorije profila, `ljudi · 1000 ∈ [min · sobe, max · sobe]` (norma je u desetinkama na 100
+    /// soba). Odjel s normom bez retka za kategoriju profila, ili norma s `min` 0 ili `min > max`, je greška
+    /// sadržaja odjela.
+    fn validate_staffing(
+        &self,
+        profile: Profile,
+        spec: &sim_hotel::ProfileSpec,
+        p: &ProfileV2,
+    ) -> Result<(), CatalogError> {
+        let rooms = u64::from(spec.rooms);
+        for (code, d) in self
+            .departments
+            .iter()
+            .filter(|(_, d)| !d.staffing.is_empty())
+        {
+            let dept_label = || format!("v2.departments.{}.staffing", code.as_str());
+            if d.staffing.values().any(|n| {
+                n.min_tenths_per_100_rooms == 0
+                    || n.min_tenths_per_100_rooms > n.max_tenths_per_100_rooms
+            }) {
+                return Err(CatalogError::OutOfRange(dept_label()));
+            }
+            let Some(n) = d.staffing.get(&spec.category) else {
+                return Err(CatalogError::OutOfRange(dept_label()));
+            };
+            let people = p.departments.get(code).map_or(0_u64, |s| {
+                u64::from(s.permanent).saturating_add(u64::from(s.seasonal))
+            });
+            let scaled = people.saturating_mul(1_000);
+            let min = u64::from(n.min_tenths_per_100_rooms).saturating_mul(rooms);
+            let max = u64::from(n.max_tenths_per_100_rooms).saturating_mul(rooms);
+            if !(min..=max).contains(&scaled) {
+                return Err(CatalogError::OutOfRange(format!(
+                    "v2.profiles.{}.departments.{}.staffing",
+                    profile.code(),
+                    code.as_str()
+                )));
             }
         }
         Ok(())
@@ -268,6 +314,7 @@ fn bare(name: &str, class: UsaliClass, revenue: RevenueModel) -> DeptSpec {
         seasonal_max: 0,
         seasonal_plan: MonthTable([0; 4]),
         can_close: false,
+        staffing: BTreeMap::new(),
     }
 }
 

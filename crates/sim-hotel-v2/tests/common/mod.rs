@@ -281,6 +281,7 @@ fn operated(
         seasonal_max,
         seasonal_plan: MonthTable(seasonal_plan),
         can_close,
+        staffing: BTreeMap::new(),
     }
 }
 

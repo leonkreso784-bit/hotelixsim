@@ -57,6 +57,9 @@ pub struct DeptOutcomeDto {
     pub satisfaction_target_pts: i32,
     pub satisfaction_after_pts: i32,
     pub guest_weight: u32,
+    /// Odlasci zaposlenih odjela u krugu; krugovi obračunati prije Taska 23 ga nemaju (0).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub departures: u16,
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::AssignedCosts`.
@@ -83,6 +86,9 @@ pub struct UndistributedOutcomeDto {
     pub per_room_cents: i64,
     pub assigned: AssignedCostsDto,
     pub total_cents: i64,
+    /// Odlasci zaposlenih odjela u krugu; krugovi obračunati prije Taska 23 ga nemaju (0).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub departures: u16,
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::PeriodAccounts`.
@@ -96,6 +102,10 @@ pub struct PeriodAccountsDto {
     pub fixed_charges: BTreeMap<String, i64>,
     pub interest_cents: i64,
     pub capex_cents: i64,
+}
+
+fn is_zero(n: &u16) -> bool {
+    *n == 0
 }
 
 fn class_of(code: &str) -> Result<UsaliClass, GameError> {
@@ -133,6 +143,7 @@ impl From<&DeptOutcome> for DeptOutcomeDto {
             satisfaction_target_pts: o.satisfaction_target_pts,
             satisfaction_after_pts: o.satisfaction_after_pts,
             guest_weight: o.guest_weight,
+            departures: o.departures,
         }
     }
 }
@@ -170,6 +181,7 @@ impl TryFrom<&DeptOutcomeDto> for DeptOutcome {
             satisfaction_target_pts: o.satisfaction_target_pts,
             satisfaction_after_pts: o.satisfaction_after_pts,
             guest_weight: o.guest_weight,
+            departures: o.departures,
         })
     }
 }
@@ -211,6 +223,7 @@ impl From<&UndistributedOutcome> for UndistributedOutcomeDto {
             per_room_cents: u.per_room_cents,
             assigned: (&u.assigned).into(),
             total_cents: u.total_cents,
+            departures: u.departures,
         }
     }
 }
@@ -231,6 +244,7 @@ impl TryFrom<&UndistributedOutcomeDto> for UndistributedOutcome {
             per_room_cents: u.per_room_cents,
             assigned: (&u.assigned).into(),
             total_cents: u.total_cents,
+            departures: u.departures,
         })
     }
 }

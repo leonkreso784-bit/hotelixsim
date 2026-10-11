@@ -23,7 +23,7 @@ use departments::{
 };
 use guests::{GuestIn, guests};
 use money::{MoneyIn, decisions, money, rooms_maintenance_cost};
-use people::{LoadUnit, PeopleIn, hotel_load, people, rooms_load, staffing};
+use people::{LoadUnit, PeopleIn, department_departures, hotel_load, people, rooms_load, staffing};
 use situations::{group_done, situation_effects};
 
 use engine::calc::{self as c, Calc, CalcError};
@@ -82,7 +82,8 @@ impl From<MechanicError> for ResolveError {
         ResolveError::Mechanic(e)
     }
 }
-/// v1 funkcije koje v2 ponovno koristi (`Strategy::choose`, `base_labor_cents`) vraćaju v1 grešku.
+/// v1 funkcija koju v2 ponovno koristi (`Strategy::choose`) vraća v1 grešku. (Početni trošak rada v2 računa sam,
+/// `indices::start_labor_cents`, umjesto v1 `base_labor_cents`.)
 impl From<sim_hotel::ResolveError> for ResolveError {
     fn from(e: sim_hotel::ResolveError) -> Self {
         match e {
@@ -324,6 +325,13 @@ pub fn resolve_period(
         interest_cents: 0,
         capex_cents: 0,
     };
+    for (code, n) in department_departures(&s, pe.out.departures)? {
+        if let Some(o) = accounts.departments.get_mut(&code) {
+            o.departures = n;
+        } else if let Some(u) = accounts.undistributed.get_mut(&code) {
+            u.departures = n;
+        }
+    }
 
     // 7. v1 sažetak novca iz računa
     let mo = money(

@@ -10,10 +10,10 @@ import {
   formatPercentBp,
   formatWhole,
   formatWholeSigned,
-  wholePoints,
+  tw,
 } from "../../format";
 import { Card } from "../../ui/primitives";
-import { resultText } from "./helpers";
+import { resultText, shownChanges } from "./helpers";
 
 function Lines({ children }: { children: ReactNode }) {
   return <dl className="divide-y divide-line">{children}</dl>;
@@ -32,12 +32,13 @@ function fromTo(before: number, after: number): string {
   return t("dept.fromTo", { from: formatIndex(before), to: formatIndex(after) });
 }
 
-/** Promjena stanja u cijelim bodovima; poslužitelj je već šalje s predznakom (trošenje −, održavanje +), ne okreće se. */
-function change(pts: number): string {
-  return formatWholeSigned(wholePoints(pts));
-}
-
 function Space({ r }: { r: DeptRoundBody }) {
+  // Poslužitelj šalje promjene s predznakom (trošenje −, održavanje +); ne okreću se, samo se zaokružuju zajedno.
+  const [wear = 0, loadWear = 0, upkeep = 0] = shownChanges(
+    r.condition_before_pts,
+    [r.wear_pts, r.load_wear_pts, r.maintenance_pts],
+    r.condition_after_pts,
+  );
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.space")}</h2>
@@ -46,9 +47,9 @@ function Space({ r }: { r: DeptRoundBody }) {
         <Line label={t("dept.upkeepCost")} value={formatEuros(r.maintenance_cents)} />
       </Lines>
       <ul className="space-y-1">
-        <li>{t("dept.wear", { n: change(r.wear_pts) })}</li>
-        <li>{t("dept.loadWear", { n: change(r.load_wear_pts) })}</li>
-        <li>{t("dept.upkeep", { n: change(r.maintenance_pts) })}</li>
+        <li>{t("dept.wear", { n: formatWholeSigned(wear) })}</li>
+        <li>{t("dept.loadWear", { n: formatWholeSigned(loadWear) })}</li>
+        <li>{t("dept.upkeep", { n: formatWholeSigned(upkeep) })}</li>
       </ul>
       <p className="text-sm text-muted">{t("dept.space.note")}</p>
     </Card>
@@ -92,8 +93,21 @@ function Money({ r, foodAndBeverage }: { r: DeptRoundBody; foodAndBeverage: bool
   );
 }
 
-/** Ljudi odjela; kapacitet i opterećenje se pokazuju samo kad postoji obračunati krug. */
-export function People({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody | null }) {
+/**
+ * Ljudi odjela; kapacitet i opterećenje se pokazuju samo kad postoji obračunati krug. Odlasci zadnjeg kruga
+ * (`departures`, `null` prije prvog obračuna) stoje i kad je 0 („nitko“): i mirno osoblje je ishod.
+ */
+export function People({
+  dept,
+  r,
+  departures,
+  weekly,
+}: {
+  dept: DepartmentBody;
+  r: DeptRoundBody | null;
+  departures: number | null;
+  weekly: boolean;
+}) {
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.staff")}</h2>
@@ -103,19 +117,36 @@ export function People({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody | n
         {r && (
           <Line label={t("dept.capacity")} value={t("dept.capacityUses", { n: formatWhole(r.capacity) })} />
         )}
+        {departures !== null && (
+          <Line
+            label={tw(weekly, "dept.departures")}
+            value={departures > 0 ? formatCount(departures, "person") : t("dept.departures.none")}
+          />
+        )}
       </Lines>
       {r && <p>{t("dept.load", { load: formatLoad(r.load_hundredths) })}</p>}
+      {departures !== null && departures > 0 && (
+        <p className="text-sm text-muted">{t("dept.departures.note")}</p>
+      )}
     </Card>
   );
 }
 
-export function DepartmentFacts({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody }) {
+export function DepartmentFacts({
+  dept,
+  r,
+  weekly,
+}: {
+  dept: DepartmentBody;
+  r: DeptRoundBody;
+  weekly: boolean;
+}) {
   return (
     <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
       <Space r={r} />
       <Guests r={r} />
       <Money r={r} foodAndBeverage={dept.class === "food_beverage"} />
-      <People dept={dept} r={r} />
+      <People dept={dept} r={r} departures={r.departures} weekly={weekly} />
     </div>
   );
 }

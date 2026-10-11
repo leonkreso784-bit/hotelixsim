@@ -39,6 +39,7 @@ fn restaurant() -> DeptSpec {
         seasonal_max: 20,
         seasonal_plan: MonthTable([10, 12, 15, 12]),
         can_close: false,
+        staffing: BTreeMap::new(),
     }
 }
 
@@ -451,5 +452,55 @@ fn validate_rejects_closed_starting_department_with_seasonal() {
         Err(CatalogError::OutOfRange(
             "v2.profiles.B.departments.rooms.open".to_string()
         ))
+    );
+}
+
+fn staff_of(xs: &[(&str, u16)]) -> BTreeMap<DeptCode, u16> {
+    xs.iter()
+        .map(|(k, n)| (DeptCode((*k).into()), *n))
+        .collect()
+}
+
+#[test]
+fn split_departures_uses_largest_remainder() {
+    // 3 odlaska na 10/5/5 ljudi: kvote 1,5 / 0,75 / 0,75 → cijeli dijelovi 1/0/0, dva preostala idu najvećim
+    // ostacima (0,75 i 0,75) → 1/1/1.
+    let staff = staff_of(&[("restaurant", 5), ("rooms", 10), ("spa", 5)]);
+    assert_eq!(
+        split_departures(3, &staff),
+        Ok(staff_of(&[("restaurant", 1), ("rooms", 1), ("spa", 1)]))
+    );
+}
+
+#[test]
+fn split_departures_breaks_equal_remainders_by_code() {
+    // 1 odlazak na 5/5 ljudi: oba ostatka 0,5 → odlučuje redoslijed koda („restaurant" < „rooms").
+    let staff = staff_of(&[("rooms", 5), ("restaurant", 5)]);
+    assert_eq!(
+        split_departures(1, &staff),
+        Ok(staff_of(&[("restaurant", 1), ("rooms", 0)]))
+    );
+    // 2 odlaska na 4/4/4: kvote 0,67 → tri jednaka ostatka, dva najmanja koda dobivaju po jednog.
+    let staff = staff_of(&[("admin", 4), ("rooms", 4), ("maintenance", 4)]);
+    assert_eq!(
+        split_departures(2, &staff),
+        Ok(staff_of(&[("admin", 1), ("maintenance", 1), ("rooms", 0)]))
+    );
+}
+
+#[test]
+fn split_departures_gives_nothing_to_departments_without_people() {
+    let staff = staff_of(&[("energy", 0), ("parking", 0), ("rooms", 24), ("admin", 7)]);
+    let out = split_departures(2, &staff).unwrap();
+    assert_eq!(out.get(&DeptCode("energy".into())), Some(&0));
+    assert_eq!(out.get(&DeptCode("parking".into())), Some(&0));
+    // 2·24/31 = 1,55 → 1, 2·7/31 = 0,45 → 0; ostatak (jedan) ide većem ostatku: Smještaj 0,55 > Uprava 0,45.
+    assert_eq!(out.get(&DeptCode::rooms()), Some(&2));
+    assert_eq!(out.get(&DeptCode("admin".into())), Some(&0));
+    assert_eq!(out.values().map(|v| u32::from(*v)).sum::<u32>(), 2);
+    // Bez ijednog zaposlenog nema ni odlazaka.
+    assert_eq!(
+        split_departures(0, &staff_of(&[("rooms", 0)])),
+        Ok(staff_of(&[("rooms", 0)]))
     );
 }

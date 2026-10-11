@@ -1,7 +1,7 @@
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { departmentDetailBody, departmentsBody, standardApi, v2Api } from "../test/fixtures";
+import { departmentDetailBody, departmentsBody, game, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -121,5 +121,70 @@ describe("Odjeli", () => {
     expect(await screen.findByRole("heading", { level: 1 })).toBeTruthy();
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Odjeli" }).length).toBeGreaterThan(1));
     expect(screen.getByRole("status")).toBeTruthy();
+  });
+
+  it("ljudi: odlasci odjela u zadnjem krugu, i kad nitko nije otišao", async () => {
+    renderApp(v2Api(), "/odjeli/rooms");
+    expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("Otišlo u tjednu")).toBeTruthy();
+    expect(within(people).getByText("2 osobe")).toBeTruthy();
+    expect(
+      within(people).getByText("Tko ode, zamijeni se novim zaposlenim; trošak zamjene je u Upravi."),
+    ).toBeTruthy();
+    cleanup();
+    renderApp(v2Api(), "/odjeli/restaurant");
+    expect(await screen.findByRole("heading", { level: 1, name: "Restoran" })).toBeTruthy();
+    const quiet = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(quiet).getByText("Otišlo u tjednu")).toBeTruthy();
+    expect(within(quiet).getByText("nitko")).toBeTruthy();
+    expect(within(quiet).queryByText(/trošak zamjene/)).toBeNull();
+  });
+
+  it("ljudi u mjesečnoj v2 igri: odlasci u mjesecu", async () => {
+    renderApp(v2Api().on("GET", "/v1/games/:game", { ...game(), model: "v2" }), "/odjeli/rooms");
+    expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("Otišlo u mjesecu")).toBeTruthy();
+    expect(within(people).queryByText("Otišlo u tjednu")).toBeNull();
+  });
+
+  it("služba: odlasci iz zadnjeg troška službe", async () => {
+    renderApp(v2Api(), "/odjeli/admin");
+    expect(await screen.findByRole("heading", { level: 1, name: "Uprava" })).toBeTruthy();
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("1 osoba")).toBeTruthy();
+  });
+
+  it("prostor: prikazane promjene se zbrajaju u prikazanu razliku (78 → 77)", async () => {
+    const body = departmentDetailBody("restaurant");
+    if (!body?.department.last) throw new Error("restoran bez rezultata");
+    // Svaka promjena zasebno zaokružena bila bi 0, 0, 0 uz „78 → 77“.
+    const last = {
+      ...body.department.last,
+      condition_before_pts: 7760,
+      wear_pts: -33,
+      load_wear_pts: -17,
+      maintenance_pts: 0,
+      condition_after_pts: 7710,
+    };
+    renderApp(
+      v2Api().on("GET", "/v1/hotels/:hotel/departments/:code", {
+        ...body,
+        department: { ...body.department, last },
+      }),
+      "/odjeli/restaurant",
+    );
+    expect(await screen.findByText("78/100 → 77/100")).toBeTruthy();
+    expect(screen.getByText("trošenje −1")).toBeTruthy();
+    expect(screen.getByText("preopterećenje 0")).toBeTruthy();
+    expect(screen.getByText("održavanje 0")).toBeTruthy();
+  });
+
+  it("povijest: ne lomi se samo naziv kruga, zaglavlja stupaca se smiju prelomiti", async () => {
+    renderApp(v2Api(), "/odjeli/restaurant");
+    const head = await screen.findByRole("columnheader", { name: "Zadovoljstvo gostiju" });
+    expect(head.className).not.toMatch(/whitespace-nowrap/);
+    expect(screen.getByRole("rowheader").className).toMatch(/whitespace-nowrap/);
   });
 });

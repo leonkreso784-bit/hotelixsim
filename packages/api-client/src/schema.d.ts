@@ -470,6 +470,11 @@ export interface components {
             cost_of_sales_cents: number;
             /**
              * Format: int32
+             * @description Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
+             */
+            departures: number;
+            /**
+             * Format: int32
              * @description Gostiju po zaposlenom na dan, u stotinkama.
              */
             load_hundredths: number;
@@ -1045,6 +1050,11 @@ export interface components {
         SeatKind: "human" | "robot";
         /** @description Neraspoređeni odjel: trošak kruga po stavkama. */
         ServiceRoundBody: {
+            /**
+             * Format: int32
+             * @description Zaposleni službe koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
+             */
+            departures: number;
             /** Format: int64 */
             fixed_cents: number;
             /** Format: int64 */
