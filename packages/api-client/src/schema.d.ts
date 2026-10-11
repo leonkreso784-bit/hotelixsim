@@ -470,6 +470,11 @@ export interface components {
             cost_of_sales_cents: number;
             /**
              * Format: int32
+             * @description Koliko su korištenja gosti htjeli (potražnja); posluženo je najviše kapacitet. 0 za odjel bez gostiju po korištenju.
+             */
+            demand: number;
+            /**
+             * Format: int32
              * @description Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
              */
             departures: number;

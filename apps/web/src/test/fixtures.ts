@@ -565,6 +565,7 @@ function deptRound(over: Partial<DeptRoundBody> = {}): DeptRoundBody {
     profit_cents: 789_600,
     margin_bp: 1175,
     served: 2100,
+    demand: 2100,
     capacity: 2400,
     load_hundredths: 190,
     usage_bp: 4500,
