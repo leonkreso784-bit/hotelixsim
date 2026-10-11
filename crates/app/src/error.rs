@@ -221,6 +221,7 @@ impl From<GameError> for AppError {
             GameError::WrongModel => C::WrongModel,
             GameError::UnknownDepartment => C::UnknownDepartment,
             GameError::NothingResolved => C::NoResolvedRound,
+            GameError::PlanBody => C::InvalidBody,
             GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };
         AppError {

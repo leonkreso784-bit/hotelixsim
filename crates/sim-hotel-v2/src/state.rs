@@ -56,6 +56,7 @@ impl HotelState {
                     seasonal: start.seasonal,
                     condition_pts: start.condition_pts,
                     satisfaction_pts: start.satisfaction_pts,
+                    season_departures: 0,
                 },
             );
             if d.class.is_undistributed() {

@@ -64,3 +64,36 @@ fn weekly_summary_is_three_causes_without_ai_note() {
         assert!(!text.contains(long), "{long:?} u {text}");
     }
 }
+
+/// ZP-10: u v2 su „fiksni troškovi" dva različita broja — stalni dio zajedničkih službi (trošak iznad GOP-a) i
+/// fiksni troškovi zgrade (najam, osiguranje, porez; ispod GOP-a, iz blagajne). Redak blagajne nosi ime iz Računa
+/// dobiti, pa isto ime ne stoji uz dva broja.
+#[test]
+fn building_fixed_costs_have_their_own_name() {
+    let g = common::v2_weekly_game_resolved_through("t01");
+    let input = g
+        .debrief_input(common::hotel_ids()[0], RoundKey::Week(1))
+        .unwrap();
+    let facts = debrief_facts(&input);
+    let causes = |var: dto::VarCode| -> Vec<String> {
+        facts
+            .indices
+            .iter()
+            .flat_map(|i| i.drivers.iter())
+            .filter(|d| d.source == DriverSource::Var(var))
+            .flat_map(|d| d.changes.iter().map(|c| c.cause.clone()))
+            .collect()
+    };
+    let cash = causes(dto::VarCode::Cash);
+    let costs = causes(dto::VarCode::Costs);
+    assert!(
+        cash.iter()
+            .any(|c| c == "fiksni troškovi zgrade (najam, osiguranje, porez)"),
+        "{cash:?}"
+    );
+    assert!(costs.iter().any(|c| c == "fiksni troškovi"), "{costs:?}");
+    assert!(
+        cash.iter().all(|c| !costs.contains(c)),
+        "{cash:?} / {costs:?}"
+    );
+}

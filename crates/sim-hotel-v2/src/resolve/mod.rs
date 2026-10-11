@@ -214,12 +214,14 @@ pub fn resolve_period(
     // 2. ljudi: opterećenje odjela ne ovisi o iskustvu i moralu, pa se uzima iz računa s početnim vrijednostima
     let r_load = rooms_load(mkt.sold, st.rooms_staff, rooms_capacity, p)?;
     let mut units = vec![LoadUnit {
+        open: s.rooms_state()?.open,
         staff: st.rooms_staff,
         capacity_tenths: rooms_capacity,
         load: r_load,
     }];
     for o in ops_in(&s, s.experience_pts, s.morale_pts)?.values() {
         units.push(LoadUnit {
+            open: o.open,
             staff: o.staff,
             capacity_tenths: cat.dept(&o.code)?.capacity_tenths_per_staff_day,
             load: w(o.load_hundredths),
@@ -325,11 +327,12 @@ pub fn resolve_period(
         interest_cents: 0,
         capex_cents: 0,
     };
-    for (code, n) in department_departures(&s, pe.out.departures)? {
-        if let Some(o) = accounts.departments.get_mut(&code) {
-            o.departures = n;
-        } else if let Some(u) = accounts.undistributed.get_mut(&code) {
-            u.departures = n;
+    let dept_departures = department_departures(&s, pe.out.departures)?;
+    for (code, n) in &dept_departures {
+        if let Some(o) = accounts.departments.get_mut(code) {
+            o.departures = *n;
+        } else if let Some(u) = accounts.undistributed.get_mut(code) {
+            u.departures = *n;
         }
     }
 
@@ -357,6 +360,14 @@ pub fn resolve_period(
             .ok_or_else(|| CatalogError::Missing(format!("state.departments.{}", code.as_str())))?;
         d.condition_pts = o.condition_after_pts;
         d.satisfaction_pts = o.satisfaction_after_pts;
+    }
+    for (code, n) in &dept_departures {
+        if let Some(d) = after.departments.get_mut(code) {
+            d.season_departures = d
+                .season_departures
+                .checked_add(*n)
+                .ok_or(CalcError::Overflow)?;
+        }
     }
     after.satisfaction_pts = c::narrow(gu.satisfaction)?;
     after.rating = c::narrow(gu.rating)?;

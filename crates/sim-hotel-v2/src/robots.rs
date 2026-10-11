@@ -8,7 +8,7 @@ use engine::Rng;
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{Maintenance, Strategy, Training, euro_bounds};
 
-use crate::calendar::{Period, avg_i64, avg_u16, prorate};
+use crate::calendar::{Period, PeriodKind, avg_i64, avg_u16, prorate, season_periods};
 use crate::catalog::Catalog;
 use crate::department::UsaliClass;
 use crate::plan::PeriodPlan;
@@ -38,13 +38,19 @@ fn price_for_pct(pct: i128, reference: i128, min_pct: i128, max_pct: i128) -> Ca
     c::narrow(c::mul(euros.max(lo).min(hi.max(lo)), 100)?)
 }
 
-/// Stalni i sezonci cijelog hotela (zbroj odjela).
+/// Stalni koji služe goste (svi odjeli osim neraspoređenih: Uprava, Prodaja, Održavanje i energija nisu u
+/// opterećenju hotela) i sezonci cijelog hotela. U degeneriranom katalogu neraspoređeni nemaju ljudi, pa je to v1.
 fn staff_totals(state: &HotelState) -> (u16, u16) {
     state
         .departments
         .values()
         .fold((0_u16, 0_u16), |(p, s), d| {
-            (p.saturating_add(d.permanent), s.saturating_add(d.seasonal))
+            let serving = if d.class.is_undistributed() {
+                0
+            } else {
+                d.permanent
+            };
+            (p.saturating_add(serving), s.saturating_add(d.seasonal))
         })
 }
 
@@ -53,6 +59,53 @@ fn seasonal_range(seasonal: u16, step: u16, seasonal_max: u16) -> (u16, u16) {
     let lo = seasonal.saturating_sub(step);
     let hi = seasonal.saturating_add(step).min(seasonal_max);
     (lo, hi)
+}
+
+/// Sezonci koje brižni treba u krugu `q`: ⌈sobe·referentna popunjenost kruga/1,8⌉ zaposlenih koji služe goste, manje
+/// stalnih koji ih služe (`serving_permanent`); najmanje 0.
+fn caring_need(
+    rooms: u16,
+    occupancy: &sim_hotel::MonthTable<u16>,
+    q: &Period,
+    serving_permanent: u16,
+) -> Result<i128, ResolveError> {
+    let rooms_bp = c::mul(i128::from(rooms), i128::from(avg_u16(occupancy, q)?))?;
+    let need = c::div_floor(c::add(rooms_bp, 17_999)?, 18_000)?;
+    Ok(c::sub(need, i128::from(serving_permanent))?.max(0))
+}
+
+/// Cilj brižnog (Leonova odluka 11.10., ZP-6): u tjednoj igri planira sezonce u oba smjera. Direktor zna da smije
+/// mijenjati broj sezonaca samo za `step` (±3) po krugu, pa zapošljava prije vrhunca i otpušta prije pada:
+/// `cilj_t = min(max(potreba_t, max_k(potreba_{t+k} − k·step)), min_k(potreba_{t+k} + k·step))` nad preostalim
+/// krugovima sezone (k ≥ 1). Bez otpuštanja unaprijed tjedni bi u kolovozu sustigao vrhunac, a u rujnu silazio po 3 i
+/// plaćao višak ljudi (B: 46 → 34 sezonaca, F na kraju sezone 7760 prema mjesečnih 8227). Buduće potrebe dolaze samo
+/// iz kataloga (referentna popunjenost po kalendaru): bez slučajnosti i bez ishoda.
+/// Mjesečni krug ostaje v1 pravilo (`potreba_t`): v1 robot je zamrznut, a mjesečna v2 sezona mora dati iste brojke kao
+/// v1 (ekvivalencija); u v1 je skok potrebe srpanj → kolovoz (A: 24 → 43) veći od koraka 10, pa bi gledanje unaprijed
+/// promijenilo v1 lipanj.
+fn caring_target(
+    s: &HotelState,
+    p: &Period,
+    occupancy: &sim_hotel::MonthTable<u16>,
+    serving_permanent: u16,
+    step: u16,
+) -> Result<i128, ResolveError> {
+    let need = caring_need(s.rooms, occupancy, p, serving_permanent)?;
+    if p.kind != PeriodKind::Week {
+        return Ok(need);
+    }
+    // `up`: najmanje koliko treba sada da se do kasnijeg vrhunca stigne korakom; `down`: najviše koliko smije
+    // biti sada da se do kasnijeg pada spusti korakom. Zadnji krug nema budućih, pa je cilj njegova potreba.
+    let (mut up, mut down) = (need, i128::MAX);
+    let mut ahead: i128 = 0;
+    for q in season_periods(p.kind).iter().filter(|q| q.index > p.index) {
+        ahead = c::add(ahead, 1)?;
+        let later = caring_need(s.rooms, occupancy, q, serving_permanent)?;
+        let reach = c::mul(ahead, i128::from(step))?;
+        up = up.max(c::sub(later, reach)?);
+        down = down.min(c::add(later, reach)?);
+    }
+    Ok(up.min(down))
 }
 
 /// v1 oblik plana robota (ukupni sezonci, jedna razina održavanja); odjeli se dodaju na kraju.
@@ -93,8 +146,9 @@ pub fn robot_plan(
     // Marketing iz kataloga i strategija su mjesečni iznosi; plan je za krug, pa idu razmjerno.
     let marketing_max = prorate(a.marketing_max_cents, p)?;
     let market = |v: i64| v.max(0).min(marketing_max);
-    let (permanent, seasonal) = staff_totals(s);
-    let (s_lo, s_hi) = seasonal_range(seasonal, cat.coeffs(p.kind)?.seasonal_step, a.seasonal_max);
+    let (serving_permanent, seasonal) = staff_totals(s);
+    let step = cat.coeffs(p.kind)?.seasonal_step;
+    let (s_lo, s_hi) = seasonal_range(seasonal, step, a.seasonal_max);
 
     let mut plan = match strategy {
         Strategy::Saver => Draft {
@@ -108,12 +162,7 @@ pub fn robot_plan(
             reply_reviews: false,
         },
         Strategy::Caring => {
-            let rooms_bp = c::mul(
-                i128::from(s.rooms),
-                i128::from(avg_u16(&spec.base_occupancy_bp, p)?),
-            )?;
-            let need = c::div_floor(c::add(rooms_bp, 17_999)?, 18_000)?;
-            let target = c::sub(need, i128::from(permanent))?.max(0);
+            let target = caring_target(s, p, &spec.base_occupancy_bp, serving_permanent, step)?;
             Draft {
                 price_cents: fixed_price(105)?,
                 marketing_cents: market(prorate(500_000, p)?),

@@ -194,6 +194,35 @@ fn dispatch_lives_in_one_place() {
             );
         }
     }
+    // ZP-7: ni app ni api ne granaju na model — ni na `content::Model` (grane `=>`) ni na kod modela.
+    let crates = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+    let mut dirs = vec![crates.join("app/src"), crates.join("api/src")];
+    while let Some(dir) = dirs.pop() {
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                dirs.push(path);
+                continue;
+            }
+            let text = std::fs::read_to_string(&path).unwrap();
+            for needle in [
+                "Model::V1 =>",
+                "Model::V2 =>",
+                "Model::V1 |",
+                "Model::V2 |",
+                "code() == \"v1\"",
+                "code() == \"v2\"",
+                "code() != \"v1\"",
+                "code() != \"v2\"",
+            ] {
+                assert!(
+                    !text.contains(needle),
+                    "{} sadrži {needle} — grananje ide u game/src/model.rs",
+                    path.display()
+                );
+            }
+        }
+    }
 }
 
 #[test]

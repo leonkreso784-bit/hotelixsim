@@ -9,7 +9,7 @@ use sim_hotel::{
     month_indices, resolve_month,
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
-use sim_hotel_v2::department::{DeptCode, PeriodAccounts};
+use sim_hotel_v2::department::PeriodAccounts;
 use sim_hotel_v2::{
     Period, PeriodKind, PeriodPlan, ResolveError, period_indices, resolve_period, run_season_with,
 };
@@ -85,6 +85,19 @@ impl Model {
             (content::Model::V2, Some(_)) => Model::V2,
             // `Snapshot::build` odbija v2 snimak bez odjeljka v2, pa je ovo uvijek v1.
             (content::Model::V2, None) | (content::Model::V1, _) => Model::V1,
+        }
+    }
+
+    /// Nova igra (app `start_demo`): snimak sadržaja modela iz postavki i zadana vrsta kruga (v1 mjesec, v2 tjedan).
+    /// Jedino mjesto koje grana na `content::Model` izvan `Model::of`.
+    pub fn new_game_snapshot<'a, T>(
+        snapshot_model: content::Model,
+        v1: &'a T,
+        v2: &'a T,
+    ) -> (&'a T, PeriodKind) {
+        match snapshot_model {
+            content::Model::V1 => (v1, PeriodKind::Month),
+            content::Model::V2 => (v2, PeriodKind::Week),
         }
     }
 
@@ -390,6 +403,15 @@ impl Model {
         }
     }
 
+    /// Tijelo zahtjeva plana (`Game::plan_from_dto`): v1 plan nema odjela, pa je tijelo s `departments`
+    /// neispravno (`GameError::PlanBody` → 422), ne tiho zanemareno.
+    pub(crate) fn check_plan_body(self, d: &PlanDto) -> Result<(), GameError> {
+        match self {
+            Model::V1 if !d.departments.is_empty() => Err(GameError::PlanBody),
+            Model::V1 | Model::V2 => Ok(()),
+        }
+    }
+
     /// v2 plan traži postavke odjela (`seasonal_target` i `maintenance` iz DTO-a se ne čitaju); bez njih je to
     /// pokvaren dnevnik. Zahtjev bez odjela dopunjuje `Game::plan_from_dto` (`needs_departments`).
     pub(crate) fn plan_from_dto(self, d: &PlanDto) -> Result<CorePlan, GameError> {
@@ -554,19 +576,18 @@ impl Model {
             .collect())
     }
 
-    /// Izravni trošak po prodanoj noći: v1 `cpor_cents` kategorije, v2 izravni trošak po korištenju odjela Smještaj.
+    /// Izravni trošak po prodanoj noći: `cpor_cents` kategorije, isto polje koje čita obračun (v1 i v2 Smještaj;
+    /// `Catalog::validate` v2 traži da je `direct_per_use_cents` Smještaja isti broj).
     pub(crate) fn rooms_direct_cost(
         self,
         c: &Content,
         category: Category,
     ) -> Result<i64, GameError> {
-        match self {
-            Model::V1 => Ok(c.catalog.category(category).map_err(debug)?.cpor_cents),
-            Model::V2 => Ok(v2_catalog(c)?
-                .dept(&DeptCode::rooms())
-                .map_err(debug)?
-                .direct_per_use_cents),
-        }
+        let base = match self {
+            Model::V1 => &c.catalog,
+            Model::V2 => &v2_catalog(c)?.base,
+        };
+        Ok(base.category(category).map_err(debug)?.cpor_cents)
     }
 
     /// Situacije kruga: v1 po mjesecu, v2 u krugu koji sadrži 1. dan mjeseca situacije (🟨 P13).

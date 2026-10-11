@@ -152,6 +152,8 @@ pub struct DeptState {
     pub seasonal: u16,
     pub condition_pts: i32,
     pub satisfaction_pts: i32,
+    /// Odlasci zaposlenih ovog odjela u dosadašnjim krugovima sezone (`split_season_departures`); počinje od 0.
+    pub season_departures: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -554,6 +556,69 @@ pub fn split_departures(
         if let Some(v) = out.get_mut(k) {
             *v = v.checked_add(1).ok_or(CalcError::Overflow)?;
         }
+    }
+    Ok(out)
+}
+
+/// Hotelski odlasci kruga po odjelima kroz cijelu sezonu (`so_far` = odlasci odjela u dosadašnjim krugovima).
+/// Zbroj odlazaka sezone do sada, uključujući ovaj krug (`T`), dijeli se po ljudima odjela u ovom krugu
+/// (`split_departures`), a odjel u krugu dobiva `kvota − već dodijeljeno` (najmanje 0, najviše koliko ljudi ima).
+/// Ako zbroj tada nije `total`: višak se oduzima odjelu s najvećim viškom prema točnom udjelu
+/// (`(dodijeljeno + krug)·svi − T·ljudi`), manjak se dodaje odjelu s najvećim manjkom; jednako → manji kod.
+/// Zbroj je uvijek `total` (`total` ≤ svi ljudi, obračun ga stišće). Bez slučajnosti, kao `split_departures`;
+/// tako i jedan tjedni odlazak s vremenom stigne do svakog odjela s ljudima, ne uvijek najvećem.
+pub fn split_season_departures(
+    total: u16,
+    staff: &BTreeMap<DeptCode, u16>,
+    so_far: &BTreeMap<DeptCode, u16>,
+) -> Calc<BTreeMap<DeptCode, u16>> {
+    let mut out: BTreeMap<DeptCode, u16> = staff.keys().map(|k| (k.clone(), 0)).collect();
+    if total == 0 {
+        return Ok(out);
+    }
+    let done = |k: &DeptCode| w(so_far.get(k).copied().unwrap_or(0));
+    let all = staff.values().try_fold(0_i128, |a, n| c::add(a, w(*n)))?;
+    let before = staff.keys().try_fold(0_i128, |a, k| c::add(a, done(k)))?;
+    let season_total = c::add(before, w(total))?;
+    let quota = split_departures(c::narrow(season_total)?, staff)?;
+    for (k, n) in staff {
+        let q = w(quota.get(k).copied().unwrap_or(0));
+        let give = c::sub(q, done(k))?.max(0).min(w(*n));
+        out.insert(k.clone(), c::narrow(give)?);
+    }
+    // Manjak odjela prema točnom udjelu sezone, u jedinicama 1/svi (negativno = višak).
+    let gap = |k: &DeptCode, n: u16, given: u16| -> Calc<i128> {
+        c::sub(
+            c::mul(season_total, w(n))?,
+            c::mul(c::add(done(k), w(given))?, all)?,
+        )
+    };
+    let sum = |m: &BTreeMap<DeptCode, u16>| m.values().try_fold(0_i128, |a, v| c::add(a, w(*v)));
+    let goal = w(total);
+    while sum(&out)? != goal {
+        let surplus = sum(&out)? > goal;
+        // BTreeMap ide po kodu rastuće, pa strogo bolji ključ čuva manji kod pri izjednačenju.
+        let mut best: Option<(&DeptCode, i128)> = None;
+        for (k, n) in staff {
+            let given = out.get(k).copied().unwrap_or(0);
+            let movable = if surplus { given > 0 } else { given < *n };
+            if !movable {
+                continue;
+            }
+            let g = gap(k, *n, given)?;
+            let key = if surplus { c::sub(0, g)? } else { g };
+            if best.is_none_or(|(_, b)| key > b) {
+                best = Some((k, key));
+            }
+        }
+        let (k, _) = best.ok_or(CalcError::BadDivisor)?;
+        let v = out.get_mut(k).ok_or(CalcError::BadDivisor)?;
+        *v = if surplus {
+            v.checked_sub(1)
+        } else {
+            v.checked_add(1)
+        }
+        .ok_or(CalcError::Overflow)?;
     }
     Ok(out)
 }
