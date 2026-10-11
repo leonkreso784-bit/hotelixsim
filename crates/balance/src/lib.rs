@@ -2,6 +2,8 @@
 //! Nije jezgra, pa smije std; sve račune drži u cijelim brojevima.
 
 use engine::calc;
+pub mod v2;
+
 use sim_hotel::{
     Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Mechanic, Month,
     MonthPlan, Profile, RefTable, ResolveError, SituationOutcome, SituationTemplate, Strategy,
@@ -33,14 +35,14 @@ pub struct S3Gain {
     pub june_cents: i64,
 }
 
-const REPRO_SEED: u64 = 7;
+pub(crate) const REPRO_SEED: u64 = 7;
 
 fn calc_err(e: calc::CalcError) -> ResolveError {
     ResolveError::Calc(e)
 }
 
 /// Medijan: za paran broj niži od dva srednja.
-fn median(values: &mut [i32]) -> i32 {
+pub(crate) fn median(values: &mut [i32]) -> i32 {
     values.sort_unstable();
     match values.len().checked_sub(1) {
         Some(last) => values.get(last / 2).copied().unwrap_or(0),
@@ -48,16 +50,19 @@ fn median(values: &mut [i32]) -> i32 {
     }
 }
 
-fn margin_bp(gop: i128, revenue: i128) -> Result<i32, ResolveError> {
-    if revenue <= 0 {
+/// `part · 10 000 / whole` u baznim bodovima; bez prihoda (`whole ≤ 0`) 0.
+pub(crate) fn ratio_bp(part: i128, whole: i128) -> Result<i32, calc::CalcError> {
+    if whole <= 0 {
         return Ok(0);
     }
-    let v =
-        calc::div_round(calc::mul(gop, 10_000).map_err(calc_err)?, revenue).map_err(calc_err)?;
-    calc::narrow(v).map_err(calc_err)
+    calc::narrow(calc::div_round(calc::mul(part, 10_000)?, whole)?)
 }
 
-fn reference_profile(cat: &Catalog) -> Result<Profile, ResolveError> {
+fn margin_bp(gop: i128, revenue: i128) -> Result<i32, ResolveError> {
+    ratio_bp(gop, revenue).map_err(calc_err)
+}
+
+pub(crate) fn reference_profile(cat: &Catalog) -> Result<Profile, ResolveError> {
     let category = cat.profile(Profile::C)?.category;
     cat.reference_profiles
         .get(&category)
@@ -225,7 +230,7 @@ fn s3_gop_gain(
 }
 
 #[derive(Clone, Copy)]
-enum Probe {
+pub(crate) enum Probe {
     Price60,
     Price150,
     Marketing,
@@ -241,7 +246,7 @@ enum Probe {
 }
 
 impl Probe {
-    const ALL: [Probe; 12] = [
+    pub(crate) const ALL: [Probe; 12] = [
         Probe::Price60,
         Probe::Price150,
         Probe::Marketing,
@@ -256,7 +261,7 @@ impl Probe {
         Probe::RenovationJune,
     ];
 
-    fn name(self) -> &'static str {
+    pub(crate) fn name(self) -> &'static str {
         match self {
             Probe::Price60 => "cijena 60 %",
             Probe::Price150 => "cijena 150 %",
@@ -320,13 +325,14 @@ impl Probe {
 }
 
 /// Odgovor „srednji po q": stabilno sortirano po kvaliteti, indeks len/2.
-fn middle_by_quality(t: &SituationTemplate) -> Result<usize, ResolveError> {
+pub(crate) fn middle_index(t: &SituationTemplate) -> Option<usize> {
     let mut order: Vec<usize> = (0..t.answers.len()).collect();
     order.sort_by_key(|&i| t.answers.get(i).map_or(0, |a| a.quality));
-    order
-        .get(order.len() / 2)
-        .copied()
-        .ok_or(ResolveError::BadChoice)
+    order.get(order.len() / 2).copied()
+}
+
+fn middle_by_quality(t: &SituationTemplate) -> Result<usize, ResolveError> {
+    middle_index(t).ok_or(ResolveError::BadChoice)
 }
 
 fn run_probe(
@@ -361,6 +367,55 @@ fn category_refs(cat: &Catalog) -> Result<Vec<(Category, RefTable)>, ResolveErro
     Ok(out)
 }
 
+/// Medijani napretka po profilu i strategiji i po profilu (sve strategije zajedno); `season` vraća napredak
+/// jedne sezone za (profil, strategija, sjeme). Zajedničko v1 i v2.
+#[allow(clippy::type_complexity)]
+pub(crate) fn season_medians<E>(
+    seeds: u64,
+    season: &mut dyn FnMut(Profile, Strategy, u64) -> Result<i32, E>,
+) -> Result<(Vec<(Profile, Strategy, i32)>, Vec<(Profile, i32)>), E> {
+    let mut medians = Vec::new();
+    let mut per_profile: Vec<(Profile, Vec<i32>)> =
+        Profile::ALL.iter().map(|&p| (p, Vec::new())).collect();
+    for p in Profile::ALL {
+        for s in Strategy::ALL {
+            let mut pts = Vec::new();
+            for seed in 0..seeds {
+                pts.push(season(p, s, seed)?);
+            }
+            if let Some((_, all)) = per_profile.iter_mut().find(|(q, _)| *q == p) {
+                all.extend(pts.iter().copied());
+            }
+            medians.push((p, s, median(&mut pts)));
+        }
+    }
+    let profile_medians = per_profile
+        .into_iter()
+        .map(|(p, mut v)| (p, median(&mut v)))
+        .collect();
+    Ok((medians, profile_medians))
+}
+
+/// §11.5: za svaki profil i strategiju `same` kaže jesu li dva izvršavanja sa sjemenom 7 jednaka.
+pub(crate) fn all_reproducible<E>(
+    same: &mut dyn FnMut(Profile, Strategy) -> Result<bool, E>,
+) -> Result<bool, E> {
+    let mut reproducible = true;
+    for p in Profile::ALL {
+        for s in Strategy::ALL {
+            reproducible &= same(p, s)?;
+        }
+    }
+    Ok(reproducible)
+}
+
+/// Jedna vrijednost po profilu (redak probe).
+pub(crate) fn profile_row<E>(
+    value: &mut dyn FnMut(Profile) -> Result<i32, E>,
+) -> Result<Vec<(Profile, i32)>, E> {
+    Profile::ALL.iter().map(|&p| Ok((p, value(p)?))).collect()
+}
+
 pub fn run(content: &content::Content, opts: &Options) -> Result<Report, ResolveError> {
     let cat = &content.catalog;
     let situations = &content.situations;
@@ -390,37 +445,22 @@ pub fn run(content: &content::Content, opts: &Options) -> Result<Report, Resolve
     let august_displacement = august_displacement(cat, situations, &before_aug)?;
     let s3_gop_gain_cents = s3_gop_gain(cat, situations, &before_jun, &before_aug)?;
 
-    let mut medians = Vec::new();
-    let mut per_profile: Vec<(Profile, Vec<i32>)> =
-        Profile::ALL.iter().map(|&p| (p, Vec::new())).collect();
-    let mut reproducible = true;
-    for p in Profile::ALL {
+    let (medians, profile_medians) =
+        season_medians::<ResolveError>(opts.seeds, &mut |p, s, seed| {
+            Ok(run_season(p, s, seed, cat, situations, refs_for(p)?)?.progress_pts)
+        })?;
+    let reproducible = all_reproducible::<ResolveError>(&mut |p, s| {
         let refs = refs_for(p)?;
-        for s in Strategy::ALL {
-            let mut pts = Vec::new();
-            for seed in 0..opts.seeds {
-                pts.push(run_season(p, s, seed, cat, situations, refs)?.progress_pts);
-            }
-            if let Some((_, all)) = per_profile.iter_mut().find(|(q, _)| *q == p) {
-                all.extend(pts.iter().copied());
-            }
-            medians.push((p, s, median(&mut pts)));
-            let a = run_season(p, s, REPRO_SEED, cat, situations, refs)?;
-            let b = run_season(p, s, REPRO_SEED, cat, situations, refs)?;
-            reproducible &= a == b;
-        }
-    }
-    let profile_medians = per_profile
-        .into_iter()
-        .map(|(p, mut v)| (p, median(&mut v)))
-        .collect();
+        let a = run_season(p, s, REPRO_SEED, cat, situations, refs)?;
+        let b = run_season(p, s, REPRO_SEED, cat, situations, refs)?;
+        Ok(a == b)
+    })?;
 
     let mut probes = Vec::new();
     for probe in Probe::ALL {
-        let mut row = Vec::new();
-        for p in Profile::ALL {
-            row.push((p, run_probe(probe, p, cat, situations, refs_for(p)?)?));
-        }
+        let row = profile_row::<ResolveError>(&mut |p| {
+            run_probe(probe, p, cat, situations, refs_for(p)?)
+        })?;
         probes.push((probe.name().to_string(), row));
     }
 
@@ -437,18 +477,15 @@ pub fn run(content: &content::Content, opts: &Options) -> Result<Report, Resolve
     })
 }
 
-fn lookup<T: Copy>(row: &[(Profile, T)], p: Profile, default: T) -> T {
+pub(crate) fn lookup<T: Copy>(row: &[(Profile, T)], p: Profile, default: T) -> T {
     row.iter()
         .find(|(q, _)| *q == p)
         .map_or(default, |(_, v)| *v)
 }
 
-/// Prazno = sve provjere prolaze.
-pub fn failures(report: &Report, _cat: &Catalog) -> Vec<String> {
-    let mut f = Vec::new();
-
-    // §11.1 početak
-    for (p, set) in &report.starts {
+/// §11.1 početak: indeksi na početku blizu ciljeva profila (C ±100, A/B ±200).
+pub(crate) fn check_start(f: &mut Vec<String>, starts: &[(Profile, IndexSet)]) {
+    for (p, set) in starts {
         let tol = if *p == Profile::C { 100i32 } else { 200 };
         let target = p.starting_indices();
         for i in Index::ALL {
@@ -466,6 +503,78 @@ pub fn failures(report: &Report, _cat: &Catalog) -> Vec<String> {
             }
         }
     }
+}
+
+/// §11.3 pravednost: razlika medijana profila i nijedan profil najbolji pod svim strategijama.
+pub(crate) fn check_fairness(
+    f: &mut Vec<String>,
+    profile_medians: &[(Profile, i32)],
+    medians: &[(Profile, Strategy, i32)],
+) {
+    let hi = profile_medians.iter().map(|(_, v)| *v).max();
+    let lo = profile_medians.iter().map(|(_, v)| *v).min();
+    if let (Some(hi), Some(lo)) = (hi, lo)
+        && hi - lo >= 500
+    {
+        f.push(format!(
+            "§11.3 pravednost: razlika medijana profila je {} (najviše 499)",
+            hi - lo
+        ));
+    }
+    for p in Profile::ALL {
+        let wins_all = Strategy::ALL.iter().all(|s| {
+            let of = |q: Profile| {
+                medians
+                    .iter()
+                    .find(|(pp, ss, _)| *pp == q && ss == s)
+                    .map_or(i32::MIN, |(_, _, v)| *v)
+            };
+            Profile::ALL
+                .iter()
+                .filter(|q| **q != p)
+                .all(|q| of(p) > of(*q))
+        });
+        if wins_all {
+            f.push(format!(
+                "§11.3 pravednost: profil {} ima najveći medijan pod svim strategijama",
+                p.code()
+            ));
+        }
+    }
+}
+
+/// §11.4 dominantna radnja: strogo najveći napredak za sva tri profila.
+pub(crate) fn check_dominant(f: &mut Vec<String>, probes: &[(String, Vec<(Profile, i32)>)]) {
+    for (name, row) in probes {
+        let dominant = Profile::ALL.iter().all(|p| {
+            let mine = lookup(row, *p, i32::MIN);
+            probes
+                .iter()
+                .filter(|(n, _)| n != name)
+                .all(|(_, r)| mine > lookup(r, *p, i32::MIN))
+        });
+        if dominant {
+            f.push(format!(
+                "§11.4 dominantna radnja: \"{name}\" ima najveći napredak za sva tri profila"
+            ));
+        }
+    }
+}
+
+/// §11.5 ponovljivost.
+pub(crate) fn check_repro(f: &mut Vec<String>, reproducible: bool) {
+    if !reproducible {
+        f.push(
+            "§11.5 ponovljivost: ista sezona sa sjemenom 7 dala je različit rezultat".to_string(),
+        );
+    }
+}
+
+/// Prazno = sve provjere prolaze.
+pub fn failures(report: &Report, _cat: &Catalog) -> Vec<String> {
+    let mut f = Vec::new();
+
+    check_start(&mut f, &report.starts);
 
     // §11.2 ekonomija
     let season = report.reference_season_margin_bp;
@@ -497,66 +606,13 @@ pub fn failures(report: &Report, _cat: &Catalog) -> Vec<String> {
         None => f.push("§7 S3: nema ponude grupe za kolovoz, lekcija se ne može provjeriti".to_string()),
     }
 
-    // §11.3 pravednost
-    let hi = report.profile_medians.iter().map(|(_, v)| *v).max();
-    let lo = report.profile_medians.iter().map(|(_, v)| *v).min();
-    if let (Some(hi), Some(lo)) = (hi, lo)
-        && hi - lo >= 500
-    {
-        f.push(format!(
-            "§11.3 pravednost: razlika medijana profila je {} (najviše 499)",
-            hi - lo
-        ));
-    }
-    for p in Profile::ALL {
-        let wins_all = Strategy::ALL.iter().all(|s| {
-            let of = |q: Profile| {
-                report
-                    .medians
-                    .iter()
-                    .find(|(pp, ss, _)| *pp == q && ss == s)
-                    .map_or(i32::MIN, |(_, _, v)| *v)
-            };
-            Profile::ALL
-                .iter()
-                .filter(|q| **q != p)
-                .all(|q| of(p) > of(*q))
-        });
-        if wins_all {
-            f.push(format!(
-                "§11.3 pravednost: profil {} ima najveći medijan pod svim strategijama",
-                p.code()
-            ));
-        }
-    }
-
-    // §11.4 dominantna radnja: strogo najveći napredak za sva tri profila
-    for (name, row) in &report.probes {
-        let dominant = Profile::ALL.iter().all(|p| {
-            let mine = lookup(row, *p, i32::MIN);
-            report
-                .probes
-                .iter()
-                .filter(|(n, _)| n != name)
-                .all(|(_, r)| mine > lookup(r, *p, i32::MIN))
-        });
-        if dominant {
-            f.push(format!(
-                "§11.4 dominantna radnja: \"{name}\" ima najveći napredak za sva tri profila"
-            ));
-        }
-    }
-
-    // §11.5 ponovljivost
-    if !report.reproducible {
-        f.push(
-            "§11.5 ponovljivost: ista sezona sa sjemenom 7 dala je različit rezultat".to_string(),
-        );
-    }
+    check_fairness(&mut f, &report.profile_medians, &report.medians);
+    check_dominant(&mut f, &report.probes);
+    check_repro(&mut f, report.reproducible);
     f
 }
 
-fn hundredths(v: i32) -> String {
+pub(crate) fn hundredths(v: i32) -> String {
     let sign = if v < 0 { "-" } else { "" };
     format!("{sign}{}.{:02}", v.abs() / 100, v.abs() % 100)
 }
@@ -575,16 +631,54 @@ fn euros(cents: i64) -> String {
     format!("{sign}{grouped} EUR")
 }
 
-pub fn render(report: &Report) -> String {
-    let mut s = String::new();
+pub(crate) fn push_starts(s: &mut String, starts: &[(Profile, IndexSet)]) {
     s.push_str("== Početak (§11.1): G R Z O F ==\n");
-    for (p, set) in &report.starts {
+    for (p, set) in starts {
         let vals: Vec<String> = Index::ALL
             .iter()
             .map(|i| hundredths(i32::from(set.get(*i).hundredths())))
             .collect();
         s.push_str(&format!("  {}: {}\n", p.code(), vals.join("  ")));
     }
+}
+
+pub(crate) fn push_medians(
+    s: &mut String,
+    medians: &[(Profile, Strategy, i32)],
+    profile_medians: &[(Profile, i32)],
+) {
+    s.push_str("== Medijan napretka po profilu i strategiji (§11.3), bodova ==\n");
+    for (p, st, v) in medians {
+        s.push_str(&format!(
+            "  {} {:<10} {}\n",
+            p.code(),
+            st.code(),
+            hundredths(*v)
+        ));
+    }
+    for (p, v) in profile_medians {
+        s.push_str(&format!(
+            "  profil {} (sve strategije): {}\n",
+            p.code(),
+            hundredths(*v)
+        ));
+    }
+}
+
+pub(crate) fn push_probes(s: &mut String, probes: &[(String, Vec<(Profile, i32)>)]) {
+    s.push_str("== Probe krajnjih radnji (§11.4), napredak A / B / C ==\n");
+    for (name, row) in probes {
+        let vals: Vec<String> = row
+            .iter()
+            .map(|(p, v)| format!("{}={}", p.code(), hundredths(*v)))
+            .collect();
+        s.push_str(&format!("  {:<24} {}\n", name, vals.join("  ")));
+    }
+}
+
+pub fn render(report: &Report) -> String {
+    let mut s = String::new();
+    push_starts(&mut s, &report.starts);
     s.push_str("== Ekonomija referentnog hotela (§11.2), marža GOP-a ==\n");
     for (m, bp) in &report.reference_margin_bp {
         s.push_str(&format!("  {}: {} %\n", m.code(), hundredths(*bp)));
@@ -606,30 +700,8 @@ pub fn render(report: &Report) -> String {
         )),
         None => s.push_str("  S3 grupa, dobit GOP-a od prihvaćanja: nema grupe u kolovozu\n"),
     }
-    s.push_str("== Medijan napretka po profilu i strategiji (§11.3), bodova ==\n");
-    for (p, st, v) in &report.medians {
-        s.push_str(&format!(
-            "  {} {:<10} {}\n",
-            p.code(),
-            st.code(),
-            hundredths(*v)
-        ));
-    }
-    for (p, v) in &report.profile_medians {
-        s.push_str(&format!(
-            "  profil {} (sve strategije): {}\n",
-            p.code(),
-            hundredths(*v)
-        ));
-    }
-    s.push_str("== Probe krajnjih radnji (§11.4), napredak A / B / C ==\n");
-    for (name, row) in &report.probes {
-        let vals: Vec<String> = row
-            .iter()
-            .map(|(p, v)| format!("{}={}", p.code(), hundredths(*v)))
-            .collect();
-        s.push_str(&format!("  {:<24} {}\n", name, vals.join("  ")));
-    }
+    push_medians(&mut s, &report.medians, &report.profile_medians);
+    push_probes(&mut s, &report.probes);
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",
         if report.reproducible { "da" } else { "ne" }
