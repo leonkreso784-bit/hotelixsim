@@ -4,6 +4,7 @@
 pub mod actor;
 mod ai_input;
 pub mod command;
+mod departments;
 pub mod dto;
 pub mod dto_v2;
 pub mod error;
@@ -24,6 +25,7 @@ pub use actor::{Actor, strategy_from_code};
 pub use ai_input::{
     AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, OfferedForJudge,
 };
+pub use departments::{DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView};
 pub use error::GameError;
 pub use event::*;
 pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};

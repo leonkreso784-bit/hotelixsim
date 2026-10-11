@@ -208,7 +208,7 @@ pub fn july_resolved_bad_chef_game() -> (Game, HotelId) {
     (g, h)
 }
 
-/// V2 tjedna igra s obračunatim krugovima redom do uključivo `code` (npr. "t05").
+/// V2 tjedna igra s obračunatim krugovima redom do uključivo `code` (npr. "t05"); `"none"` = nijedan obračun.
 pub fn v2_weekly_game_resolved_through(code: &str) -> Game {
     use game::command::{GameSettings, new_game_with};
     let snap = Snapshot::read_v2(&repo_dir()).unwrap();
@@ -228,6 +228,9 @@ pub fn v2_weekly_game_resolved_through(code: &str) -> Game {
     .map(|((actor, event), seq)| Recorded { seq, actor, event })
     .collect();
     let mut g = Game::fold(&log).unwrap();
+    if code == "none" {
+        return g;
+    }
     let last = RoundKey::parse(code).unwrap();
     while let Some(r) = g.current_round() {
         let ev = g.close_round(r).unwrap().unwrap();

@@ -9,9 +9,12 @@ use sim_hotel::{
     month_indices, resolve_month,
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
-use sim_hotel_v2::{Period, PeriodKind, PeriodPlan, period_indices, resolve_period};
+use sim_hotel_v2::department::{DeptCode, PeriodAccounts};
+use sim_hotel_v2::{
+    Period, PeriodKind, PeriodPlan, ResolveError, period_indices, resolve_period, run_season_with,
+};
 
-use crate::command::{PlanLimits, plan_limits};
+use crate::command::{DeptLimitsView, PlanLimits, plan_limits};
 use crate::dto::{MonthReportDto, PlanDto};
 use crate::dto_v2::DetailDto;
 use crate::error::{GameError, corrupt};
@@ -360,6 +363,7 @@ impl Model {
                     report: MonthReportDto::from(&report.summary),
                     detail: Some(DetailDto {
                         after: (&report.after).into(),
+                        accounts: Some((&report.accounts).into()),
                     }),
                     indices,
                 })
@@ -456,9 +460,112 @@ impl Model {
                     wage_min_pct: l.wage_min_pct,
                     wage_max_pct: l.wage_max_pct,
                     renovation_available: l.renovation_available,
+                    seasonal_step_total: Some(l.seasonal_step_total),
+                    departments: l
+                        .departments
+                        .iter()
+                        .map(|(code, d)| {
+                            (
+                                code.as_str().to_owned(),
+                                DeptLimitsView {
+                                    seasonal_min: d.seasonal_min,
+                                    seasonal_max: d.seasonal_max,
+                                    price_level_min_pct: d.price_level_min_pct,
+                                    price_level_max_pct: d.price_level_max_pct,
+                                    can_close: d.can_close,
+                                },
+                            )
+                        })
+                        .collect(),
                 })
             }
             _ => Err(mismatch()),
+        }
+    }
+
+    /// Katalog v2 za poglede odjela i računa dobiti; v1 igra ih nema (`WrongModel`).
+    pub(crate) fn require_v2(self, c: &Content) -> Result<&sim_hotel_v2::Catalog, GameError> {
+        match self {
+            Model::V1 => Err(GameError::WrongModel),
+            Model::V2 => v2_catalog(c),
+        }
+    }
+
+    /// Stanje v2 (odjeli) iz stanja igre; v1 stanje je `WrongModel`.
+    pub(crate) fn v2_state(self, s: &CoreState) -> Result<&sim_hotel_v2::HotelState, GameError> {
+        match (self, s) {
+            (Model::V1, _) => Err(GameError::WrongModel),
+            (Model::V2, CoreState::V2(s)) => Ok(s),
+            _ => Err(mismatch()),
+        }
+    }
+
+    /// Računi odjela jednog obračunatog kruga (v2); v1 obračun ih nema (`WrongModel`).
+    pub(crate) fn accounts(self, res: &HotelResolution) -> Result<PeriodAccounts, GameError> {
+        match self {
+            Model::V1 => Err(GameError::WrongModel),
+            Model::V2 => {
+                let a = res
+                    .detail
+                    .as_ref()
+                    .and_then(|d| d.accounts.as_ref())
+                    .ok_or_else(|| corrupt("v2 obračun bez računa odjela"))?;
+                PeriodAccounts::try_from(a)
+            }
+        }
+    }
+
+    /// Budžet (🟨 P8): račun odjela svakog kruga sezone kad hotel od početnog stanja profila u svakom krugu igra
+    /// zadani plan (`PeriodPlan::default_for`), bez situacija; isti kalendar kao igra. Redom `rounds`.
+    pub(crate) fn budget_accounts(
+        self,
+        c: &Content,
+        profile: Profile,
+        rounds: &[RoundInfo],
+        refs: &CoreRefs,
+    ) -> Result<Vec<PeriodAccounts>, GameError> {
+        let (cat, refs) = match (self, refs) {
+            (Model::V1, _) => return Err(GameError::WrongModel),
+            (Model::V2, CoreRefs::V2(r)) => (v2_catalog(c)?, r),
+            _ => return Err(mismatch()),
+        };
+        let kind = rounds
+            .first()
+            .ok_or_else(|| corrupt("igra bez krugova"))?
+            .period
+            .kind;
+        let season = run_season_with(
+            profile,
+            kind,
+            cat,
+            &[],
+            refs,
+            &mut |s, p| PeriodPlan::default_for(s, p, cat).map_err(ResolveError::Catalog),
+            &mut |_| Err(ResolveError::BadChoice),
+        )
+        .map_err(debug)?;
+        if season.periods.len() != rounds.len() {
+            return Err(corrupt("budžet nema isti broj krugova kao igra"));
+        }
+        Ok(season
+            .periods
+            .into_iter()
+            .map(|(report, _)| report.accounts)
+            .collect())
+    }
+
+    /// Izravni trošak po prodanoj noći: v1 `cpor_cents` kategorije, v2 izravni trošak po korištenju odjela Smještaj.
+    pub(crate) fn rooms_direct_cost(
+        self,
+        c: &Content,
+        category: Category,
+    ) -> Result<i64, GameError> {
+        match self {
+            Model::V1 => Ok(c.catalog.category(category).map_err(debug)?.cpor_cents),
+            Model::V2 => Ok(v2_catalog(c)?
+                .dept(&DeptCode::rooms())
+                .map_err(debug)?
+                .direct_per_use_cents),
         }
     }
 

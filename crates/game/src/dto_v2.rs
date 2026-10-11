@@ -5,7 +5,10 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use sim_hotel::{Category, GroupBlock, Pending};
-use sim_hotel_v2::department::{DeptCode, DeptPlan, DeptState, UsaliClass};
+use sim_hotel_v2::department::{
+    AssignedCosts, DeptCode, DeptOutcome, DeptPlan, DeptState, PeriodAccounts,
+    UndistributedOutcome, UsaliClass,
+};
 use sim_hotel_v2::{HotelState, PeriodPlan};
 
 use crate::dto::{GroupBlockDto, MaintenanceCode, PendingDto, PlanDto};
@@ -17,6 +20,257 @@ use crate::error::{GameError, corrupt};
 pub struct DetailDto {
     /// Stanje v2 nakon kruga; iz njega kreće idući krug.
     pub after: HotelStateV2Dto,
+    /// Računi odjela kruga (izvor računa dobiti i pogleda odjela); krugovi obračunati prije Taska 14 ga nemaju.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accounts: Option<PeriodAccountsDto>,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::department::DeptOutcome`; `class` je kod `UsaliClass::code`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DeptOutcomeDto {
+    pub code: String,
+    pub class: String,
+    pub open: bool,
+    pub staff: u16,
+    pub capacity_uses: u32,
+    pub demand_uses: u32,
+    pub served_uses: u32,
+    pub usage_bp: u16,
+    pub load_hundredths: u16,
+    pub load_penalty_pts: i32,
+    pub quality_pts: i32,
+    pub price_level_pct: u16,
+    pub revenue_cents: i64,
+    pub payroll_cents: i64,
+    pub cost_of_sales_cents: i64,
+    pub other_direct_cents: i64,
+    pub profit_cents: i64,
+    pub condition_before_pts: i32,
+    pub wear_pts: i32,
+    pub load_wear_pts: i32,
+    pub maintenance_pts: i32,
+    pub condition_after_pts: i32,
+    pub maintenance_cents: i64,
+    pub value_pts: i32,
+    pub satisfaction_before_pts: i32,
+    pub satisfaction_target_pts: i32,
+    pub satisfaction_after_pts: i32,
+    pub guest_weight: u32,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::department::AssignedCosts`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssignedCostsDto {
+    pub marketing_cents: i64,
+    pub reply_cents: i64,
+    pub maintenance_cents: i64,
+    pub training_cents: i64,
+    pub hiring_cents: i64,
+    pub situation_cents: i64,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::department::UndistributedOutcome`; `kind` je kod razreda (`UsaliClass::code`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UndistributedOutcomeDto {
+    pub code: String,
+    pub kind: String,
+    pub staff: u16,
+    pub payroll_cents: i64,
+    pub fixed_cents: i64,
+    pub per_room_cents: i64,
+    pub assigned: AssignedCostsDto,
+    pub total_cents: i64,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::department::PeriodAccounts`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PeriodAccountsDto {
+    pub days: u8,
+    pub rooms: u16,
+    pub departments: BTreeMap<String, DeptOutcomeDto>,
+    pub undistributed: BTreeMap<String, UndistributedOutcomeDto>,
+    pub fixed_charges: BTreeMap<String, i64>,
+    pub interest_cents: i64,
+    pub capex_cents: i64,
+}
+
+fn class_of(code: &str) -> Result<UsaliClass, GameError> {
+    UsaliClass::from_code(code).ok_or_else(|| corrupt(format!("razred odjela {code}")))
+}
+
+impl From<&DeptOutcome> for DeptOutcomeDto {
+    fn from(o: &DeptOutcome) -> Self {
+        DeptOutcomeDto {
+            code: o.code.as_str().to_owned(),
+            class: o.class.code().to_owned(),
+            open: o.open,
+            staff: o.staff,
+            capacity_uses: o.capacity_uses,
+            demand_uses: o.demand_uses,
+            served_uses: o.served_uses,
+            usage_bp: o.usage_bp,
+            load_hundredths: o.load_hundredths,
+            load_penalty_pts: o.load_penalty_pts,
+            quality_pts: o.quality_pts,
+            price_level_pct: o.price_level_pct,
+            revenue_cents: o.revenue_cents,
+            payroll_cents: o.payroll_cents,
+            cost_of_sales_cents: o.cost_of_sales_cents,
+            other_direct_cents: o.other_direct_cents,
+            profit_cents: o.profit_cents,
+            condition_before_pts: o.condition_before_pts,
+            wear_pts: o.wear_pts,
+            load_wear_pts: o.load_wear_pts,
+            maintenance_pts: o.maintenance_pts,
+            condition_after_pts: o.condition_after_pts,
+            maintenance_cents: o.maintenance_cents,
+            value_pts: o.value_pts,
+            satisfaction_before_pts: o.satisfaction_before_pts,
+            satisfaction_target_pts: o.satisfaction_target_pts,
+            satisfaction_after_pts: o.satisfaction_after_pts,
+            guest_weight: o.guest_weight,
+        }
+    }
+}
+
+impl TryFrom<&DeptOutcomeDto> for DeptOutcome {
+    type Error = GameError;
+
+    fn try_from(o: &DeptOutcomeDto) -> Result<Self, GameError> {
+        Ok(DeptOutcome {
+            code: DeptCode(o.code.clone()),
+            class: class_of(&o.class)?,
+            open: o.open,
+            staff: o.staff,
+            capacity_uses: o.capacity_uses,
+            demand_uses: o.demand_uses,
+            served_uses: o.served_uses,
+            usage_bp: o.usage_bp,
+            load_hundredths: o.load_hundredths,
+            load_penalty_pts: o.load_penalty_pts,
+            quality_pts: o.quality_pts,
+            price_level_pct: o.price_level_pct,
+            revenue_cents: o.revenue_cents,
+            payroll_cents: o.payroll_cents,
+            cost_of_sales_cents: o.cost_of_sales_cents,
+            other_direct_cents: o.other_direct_cents,
+            profit_cents: o.profit_cents,
+            condition_before_pts: o.condition_before_pts,
+            wear_pts: o.wear_pts,
+            load_wear_pts: o.load_wear_pts,
+            maintenance_pts: o.maintenance_pts,
+            condition_after_pts: o.condition_after_pts,
+            maintenance_cents: o.maintenance_cents,
+            value_pts: o.value_pts,
+            satisfaction_before_pts: o.satisfaction_before_pts,
+            satisfaction_target_pts: o.satisfaction_target_pts,
+            satisfaction_after_pts: o.satisfaction_after_pts,
+            guest_weight: o.guest_weight,
+        })
+    }
+}
+
+impl From<&AssignedCosts> for AssignedCostsDto {
+    fn from(a: &AssignedCosts) -> Self {
+        AssignedCostsDto {
+            marketing_cents: a.marketing_cents,
+            reply_cents: a.reply_cents,
+            maintenance_cents: a.maintenance_cents,
+            training_cents: a.training_cents,
+            hiring_cents: a.hiring_cents,
+            situation_cents: a.situation_cents,
+        }
+    }
+}
+
+impl From<&AssignedCostsDto> for AssignedCosts {
+    fn from(a: &AssignedCostsDto) -> Self {
+        AssignedCosts {
+            marketing_cents: a.marketing_cents,
+            reply_cents: a.reply_cents,
+            maintenance_cents: a.maintenance_cents,
+            training_cents: a.training_cents,
+            hiring_cents: a.hiring_cents,
+            situation_cents: a.situation_cents,
+        }
+    }
+}
+
+impl From<&UndistributedOutcome> for UndistributedOutcomeDto {
+    fn from(u: &UndistributedOutcome) -> Self {
+        UndistributedOutcomeDto {
+            code: u.code.as_str().to_owned(),
+            kind: UsaliClass::Undistributed(u.kind).code().to_owned(),
+            staff: u.staff,
+            payroll_cents: u.payroll_cents,
+            fixed_cents: u.fixed_cents,
+            per_room_cents: u.per_room_cents,
+            assigned: (&u.assigned).into(),
+            total_cents: u.total_cents,
+        }
+    }
+}
+
+impl TryFrom<&UndistributedOutcomeDto> for UndistributedOutcome {
+    type Error = GameError;
+
+    fn try_from(u: &UndistributedOutcomeDto) -> Result<Self, GameError> {
+        let UsaliClass::Undistributed(kind) = class_of(&u.kind)? else {
+            return Err(corrupt(format!("{} nije neraspoređeni odjel", u.kind)));
+        };
+        Ok(UndistributedOutcome {
+            code: DeptCode(u.code.clone()),
+            kind,
+            staff: u.staff,
+            payroll_cents: u.payroll_cents,
+            fixed_cents: u.fixed_cents,
+            per_room_cents: u.per_room_cents,
+            assigned: (&u.assigned).into(),
+            total_cents: u.total_cents,
+        })
+    }
+}
+
+impl From<&PeriodAccounts> for PeriodAccountsDto {
+    fn from(a: &PeriodAccounts) -> Self {
+        PeriodAccountsDto {
+            days: a.days,
+            rooms: a.rooms,
+            departments: by_string(&a.departments, |d| DeptOutcomeDto::from(d)),
+            undistributed: by_string(&a.undistributed, |u| UndistributedOutcomeDto::from(u)),
+            fixed_charges: a.fixed_charges.clone(),
+            interest_cents: a.interest_cents,
+            capex_cents: a.capex_cents,
+        }
+    }
+}
+
+impl TryFrom<&PeriodAccountsDto> for PeriodAccounts {
+    type Error = GameError;
+
+    fn try_from(a: &PeriodAccountsDto) -> Result<Self, GameError> {
+        let mut departments = BTreeMap::new();
+        for (k, v) in &a.departments {
+            departments.insert(DeptCode(k.clone()), DeptOutcome::try_from(v)?);
+        }
+        let mut undistributed = BTreeMap::new();
+        for (k, v) in &a.undistributed {
+            undistributed.insert(DeptCode(k.clone()), UndistributedOutcome::try_from(v)?);
+        }
+        Ok(PeriodAccounts {
+            days: a.days,
+            rooms: a.rooms,
+            departments,
+            undistributed,
+            fixed_charges: a.fixed_charges.clone(),
+            interest_cents: a.interest_cents,
+            capex_cents: a.capex_cents,
+        })
+    }
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::DeptState`; `class` je kod `UsaliClass::code`.

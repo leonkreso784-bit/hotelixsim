@@ -33,6 +33,10 @@ pub enum GameError {
     InvalidSettings,
     /// Greška plana v2 (v1 ostaje `Plan`).
     PlanV2(sim_hotel_v2::PlanError),
+    /// Hotel nema odjel s tim kodom (pogled jednog odjela).
+    UnknownDepartment,
+    /// Račun dobiti traži barem jedan obračunati krug.
+    NothingResolved,
 }
 
 pub(crate) fn corrupt(msg: impl Into<String>) -> GameError {

@@ -6,7 +6,6 @@ use crate::error::{GameError, corrupt};
 use crate::event::Controller;
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
-use crate::kpi::round_kpi;
 use crate::round::RoundKey;
 
 /// Tko vodi hotel; namjerno bez `guest_id`, tuđi gost se ne otkriva.
@@ -138,8 +137,7 @@ impl Game {
                 .iter()
                 .find(|x| x.hotel_id == id)
                 .ok_or_else(|| corrupt("hotel nedostaje u obračunu"))?;
-            let days = self.round_info(rr.month)?.period.days;
-            let k = round_kpi(&res.report, days, self.model().catalog(&self.content)?)?;
+            let k = self.round_kpi_of(&res.report, rr.month)?;
             last_month = Some(LastMonth {
                 round: rr.month,
                 sold: res.report.market.sold,

@@ -96,12 +96,18 @@ fn v2_game_ignores_the_v1_catalog() {
 fn v2_game_reads_the_v2_base_catalog() {
     let mut g = v2_game();
     let before = reads(&g);
-    poison(&mut g.content.v2.as_mut().unwrap().base);
+    let v2 = g.content.v2.as_mut().unwrap();
+    poison(&mut v2.base);
+    // Od Taska 14 izravni trošak po noći v2 igre je trošak po korištenju odjela Smještaj, ne CPOR kategorije.
+    v2.departments
+        .get_mut(&sim_hotel_v2::department::DeptCode::rooms())
+        .unwrap()
+        .direct_per_use_cents += BUMP;
     let after = reads(&g);
     let shifted: Vec<Option<i64>> = before.cpor.iter().map(|c| c.map(|v| v + BUMP)).collect();
     assert_eq!(
         after.cpor, shifted,
-        "pokazatelji moraju koristiti CPOR kataloga v2"
+        "pokazatelji moraju koristiti izravni trošak odjela Smještaj kataloga v2"
     );
     assert_ne!(
         before.price_ref, after.price_ref,
