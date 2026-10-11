@@ -63,6 +63,13 @@ pub struct DebriefSituation {
     pub chosen_label: Option<String>,
 }
 
+/// Odlasci zaposlenih jednog odjela u krugu (samo v2); ime je iz sadržaja, ne šifra.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct DepartmentDepartures {
+    pub name: String,
+    pub count: u16,
+}
+
 /// Ulaz za mentora nakon obračuna mjeseca.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefInput {
@@ -95,6 +102,9 @@ pub struct DebriefInput {
     /// Stopa odlazaka (baze, 300 = 3 % osoblja u mjesecu) prije i poslije mjeseca; ulazi u zadržavanje (Z).
     pub turnover_before_bp: u16,
     pub turnover_after_bp: u16,
+    /// Odlasci po odjelu u krugu, od najvećeg broja (pa po šifri odjela); odjeli bez odlazaka se ne navode.
+    /// Prazno za v1 igru i za krug bez odlazaka; zbroj je hotelski broj odlazaka.
+    pub department_departures: Vec<DepartmentDepartures>,
     pub lines: Vec<LineDto>,
 }
 
@@ -225,6 +235,7 @@ impl Game {
             self.model()
                 .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
+        let department_departures = self.department_departures(hotel, res)?;
         let period = self.round_info(m)?.period;
         let (fd, fm) = period.first_date();
         let (ld, lm) = period.last_date();
@@ -248,6 +259,7 @@ impl Game {
             load_after_hundredths: report.after.load_hundredths,
             turnover_before_bp: report.before.turnover_bp,
             turnover_after_bp: report.after.turnover_bp,
+            department_departures,
             lines: report.lines.clone(),
         })
     }

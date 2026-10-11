@@ -4,12 +4,16 @@
 
 use std::collections::BTreeMap;
 
-use sim_hotel_v2::department::{DeptOutcome, PeriodAccounts, UndistributedOutcome, UsaliClass};
+use sim_hotel_v2::department::{
+    DeptCode, DeptOutcome, PeriodAccounts, UndistributedOutcome, UsaliClass,
+};
 use sim_hotel_v2::usali::{
     UsaliStatement, VarianceLine, budget_variance, statement, sum_statements,
 };
 
+use crate::ai_input::DepartmentDepartures;
 use crate::error::{GameError, corrupt};
+use crate::event::HotelResolution;
 use crate::game::Game;
 use crate::ids::HotelId;
 use crate::round::RoundKey;
@@ -91,6 +95,45 @@ impl Game {
             out.push((rr.month, self.model().accounts(res)?));
         }
         Ok(out)
+    }
+
+    /// Odlasci zaposlenih po odjelu u jednom obračunatom krugu, za objašnjenje tjedna i mentora: od najvećeg broja,
+    /// pa po šifri odjela; odjeli s 0 se ne navode. v1 obračun nema odjela pa je odgovor prazan.
+    pub(crate) fn department_departures(
+        &self,
+        h: HotelId,
+        res: &HotelResolution,
+    ) -> Result<Vec<DepartmentDepartures>, GameError> {
+        let accounts = match self.model().accounts(res) {
+            Ok(a) => a,
+            Err(GameError::WrongModel) => return Ok(Vec::new()),
+            Err(e) => return Err(e),
+        };
+        let mut by_code: BTreeMap<&DeptCode, u16> = BTreeMap::new();
+        for (code, o) in &accounts.departments {
+            by_code.insert(code, o.departures);
+        }
+        for (code, u) in &accounts.undistributed {
+            by_code.insert(code, u.departures);
+        }
+        let mut ranked: Vec<(&DeptCode, u16)> =
+            by_code.into_iter().filter(|(_, n)| *n > 0).collect();
+        // Stabilno: `BTreeMap` već daje redoslijed po šifri, pa jednaki brojevi ostaju po šifri.
+        ranked.sort_by_key(|&(_, n)| std::cmp::Reverse(n));
+        if ranked.is_empty() {
+            return Ok(Vec::new());
+        }
+        let rec = self.hotel(h)?;
+        let cat = self.model().require_v2(&self.content)?;
+        ranked
+            .into_iter()
+            .map(|(code, count)| {
+                Ok(DepartmentDepartures {
+                    name: cat.dept_name(rec.profile, code).map_err(catalog)?,
+                    count,
+                })
+            })
+            .collect()
     }
 
     /// Odjeli hotela sa stanjem na kraju zadnjeg obračunatog kruga (prije prvog obračuna: početno stanje bez rezultata).

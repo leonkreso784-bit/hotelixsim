@@ -10,7 +10,7 @@ use sim_hotel::{
     Driver, Index, LOAD_LIMIT_HUNDREDTHS, Month, index_drivers, load_penalty, retention,
 };
 
-use crate::ai_input::DebriefInput;
+use crate::ai_input::{DebriefInput, DepartmentDepartures};
 use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
 use crate::error::GameError;
 use crate::game::Game;
@@ -525,6 +525,39 @@ fn people_text(c: &CauseDto, amount: i64) -> String {
     format!("{verb} {n} {}", ["osoba", "osobe", "osoba"][k])
 }
 
+/// Najviše toliko odjela se imenuje uz odlaske; ostali idu u „i još N".
+const DEPARTURE_NAMED_MAX: usize = 3;
+
+/// Odlasci iz hotelskog retka s odjelima: „otišle 3 osobe (Smještaj 2, Restoran 1)", a uz više od tri odjela
+/// „… (Smještaj 3, Restoran 2, Uprava 1 i još 2)". Bez raščlambe, ili kad se ne slaže s brojem u retku (krug
+/// zapisan prije raščlambe), tekst ostaje kakav je bio.
+fn with_departments(
+    text: String,
+    hotel_total: i64,
+    by_department: &[DepartmentDepartures],
+) -> String {
+    let sum: i64 = by_department.iter().map(|d| i64::from(d.count)).sum();
+    if by_department.is_empty() || sum != hotel_total {
+        return text;
+    }
+    let named: Vec<String> = by_department
+        .iter()
+        .take(DEPARTURE_NAMED_MAX)
+        .map(|d| format!("{} {}", d.name, d.count))
+        .collect();
+    let rest = by_department.len().saturating_sub(DEPARTURE_NAMED_MAX);
+    let list = if rest == 0 {
+        named.join(", ")
+    } else {
+        format!("{} i još {rest}", named.join(", "))
+    };
+    // Jedan odjel: brojka je već u rečenici („otišla 1 osoba (Restoran)").
+    match by_department {
+        [only] => format!("{text} ({})", only.name),
+        _ => format!("{text} ({list})"),
+    }
+}
+
 /// Iznos retka u ljudskoj jedinici; `None` kad je (zaokruženo) nula pa se redak izostavlja.
 fn amount_text(l: &LineDto, signed: bool) -> Option<String> {
     let a = l.amount;
@@ -912,8 +945,12 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
             .into_iter()
             .chain(lines.iter().filter(|l| l.var == var).filter_map(|l| {
                 let pushed = push(l, room_revenue, maintained, morale_alone);
+                let mut amount = amount_text(l, shows_sign(l.var, &l.cause))?;
+                if l.var == VarCode::Staff && l.cause == CauseDto::Turnover {
+                    amount = with_departments(amount, l.amount, &input.department_departures);
+                }
                 Some(ChangeFact {
-                    amount: amount_text(l, shows_sign(l.var, &l.cause))?,
+                    amount,
                     cause: cause_label(l.var, &l.cause, &titles, weekly),
                     because: cause_because(l.var, &l.cause, &titles, weekly),
                     harm: harm_of(pushed),

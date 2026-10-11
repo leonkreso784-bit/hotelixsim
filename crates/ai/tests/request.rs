@@ -167,6 +167,7 @@ fn sample_debrief() -> game::DebriefInput {
         load_after_hundredths: 230,
         turnover_before_bp: 375,
         turnover_after_bp: 443,
+        department_departures: Vec::new(),
         lines: vec![LineDto {
             var: VarCode::Morale,
             cause: CauseDto::Situation("S2".into()),

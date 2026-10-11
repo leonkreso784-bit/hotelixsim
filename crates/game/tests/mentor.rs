@@ -71,6 +71,7 @@ fn sample() -> DebriefInput {
         // Moral 55 → 50,47 bodova: stopa odlazaka 300 + 15 · (6000 − moral) / 100 baza.
         turnover_before_bp: 375,
         turnover_after_bp: 443,
+        department_departures: Vec::new(),
         lines: vec![
             line(VarCode::Morale, CauseDto::Baseline, -453, UnitCode::Points),
             line(VarCode::Morale, CauseDto::Wage, -1_000, UnitCode::Points),
@@ -1413,4 +1414,112 @@ fn monthly_round_texts_keep_month_wording() {
             .iter()
             .any(|(cause, _)| cause == "situacija „situacija iz ovog mjeseca“")
     );
+}
+
+// ------------------------------------------------------------ odlasci po odjelu (Sloj 1/OT)
+
+fn dep(name: &str, count: u16) -> DepartmentDepartures {
+    DepartmentDepartures {
+        name: name.into(),
+        count,
+    }
+}
+
+/// `sample()` ima 3 odlaska u hotelu; v2 krug ih raspoređuje po odjelima.
+fn with_departures(departures: Vec<DepartmentDepartures>) -> DebriefInput {
+    DebriefInput {
+        department_departures: departures,
+        ..sample()
+    }
+}
+
+#[test]
+fn departures_name_both_departments_with_counts() {
+    let input = with_departures(vec![dep("Smještaj", 2), dep("Restoran", 1)]);
+    let f = facts_json(&input);
+    assert_eq!(
+        amount_for(&f, "Zaposleni", "odlasci"),
+        "otišle 3 osobe (Smještaj 2, Restoran 1)"
+    );
+}
+
+#[test]
+fn departures_in_one_department() {
+    let mut input = with_departures(vec![dep("Restoran", 1)]);
+    for l in &mut input.lines {
+        if l.var == VarCode::Staff && l.cause == CauseDto::Turnover {
+            l.amount = 1;
+        }
+    }
+    let f = facts_json(&input);
+    assert_eq!(
+        amount_for(&f, "Zaposleni", "odlasci"),
+        "otišla 1 osoba (Restoran)"
+    );
+}
+
+#[test]
+fn zero_departures_have_no_parentheses() {
+    let mut input = with_departures(Vec::new());
+    for l in &mut input.lines {
+        if l.var == VarCode::Staff && l.cause == CauseDto::Turnover {
+            l.amount = 0;
+        }
+    }
+    let f = facts_json(&input);
+    assert!(
+        changes(&f, "Zaposleni")
+            .iter()
+            .all(|(c, _)| !c.contains("odlasci")),
+        "redak bez odlazaka se izostavlja"
+    );
+    assert!(!serde_json::to_string(&f).unwrap().contains("osobe ("));
+}
+
+#[test]
+fn more_than_three_departments_are_cut_to_three_and_the_rest_counted() {
+    let mut input = with_departures(vec![
+        dep("Smještaj", 3),
+        dep("Restoran", 2),
+        dep("Uprava", 1),
+        dep("Održavanje", 1),
+        dep("Wellness", 1),
+    ]);
+    for l in &mut input.lines {
+        if l.var == VarCode::Staff && l.cause == CauseDto::Turnover {
+            l.amount = 8;
+        }
+    }
+    let f = facts_json(&input);
+    assert_eq!(
+        amount_for(&f, "Zaposleni", "odlasci"),
+        "otišlo 8 osoba (Smještaj 3, Restoran 2, Uprava 1 i još 2)"
+    );
+}
+
+#[test]
+fn v1_text_has_no_departments_and_is_unchanged() {
+    // v1 igra nema odjela: lista je prazna i tekst je isti kao prije.
+    let input = sample();
+    assert!(input.department_departures.is_empty());
+    let f = facts_json(&input);
+    assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "otišle 3 osobe");
+    // I stvarna v1 igra: obračunati mjesec nosi praznu raščlambu, pa nijedan redak o ljudima nema zagradu.
+    let (g, h) = july_resolved_bad_chef_game();
+    let real = g.debrief_input(h, Month::Jul).unwrap();
+    assert!(real.department_departures.is_empty());
+    let json = serde_json::to_string(&facts_json(&real)).unwrap();
+    assert!(
+        !json.contains("osob") || !json.contains("osobe ("),
+        "{json}"
+    );
+    assert!(!json.contains("osoba ("), "{json}");
+}
+
+#[test]
+fn breakdown_that_does_not_add_up_to_the_hotel_number_is_left_out() {
+    // Zaštita: raščlamba koja se ne slaže s hotelskim brojem ne smije zavarati.
+    let input = with_departures(vec![dep("Smještaj", 5)]);
+    let f = facts_json(&input);
+    assert_eq!(amount_for(&f, "Zaposleni", "odlasci"), "otišle 3 osobe");
 }

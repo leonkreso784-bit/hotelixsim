@@ -97,3 +97,44 @@ fn building_fixed_costs_have_their_own_name() {
         "{cash:?} / {costs:?}"
     );
 }
+
+/// Tekst o odlascima u v2 krugu nosi odjele iz računa kruga; zbroj raščlambe je hotelski broj odlazaka.
+#[test]
+fn real_weekly_departures_name_departments_and_add_up() {
+    let g = common::v2_weekly_game_resolved_through("t17");
+    let mut with_breakdown = 0;
+    for h in common::hotel_ids() {
+        for n in 1..=17 {
+            let input = g.debrief_input(h, RoundKey::Week(n)).unwrap();
+            let hotel_total: i64 = input
+                .lines
+                .iter()
+                .filter(|l| {
+                    l.var == game::dto::VarCode::Staff && l.cause == game::dto::CauseDto::Turnover
+                })
+                .map(|l| l.amount)
+                .sum();
+            let by_dept: i64 = input
+                .department_departures
+                .iter()
+                .map(|d| i64::from(d.count))
+                .sum();
+            assert_eq!(by_dept, hotel_total, "tjedan {n}");
+            if hotel_total == 0 {
+                assert!(input.department_departures.is_empty());
+                continue;
+            }
+            with_breakdown += 1;
+            let text = serde_json::to_string(&debrief_facts(&input)).unwrap();
+            let first = &input.department_departures[0].name;
+            assert!(
+                text.contains(&format!("{first} ")) || text.contains(&format!("({first})")),
+                "tjedan {n}: {text}"
+            );
+        }
+    }
+    assert!(
+        with_breakdown > 0,
+        "sezona bez ijednog odlaska ne provjerava ništa"
+    );
+}
