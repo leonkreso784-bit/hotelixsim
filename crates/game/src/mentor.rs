@@ -356,6 +356,10 @@ fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>, weekly: 
         (_, CauseDto::Maintenance) => "održavanje",
         (_, CauseDto::Renovation) => "obnova",
         (_, CauseDto::ReplyReviews) => "odgovori na recenzije",
+        // Samo v2: fiksne naknade ispod GOP-a (ime kao u Računu dobiti), ne stalni dio službi iz retka troškova.
+        (VarCode::Cash, CauseDto::FixedCosts) => {
+            "fiksni troškovi zgrade (najam, osiguranje, porez)"
+        }
         (_, CauseDto::FixedCosts) => "fiksni troškovi",
         (_, CauseDto::Interest) => "kamate",
     };
@@ -408,6 +412,9 @@ fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>, weekly
         (VarCode::Cash, CauseDto::Renovation) => "ulaganja u obnovu",
         (_, CauseDto::Renovation) => "obnove",
         (_, CauseDto::ReplyReviews) => "odgovora na recenzije",
+        (VarCode::Cash, CauseDto::FixedCosts) => {
+            "fiksnih troškova zgrade (najam, osiguranje, porez)"
+        }
         (_, CauseDto::FixedCosts) => "fiksnih troškova",
         (VarCode::Cash, CauseDto::Interest) => "kamata na minus na računu",
         (_, CauseDto::Interest) => "kamata",
