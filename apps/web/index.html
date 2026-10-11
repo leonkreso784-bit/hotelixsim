@@ -8,7 +8,9 @@
     <title>HotelixSim</title>
     <style>
       /* Uvod: logo se gradi dok se aplikacija učitava. Izlaz vodi src/splash.ts.
-         Boje su prijepis tokena iz src/styles.css (canvas, ink, accent) jer se uvod crta prije njega. */
+         Boje su prijepis tokena iz src/styles.css (--color-canvas, --color-ink, --color-accent) jer ovaj stil ne
+         smije ovisiti o njemu. U razvoju se uvod crta prije styles.css; u produkciji Vite stavi index-*.css u <head>
+         pa se uvod crta tek kad on stigne — zato se vrijeme uvoda broji od prvog crtanja (data-start), ne od učitavanja. */
       .hx-splash {
         position: fixed;
         inset: 0;
@@ -35,7 +37,8 @@
       }
       .hx-word {
         margin: 0;
-        font-family: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+        /* Sistemski dio --font-sans: Plus Jakarta stiže tek sa styles.css i zamijenio bi slova usred uvoda. */
+        font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
         font-size: 26px;
         font-weight: 800;
         letter-spacing: -0.01em;
@@ -80,8 +83,14 @@
       .hx-flare {
         animation: hx-fade 0.3s ease-out 1.1s both;
       }
+      /* Vrata na šarki lijevo; osnovni stil je završno stanje (otvorena), da ga vide i smanjeni pokreti. */
       .hx-door {
-        animation: hx-fade 0.2s ease-out 1.2s both;
+        fill: #cfe0ff;
+        transform-origin: 0% 50%;
+        transform: scaleX(0.37);
+        animation:
+          hx-fade 0.2s ease-out 1.2s both,
+          hx-door-open 0.62s cubic-bezier(0.65, 0, 0.25, 1) 1.62s both;
       }
       .hx-s1 {
         animation: hx-step 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) 1.26s both;
@@ -95,6 +104,7 @@
           hx-breathe 2.4s ease-in-out 2.6s infinite;
       }
       .hx-spill {
+        opacity: 0.9;
         animation: hx-spill 0.7s ease-out 1.78s both;
       }
       .hx-word {
@@ -133,8 +143,11 @@
           opacity: 0;
           transform: scaleY(0.4);
         }
-        to {
-          opacity: 0.9;
+      }
+      @keyframes hx-door-open {
+        from {
+          fill: #9dbfff;
+          transform: none;
         }
       }
       @keyframes hx-breathe {
@@ -150,21 +163,35 @@
         }
       }
 
-      /* Izlaz (src/splash.ts, SPLASH_FADE_MS): uvod mekano izblijedi. */
+      /* Izlaz (src/splash.ts, SPLASH_FADE_MS = 0,32 s): prvo nestane logo s imenom, tek onda podloga —
+         logo uvoda i logo početnog ekrana nikad se ne vide jedan preko drugog. */
       .hx-splash.is-leaving {
         animation: hx-leave 0.32s ease-out forwards;
       }
+      .hx-splash.is-leaving .hx-stage {
+        animation: hx-out 0.14s ease-out forwards;
+      }
       @keyframes hx-leave {
+        0%,
+        45% {
+          opacity: 1;
+        }
         to {
           opacity: 0;
           visibility: hidden;
+        }
+      }
+      @keyframes hx-out {
+        to {
+          opacity: 0;
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
         .hx-logo *,
         .hx-word,
-        .hx-splash.is-leaving {
+        .hx-splash.is-leaving,
+        .hx-splash.is-leaving .hx-stage {
           animation: none;
         }
       }
@@ -176,10 +203,6 @@
       <div class="hx-stage" aria-hidden="true">
         <svg class="hx-logo" viewBox="0 0 128 128" aria-hidden="true">
           <defs>
-            <linearGradient id="hx-tile-g" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#3a7dff" />
-              <stop offset="1" stop-color="#1b5be6" />
-            </linearGradient>
             <radialGradient id="hx-light-g" cx="0.5" cy="0.62" r="0.62">
               <stop offset="0" stop-color="#fffaf0" />
               <stop offset="0.55" stop-color="#ffe3a6" />
@@ -204,8 +227,9 @@
           </defs>
 
           <g class="hx-tile">
-            <rect class="hx-shadow" x="6" y="12" width="116" height="116" rx="30" fill="#1b5be6" opacity="0.18" filter="url(#hx-blur)" />
-            <rect width="128" height="128" rx="30" fill="url(#hx-tile-g)" />
+            <rect class="hx-shadow" x="6" y="12" width="116" height="116" rx="30" fill="#246bfd" opacity="0.18" filter="url(#hx-blur)" />
+            <!-- #246bfd = --color-accent: ista jednolična boja kao logo na početnom ekranu. -->
+            <rect width="128" height="128" rx="30" fill="#246bfd" />
           </g>
 
           <g clip-path="url(#hx-arch)">
@@ -223,42 +247,41 @@
           <rect class="hx-s1" x="50" y="97" width="28" height="4" rx="1.5" fill="#cfe0ff" />
           <rect class="hx-s2" x="43" y="104" width="42" height="4.5" rx="1.8" fill="#a9c6ff" />
 
-          <!-- Vrata na šarki lijevo; slobodni rub se pri otvaranju skrati (perspektiva). SMIL radi i u Safariju. -->
-          <path class="hx-door" d="M50.5 94 L50.5 73.5 C50.5 66 56.5 60 64 60 C71.5 60 77.5 66 77.5 73.5 L77.5 94 Z" fill="#9dbfff">
-            <animate
-              attributeName="d"
-              begin="1.62s"
-              dur="0.62s"
-              fill="freeze"
-              calcMode="spline"
-              keyTimes="0;1"
-              keySplines="0.65 0 0.25 1"
-              to="M50.5 94 L50.5 73.5 C50.5 67.5 53.2 63.6 56.6 63 C59 63.4 60.5 65.6 60.5 68.6 L60.5 90.6 Z"
-            />
-            <animate attributeName="fill" begin="1.62s" dur="0.62s" fill="freeze" to="#cfe0ff" />
-          </path>
+          <path class="hx-door" d="M50.5 94 L50.5 73.5 C50.5 66 56.5 60 64 60 C71.5 60 77.5 66 77.5 73.5 L77.5 94 Z" />
         </svg>
         <p class="hx-word">HotelixSim</p>
       </div>
     </div>
+    <div id="root"></div>
     <script>
-      // Uvod jednom po kartici (ključ SPLASH_SEEN_KEY u src/splash.ts); `?uvod` ga uvijek pokaže.
+      // Uvod jednom po kartici (ključ SPLASH_SEEN_KEY u src/splash.ts); `?uvod` ili `?uvod=1` ga uvijek pokaže.
+      // Stoji iza #root da ga može učiniti nedostupnim (inert) dok je uvod na ekranu.
       (() => {
         var splash = document.getElementById("hx-splash");
-        var svg = splash.querySelector("svg");
+        var root = document.getElementById("root");
+        var uvod = new URLSearchParams(location.search).get("uvod");
         try {
-          if (sessionStorage.getItem("hx-uvod") && location.search.indexOf("uvod") < 0) {
+          if (uvod !== "" && uvod !== "1" && sessionStorage.getItem("hx-uvod")) {
             splash.remove();
             return;
           }
         } catch {}
-        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          svg.setCurrentTime(10);
-          svg.pauseAnimations();
-        }
+        root.setAttribute("inert", "");
+        // Prvo crtanje uvoda: odavde src/splash.ts broji SPLASH_MIN_MS, a ovdje teče sigurnosni rok —
+        // ako se aplikacija ne učita za 9 s, uvod izblijedi i ode sam (blijeđenje samo jednom, vidi splash.ts).
+        requestAnimationFrame((t) => {
+          splash.dataset.start = String(t);
+          setTimeout(() => {
+            if (!splash.isConnected || splash.classList.contains("is-leaving")) return;
+            splash.classList.add("is-leaving");
+            setTimeout(() => {
+              splash.remove();
+              root.removeAttribute("inert");
+            }, 320);
+          }, 9000);
+        });
       })();
     </script>
-    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
