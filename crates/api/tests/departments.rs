@@ -290,3 +290,65 @@ async fn pl_season_scope_and_unknown_round() {
         (409, Some("round_not_open"))
     );
 }
+
+/// ZP-6: PUT plana vraća plan kakav je spremljen, ne poslano tijelo. S odjelima se ukupni sezonci iz tijela ne čitaju
+/// (spremi se zbroj odjela); bez odjela se odjeli uzimaju iz važećeg plana.
+#[tokio::test]
+async fn put_plan_returns_the_saved_plan() {
+    let (app, c, _, h) = v2_after_first_week().await;
+    let me = common::call(&app, "GET", "/v1/me/hotel", Some(&c), None).await;
+    let mut plan = me.body["private"]["plan"]["plan"].clone();
+    let limits = me.body["private"]["plan"]["limits"].clone();
+    let depts = plan["departments"].as_object().unwrap();
+    let sum: u64 = depts
+        .values()
+        .map(|d| d["seasonal_target"].as_u64().unwrap())
+        .sum();
+    assert_eq!(plan["seasonal_target"].as_u64(), Some(sum));
+    // Restoran ±1 unutar granica (ukupno i odjel), a ukupni broj u tijelu ostaje star.
+    let rest = plan["departments"]["restaurant"]["seasonal_target"]
+        .as_u64()
+        .unwrap();
+    let rest_max = limits["departments"]["restaurant"]["seasonal_max"]
+        .as_u64()
+        .unwrap();
+    let up = sum < limits["seasonal_max"].as_u64().unwrap() && rest < rest_max;
+    let (new_rest, new_sum) = if up {
+        (rest + 1, sum + 1)
+    } else {
+        (rest - 1, sum - 1)
+    };
+    plan["departments"]["restaurant"]["seasonal_target"] = json!(new_rest);
+    let r = common::call(
+        &app,
+        "PUT",
+        &format!("/v1/hotels/{h}/plans/t02"),
+        Some(&c),
+        Some(plan.clone()),
+    )
+    .await;
+    assert_eq!(r.status, 200, "{:?}", r.body);
+    assert_eq!(r.body["seasonal_target"].as_u64(), Some(new_sum));
+    assert_eq!(
+        r.body["departments"]["restaurant"]["seasonal_target"].as_u64(),
+        Some(new_rest)
+    );
+    let me = common::call(&app, "GET", "/v1/me/hotel", Some(&c), None).await;
+    assert_eq!(r.body, me.body["private"]["plan"]["plan"]);
+
+    // Tijelo bez odjela: odgovor ima odjele (iz važećeg plana) i iste brojke kao spremljeni plan.
+    let mut body = r.body.clone();
+    body.as_object_mut().unwrap().remove("departments");
+    let r = common::call(
+        &app,
+        "PUT",
+        &format!("/v1/hotels/{h}/plans/t02"),
+        Some(&c),
+        Some(body),
+    )
+    .await;
+    assert_eq!(r.status, 200, "{:?}", r.body);
+    assert!(r.body["departments"]["restaurant"].is_object());
+    let me = common::call(&app, "GET", "/v1/me/hotel", Some(&c), None).await;
+    assert_eq!(r.body, me.body["private"]["plan"]["plan"]);
+}

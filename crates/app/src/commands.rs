@@ -2,7 +2,7 @@
 //! Redoslijed provjera: igra postoji (`fold_raw`), pravo (`member_hotel`/`require_owner`), pravilo igre.
 use game::RoundKey;
 use game::dto::PlanDto;
-use game::{Actor, GameId, HotelId};
+use game::{Actor, GameEvent, GameId, HotelId};
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{RESOLVE_KIND, ResolvePayload, resolve_key};
@@ -22,19 +22,21 @@ pub async fn set_plan(
     let guest = caller.require()?;
     let game_id = game_of_hotel(deps, hotel).await?;
     let m = month;
-    let body = plan.clone();
+    // Odgovor je plan kakav je zapisan u `PlanSet` (v2 s odjelima: ukupni sezonci su zbroj odjela; bez odjela:
+    // odjeli iz važećeg plana), ne poslano tijelo.
+    let mut saved: Option<PlanDto> = None;
+    let out = &mut saved;
     deps.log
         .decide(
             game_id,
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 require_owner(&g, guest, hotel)?;
-                // v1 plan nema odjela: tijelo s `departments` je neispravno (422), ne tiho zanemareno.
-                if g.model().code() == "v1" && !body.departments.is_empty() {
-                    return Err(AppError::new(ErrorCode::InvalidBody));
-                }
-                let core = g.plan_from_dto(hotel, m, &body)?;
+                let core = g.plan_from_dto(hotel, m, &plan)?;
                 let ev = g.set_plan(hotel, m, core)?;
+                if let GameEvent::PlanSet(p) = &ev {
+                    *out = Some(p.plan.clone());
+                }
                 Ok(Decision {
                     events: vec![new_event(&Actor::Guest(guest), &ev)],
                     ..Decision::default()
@@ -42,7 +44,7 @@ pub async fn set_plan(
             }),
         )
         .await?;
-    Ok(plan)
+    saved.ok_or_else(|| AppError::new(ErrorCode::Internal))
 }
 
 pub async fn answer(

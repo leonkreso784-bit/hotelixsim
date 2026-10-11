@@ -463,6 +463,7 @@ impl Game {
         let r = r.into();
         self.hotel(h)?;
         self.round_info(r)?;
+        self.model.check_plan_body(d)?;
         if self.model.needs_departments(d) {
             let eff = self.effective_plan(h, r)?;
             let state = self.state_at(h, r)?;

@@ -73,10 +73,8 @@ pub async fn start_demo(
     };
     let game_id = GameId(deps.ids.uuid());
     let hotel_ids = [(); 4].map(|_| HotelId(deps.ids.uuid()));
-    let (snapshot, default_kind) = match settings.model {
-        content::Model::V1 => (&deps.snapshot, PeriodKind::Month),
-        content::Model::V2 => (&deps.snapshot_v2, PeriodKind::Week),
-    };
+    let (snapshot, default_kind) =
+        game::Model::new_game_snapshot(settings.model, &deps.snapshot, &deps.snapshot_v2);
     let kind = settings.kind.unwrap_or(default_kind);
     // Postavke se provjere prije upisa gosta: odbijena igra ne ostavlja siroče gosta.
     let events = new_game_with(

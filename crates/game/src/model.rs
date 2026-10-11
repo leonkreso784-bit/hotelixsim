@@ -88,6 +88,19 @@ impl Model {
         }
     }
 
+    /// Nova igra (app `start_demo`): snimak sadržaja modela iz postavki i zadana vrsta kruga (v1 mjesec, v2 tjedan).
+    /// Jedino mjesto koje grana na `content::Model` izvan `Model::of`.
+    pub fn new_game_snapshot<'a, T>(
+        snapshot_model: content::Model,
+        v1: &'a T,
+        v2: &'a T,
+    ) -> (&'a T, PeriodKind) {
+        match snapshot_model {
+            content::Model::V1 => (v1, PeriodKind::Month),
+            content::Model::V2 => (v2, PeriodKind::Week),
+        }
+    }
+
     /// "v1" | "v2" — jedini put kojim app/api pretvaraju model u svoj kod (bez `match` na `Model` izvan ove datoteke).
     pub fn code(self) -> &'static str {
         match self {
@@ -387,6 +400,15 @@ impl Model {
                     &d.after,
                 )?)))
             }
+        }
+    }
+
+    /// Tijelo zahtjeva plana (`Game::plan_from_dto`): v1 plan nema odjela, pa je tijelo s `departments`
+    /// neispravno (`GameError::PlanBody` → 422), ne tiho zanemareno.
+    pub(crate) fn check_plan_body(self, d: &PlanDto) -> Result<(), GameError> {
+        match self {
+            Model::V1 if !d.departments.is_empty() => Err(GameError::PlanBody),
+            Model::V1 | Model::V2 => Ok(()),
         }
     }
 

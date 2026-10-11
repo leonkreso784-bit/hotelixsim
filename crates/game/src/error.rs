@@ -37,6 +37,8 @@ pub enum GameError {
     UnknownDepartment,
     /// Račun dobiti traži barem jedan obračunati krug.
     NothingResolved,
+    /// Tijelo plana ne odgovara modelu igre (v1 plan s `departments`): neispravno tijelo, ne tiho zanemareno.
+    PlanBody,
 }
 
 pub(crate) fn corrupt(msg: impl Into<String>) -> GameError {
