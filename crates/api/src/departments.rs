@@ -417,6 +417,7 @@ impl PlBody {
 }
 
 #[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct PlQuery {
     /// Kod kruga (t01…); bez njega zadnji obračunati krug.
     pub round: Option<String>,

@@ -1703,15 +1703,16 @@ export interface operations {
     };
     pl: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Kod kruga (t01…); bez njega zadnji obračunati krug. */
+                round?: string;
+                /** @description `round` (zadano) ili `season` (zbroj od prvog kruga do traženog). */
+                scope?: components["schemas"]["PlScopeCode"];
+            };
             header?: never;
             path: {
                 /** @description Hotel (uuid) */
                 hotel_id: string;
-                /** @description Kod kruga (t01…); bez njega zadnji obračunati krug. */
-                round: string | null;
-                /** @description `round` (zadano) ili `season` (zbroj od prvog kruga do traženog). */
-                scope: components["schemas"]["PlScopeCode"] | null;
             };
             cookie?: never;
         };
