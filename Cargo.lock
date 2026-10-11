@@ -180,6 +180,7 @@ dependencies = [
  "content",
  "engine",
  "sim-hotel",
+ "sim-hotel-v2",
 ]
 
 [[package]]
