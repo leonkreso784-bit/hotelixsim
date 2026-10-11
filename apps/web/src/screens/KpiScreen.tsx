@@ -1,7 +1,7 @@
 // KpiScreen — hotelski pokazatelji po obračunatom krugu (mjesecu ili tjednu): na računalu tablica pokazatelji × krugovi,
 // na mobitelu kartica po krugu. Uz svaki pokazatelj jedna rečenica što znači; brojke su s poslužitelja.
 import { t } from "@hotelixsim/i18n";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { problemMessage } from "../api/errors";
 import { useGame, useKpi } from "../api/queries";
 import type { GameBody, HotelBody, KpiMonthBody } from "../api/types";
@@ -68,11 +68,16 @@ function KpiTable({ game, weekly, months }: View) {
                   <span id={`kpi-${r.key}`} className="block font-semibold">
                     {rowLabel(r.key)}
                   </span>
-                  <details className="text-sm text-muted">
+                  <details className="group text-sm text-muted">
                     <summary
                       aria-describedby={`kpi-${r.key}`}
-                      className="inline-flex min-h-11 cursor-pointer items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
                     >
+                      <ChevronRight
+                        size={16}
+                        aria-hidden="true"
+                        className="shrink-0 transition-transform group-open:rotate-90"
+                      />
                       {t("kpi.whatMeans")}
                     </summary>
                     {rowMeaning(r.key, weekly)}
