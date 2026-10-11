@@ -295,3 +295,37 @@ fn category_seasonal_plan_is_the_whole_hotel_plan() {
     }
     assert_eq!(plan.seasonal_total(), 20);
 }
+
+#[test]
+fn closed_department_does_not_dilute_hotel_load() {
+    // Zatvoreni bar zadržava stalne ljude (opterećenje 0, kazna 0); u prosjek opterećenja hotela ulaze samo otvoreni
+    // odjeli, inače bi zatvaranje spustilo kaznu i podiglo cilj morala.
+    let c = common::catalog_with_departments();
+    let s = HotelState::from_profile(&c, Profile::C).unwrap();
+    let p = month_period(Month::Jun);
+    let mut plan = common::hold_plan(&s, &p, &c);
+    let bar = plan.departments.get_mut(&code("lobby_bar")).unwrap();
+    bar.open = false;
+    bar.seasonal_target = 0;
+    let r = resolve_period(&s, &p, &plan, &[], &c).unwrap();
+    let bar = &r.accounts.departments[&code("lobby_bar")];
+    assert!(!bar.open);
+    assert!(bar.staff > 0, "bar bez stalnih ljudi ne provjerava ništa");
+    let (num, den) = r
+        .accounts
+        .departments
+        .iter()
+        .filter(|(k, o)| {
+            o.open && c.dept(k).unwrap().capacity_tenths_per_staff_day > 0 && o.staff > 0
+        })
+        .fold((0_u32, 0_u32), |(n, d), (_, o)| {
+            (
+                n + u32::from(o.load_hundredths) * u32::from(o.staff),
+                d + u32::from(o.staff),
+            )
+        });
+    assert_eq!(
+        u32::from(r.summary.people.load_hundredths),
+        (num + den / 2) / den
+    );
+}

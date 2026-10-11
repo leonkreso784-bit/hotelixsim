@@ -38,13 +38,19 @@ fn price_for_pct(pct: i128, reference: i128, min_pct: i128, max_pct: i128) -> Ca
     c::narrow(c::mul(euros.max(lo).min(hi.max(lo)), 100)?)
 }
 
-/// Stalni i sezonci cijelog hotela (zbroj odjela).
+/// Stalni koji služe goste (svi odjeli osim neraspoređenih: Uprava, Prodaja, Održavanje i energija nisu u
+/// opterećenju hotela) i sezonci cijelog hotela. U degeneriranom katalogu neraspoređeni nemaju ljudi, pa je to v1.
 fn staff_totals(state: &HotelState) -> (u16, u16) {
     state
         .departments
         .values()
         .fold((0_u16, 0_u16), |(p, s), d| {
-            (p.saturating_add(d.permanent), s.saturating_add(d.seasonal))
+            let serving = if d.class.is_undistributed() {
+                0
+            } else {
+                d.permanent
+            };
+            (p.saturating_add(serving), s.saturating_add(d.seasonal))
         })
 }
 
@@ -93,7 +99,7 @@ pub fn robot_plan(
     // Marketing iz kataloga i strategija su mjesečni iznosi; plan je za krug, pa idu razmjerno.
     let marketing_max = prorate(a.marketing_max_cents, p)?;
     let market = |v: i64| v.max(0).min(marketing_max);
-    let (permanent, seasonal) = staff_totals(s);
+    let (serving_permanent, seasonal) = staff_totals(s);
     let (s_lo, s_hi) = seasonal_range(seasonal, cat.coeffs(p.kind)?.seasonal_step, a.seasonal_max);
 
     let mut plan = match strategy {
@@ -113,7 +119,7 @@ pub fn robot_plan(
                 i128::from(avg_u16(&spec.base_occupancy_bp, p)?),
             )?;
             let need = c::div_floor(c::add(rooms_bp, 17_999)?, 18_000)?;
-            let target = c::sub(need, i128::from(permanent))?.max(0);
+            let target = c::sub(need, i128::from(serving_permanent))?.max(0);
             Draft {
                 price_cents: fixed_price(105)?,
                 marketing_cents: market(prorate(500_000, p)?),

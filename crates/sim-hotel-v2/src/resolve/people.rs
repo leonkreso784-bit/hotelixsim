@@ -108,23 +108,25 @@ pub(super) fn rooms_load(sold: u32, staff: u16, capacity_tenths: u16, p: &Period
     Ok(c::div_round(c::mul(w(sold), 2_400)?, denom)?.clamp(0, 300))
 }
 
-/// Opterećenje jednog odjela s ljudima koji služe goste: zaposleni, kapacitet (desetinke po zaposlenom na dan) i
-/// opterećenje u stotinkama.
+/// Opterećenje jednog odjela s ljudima koji služe goste: otvorenost, zaposleni, kapacitet (desetinke po zaposlenom na
+/// dan) i opterećenje u stotinkama.
 pub(super) struct LoadUnit {
+    pub(super) open: bool,
     pub(super) staff: u16,
     pub(super) capacity_tenths: u16,
     pub(super) load: i128,
 }
 
-/// Opterećenje i kazna hotela: prosjek opterećenja i kazni odjela s kapacitetom i osobljem (`capacity_tenths > 0`,
-/// `staff > 0`), ponderiran brojem zaposlenih. Bez takvog odjela vrijedi opterećenje Smještaja `fallback` (v1: 300 bez
+/// Opterećenje i kazna hotela: prosjek opterećenja i kazni otvorenih odjela s kapacitetom i osobljem
+/// (`capacity_tenths > 0`, `staff > 0`), ponderiran brojem zaposlenih; zatvoreni odjel (stalni bez gostiju,
+/// opterećenje 0) ne razrjeđuje prosjek. Bez takvog odjela vrijedi opterećenje Smještaja `fallback` (v1: 300 bez
 /// osoblja). U degeneriranom katalogu jedini takav odjel je Smještaj, pa je to točno v1.
 pub(super) fn hotel_load(units: &[LoadUnit], fallback: i128) -> Calc<(i128, i128)> {
     let mut loads: Vec<(u32, i128)> = Vec::with_capacity(units.len());
     let mut penalties: Vec<(u32, i128)> = Vec::with_capacity(units.len());
     for u in units
         .iter()
-        .filter(|u| u.capacity_tenths > 0 && u.staff > 0)
+        .filter(|u| u.open && u.capacity_tenths > 0 && u.staff > 0)
     {
         loads.push((u32::from(u.staff), u.load));
         penalties.push((u32::from(u.staff), w(load_penalty(c::narrow(u.load)?)?)));

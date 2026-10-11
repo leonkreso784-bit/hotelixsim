@@ -3,13 +3,13 @@
 //! (medijani, provjere §11.1/3/4/5, ispis) žive u `lib.rs` i dijele se s v1.
 
 use engine::calc;
-use sim_hotel_v2::calendar::{avg_i64, first_period_of_month, prorate};
+use sim_hotel_v2::calendar::{avg_i64, avg_u16, first_period_of_month, prorate};
 use sim_hotel_v2::department::{DeptCode, UsaliClass};
 use sim_hotel_v2::usali::{self, UsaliStatement};
 use sim_hotel_v2::{
     Catalog, CatalogError, Category, HotelState, IndexSet, Maintenance, Month, Period, PeriodKind,
-    PeriodPlan, PlanLimits, Profile, RefTable, ResolveError, Strategy, Training, run_season,
-    run_season_with, season_periods, start_indices,
+    PeriodPlan, PlanLimits, Profile, RefTable, ResolveError, SeasonResult, Strategy, Training,
+    run_season, run_season_with, season_periods, start_indices,
 };
 
 use crate::{
@@ -38,6 +38,8 @@ pub struct ReportV2 {
     /// Medijan napretka tjedno, mjesečno (obje vrste krugova, bez obzira na `OptionsV2::kind`).
     pub week_vs_month: Vec<(Profile, Strategy, i32, i32)>,
     pub reproducible: bool,
+    /// Robot „brižni" (sjeme ponovljivosti): Σ sezonaca·dani / Σ sezonskog plana kategorije·dani, u bp, po profilu.
+    pub caring_seasonal_vs_plan_bp: Vec<(Profile, i32)>,
 }
 
 type RefTables = Vec<(Category, RefTable)>;
@@ -92,6 +94,26 @@ fn season_statement(
         .map(|(report, _)| usali::statement(&report.accounts))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(usali::sum_statements(&statements)?)
+}
+
+/// Sezonci nakon svakog kruga prema sezonskom planu kategorije za taj krug, ponderirano danima kruga (bp).
+fn seasonal_vs_plan_bp(
+    r: &SeasonResult,
+    profile: Profile,
+    cat: &Catalog,
+) -> Result<i32, ResolveError> {
+    let spec = cat.base.category(cat.base.profile(profile)?.category)?;
+    let (mut held, mut planned) = (0_i128, 0_i128);
+    for (rep, _) in &r.periods {
+        let days = i128::from(rep.period.days);
+        held = calc::add(
+            held,
+            calc::mul(i128::from(rep.summary.after.seasonal), days)?,
+        )?;
+        let plan = avg_u16(&spec.seasonal_plan, &rep.period)?;
+        planned = calc::add(planned, calc::mul(i128::from(plan), days)?)?;
+    }
+    Ok(ratio_bp(held, planned)?)
 }
 
 fn narrow_bp(x: i64) -> Result<i32, ResolveError> {
@@ -362,6 +384,20 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         Ok(a == b)
     })?;
 
+    let mut caring_seasonal_vs_plan_bp = Vec::new();
+    for p in Profile::ALL {
+        let r = run_season(
+            p,
+            Strategy::Caring,
+            REPRO_SEED,
+            kind,
+            cat,
+            situations,
+            refs_for(cat, &refs, p)?,
+        )?;
+        caring_seasonal_vs_plan_bp.push((p, seasonal_vs_plan_bp(&r, p, cat)?));
+    }
+
     let mut probes = Vec::new();
     for probe in ProbeV2::all() {
         let row = profile_row::<ResolveError>(&mut |p| {
@@ -382,6 +418,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         probes,
         week_vs_month,
         reproducible,
+        caring_seasonal_vs_plan_bp,
     })
 }
 
@@ -394,6 +431,9 @@ fn dept_band(class: UsaliClass) -> Option<(i32, i32)> {
         _ => None,
     }
 }
+
+/// Najmanji udio sezonskog plana hotela koji brižni robot drži kroz sezonu (ZP-4).
+const CARING_MIN_SEASONAL_VS_PLAN_BP: i32 = 8_000;
 
 /// Prazno = sve provjere prolaze.
 pub fn failures_v2(r: &ReportV2) -> Vec<String> {
@@ -457,6 +497,14 @@ pub fn failures_v2(r: &ReportV2) -> Vec<String> {
             ));
         }
     }
+    for (p, bp) in &r.caring_seasonal_vs_plan_bp {
+        if *bp < CARING_MIN_SEASONAL_VS_PLAN_BP {
+            f.push(format!(
+                "sloj 1 brižni robot: {} drži {bp} bp sezonskog plana hotela (najmanje {CARING_MIN_SEASONAL_VS_PLAN_BP})",
+                p.code()
+            ));
+        }
+    }
     check_repro(&mut f, r.reproducible);
     f
 }
@@ -503,6 +551,10 @@ pub fn render_v2(r: &ReportV2) -> String {
             hundredths(*week),
             hundredths(*month)
         ));
+    }
+    s.push_str("== Brižni robot: sezonci prema sezonskom planu hotela ==\n");
+    for (p, bp) in &r.caring_seasonal_vs_plan_bp {
+        s.push_str(&format!("  {}: {}\n", p.code(), pct(*bp)));
     }
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",
