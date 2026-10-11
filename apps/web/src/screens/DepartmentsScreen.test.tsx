@@ -1,7 +1,7 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { standardApi, v2Api } from "../test/fixtures";
+import { departmentDetailBody, departmentsBody, standardApi, v2Api } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -32,6 +32,15 @@ describe("Odjeli", () => {
       expect(screen.getByRole("heading", { level: 2, name: h })).toBeTruthy();
     expect(screen.getByText("67.200 €")).toBeTruthy();
     expect(screen.getByText("trošenje −3")).toBeTruthy();
+    expect(screen.getByText("preopterećenje −1")).toBeTruthy();
+    expect(screen.getByText("održavanje +3")).toBeTruthy();
+    // Poslužiteljeve promjene već nose predznak: prije + promjene = poslije.
+    const r = departmentDetailBody("restaurant")?.department.last;
+    expect(r && r.condition_before_pts + r.wear_pts + r.load_wear_pts + r.maintenance_pts).toBe(
+      r?.condition_after_pts,
+    );
+    expect(screen.getByRole("heading", { level: 2, name: "Po tjednima" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "Restoran" })).toBeTruthy();
     expect(screen.getByText("udio gostiju koji dolaze 45 %")).toBeTruthy();
   });
 
@@ -41,6 +50,13 @@ describe("Odjeli", () => {
       "[data-layout='list-detail']",
     );
     expect(grid?.className).toMatch(/lg:grid/);
+    // Stupac detalja se smije suziti i tablica se pomiče u svojoj regiji, nikad ne gura stranicu.
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Restoran" }).closest("[data-layout] > div")?.className,
+    ).toMatch(/min-w-0/);
+    const region = screen.getByRole("region", { name: "Rezultat odjela po krugovima" });
+    expect(region.className).toMatch(/overflow-x-auto/);
+    expect(region.getAttribute("tabindex")).toBe("0");
   });
 
   it("v1 igra: rečenica umjesto odjela i nema stavke izbornika", async () => {
@@ -49,6 +65,7 @@ describe("Odjeli", () => {
       "/odjeli",
     );
     expect(await screen.findByText("Ova igra je na starom modelu i nema ovaj prikaz.")).toBeTruthy();
+    expect(await screen.findByText(/LIPANJ/)).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Odjeli" })).toBeNull();
   });
 
@@ -58,6 +75,8 @@ describe("Odjeli", () => {
       "/odjeli/casino",
     );
     expect(await screen.findByText("Taj odjel ne postoji u ovom hotelu.")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Odjeli" }).length).toBeGreaterThan(1);
   });
 
   it("v2 igra: izbornik ima Odjeli, zatvoren odjel nosi oznaku, kartica je jedna poveznica", async () => {
@@ -83,16 +102,24 @@ describe("Odjeli", () => {
     expect(screen.queryByRole("heading", { level: 2, name: "Novac" })).toBeNull();
   });
 
-  it("mobitel: popis se krije dok je otvoren detalj, a detalj ima povratak; bez vodoravnog pomicanja", async () => {
-    renderApp(v2Api(), "/odjeli/restaurant");
-    const h1 = await screen.findByRole("heading", { level: 1, name: "Restoran" });
-    const back = screen
-      .getAllByRole("link", { name: "Odjeli" })
-      .find((a) => /lg:hidden/.test(a.className)) as HTMLElement;
-    expect(back.className).toMatch(/lg:hidden/);
-    expect(back.className).toMatch(/min-h-11/);
-    const list = screen.getByRole("heading", { level: 2, name: "Odjeli" }).closest("div[class*='hidden']");
-    expect(list?.className).toMatch(/hidden lg:block/);
-    expect(h1.closest("[data-layout='list-detail']")?.className).not.toMatch(/overflow-x/);
+  it("prije prvog obračuna: rečenica kad se pojavljuju rezultati", async () => {
+    const empty = {
+      round: null,
+      departments: departmentsBody().departments.map((d) => ({ ...d, last: null, service_last: null })),
+    };
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/departments", empty), "/odjeli");
+    expect(
+      await screen.findByText("Rezultati odjela pojave se nakon prvog obračunatog tjedna."),
+    ).toBeTruthy();
+  });
+
+  it("detalj dok se učitava ima povratak i naslov prve razine", async () => {
+    renderApp(
+      v2Api().on("GET", "/v1/hotels/:hotel/departments/:code", () => new Promise<Response>(() => {})),
+      "/odjeli/restaurant",
+    );
+    expect(await screen.findByRole("heading", { level: 1 })).toBeTruthy();
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Odjeli" }).length).toBeGreaterThan(1));
+    expect(screen.getByRole("status")).toBeTruthy();
   });
 });

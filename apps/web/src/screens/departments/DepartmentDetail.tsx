@@ -29,21 +29,43 @@ export function DepartmentDetail({
     const info = game ? roundInfo(game, round) : null;
     return info ? roundTitle(info) : t("dept.history.fallback");
   };
-  if (q.isPending) return <StatusText>{t("status.loading")}</StatusText>;
-  if (q.isError) {
-    // Odjel kojeg hotel nema je očekivan ishod (rečenica), ne kvar.
-    if (q.error instanceof ApiError && q.error.status === 404)
-      return (
-        <Card>
-          <p>{problemMessage(q.error)}</p>
-        </Card>
-      );
+  const back = (
+    <Link
+      to="/odjeli"
+      className={`inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink lg:hidden ${FOCUS}`}
+    >
+      <ChevronLeft size={18} aria-hidden="true" />
+      {t("dept.back")}
+    </Link>
+  );
+  // Povratak i naslov prve razine stoje iznad svakog stanja (učitavanje, greška, nepoznat odjel).
+  if (q.isPending)
     return (
       <div className="space-y-3">
-        <ErrorText>{problemMessage(q.error)}</ErrorText>
-        <Button variant="secondary" onClick={() => void q.refetch()}>
-          {t("error.retry")}
-        </Button>
+        {back}
+        <h1 className="sr-only">{t("dept.detail.title")}</h1>
+        <StatusText>{t("status.loading")}</StatusText>
+      </div>
+    );
+  if (q.isError) {
+    // Odjel kojeg hotel nema je očekivan ishod (rečenica), ne kvar.
+    const unknown = q.error instanceof ApiError && q.error.status === 404;
+    return (
+      <div className="space-y-3">
+        {back}
+        <h1 className="sr-only">{t("dept.detail.title")}</h1>
+        {unknown ? (
+          <Card>
+            <p>{problemMessage(q.error)}</p>
+          </Card>
+        ) : (
+          <>
+            <ErrorText>{problemMessage(q.error)}</ErrorText>
+            <Button variant="secondary" onClick={() => void q.refetch()}>
+              {t("error.retry")}
+            </Button>
+          </>
+        )}
       </div>
     );
   }
@@ -52,13 +74,7 @@ export function DepartmentDetail({
   const empty = service ? dept.service_last === null : dept.last === null;
   return (
     <div className="space-y-3">
-      <Link
-        to="/odjeli"
-        className={`inline-flex min-h-11 items-center gap-1 font-semibold text-accent-ink lg:hidden ${FOCUS}`}
-      >
-        <ChevronLeft size={18} aria-hidden="true" />
-        {t("dept.back")}
-      </Link>
+      {back}
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">{dept.name}</h1>
         {!dept.open && <Badge tone="muted">{t("dept.closed")}</Badge>}
@@ -71,7 +87,7 @@ export function DepartmentDetail({
       {dept.service_last && <ServiceCosts cost={dept.service_last} />}
       {!service && dept.last && <DepartmentFacts dept={dept} r={dept.last} />}
       {(service || empty) && <People dept={dept} r={service ? null : dept.last} />}
-      <DepartmentHistory history={history} titleOf={titleOf} />
+      <DepartmentHistory history={history} titleOf={titleOf} weekly={weekly} />
     </div>
   );
 }

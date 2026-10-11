@@ -11,14 +11,16 @@ export function ServiceList({
   services,
   weekly,
   selected,
+  className = "",
 }: {
   services: DepartmentBody[];
   weekly: boolean;
   selected: string | null;
+  className?: string;
 }) {
   if (services.length === 0) return null;
   return (
-    <Card className="space-y-2">
+    <Card className={`space-y-2 ${className}`}>
       <h2 className="text-lg font-bold">{t("dept.services")}</h2>
       <p className="text-sm text-muted">{t("dept.services.intro")}</p>
       <ul className="divide-y divide-line">
@@ -27,7 +29,7 @@ export function ServiceList({
             <Link
               to={`/odjeli/${s.code}`}
               aria-current={s.code === selected ? "page" : undefined}
-              className={`flex min-h-12 items-center gap-3 py-2 ${FOCUS}`}
+              className={`flex min-h-12 items-center gap-3 rounded-xl py-2 ${s.code === selected ? "bg-accent-soft px-2" : ""} ${FOCUS}`}
             >
               <span className="min-w-0 flex-1 font-semibold">{s.name}</span>
               <span className="text-right text-sm">

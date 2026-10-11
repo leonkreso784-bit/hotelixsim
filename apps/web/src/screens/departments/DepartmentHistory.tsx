@@ -1,12 +1,12 @@
 // Rezultati odjela po obračunatim krugovima: tablica od 1024 px, ispod toga popis (iste brojke, UI_PRAVILA §4.5).
 import { t } from "@hotelixsim/i18n";
 import type { DeptRoundBody } from "../../api/types";
-import { formatIndex, formatPercentBp } from "../../format";
+import { formatIndex, formatPercentBp, tw } from "../../format";
 import { Card } from "../../ui/primitives";
 import { resultText } from "./helpers";
 
 const NUM = "whitespace-nowrap px-3 py-2 text-right tabular-nums";
-const HEAD = "border-b border-line px-3 py-2 text-right text-sm font-semibold text-muted";
+const HEAD = "whitespace-nowrap border-b border-line px-3 py-2 text-right text-sm font-semibold text-muted";
 
 function points(pts: number): string {
   return t("dept.outOf", { n: formatIndex(pts) });
@@ -15,15 +15,24 @@ function points(pts: number): string {
 export function DepartmentHistory({
   history,
   titleOf,
+  weekly,
 }: {
   history: DeptRoundBody[];
   titleOf: (code: string) => string;
+  weekly: boolean;
 }) {
   if (history.length === 0) return null;
   return (
     <Card className="space-y-2">
-      <h2 className="text-lg font-bold">{t("dept.history")}</h2>
-      <div className="hidden lg:block">
+      <h2 className="text-lg font-bold">{tw(weekly, "dept.history")}</h2>
+      {/* biome-ignore lint/a11y/useSemanticElements: vanjski <section> je Card; regija se ne ugnježđuje u drugi section */}
+      <div
+        role="region"
+        aria-label={t("dept.history.table")}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: pomična tablica mora biti dostupna tipkovnicom
+        tabIndex={0}
+        className="hidden overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent xl:block"
+      >
         <table className="w-full text-left">
           <caption className="sr-only">{t("dept.history.table")}</caption>
           <thead>
@@ -48,7 +57,7 @@ export function DepartmentHistory({
           <tbody>
             {history.map((h) => (
               <tr key={h.round} className="border-b border-line">
-                <th scope="row" className="px-3 py-2 font-semibold">
+                <th scope="row" className="whitespace-nowrap px-3 py-2 font-semibold">
                   {titleOf(h.round)}
                 </th>
                 <td className={NUM}>{resultText(h.profit_cents)}</td>
@@ -60,7 +69,7 @@ export function DepartmentHistory({
           </tbody>
         </table>
       </div>
-      <ul className="divide-y divide-line lg:hidden">
+      <ul className="divide-y divide-line xl:hidden">
         {history.map((h) => (
           <li key={h.round} className="space-y-1 py-2">
             <h3 className="font-semibold">{titleOf(h.round)}</h3>

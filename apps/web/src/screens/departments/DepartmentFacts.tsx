@@ -32,9 +32,9 @@ function fromTo(before: number, after: number): string {
   return t("dept.fromTo", { from: formatIndex(before), to: formatIndex(after) });
 }
 
-/** Promjena stanja u cijelim bodovima s predznakom (trošenje i preopterećenje oduzimaju, održavanje dodaje). */
-function change(pts: number, sign: 1 | -1): string {
-  return formatWholeSigned(sign * wholePoints(pts));
+/** Promjena stanja u cijelim bodovima; poslužitelj je već šalje s predznakom (trošenje −, održavanje +), ne okreće se. */
+function change(pts: number): string {
+  return formatWholeSigned(wholePoints(pts));
 }
 
 function Space({ r }: { r: DeptRoundBody }) {
@@ -46,9 +46,9 @@ function Space({ r }: { r: DeptRoundBody }) {
         <Line label={t("dept.upkeepCost")} value={formatEuros(r.maintenance_cents)} />
       </Lines>
       <ul className="space-y-1">
-        <li>{t("dept.wear", { n: change(r.wear_pts, -1) })}</li>
-        <li>{t("dept.loadWear", { n: change(r.load_wear_pts, -1) })}</li>
-        <li>{t("dept.upkeep", { n: change(r.maintenance_pts, 1) })}</li>
+        <li>{t("dept.wear", { n: change(r.wear_pts) })}</li>
+        <li>{t("dept.loadWear", { n: change(r.load_wear_pts) })}</li>
+        <li>{t("dept.upkeep", { n: change(r.maintenance_pts) })}</li>
       </ul>
       <p className="text-sm text-muted">{t("dept.space.note")}</p>
     </Card>

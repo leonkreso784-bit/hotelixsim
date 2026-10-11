@@ -4,6 +4,7 @@ import { t } from "@hotelixsim/i18n";
 import { ApiError, problemMessage } from "../api/errors";
 import { useDepartments, useGame } from "../api/queries";
 import type { HotelBody } from "../api/types";
+import { tw } from "../format";
 import { isWeekly } from "../game";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { DepartmentCard } from "./departments/DepartmentCard";
@@ -55,12 +56,24 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
           <StatusText>{t("status.loading")}</StatusText>
         ) : (
           <>
-            <div className="space-y-3">
+            {list.data?.round === null && <p className="text-muted">{tw(weekly, "dept.listEmpty")}</p>}
+            <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:block lg:space-y-3">
               {revenue.map((d) => (
-                <DepartmentCard key={d.code} dept={d} weekly={weekly} selected={d.code === code} />
+                <DepartmentCard
+                  key={d.code}
+                  dept={d}
+                  weekly={weekly}
+                  selected={d.code === code}
+                  level={code === null ? 2 : 3}
+                />
               ))}
+              <ServiceList
+                services={services}
+                weekly={weekly}
+                selected={code}
+                className="md:col-span-2 lg:col-span-1"
+              />
             </div>
-            <ServiceList services={services} weekly={weekly} selected={code} />
           </>
         )}
       </div>
