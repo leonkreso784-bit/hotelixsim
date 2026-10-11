@@ -5,7 +5,7 @@ import { useSubmitResponse } from "../../api/queries";
 import type { SituationBody } from "../../api/types";
 import { Button, ErrorText } from "../../ui/primitives";
 
-export function FreeResponse({ hotelId, s }: { hotelId: string; s: SituationBody }) {
+export function FreeResponse({ hotelId, s, weekly }: { hotelId: string; s: SituationBody; weekly: boolean }) {
   const submit = useSubmitResponse(hotelId, s.code);
   const inFlight = useRef(false);
   const [text, setText] = useState("");
@@ -36,7 +36,7 @@ export function FreeResponse({ hotelId, s }: { hotelId: string; s: SituationBody
         <span>{t("response.hint")}</span>
         <span>{t("response.count", { n: text.length })}</span>
       </div>
-      {submit.isError && <ErrorText>{problemMessage(submit.error)}</ErrorText>}
+      {submit.isError && <ErrorText>{problemMessage(submit.error, weekly)}</ErrorText>}
       <Button type="submit" disabled={submit.isPending || !text.trim()}>
         {t("response.submit")}
       </Button>

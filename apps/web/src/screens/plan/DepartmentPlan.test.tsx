@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, problem } from "../../test/fakeApi";
-import { HOTEL_ID, standardApi, v2Api } from "../../test/fixtures";
+import { HOTEL_ID, standardApi, v2Api, v2PlanHotel } from "../../test/fixtures";
 import { renderApp } from "../../test/renderApp";
 
 afterEach(() => {
@@ -128,6 +128,26 @@ describe("Plan po odjelima", () => {
     for (let i = 0; i < 4; i++) fireEvent.click(plus);
     const bar = screen.getByRole("group", { name: "Lobby bar" });
     expect((within(bar).getByRole("checkbox", { name: "Otvoren" }) as HTMLInputElement).disabled).toBe(true);
+  });
+
+  it("zbroj sezonaca iznad najvećeg broja hotela: jasna rečenica, bez zahtjeva", async () => {
+    const hotel = v2PlanHotel();
+    if (hotel.private?.plan) hotel.private.plan.limits.seasonal_max = 24;
+    const api = echoApi().on("GET", "/v1/me/hotel", hotel);
+    renderApp(api, "/plan");
+    const rest = await screen.findByRole("group", { name: "Restoran" });
+    const plus = within(rest).getByRole("button", { name: "Više sezonaca" });
+    fireEvent.click(plus);
+    fireEvent.click(plus);
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    expect(
+      await screen.findByText(
+        "Odjeli zajedno imaju previše sezonaca: hotel smije imati najviše 24 sezonca. Smanji ih u nekom odjelu.",
+      ),
+    ).toBeTruthy();
+    expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(0);
+    fireEvent.click(within(rest).getByRole("button", { name: "Manje sezonaca" }));
+    expect(screen.queryByText(/previše sezonaca/)).toBeNull();
   });
 
   it("razina cijene u koracima od 5 do granice; održavanje se šalje po odjelu", async () => {

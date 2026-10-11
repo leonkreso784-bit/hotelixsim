@@ -9,7 +9,7 @@ import { keepRoundTogether, roundDates, roundTitle, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { navigate } from "../router";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
-import { type PickerRound, RoundPicker, shortWeek } from "../ui/RoundPicker";
+import { type PickerRound, RoundPicker, shortWeek, weekGroup } from "../ui/RoundPicker";
 import { PlCards } from "./pl/PlCards";
 import { PlRatios } from "./pl/PlRatios";
 import { PlTable } from "./pl/PlTable";
@@ -27,10 +27,10 @@ function heading(game: GameBody | undefined, pl: PlBody): string {
   const text =
     pl.scope === "season" && info
       ? info.kind === "week"
-        ? t("pl.titleSeason.week", { n: info.index + 1, dates: roundDates(info) })
+        ? keepRoundTogether(t("pl.titleSeason.week", { n: info.index + 1, dates: roundDates(info) }))
         : t("pl.titleSeason", { round: titleOf(game, pl.round) })
       : t("pl.titleRound", { round: titleOf(game, pl.round) });
-  return keepRoundTogether(text);
+  return text;
 }
 
 function ScopeToggle({
@@ -79,7 +79,9 @@ export function PlScreen({ me, code }: { me: HotelBody; code: string | null }) {
   );
 
   // Naslov se pokazuje tek s podacima (ili s rečenicom o grešci): naslov kruga ovisi o odgovoru poslužitelja.
-  if (q.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  // Igra se čeka kao i odgovor: bez nje ne zna se ni je li igra tjedna (tekstovi, birač) ni kako se krug zove.
+  if (q.isPending || gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
+  if (!game) return <ErrorText>{problemMessage(gameQuery.error)}</ErrorText>;
   if (!pl) {
     // 409 (stara igra, još nema obračunatog kruga) i 404 su očekivani ishodi: rečenica, ne kvar.
     const expected = q.error instanceof ApiError && q.error.status < 500;
@@ -104,7 +106,12 @@ export function PlScreen({ me, code }: { me: HotelBody; code: string | null }) {
 
   const rounds: PickerRound[] = pl.rounds.map((c) => {
     const info = game ? roundInfo(game, c) : null;
-    return { code: c, title: titleOf(game, c), short: info ? shortWeek(info.index + 1) : c };
+    return {
+      code: c,
+      title: titleOf(game, c),
+      short: info ? shortWeek(info.index + 1) : c,
+      ...(info && info.kind === "week" ? { group: weekGroup(info) } : {}),
+    };
   });
   return (
     <div className="space-y-3" aria-busy={q.isPlaceholderData}>

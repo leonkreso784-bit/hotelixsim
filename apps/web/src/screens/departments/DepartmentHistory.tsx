@@ -30,17 +30,17 @@ export function DepartmentHistory({
       {/* biome-ignore lint/a11y/useSemanticElements: vanjski <section> je Card; regija se ne ugnježđuje u drugi section */}
       <div
         role="region"
-        aria-label={t("dept.history.table")}
+        aria-label={tw(weekly, "dept.history.table")}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: pomična tablica mora biti dostupna tipkovnicom
         tabIndex={0}
         className="hidden overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent xl:block"
       >
         <table className="w-full text-left">
-          <caption className="sr-only">{t("dept.history.table")}</caption>
+          <caption className="sr-only">{tw(weekly, "dept.history.table")}</caption>
           <thead>
             <tr>
               <th scope="col" className="border-b border-line px-2 py-2 text-sm font-semibold text-muted">
-                {t("dept.history.round")}
+                {tw(weekly, "dept.history.round")}
               </th>
               <th scope="col" className={HEAD}>
                 {t("dept.profit")}

@@ -20,25 +20,6 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
   const weekly = game ? isWeekly(game) : false;
   const Heading = code === null ? "h1" : "h2";
 
-  if (list.isError)
-    return (
-      <div className="mx-auto max-w-2xl space-y-3">
-        <h1 className="text-3xl font-extrabold tracking-tight">{t("dept.title")}</h1>
-        {list.error instanceof ApiError && list.error.status === 409 ? (
-          <Card>
-            <p>{problemMessage(list.error)}</p>
-          </Card>
-        ) : (
-          <>
-            <ErrorText>{problemMessage(list.error)}</ErrorText>
-            <Button variant="secondary" onClick={() => void list.refetch()}>
-              {t("error.retry")}
-            </Button>
-          </>
-        )}
-      </div>
-    );
-
   const departments = list.data?.departments ?? [];
   const revenue = departments.filter((d) => !isService(d.class));
   const services = departments.filter((d) => isService(d.class));
@@ -52,7 +33,20 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
           <Heading className="text-3xl font-extrabold tracking-tight">{t("dept.title")}</Heading>
           <p className="text-muted">{t("dept.intro")}</p>
         </div>
-        {list.isPending ? (
+        {list.isError ? (
+          list.error instanceof ApiError && list.error.status === 409 ? (
+            <Card>
+              <p>{problemMessage(list.error)}</p>
+            </Card>
+          ) : (
+            <>
+              <ErrorText>{problemMessage(list.error)}</ErrorText>
+              <Button variant="secondary" onClick={() => void list.refetch()}>
+                {t("error.retry")}
+              </Button>
+            </>
+          )
+        ) : list.isPending || gameQuery.isPending ? (
           <StatusText>{t("status.loading")}</StatusText>
         ) : (
           <>
@@ -83,7 +77,14 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
             <p className="text-muted">{t("dept.pick")}</p>
           </Card>
         ) : (
-          <DepartmentDetail key={code} hotelId={hotelId} code={code} game={game} weekly={weekly} />
+          <DepartmentDetail
+            key={code}
+            hotelId={hotelId}
+            code={code}
+            game={game}
+            gamePending={gameQuery.isPending}
+            weekly={weekly}
+          />
         )}
       </div>
     </div>

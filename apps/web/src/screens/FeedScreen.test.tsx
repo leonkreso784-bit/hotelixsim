@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
+import { keepRoundTogether } from "../format";
 import { json } from "../test/fakeApi";
 import { ix, plan, standardApi, v2Api, weeklyGame } from "../test/fixtures";
+import { joined } from "../test/joined";
 import { renderApp } from "../test/renderApp";
 import { feedEntries } from "./FeedScreen";
 
@@ -184,11 +186,17 @@ describe("Tijek: tjedna igra", () => {
 
   it("naslovi su tjedni s datumima, rečenice govore o tjednu, poveznica vodi na /krug/t01", async () => {
     renderApp(v2Api().on("GET", "/v1/hotels/:hotel/feed", { items: weekItems }), "/tijek");
-    expect(await screen.findByRole("heading", { name: "Tjedan 1 (1. 6. – 7. 6.)" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Tjedan 2 (8. 6. – 14. 6.)" })).toBeTruthy();
-    expect(screen.getByText("Tjedan 1 (1. 6. – 7. 6.) je zatvoren.")).toBeTruthy();
-    expect(screen.getByText("Tjedan 1 (1. 6. – 7. 6.) je obračunat: napredak +8 bodova.")).toBeTruthy();
-    expect(screen.getByText("Plan za tjedan 2 (8. 6. – 14. 6.) je promijenjen.")).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: keepRoundTogether("Tjedan 1 (1. 6. – 7. 6.)") }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: keepRoundTogether("Tjedan 2 (8. 6. – 14. 6.)") }),
+    ).toBeTruthy();
+    expect(screen.getByText(joined("Tjedan 1 (1. 6. – 7. 6.) je zatvoren."))).toBeTruthy();
+    expect(
+      screen.getByText(joined("Tjedan 1 (1. 6. – 7. 6.) je obračunat: napredak +8 bodova.")),
+    ).toBeTruthy();
+    expect(screen.getByText(joined("Plan za tjedan 2 (8. 6. – 14. 6.) je promijenjen."))).toBeTruthy();
     const why = screen.getByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" });
     expect(why.getAttribute("href")).toBe("/krug/t01");
   });
@@ -209,6 +217,8 @@ describe("Tijek: tjedna igra", () => {
     expect(screen.getByRole("heading", { name: "Tjedan 2" })).toBeTruthy();
     expect(screen.queryByText(/lipanj/i)).toBeNull();
     release();
-    expect(await screen.findByRole("heading", { name: "Tjedan 1 (1. 6. – 7. 6.)" })).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: keepRoundTogether("Tjedan 1 (1. 6. – 7. 6.)") }),
+    ).toBeTruthy();
   });
 });

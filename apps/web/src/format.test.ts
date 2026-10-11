@@ -19,6 +19,7 @@ import {
   keepRoundTogether,
   monthName,
   roundDates,
+  roundPhrase,
   roundTitle,
   strategyLabel,
 } from "./format";
@@ -143,8 +144,9 @@ describe("oznaka kruga", () => {
       last_month: "jul",
       month_ends: true,
     } as const;
-    expect(roundDates(t05)).toBe("29. 6. – 5. 7.");
-    expect(roundTitle(t05)).toBe("Tjedan 5 (29. 6. – 5. 7.)");
+    expect(roundDates(t05)).toBe("29.\u00a06.\u00a0–\u2060\u00a05.\u00a07.");
+    expect(roundTitle(t05)).toBe("Tjedan\u00a05 (29.\u00a06.\u00a0–\u2060\u00a05.\u00a07.)");
+    expect(roundPhrase(t05)).toBe("tjedan\u00a05 (29.\u00a06.\u00a0–\u2060\u00a05.\u00a07.)");
     const jun = {
       code: "jun",
       kind: "month",
@@ -204,6 +206,11 @@ describe("keepRoundTogether", () => {
     expect(keepRoundTogether("Račun dobiti — sezona do tjedna 4 (22. 6. – 28. 6.)")).toBe(
       "Račun dobiti — sezona do tjedna\u00a04 (22.\u00a06.\u00a0–\u2060\u00a028.\u00a06.)",
     );
+  });
+  it("poziv je idempotentan: tekst iz roundPhrase/roundDates prolazi opet isti", () => {
+    const once = keepRoundTogether("Tjedan 1 završen (1. 6. – 7. 6.)");
+    expect(keepRoundTogether(once)).toBe(once);
+    expect(once).toBe("Tjedan\u00a01 završen (1.\u00a06.\u00a0–\u2060\u00a07.\u00a06.)");
   });
   it("mjesečni naslov ostaje kakav je", () => {
     expect(keepRoundTogether("Račun dobiti — Lipanj")).toBe("Račun dobiti — Lipanj");

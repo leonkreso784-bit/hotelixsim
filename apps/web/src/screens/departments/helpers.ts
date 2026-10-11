@@ -18,9 +18,13 @@ export function isService(cls: DeptClassCode): boolean {
   return SERVICE_CLASSES.includes(cls);
 }
 
-/** Rezultat sa strelicom i predznakom, da se rast i pad ne razlikuju samo bojom: „▲ +7.896 €“. */
+/**
+ * Rezultat sa strelicom i predznakom, da se rast i pad ne razlikuju samo bojom: „▲ +7.896 €“. Strelica ide po
+ * prikazanim (zaokruženim) eurima, pa blizu nule nema „▼ 0 €“.
+ */
 export function resultText(cents: number): string {
-  const arrow = cents > 0 ? "▲ " : cents < 0 ? "▼ " : "";
+  const euros = Math.round(cents / 100);
+  const arrow = euros > 0 ? "▲ " : euros < 0 ? "▼ " : "";
   return `${arrow}${formatEurosSigned(cents)}`;
 }
 
