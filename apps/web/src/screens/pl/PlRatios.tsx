@@ -1,15 +1,15 @@
 // Pokazatelji ispod računa: GOP marža, GOPPAR i EBITDA marža, ostvareno i budžet, svaki s rečenicom što znači.
 import { t } from "@hotelixsim/i18n";
 import type { PlBody } from "../../api/types";
-import { formatEurosCents, formatPercentBp } from "../../format";
+import { formatEurosCents, formatPercentBpFixed } from "../../format";
 import { Card } from "../../ui/primitives";
 
 export function PlRatios({ pl }: { pl: PlBody }) {
   const rows = [
     {
       key: "gopMargin",
-      actual: formatPercentBp(pl.gop_margin_bp.actual),
-      budget: formatPercentBp(pl.gop_margin_bp.budget),
+      actual: formatPercentBpFixed(pl.gop_margin_bp.actual),
+      budget: formatPercentBpFixed(pl.gop_margin_bp.budget),
     },
     {
       key: "goppar",
@@ -18,14 +18,13 @@ export function PlRatios({ pl }: { pl: PlBody }) {
     },
     {
       key: "ebitdaMargin",
-      actual: formatPercentBp(pl.ebitda_margin_bp.actual),
-      budget: formatPercentBp(pl.ebitda_margin_bp.budget),
+      actual: formatPercentBpFixed(pl.ebitda_margin_bp.actual),
+      budget: formatPercentBpFixed(pl.ebitda_margin_bp.budget),
     },
   ] as const;
   return (
     <Card className="space-y-1">
-      {/* Namjerno <p>, ne h2: test i čitanje ekrana drže točno sedam naslova sekcija računa. */}
-      <p className="text-lg font-bold">{t("pl.ratios")}</p>
+      <h2 className="text-lg font-bold">{t("pl.ratios")}</h2>
       <ul className="divide-y divide-line">
         {rows.map((r) => (
           <li key={r.key} className="space-y-1 py-2">

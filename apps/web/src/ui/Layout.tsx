@@ -74,7 +74,7 @@ function BottomNav({ route, withDepartments }: { route: Route; withDepartments: 
               <Link
                 to={tab.to}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-center text-xs leading-tight font-semibold md:min-h-12 md:flex-row md:justify-start md:gap-3 md:rounded-2xl md:px-4 md:text-base ${
+                className={`flex min-h-14 flex-col items-center justify-start gap-0.5 pt-2 text-center text-xs leading-tight font-semibold md:min-h-12 md:flex-row md:justify-start md:pt-0 md:gap-3 md:rounded-2xl md:px-4 md:text-base ${
                   active ? "text-accent-ink md:bg-accent-soft" : "text-muted md:hover:bg-sand"
                 }`}
               >

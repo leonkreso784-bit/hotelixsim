@@ -7,7 +7,7 @@ import { sectionRows, sectionTitle } from "./sections";
 import { Variance } from "./Variance";
 
 const HEAD = "border-b border-line px-3 py-2 text-sm font-semibold text-muted";
-const NUM = "whitespace-nowrap px-3 py-2 text-right tabular-nums";
+const NUM = "whitespace-nowrap px-3 py-2 text-right align-top tabular-nums";
 
 export function PlTable({ sections }: { sections: PlSectionBody[] }) {
   const caption = t("pl.table");
@@ -52,13 +52,13 @@ export function PlTable({ sections }: { sections: PlSectionBody[] }) {
                   <tr key={line.code} className={total ? "font-bold" : ""}>
                     <th
                       scope="row"
-                      className={`px-3 py-2 text-left align-top ${top} ${total ? "font-bold" : "font-normal"}`}
+                      className={`w-full min-w-0 px-3 py-2 text-left align-top ${top} ${total ? "font-bold" : "font-normal"}`}
                     >
                       {line.name}
                     </th>
                     <td className={`${NUM} ${top}`}>{formatEuros(line.actual_cents)}</td>
                     <td className={`${NUM} ${top}`}>{formatEuros(line.budget_cents)}</td>
-                    <td className={`px-3 py-2 text-right align-top font-semibold ${top}`}>
+                    <td className={`whitespace-nowrap px-3 py-2 text-right align-top font-semibold ${top}`}>
                       <Variance line={line} />
                     </td>
                   </tr>

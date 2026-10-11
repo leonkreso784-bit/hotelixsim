@@ -8,7 +8,10 @@ import { Variance } from "./Variance";
 
 export function PlCards({ sections }: { sections: PlSectionBody[] }) {
   return (
-    <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:hidden">
+    <div
+      data-layout="pl-sections"
+      className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:hidden"
+    >
       {sections.map((s) => (
         <Card key={s.section} className="min-w-0 space-y-1">
           <h2 className="text-lg font-bold">{sectionTitle(s.section)}</h2>
