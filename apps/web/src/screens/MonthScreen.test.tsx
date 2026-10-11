@@ -1,5 +1,6 @@
-import { act, cleanup, screen, within } from "@testing-library/react";
+import { act, cleanup, configure, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { poll } from "../api/poll";
 import type { FeedItemBody } from "../api/types";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
@@ -19,8 +20,18 @@ import {
 } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
-beforeEach(fastPolling);
+// Čekanja se mjere događajima (sljedeći odgovor, sljedeći ispis), ne stvarnim vremenom stroja: velika gornja granica
+// znači da opterećen stroj samo usporava test, ne ruši ga (zadano 1000 ms znalo je pasti uz cargo u pozadini).
+const WAIT_MS = 15_000;
+const DEFAULT_WAIT_MS = 1000;
+vi.setConfig({ testTimeout: 2 * WAIT_MS });
+
+beforeEach(() => {
+  fastPolling();
+  configure({ asyncUtilTimeout: WAIT_MS });
+});
 afterEach(() => {
+  configure({ asyncUtilTimeout: DEFAULT_WAIT_MS });
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -194,7 +205,7 @@ describe("Mjesec završen", () => {
       await screen.findByText(
         "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi profesoru.",
         {},
-        { timeout: 2000 },
+        { timeout: WAIT_MS },
       ),
     ).toBeTruthy();
   });
@@ -244,7 +255,7 @@ describe("Mjesec završen", () => {
       .on("GET", "/v1/hotels/:hotel/feed", () => json(200, { items: resolved ? feed : feed.slice(0, 5) }));
     renderApp(api, "/mjesec/jun");
     expect(await screen.findByText("Obračunavam lipanj…")).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Lipanj završen" }, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Lipanj završen" }, { timeout: WAIT_MS })).toBeTruthy();
     expect(await screen.findByText("Usluga je bolja. Prati troškove.")).toBeTruthy();
     expect(screen.queryByText("Mentor se ovaj put nije javio.")).toBeNull();
   });
@@ -256,7 +267,7 @@ describe("Mjesec završen", () => {
       .on("GET", "/v1/hotels/:hotel/feed", { items: feed.slice(0, 5) });
     renderApp(api, "/mjesec/jun");
     expect(await screen.findByText("Mentor piše…")).toBeTruthy();
-    expect(await screen.findByText("Mentor se ovaj put nije javio.", {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText("Mentor se ovaj put nije javio.", {}, { timeout: WAIT_MS })).toBeTruthy();
   });
 
   it("prijelaz lipanj → srpanj: sat „traje dulje“ iz lipnja ne prelazi u srpanj", async () => {
@@ -270,7 +281,9 @@ describe("Mjesec završen", () => {
     renderApp(api, "/mjesec/jun");
     const slow =
       "Obračun traje dulje nego inače. Osvježi stranicu za minutu; ako i dalje stoji, javi profesoru.";
-    expect(await screen.findByText(slow, {}, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText(slow, {}, { timeout: WAIT_MS })).toBeTruthy();
+    // Srpanj ima vlastiti sat; da ga opterećen stroj ne stigne u trenutku provjere, dulji se do „nikad“.
+    poll.slowRoundMs = 600_000;
     current = "jul";
     act(() => navigate("/mjesec/jul"));
     expect(await screen.findByText("Obračunavam srpanj…")).toBeTruthy();

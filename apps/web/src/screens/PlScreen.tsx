@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ApiError, problemMessage } from "../api/errors";
 import { useGame, usePl } from "../api/queries";
 import type { GameBody, HotelBody, PlBody, PlScopeCode } from "../api/types";
-import { roundDates, roundTitle, tw } from "../format";
+import { keepRoundTogether, roundDates, roundTitle, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { navigate } from "../router";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
@@ -21,7 +21,7 @@ function titleOf(game: GameBody | undefined, code: string): string {
   return info ? roundTitle(info) : code;
 }
 
-/** Naslov ekrana; datumi u zagradi vezani nerazdvojnim razmacima da se naslov ne lomi usred njih. */
+/** Naslov ekrana; broj tjedna i datumi u zagradi vezani nerazdvojnim razmacima da se naslov ne lomi usred njih. */
 function heading(game: GameBody | undefined, pl: PlBody): string {
   const info = game ? roundInfo(game, pl.round) : null;
   const text =
@@ -30,7 +30,7 @@ function heading(game: GameBody | undefined, pl: PlBody): string {
         ? t("pl.titleSeason.week", { n: info.index + 1, dates: roundDates(info) })
         : t("pl.titleSeason", { round: titleOf(game, pl.round) })
       : t("pl.titleRound", { round: titleOf(game, pl.round) });
-  return text.replace(/\([^)]*\)/, (m) => m.replace(/ /g, " "));
+  return keepRoundTogether(text);
 }
 
 function ScopeToggle({

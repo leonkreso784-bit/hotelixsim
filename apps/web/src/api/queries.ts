@@ -310,12 +310,7 @@ export function usePl(hotelId: string, code: string | null, scope: PlScopeCode) 
     queryFn: async () =>
       unwrap(
         await api.GET("/v1/hotels/{hotel_id}/pl", {
-          // openapi.json (utoipa) vodi `round` i `scope` kao path-parametre iako su query: Task 15 ih je tako
-          // opisao, a poslužitelj ih čita iz upita. Pa se šalju kao upit uz uski izlaz iz tipa (vidi izvještaj Taska 20).
-          params: {
-            path: { hotel_id: hotelId, round: code, scope },
-            query: { scope, ...(code ? { round: code } : {}) } as never,
-          },
+          params: { path: { hotel_id: hotelId }, query: { scope, ...(code ? { round: code } : {}) } },
         }),
       ),
   });

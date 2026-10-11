@@ -1256,3 +1256,161 @@ fn index_code_follows_index_order() {
     let codes: Vec<IndexCode> = f.indices.iter().map(|i| i.index.into()).collect();
     assert_eq!(codes, INDEX_ORDER);
 }
+
+// ------------------------------------------------------------ tjedni krug govori o tjednu
+
+/// Isti ručni primjer kao `sample()`, ali kao tjedan 5 (29. 6. – 5. 7.) tjedne igre; uz trening, obnovu, prihod i
+/// trošak situacije koju popis situacija ne poznaje, da se vide i ti tekstovi.
+fn weekly_sample() -> DebriefInput {
+    let mut input = sample();
+    input.round = RoundKey::Week(5);
+    input.next_round = Some(RoundKey::Week(6));
+    input.prev_round = Some(RoundKey::Week(4));
+    input.round_kind = "week".into();
+    input.first_date = (29, MonthCode::Jun);
+    input.last_date = (5, MonthCode::Jul);
+    input.plan.training = TrainingCode::Full;
+    input.plan.renovation = true;
+    input.lines.extend([
+        line(
+            VarCode::Revenue,
+            CauseDto::Baseline,
+            9_000_000,
+            UnitCode::Cents,
+        ),
+        line(
+            VarCode::Costs,
+            CauseDto::Situation("S9".into()),
+            400_000,
+            UnitCode::Cents,
+        ),
+        line(
+            VarCode::Morale,
+            CauseDto::Situation("S9".into()),
+            -300,
+            UnitCode::Points,
+        ),
+    ]);
+    input
+}
+
+fn strings_in(v: &Value, out: &mut Vec<String>) {
+    match v {
+        Value::String(s) => out.push(s.clone()),
+        Value::Array(a) => a.iter().for_each(|x| strings_in(x, out)),
+        Value::Object(o) => o.values().for_each(|x| strings_in(x, out)),
+        _ => {}
+    }
+}
+
+#[test]
+fn weekly_round_texts_never_say_month() {
+    let input = weekly_sample();
+    let mut texts = Vec::new();
+    strings_in(&facts_json(&input), &mut texts);
+    texts.push(fallback_debrief(&input));
+    // Zadnja rečenica sažetka je o pravom kraju mjeseca („Puni pregled s mentorom stiže na kraju mjeseca").
+    let summary = weekly_summary(&input);
+    texts.push(
+        summary
+            .split("\n\nPuni pregled")
+            .next()
+            .unwrap_or_default()
+            .to_owned(),
+    );
+    let said: Vec<&String> = texts
+        .iter()
+        .filter(|t| t.to_lowercase().contains("mjesec"))
+        .collect();
+    assert!(said.is_empty(), "tjedan govori o mjesecu: {said:?}");
+    let f = facts_json(&input);
+    assert_eq!(f["mjesec"], "u tjednu od 29. lipnja do 5. srpnja");
+    assert_eq!(f["iduci_mjesec"], "sljedeći tjedan");
+    // Usporedbe i značenja stoje u tjednu.
+    let p = &f["odluke_u_planu"];
+    assert_eq!(
+        p["cijena_sobe"],
+        "115 € po noći, 4 % ispod uobičajene cijene za ovaj tjedan"
+    );
+    assert_eq!(
+        p["sezonski_radnici"],
+        "20 sezonskih radnika, više nego prošli tjedan"
+    );
+    assert_eq!(p["obuka"], "puna obuka (učinak stiže idući tjedan)");
+    assert_eq!(
+        p["odrzavanje"],
+        "odgođeno (oprema se ovaj tjedan nije popravljala)"
+    );
+    assert_eq!(
+        p["obnova"],
+        "pokrenuta: plaća se sada, a sobe su bolje od idućeg tjedna"
+    );
+    assert!(
+        f["ljestvica_indeksa"]
+            .as_str()
+            .unwrap()
+            .contains("u istom tjednu")
+    );
+    assert_eq!(
+        changes(&f, "Opterećenje osoblja")[0].0,
+        "opterećenje u ovom tjednu"
+    );
+    assert_eq!(
+        changes(&f, "Opterećenje osoblja")[1].0,
+        "opterećenje prošli tjedan"
+    );
+    assert!(
+        amount_for(
+            &f,
+            "Zaposleni",
+            "udio osoblja koje je dalo otkaz ovaj tjedan"
+        )
+        .ends_with("više nego prošli tjedan")
+    );
+    assert!(
+        changes(&f, "Troškovi")
+            .iter()
+            .any(|(cause, _)| cause == "situacija „situacija iz ovog tjedna“")
+    );
+}
+
+/// Mjesečni tekstovi ostaju kakvi su bili: riječ „mjesec" stoji gdje je stajala.
+#[test]
+fn monthly_round_texts_keep_month_wording() {
+    let f = facts_json(&sample());
+    let mut texts = Vec::new();
+    strings_in(&f, &mut texts);
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.contains("Što je hotel platio ovaj mjesec, po vrsti troška."))
+    );
+    assert!(texts.iter().any(|t| t.contains("Svaki mjesec se troši")));
+    assert!(texts.iter().any(|t| t.contains("Moral se svaki mjesec")));
+    assert!(texts.iter().any(|t| t.contains("koje u mjesecu da otkaz")));
+    assert!(
+        texts
+            .iter()
+            .any(|t| t == "udio osoblja koje je dalo otkaz ovaj mjesec")
+    );
+    assert!(texts.iter().any(|t| t == "opterećenje u ovom mjesecu"));
+    assert!(
+        f["ljestvica_indeksa"]
+            .as_str()
+            .unwrap()
+            .contains("u istom mjesecu")
+    );
+    let mut empty = sample();
+    empty.situations.clear();
+    empty.lines = vec![line(
+        VarCode::Costs,
+        CauseDto::Situation("S9".into()),
+        400_000,
+        UnitCode::Cents,
+    )];
+    assert!(
+        changes(&facts_json(&empty), "Troškovi")
+            .iter()
+            .any(|(cause, _)| cause == "situacija „situacija iz ovog mjeseca“")
+    );
+}

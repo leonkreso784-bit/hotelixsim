@@ -37,6 +37,12 @@ describe("problemMessage i isNoGame", () => {
       "Cijena je izvan dopuštenog raspona.",
     );
   });
+  it("nema obračunatog kruga: tjedna igra dobiva inačicu bez općenitog „kruga“", () => {
+    const err = new ApiError(409, "no_resolved_round");
+    expect(problemMessage(err)).toBe("Račun dobiti postoji tek nakon prvog obračunatog kruga.");
+    expect(problemMessage(err, true)).toBe("Račun dobiti postoji tek nakon prvog obračunatog tjedna.");
+  });
+
   it("nepoznat kod: 5xx i mreža → poslužitelj, ostalo → općenito", () => {
     expect(problemMessage(new ApiError(500, "novi_kod"))).toBe(
       "Poslužitelj trenutno ne odgovara. Pokušaj ponovno za koju sekundu.",

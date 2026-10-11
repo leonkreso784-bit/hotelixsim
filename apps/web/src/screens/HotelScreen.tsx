@@ -1,8 +1,7 @@
 import { t } from "@hotelixsim/i18n";
 import { BedDouble, CalendarDays, ChartColumn, FileText, Gauge, Star, Users, Wallet } from "lucide-react";
-import { useRef } from "react";
 import { problemMessage } from "../api/errors";
-import { useGame, useSituations, useStartDemo } from "../api/queries";
+import { useGame, useSituations } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { PLAYER_LOOK } from "../avatar/look";
@@ -19,15 +18,13 @@ import {
 import { indexDeltas, isWeekly, latestIndices, roundInfo } from "../game";
 import { Link, roundPath } from "../router";
 import { IndexBars } from "../ui/IndexBars";
-import { Badge, Button, Card, ErrorText, StatusText } from "../ui/primitives";
+import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
 import { Row, Stat } from "./hotel/links";
 
 export function HotelScreen({ me }: { me: HotelBody }) {
   const game = useGame(me.game_id);
   const sits = useSituations(me.hotel.hotel_id);
-  const start = useStartDemo();
-  const inFlight = useRef(false);
   const priv = me.private;
   if (game.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (game.isError && !game.data) return <ErrorText>{problemMessage(game.error)}</ErrorText>;
@@ -45,16 +42,6 @@ export function HotelScreen({ me }: { me: HotelBody }) {
       ? t("hotel.lastWeek", { week: roundPhrase(lm.round) })
       : t("hotel.lastMonth", { month: monthName(lm.month) })
     : t(weekly ? "hotel.noWeekYet" : "hotel.noMonthYet");
-
-  function newGame() {
-    if (start.isPending || inFlight.current) return;
-    inFlight.current = true;
-    start.mutate(undefined, {
-      onSettled: () => {
-        inFlight.current = false;
-      },
-    });
-  }
 
   return (
     <>
@@ -185,10 +172,12 @@ export function HotelScreen({ me }: { me: HotelBody }) {
           {!current && (
             <Card className="space-y-3">
               <p className="text-lg font-bold">{t("hotel.seasonOver")}</p>
-              {start.isError && <ErrorText>{problemMessage(start.error)}</ErrorText>}
-              <Button disabled={start.isPending} onClick={newGame}>
+              <Link
+                to="/nova"
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent px-4 py-3 text-base font-bold text-white"
+              >
                 {t("hotel.newGame")}
-              </Button>
+              </Link>
             </Card>
           )}
         </div>

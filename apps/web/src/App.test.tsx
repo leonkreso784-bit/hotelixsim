@@ -136,3 +136,35 @@ describe("početni ekran: postavke za profesora", () => {
     expect(api.posts("/v1/demo")[0]?.body).toBeUndefined();
   });
 });
+
+describe("Nova igra iz igre", () => {
+  function seasonOverApi() {
+    return startApi()
+      .on("GET", "/v1/me/hotel", myHotel({ planMonth: null }))
+      .on("GET", "/v1/games/:game", game({ current: null }));
+  }
+
+  it("„Nova igra“ ne šalje zahtjev, pokazuje izbor modela, a „Natrag na igru“ vraća na igru bez zahtjeva", async () => {
+    const api = seasonOverApi();
+    renderApp(api, "/");
+    fireEvent.click(await screen.findByRole("link", { name: "Nova igra" }));
+    expect(await screen.findByRole("heading", { name: "Nova igra" })).toBeTruthy();
+    fireEvent.click(screen.getByText("Za profesora: postavke nove igre"));
+    expect(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("link", { name: "Natrag na igru" }));
+    expect(await screen.findByText("Sezona je završena.")).toBeTruthy();
+    expect(window.location.pathname).toBe("/");
+    expect(api.posts("/v1/demo")).toHaveLength(0);
+  });
+
+  it("izbor „Novi model / Po tjednima“ šalje postavke kao početni ekran i otvara novu igru", async () => {
+    const api = seasonOverApi();
+    renderApp(api, "/nova");
+    fireEvent.click(await screen.findByText("Za profesora: postavke nove igre"));
+    fireEvent.click(screen.getByRole("radio", { name: "Novi model: odjeli i račun dobiti" }));
+    fireEvent.click(screen.getByRole("button", { name: "Započni igru" }));
+    await waitFor(() => expect(api.posts("/v1/demo")).toHaveLength(1));
+    expect(api.posts("/v1/demo")[0]?.body).toEqual({ model: "v2", round_kind: "week" });
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+  });
+});

@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FeedItemBody } from "../api/types";
-import { ix, plan, standardApi, v2Api } from "../test/fixtures";
+import { json } from "../test/fakeApi";
+import { ix, plan, standardApi, v2Api, weeklyGame } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
 import { feedEntries } from "./FeedScreen";
 
@@ -190,5 +191,24 @@ describe("Tijek: tjedna igra", () => {
     expect(screen.getByText("Plan za tjedan 2 (8. 6. – 14. 6.) je promijenjen.")).toBeTruthy();
     const why = screen.getByRole("link", { name: "Pogledaj zašto su se indeksi pomaknuli" });
     expect(why.getAttribute("href")).toBe("/krug/t01");
+  });
+
+  it("dok igra ne stigne, naslovi su neutralni „Tjedan N“, nikad mjesec", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const api = v2Api()
+      .on("GET", "/v1/games/:game", async () => {
+        await gate;
+        return json(200, weeklyGame());
+      })
+      .on("GET", "/v1/hotels/:hotel/feed", { items: weekItems });
+    renderApp(api, "/tijek");
+    expect(await screen.findByRole("heading", { name: "Tjedan 1" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Tjedan 2" })).toBeTruthy();
+    expect(screen.queryByText(/lipanj/i)).toBeNull();
+    release();
+    expect(await screen.findByRole("heading", { name: "Tjedan 1 (1. 6. – 7. 6.)" })).toBeTruthy();
   });
 });
