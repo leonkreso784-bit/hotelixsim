@@ -39,6 +39,14 @@ describe("Račun dobiti", () => {
     ).toEqual(["Stavka", "Ostvareno", "Budžet", "Razlika"]);
     expect(table.closest("section")?.className).toMatch(/hidden .*lg:block/);
   });
+  it("naslov tjednog kruga: broj tjedna i datumi su nelomljivi", async () => {
+    renderApp(v2PlApi(), "/racun-dobiti");
+    const h1 = await screen.findByRole("heading", { level: 1, name: /^Račun dobiti/ });
+    const text = h1.textContent ?? "";
+    expect(text).toContain("Tjedan\u00a01 (");
+    expect(text).toMatch(/\([^ )]+\)/); // u zagradi nema običnih razmaka
+    expect(text).toContain("–\u2060\u00a0");
+  });
   it("sezona do sada šalje jedan novi upit sa scope=season", async () => {
     const api = v2PlApi();
     renderApp(api, "/racun-dobiti");
@@ -55,14 +63,15 @@ describe("Račun dobiti", () => {
     await waitFor(() => expect(seasonCalls()).toHaveLength(1));
     expect(await screen.findByText(/Zbroj od početka sezone/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sezona do sada" }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/sezona do tjedna 1/);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/sezona do tjedna\u00a01/);
   });
   it("prije prvog obračuna: rečenica, ne nule", async () => {
     renderApp(
       v2Api().on("GET", "/v1/hotels/:hotel/pl", () => problem(409, "no_resolved_round")),
       "/racun-dobiti",
     );
-    expect(await screen.findByText("Račun dobiti postoji tek nakon prvog obračunatog kruga.")).toBeTruthy();
+    // Tjedna igra: rečenica govori o tjednu, bez riječi „mjesec“ ni općenitog „kruga“.
+    expect(await screen.findByText("Račun dobiti postoji tek nakon prvog obračunatog tjedna.")).toBeTruthy();
     expect(screen.queryByText("0 €")).toBeNull();
   });
   it("GOP i EBITDA imaju objašnjenje riječima", async () => {
@@ -130,7 +139,7 @@ describe("Račun dobiti", () => {
       v2Api().on("GET", "/v1/hotels/:hotel/pl", () => problem(409, "no_resolved_round")),
       "/racun-dobiti",
     );
-    await screen.findByText("Račun dobiti postoji tek nakon prvog obračunatog kruga.");
+    await screen.findByText("Račun dobiti postoji tek nakon prvog obračunatog tjedna.");
     expect(screen.queryByText(/Ovako hotelski računovođe/)).toBeNull();
   });
   it("pokazatelji imaju naslov razine 2 i postotke s jednom decimalom", async () => {

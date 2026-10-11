@@ -5,7 +5,7 @@ import { useFeed, useGame } from "../api/queries";
 import type { FeedItemBody, GameBody, HotelBody, MonthCode } from "../api/types";
 import { Avatar } from "../avatar/Avatar";
 import { MENTOR_LOOK } from "../avatar/look";
-import { capitalize, formatPointsCount, monthName, roundPhrase } from "../format";
+import { capitalize, formatPointsCount, roundPhrase, roundWithoutGame } from "../format";
 import { roundInfo } from "../game";
 import { Link, roundPath } from "../router";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
@@ -42,10 +42,13 @@ export function feedEntries(items: FeedItemBody[]): FeedEntry[] {
   return out.reverse();
 }
 
-/** Krug usred rečenice: iz igre („tjedan 5 (29. 6. – 5. 7.)“), a bez nje ime mjeseca. */
+/**
+ * Krug usred rečenice: iz igre („tjedan 5 (29. 6. – 5. 7.)“). Dok igra ne stigne, tjedni krug (kod „t05“) nosi samo
+ * broj („tjedan 5“), a mjesečni ime mjeseca; mjesec iz dnevnika za tjedan bi bio kriv („lipanj“ za svih 17 krugova).
+ */
 function phrase(game: GameBody | undefined, round: string, month: MonthCode): string {
   const info = game ? roundInfo(game, round) : null;
-  return info ? roundPhrase(info) : monthName(month);
+  return info ? roundPhrase(info) : roundWithoutGame(round, month);
 }
 
 function sentence(i: Plain, game: GameBody | undefined): string {

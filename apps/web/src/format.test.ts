@@ -16,6 +16,7 @@ import {
   formatRating,
   formatWhole,
   formatWholeSigned,
+  keepRoundTogether,
   monthName,
   roundDates,
   roundTitle,
@@ -192,5 +193,19 @@ describe("plan odjela", () => {
       "5 sezonaca",
     ]);
     expect(formatPercentWhole(110)).toBe("110 %");
+  });
+});
+
+describe("keepRoundTogether", () => {
+  it("broj tjedna i datumi u zagradi ne lome se, prijelaz je moguć samo ispred zagrade", () => {
+    expect(keepRoundTogether("Račun dobiti — Tjedan 4 (22. 6. – 28. 6.)")).toBe(
+      "Račun dobiti — Tjedan\u00a04 (22.\u00a06.\u00a0–\u2060\u00a028.\u00a06.)",
+    );
+    expect(keepRoundTogether("Račun dobiti — sezona do tjedna 4 (22. 6. – 28. 6.)")).toBe(
+      "Račun dobiti — sezona do tjedna\u00a04 (22.\u00a06.\u00a0–\u2060\u00a028.\u00a06.)",
+    );
+  });
+  it("mjesečni naslov ostaje kakav je", () => {
+    expect(keepRoundTogether("Račun dobiti — Lipanj")).toBe("Račun dobiti — Lipanj");
   });
 });

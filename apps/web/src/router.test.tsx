@@ -14,6 +14,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/mjesec/jun")).toEqual({ name: "round", code: "jun" });
     expect(matchRoute("/tijek/")).toEqual({ name: "feed" });
     expect(matchRoute("/odjeli")).toEqual({ name: "departments" });
+    expect(matchRoute("/nova")).toEqual({ name: "new" });
     expect(matchRoute("/odjeli/restaurant")).toEqual({ name: "department", code: "restaurant" });
     expect(matchRoute("/odjeli/a/b")).toEqual({ name: "notFound" });
     expect(matchRoute("/racun-dobiti")).toEqual({ name: "pl", code: null });

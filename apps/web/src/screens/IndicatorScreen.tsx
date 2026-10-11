@@ -5,7 +5,7 @@ import { useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useExplanation, useGame } from "../api/queries";
 import type { DriverCode, GameBody, HotelBody, IndexCode, IndexEntry } from "../api/types";
-import { capitalize, formatIndex, monthName, roundPhrase, roundTitle, tw } from "../format";
+import { capitalize, formatIndex, roundPhrase, roundTitle, roundWithoutGame, tw } from "../format";
 import { indexDeltas, isWeekly, roundInfo } from "../game";
 import { Link } from "../router";
 import { Delta, INDEX_ICON } from "../ui/IndexBars";
@@ -16,10 +16,10 @@ import { DriverList } from "./month/Explanation";
 type HistoryRow = { key: string; label: string; entry: IndexEntry; delta: number | null };
 type Scored = HotelBody["hotel"]["months"][number];
 
-/** Naslov obračunatog kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez igre ili kruga u njoj ime mjeseca. */
+/** Naslov obračunatog kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez igre ili kruga u njoj neutralno („tjedan 5“ ili ime mjeseca). */
 function scoredTitle(game: GameBody | undefined, m: Scored): string {
   const info = game ? roundInfo(game, m.round) : null;
-  return info ? roundTitle(info) : capitalize(monthName(m.month));
+  return info ? roundTitle(info) : capitalize(roundWithoutGame(m.round, m.month));
 }
 
 /** Početak, pa svaki obračunati krug: vrijednost indeksa i promjena prema prethodnom redu. */

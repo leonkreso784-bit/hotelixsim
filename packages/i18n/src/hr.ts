@@ -65,6 +65,7 @@ export const hr = {
   "problem.model_v1": "Ova igra je na starom modelu i nema ovaj prikaz.",
   "problem.unknown_department": "Taj odjel ne postoji u ovom hotelu.",
   "problem.no_resolved_round": "Račun dobiti postoji tek nakon prvog obračunatog kruga.",
+  "problem.no_resolved_round.week": "Račun dobiti postoji tek nakon prvog obračunatog tjedna.",
   "problem.department_plan_invalid":
     "Postavke odjela nisu dopuštene. Provjeri sezonce, razinu cijene i koje se odjele smije zatvoriti.",
   "nav.hotel": "Hotel",
@@ -77,6 +78,7 @@ export const hr = {
   "chip.over": "SEZONA ZAVRŠENA",
   "chip.week": "TJEDAN {n} · {i}/{total}",
   "round.week": "Tjedan {n}",
+  "round.weekBare": "tjedan {n}",
   "round.weekPhrase": "tjedan {n} ({dates})",
   "round.dates": "{d1}. {m1}. – {d2}. {m2}.",
   "round.withDates": "{title} ({dates})",
@@ -180,6 +182,9 @@ export const hr = {
   "start.kind.help":
     "Tjedni krug ima manje odluka: mentor uz svaki tjedan daje kratak sažetak, a cijelu lekciju na kraju mjeseca.",
   "start.busy": "Pripremam tvoj hotel…",
+  "start.newTitle": "Nova igra",
+  "start.newLead": "Tvoja igra ostaje kakva jest dok ne započneš novu.",
+  "start.back": "Natrag na igru",
   "situations.title": "Situacije mjeseca",
   "situations.title.week": "Situacije tjedna",
   "situations.none.week": "Ovaj tjedan nema situacija.",

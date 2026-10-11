@@ -5,16 +5,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { problemMessage } from "../api/errors";
 import { useGame, useKpi } from "../api/queries";
 import type { GameBody, HotelBody, KpiMonthBody } from "../api/types";
-import { capitalize, monthName, roundTitle, tw } from "../format";
+import { capitalize, roundTitle, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { Link } from "../router";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
 import { breakEvenSentence, KPI_ROWS, rowLabel, rowMeaning } from "./kpi/rows";
 
-/** Naslov kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez igre ili kruga u njoj ime mjeseca. */
+/** Naslov kruga („Lipanj“, „Tjedan 5 (29. 6. – 5. 7.)“); bez igre ili kruga u njoj neutralno („tjedan 5“ ili ime mjeseca). */
 function roundLabel(game: GameBody | undefined, m: KpiMonthBody): string {
   const info = game ? roundInfo(game, m.round) : null;
-  return info ? roundTitle(info) : capitalize(monthName(m.month));
+  return info ? roundTitle(info) : capitalize(roundWithoutGame(m.round, m.month));
 }
 
 type View = { game: GameBody | undefined; weekly: boolean; months: KpiMonthBody[] };
