@@ -437,6 +437,8 @@ export interface components {
         /** @description Granice postavki jednog odjela. */
         DeptLimitsBody: {
             can_close: boolean;
+            /** @description Trošak razina održavanja odjela u ovom krugu. */
+            maintenance: components["schemas"]["LevelCostsBody"];
             /** Format: int32 */
             price_level_max_pct: number;
             /** Format: int32 */
@@ -820,6 +822,15 @@ export interface components {
             /** Format: int32 */
             sold: number;
         };
+        /** @description Trošak triju razina održavanja u krugu (centi). */
+        LevelCostsBody: {
+            /** Format: int64 */
+            deferred_cents: number;
+            /** Format: int64 */
+            intensive_cents: number;
+            /** Format: int64 */
+            regular_cents: number;
+        };
         /** @enum {string} */
         MaintenanceCode: "deferred" | "regular" | "intensive";
         /**
@@ -912,8 +923,42 @@ export interface components {
             /** Format: int32 */
             wage_pct: number;
         };
+        /** @description Cijene odluka plana hotela u krugu. */
+        PlanCostsBody: {
+            /** @description Održavanje hotela (v1) odnosno Smještaja (v2) u krugu. */
+            maintenance: components["schemas"]["LevelCostsBody"];
+            /**
+             * Format: int64
+             * @description Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje).
+             */
+            payroll_week_cents: number;
+            /**
+             * Format: int64
+             * @description Obnova: jednokratno, puni iznos.
+             */
+            renovation_cents: number;
+            /**
+             * Format: int32
+             * @description Učinak obnove na opremu (bodovi 0–10 000).
+             */
+            renovation_equipment_pts: number;
+            /**
+             * Format: int32
+             * @description Učinak obnove na zadovoljstvo gostiju (bodovi 0–10 000).
+             */
+            renovation_satisfaction_pts: number;
+            /**
+             * Format: int64
+             * @description Odgovaranje na recenzije u krugu.
+             */
+            reply_cents: number;
+            training_basic: components["schemas"]["TrainingCostBody"];
+            training_full: components["schemas"]["TrainingCostBody"];
+        };
         /** @description Granice izbornika radnji za ekran. */
         PlanLimitsBody: {
+            /** @description Cijene odluka plana u ovom krugu (iz kataloga) i procjena tjednih plaća hotela. */
+            costs: components["schemas"]["PlanCostsBody"];
             /** @description Granice po odjelu (v2); izostavljeno u v1 igri. */
             departments?: {
                 [key: string]: components["schemas"]["DeptLimitsBody"];
@@ -1117,6 +1162,15 @@ export interface components {
         };
         /** @enum {string} */
         TrainingCode: "none" | "basic" | "full";
+        /** @description Trošak obuke u krugu i odgođeni učinak (bodovi 0–10 000; stiže idući krug). */
+        TrainingCostBody: {
+            /** Format: int64 */
+            cost_cents: number;
+            /** Format: int32 */
+            experience_pts: number;
+            /** Format: int32 */
+            morale_pts: number;
+        };
         /** @enum {string} */
         UnitCode: "room_nights" | "cents" | "people" | "points" | "rating_hundredths" | "bp";
         /** @enum {string} */

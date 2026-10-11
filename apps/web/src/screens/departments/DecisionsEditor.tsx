@@ -8,6 +8,7 @@ import type { DepartmentBody, PlanStateBody } from "../../api/types";
 import { formatCount, formatPercentWhole, formatRange, tw } from "../../format";
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
 import { Choice } from "../plan/Choice";
+import { maintenanceOptions } from "../plan/costs";
 import { FOCUS } from "./helpers";
 import { Stepper } from "./Stepper";
 import { type DeptPlans, stepLeftForOthers } from "./step";
@@ -172,13 +173,10 @@ export function DecisionsEditor(props: {
           value={draft.maintenance}
           disabled={!draft.open}
           describedBy={legendId}
-          options={[
-            { v: "deferred", label: t("maintenance.deferred") },
-            { v: "regular", label: t("maintenance.regular") },
-            { v: "intensive", label: t("maintenance.intensive") },
-          ]}
+          options={maintenanceOptions(l.maintenance)}
           onChange={(v) => set({ maintenance: v })}
         />
+        <p className="text-xs text-muted">{tw(weekly, "plan.cost.levels")}</p>
       </fieldset>
       {/* Ponovni pokušaj nudi stupac popisa (isti upit), da gumb ne bude dvaput na ekranu. */}
       {list.isError && <ErrorText>{problemMessage(list.error)}</ErrorText>}

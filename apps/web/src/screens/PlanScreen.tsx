@@ -5,13 +5,15 @@ import { type FormEvent, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { roundPhrase, roundWithoutGame, tw } from "../format";
+import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
+import { maintenanceOptions, trainingEffect, trainingOptions } from "./plan/costs";
 import { DepartmentSummary } from "./plan/DepartmentSummary";
 import { NumberField, Toggle } from "./plan/fields";
+import { Renovation } from "./plan/Renovation";
 
 type Draft = {
   price: string;
@@ -139,17 +141,16 @@ export function PlanScreen({ me }: { me: HotelBody }) {
               unit="person"
               onChange={(v) => set({ seasonal: v })}
             />
-            <Choice
-              legend={t("plan.maintenance")}
-              name="maintenance"
-              value={draft.maintenance}
-              options={[
-                { v: "deferred", label: t("maintenance.deferred") },
-                { v: "regular", label: t("maintenance.regular") },
-                { v: "intensive", label: t("maintenance.intensive") },
-              ]}
-              onChange={(v) => set({ maintenance: v })}
-            />
+            <div className="space-y-1">
+              <Choice
+                legend={t("plan.maintenance")}
+                name="maintenance"
+                value={draft.maintenance}
+                options={maintenanceOptions(l.costs.maintenance)}
+                onChange={(v) => set({ maintenance: v })}
+              />
+              <p className="text-xs text-muted">{tw(weekly, "plan.cost.levels")}</p>
+            </div>
           </>
         )}
       </Card>
@@ -175,29 +176,33 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             unit="percent"
             onChange={(v) => set({ wage: v })}
           />
-          <Choice
-            legend={t("plan.training")}
-            name="training"
-            value={draft.training}
-            options={[
-              { v: "none", label: t("training.none") },
-              { v: "basic", label: t("training.basic") },
-              { v: "full", label: t("training.full") },
-            ]}
-            onChange={(v) => set({ training: v })}
-          />
-          <Toggle
-            id="plan-renovation"
-            label={t("plan.renovation")}
+          <div className="space-y-1">
+            <Choice
+              legend={t("plan.training")}
+              name="training"
+              value={draft.training}
+              options={trainingOptions(l.costs)}
+              onChange={(v) => set({ training: v })}
+            />
+            <p className="text-sm">
+              {trainingEffect(draft.training, l.costs, weekly) ?? tw(weekly, "plan.cost.levels")}
+            </p>
+          </div>
+          <Renovation
             checked={draft.renovation}
-            disabled={!l.renovation_available}
-            note={!l.renovation_available && <p className="text-xs text-muted">{t("plan.renovationUsed")}</p>}
+            limits={l}
+            cashCents={me.private?.now.cash_cents ?? 0}
             onChange={(v) => set({ renovation: v })}
           />
           <Toggle
             id="plan-reply"
             label={t("plan.replyReviews")}
             checked={draft.reply}
+            note={
+              <p className="text-sm text-muted">
+                {tw(weekly, "plan.cost.reply", { amount: formatEuros(l.costs.reply_cents) })}
+              </p>
+            }
             onChange={(v) => set({ reply: v })}
           />
         </div>

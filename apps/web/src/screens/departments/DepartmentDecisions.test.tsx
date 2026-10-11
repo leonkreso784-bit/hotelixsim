@@ -68,7 +68,9 @@ describe("Odluke odjela na ekranu odjela", () => {
     for (const c of controls) {
       const id = c.getAttribute("aria-describedby");
       expect(id, c.outerHTML).toBeTruthy();
-      expect(document.getElementById(id ?? "")?.textContent).toBe("Lobby bar");
+      // Prvi opis je ime odjela; izbor održavanja uz njega ima i cijenu.
+      const first = (id ?? "").split(" ")[0] ?? "";
+      expect(document.getElementById(first)?.textContent).toBe("Lobby bar");
     }
     const hire = within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" });
     expect(hire.textContent).toBe("Zaposli sezonskog radnika");

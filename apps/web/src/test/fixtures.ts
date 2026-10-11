@@ -81,6 +81,17 @@ export function limits(): PlanLimitsBody {
     wage_min_pct: 90,
     wage_max_pct: 115,
     renovation_available: true,
+    // Mjesečni iznosi kataloga (content/hotel/catalog.json); tjedne plaće su procjena.
+    costs: {
+      renovation_cents: 15_000_000,
+      renovation_equipment_pts: 2_500,
+      renovation_satisfaction_pts: 300,
+      reply_cents: 150_000,
+      training_basic: { cost_cents: 500_000, experience_pts: 400, morale_pts: 200 },
+      training_full: { cost_cents: 1_000_000, experience_pts: 700, morale_pts: 200 },
+      maintenance: { deferred_cents: 300_000, regular_cents: 1_500_000, intensive_cents: 3_000_000 },
+      payroll_week_cents: 3_000_000,
+    },
   };
 }
 
@@ -500,6 +511,9 @@ export function v2PlanHotel(): HotelBody {
     price_level_min_pct: rooms ? 100 : 90,
     price_level_max_pct: rooms ? 100 : 120,
     can_close,
+    maintenance: rooms
+      ? { deferred_cents: 70_000, regular_cents: 350_000, intensive_cents: 700_000 }
+      : { deferred_cents: 11_666, regular_cents: 93_333, intensive_cents: 186_666 },
   });
   const p = base.private;
   if (!p?.plan) return base;
@@ -525,6 +539,14 @@ export function v2PlanHotel(): HotelBody {
         limits: {
           ...p.plan.limits,
           seasonal_step_total: 5,
+          // Tjedan od 7 dana lipnja: 7/30 mjesečnih iznosa; obnova u punom iznosu.
+          costs: {
+            ...p.plan.limits.costs,
+            reply_cents: 35_000,
+            training_basic: { cost_cents: 116_666, experience_pts: 93, morale_pts: 46 },
+            training_full: { cost_cents: 233_333, experience_pts: 163, morale_pts: 46 },
+            maintenance: { deferred_cents: 70_000, regular_cents: 350_000, intensive_cents: 700_000 },
+          },
           departments: {
             rooms: lim(20, false, true),
             restaurant: lim(12, false),

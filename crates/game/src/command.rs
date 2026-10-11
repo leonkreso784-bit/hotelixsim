@@ -5,6 +5,7 @@ use sim_hotel::{Catalog, HotelState, Month, Profile, euro_bounds, seasonal_range
 use sim_hotel_v2::PeriodKind;
 
 use crate::actor::{Actor, strategy_from_code};
+use crate::costs::{LevelCosts, PlanCosts, v1_costs};
 use crate::error::{GameError, corrupt};
 use crate::event::*;
 use crate::game::{Game, RoundStatus};
@@ -236,6 +237,8 @@ pub struct DeptLimitsView {
     pub price_level_min_pct: u16,
     pub price_level_max_pct: u16,
     pub can_close: bool,
+    /// Trošak razina održavanja odjela u krugu.
+    pub maintenance: LevelCosts,
 }
 
 /// Granice izbornika radnji za ekran.
@@ -253,6 +256,8 @@ pub struct PlanLimits {
     pub seasonal_step_total: Option<u16>,
     /// v2: granice po kodu odjela (svi odjeli plana); v1: prazno.
     pub departments: BTreeMap<String, DeptLimitsView>,
+    /// Cijene odluka plana u krugu (iz kataloga) i procjena tjednih plaća.
+    pub costs: PlanCosts,
 }
 
 /// Iste brojke koje `MonthPlan::validate` provjerava (test ih veže); koristi jezgrine funkcije, ne kopije.
@@ -285,5 +290,6 @@ pub fn plan_limits(s: &HotelState, m: Month, cat: &Catalog) -> Result<PlanLimits
         renovation_available: !s.renovated,
         seasonal_step_total: None,
         departments: BTreeMap::new(),
+        costs: v1_costs(s, m, cat)?,
     })
 }

@@ -286,6 +286,19 @@ export const hr = {
   "plan.dept.morePrice": "Više cijene",
   "plan.dept.lessPrice": "Manje cijene",
   "plan.dept.maintenance": "Održavanje odjela",
+  // Cijene odluka (Leon 12.10.): brojke iz granica plana, za krug
+  "plan.cost.training":
+    "{level} obuka: {amount} ovaj mjesec; iskustvo osoblja {experience}, moral {morale} od idućeg mjeseca.",
+  "plan.cost.training.week":
+    "{level} obuka: {amount} ovaj tjedan; iskustvo osoblja {experience}, moral {morale} od idućeg tjedna.",
+  "plan.cost.reply": "Trošak {amount} ovaj mjesec.",
+  "plan.cost.reply.week": "Trošak {amount} ovaj tjedan.",
+  "plan.cost.levels": "Iznosi ispod izbora su trošak za ovaj mjesec.",
+  "plan.cost.levels.week": "Iznosi ispod izbora su trošak za ovaj tjedan.",
+  "plan.renovation.note": "Jednokratno {amount}; oprema {equipment}, zadovoljstvo gostiju {satisfaction}.",
+  "plan.renovation.cash": "Blagajna sada {now}, nakon obnove {after}.",
+  "plan.renovation.negative": "Pozor: nakon obnove blagajna bi bila u minusu.",
+  "plan.renovation.thin": "Pozor: nakon obnove u blagajni ostaje manje od jednog tjedna plaća ({payroll}).",
   "plan.invalid": "Upiši brojeve u dopuštenom rasponu.",
   "maintenance.deferred": "odgođeno",
   "maintenance.regular": "redovno",

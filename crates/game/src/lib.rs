@@ -4,6 +4,7 @@
 pub mod actor;
 mod ai_input;
 pub mod command;
+pub mod costs;
 mod departments;
 pub mod dto;
 pub mod dto_v2;
