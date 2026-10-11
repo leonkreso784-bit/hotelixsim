@@ -1,5 +1,8 @@
-//! Roboti v2 (v1 `Strategy::plan` za krug, DEMO §10): plan kruga za svaku strategiju. Izbor odgovora na
-//! situacije ostaje v1 `Strategy::choose`. Sva slučajnost dolazi iz predanog `Rng`-a.
+//! Roboti v2 (v1 `Strategy::plan` za krug, DEMO §10): plan kruga za svaku strategiju. v1 strategija daje ukupne
+//! sezonce i razinu održavanja; sezonci se raspodijele po odjelima prema planovima odjela (`allocate_seasonal`),
+//! održavanje je isto u svim odjelima, razina cijene 100 (Nasumični: jednoliko u granicama, u koracima od 5, samo
+//! operativni odjeli). Izbor odgovora na situacije ostaje v1 `Strategy::choose`. Sva slučajnost dolazi iz predanog
+//! `Rng`-a; razine cijene Nasumičnog izvlače se nakon svih v1 izvlačenja, pa v1 dio plana ostaje isti.
 
 use engine::Rng;
 use engine::calc::{self as c, Calc, CalcError};
@@ -7,6 +10,7 @@ use sim_hotel::{Maintenance, Strategy, Training, euro_bounds};
 
 use crate::calendar::{Period, avg_i64, avg_u16, prorate};
 use crate::catalog::Catalog;
+use crate::department::UsaliClass;
 use crate::plan::PeriodPlan;
 use crate::resolve::ResolveError;
 use crate::state::HotelState;
@@ -34,11 +38,43 @@ fn price_for_pct(pct: i128, reference: i128, min_pct: i128, max_pct: i128) -> Ca
     c::narrow(c::mul(euros.max(lo).min(hi.max(lo)), 100)?)
 }
 
-/// Dopušteni raspon sezonaca za sljedeći plan (korak je koeficijent vrste kruga).
-fn seasonal_range(state: &HotelState, step: u16, seasonal_max: u16) -> (u16, u16) {
-    let lo = state.seasonal.saturating_sub(step);
-    let hi = state.seasonal.saturating_add(step).min(seasonal_max);
+/// Stalni i sezonci cijelog hotela (zbroj odjela).
+fn staff_totals(state: &HotelState) -> (u16, u16) {
+    state
+        .departments
+        .values()
+        .fold((0_u16, 0_u16), |(p, s), d| {
+            (p.saturating_add(d.permanent), s.saturating_add(d.seasonal))
+        })
+}
+
+/// Dopušteni raspon ukupnog broja sezonaca za sljedeći plan (korak je koeficijent vrste kruga).
+fn seasonal_range(seasonal: u16, step: u16, seasonal_max: u16) -> (u16, u16) {
+    let lo = seasonal.saturating_sub(step);
+    let hi = seasonal.saturating_add(step).min(seasonal_max);
     (lo, hi)
+}
+
+/// v1 oblik plana robota (ukupni sezonci, jedna razina održavanja); odjeli se dodaju na kraju.
+struct Draft {
+    price_cents: i64,
+    marketing_cents: i64,
+    seasonal_target: u16,
+    wage_pct: u16,
+    training: Training,
+    maintenance: Maintenance,
+    renovation: bool,
+    reply_reviews: bool,
+}
+
+/// Razina cijene iz `[min, max]` u koracima od 5 (jednoliko).
+fn random_level(rng: &mut Rng, min: u16, max: u16) -> Result<u16, ResolveError> {
+    let steps = max.saturating_sub(min).checked_div(5).unwrap_or(0);
+    let k = uniform(rng, 0, u64::from(steps))?;
+    let k = u16::try_from(k).map_err(|_| overflow())?;
+    k.checked_mul(5)
+        .and_then(|x| x.checked_add(min))
+        .ok_or_else(overflow)
 }
 
 pub fn robot_plan(
@@ -57,10 +93,11 @@ pub fn robot_plan(
     // Marketing iz kataloga i strategija su mjesečni iznosi; plan je za krug, pa idu razmjerno.
     let marketing_max = prorate(a.marketing_max_cents, p)?;
     let market = |v: i64| v.max(0).min(marketing_max);
-    let (s_lo, s_hi) = seasonal_range(s, cat.coeffs(p.kind)?.seasonal_step, a.seasonal_max);
+    let (permanent, seasonal) = staff_totals(s);
+    let (s_lo, s_hi) = seasonal_range(seasonal, cat.coeffs(p.kind)?.seasonal_step, a.seasonal_max);
 
     let mut plan = match strategy {
-        Strategy::Saver => PeriodPlan {
+        Strategy::Saver => Draft {
             price_cents: fixed_price(100)?,
             marketing_cents: 0,
             seasonal_target: avg_u16(&spec.seasonal_plan, p)?.saturating_sub(5),
@@ -76,8 +113,8 @@ pub fn robot_plan(
                 i128::from(avg_u16(&spec.base_occupancy_bp, p)?),
             )?;
             let need = c::div_floor(c::add(rooms_bp, 17_999)?, 18_000)?;
-            let target = c::sub(need, i128::from(s.permanent))?.max(0);
-            PeriodPlan {
+            let target = c::sub(need, i128::from(permanent))?.max(0);
+            Draft {
                 price_cents: fixed_price(105)?,
                 marketing_cents: market(prorate(500_000, p)?),
                 seasonal_target: u16::try_from(target).unwrap_or(u16::MAX),
@@ -88,10 +125,10 @@ pub fn robot_plan(
                 reply_reviews: false,
             }
         }
-        Strategy::OccupancyHunter => PeriodPlan {
+        Strategy::OccupancyHunter => Draft {
             price_cents: fixed_price(85)?,
             marketing_cents: market(prorate(2_500_000, p)?),
-            seasonal_target: s.seasonal,
+            seasonal_target: seasonal,
             wage_pct: wage(100),
             training: Training::None,
             maintenance: Maintenance::Regular,
@@ -115,7 +152,7 @@ pub fn robot_plan(
                 1 => Maintenance::Regular,
                 _ => Maintenance::Intensive,
             };
-            PeriodPlan {
+            Draft {
                 price_cents: c::narrow(c::mul(i128::from(euros), 100)?)?,
                 marketing_cents: c::narrow(c::mul(i128::from(mkt_steps), 100_000)?)?,
                 seasonal_target: u16::try_from(seasonal).unwrap_or(s_lo),
@@ -128,5 +165,30 @@ pub fn robot_plan(
         }
     };
     plan.seasonal_target = plan.seasonal_target.max(s_lo).min(s_hi);
-    Ok(plan)
+    let mut departments =
+        PeriodPlan::departments_for(s, p, cat, plan.seasonal_target, plan.maintenance)?;
+    if matches!(strategy, Strategy::Random) {
+        let e = &cat.economy;
+        for (code, d) in departments.iter_mut() {
+            let operated = s.departments.get(code).is_some_and(|st| {
+                matches!(
+                    st.class,
+                    UsaliClass::FoodBeverage | UsaliClass::OtherOperated
+                )
+            });
+            if operated {
+                d.price_level_pct =
+                    random_level(rng, e.price_level_min_pct, e.price_level_max_pct)?;
+            }
+        }
+    }
+    Ok(PeriodPlan {
+        price_cents: plan.price_cents,
+        marketing_cents: plan.marketing_cents,
+        wage_pct: plan.wage_pct,
+        training: plan.training,
+        renovation: plan.renovation,
+        reply_reviews: plan.reply_reviews,
+        departments,
+    })
 }

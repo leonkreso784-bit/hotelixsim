@@ -182,11 +182,25 @@ impl Catalog {
             }
             let (mut permanent, mut seasonal) = (0_u32, 0_u32);
             for (code, s) in &p.departments {
-                if !self.departments.contains_key(code) {
+                let Some(d) = self.departments.get(code) else {
                     return Err(CatalogError::Missing(format!(
                         "v2.departments.{}",
                         code.as_str()
                     )));
+                };
+                // Početni sezonci moraju biti u granicama odjela i zatvoren odjel bez sezonaca, inače zadani plan
+                // ne može u jednom koraku doći do valjanog stanja i igra zapne pri obračunu.
+                if s.seasonal > d.seasonal_max {
+                    return Err(CatalogError::OutOfRange(label(&format!(
+                        "departments.{}.seasonal",
+                        code.as_str()
+                    ))));
+                }
+                if !s.open && s.seasonal > 0 {
+                    return Err(CatalogError::OutOfRange(label(&format!(
+                        "departments.{}.open",
+                        code.as_str()
+                    ))));
                 }
                 for v in [s.condition_pts, s.satisfaction_pts] {
                     if !(0_i32..=10_000_i32).contains(&v) {

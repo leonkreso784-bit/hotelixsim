@@ -47,7 +47,7 @@ impl RefTable {
             .ok_or_else(|| {
                 CatalogError::Missing(format!("reference_profiles.{}", category.code()))
             })?;
-        let mut s = HotelState::from_profile(base.profile(profile)?)?;
+        let mut s = HotelState::from_profile(cat, profile)?;
         let g0 = first_goppar(&s, first, cat)?;
         let start = RefPoint {
             raw: raw_indices(

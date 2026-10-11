@@ -383,3 +383,49 @@ fn usali_class_codes_round_trip_and_rank_is_account_order() {
         assert_eq!(k.is_undistributed(), i >= 4);
     }
 }
+
+#[test]
+fn validate_rejects_starting_seasonal_above_department_maximum() {
+    use sim_hotel::{CatalogError, Profile};
+    let mut c = sim_hotel_v2::degenerate(&common_base());
+    let max = c.departments[&DeptCode::rooms()].seasonal_max;
+    let rooms = c
+        .profiles
+        .get_mut(&Profile::C)
+        .unwrap()
+        .departments
+        .get_mut(&DeptCode::rooms())
+        .unwrap();
+    assert!(rooms.seasonal <= max);
+    c.departments
+        .get_mut(&DeptCode::rooms())
+        .unwrap()
+        .seasonal_max = rooms.seasonal - 1;
+    assert_eq!(
+        c.validate(),
+        Err(CatalogError::OutOfRange(
+            "v2.profiles.A.departments.rooms.seasonal".to_string()
+        ))
+    );
+}
+
+#[test]
+fn validate_rejects_closed_starting_department_with_seasonal() {
+    use sim_hotel::{CatalogError, Profile};
+    let mut c = sim_hotel_v2::degenerate(&common_base());
+    let rooms = c
+        .profiles
+        .get_mut(&Profile::B)
+        .unwrap()
+        .departments
+        .get_mut(&DeptCode::rooms())
+        .unwrap();
+    assert!(rooms.seasonal > 0);
+    rooms.open = false;
+    assert_eq!(
+        c.validate(),
+        Err(CatalogError::OutOfRange(
+            "v2.profiles.B.departments.rooms.open".to_string()
+        ))
+    );
+}

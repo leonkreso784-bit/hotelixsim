@@ -452,15 +452,29 @@ impl Game {
     }
 
     /// Plan iz tijela zahtjeva (app `set_plan`) za model ove igre; javni omotač oko `Model::plan_from_dto`.
-    /// `h` i `r` koristi Task 11: v2 plan bez `departments` uzima postavke odjela iz `effective_plan(h, r)`.
+    /// v2 plan bez `departments` (do Taska 15 `PlanBody` ih nema) uzima postavke odjela iz `effective_plan(h, r)`,
+    /// a ukupne sezonce i održavanje iz tijela (`Model::plan_from_dto_without_departments`).
     pub fn plan_from_dto(
         &self,
         h: HotelId,
         r: impl Into<RoundKey>,
         d: &PlanDto,
     ) -> Result<CorePlan, GameError> {
+        let r = r.into();
         self.hotel(h)?;
         self.round_info(r)?;
+        if self.model.needs_departments(d) {
+            let eff = self.effective_plan(h, r)?;
+            let state = self.state_at(h, r)?;
+            let info = self.round_info(r)?;
+            return self.model.plan_from_dto_without_departments(
+                d,
+                &eff,
+                &state,
+                &info,
+                &self.content,
+            );
+        }
         self.model.plan_from_dto(d)
     }
 
