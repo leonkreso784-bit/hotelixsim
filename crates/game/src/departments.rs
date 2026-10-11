@@ -246,3 +246,14 @@ impl Game {
         })
     }
 }
+
+/// Marža odjela u baznim bodovima (`profit·10 000 / revenue`, zaokruženo kao u računu dobiti); `None` bez prihoda.
+pub fn department_margin_bp(o: &DeptOutcome) -> Option<i64> {
+    if o.revenue_cents == 0 {
+        return None;
+    }
+    let part = engine::calc::mul(i128::from(o.profit_cents), 10_000).ok()?;
+    let share = engine::calc::div_round(part, i128::from(o.revenue_cents).abs()).ok()?;
+    let signed = if o.revenue_cents < 0 { -share } else { share };
+    engine::calc::narrow(signed).ok()
+}

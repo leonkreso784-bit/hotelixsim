@@ -8,7 +8,8 @@ use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{RESOLVE_KIND, ResolvePayload, resolve_key};
 use crate::views::{game_of_hotel, member_hotel, require_owner, round_view};
 use crate::{
-    AppError, Caller, Decision, Deps, NewJob, RawEvent, RoundView, SituationsView, situations,
+    AppError, Caller, Decision, Deps, ErrorCode, NewJob, RawEvent, RoundView, SituationsView,
+    situations,
 };
 
 pub async fn set_plan(
@@ -28,6 +29,10 @@ pub async fn set_plan(
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 require_owner(&g, guest, hotel)?;
+                // v1 plan nema odjela: tijelo s `departments` je neispravno (422), ne tiho zanemareno.
+                if g.model().code() == "v1" && !body.departments.is_empty() {
+                    return Err(AppError::new(ErrorCode::InvalidBody));
+                }
                 let core = g.plan_from_dto(hotel, m, &body)?;
                 let ev = g.set_plan(hotel, m, core)?;
                 Ok(Decision {
