@@ -16,7 +16,7 @@ export function Choice<T extends string>(props: {
         {props.options.map((o) => (
           <label
             key={o.v}
-            className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+            className={`flex min-h-11 cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40 items-center justify-center rounded-xl border text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
               props.value === o.v ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-surface"
             }`}
           >

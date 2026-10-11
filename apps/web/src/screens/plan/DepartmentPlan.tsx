@@ -126,7 +126,7 @@ export function DepartmentPlan(props: {
             : tw(weekly, "plan.dept.stepNone")}
         </p>
       </div>
-      <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0">
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0">
         {rows.map((d) => {
           const p = plan[d.code];
           const l: DeptLimits | undefined = limits[d.code];
