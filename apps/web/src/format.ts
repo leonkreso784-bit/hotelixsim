@@ -132,8 +132,8 @@ export function roundWithoutGame(round: string, month: MonthCode): string {
   return week ? t("round.weekBare", { n: Number(week[1]) }) : monthName(month);
 }
 
-const NBSP = " ";
-const WORD_JOINER = "⁠";
+const NBSP = "\u00a0";
+const WORD_JOINER = "\u2060";
 
 /**
  * Naslov kruga bez neželjenih prijeloma: „tjedan 4“ i sve u zagradi (datumi) postaju jedna nelomljiva cjelina, a

@@ -199,10 +199,10 @@ describe("plan odjela", () => {
 describe("keepRoundTogether", () => {
   it("broj tjedna i datumi u zagradi ne lome se, prijelaz je moguć samo ispred zagrade", () => {
     expect(keepRoundTogether("Račun dobiti — Tjedan 4 (22. 6. – 28. 6.)")).toBe(
-      "Račun dobiti — Tjedan 4 (22. 6. –⁠ 28. 6.)",
+      "Račun dobiti — Tjedan\u00a04 (22.\u00a06.\u00a0–\u2060\u00a028.\u00a06.)",
     );
     expect(keepRoundTogether("Račun dobiti — sezona do tjedna 4 (22. 6. – 28. 6.)")).toBe(
-      "Račun dobiti — sezona do tjedna 4 (22. 6. –⁠ 28. 6.)",
+      "Račun dobiti — sezona do tjedna\u00a04 (22.\u00a06.\u00a0–\u2060\u00a028.\u00a06.)",
     );
   });
   it("mjesečni naslov ostaje kakav je", () => {

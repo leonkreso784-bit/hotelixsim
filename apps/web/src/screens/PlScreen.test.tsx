@@ -43,9 +43,9 @@ describe("Račun dobiti", () => {
     renderApp(v2PlApi(), "/racun-dobiti");
     const h1 = await screen.findByRole("heading", { level: 1, name: /^Račun dobiti/ });
     const text = h1.textContent ?? "";
-    expect(text).toContain("Tjedan 1 (");
+    expect(text).toContain("Tjedan\u00a01 (");
     expect(text).toMatch(/\([^ )]+\)/); // u zagradi nema običnih razmaka
-    expect(text).toContain("–⁠ ");
+    expect(text).toContain("–\u2060\u00a0");
   });
   it("sezona do sada šalje jedan novi upit sa scope=season", async () => {
     const api = v2PlApi();
@@ -63,7 +63,7 @@ describe("Račun dobiti", () => {
     await waitFor(() => expect(seasonCalls()).toHaveLength(1));
     expect(await screen.findByText(/Zbroj od početka sezone/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sezona do sada" }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/sezona do tjedna 1/);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/sezona do tjedna\u00a01/);
   });
   it("prije prvog obračuna: rečenica, ne nule", async () => {
     renderApp(
