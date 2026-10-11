@@ -170,6 +170,16 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
+/// Tekst za mjesec ili za tjedan: tjedni krug govori o tjednu (ne o „mjesecu"), a v1 i mjesečna v2 igra dobivaju
+/// točno stari tekst.
+fn per<'a>(weekly: bool, month: &'a str, week: &'a str) -> &'a str {
+    if weekly { week } else { month }
+}
+
+fn is_weekly(input: &DebriefInput) -> bool {
+    matches!(input.round, RoundKey::Week(_))
+}
+
 // ---------------------------------------------------------------- nazivi
 
 fn index_name(i: Index) -> &'static str {
@@ -244,26 +254,40 @@ const LOAD_NAME: &str = "Opterećenje osoblja";
 const LOAD_MEANING: &str = "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral.";
 
 /// Kako čitati iznose uz varijablu (osobito moral, gdje su uzroci pritisci, a ne cijela promjena).
-fn var_meaning(v: VarCode) -> &'static str {
+fn var_meaning(v: VarCode, weekly: bool) -> &'static str {
     match v {
         VarCode::Sold => {
             "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
         }
-        VarCode::Revenue => "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru.",
-        VarCode::Costs => "Što je hotel platio ovaj mjesec, po vrsti troška.",
+        VarCode::Revenue => per(
+            weekly,
+            "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru.",
+            "Novac koji je hotel dobio od gostiju ovaj tjedan, po izvoru.",
+        ),
+        VarCode::Costs => per(
+            weekly,
+            "Što je hotel platio ovaj mjesec, po vrsti troška.",
+            "Što je hotel platio ovaj tjedan, po vrsti troška.",
+        ),
         VarCode::Cash => "Kako se mijenjao novac na računu hotela.",
-        VarCode::Staff => {
-            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
-        }
-        VarCode::Morale => {
-            "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
-        }
+        VarCode::Staff => per(
+            weekly,
+            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova.",
+            "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u tjednu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova.",
+        ),
+        VarCode::Morale => per(
+            weekly,
+            "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka.",
+            "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki tjedan pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka.",
+        ),
         VarCode::Experience => {
             "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
         }
-        VarCode::Equipment => {
-            "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
-        }
+        VarCode::Equipment => per(
+            weekly,
+            "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju.",
+            "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki tjedan se troši; održavanje i obnova je vraćaju.",
+        ),
         VarCode::Satisfaction => "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova.",
         VarCode::Rating => {
             "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
@@ -289,14 +313,24 @@ fn consequence(s: DriverSource) -> &'static str {
 }
 
 /// Uzrok u nominativu; „osnova" dobiva značenje po varijabli.
-fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> String {
+fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>, weekly: bool) -> String {
     let s = match (v, c) {
-        (_, CauseDto::Situation(code)) => return format!("situacija „{}“", title(titles, code)),
-        (VarCode::Sold, CauseDto::Baseline) => "osnovna potražnja za ovaj mjesec",
+        (_, CauseDto::Situation(code)) => {
+            return format!("situacija „{}“", title(titles, code, weekly));
+        }
+        (VarCode::Sold, CauseDto::Baseline) => per(
+            weekly,
+            "osnovna potražnja za ovaj mjesec",
+            "osnovna potražnja za ovaj tjedan",
+        ),
         (VarCode::Revenue, CauseDto::Baseline) => "noćenja pojedinačnih gostiju",
         (VarCode::Costs, CauseDto::Baseline) => "troškovi po prodanom noćenju",
         (VarCode::Cash, CauseDto::Baseline) => "zarada iz poslovanja (prihod minus troškovi)",
-        (VarCode::Morale, CauseDto::Baseline) => "ukupna promjena morala u mjesecu",
+        (VarCode::Morale, CauseDto::Baseline) => per(
+            weekly,
+            "ukupna promjena morala u mjesecu",
+            "ukupna promjena morala u tjednu",
+        ),
         (VarCode::Experience, CauseDto::Baseline) => "iskustvo stečeno radom",
         (VarCode::Equipment, CauseDto::Baseline) => "redovito trošenje opreme",
         (VarCode::Satisfaction, CauseDto::Baseline) => "usluga, oprema i cijena zajedno",
@@ -329,10 +363,10 @@ fn cause_label(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> Strin
 }
 
 /// Uzrok štete u genitivu, za „pao je ponajviše zbog …"; svaki par ima vlastitu frazu.
-fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> String {
+fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>, weekly: bool) -> String {
     let s = match (v, c) {
         (_, CauseDto::Situation(code)) => {
-            return format!("rješenja situacije „{}“", title(titles, code));
+            return format!("rješenja situacije „{}“", title(titles, code, weekly));
         }
         (VarCode::Morale, CauseDto::Wage) => "nižih plaća",
         (_, CauseDto::Wage) => "plaća",
@@ -352,8 +386,12 @@ fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> Str
         }
         (VarCode::Cash, CauseDto::Baseline) => "gubitka u poslovanju (troškovi veći od prihoda)",
         (VarCode::Morale, CauseDto::Baseline) => "pada morala",
-        (VarCode::Sold, CauseDto::Baseline) => "slabije potražnje u ovom mjesecu",
-        (_, CauseDto::Baseline) => "redovnog tijeka mjeseca",
+        (VarCode::Sold, CauseDto::Baseline) => per(
+            weekly,
+            "slabije potražnje u ovom mjesecu",
+            "slabije potražnje u ovom tjednu",
+        ),
+        (_, CauseDto::Baseline) => per(weekly, "redovnog tijeka mjeseca", "redovnog tijeka tjedna"),
         (VarCode::Equipment, CauseDto::Maintenance) => "slabijeg održavanja",
         (_, CauseDto::Maintenance) => "održavanja",
         (VarCode::Sold, CauseDto::Price) => "previsoke cijene",
@@ -377,11 +415,14 @@ fn cause_because(v: VarCode, c: &CauseDto, titles: &BTreeMap<&str, &str>) -> Str
     s.to_owned()
 }
 
-fn title<'a>(titles: &BTreeMap<&str, &'a str>, code: &str) -> &'a str {
-    titles
-        .get(code)
-        .copied()
-        .unwrap_or("situacija iz ovog mjeseca")
+fn title<'a>(titles: &BTreeMap<&str, &'a str>, code: &str, weekly: bool) -> &'a str {
+    titles.get(code).copied().unwrap_or_else(|| {
+        per(
+            weekly,
+            "situacija iz ovog mjeseca",
+            "situacija iz ovog tjedna",
+        )
+    })
 }
 
 // ---------------------------------------------------------------- brojke
@@ -597,17 +638,17 @@ fn merged(lines: &[LineDto]) -> Vec<LineDto> {
 
 /// S čim se uspoređuje „prije" mjeseca: prošli mjesec, a u prvom mjesecu igre (`first`, iz
 /// `DebriefInput::prev_month`) početno stanje hotela. Jedno mjesto za sve usporedbe u činjenicama.
-fn earlier(first: bool) -> &'static str {
+fn earlier(first: bool, weekly: bool) -> &'static str {
     if first {
         "na početku igre"
     } else {
-        "prošli mjesec"
+        per(weekly, "prošli mjesec", "prošli tjedan")
     }
 }
 
 /// Ovaj mjesec prema ranijem: „više nego prošli mjesec", „manje nego na početku igre", „isto kao …".
-fn compared(now_vs_before: std::cmp::Ordering, first: bool) -> String {
-    let than = earlier(first);
+fn compared(now_vs_before: std::cmp::Ordering, first: bool, weekly: bool) -> String {
+    let than = earlier(first, weekly);
     match now_vs_before {
         std::cmp::Ordering::Greater => format!("više nego {than}"),
         std::cmp::Ordering::Less => format!("manje nego {than}"),
@@ -617,7 +658,7 @@ fn compared(now_vs_before: std::cmp::Ordering, first: bool) -> String {
 
 /// Opterećenje osoblja kao pokretač Operative; izostaje kad je i prije i poslije bilo u redu.
 /// Šteta je porast kazne opterećenja s težinom 25 (njezin udio u Operativi).
-fn load_driver(before: u16, after: u16, first: bool) -> Option<DriverFact> {
+fn load_driver(before: u16, after: u16, first: bool, weekly: bool) -> Option<DriverFact> {
     if before <= LOAD_LIMIT_HUNDREDTHS && after <= LOAD_LIMIT_HUNDREDTHS {
         return None;
     }
@@ -642,7 +683,12 @@ fn load_driver(before: u16, after: u16, first: bool) -> Option<DriverFact> {
         meaning: LOAD_MEANING,
         changes: vec![
             ChangeFact {
-                cause: "opterećenje u ovom mjesecu".to_owned(),
+                cause: per(
+                    weekly,
+                    "opterećenje u ovom mjesecu",
+                    "opterećenje u ovom tjednu",
+                )
+                .to_owned(),
                 amount: format!("{}, {state}", per_day(after)),
                 harm: harm_of(pushed),
                 effect: Effect::of(pushed),
@@ -650,7 +696,7 @@ fn load_driver(before: u16, after: u16, first: bool) -> Option<DriverFact> {
             },
             // Prošli mjesec (ili početak igre) je samo usporedba, ne uzrok.
             ChangeFact {
-                cause: format!("opterećenje {}", earlier(first)),
+                cause: format!("opterećenje {}", earlier(first, weekly)),
                 amount: per_day(before),
                 harm: 0,
                 effect: Effect::Neutral,
@@ -668,16 +714,16 @@ fn load_driver(before: u16, after: u16, first: bool) -> Option<DriverFact> {
 /// siva, i iznos to kaže. Stopa slijedi moral na kraju mjeseca (`sim_hotel::turnover_bp`): 3 % do 60
 /// bodova morala, iznad toga raste; zato rečenica „zašto" kaže i mehanizam.
 /// `first`: prvi mjesec igre nema prošlog, usporedba je s početkom igre („na početku igre").
-fn turnover_changes(before: u16, after: u16, first: bool) -> [ChangeFact; 2] {
+fn turnover_changes(before: u16, after: u16, first: bool, weekly: bool) -> [ChangeFact; 2] {
     let share = |bp: u16| format!("{} %", decimal_hundredths(u64::from(bp)));
-    let than = earlier(first);
+    let than = earlier(first, weekly);
     // Na početku igre nitko još nije otišao: to je udio koji hotel tada ima, ne prošli događaj.
     let prev_cause = if first {
         format!("udio osoblja koje daje otkaz {than}")
     } else {
         format!("udio osoblja koje je dalo otkaz {than}")
     };
-    let vs = compared(after.cmp(&before), first);
+    let vs = compared(after.cmp(&before), first, weekly);
     let kept = |bp: u16| i64::from(retention(bp).unwrap_or_default());
     let pushed = (kept(after) - kept(before)) * 40;
     // Udio se promijenio, a indeks nije: oba mjeseca su na dnu zadržavanja.
@@ -691,7 +737,12 @@ fn turnover_changes(before: u16, after: u16, first: bool) -> [ChangeFact; 2] {
     );
     [
         ChangeFact {
-            cause: "udio osoblja koje je dalo otkaz ovaj mjesec".to_owned(),
+            cause: per(
+                weekly,
+                "udio osoblja koje je dalo otkaz ovaj mjesec",
+                "udio osoblja koje je dalo otkaz ovaj tjedan",
+            )
+            .to_owned(),
             amount: format!("{}, {vs}{floor}", share(after)),
             harm: harm_of(pushed),
             effect: Effect::of(pushed),
@@ -727,14 +778,16 @@ fn direction(change: i64) -> &'static str {
 }
 
 fn plan_facts(input: &DebriefInput) -> PlanFacts {
+    let weekly = is_weekly(input);
     let p = &input.plan;
     let reference = input.price_ref_cents.max(1);
     let off = round_div((p.price_cents - reference) * 100, reference);
+    let usual = per(weekly, "ovaj mjesec", "ovaj tjedan");
     let rel = match off.signum() {
-        0 => "kao uobičajena cijena za ovaj mjesec".to_owned(),
-        1 => format!("{off} % iznad uobičajene cijene za ovaj mjesec"),
+        0 => format!("kao uobičajena cijena za {usual}"),
+        1 => format!("{off} % iznad uobičajene cijene za {usual}"),
         _ => format!(
-            "{} % ispod uobičajene cijene za ovaj mjesec",
+            "{} % ispod uobičajene cijene za {usual}",
             off.unsigned_abs()
         ),
     };
@@ -753,6 +806,7 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
     let vs_last = compared(
         p.seasonal_target.cmp(&input.seasonal_before),
         input.prev_round.is_none(),
+        weekly,
     );
     let wage_note = match p.wage_pct.cmp(&100) {
         std::cmp::Ordering::Less => " (niže od uobičajenih)",
@@ -770,18 +824,34 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
         wages: format!("{} % uobičajene plaće{wage_note}", p.wage_pct),
         training: match p.training {
             TrainingCode::None => "bez obuke",
-            TrainingCode::Basic => "osnovna obuka (učinak stiže idući mjesec)",
-            TrainingCode::Full => "puna obuka (učinak stiže idući mjesec)",
+            TrainingCode::Basic => per(
+                weekly,
+                "osnovna obuka (učinak stiže idući mjesec)",
+                "osnovna obuka (učinak stiže idući tjedan)",
+            ),
+            TrainingCode::Full => per(
+                weekly,
+                "puna obuka (učinak stiže idući mjesec)",
+                "puna obuka (učinak stiže idući tjedan)",
+            ),
         }
         .to_owned(),
         maintenance: match p.maintenance {
-            MaintenanceCode::Deferred => "odgođeno (oprema se ovaj mjesec nije popravljala)",
+            MaintenanceCode::Deferred => per(
+                weekly,
+                "odgođeno (oprema se ovaj mjesec nije popravljala)",
+                "odgođeno (oprema se ovaj tjedan nije popravljala)",
+            ),
             MaintenanceCode::Regular => "redovno",
             MaintenanceCode::Intensive => "pojačano",
         }
         .to_owned(),
         renovation: if p.renovation {
-            "pokrenuta: plaća se sada, a sobe su bolje od idućeg mjeseca"
+            per(
+                weekly,
+                "pokrenuta: plaća se sada, a sobe su bolje od idućeg mjeseca",
+                "pokrenuta: plaća se sada, a sobe su bolje od idućeg tjedna",
+            )
         } else {
             "ne"
         }
@@ -818,9 +888,16 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
     let morale_alone = matches!(morale_shown.as_slice(), [l] if l.cause == CauseDto::Baseline);
     // Prvi mjesec kaže igra (`prev_month`), ne kalendar: prije njega je početno stanje hotela.
     let first = input.prev_round.is_none();
+    let weekly = is_weekly(input);
     let var_driver = |var: VarCode| -> Option<DriverFact> {
         let rate = if var == VarCode::Staff {
-            turnover_changes(input.turnover_before_bp, input.turnover_after_bp, first).to_vec()
+            turnover_changes(
+                input.turnover_before_bp,
+                input.turnover_after_bp,
+                first,
+                weekly,
+            )
+            .to_vec()
         } else {
             Vec::new()
         };
@@ -830,8 +907,8 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                 let pushed = push(l, room_revenue, maintained, morale_alone);
                 Some(ChangeFact {
                     amount: amount_text(l, shows_sign(l.var, &l.cause))?,
-                    cause: cause_label(l.var, &l.cause, &titles),
-                    because: cause_because(l.var, &l.cause, &titles),
+                    cause: cause_label(l.var, &l.cause, &titles, weekly),
+                    because: cause_because(l.var, &l.cause, &titles, weekly),
                     harm: harm_of(pushed),
                     effect: Effect::of(pushed),
                 })
@@ -840,7 +917,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         (!changes.is_empty()).then(|| DriverFact {
             source: DriverSource::Var(var),
             what: var_name(var),
-            meaning: var_meaning(var),
+            meaning: var_meaning(var, weekly),
             changes,
         })
     };
@@ -865,6 +942,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                             input.load_before_hundredths,
                             input.load_after_hundredths,
                             first,
+                            weekly,
                         ),
                     })
                     .collect(),
@@ -904,7 +982,11 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
             points(progress)
         },
         cash_end: euros(input.cash_end_cents, false),
-        index_scale: "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+        index_scale: per(
+            weekly,
+            "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+            "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom tjednu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+        ),
         plan: plan_facts(input),
         indices,
         situations,
@@ -1045,8 +1127,12 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
     );
     if good.is_empty() {
         good.push(
-            "Ovaj mjesec nijedan indeks nije porastao i nijedna situacija nije riješena dobro."
-                .to_owned(),
+            per(
+                is_weekly(input),
+                "Ovaj mjesec nijedan indeks nije porastao i nijedna situacija nije riješena dobro.",
+                "Ovaj tjedan nijedan indeks nije porastao i nijedna situacija nije riješena dobro.",
+            )
+            .to_owned(),
         );
     }
     out.push_str(&format!("Što je išlo dobro\n{}\n\n", good.join(" ")));
@@ -1155,13 +1241,15 @@ mod tests {
         let titles = BTreeMap::from([("S9", "Izmišljena situacija")]);
         for v in VARS {
             for c in causes() {
-                let b = cause_because(v, &c, &titles);
+                let b = cause_because(v, &c, &titles, false);
+                let w = cause_because(v, &c, &titles, true);
+                assert!(!w.contains("mjesec"), "{v:?} {c:?}: {w}");
                 assert!(!b.is_empty() && !b.contains("stavk"), "{v:?} {c:?}: {b}");
                 assert!(!b.contains("S9"), "{b}");
             }
         }
         assert_eq!(
-            cause_because(VarCode::Sold, &CauseDto::Marketing, &titles),
+            cause_because(VarCode::Sold, &CauseDto::Marketing, &titles, false),
             "premalo marketinga"
         );
     }
@@ -1173,7 +1261,7 @@ mod tests {
         assert!(sim_hotel::turnover_bp(5_900).unwrap() > 300);
         assert_eq!(retention(799).unwrap(), 12);
         assert_eq!(retention(800).unwrap(), 0);
-        let [now, last] = turnover_changes(375, 443, false);
+        let [now, last] = turnover_changes(375, 443, false, false);
         assert_eq!((now.harm, now.effect), (500 * 68, Effect::Down));
         assert_eq!((last.harm, last.effect), (0, Effect::Neutral));
     }
