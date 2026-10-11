@@ -123,6 +123,29 @@ export function monthName(code: MonthCode): string {
   return t(`month.${code}` as const);
 }
 
+/**
+ * Krug kad igra još nije stigla: tjedni krug (kod „t05“) nosi samo broj („tjedan 5“), a mjesečni ime mjeseca.
+ * Mjesec iz dnevnika za tjedan bio bi kriv („lipanj“ za pet krugova).
+ */
+export function roundWithoutGame(round: string, month: MonthCode): string {
+  const week = /^t(\d+)$/.exec(round);
+  return week ? t("round.weekBare", { n: Number(week[1]) }) : monthName(month);
+}
+
+const NBSP = " ";
+const WORD_JOINER = "⁠";
+
+/**
+ * Naslov kruga bez neželjenih prijeloma: „tjedan 4“ i sve u zagradi (datumi) postaju jedna nelomljiva cjelina, a
+ * smije se prijeći u novi redak samo ispred zagrade. Iza crtice dolazi spojnik riječi (U+2060): bez njega preglednik
+ * smije prelomiti iza „–“ čak i kad iza nje stoji nerazdvojni razmak.
+ */
+export function keepRoundTogether(text: string): string {
+  return text
+    .replace(/(tjedan|tjedna|tjednu) (\d+)/gi, `$1${NBSP}$2`)
+    .replace(/\([^)]*\)/g, (paren) => paren.replace(/ /g, NBSP).replace(/–/g, `–${WORD_JOINER}`));
+}
+
 export function capitalize(s: string): string {
   return s.charAt(0).toLocaleUpperCase("hr-HR") + s.slice(1);
 }

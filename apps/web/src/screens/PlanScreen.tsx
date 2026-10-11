@@ -3,7 +3,7 @@ import { type FormEvent, type ReactNode, useCallback, useRef, useState } from "r
 import { problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatRange, monthName, roundPhrase, tw } from "../format";
+import { formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
@@ -165,7 +165,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   }
 
   const info = game ? roundInfo(game, state.round) : null;
-  const round = info ? roundPhrase(info) : monthName(state.month);
+  const round = info ? roundPhrase(info) : roundWithoutGame(state.round, state.month);
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
