@@ -147,4 +147,36 @@ describe("Odjeli", () => {
     const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
     expect(within(people).getByText("1 osoba")).toBeTruthy();
   });
+
+  it("prostor: prikazane promjene se zbrajaju u prikazanu razliku (78 → 77)", async () => {
+    const body = departmentDetailBody("restaurant");
+    if (!body?.department.last) throw new Error("restoran bez rezultata");
+    // Svaka promjena zasebno zaokružena bila bi 0, 0, 0 uz „78 → 77“.
+    const last = {
+      ...body.department.last,
+      condition_before_pts: 7760,
+      wear_pts: -33,
+      load_wear_pts: -17,
+      maintenance_pts: 0,
+      condition_after_pts: 7710,
+    };
+    renderApp(
+      v2Api().on("GET", "/v1/hotels/:hotel/departments/:code", {
+        ...body,
+        department: { ...body.department, last },
+      }),
+      "/odjeli/restaurant",
+    );
+    expect(await screen.findByText("78/100 → 77/100")).toBeTruthy();
+    expect(screen.getByText("trošenje −1")).toBeTruthy();
+    expect(screen.getByText("preopterećenje 0")).toBeTruthy();
+    expect(screen.getByText("održavanje 0")).toBeTruthy();
+  });
+
+  it("povijest: ne lomi se samo naziv kruga, zaglavlja stupaca se smiju prelomiti", async () => {
+    renderApp(v2Api(), "/odjeli/restaurant");
+    const head = await screen.findByRole("columnheader", { name: "Zadovoljstvo gostiju" });
+    expect(head.className).not.toMatch(/whitespace-nowrap/);
+    expect(screen.getByRole("rowheader").className).toMatch(/whitespace-nowrap/);
+  });
 });

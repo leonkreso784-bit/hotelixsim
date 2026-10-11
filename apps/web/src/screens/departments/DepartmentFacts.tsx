@@ -10,10 +10,9 @@ import {
   formatPercentBp,
   formatWhole,
   formatWholeSigned,
-  wholePoints,
 } from "../../format";
 import { Card } from "../../ui/primitives";
-import { resultText } from "./helpers";
+import { resultText, shownChanges } from "./helpers";
 
 function Lines({ children }: { children: ReactNode }) {
   return <dl className="divide-y divide-line">{children}</dl>;
@@ -32,12 +31,13 @@ function fromTo(before: number, after: number): string {
   return t("dept.fromTo", { from: formatIndex(before), to: formatIndex(after) });
 }
 
-/** Promjena stanja u cijelim bodovima; poslužitelj je već šalje s predznakom (trošenje −, održavanje +), ne okreće se. */
-function change(pts: number): string {
-  return formatWholeSigned(wholePoints(pts));
-}
-
 function Space({ r }: { r: DeptRoundBody }) {
+  // Poslužitelj šalje promjene s predznakom (trošenje −, održavanje +); ne okreću se, samo se zaokružuju zajedno.
+  const [wear = 0, loadWear = 0, upkeep = 0] = shownChanges(
+    r.condition_before_pts,
+    [r.wear_pts, r.load_wear_pts, r.maintenance_pts],
+    r.condition_after_pts,
+  );
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.space")}</h2>
@@ -46,9 +46,9 @@ function Space({ r }: { r: DeptRoundBody }) {
         <Line label={t("dept.upkeepCost")} value={formatEuros(r.maintenance_cents)} />
       </Lines>
       <ul className="space-y-1">
-        <li>{t("dept.wear", { n: change(r.wear_pts) })}</li>
-        <li>{t("dept.loadWear", { n: change(r.load_wear_pts) })}</li>
-        <li>{t("dept.upkeep", { n: change(r.maintenance_pts) })}</li>
+        <li>{t("dept.wear", { n: formatWholeSigned(wear) })}</li>
+        <li>{t("dept.loadWear", { n: formatWholeSigned(loadWear) })}</li>
+        <li>{t("dept.upkeep", { n: formatWholeSigned(upkeep) })}</li>
       </ul>
       <p className="text-sm text-muted">{t("dept.space.note")}</p>
     </Card>
