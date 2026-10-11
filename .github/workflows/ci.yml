@@ -38,6 +38,8 @@ jobs:
       - run: cargo sqlx prepare --workspace --check
       - run: cargo test --workspace
       - run: cargo run -q -p balance --release -- --seeds 100 --check
+      - run: cargo run -q -p balance --release -- --model v2 --round week --seeds 100 --check
+      - run: cargo run -q -p balance --release -- --model v2 --round month --seeds 100 --check
       - uses: EmbarkStudios/cargo-deny-action@v2
 
   web:

@@ -5,5 +5,5 @@
     "rating_step_bp": 2500,
     "seasonal_step": 10
   },
-  "week": { "morale_step_bp": 800, "satisfaction_step_bp": 1500, "rating_step_bp": 700, "seasonal_step": 5 }
+  "week": { "morale_step_bp": 1100, "satisfaction_step_bp": 1400, "rating_step_bp": 1000, "seasonal_step": 2 }
 }

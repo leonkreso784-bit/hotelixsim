@@ -25,14 +25,14 @@
     "revenue": {
       "type": "per_guest",
       "usage_bp": { "jun": 4500, "jul": 4800, "aug": 5000, "sep": 4500 },
-      "check_cents": 3200,
+      "check_cents": 3500,
       "price_elasticity_bp": -15000,
       "satisfaction_elasticity_bp": 5000
     },
-    "cost_of_sales_bp": 3200,
+    "cost_of_sales_bp": 3000,
     "direct_per_use_cents": 0,
     "wage_cents": 210000,
-    "capacity_tenths_per_staff_day": 50,
+    "capacity_tenths_per_staff_day": 60,
     "wear_pts_per_month": 300,
     "maintenance": {
       "deferred": { "cost_cents": 50000, "equipment_pts": 0 },
@@ -58,7 +58,7 @@
     "cost_of_sales_bp": 2500,
     "direct_per_use_cents": 0,
     "wage_cents": 190000,
-    "capacity_tenths_per_staff_day": 120,
+    "capacity_tenths_per_staff_day": 200,
     "wear_pts_per_month": 250,
     "maintenance": {
       "deferred": { "cost_cents": 20000, "equipment_pts": 0 },
@@ -84,7 +84,7 @@
     "cost_of_sales_bp": 2800,
     "direct_per_use_cents": 0,
     "wage_cents": 200000,
-    "capacity_tenths_per_staff_day": 100,
+    "capacity_tenths_per_staff_day": 160,
     "wear_pts_per_month": 350,
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },
@@ -133,10 +133,10 @@
       "price_elasticity_bp": -10000,
       "satisfaction_elasticity_bp": 6000
     },
-    "cost_of_sales_bp": 1200,
-    "direct_per_use_cents": 300,
-    "wage_cents": 230000,
-    "capacity_tenths_per_staff_day": 60,
+    "cost_of_sales_bp": 1500,
+    "direct_per_use_cents": 500,
+    "wage_cents": 250000,
+    "capacity_tenths_per_staff_day": 70,
     "wear_pts_per_month": 250,
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },

@@ -12,22 +12,22 @@
         "open": true,
         "permanent": 7,
         "seasonal": 9,
-        "condition_pts": 7800,
+        "condition_pts": 8300,
         "satisfaction_pts": 8200
       },
       "lobby_bar": {
         "open": true,
         "permanent": 2,
         "seasonal": 2,
-        "condition_pts": 7600,
+        "condition_pts": 8100,
         "satisfaction_pts": 8000
       },
-      "spa": { "open": true, "permanent": 3, "seasonal": 2, "condition_pts": 8000, "satisfaction_pts": 8400 },
+      "spa": { "open": true, "permanent": 3, "seasonal": 2, "condition_pts": 8500, "satisfaction_pts": 8400 },
       "rooftop_bar": {
         "open": true,
         "permanent": 0,
         "seasonal": 2,
-        "condition_pts": 8200,
+        "condition_pts": 8700,
         "satisfaction_pts": 8500
       },
       "parking": {
@@ -43,7 +43,7 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 3300000
+        "fixed_monthly_cents": 3700000
       },
       "sales": {
         "open": true,
@@ -51,7 +51,7 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1200000
+        "fixed_monthly_cents": 1300000
       },
       "maintenance": {
         "open": true,
@@ -59,7 +59,7 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 1800000
+        "fixed_monthly_cents": 2300000
       },
       "energy": {
         "open": true,
@@ -67,7 +67,7 @@
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 2800000
+        "fixed_monthly_cents": 3500000
       }
     },
     "fixed_charges_cents": { "insurance": 900000, "lease": 4500000, "property_tax": 800000 }
@@ -76,7 +76,7 @@
     "departments": {
       "rooms": {
         "open": true,
-        "permanent": 13,
+        "permanent": 11,
         "seasonal": 15,
         "condition_pts": 4000,
         "satisfaction_pts": 6500
@@ -111,19 +111,19 @@
       },
       "admin": {
         "open": true,
+        "permanent": 3,
+        "seasonal": 0,
+        "condition_pts": 10000,
+        "satisfaction_pts": 0,
+        "fixed_monthly_cents": 2600000
+      },
+      "sales": {
+        "open": true,
         "permanent": 2,
         "seasonal": 0,
         "condition_pts": 10000,
         "satisfaction_pts": 0,
-        "fixed_monthly_cents": 2900000
-      },
-      "sales": {
-        "open": true,
-        "permanent": 1,
-        "seasonal": 0,
-        "condition_pts": 10000,
-        "satisfaction_pts": 0,
-        "fixed_monthly_cents": 800000
+        "fixed_monthly_cents": 520000
       },
       "maintenance": {
         "open": true,
