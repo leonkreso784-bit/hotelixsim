@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { ApiProvider } from "./api/ApiContext";
 import { createQueryClient } from "./api/queryClient";
+import { dismissSplashInBrowser } from "./splash";
 import "./styles.css";
 
 const root = document.getElementById("root");
@@ -19,3 +20,4 @@ createRoot(root).render(
     </ApiProvider>
   </StrictMode>,
 );
+dismissSplashInBrowser();
