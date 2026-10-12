@@ -560,7 +560,7 @@ fn close_progress_is_shown_with_tenths() {
         f["pobjednik"].as_str().unwrap().contains("+8,4 boda"),
         "{f}"
     );
-    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "−3 boda");
+    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "−3,0 boda");
     // Kad se cijeli bodovi razlikuju, ostaju cijeli (kao na ekranu).
     input.me.hotel.progress_hundredths = 520;
     let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
@@ -645,4 +645,49 @@ fn robot_comparison_verb_follows_each_hotels_direction() {
         up_flat.contains("mu je porastao s 50 na 70, a tvom hotelu je ostao na 35."),
         "{up_flat}"
     );
+}
+
+// ---------------------------------------------------------------- popravak 2 (ponovni pregled KS-3, N-1 i N-5)
+
+/// Kad ekran piše desetinke, mentor piše isti broj decimala i za cijeli broj („−4,0 boda", ne „−4 boda"), jer kartica
+/// rezultata i mentor stoje na istom ekranu (UI_PRAVILA §2.3).
+#[test]
+fn whole_progress_keeps_the_screen_decimals() {
+    let g = weekly_done();
+    let mut input = g.season_debrief_input(me()).unwrap();
+    input.me.hotel.progress_hundredths = -400;
+    input.me.hotel.rank = 4;
+    input.me.hotel.winner = false;
+    for (i, o) in input.others.iter_mut().enumerate() {
+        // +8,0 i +7,6 se zaokruženo poklapaju („+8"), pa cijeli ekran ide s desetinkama.
+        let (rank, p) = [(1, 800), (2, 760), (3, 0)][i];
+        o.hotel.rank = rank;
+        o.hotel.winner = rank == 1;
+        o.hotel.progress_hundredths = p;
+    }
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert_eq!(f["napredak_od_pocetka"], "−4,0 boda");
+    assert_eq!(f["ostali_hoteli"][0]["napredak_od_pocetka"], "+8,0 boda");
+    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "+7,6 boda");
+    assert_eq!(f["ostali_hoteli"][2]["napredak_od_pocetka"], "0,0 boda");
+    let text = fallback_season_debrief(&input);
+    assert!(
+        text.contains("Napredak tvog hotela od početka sezone je −4,0 boda,"),
+        "{text}"
+    );
+    assert!(text.contains("s napretkom od +8,0 boda."), "{text}");
+}
+
+/// Rečenicu o poštenoj usporedbi ekran piše ispod rezultata; rezerva je ne ponavlja, a AI je i dalje dobiva u činjenicama.
+#[test]
+fn fallback_leaves_the_fairness_sentence_to_the_screen() {
+    let input = weekly_done().season_debrief_input(me()).unwrap();
+    let fairness = "uspoređuje napredak od vlastitog početka";
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert!(
+        f["kako_se_usporeduje"].as_str().unwrap().contains(fairness),
+        "{f}"
+    );
+    let text = fallback_season_debrief(&input);
+    assert!(!text.contains(fairness), "{text}");
 }

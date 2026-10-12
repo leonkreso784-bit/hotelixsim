@@ -328,3 +328,60 @@ describe("Kraj sezone: druga stanja", () => {
     expect(await screen.findByRole("list", { name: "Konačni poredak" })).toBeTruthy();
   });
 });
+
+// jsdom ne računa raspored, pa se čuvaju klase koje ga određuju; mjerenje na 1024/1280 ostaje UI čuvaru.
+describe("Kraj sezone: raspored od 1024 px (ponovni pregled KS-3)", () => {
+  function hotelsSection() {
+    return screen.getByRole("region", { name: "Kako su igrali" });
+  }
+
+  it("kartice robota: dvije u redu od 1024 px, tri tek od 1280 px (N-2)", async () => {
+    await open();
+    const grid = card("1. Brižni (robot)").getByText("Kako je igrao").closest("section")?.parentElement;
+    const classes = grid?.className.split(" ") ?? [];
+    // `md:grid-cols-2` vrijedi i na 1024 px; tri stupca tek od `xl:` (1280 px).
+    expect(classes).toContain("md:grid-cols-2");
+    expect(classes).toContain("xl:grid-cols-3");
+    expect(classes).not.toContain("lg:grid-cols-3");
+  });
+
+  it("tablica odluka: brojke s jedinicom u jednom retku, rečenice se smiju prelomiti (N-3)", async () => {
+    await open();
+    const table = within(screen.getByRole("table", { name: "Odluke u brojkama" }));
+    const cells = (label: string) => {
+      const row = table.getByRole("rowheader", { name: label }).closest("tr");
+      if (!row) throw new Error(`nema retka ${label}`);
+      return within(row).getAllByRole("cell");
+    };
+    for (const label of ["Prosječna cijena sobe", "Marketing u sezoni", "Obuka", "Bez odgovora"]) {
+      for (const c of cells(label)) expect(c.className.split(" ")).toContain("whitespace-nowrap");
+    }
+    for (const label of ["Plaće", "Obnova", "Situacije"]) {
+      for (const c of cells(label)) expect(c.className.split(" ")).not.toContain("whitespace-nowrap");
+    }
+  });
+
+  it("svaka tablica od 1024 px je pozicionirana regija za pomicanje (C-1, N-4)", async () => {
+    await open();
+    const regions = screen
+      .getAllByRole("region")
+      .filter((r) => r.className.split(" ").includes("overflow-x-auto"));
+    expect(regions.length).toBeGreaterThanOrEqual(3);
+    for (const r of regions) expect(r.className.split(" ")).toContain("relative");
+  });
+
+  it("igra bez robota: „Kako su igrali“ od 1024 px se skriva, bez rečenice o robotima (N-7)", async () => {
+    const body = seasonBody();
+    body.hotels = body.hotels.map((h) => ({ ...h, seat: { kind: "human", strategy: null } }));
+    await open(body);
+    expect(hotelsSection().className.split(" ")).toContain("lg:hidden");
+    expect(screen.queryByText("Roboti igraju po stalnom pravilu i ne čitaju situacije.")).toBeNull();
+    // Ispod 1024 px kartice i dalje stoje.
+    expect(card("2. Tvoj hotel").getByText("Financije sezone")).toBeTruthy();
+  });
+
+  it("s robotima sekcija ostaje i od 1024 px", async () => {
+    await open();
+    expect(hotelsSection().className.split(" ")).not.toContain("lg:hidden");
+  });
+});

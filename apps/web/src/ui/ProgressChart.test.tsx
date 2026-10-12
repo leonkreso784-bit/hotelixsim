@@ -1,6 +1,6 @@
 import { t } from "@hotelixsim/i18n";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatPointsPrecise, formatWholeSigned } from "../format";
 import { axisTicks, curveColumns, curveSeries } from "../screens/season/rows";
 import { seasonBody } from "../test/fixtures";
@@ -8,6 +8,7 @@ import { ProgressChart } from "./ProgressChart";
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 function renderChart(weekly = true) {
@@ -102,9 +103,34 @@ describe("ProgressChart", () => {
     const region = screen.getByRole("region", { name: "Napredak po krugovima" });
     expect(region.className.split(" ")).toContain("relative");
     expect(region.className.split(" ")).toContain("overflow-x-auto");
-    for (const hidden of region.querySelectorAll(".sr-only")) {
-      expect(region.contains(hidden)).toBe(true);
-    }
+    // Rizik postoji: u regiji su skriveni (`sr-only`) dijelovi zaglavlja, koje `relative` drži unutar nje.
+    expect(region.querySelectorAll(".sr-only").length).toBeGreaterThan(0);
+  });
+
+  it("uska krivulja (mobitel): os bez „Poč.“, mjeseci skraćeno (UI KS-3 M-3)", () => {
+    // Okvir širok 360 px: ResizeObserver javi širinu odmah pri promatranju.
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        cb: ResizeObserverCallback;
+        constructor(cb: ResizeObserverCallback) {
+          this.cb = cb;
+        }
+        observe() {
+          this.cb(
+            [{ contentRect: { width: 360 } } as ResizeObserverEntry],
+            this as unknown as ResizeObserver,
+          );
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+    const { container } = renderChart();
+    const labels = [...container.querySelectorAll("svg text")].map((n) => n.textContent ?? "");
+    expect(labels).toContain("lip.");
+    expect(labels).not.toContain("Poč.");
+    expect(labels).not.toContain("Početak");
   });
 
   it("mjesečna igra: četiri kruga i početak", () => {

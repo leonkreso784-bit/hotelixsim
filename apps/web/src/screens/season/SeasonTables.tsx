@@ -8,7 +8,7 @@ import { formatWhole } from "../../format";
 import { INDEX_ORDER } from "../../game";
 import { Delta } from "../../ui/IndexBars";
 import { Card } from "../../ui/primitives";
-import { decisionRows, financeRows, gopMargin, hotelLabel, indexRows } from "./rows";
+import { type DecisionKey, decisionRows, financeRows, gopMargin, hotelLabel, indexRows } from "./rows";
 
 const CELL = "border-b border-line px-3 py-2";
 // Tablica indeksa ima šest stupaca: uži razmak, da na 1024 px stane bez pomicanja.
@@ -129,6 +129,10 @@ export function MoneyTable({ hotels }: { hotels: SeasonHotelBody[] }) {
   );
 }
 
+// Retci odluka koji su rečenica („100–105 % uobičajenih“, krug obnove, situacije s ocjenom) smiju se prelomiti; ostali
+// su broj s jedinicom i ostaju u jednom retku (UI_PRAVILA §4.5), a tablica se pomiče unutar svoje regije.
+const PROSE_ROWS: ReadonlySet<DecisionKey> = new Set(["wage", "renovation", "situations"]);
+
 /** Odluke u brojkama: retci = odluke, stupci = hoteli redom poretka (moj hotel podebljan). */
 export function DecisionTable({ body }: { body: SeasonBody }) {
   const columns = body.hotels.map((h) => ({ h, rows: decisionRows(h, body) }));
@@ -164,7 +168,7 @@ export function DecisionTable({ body }: { body: SeasonBody }) {
               {columns.map(({ h, rows }) => (
                 <td
                   key={h.hotel_id}
-                  className={`${CELL} text-right tabular-nums ${h.mine ? "font-bold" : ""}`}
+                  className={`${CELL} text-right tabular-nums ${PROSE_ROWS.has(k.key) ? "" : "whitespace-nowrap"} ${h.mine ? "font-bold" : ""}`}
                 >
                   {rows?.find((r) => r.key === k.key)?.value ?? "—"}
                 </td>

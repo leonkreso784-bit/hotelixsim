@@ -318,26 +318,25 @@ fn points_tenths(hundredths: i64) -> String {
     with_sign(t, format!("{},{} boda", thousands(a / 10), a % 10), true)
 }
 
-/// Napredak s `digits` decimala (0–2), bez suvišnih nula: „+8 bodova", „+7,6 boda", „+8,42 boda".
+/// Napredak s točno `digits` decimala (0–2), kao na ekranu (`formatPointsPrecise`, UI_PRAVILA §2.3): „+8 bodova",
+/// „+7,6 boda", „−4,0 boda", „0,0 boda", „+8,42 boda". Uz decimale imenica je uvijek „boda".
 fn points_with(hundredths: i32, digits: u32) -> String {
     let digits = digits.min(2);
     let v = round_div(i64::from(hundredths), 10_i64.pow(2 - digits));
-    let scale = 10_u64.pow(digits);
-    let a = v.unsigned_abs();
-    if a.is_multiple_of(scale) {
-        let w = v / 10_i64.pow(digits);
-        return if w == 0 {
+    if digits == 0 {
+        return if v == 0 {
             "0 bodova".to_owned()
         } else {
-            points(w)
+            points(v)
         };
     }
+    let scale = 10_u64.pow(digits);
+    let a = v.unsigned_abs();
     let frac = format!(
         "{:0width$}",
         a % scale,
         width = usize::try_from(digits).unwrap_or(2)
     );
-    let frac = frac.trim_end_matches('0');
     with_sign(v, format!("{},{frac} boda", thousands(a / scale)), true)
 }
 

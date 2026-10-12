@@ -516,7 +516,6 @@ export const hr = {
   "season.curve.hotel": "Hotel",
   "season.hotels": "Kako su igrali",
   "season.robot": "Robot",
-  "season.mine": "Tvoj hotel",
   "season.otherHuman": "Drugi student",
   "season.howPlayed": "Kako je igrao",
   "season.robotsNote": "Roboti igraju po stalnom pravilu i ne čitaju situacije.",

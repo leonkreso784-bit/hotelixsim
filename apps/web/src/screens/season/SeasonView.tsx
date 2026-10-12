@@ -18,6 +18,7 @@ import {
   rankingRows,
   rankLine,
   seasonDigits,
+  strategySentence,
   winnerLine,
 } from "./rows";
 import { SeasonMentor } from "./SeasonMentor";
@@ -51,6 +52,7 @@ function Result({ body }: { body: SeasonBody }) {
 export function SeasonView({ body }: { body: SeasonBody }) {
   const weekly = body.round_kind === "week";
   const digits = seasonDigits(body);
+  const robots = body.hotels.some((h) => strategySentence(h, weekly) !== null);
   return (
     <>
       <div>
@@ -89,14 +91,16 @@ export function SeasonView({ body }: { body: SeasonBody }) {
       <IndexTable hotels={body.hotels} />
       <MoneyTable hotels={body.hotels} />
 
-      <section aria-labelledby="kako-su-igrali" className="space-y-3">
+      {/* Od 1024 px kartice nose samo „Kako je igrao“ robota; bez robota tablice kažu sve, pa se sekcija skriva (N-7). */}
+      <section aria-labelledby="kako-su-igrali" className={`space-y-3 ${robots ? "" : "lg:hidden"}`}>
         <div>
           <h2 id="kako-su-igrali" className="text-lg font-bold">
             {t("season.hotels")}
           </h2>
-          <p className="text-sm text-muted">{t("season.robotsNote")}</p>
+          {robots && <p className="text-sm text-muted">{t("season.robotsNote")}</p>}
         </div>
-        <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:grid-cols-3">
+        {/* Rečenica strategije je tekst za čitanje: na 1024 px dvije kartice u redu, tri tek od 1280 px (N-2). */}
+        <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 xl:grid-cols-3">
           {body.hotels.map((h) => (
             <HotelCard key={h.hotel_id} h={h} body={body} digits={digits} />
           ))}
