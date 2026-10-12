@@ -3,6 +3,7 @@
 use content::templates::{Kind, MajorSide, Quantity, TemplateMechanic};
 use content::{Content, ContentError, Snapshot, fingerprint_value, repo_dir};
 use serde_json::{Value, json};
+use sim_hotel_v2::department::UsaliClass;
 
 fn v2_value() -> Value {
     Snapshot::read_v2(&repo_dir()).unwrap().to_value()
@@ -54,9 +55,8 @@ fn repo_templates_load_and_validate() {
     let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     let t = c.situation_templates.expect("v2 snimak ima predloške");
     let codes: Vec<&str> = t.templates.iter().map(|t| t.code.as_str()).collect();
-    // S-1 primjeri prvi, pa prvi val S-2 (20 predložaka).
+    // S-1 primjeri prvi; broj predložaka se ovdje ne veže (pokrivenost čuva `repo_templates_cover_kinds_and_departments`).
     assert_eq!(codes[..3], ["P-KLIMA", "P-POVISICA", "P-DOTRAJALO"]);
-    assert_eq!(codes.len(), 23);
     assert_eq!(
         (
             t.major.high_avg_min,
@@ -89,6 +89,63 @@ fn repo_templates_load_and_validate() {
     assert!(
         !t.names.guest.f.is_empty() && !t.names.staff.m.is_empty() && !t.names.partner.f.is_empty()
     );
+}
+
+/// Pravila sadržaja iz S-2 (plan §8, pregled S-2): svaka vrsta i svaki gostinski odjel imaju barem dva predloška;
+/// svaki predložak ima najbolji odgovor (kvaliteta 5) i barem jedan srednji (kvaliteta 3 ili 4, 🟨 pravilo iz
+/// pregleda S-2); isti predložak se vraća najranije nakon 4 kruga (Leon 13.10.: ponavljanje uz razmak ≥ 4 tjedna).
+#[test]
+fn repo_templates_cover_kinds_and_departments() {
+    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let t = c.situation_templates.unwrap();
+    let kinds = [
+        Kind::Complaint,
+        Kind::Staff,
+        Kind::Opportunity,
+        Kind::Breakdown,
+        Kind::Crisis,
+        Kind::Request,
+    ];
+    for k in kinds {
+        let n = t.templates.iter().filter(|x| x.kind == k).count();
+        assert!(n >= 2, "vrsta {k:?} ima samo {n} predložak/predloška");
+    }
+    let v2 = c.v2.unwrap();
+    let guest_facing: Vec<&str> = v2
+        .departments
+        .iter()
+        .filter(|(_, s)| {
+            matches!(
+                s.class,
+                UsaliClass::Rooms | UsaliClass::FoodBeverage | UsaliClass::OtherOperated
+            )
+        })
+        .map(|(k, _)| k.as_str())
+        .collect();
+    assert_eq!(guest_facing.len(), 6, "gostinski odjeli: {guest_facing:?}");
+    for d in guest_facing {
+        let n = t.templates.iter().filter(|x| x.department == d).count();
+        assert!(n >= 2, "odjel {d} ima samo {n} predložak/predloška");
+    }
+    for x in &t.templates {
+        let q: Vec<u8> = x.answers.iter().map(|a| a.quality()).collect();
+        assert!(
+            q.contains(&5),
+            "{}: nema najboljeg odgovora (kvaliteta 5): {q:?}",
+            x.code
+        );
+        assert!(
+            q.iter().any(|v| (3..=4).contains(v)),
+            "{}: nema srednjeg odgovora (kvaliteta 3 ili 4): {q:?}",
+            x.code
+        );
+        assert!(
+            x.repeat.gap_rounds >= 4,
+            "{}: razmak ponavljanja {} < 4 kruga",
+            x.code,
+            x.repeat.gap_rounds
+        );
+    }
 }
 
 #[test]
