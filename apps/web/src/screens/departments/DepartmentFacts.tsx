@@ -13,7 +13,7 @@ import {
   tw,
 } from "../../format";
 import { Card } from "../../ui/primitives";
-import { leaseWithoutPeople, resultText, shownChanges } from "./helpers";
+import { isLease, leaseWithoutPeople, resultText, shownChanges } from "./helpers";
 import { staffUsePct, usesText } from "./insights";
 
 function Lines({ children }: { children: ReactNode }) {
@@ -153,13 +153,15 @@ export function DepartmentFacts({
   r: DeptRoundBody;
   weekly: boolean;
 }) {
-  const lease = leaseWithoutPeople(dept);
+  // Najam nema goste po korištenju (prihod je ugovoren), a zatvoren odjel ih ovaj krug nije imao (M-11); ljudi se
+  // pokazuju kad ih odjel ima (i najam s ljudima ih plaća).
+  const guests = !isLease(dept.class) && dept.open;
   return (
     <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
       <Space r={r} />
-      {!lease && <Guests dept={dept} r={r} />}
+      {guests && <Guests dept={dept} r={r} />}
       <Money r={r} foodAndBeverage={dept.class === "food_beverage"} />
-      {!lease && <People dept={dept} r={r} departures={r.departures} weekly={weekly} />}
+      {!leaseWithoutPeople(dept) && <People dept={dept} r={r} departures={r.departures} weekly={weekly} />}
     </div>
   );
 }

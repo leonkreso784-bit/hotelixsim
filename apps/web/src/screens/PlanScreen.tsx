@@ -6,7 +6,7 @@ import { type FormEvent, useRef, useState } from "react";
 import { ApiError, problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
 import type { HotelBody } from "../api/types";
-import { differs, draftKey, useDraft, useRoundChanged } from "../drafts";
+import { differs, draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
 import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
@@ -15,8 +15,9 @@ import { Choice } from "./plan/Choice";
 import { maintenanceOptions, trainingEffect, trainingOptions } from "./plan/costs";
 import { DepartmentSummary } from "./plan/DepartmentSummary";
 import { NumberField, Toggle } from "./plan/fields";
-import { type Draft, hotelPatch, toDraft } from "./plan/hotelDraft";
+import { type Draft, hotelPatch, toDraft, touchedOnly } from "./plan/hotelDraft";
 import { Renovation } from "./plan/Renovation";
+import { RoundNotice } from "./plan/RoundNotice";
 
 const roundChanged = (e: unknown) => e instanceof ApiError && e.code === "round_changed";
 
@@ -27,20 +28,24 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
-  const changes = useDraft<Draft>(draftKey("plan", me.hotel.hotel_id, state?.round ?? "-"));
+  const saved = state ? toDraft(state.plan) : null;
+  const changes = useDraft<Draft>(
+    draftKey("plan", me.hotel.hotel_id, state?.round ?? "-"),
+    saved ?? ({} as Draft),
+  );
   const newRound = useRoundChanged(state?.round ?? null);
+  const stale = useStaleDrafts("plan", me.hotel.hotel_id, state?.round ?? null);
   const [invalid, setInvalid] = useState(false);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
-  if (!state)
+  if (!state || !saved)
     return (
       <>
         <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
         <p className="text-muted">{tw(weekly, "plan.closed")}</p>
       </>
     );
-  const saved = toDraft(state.plan);
   const draft: Draft = { ...saved, ...changes.changes };
   const l = state.limits;
   const depts = state.plan.departments ?? null;
@@ -54,16 +59,18 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!state || save.isPending || inFlight.current) return;
-    const hotel = hotelPatch(draft, l, v2);
-    if (!hotel) {
+    const all = hotelPatch(draft, l, v2);
+    if (!all) {
       setInvalid(true);
       return;
     }
     inFlight.current = true;
+    const sent = changes.changes;
+    const hotel = touchedOnly(all, Object.keys(sent) as (keyof Draft)[]);
     save.mutate(
       { round: state.round, patch: (cur) => ({ ...cur, ...hotel }) },
       {
-        onSuccess: () => changes.clear(),
+        onSuccess: () => changes.settle(sent),
         onSettled: () => {
           inFlight.current = false;
         },
@@ -79,7 +86,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       <p className="text-sm text-muted">
         {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
       </p>
-      {newRound && <StatusText>{tw(weekly, "plan.newRound")}</StatusText>}
+      <RoundNotice show={newRound || stale || roundChanged(save.error)} weekly={weekly} />
       <Card className="space-y-4">
         <NumberField
           id="plan-price"
@@ -117,7 +124,9 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           </>
         )}
       </Card>
-      {v2 && depts && <DepartmentSummary hotelId={me.hotel.hotel_id} plans={depts} weekly={weekly} />}
+      {v2 && depts && (
+        <DepartmentSummary hotelId={me.hotel.hotel_id} round={state.round} plans={depts} weekly={weekly} />
+      )}
       <details className="rounded-card border border-line bg-surface p-4">
         <summary className="min-h-11 cursor-pointer font-bold">{t("plan.more")}</summary>
         <div className="mt-3 space-y-4">
@@ -173,12 +182,13 @@ export function PlanScreen({ me }: { me: HotelBody }) {
         </div>
       </details>
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {save.isError && !(newRound && roundChanged(save.error)) && (
+      {save.isError && !roundChanged(save.error) && (
         <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
       )}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
       {differs(saved, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
-      <Button type="submit" disabled={save.isPending}>
+      {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
+      <Button type="submit" aria-disabled={save.isPending}>
         {t("plan.save")}
       </Button>
     </form>

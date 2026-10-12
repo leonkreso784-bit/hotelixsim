@@ -16,6 +16,16 @@ function luminance(hex: string): number {
   return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0);
 }
 
+/** Ton boje u stupnjevima (HSL), 0 = crvena, 60 = žuta. */
+function hue(hex: string): number {
+  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+}
+
 function contrast(fg: string, bg: string): number {
   const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
   return ((hi ?? 0) + 0.05) / ((lo ?? 0) + 0.05);
@@ -47,6 +57,13 @@ const TEXT_PAIRS: [string, string][] = [
 describe("kontrast tokena (I3)", () => {
   it.each(TEXT_PAIRS)("%s na %s ≥ 4,5:1", (fg, bg) => {
     expect(contrast(token(fg), token(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+  it("trake razina ≥ 3:1 na podlozi trake (bg-line)", () => {
+    for (const bar of ["up", "warn", "down", "muted"])
+      expect(contrast(token(bar), token("line")), bar).toBeGreaterThanOrEqual(3);
+  });
+  it("jantarna (srednje) se tonom razlikuje od crvene (slabo) bar za 25°", () => {
+    expect(hue(token("warn")) - hue(token("down"))).toBeGreaterThanOrEqual(25);
   });
   it("bijeli tekst na bg-accent ≥ 4,5:1", () => {
     expect(contrast("#ffffff", token("accent"))).toBeGreaterThanOrEqual(4.5);

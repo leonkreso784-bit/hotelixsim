@@ -45,11 +45,6 @@ export const hr = {
   "problem.unknown_profile": "Taj profil hotela ne postoji.",
   "problem.round_not_open": "Mjesec nije otvoren — sad se ne može mijenjati.",
   "problem.round_not_open.week": "Tjedan nije otvoren — sad se ne može mijenjati.",
-  // Samo web: krug se promijenio između otvaranja obrasca i spremanja (poslužitelj već ima novi krug).
-  "problem.round_changed":
-    "U međuvremenu je otvoren novi mjesec, pa odluke nisu spremljene. Pogledaj ih za novi mjesec i spremi ponovno.",
-  "problem.round_changed.week":
-    "U međuvremenu je otvoren novi tjedan, pa odluke nisu spremljene. Pogledaj ih za novi tjedan i spremi ponovno.",
   "problem.already_answered": "Na ovu situaciju je već odgovoreno.",
   "problem.not_free_text": "Ova situacija nema odgovor svojim riječima.",
   "problem.chat_limit": "Poruke za ovaj razgovor su potrošene.",
@@ -268,6 +263,7 @@ export const hr = {
   "plan.dept.none": "Odjeli zasad rade kao dosad.",
   "plan.dept.none.week": "Odjeli ovaj tjedan rade kao dosad.",
   "plan.dept.all": "Svi odjeli",
+  "plan.dept.unsaved": "izmjene još nisu spremljene",
   "plan.dept.closing": "zatvara se",
   "plan.dept.reopening": "ponovno se otvara",
   "plan.dept.priceChange": "cijene {p}",
@@ -293,9 +289,9 @@ export const hr = {
   "plan.dept.lessPrice": "Manje cijene",
   "plan.dept.maintenance": "Održavanje odjela",
   "plan.dept.seasonalCost":
-    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj mjesec. Više ljudi posluži više gostiju bez preopterećenja; manje ljudi znači manje plaća.",
+    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj mjesec; više ljudi smanjuje opterećenje osoblja.",
   "plan.dept.seasonalCost.week":
-    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj tjedan. Više ljudi posluži više gostiju bez preopterećenja; manje ljudi znači manje plaća.",
+    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj tjedan; više ljudi smanjuje opterećenje osoblja.",
   "plan.dept.priceNote":
     "Više cijene donose više novca od svakog gosta, ali dolazi manje gostiju i pada vrijednost za novac, a s njom zadovoljstvo gostiju.",
   // Cijene odluka (Leon 12.10.): brojke iz granica plana, za krug
@@ -315,6 +311,11 @@ export const hr = {
   "plan.renovation.thin": "Pozor: nakon obnove u blagajni ostaje manje od jednog tjedna plaća ({payroll}).",
   "plan.invalid": "Upiši brojeve u dopuštenom rasponu.",
   "plan.unsaved": "Izmjene još nisu spremljene.",
+  "close.unsaved":
+    "Plan ili odluke odjela imaju nespremljene izmjene: mjesec se obračunava bez njih. Spremi ih prije zatvaranja.",
+  "close.unsaved.week":
+    "Plan ili odluke odjela imaju nespremljene izmjene: tjedan se obračunava bez njih. Spremi ih prije zatvaranja.",
+  "close.openPlan": "Otvori plan",
   "plan.newRound":
     "Otvoren je novi mjesec. Odluke sada vrijede za njega; nespremljene izmjene prošlog mjeseca nisu prenesene.",
   "plan.newRound.week":
@@ -599,6 +600,8 @@ export const hr = {
   "dept.decide.week": "Odluke za ovaj tjedan",
   "dept.decide.intro":
     "Odredi je li odjel otvoren, koliko sezonskih radnika ima, razinu cijena i održavanje. Broj sezonskih radnika smije se ukupno promijeniti samo malo odjednom, za cijeli hotel.",
+  "dept.decide.intro.lease":
+    "Najam ima ugovoreni prihod i nema svojih gostiju ni sezonskih radnika: ovdje se odlučuje o održavanju prostora.",
   "dept.decide.save": "Spremi odluke odjela",
   "dept.decide.saved": "Odluke odjela su spremljene.",
   "dept.decide.closed": "Odluke odjela mijenjaju se dok je mjesec otvoren.",

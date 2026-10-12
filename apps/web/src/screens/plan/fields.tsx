@@ -32,7 +32,7 @@ export function NumberField(props: {
         value={props.value}
         aria-describedby={noteId ? `${rangeId} ${noteId}` : rangeId}
         onChange={(e) => props.onChange(e.target.value)}
-        className="min-h-12 w-full rounded-2xl border border-line bg-surface px-3 text-lg tabular-nums"
+        className="min-h-12 w-full rounded-2xl border border-line bg-surface px-3 text-lg tabular-nums md:max-w-xs"
       />
       <p id={rangeId} className="text-xs text-muted">
         {t("plan.range", { range: formatRange(props.min, props.max, props.unit) })}

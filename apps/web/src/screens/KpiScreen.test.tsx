@@ -190,7 +190,7 @@ describe("Pokazatelji", () => {
     renderApp(api);
     const link = await screen.findByRole("link", { name: /^Pokazatelji/ });
     expect(link.getAttribute("href")).toBe("/pokazatelji");
-    expect(link.textContent).toContain("ADR\u00a0132,45 € · RevPAR\u00a090,07 €");
+    expect(link.textContent).toContain("ADR\u00a0132,45\u00a0€ · RevPAR\u00a090,07\u00a0€");
     fireEvent.click(link);
     expect(await screen.findByRole("heading", { level: 1, name: "Pokazatelji" })).toBeTruthy();
     expect(window.location.pathname).toBe("/pokazatelji");

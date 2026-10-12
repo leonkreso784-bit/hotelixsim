@@ -1,9 +1,8 @@
 // Odluke odjela za otvoreni krug (samo v2). Granice i ukupni korak sezonskih radnika dolaze od poslužitelja. Kad krug
 // nije otvoren, odluke su samo za čitanje. Ako se dok je ekran otvoren otvori novi krug, rečenica to kaže.
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
-import { useRoundChanged } from "../../drafts";
-import { tw } from "../../format";
-import { StatusText } from "../../ui/primitives";
+import { useRoundChanged, useStaleDrafts } from "../../drafts";
+import { RoundNotice } from "../plan/RoundNotice";
 import { DecisionsEditor } from "./DecisionsEditor";
 import { DecisionsReadOnly } from "./DecisionsReadOnly";
 
@@ -20,6 +19,7 @@ export function DepartmentDecisions({
   weekly: boolean;
 }) {
   const newRound = useRoundChanged(planState?.round ?? null);
+  const stale = useStaleDrafts("dept", hotelId, planState?.round ?? null);
   const plans = planState?.plan.departments ?? null;
   const entry = plans?.[dept.code];
   const limits = planState?.limits.departments?.[dept.code];
@@ -28,9 +28,10 @@ export function DepartmentDecisions({
   if (!plans || !entry || !limits) return null;
   return (
     <>
-      {newRound && <StatusText>{tw(weekly, "plan.newRound")}</StatusText>}
+      <RoundNotice show={newRound || stale} weekly={weekly} />
       <DecisionsEditor
-        key={planState.round}
+        // Po krugu i odjelu: stanje spremanja i greške ne prelaze s odjela na odjel (minor pregleda 7).
+        key={`${planState.round}:${dept.code}`}
         hotelId={hotelId}
         dept={dept}
         round={planState.round}

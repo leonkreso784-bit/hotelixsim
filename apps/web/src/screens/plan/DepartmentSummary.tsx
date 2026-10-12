@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { problemMessage } from "../../api/errors";
 import { useDepartments } from "../../api/queries";
 import type { PlanBody } from "../../api/types";
+import { roundDrafts } from "../../drafts";
 import { tw } from "../../format";
 import { Link } from "../../router";
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
@@ -16,10 +17,12 @@ const ROW = `flex min-h-12 items-center gap-3 rounded-xl py-2 ${FOCUS}`;
 
 export function DepartmentSummary({
   hotelId,
+  round,
   plans,
   weekly,
 }: {
   hotelId: string;
+  round: string;
   plans: NonNullable<PlanBody["departments"]>;
   weekly: boolean;
 }) {
@@ -42,7 +45,7 @@ export function DepartmentSummary({
         </Button>
       </Card>
     );
-  const changes = deptChanges(plans, list.data.departments);
+  const changes = deptChanges(plans, list.data.departments, roundDrafts(hotelId, round).depts);
   return (
     <Card className="space-y-2">
       {heading}

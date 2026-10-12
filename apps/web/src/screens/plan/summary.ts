@@ -12,7 +12,12 @@ export type DeptChange = { code: string; name: string; text: string };
 /** Uobičajena razina cijene u odjelu; druga razina je odluka koja se vidi u sažetku. */
 const USUAL_PRICE_PCT = 100;
 
-export function deptChanges(plans: DeptPlans, departments: DepartmentBody[]): DeptChange[] {
+/** `unsaved`: odjeli s nespremljenim nacrtom odluka (M-8), da sažetak ne kaže „rade kao dosad“ dok izmjena čeka. */
+export function deptChanges(
+  plans: DeptPlans,
+  departments: DepartmentBody[],
+  unsaved: readonly string[] = [],
+): DeptChange[] {
   const out: DeptChange[] = [];
   for (const d of departments) {
     const p = plans[d.code];
@@ -29,6 +34,7 @@ export function deptChanges(plans: DeptPlans, departments: DepartmentBody[]): De
       if (p.maintenance !== "regular")
         parts.push(t("plan.dept.maintenanceChange", { level: t(`maintenance.${p.maintenance}` as const) }));
     }
+    if (unsaved.includes(d.code)) parts.push(t("plan.dept.unsaved"));
     if (parts.length > 0) out.push({ code: d.code, name: d.name, text: parts.join(", ") });
   }
   return out;

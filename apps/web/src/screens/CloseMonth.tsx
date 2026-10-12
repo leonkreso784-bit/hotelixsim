@@ -3,17 +3,27 @@ import { useEffect, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useCloseRound } from "../api/queries";
 import type { RoundInfoBody } from "../api/types";
+import { roundDrafts } from "../drafts";
 import { roundPhrase, tw } from "../format";
 import { isWeekRound } from "../game";
+import { Link } from "../router";
 import { Button, Card, ErrorText } from "../ui/primitives";
+import { FOCUS } from "./departments/helpers";
 
-/** Gumb s potvrdom za zatvaranje kruga (mjeseca ili tjedna); upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4). */
+/**
+ * Gumb s potvrdom za zatvaranje kruga (mjeseca ili tjedna); upozorava na neodgovorene PRIJE klika (BACKLOG [dnevnik] M4)
+ * i na nespremljene izmjene plana ili odluka odjela (N-I2): krug se obračunava sa spremljenim planom, pa potvrda to kaže
+ * i vodi u plan (sažetak ondje pokazuje i odjele s nespremljenim izmjenama). Potvrda ne sprema sama: odluke odjela imaju
+ * svoja pravila (korak sezonskih radnika, najveći broj), pa bi skupno spremanje moglo pasti napola.
+ */
 export function CloseMonth({
   gameId,
+  hotelId,
   round,
   unanswered,
 }: {
   gameId: string;
+  hotelId: string;
   round: RoundInfoBody;
   unanswered: number;
 }) {
@@ -60,6 +70,8 @@ export function CloseMonth({
         {t(weekly ? "close.week" : "close.button")}
       </Button>
     );
+  const drafts = roundDrafts(hotelId, round.code);
+  const unsaved = drafts.plan || drafts.depts.length > 0;
   return (
     <Card emphasis className="space-y-3">
       <h2 ref={title} tabIndex={-1} className="text-lg font-bold">
@@ -67,6 +79,17 @@ export function CloseMonth({
       </h2>
       <p className="text-sm text-muted">{tw(weekly, "close.confirmText")}</p>
       {unanswered > 0 && <ErrorText>{t("close.unanswered", { n: unanswered })}</ErrorText>}
+      {unsaved && (
+        <div className="space-y-1">
+          <ErrorText>{tw(weekly, "close.unsaved")}</ErrorText>
+          <Link
+            to="/plan"
+            className={`inline-flex min-h-11 items-center font-semibold text-accent-ink underline ${FOCUS}`}
+          >
+            {t("close.openPlan")}
+          </Link>
+        </div>
+      )}
       {close.isError && <ErrorText>{problemMessage(close.error, weekly)}</ErrorText>}
       <Button disabled={close.isPending} onClick={confirm}>
         {t("close.confirm", { month: name })}

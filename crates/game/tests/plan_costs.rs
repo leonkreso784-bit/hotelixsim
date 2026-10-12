@@ -52,3 +52,42 @@ fn v2_weekly_costs_are_prorated_to_seven_of_thirty_days_and_renovation_is_full()
     // Restoran: plaća 2.100 €/mjesec pri 100 % → 490 € za tjedan (7/30).
     assert_eq!(l.departments["restaurant"].seasonal_worker_cents, 49_000);
 }
+
+#[test]
+fn v2_monthly_costs_are_full_month_and_match_what_resolution_books() {
+    let h = common::hotel_ids()[0];
+    let g = common::v2_monthly_game_resolved_through("none");
+    let l = g.private_hotel(h).unwrap().plan.unwrap().limits;
+    // Lipanj je cijeli krug: plaća jednog sezonskog radnika Restorana je mjesečna (2.100 € pri 100 %).
+    assert_eq!(l.departments["restaurant"].seasonal_worker_cents, 210_000);
+    // Plaće kruga = ljudi svakog odjela (otvoreni: stalni + sezonski) puta plaća jednog radnika tog odjela.
+    let before = g.departments(h).unwrap();
+    let sum: i64 = before
+        .departments
+        .iter()
+        .map(|d| {
+            let staff = i64::from(d.permanent) + if d.open { i64::from(d.seasonal) } else { 0 };
+            staff * l.departments[&d.code].seasonal_worker_cents
+        })
+        .sum();
+    assert_eq!(l.costs.payroll_round_cents, sum);
+
+    // Obračun lipnja knjiži za svakog zaposlenog odjela upravo tu plaću (plan ne mijenja postotak plaće).
+    let resolved = common::v2_monthly_game_resolved_through("jun");
+    let mut checked = 0;
+    for d in resolved.departments(h).unwrap().departments {
+        let (staff, payroll) = match (&d.last, &d.undistributed_last) {
+            (Some((_, o)), _) => (o.staff, o.payroll_cents),
+            (None, Some((_, u))) => (u.staff, u.payroll_cents),
+            (None, None) => continue,
+        };
+        assert_eq!(
+            payroll,
+            i64::from(staff) * l.departments[&d.code].seasonal_worker_cents,
+            "{}",
+            d.code
+        );
+        checked += 1;
+    }
+    assert!(checked >= 10, "provjereno samo {checked} odjela");
+}

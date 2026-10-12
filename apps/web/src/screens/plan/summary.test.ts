@@ -30,7 +30,7 @@ describe("deptChanges", () => {
     p.rooms = { open: true, seasonal_target: 9, price_level_pct: 100, maintenance: "intensive" };
     expect(deptChanges(p, now)).toEqual([
       { code: "rooms", name: "Smještaj", text: "−1 sezonski radnik, održavanje pojačano" },
-      { code: "restaurant", name: "Restoran", text: "+2 sezonska radnika, cijene 105 %" },
+      { code: "restaurant", name: "Restoran", text: "+2 sezonska radnika, cijene 105\u00a0%" },
     ]);
   });
 

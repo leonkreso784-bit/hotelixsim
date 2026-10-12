@@ -50,3 +50,24 @@ export function hotelPatch(d: Draft, l: PlanLimitsBody, v2: boolean): Partial<Pl
   };
   return v2 ? hotel : { ...hotel, seasonal_target: seasonal, maintenance: d.maintenance };
 }
+
+/** Polje plana kruga koje puni svako polje obrasca. */
+const FIELD: Record<keyof Draft, keyof PlanBody> = {
+  price: "price_cents",
+  marketing: "marketing_cents",
+  seasonal: "seasonal_target",
+  wage: "wage_pct",
+  training: "training",
+  maintenance: "maintenance",
+  renovation: "renovation",
+  reply: "reply_reviews",
+};
+
+/**
+ * Samo polja plana koja je student dirao (minor pregleda 2): ostala ostaju iz svježeg plana poslužitelja, pa spremanje
+ * plana hotela ne pregazi ono što je u međuvremenu spremljeno drugdje.
+ */
+export function touchedOnly(patch: Partial<PlanBody>, touched: (keyof Draft)[]): Partial<PlanBody> {
+  const fields = new Set(touched.map((k) => FIELD[k]));
+  return Object.fromEntries(Object.entries(patch).filter(([k]) => fields.has(k as keyof PlanBody)));
+}

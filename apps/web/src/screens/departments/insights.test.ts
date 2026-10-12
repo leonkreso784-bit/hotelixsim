@@ -9,7 +9,7 @@ function round(over: Partial<DeptRoundBody> = {}): DeptRoundBody {
   if (!last) throw new Error("restoran bez kruga");
   return {
     ...last,
-    load_hundredths: 144, // 80 % granice za dobru uslugu
+    load_hundredths: 144, // 80\u00a0% granice za dobru uslugu
     served: 2000,
     demand: 2000,
     condition_after_pts: 6000,
@@ -41,7 +41,7 @@ describe("pragovi u jednoj tablici", () => {
       satisfactionStep: 2,
     });
   });
-  it("granica za dobru uslugu: opterećenje 180 (iznad nje jezgra kažnjava kvalitetu) je 100 %", () => {
+  it("granica za dobru uslugu: opterećenje 180 (iznad nje jezgra kažnjava kvalitetu) je 100\u00a0%", () => {
     expect(staffUsePct(180)).toBe(100);
     expect(staffUsePct(190)).toBe(106);
     expect(staffUsePct(108)).toBe(60);
@@ -50,25 +50,25 @@ describe("pragovi u jednoj tablici", () => {
 });
 
 describe("opterećenje (ista mjera kao kartica Ljudi i ocjena)", () => {
-  it("iznad 100 % granice: osoblje je preopterećeno, s prijedlogom", () => {
+  it("iznad 100\u00a0% granice: osoblje je preopterećeno, s prijedlogom", () => {
     const x = insights(RESTAURANT, round({ load_hundredths: 181 }), true);
     expect(x.weak[0]).toEqual({
-      text: "Osoblje je preopterećeno: 101 % granice za dobru uslugu, kvaliteta usluge pada",
+      text: "Osoblje je preopterećeno: 101\u00a0% granice za dobru uslugu, kvaliteta usluge pada",
       suggestion: "Prijedlog: zaposli više sezonskih radnika u ovom odjelu.",
     });
   });
-  it("točno 100 % i točno 60 %: broj ljudi odgovara poslu", () => {
+  it("točno 100\u00a0% i točno 60\u00a0%: broj ljudi odgovara poslu", () => {
     expect(texts(round({ load_hundredths: 180 })).strong).toContain(
-      "Broj ljudi odgovara poslu: osoblje radi na 100 % granice za dobru uslugu",
+      "Broj ljudi odgovara poslu: osoblje radi na 100\u00a0% granice za dobru uslugu",
     );
     expect(texts(round({ load_hundredths: 108 })).strong).toContain(
-      "Broj ljudi odgovara poslu: osoblje radi na 60 % granice za dobru uslugu",
+      "Broj ljudi odgovara poslu: osoblje radi na 60\u00a0% granice za dobru uslugu",
     );
   });
-  it("ispod 60 %: previše ljudi", () => {
+  it("ispod 60\u00a0%: previše ljudi", () => {
     const x = texts(round({ load_hundredths: 107 }));
     expect(x.weak).toContain(
-      "Previše ljudi za ovoliko gostiju: osoblje radi na 59 % granice za dobru uslugu",
+      "Previše ljudi za ovoliko gostiju: osoblje radi na 59\u00a0% granice za dobru uslugu",
     );
     expect(x.strong.some((s) => s.startsWith("Broj ljudi"))).toBe(false);
   });
@@ -154,12 +154,14 @@ describe("zadovoljstvo gostiju (promjena od 2 prikazana boda naviše)", () => {
 
 describe("rezultat", () => {
   it("gubitak i dobit s iznosom; tjedan i mjesec", () => {
-    expect(texts(round({ profit_cents: -80_000 })).weak).toContain("Odjel je ovaj tjedan u gubitku (−800 €)");
+    expect(texts(round({ profit_cents: -80_000 })).weak).toContain(
+      "Odjel je ovaj tjedan u gubitku (−800\u00a0€)",
+    );
     expect(texts(round({ profit_cents: -80_000 }), false).weak).toContain(
-      "Odjel je ovaj mjesec u gubitku (−800 €)",
+      "Odjel je ovaj mjesec u gubitku (−800\u00a0€)",
     );
     expect(texts(round({ profit_cents: 789_600 })).strong).toContain(
-      "Odjel je ovaj tjedan u dobiti (+7.896 €)",
+      "Odjel je ovaj tjedan u dobiti (+7.896\u00a0€)",
     );
   });
   it("ispod pola eura: ništa", () => {
@@ -173,7 +175,7 @@ describe("zatvoren odjel (M2)", () => {
   it("razlog gubitka: zatvoren je, a stalni radnici se i dalje plaćaju", () => {
     const x = texts(closed, true, { class: "other_operated", open: false });
     expect(x.weak).toEqual([
-      "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće 1.167 € ovaj tjedan)",
+      "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće 1.167\u00a0€ ovaj tjedan)",
     ]);
     expect(x.strong).toEqual([]);
   });
@@ -183,7 +185,7 @@ describe("zatvoren odjel (M2)", () => {
       open: false,
     });
     expect(x.weak).toEqual([
-      "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće 1.167 € ovaj mjesec)",
+      "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće 1.167\u00a0€ ovaj mjesec)",
       "Prostor je dotrajao (40/100)",
     ]);
   });

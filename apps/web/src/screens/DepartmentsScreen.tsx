@@ -57,7 +57,8 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
         ) : (
           <>
             {list.data?.round === null && <p className="text-muted">{tw(weekly, "dept.listEmpty")}</p>}
-            <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:block lg:space-y-3">
+            {/* Jedan stupac: od 768 px uz bočnu traku dva stupca bila bi preuska (lomljena ocjena i rezultat, M-4). */}
+            <div className="space-y-3">
               {revenue.map((d) => (
                 <DepartmentCard
                   key={d.code}
@@ -67,12 +68,7 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
                   level={code === null ? 2 : 3}
                 />
               ))}
-              <ServiceList
-                services={services}
-                weekly={weekly}
-                selected={code}
-                className="md:col-span-2 lg:col-span-1"
-              />
+              <ServiceList services={services} weekly={weekly} selected={code} />
             </div>
           </>
         )}

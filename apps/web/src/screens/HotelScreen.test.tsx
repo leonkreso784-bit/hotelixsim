@@ -1,11 +1,13 @@
 import { focusManager } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { draftKey, writeDraft } from "../drafts";
 import { keepRoundTogether } from "../format";
 import { json, problem } from "../test/fakeApi";
 import {
   GAME_ID,
   game,
+  HOTEL_ID,
   ix,
   myHotel,
   resolvedWeekApi,
@@ -343,6 +345,21 @@ describe("Moj hotel: tjedna igra", () => {
     fireEvent.click(confirm);
     await waitFor(() => expect(window.location.pathname).toBe("/krug/t01"));
     expect(api.posts(`/v1/games/${GAME_ID}/rounds/t01/close`)).toHaveLength(1);
+  });
+
+  it("nespremljene izmjene: potvrda kaže da ulaze bez njih i vodi u plan (N-I2)", async () => {
+    renderApp(v2Api());
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(screen.queryByText(/nespremljene izmjene/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Odustani" }));
+    writeDraft(draftKey("dept", HOTEL_ID, "t01", "restaurant"), { seasonal_target: 3 });
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(
+      screen.getByText(
+        "Plan ili odluke odjela imaju nespremljene izmjene: tjedan se obračunava bez njih. Spremi ih prije zatvaranja.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Otvori plan" }).getAttribute("href")).toBe("/plan");
   });
 
   it("izbornik kaže tjedan; rezultat zadnjeg tjedna vodi na /krug/t01", async () => {

@@ -30,16 +30,20 @@ export function DepartmentInsights({ dept, weekly }: { dept: DepartmentBody; wee
       </Card>
     );
   const x = insights(dept, r, weekly);
+  // Slabe i jake strane jedna ispod druge: uz nejednako dugi popis dva stupca ostavljaju prazninu (M-12). Zatvoren
+  // odjel nema jakih strana (M-11).
   return (
-    <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
+    <div className="space-y-3">
       <Card className="space-y-2">
         <h2 className="text-lg font-bold">{t("dept.weak")}</h2>
         <List items={x.weak} empty={tw(weekly, "dept.weak.none")} />
       </Card>
-      <Card className="space-y-2">
-        <h2 className="text-lg font-bold">{t("dept.strong")}</h2>
-        <List items={x.strong} empty={tw(weekly, "dept.strong.none")} />
-      </Card>
+      {dept.open && (
+        <Card className="space-y-2">
+          <h2 className="text-lg font-bold">{t("dept.strong")}</h2>
+          <List items={x.strong} empty={tw(weekly, "dept.strong.none")} />
+        </Card>
+      )}
     </div>
   );
 }

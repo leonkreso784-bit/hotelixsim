@@ -4,7 +4,7 @@
 // student nije dirao ostaju kakva su na poslužitelju.
 import { t } from "@hotelixsim/i18n";
 import { useRef, useState } from "react";
-import { problemMessage } from "../../api/errors";
+import { ApiError, problemMessage } from "../../api/errors";
 import { useDepartments, useSavePlan } from "../../api/queries";
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
 import { differs, draftKey, useDraft } from "../../drafts";
@@ -12,6 +12,7 @@ import { formatCount, formatEuros, formatPercentWhole, formatRange, tw } from ".
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
 import { Choice } from "../plan/Choice";
 import { maintenanceOptions } from "../plan/costs";
+import { isLease } from "./helpers";
 import { OpenToggle } from "./OpenToggle";
 import { Stepper } from "./Stepper";
 import { type DeptPlans, stepLeftForOthers } from "./step";
@@ -42,7 +43,7 @@ export function DecisionsEditor(props: {
   const list = useDepartments(props.hotelId);
   const save = useSavePlan(props.hotelId);
   const inFlight = useRef(false);
-  const changes = useDraft<Entry>(draftKey("dept", props.hotelId, props.round, code));
+  const changes = useDraft<Entry>(draftKey("dept", props.hotelId, props.round, code), entry);
   const draft: Entry = { ...entry, ...changes.changes };
   const [tooMany, setTooMany] = useState(false);
 
@@ -56,7 +57,11 @@ export function DecisionsEditor(props: {
   const cost = (target: number) => Math.abs(target - base) - Math.abs(draft.seasonal_target - base);
   const canMove = (target: number) =>
     draft.open && target >= l.seasonal_min && target <= l.seasonal_max && cost(target) <= left;
-  const fixedPrice = l.price_level_min_pct === l.price_level_max_pct;
+  // Najam (parking, lokal) ima ugovoreni prihod: razina cijena na njega ne djeluje, pa je nema (N-I1). Brojač
+  // sezonskih radnika je samo za odjel koji ih smije imati (najam i odjel bez sezonskih imaju 0–0).
+  const lease = isLease(dept.class);
+  const fixedPrice = lease || l.price_level_min_pct === l.price_level_max_pct;
+  const fixedSeasonal = l.seasonal_min === l.seasonal_max;
   const legendId = `dept-name-${code}`;
 
   const set = (patch: Partial<Entry>) => {
@@ -73,6 +78,7 @@ export function DecisionsEditor(props: {
     }
     inFlight.current = true;
     const mine = changes.changes;
+    const sent = { ...mine };
     save.mutate(
       {
         round: props.round,
@@ -89,7 +95,7 @@ export function DecisionsEditor(props: {
         },
       },
       {
-        onSuccess: () => changes.clear(),
+        onSuccess: () => changes.settle(sent),
         onSettled: () => {
           inFlight.current = false;
         },
@@ -101,14 +107,17 @@ export function DecisionsEditor(props: {
     <Card className="space-y-3">
       <div className="space-y-1">
         <h2 className="text-lg font-bold">{tw(weekly, "dept.decide")}</h2>
-        <p className="text-sm text-muted">{t("dept.decide.intro")}</p>
-        <p role="status" className="text-sm font-semibold">
-          {left > 0
-            ? tw(weekly, "plan.dept.stepLeft", { n: formatCount(left, "seasonalWorkerAcc") })
-            : tw(weekly, "plan.dept.stepNone")}
-        </p>
+        <p className="text-sm text-muted">{t(lease ? "dept.decide.intro.lease" : "dept.decide.intro")}</p>
+        {!fixedSeasonal && (
+          <p role="status" className="text-sm font-semibold">
+            {left > 0
+              ? tw(weekly, "plan.dept.stepLeft", { n: formatCount(left, "seasonalWorkerAcc") })
+              : tw(weekly, "plan.dept.stepNone")}
+          </p>
+        )}
       </div>
-      <fieldset className="min-w-0 space-y-3">
+      {/* Od 768 px sve odluke u istom uskom stupcu, poravnate lijevo (M-3). */}
+      <fieldset className="min-w-0 space-y-3 md:max-w-md">
         <legend id={legendId} className="sr-only">
           {dept.name}
         </legend>
@@ -122,23 +131,25 @@ export function DecisionsEditor(props: {
             onChange={(open) => set(open ? { open, seasonal_target: base } : { open, seasonal_target: 0 })}
           />
         )}
-        <div className="space-y-1">
-          <Stepper
-            named
-            label={t("plan.dept.seasonal")}
-            value={formatCount(draft.seasonal_target, "seasonalWorker")}
-            moreLabel={t("plan.dept.moreSeasonal")}
-            lessLabel={t("plan.dept.lessSeasonal")}
-            describedBy={legendId}
-            moreDisabled={!canMove(draft.seasonal_target + 1)}
-            lessDisabled={!canMove(draft.seasonal_target - 1)}
-            onMore={() => set({ seasonal_target: draft.seasonal_target + 1 })}
-            onLess={() => set({ seasonal_target: draft.seasonal_target - 1 })}
-          />
-          <p className="text-sm text-muted">
-            {tw(weekly, "plan.dept.seasonalCost", { amount: formatEuros(l.seasonal_worker_cents) })}
-          </p>
-        </div>
+        {!fixedSeasonal && (
+          <div className="space-y-1">
+            <Stepper
+              named
+              label={t("plan.dept.seasonal")}
+              value={formatCount(draft.seasonal_target, "seasonalWorker")}
+              moreLabel={t("plan.dept.moreSeasonal")}
+              lessLabel={t("plan.dept.lessSeasonal")}
+              describedBy={legendId}
+              moreDisabled={!canMove(draft.seasonal_target + 1)}
+              lessDisabled={!canMove(draft.seasonal_target - 1)}
+              onMore={() => set({ seasonal_target: draft.seasonal_target + 1 })}
+              onLess={() => set({ seasonal_target: draft.seasonal_target - 1 })}
+            />
+            <p className="text-sm text-muted">
+              {tw(weekly, "plan.dept.seasonalCost", { amount: formatEuros(l.seasonal_worker_cents) })}
+            </p>
+          </div>
+        )}
         {!fixedPrice && (
           <div className="space-y-1">
             <Stepper
@@ -189,10 +200,14 @@ export function DecisionsEditor(props: {
           {t("plan.dept.tooMany", { n: formatCount(props.seasonalMax, "seasonalWorker") })}
         </ErrorText>
       )}
-      {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
+      {/* Novi krug javlja rečenica iznad odluka (DepartmentDecisions), ne greška. */}
+      {save.isError && !(save.error instanceof ApiError && save.error.code === "round_changed") && (
+        <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
+      )}
       {save.isSuccess && <StatusText>{t("dept.decide.saved")}</StatusText>}
       {differs(entry, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
-      <Button disabled={save.isPending || !list.isSuccess} onClick={onSave}>
+      {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
+      <Button aria-disabled={save.isPending || !list.isSuccess} onClick={onSave}>
         {t("dept.decide.save")}
       </Button>
     </Card>

@@ -11,12 +11,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** Opis elementa (aria-describedby) kao jedan tekst. */
+/** Opis elementa (aria-describedby) kao jedan tekst; nelomljivi razmak prije jedinice čita se kao razmak. */
 function description(el: HTMLElement): string {
   return (el.getAttribute("aria-describedby") ?? "")
     .split(" ")
     .map((id) => document.getElementById(id)?.textContent ?? "")
-    .join(" ");
+    .join(" ")
+    .replace(/\u00a0/g, " ");
 }
 
 function withCash(cents: number): HotelBody {
@@ -106,7 +107,9 @@ describe("cijene odluka u planu", () => {
     renderApp(v2Api(), "/odjeli/restaurant");
     const rest = await screen.findByRole("group", { name: "Restoran" }, { timeout: 3000 });
     expect(
-      within(rest).getByText(/^Jedan sezonski radnik u ovom odjelu stoji 490 € ovaj tjedan\. Više ljudi/),
+      within(rest).getByText(
+        /^Jedan sezonski radnik u ovom odjelu stoji 490 € ovaj tjedan; više ljudi smanjuje opterećenje osoblja\.$/,
+      ),
     ).toBeTruthy();
     expect(within(rest).getByText(/^Više cijene donose više novca od svakog gosta/)).toBeTruthy();
   });

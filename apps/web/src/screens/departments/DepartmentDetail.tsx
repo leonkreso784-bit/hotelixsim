@@ -13,7 +13,7 @@ import { DepartmentDecisions } from "./DepartmentDecisions";
 import { DepartmentFacts, People } from "./DepartmentFacts";
 import { DepartmentHistory } from "./DepartmentHistory";
 import { DepartmentInsights } from "./DepartmentInsights";
-import { FOCUS, isService, leaseWithoutPeople } from "./helpers";
+import { FOCUS, isLease, isService, leaseWithoutPeople } from "./helpers";
 import { DeptIcon } from "./icons";
 import { ScoreCard } from "./ScoreCard";
 import { ServiceCosts } from "./ServiceCard";
@@ -113,7 +113,12 @@ export function DepartmentDetail({
           weekly={weekly}
         />
       )}
-      <DepartmentHistory history={history} titleOf={titleOf} weekly={weekly} />
+      <DepartmentHistory
+        history={history}
+        titleOf={titleOf}
+        weekly={weekly}
+        satisfaction={!isLease(dept.class)}
+      />
     </div>
   );
 }

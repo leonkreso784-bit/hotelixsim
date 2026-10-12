@@ -32,7 +32,12 @@ export function Meter({
           {shown}
         </strong>
       </div>
-      <span role="img" aria-label={aria} className="relative block h-2 rounded-full bg-line">
+      {/* Sastavnica (bez razine) je tanja traka, da ocjena ostane glavna (M-9). */}
+      <span
+        role="img"
+        aria-label={aria}
+        className={`relative block rounded-full bg-line ${look ? "h-2" : "h-1.5"}`}
+      >
         <span
           className={`absolute inset-y-0 left-0 rounded-full ${look ? look.bar : "bg-muted"}`}
           style={{ width: `${pct}%` }}

@@ -18,7 +18,16 @@ export function isService(cls: DeptClassCode): boolean {
   return SERVICE_CLASSES.includes(cls);
 }
 
-/** Najam bez ljudi (parking, lokal u najmu): nema goste po korištenju ni zaposlene, pa ni redak o ljudima. */
+/**
+ * Najam (parking, lokal; razred `rentals`): prihod je ugovoren i ne ovisi o gostima ni cijenama, pa najam nema
+ * kartice Gosti, zadovoljstva, razine cijena ni usklađenosti ljudi, a ocjena mu je samo stanje prostora (jedno pravilo
+ * za prikaz i ocjenu, minor pregleda 6). Ljude pokazuje samo ako ih ima (`leaseWithoutPeople`).
+ */
+export function isLease(cls: DeptClassCode): boolean {
+  return cls === "rentals";
+}
+
+/** Najam bez ljudi: ni redak ni kartica o ljudima. */
 export function leaseWithoutPeople(d: {
   class: DeptClassCode;
   permanent: number;

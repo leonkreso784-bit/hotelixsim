@@ -150,6 +150,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
           {current?.status === "open" && (
             <CloseMonth
               gameId={me.game_id}
+              hotelId={me.hotel.hotel_id}
               round={current.round}
               unanswered={sits.data?.unanswered ?? current.unanswered}
             />

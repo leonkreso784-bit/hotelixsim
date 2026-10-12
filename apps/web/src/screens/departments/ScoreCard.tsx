@@ -10,11 +10,16 @@ export function ScoreCard({ score }: { score: DeptScore }) {
     <Card className="space-y-3">
       <Meter label={t("dept.score")} points={score.points} level={scoreLevel(score.points)} strong />
       <p className="text-sm text-muted">{scoreParts(score)}</p>
-      <div className="space-y-2">
-        <Meter label={t("dept.condition")} points={score.condition} />
-        {score.satisfaction !== null && <Meter label={t("dept.satisfaction")} points={score.satisfaction} />}
-        {score.staffFit !== null && <Meter label={t("dept.staffFit")} points={score.staffFit} />}
-      </div>
+      {/* Jedna sastavnica (najam: samo prostor) bila bi ista brojka dvaput; napomena je dovoljna (M-10). */}
+      {(score.satisfaction !== null || score.staffFit !== null) && (
+        <div className="space-y-2">
+          <Meter label={t("dept.condition")} points={score.condition} />
+          {score.satisfaction !== null && (
+            <Meter label={t("dept.satisfaction")} points={score.satisfaction} />
+          )}
+          {score.staffFit !== null && <Meter label={t("dept.staffFit")} points={score.staffFit} />}
+        </div>
+      )}
       {score.staffFit !== null && <p className="text-sm text-muted">{t("dept.score.fitNote")}</p>}
     </Card>
   );

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HotelBody, PlanBody } from "../../api/types";
+import { draftKey, readDraft, writeDraft } from "../../drafts";
 import { navigate } from "../../router";
 import { json, problem } from "../../test/fakeApi";
 import { departmentsBody, HOTEL_ID, plan, v2Api, v2PlanHotel } from "../../test/fixtures";
@@ -295,9 +296,10 @@ describe("Odluke odjela na ekranu odjela", () => {
       "/odjeli/restaurant",
     );
     await decisions("Restoran");
-    expect((screen.getByRole("button", { name: "Spremi odluke odjela" }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    // aria-disabled, ne disabled: fokus ostaje na gumbu (M-6); klik ne šalje ništa.
+    const save = screen.getByRole("button", { name: "Spremi odluke odjela" });
+    expect(save.getAttribute("aria-disabled")).toBe("true");
+    expect(save.hasAttribute("disabled")).toBe(false);
   });
 
   it("jasan jezik: nigdje „sezonci“; uz ljude objašnjenje stalnih i sezonskih radnika", async () => {
@@ -399,5 +401,17 @@ describe("nespremljene izmjene i svjež plan", () => {
       ).toBe(false),
     );
     expect(within(card).queryByRole("button", { name: "Ponovno učitaj odjele" })).toBeNull();
+  });
+
+  it("nacrt odjela iz prošlog tjedna: rečenica pri otvaranju i nacrt se briše (minor 3)", async () => {
+    renderApp(echoApi(), "/odjeli/restaurant");
+    writeDraft(draftKey("dept", HOTEL_ID, "t00", "lobby_bar"), { seasonal_target: 1 });
+    await decisions("Restoran");
+    expect(
+      await screen.findByText(
+        "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
+      ),
+    ).toBeTruthy();
+    await waitFor(() => expect(readDraft(draftKey("dept", HOTEL_ID, "t00", "lobby_bar"))).toEqual({}));
   });
 });

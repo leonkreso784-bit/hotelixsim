@@ -5,7 +5,7 @@
 import { t } from "@hotelixsim/i18n";
 import type { DepartmentBody, DeptRoundBody } from "../../api/types";
 import { wholePoints } from "../../format";
-import { isService } from "./helpers";
+import { isLease, isService } from "./helpers";
 import { INSIGHT_LIMITS } from "./insights";
 
 export type DeptScore = {
@@ -18,9 +18,9 @@ export type DeptScore = {
 
 export type ScoreLevel = "good" | "mid" | "weak";
 
-/** Pragovi boje po prikazanom cijelom broju (🟨): ≥ 70 dobro, 50–69 srednje, < 50 slabo. */
-const GOOD_FROM = 70;
-const MID_FROM = 50;
+/** Pragovi boje po prikazanom cijelom broju (Leonova odluka 13.10.): ≥ 80 dobro, 60–79 srednje, < 60 slabo. */
+const GOOD_FROM = 80;
+const MID_FROM = 60;
 
 /** Riječ i boja trake po razini; boje su tokeni iz `styles.css` (UI_PRAVILA §1.1), riječ stoji uz boju (§6.8). */
 export const SCORE_LEVELS: Record<ScoreLevel, { word: string; bar: string }> = {
@@ -31,9 +31,9 @@ export const SCORE_LEVELS: Record<ScoreLevel, { word: string; bar: string }> = {
 
 /**
  * Usklađenost broja ljudi s poslom 0–10 000 (🟨), ista mjera kao rečenice o ljudima: opterećenje osoblja prema granici
- * za dobru uslugu (180 = 100 %). U zoni bez kazne (60–100 % granice) je 10 000. Iznad granice pada kao kazna
- * opterećenja u jezgri (100 po stotinki iznad 180) i dolazi do 0 pri 240, kad je kazna najveća i odjel radi punim
- * kapacitetom. Ispod 60 % pada ravnomjerno do 0 kod odjela bez ijednog gosta. Odjel bez posla (najam, zatvoren, bez
+ * za dobru uslugu (180 = 100 %). U zoni bez kazne (60–100 % granice) je 10 000. Iznad granice pada ravnomjerno od
+ * 180 do 240 (≈ 167 bodova po stotinki opterećenja), to jest razmjerno kazni opterećenja u jezgri (100 po stotinki, najviše
+ * 6.000 pri 240), pa je 0 tamo gdje je kazna najveća i odjel radi punim kapacitetom. Ispod 60 % pada ravnomjerno do 0 kod odjela bez ijednog gosta. Odjel bez posla (najam, zatvoren, bez
  * potražnje) nema usklađenost (`null`).
  */
 export function staffFit(r: DeptRoundBody): number | null {
@@ -48,7 +48,7 @@ export function staffFit(r: DeptRoundBody): number | null {
 
 export function deptScore(d: DepartmentBody): DeptScore | null {
   if (isService(d.class) || !d.open) return null;
-  const lease = d.class === "rentals";
+  const lease = isLease(d.class);
   const satisfaction = lease ? null : d.guest_satisfaction_pts;
   const fit = lease || !d.last ? null : staffFit(d.last);
   const parts = [d.condition_pts, satisfaction, fit].filter((x): x is number => x !== null);
@@ -68,7 +68,7 @@ export function scoreParts(s: DeptScore): string {
   return t("dept.score.note", { parts: `${names.join(", ")} i ${last}` });
 }
 
-/** Razina po prikazanom broju, da „70/100“ nikad ne bude „srednje“. */
+/** Razina po prikazanom broju, da „80/100“ nikad ne bude „srednje“. */
 export function scoreLevel(points: number): ScoreLevel {
   const shown = wholePoints(points);
   return shown >= GOOD_FROM ? "good" : shown >= MID_FROM ? "mid" : "weak";

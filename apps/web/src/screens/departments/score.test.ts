@@ -91,13 +91,14 @@ describe("scoreParts: napomena nabraja samo prikazane sastavnice (M1)", () => {
 });
 
 describe("scoreLevel", () => {
-  it("pragovi po prikazanom cijelom broju: ≥ 70 dobro, 50–69 srednje, < 50 slabo", () => {
-    expect(scoreLevel(7000)).toBe("good");
-    expect(scoreLevel(6950)).toBe("good"); // prikaže se 70
-    expect(scoreLevel(6949)).toBe("mid"); // prikaže se 69
-    expect(scoreLevel(5000)).toBe("mid");
-    expect(scoreLevel(4950)).toBe("mid"); // prikaže se 50
-    expect(scoreLevel(4949)).toBe("weak");
+  it("pragovi po prikazanom cijelom broju (Leon 13.10.): ≥ 80 dobro, 60–79 srednje, < 60 slabo", () => {
+    expect(scoreLevel(8000)).toBe("good");
+    expect(scoreLevel(7950)).toBe("good"); // prikaže se 80
+    expect(scoreLevel(7949)).toBe("mid"); // prikaže se 79
+    expect(scoreLevel(7000)).toBe("mid");
+    expect(scoreLevel(6000)).toBe("mid");
+    expect(scoreLevel(5950)).toBe("mid"); // prikaže se 60
+    expect(scoreLevel(5949)).toBe("weak"); // prikaže se 59
     expect(scoreLevel(0)).toBe("weak");
     expect(scoreLevel(10_000)).toBe("good");
   });

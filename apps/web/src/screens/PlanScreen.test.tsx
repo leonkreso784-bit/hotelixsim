@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlanBody } from "../api/types";
+import { draftKey, readDraft, writeDraft } from "../drafts";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
 import { HOTEL_ID, myHotel, plan, standardApi, v2Api, v2PlanHotel } from "../test/fixtures";
@@ -157,7 +158,9 @@ describe("plan tjedna: odjeli", () => {
     if (p?.departments?.restaurant)
       p.departments.restaurant = { ...p.departments.restaurant, seasonal_target: 4, price_level_pct: 105 };
     renderApp(echo().on("GET", "/v1/me/hotel", hotel), "/plan");
-    const link = await screen.findByRole("link", { name: "Restoran: +2 sezonska radnika, cijene 105 %" });
+    const link = await screen.findByRole("link", {
+      name: "Restoran: +2 sezonska radnika, cijene 105\u00a0%",
+    });
     expect(link.getAttribute("href")).toBe("/odjeli/restaurant");
   });
 
@@ -252,5 +255,55 @@ describe("plan: nespremljene izmjene (I1)", () => {
     expect(screen.queryByText(/pa odluke nisu spremljene/)).toBeNull();
     expect(api.calls.filter((c) => c.method === "PUT")).toHaveLength(0);
     expect((screen.getByLabelText("Cijena sobe po noći (€)") as HTMLInputElement).value).not.toBe("150");
+    // Gumb je daleko ispod: fokus ide na rečenicu (M-7).
+    expect(document.activeElement?.textContent).toMatch(/^Otvoren je novi tjedan/);
+  });
+
+  it("nacrt prošlog tjedna pri otvaranju plana: rečenica i nacrt se briše (minor 3)", async () => {
+    renderApp(v2Api(), "/plan");
+    writeDraft(draftKey("plan", HOTEL_ID, "t00"), { price: "999" });
+    expect(
+      await screen.findByText(
+        "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
+      ),
+    ).toBeTruthy();
+    expect((screen.getByLabelText("Cijena sobe po noći (€)") as HTMLInputElement).value).not.toBe("999");
+    await waitFor(() => expect(readDraft(draftKey("plan", HOTEL_ID, "t00"))).toEqual({}));
+  });
+
+  it("šalju se samo dirana polja hotela: ono što je u međuvremenu spremljeno drugdje ostaje (minor 2)", async () => {
+    let reads = 0;
+    const fresh = v2PlanHotel();
+    if (fresh.private?.plan) fresh.private.plan.plan.marketing_cents = 70_000;
+    const api = v2Api()
+      .on("GET", "/v1/me/hotel", () => {
+        reads += 1;
+        return json(200, reads === 1 ? v2PlanHotel() : fresh);
+      })
+      .on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) => json(200, body as object));
+    renderApp(api, "/plan");
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "150" } });
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    await waitFor(() => expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1));
+    const sent = api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)[0]?.body as PlanBody;
+    expect(sent.price_cents).toBe(15_000);
+    expect(sent.marketing_cents).toBe(70_000);
+  });
+
+  it("dok se sprema, gumb ostaje u redu tipkovnice (aria-disabled, M-6)", async () => {
+    const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => new Promise<Response>(() => {}));
+    renderApp(api, "/plan");
+    const button = await screen.findByRole("button", { name: "Spremi plan" });
+    button.focus();
+    fireEvent.click(button);
+    await waitFor(() => expect(button.getAttribute("aria-disabled")).toBe("true"));
+    expect(button.hasAttribute("disabled")).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
+
+  it("sažetak odjela kaže kad odjel ima nespremljene izmjene (M-8)", async () => {
+    renderApp(v2Api(), "/plan");
+    writeDraft(draftKey("dept", HOTEL_ID, "t01", "lobby_bar"), { seasonal_target: 4 });
+    expect(await screen.findByRole("link", { name: "Lobby bar: izmjene još nisu spremljene" })).toBeTruthy();
   });
 });

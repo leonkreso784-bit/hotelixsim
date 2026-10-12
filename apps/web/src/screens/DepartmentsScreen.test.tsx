@@ -1,7 +1,14 @@
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { problem } from "../test/fakeApi";
-import { departmentDetailBody, departmentsBody, game, standardApi, v2Api } from "../test/fixtures";
+import {
+  departmentDetailBody,
+  departmentsBody,
+  game,
+  standardApi,
+  v2Api,
+  v2PlanHotel,
+} from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 
 beforeEach(fastPolling);
@@ -20,9 +27,9 @@ describe("Odjeli", () => {
     // Jedna traka „Ocjena odjela“: prosjek prostora 65, zadovoljstva 74 i usklađenosti ljudi 83 (opterećenje 190)
     // = 74, uz broj i riječ.
     expect(within(spa).getByText("Ocjena odjela")).toBeTruthy();
-    expect(within(spa).getByText("74/100 · dobro")).toBeTruthy();
+    expect(within(spa).getByText("74/100 · srednje")).toBeTruthy();
     expect(within(spa).getAllByRole("img")).toHaveLength(1);
-    expect(within(spa).getByRole("img").getAttribute("aria-label")).toBe("Ocjena odjela: 74 od 100, dobro");
+    expect(within(spa).getByRole("img").getAttribute("aria-label")).toBe("Ocjena odjela: 74 od 100, srednje");
     expect(within(spa).getByText("Ljudi: 2 stalna, 1 sezonski")).toBeTruthy();
     expect(screen.queryByText("Rooftop bar")).toBeNull();
     expect(screen.getByRole("heading", { name: "Službe bez prihoda" })).toBeTruthy();
@@ -44,8 +51,8 @@ describe("Odjeli", () => {
     const h1 = await screen.findByRole("heading", { level: 1, name: "Restoran" });
     // Stupac detalja (popis lijevo ima svoju karticu Restorana s istom ocjenom).
     const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
-    expect(detail.getByRole("img", { name: "Ocjena odjela: 74 od 100, dobro" })).toBeTruthy();
-    expect(detail.getByText("74/100 · dobro")).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Ocjena odjela: 74 od 100, srednje" })).toBeTruthy();
+    expect(detail.getByText("74/100 · srednje")).toBeTruthy();
     // Kvaliteta usluge hotela više ne ulazi (Leon 12.10.); usklađenost ljudi je ista mjera kao rečenica ispod.
     expect(detail.queryByRole("img", { name: /Kvaliteta usluge/ })).toBeNull();
     expect(detail.getByRole("img", { name: "Stanje prostora: 69 od 100" })).toBeTruthy();
@@ -163,6 +170,9 @@ describe("Odjeli", () => {
       ),
     ).toBeTruthy();
     expect(within(weak).queryByText(/u gubitku/)).toBeNull();
+    // Zatvoren odjel nema jakih strana ni gostiju u krugu (M-11).
+    expect(screen.queryByRole("heading", { level: 2, name: "U čemu je dobar" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2, name: "Gosti" })).toBeNull();
     const card = screen.getAllByRole("link", { name: /Mali wellness/ })[0]?.closest("article") as HTMLElement;
     expect(within(card).queryByRole("img")).toBeNull();
     expect(within(card).getByText("Zatvoren")).toBeTruthy();
@@ -179,7 +189,19 @@ describe("Odjeli", () => {
       guest_satisfaction_pts: 7000,
       last: { ...restaurant.last, served: 0, demand: 0, load_hundredths: 0, payroll_cents: 0 },
     });
+    // Plan kruga: parking otvoren, bez sezonskih radnika (granice 0–0) i ne može se zatvoriti, kao u katalogu.
+    const hotel = v2PlanHotel();
+    const plan = hotel.private?.plan;
+    if (!plan?.plan.departments || !plan.limits.departments?.parking) throw new Error("nema plana");
+    plan.plan.departments.parking = {
+      open: true,
+      seasonal_target: 0,
+      price_level_pct: 100,
+      maintenance: "regular",
+    };
+    Object.assign(plan.limits.departments.parking, { seasonal_max: 0, can_close: false });
     const api = v2Api()
+      .on("GET", "/v1/me/hotel", hotel)
       .on("GET", "/v1/hotels/:hotel/departments", body)
       .on("GET", "/v1/hotels/:hotel/departments/:code", { department: parking, history: [parking.last] });
     renderApp(api, "/odjeli/parking");
@@ -187,7 +209,21 @@ describe("Odjeli", () => {
     const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
     expect(detail.getByRole("img", { name: "Ocjena odjela: 42 od 100, slabo" })).toBeTruthy();
     expect(detail.getByText("Ocjena je stanje prostora.")).toBeTruthy();
-    expect(detail.queryByRole("img", { name: /Zadovoljstvo|Usklađenost/ })).toBeNull();
+    // Jedna sastavnica se ne crta dvaput (M-10); zadovoljstvo se nigdje ne spominje, ni u povijesti (N-I1).
+    expect(detail.queryByRole("img", { name: /Stanje prostora|Zadovoljstvo|Usklađenost/ })).toBeNull();
+    expect(detail.queryByText(/Zadovoljstvo gostiju|zadovoljstvo/)).toBeNull();
+    expect(detail.queryByRole("columnheader", { name: "Zadovoljstvo gostiju" })).toBeNull();
+    // Odluke najma: bez sezonskih radnika i bez razine cijena (ugovoreni prihod), samo održavanje (N-I1).
+    const decisions = await screen.findByRole("group", { name: "Parking" });
+    expect(within(decisions).queryByText("Sezonski radnici u odjelu")).toBeNull();
+    expect(within(decisions).queryByText("Cijene u odjelu")).toBeNull();
+    expect(within(decisions).getByRole("radio", { name: "redovno" })).toBeTruthy();
+    expect(screen.queryByText(/Jedan sezonski radnik|možeš još promijeniti/)).toBeNull();
+    expect(
+      screen.getByText(
+        "Najam ima ugovoreni prihod i nema svojih gostiju ni sezonskih radnika: ovdje se odlučuje o održavanju prostora.",
+      ),
+    ).toBeTruthy();
     for (const h of ["Gosti", "Ljudi"])
       expect(detail.queryByRole("heading", { level: 2, name: h })).toBeNull();
     const card = screen.getAllByRole("link", { name: "Parking" })[0]?.closest("article") as HTMLElement;
@@ -235,7 +271,7 @@ describe("Odjeli", () => {
     expect(within(parking).getByText("Zatvoren")).toBeTruthy();
     expect(within(parking).getAllByRole("link")).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Odjeli" }).getAttribute("href")).toBe("/odjeli");
-    expect(screen.getByRole("link", { name: /Uprava/ }).textContent).toContain("59.050 €");
+    expect(screen.getByRole("link", { name: /Uprava/ }).textContent).toContain("59.050\u00a0€");
   });
 
   it("služba bez prihoda: trošak po stavkama, bez kartica Prostor i Gosti", async () => {
