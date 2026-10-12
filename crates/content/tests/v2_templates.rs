@@ -54,7 +54,9 @@ fn repo_templates_load_and_validate() {
     let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     let t = c.situation_templates.expect("v2 snimak ima predloške");
     let codes: Vec<&str> = t.templates.iter().map(|t| t.code.as_str()).collect();
-    assert_eq!(codes, ["P-KLIMA", "P-POVISICA", "P-DOTRAJALO"]);
+    // S-1 primjeri prvi, pa prvi val S-2 (20 predložaka).
+    assert_eq!(codes[..3], ["P-KLIMA", "P-POVISICA", "P-DOTRAJALO"]);
+    assert_eq!(codes.len(), 23);
     assert_eq!(
         (
             t.major.high_avg_min,
