@@ -1,6 +1,7 @@
 //! Popunjavanje primjerka: imena i opisi uloga, brojevna mjesta. Svaki primjerak ima svoj tok kocke (ključ je
-//! šifra predloška), pa izbor drugih predložaka u krugu ne mijenja njegove brojeve; imena se u krugu ne ponavljaju
-//! dok ih popis ima dovoljno.
+//! šifra predloška, uz redni broj za ponovljeni primjerak u istom krugu), pa izbor drugih predložaka u krugu ne
+//! mijenja njegove brojeve. Imena se u krugu ne ponavljaju dok ih popis ima dovoljno, a ponovljeni predložak
+//! dobiva drugi lik: ime (i opis) koje nije imao nijedan raniji primjerak tog predloška u sezoni.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -42,34 +43,83 @@ fn number(rng: &mut Rng, p: &NumberParam) -> Result<i64, ResolveError> {
     }
 }
 
-/// Primjerak predloška `t` za krug `p`, s odjelom `department`; `used` su imena već dana u ovom krugu.
+/// Za koga i gdje se primjerak puni: krug, sjeme, utor i imena likova.
+pub(super) struct FillCtx<'a> {
+    pub p: &'a Period,
+    pub seed: u64,
+    pub slot: u8,
+    pub names: &'a NamePool,
+}
+
+/// Mjesto primjerka: odjel, dan sezone i redni broj istog predloška u krugu.
+pub(super) struct Place {
+    pub department: Option<DeptCode>,
+    pub day: u16,
+    pub occurrence: u8,
+}
+
+/// Prvi neprazan popis po redu sklonosti.
+fn first_nonempty(tiers: [Vec<&String>; 4]) -> Vec<&String> {
+    tiers
+        .into_iter()
+        .find(|t| !t.is_empty())
+        .unwrap_or_default()
+}
+
+/// Primjerak predloška `t`; `earlier` su raniji primjerci istog predloška u sezoni (drugi lik), `used` imena već
+/// dana u ovom krugu.
 pub(super) fn fill(
     t: &SituationSpec,
-    department: Option<DeptCode>,
-    p: &Period,
-    seed: u64,
-    slot: u8,
-    names: &NamePool,
+    at: Place,
+    ctx: &FillCtx,
+    earlier: &[&DrawnSituation],
     used: &mut BTreeSet<String>,
 ) -> Result<DrawnSituation, ResolveError> {
-    let mut rng = stream(seed, Purpose::Situations, p.index, slot, label(&t.code));
+    let key = if at.occurrence <= 1 {
+        label(&t.code)
+    } else {
+        label(&format!("{}#{}", t.code, at.occurrence))
+    };
+    let mut rng = stream(ctx.seed, Purpose::Situations, ctx.p.index, ctx.slot, key);
+    let avoid: BTreeSet<&str> = earlier
+        .iter()
+        .flat_map(|e| e.roles.values().map(|r| r.name.as_str()))
+        .collect();
     let mut roles = BTreeMap::new();
     for (key, role) in &t.roles {
-        let all = names.list(role.source, role.gender);
-        let free: Vec<&String> = all.iter().filter(|n| !used.contains(*n)).collect();
-        let pool: Vec<&String> = if free.is_empty() {
-            all.iter().collect()
-        } else {
-            free
-        };
+        let all = ctx.names.list(role.source, role.gender);
+        let only = |f: &dyn Fn(&String) -> bool| all.iter().filter(|n| f(n)).collect::<Vec<_>>();
+        // Bez ranijih primjeraka predložak bira samo među imenima slobodnim u krugu (kao prije ponavljanja).
+        let pool = first_nonempty([
+            only(&|n| !used.contains(n) && !avoid.contains(n.as_str())),
+            only(&|n| !avoid.contains(n.as_str())),
+            only(&|n| !used.contains(n)),
+            all.iter().collect(),
+        ]);
         let i = index(&mut rng, pool.len())
             .map_err(|_| CatalogError::Missing(format!("names za ulogu {key} ({})", t.code)))?;
         let name = pool.get(i).map(|n| (*n).clone()).unwrap_or_default();
         used.insert(name.clone());
-        let role_type = if role.types.is_empty() {
+        let seen_types: BTreeSet<&str> = earlier
+            .iter()
+            .filter_map(|e| e.roles.get(key).and_then(|r| r.role_type.as_deref()))
+            .collect();
+        let fresh: Vec<&String> = role
+            .types
+            .iter()
+            .filter(|ty| !seen_types.contains(ty.as_str()))
+            .collect();
+        let types: Vec<&String> = if fresh.is_empty() {
+            role.types.iter().collect()
+        } else {
+            fresh
+        };
+        let role_type = if types.is_empty() {
             None
         } else {
-            role.types.get(index(&mut rng, role.types.len())?).cloned()
+            types
+                .get(index(&mut rng, types.len())?)
+                .map(|ty| (*ty).clone())
         };
         roles.insert(key.clone(), RoleFill { name, role_type });
     }
@@ -77,15 +127,23 @@ pub(super) fn fill(
     for (key, param) in &t.numbers {
         numbers.insert(key.clone(), number(&mut rng, param)?);
     }
+    let code = if at.occurrence <= 1 {
+        format!("{}.{}", t.code, ctx.p.code())
+    } else {
+        format!("{}.{}.{}", t.code, ctx.p.code(), at.occurrence)
+    };
     Ok(DrawnSituation {
-        code: format!("{}.{}", t.code, p.code()),
+        code,
         template: t.code.clone(),
-        period: *p,
+        period: *ctx.p,
+        day: at.day,
+        occurrence: at.occurrence,
+        slot: ctx.slot,
         kind: t.kind,
         weight: t.weight,
         scope: t.scope,
         major: t.major,
-        department,
+        department: at.department,
         roles,
         numbers,
     })

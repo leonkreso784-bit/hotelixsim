@@ -13,7 +13,7 @@ use crate::department::DeptCode;
 use crate::resolve::{PeriodReport, ResolveError};
 use crate::state::HotelState;
 
-const WEEK_DAYS: u16 = 7;
+pub(super) const WEEK_DAYS: u16 = 7;
 
 /// Stanje hotela kako ga vidi izvlačenje na početku kruga.
 #[derive(Clone, Copy, Debug)]
@@ -133,21 +133,25 @@ pub(super) fn weight(
     Ok(Some(w))
 }
 
-/// `max_per_season` i razmak od zadnje pojave; razmak se mjeri u tjednima sezone (dani / 7), pa u tjednoj igri
-/// znači krugove, a u mjesečnoj ne zabranjuje ponavljanje do kraja sezone.
-pub(super) fn repeat_allows(
+/// Najmanji razmak između dva pojavljivanja istog predloška u tjednima (Leon): vrijedi i kad predložak traži manje.
+const MIN_GAP_WEEKS: u8 = 4;
+
+/// `max_per_season` i razmak od svih ranijih pojava (`earlier`: povijest i već izvučeni primjerci ovog kruga)
+/// u danima sezone: barem `max(gap_rounds, 4)` tjedana. Isto mjerilo za tjednu i mjesečnu igru (u mjesečnoj je
+/// dan primjerka početak njegova virtualnog tjedna).
+pub(super) fn repeat_allows<'h>(
     r: &Repeat,
     code: &str,
-    p: &Period,
-    history: &[DrawnSituation],
+    day: u16,
+    earlier: impl Iterator<Item = &'h DrawnSituation>,
 ) -> bool {
-    let past: Vec<&DrawnSituation> = history.iter().filter(|h| h.template == code).collect();
+    let past: Vec<&DrawnSituation> = earlier.filter(|h| h.template == code).collect();
     if past.len() >= usize::from(r.max_per_season) {
         return false;
     }
-    let gap = u16::from(r.gap_rounds).saturating_mul(WEEK_DAYS);
+    let gap = u16::from(r.gap_rounds.max(MIN_GAP_WEEKS)).saturating_mul(WEEK_DAYS);
     past.iter()
-        .all(|h| h.period.index < p.index && p.start_day.saturating_sub(h.period.start_day) >= gap)
+        .all(|h| h.day < day && day.saturating_sub(h.day) >= gap)
 }
 
 /// Strana veće situacije za ovaj krug: prosjek pet pokazatelja na početku kruga prema pravilu.

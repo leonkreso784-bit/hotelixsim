@@ -1,123 +1,37 @@
 //! Izvlačenje situacija iz predložaka (J-2, plan situacija §4): determinizam, ponavljanje, raznolikost, uvjeti i
-//! pojačanja iz stanja, veća i kolektivna situacija, uloge i mjesta. Predlošci iz repoa (pretvoreni u jezgreni
-//! oblik) uz testne „opće" predloške, jer ih repo za sada ima samo tri.
+//! pojačanja iz stanja, veća i kolektivna situacija, uloge i mjesta, u tjednoj i mjesečnoj igri. Predlošci iz
+//! repoa (pretvoreni u jezgreni oblik) uz testne „opće" predloške, jer ih repo za sada ima samo tri. Najmanji
+//! razmak između dva pojavljivanja istog predloška je 4 tjedna (Leon), i kad predložak traži manje.
+
+mod situations_common;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use content::{Snapshot, repo_dir};
 use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::situations::{
-    Chance, Conditions, DeptTarget, Draw, DrawView, DrawnSituation, Gender, Kind, MajorSide,
-    NumberParam, Repeat, RoleSource, RoleSpec, Scope, SituationSpec, TemplateSet, draw_situations,
-    situation_count,
+    Anchor, DeptTarget, DrawnSituation, Gender, Kind, MajorSide, NumberParam, Repeat, RoleSource,
+    Scope, situation_count,
 };
-use sim_hotel_v2::{
-    Catalog, HotelState, IndexSet, Month, Period, PeriodKind, Profile, season_periods,
-};
+use sim_hotel_v2::{HotelState, Month, PeriodKind, Profile, season_periods};
+use situations_common::{Hotel, content, general, indices, round, season, start, with_general};
 
-fn content() -> (Catalog, TemplateSet) {
-    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
-    let set = c
-        .situation_templates
-        .expect("v2 snimak ima predloške")
-        .to_core();
-    (c.v2.expect("v2 katalog"), set)
+const KINDS: [PeriodKind; 2] = [PeriodKind::Week, PeriodKind::Month];
+
+/// Najmanji razmak u danima sezone: `gap_rounds` tjedana, ali barem 4 tjedna.
+fn min_gap_days(r: Repeat) -> u16 {
+    u16::from(r.gap_rounds.max(4)) * 7
 }
 
-fn indices(avg_hundredths: u16) -> IndexSet {
-    IndexSet::from_hundredths([avg_hundredths; 5]).unwrap()
+/// Najviše iz istog odjela u cijelom krugu: 2 u tjednu, ⌈2n/5⌉ u mjesecu.
+fn round_dept_limit(n: u8) -> u8 {
+    (n * 2).div_ceil(5).max(2)
 }
 
-/// Opći predložak bez uvjeta (cijeli hotel).
-fn general(code: &str, kind: Kind, repeat: Repeat) -> SituationSpec {
-    SituationSpec {
-        code: code.to_string(),
+fn anchor(kind: Kind) -> Anchor {
+    Anchor {
         kind,
-        department: DeptTarget::Hotel,
-        weight: 1,
-        scope: Scope::Hotel,
-        major: None,
-        when: Conditions::default(),
-        chance: Chance {
-            base: 1,
-            boost: vec![],
-        },
-        repeat,
-        roles: BTreeMap::from([(
-            "gost".to_string(),
-            RoleSpec {
-                source: RoleSource::Guest,
-                gender: Gender::M,
-                types: vec![],
-            },
-        )]),
-        numbers: BTreeMap::new(),
+        department: None,
     }
-}
-
-fn with_general(mut set: TemplateSet, n: usize, repeat: Repeat) -> TemplateSet {
-    let kinds = [Kind::Request, Kind::Breakdown, Kind::Crisis, Kind::Staff];
-    for i in 0..n {
-        set.templates.push(general(
-            &format!("P-OPCI-{i}"),
-            kinds[i % kinds.len()],
-            repeat,
-        ));
-    }
-    set
-}
-
-struct Hotel<'a> {
-    state: &'a HotelState,
-    indices: IndexSet,
-    slot: u8,
-}
-
-fn round(
-    cat: &Catalog,
-    set: &TemplateSet,
-    h: &Hotel,
-    p: &Period,
-    history: &[DrawnSituation],
-    seed: u64,
-    anchors: u8,
-) -> Vec<DrawnSituation> {
-    let view = DrawView {
-        state: h.state,
-        previous: None,
-        indices: &h.indices,
-    };
-    let draw = Draw {
-        period: p,
-        templates: set,
-        history,
-        seed,
-        slot: h.slot,
-        anchors,
-    };
-    draw_situations(&view, &draw, cat).unwrap()
-}
-
-/// Cijela sezona jednog hotela uz nepromijenjeno početno stanje; povijest raste krug po krug.
-fn season(
-    cat: &Catalog,
-    set: &TemplateSet,
-    h: &Hotel,
-    kind: PeriodKind,
-    seed: u64,
-) -> Vec<Vec<DrawnSituation>> {
-    let mut history: Vec<DrawnSituation> = Vec::new();
-    let mut out = Vec::new();
-    for p in season_periods(kind) {
-        let drawn = round(cat, set, h, &p, &history, seed, 0);
-        history.extend(drawn.iter().cloned());
-        out.push(drawn);
-    }
-    out
-}
-
-fn start(cat: &Catalog, profile: Profile) -> HotelState {
-    HotelState::from_profile(cat, profile).unwrap()
 }
 
 #[test]
@@ -137,15 +51,22 @@ fn same_seed_gives_same_instances() {
         indices: indices(5_000),
         slot: 1,
     };
-    let a = season(&cat, &set, &h, PeriodKind::Week, 7);
-    assert_eq!(a, season(&cat, &set, &h, PeriodKind::Week, 7));
-    assert_ne!(a, season(&cat, &set, &h, PeriodKind::Week, 8));
-    let other_slot = Hotel { slot: 2, ..h };
-    assert_ne!(a, season(&cat, &set, &other_slot, PeriodKind::Week, 7));
+    for kind in KINDS {
+        let a = season(&cat, &set, &h, kind, 7);
+        assert_eq!(a, season(&cat, &set, &h, kind, 7));
+        assert_ne!(a, season(&cat, &set, &h, kind, 8));
+        let other_slot = Hotel {
+            slot: 2,
+            indices: indices(5_000),
+            ..h
+        };
+        assert_ne!(a, season(&cat, &set, &other_slot, kind, 7));
+    }
 }
 
-/// 1000 sjemena: isti predložak nikad dvaput u krugu, `max_per_season` i razmak poštovani, najviše onoliko
-/// situacija koliko krug ima, najviše dvije iz istog odjela u tjednom krugu.
+/// 1000 sjemena × tjedna i mjesečna igra: `max_per_season` i razmak (barem 4 tjedna) po danima sezone, šifre
+/// jedinstvene u igri, najviše onoliko situacija koliko krug ima, najviše dvije iz istog odjela u (virtualnom)
+/// tjednu i ⌈2n/5⌉ u krugu.
 #[test]
 fn thousand_seeds_respect_repeat_and_round_rules() {
     let (cat, set) = content();
@@ -162,72 +83,78 @@ fn thousand_seeds_respect_repeat_and_round_rules() {
         .iter()
         .map(|t| (t.code.clone(), t.repeat))
         .collect();
-    for profile in [Profile::A, Profile::B, Profile::C] {
-        let state = start(&cat, profile);
-        let h = Hotel {
-            state: &state,
-            indices: indices(5_000),
-            slot: 1,
-        };
-        for seed in 0..1_000 {
-            let rounds = season(&cat, &set, &h, PeriodKind::Week, seed);
-            let mut seen: BTreeMap<String, Vec<u16>> = BTreeMap::new();
-            for (p, drawn) in season_periods(PeriodKind::Week).iter().zip(&rounds) {
-                let n = situation_count(&state, p, &cat).unwrap();
-                assert!(
-                    drawn.len() <= usize::from(n),
-                    "{}: {} > {n}",
-                    p.code(),
-                    drawn.len()
-                );
-                let codes: BTreeSet<&str> = drawn.iter().map(|d| d.template.as_str()).collect();
-                assert_eq!(
-                    codes.len(),
-                    drawn.len(),
-                    "isti predložak dvaput u {}",
-                    p.code()
-                );
-                let mut per_dept: BTreeMap<&DeptCode, u8> = BTreeMap::new();
-                for d in drawn {
-                    assert_eq!(d.period, *p);
-                    assert_eq!(d.code, format!("{}.{}", d.template, p.code()));
-                    if let Some(dept) = &d.department {
-                        *per_dept.entry(dept).or_default() += 1;
-                    }
-                    seen.entry(d.template.clone())
-                        .or_default()
-                        .push(p.start_day);
-                }
-                assert!(
-                    per_dept.values().all(|&c| c <= 2),
-                    "{}: {per_dept:?}",
-                    p.code()
-                );
-            }
-            for (code, days) in &seen {
-                let r = rules[code];
-                assert!(
-                    days.len() <= usize::from(r.max_per_season),
-                    "{code}: {days:?}"
-                );
-                for w in days.windows(2) {
+    for kind in KINDS {
+        for profile in [Profile::A, Profile::B, Profile::C] {
+            let state = start(&cat, profile);
+            let h = Hotel {
+                state: &state,
+                indices: indices(5_000),
+                slot: 1,
+            };
+            for seed in 0..1_000 {
+                let rounds = season(&cat, &set, &h, kind, seed);
+                let mut seen: BTreeMap<String, Vec<u16>> = BTreeMap::new();
+                let mut codes: BTreeSet<&str> = BTreeSet::new();
+                for (p, drawn) in season_periods(kind).iter().zip(&rounds) {
+                    let n = situation_count(&state, p, &cat).unwrap();
                     assert!(
-                        w[1] - w[0] >= u16::from(r.gap_rounds) * 7,
-                        "{code}: razmak {days:?} (sjeme {seed})"
+                        drawn.len() <= usize::from(n),
+                        "{}: {} > {n}",
+                        p.code(),
+                        drawn.len()
                     );
+                    let mut per_week: BTreeMap<(u16, &DeptCode), u8> = BTreeMap::new();
+                    let mut per_round: BTreeMap<&DeptCode, u8> = BTreeMap::new();
+                    for d in drawn {
+                        assert_eq!(d.period, *p);
+                        assert!(codes.insert(&d.code), "šifra {} dvaput u igri", d.code);
+                        assert!(d.day >= p.start_day && d.day < p.start_day + u16::from(p.days));
+                        assert_eq!((d.day - p.start_day) % 7, 0, "{}", d.code);
+                        if let Some(dept) = &d.department {
+                            *per_week.entry((d.day, dept)).or_default() += 1;
+                            *per_round.entry(dept).or_default() += 1;
+                        }
+                        seen.entry(d.template.clone()).or_default().push(d.day);
+                    }
+                    assert!(
+                        per_week.values().all(|&c| c <= 2),
+                        "{}: {per_week:?}",
+                        p.code()
+                    );
+                    assert!(
+                        per_round.values().all(|&c| c <= round_dept_limit(n)),
+                        "{}: {per_round:?}",
+                        p.code()
+                    );
+                }
+                for (code, days) in &seen {
+                    let r = rules[code];
+                    assert!(
+                        days.len() <= usize::from(r.max_per_season),
+                        "{code}: {days:?}"
+                    );
+                    let mut sorted = days.clone();
+                    sorted.sort_unstable();
+                    for w in sorted.windows(2) {
+                        assert!(
+                            w[1] - w[0] >= min_gap_days(r),
+                            "{code}: razmak {days:?} (sjeme {seed}, {kind:?})"
+                        );
+                    }
                 }
             }
         }
     }
 }
 
-/// Kad dopuštenih predložaka ima dovoljno, krug dobiva točno svoj broj, bez sidara i sa sidrima.
+/// Kad dopuštenih predložaka ima dovoljno, tjedni krug dobiva točno svoj broj, bez sidara i sa sidrima. Uz
+/// razmak od 4 tjedna vrhunac (5 tjedno) traži barem 20 različitih dopuštenih predložaka.
 #[test]
 fn round_is_filled_to_its_count_minus_anchors() {
     let (cat, set) = content();
     let set = with_general(
         set,
-        6,
+        24,
         Repeat {
             max_per_season: 17,
             gap_rounds: 1,
@@ -255,12 +182,18 @@ fn round_is_filled_to_its_count_minus_anchors() {
     }
     let t01 = season_periods(PeriodKind::Week)[0];
     assert_eq!(situation_count(&state, &t01, &cat).unwrap(), 3);
+    let two = [anchor(Kind::Complaint), anchor(Kind::Staff)];
     assert_eq!(
-        round(&cat, &set, &h, &t01, &[], 1, 2).len(),
+        round(&cat, &set, &h, &t01, &[], 1, &two).len(),
         1,
         "S1 i S3 su dva od tri"
     );
-    assert!(round(&cat, &set, &h, &t01, &[], 1, 3).is_empty());
+    let three = [
+        anchor(Kind::Complaint),
+        anchor(Kind::Staff),
+        anchor(Kind::Crisis),
+    ];
+    assert!(round(&cat, &set, &h, &t01, &[], 1, &three).is_empty());
 }
 
 /// Poredak po važnosti: 4 prva.
@@ -282,10 +215,12 @@ fn instances_are_ordered_by_importance() {
         indices: indices(5_000),
         slot: 1,
     };
-    for seed in 0..100 {
-        for drawn in season(&cat, &set, &h, PeriodKind::Week, seed) {
-            let w: Vec<u8> = drawn.iter().map(|d| d.weight).collect();
-            assert!(w.windows(2).all(|x| x[0] >= x[1]), "{w:?}");
+    for kind in KINDS {
+        for seed in 0..100 {
+            for drawn in season(&cat, &set, &h, kind, seed) {
+                let w: Vec<u8> = drawn.iter().map(|d| d.weight).collect();
+                assert!(w.windows(2).all(|x| x[0] >= x[1]), "{w:?}");
+            }
         }
     }
 }
@@ -323,7 +258,7 @@ fn worn_departments_raise_share_of_wear_complaints() {
         let mut hits = 0;
         let mut depts: BTreeMap<String, u32> = BTreeMap::new();
         for seed in 0..1_000 {
-            for d in round(&cat, &set, &h, &t06, &[], seed, 0) {
+            for d in round(&cat, &set, &h, &t06, &[], seed, &[]) {
                 if d.template == "P-DOTRAJALO" {
                     hits += 1;
                     let dept = d.department.expect("pritužba na prostor ima odjel");
@@ -350,11 +285,13 @@ fn worn_departments_raise_share_of_wear_complaints() {
 #[test]
 fn roles_and_numbers_are_filled_from_templates() {
     let (cat, set) = content();
+    // Najviše 3 pojave po predlošku: ranija imena istog predloška (najviše 2) i imena kruga (najviše 4) ne
+    // potroše popis od 8 imena, pa se ime u tjednom krugu ne ponavlja.
     let set = with_general(
         set,
         4,
         Repeat {
-            max_per_season: 17,
+            max_per_season: 3,
             gap_rounds: 1,
         },
     );
@@ -404,7 +341,8 @@ fn roles_and_numbers_are_filled_from_templates() {
     ));
 }
 
-/// Kolektivna situacija (`svi`): ista za sve hotele (utor 0), u prvom krugu mjeseca, najviše jedna mjesečno.
+/// Kolektivna situacija (`svi`): ista za sve hotele (utor 0), u prvom krugu mjeseca, najviše jedna mjesečno —
+/// u tjednoj i u mjesečnoj igri (u mjesečnoj je svaki krug prvi u svom mjesecu).
 #[test]
 fn collective_situation_is_the_same_for_every_hotel() {
     let (cat, mut set) = content();
@@ -423,7 +361,7 @@ fn collective_situation_is_the_same_for_every_hotel() {
     set.templates.push(svi);
     let set = with_general(
         set,
-        6,
+        24,
         Repeat {
             max_per_season: 17,
             gap_rounds: 1,
@@ -433,31 +371,38 @@ fn collective_situation_is_the_same_for_every_hotel() {
         .into_iter()
         .map(|p| start(&cat, p))
         .collect();
-    for seed in 0..50 {
-        let seasons: Vec<Vec<Vec<DrawnSituation>>> = states
-            .iter()
-            .zip(1_u8..)
-            .map(|(s, slot)| {
-                let h = Hotel {
-                    state: s,
-                    indices: indices(5_000),
-                    slot,
-                };
-                season(&cat, &set, &h, PeriodKind::Week, seed)
-            })
-            .collect();
-        for (i, p) in season_periods(PeriodKind::Week).iter().enumerate() {
-            let collective: Vec<Vec<&DrawnSituation>> = seasons
+    for kind in KINDS {
+        for seed in 0..50 {
+            let seasons: Vec<Vec<Vec<DrawnSituation>>> = states
                 .iter()
-                .map(|s| s[i].iter().filter(|d| d.scope == Scope::All).collect())
+                .zip(1_u8..)
+                .map(|(s, slot)| {
+                    let h = Hotel {
+                        state: s,
+                        indices: indices(5_000),
+                        slot,
+                    };
+                    season(&cat, &set, &h, kind, seed)
+                })
                 .collect();
-            assert!(collective.windows(2).all(|w| w[0] == w[1]), "{}", p.code());
-            let first_of_month = season_periods(PeriodKind::Week)
-                .iter()
-                .find(|q| q.start_month() == p.start_month())
-                == Some(p);
-            let expected = first_of_month && [Month::Jul, Month::Aug].contains(&p.start_month());
-            assert_eq!(collective[0].len(), usize::from(expected), "{}", p.code());
+            for (i, p) in season_periods(kind).iter().enumerate() {
+                let collective: Vec<Vec<&DrawnSituation>> = seasons
+                    .iter()
+                    .map(|s| s[i].iter().filter(|d| d.scope == Scope::All).collect())
+                    .collect();
+                assert!(collective.windows(2).all(|w| w[0] == w[1]), "{}", p.code());
+                let first_of_month = season_periods(kind)
+                    .iter()
+                    .find(|q| q.start_month() == p.start_month())
+                    == Some(p);
+                let expected =
+                    first_of_month && [Month::Jul, Month::Aug].contains(&p.start_month());
+                assert_eq!(collective[0].len(), usize::from(expected), "{}", p.code());
+                for c in &collective[0] {
+                    assert_eq!(c.day, p.start_day, "kolektivna je u prvom tjednu kruga");
+                    assert_eq!(c.code, format!("P-SVI.{}", p.code()));
+                }
+            }
         }
     }
 }
@@ -483,60 +428,60 @@ fn major_situation_only_in_extremes_and_once_a_month() {
     }
     let set = with_general(
         set,
-        6,
+        24,
         Repeat {
             max_per_season: 17,
             gap_rounds: 1,
         },
     );
     let state = start(&cat, Profile::C);
-    for (avg, expected) in [
-        (9_000, Some("P-VECA-DOBRO")),
-        (5_000, None),
-        (3_000, Some("P-VECA-LOSE")),
-    ] {
-        let h = Hotel {
-            state: &state,
-            indices: indices(avg),
-            slot: 1,
-        };
-        for seed in 0..50 {
-            let rounds = season(&cat, &set, &h, PeriodKind::Week, seed);
-            let mut per_month: BTreeMap<Month, Vec<&str>> = BTreeMap::new();
-            for (p, drawn) in season_periods(PeriodKind::Week).iter().zip(&rounds) {
-                for d in drawn.iter().filter(|d| d.major.is_some()) {
-                    per_month
-                        .entry(p.start_month())
-                        .or_default()
-                        .push(d.template.as_str());
+    for kind in KINDS {
+        for (avg, expected) in [
+            (9_000, Some("P-VECA-DOBRO")),
+            (5_000, None),
+            (3_000, Some("P-VECA-LOSE")),
+        ] {
+            let h = Hotel {
+                state: &state,
+                indices: indices(avg),
+                slot: 1,
+            };
+            for seed in 0..50 {
+                let rounds = season(&cat, &set, &h, kind, seed);
+                let mut per_month: BTreeMap<Month, Vec<&str>> = BTreeMap::new();
+                for (p, drawn) in season_periods(kind).iter().zip(&rounds) {
+                    for d in drawn.iter().filter(|d| d.major.is_some()) {
+                        per_month
+                            .entry(p.start_month())
+                            .or_default()
+                            .push(d.template.as_str());
+                    }
                 }
-            }
-            match expected {
-                None => assert!(per_month.is_empty()),
-                Some(code) => {
-                    assert_eq!(per_month.len(), 4, "jedna u svakom mjesecu: {per_month:?}");
-                    assert!(
-                        per_month.values().all(|v| v == &vec![code]),
-                        "{per_month:?}"
-                    );
+                match expected {
+                    None => assert!(per_month.is_empty()),
+                    Some(code) => {
+                        assert_eq!(per_month.len(), 4, "jedna u svakom mjesecu: {per_month:?}");
+                        assert!(
+                            per_month.values().all(|v| v == &vec![code]),
+                            "{per_month:?}"
+                        );
+                    }
                 }
             }
         }
     }
 }
 
-/// Raznolikost: barem dvije vrste u krugu i barem jedna prilika u svaka tri kruga, kad ih ima.
+/// Raznolikost: barem dvije vrste u krugu i barem jedna prilika u svaka tri kruga, kad ih ima. Prilika ima
+/// osam (svaka se smije ponoviti tek nakon 4 tjedna).
 #[test]
 fn kinds_vary_and_an_opportunity_comes_every_three_rounds() {
     let (cat, set) = content();
-    let mut set = with_general(
-        set,
-        6,
-        Repeat {
-            max_per_season: 17,
-            gap_rounds: 1,
-        },
-    );
+    let repeat = Repeat {
+        max_per_season: 17,
+        gap_rounds: 1,
+    };
+    let mut set = with_general(set, 24, repeat);
     for t in set
         .templates
         .iter_mut()
@@ -544,16 +489,13 @@ fn kinds_vary_and_an_opportunity_comes_every_three_rounds() {
     {
         t.kind = Kind::Request;
     }
-    let mut prilika = general(
-        "P-PRILIKA",
-        Kind::Opportunity,
-        Repeat {
-            max_per_season: 17,
-            gap_rounds: 1,
-        },
-    );
-    prilika.chance.base = 1;
-    set.templates.push(prilika);
+    for i in 0..8 {
+        set.templates.push(general(
+            &format!("P-PRILIKA-{i}"),
+            Kind::Opportunity,
+            repeat,
+        ));
+    }
     let state = start(&cat, Profile::C);
     let h = Hotel {
         state: &state,
@@ -610,4 +552,52 @@ fn content_templates_convert_to_core_rules() {
         members.contains(&DeptCode::rooms()) && members.len() == 6,
         "{members:?}"
     );
+}
+
+/// Sidra S1–S4 po krugu (P7/P13): krug koji sadrži 1. lipnja (S1 i S3), 1. srpnja (S2) i 1. kolovoza (S4).
+fn anchors_for(kind: PeriodKind, index: u8) -> Vec<Anchor> {
+    let starts = match kind {
+        PeriodKind::Week => [0, 4, 8],
+        PeriodKind::Month => [0, 1, 2],
+    };
+    match starts.iter().position(|&i| i == index) {
+        Some(0) => vec![anchor(Kind::Complaint), anchor(Kind::Request)],
+        Some(1) => vec![anchor(Kind::Staff)],
+        Some(_) => vec![anchor(Kind::Crisis)],
+        None => vec![],
+    }
+}
+
+/// Pokrivenost sadržaja (pregled J-2, I2): samo predlošci iz repoa, početno stanje A/B/C, tjedna i mjesečna igra
+/// — svaki krug dobiva točno `broj − sidra`. Pada dok S-2 ne doda predloške (sada su tri), pa je isključen;
+/// S-2 ga uključuje (ili J-3 doda provjeru balansa).
+#[test]
+#[ignore = "čeka S-2: repo ima samo tri predloška, a vrhunac traži barem 20 dopuštenih uz razmak od 4 tjedna"]
+fn repo_templates_fill_every_round() {
+    let (cat, set) = content();
+    for kind in KINDS {
+        for profile in [Profile::A, Profile::B, Profile::C] {
+            let state = start(&cat, profile);
+            let h = Hotel {
+                state: &state,
+                indices: indices(5_000),
+                slot: 1,
+            };
+            for seed in 0..20 {
+                let mut history: Vec<DrawnSituation> = Vec::new();
+                for p in season_periods(kind) {
+                    let anchors = anchors_for(kind, p.index);
+                    let drawn = round(&cat, &set, &h, &p, &history, seed, &anchors);
+                    let n = usize::from(situation_count(&state, &p, &cat).unwrap());
+                    assert_eq!(
+                        drawn.len(),
+                        n - anchors.len(),
+                        "{} {profile:?} (sjeme {seed})",
+                        p.code()
+                    );
+                    history.extend(drawn);
+                }
+            }
+        }
+    }
 }

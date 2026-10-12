@@ -52,3 +52,43 @@ pub fn period_count(p: &Period, occupancy_bp: u16) -> Calc<u8> {
 pub fn situation_count(state: &HotelState, p: &Period, cat: &Catalog) -> Result<u8, ResolveError> {
     Ok(period_count(p, expected_occupancy_bp(state, p, cat)?)?)
 }
+
+/// Virtualni tjedan kruga: od `offset_days` dana od početka kruga, s `count` situacija (sidra, kolektivna i veća
+/// uključene u prvi).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct VirtualWeek {
+    pub offset_days: u8,
+    pub count: u8,
+}
+
+/// Krug kao niz virtualnih tjedana, za razmak ponavljanja (Leon: isti predložak tek nakon 4 tjedna, i u
+/// mjesečnoj igri). Tjedni krug je jedan dio s cijelim brojem; mjesečni su dijelovi od 7 dana od početka
+/// mjeseca: svaki pun tjedan dobiva tjedni broj, zadnji dio ostatak do broja kruga (kolovoz 5+5+5+5+2).
+pub fn virtual_weeks(p: &Period, occupancy_bp: u16) -> Calc<Vec<VirtualWeek>> {
+    let n = period_count(p, occupancy_bp)?;
+    if p.kind == PeriodKind::Week {
+        return Ok(vec![VirtualWeek {
+            offset_days: 0,
+            count: n,
+        }]);
+    }
+    let weekly = weekly_count(occupancy_bp);
+    let mut out = Vec::new();
+    let mut left = n;
+    let mut offset: u8 = 0;
+    while offset < p.days {
+        let next = offset.saturating_add(7);
+        let count = if next < p.days {
+            weekly.min(left)
+        } else {
+            left
+        };
+        out.push(VirtualWeek {
+            offset_days: offset,
+            count,
+        });
+        left = left.saturating_sub(count);
+        offset = next;
+    }
+    Ok(out)
+}

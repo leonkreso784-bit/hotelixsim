@@ -110,7 +110,20 @@ fn check_template(
         && (has_state(&t.when) || t.chance.boost.iter().any(|b| has_state(&b.when)))
     {
         return invalid(format!(
-            "{ctx}: kolektivna situacija (scope 'svi') je ista za sve hotele, pa uvjeti i pojačanja smiju              gledati samo mjesece, ne stanje hotela"
+            "{ctx}: kolektivna situacija (scope 'svi') je ista za sve hotele, pa uvjeti i pojačanja smiju \
+             gledati samo mjesece, ne stanje hotela"
+        ));
+    }
+    if t.scope == Scope::All
+        && let Some(code) = depts.iter().flatten().find(|code| {
+            v2.departments
+                .iter()
+                .any(|(k, s)| k.as_str() == code.as_str() && s.can_close)
+        })
+    {
+        return invalid(format!(
+            "{ctx}: kolektivna situacija (scope 'svi') je ista za sve hotele, pa ne smije pasti na odjel koji \
+             hotel može zatvoriti ('{code}')"
         ));
     }
     let months = check_conditions(ctx, "when", &t.when, depts.is_some())?;

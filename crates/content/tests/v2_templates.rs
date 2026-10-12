@@ -561,3 +561,19 @@ fn collective_situation_has_no_hotel_state_conditions() {
         "svi",
     );
 }
+
+/// Kolektivna je ista za sve hotele, pa ne smije pasti na odjel koji hotel može zatvoriti (pregled J-2, I1).
+#[test]
+fn collective_situation_needs_departments_that_cannot_close() {
+    let collective = |t: &mut Value, dept: &str| {
+        t["scope"] = json!("svi");
+        t["department"] = json!(dept);
+        t["when"] = json!({ "months": ["jul"] });
+        t["chance"] = json!({ "base": 3 });
+    };
+    let mut v = v2_value();
+    collective(tpl(&mut v, "P-KLIMA"), "rooms");
+    build(&v).expect("smještaj se ne može zatvoriti");
+    rejected(|v| collective(tpl(v, "P-KLIMA"), "*staffed"), "zatvoriti");
+    rejected(|v| collective(tpl(v, "P-KLIMA"), "spa"), "zatvoriti");
+}
