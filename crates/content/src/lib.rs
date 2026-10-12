@@ -6,15 +6,15 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-pub mod templates;
-mod templates_check;
-mod v2;
-mod v2_dept;
-
 use sim_hotel::{
     ActionSpec, Catalog, Category, CategorySpec, Economy, LevelEffect, Mechanic, MechanicSpec,
     Month, MonthTable, OfferedAnswer, Profile, ProfileSpec, SituationTemplate, TrainingEffect,
 };
+
+pub mod templates;
+mod templates_check;
+mod v2;
+mod v2_dept;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ContentError {

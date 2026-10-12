@@ -119,10 +119,9 @@ fn v2_snapshot_with_templates_round_trips() {
     let v = v2_value();
     let again = Snapshot::from_value(&v).unwrap().to_value();
     assert_eq!(fingerprint_value(&again), fingerprint_value(&v));
-    assert_ne!(
-        fingerprint_value(&v),
-        "sha256:7cd0c6db29b379ab8d1364a11881071cd0749b6b0cd01c5e5d057abb2e9f0cc8",
-        "predlošci ulaze u otisak nove igre"
+    assert!(
+        again["v2"].get("situation_templates").is_some() && again["v2"].get("names").is_some(),
+        "predlošci i imena ostaju u snimku nove igre"
     );
 }
 
@@ -491,8 +490,13 @@ fn group_month_cannot_be_before_the_situation() {
                         "discount_bp": 2000, "month": "jul" });
     let mut v = v2_value();
     tpl(&mut v, "P-KLIMA")["answers"][2]["mechanics"] = json!([group.clone()]);
+    // „boravak" više nitko ne koristi (provjera neiskorištenih mjesta).
+    tpl(&mut v, "P-KLIMA")["params"]
+        .as_object_mut()
+        .unwrap()
+        .remove("boravak");
     assert!(
-        build(&v).is_err(),
+        matches!(build(&v), Err(ContentError::Invalid(m)) if m.contains("grupa")),
         "srpanjska grupa u kolovozu (when.months) mora pasti"
     );
     tpl(&mut v, "P-KLIMA")["when"]["months"] = json!(["jun", "jul"]);
@@ -500,4 +504,60 @@ fn group_month_cannot_be_before_the_situation() {
     build(&v).unwrap();
     tpl(&mut v, "P-KLIMA")["answers"][2]["mechanics"][0]["discount_bp"] = json!(10_001);
     assert!(matches!(build(&v), Err(ContentError::Invalid(m)) if m.contains("discount_bp")));
+}
+
+// --- popravak 1: uloge osoblja, neiskorištena mjesta, kolektivne situacije ---
+
+#[test]
+fn staff_role_needs_a_department() {
+    rejected(
+        |v| {
+            let t = tpl(v, "P-KLIMA");
+            t["department"] = json!("hotel");
+            t["chance"] = json!({ "base": 3 });
+            t["roles"]["kolega"] = json!({ "from": "staff", "gender": "f" });
+            t["description"] = json!(
+                "{gost.ime}, {gost.tip}, zove; {kolega.ime} je na recepciji. Soba {soba}, {temp} °C."
+            );
+        },
+        "kolega",
+    );
+}
+
+#[test]
+fn unused_role_or_param_is_rejected() {
+    rejected(
+        |v| tpl(v, "P-KLIMA")["params"]["visak"] = json!({ "pick": [1, 2] }),
+        "visak",
+    );
+    rejected(
+        |v| tpl(v, "P-KLIMA")["roles"]["susjed"] = json!({ "from": "guest", "gender": "m" }),
+        "susjed",
+    );
+}
+
+#[test]
+fn collective_situation_has_no_hotel_state_conditions() {
+    let mut v = v2_value();
+    let t = tpl(&mut v, "P-KLIMA");
+    t["scope"] = json!("svi");
+    t["when"] = json!({ "months": ["jun", "jul"] });
+    t["chance"] = json!({ "base": 3 });
+    build(&v).expect("kolektivna smije ovisiti samo o mjesecu");
+    rejected(
+        |v| {
+            let t = tpl(v, "P-KLIMA");
+            t["scope"] = json!("svi");
+            t["chance"] = json!({ "base": 3 });
+        },
+        "svi",
+    );
+    rejected(
+        |v| {
+            let t = tpl(v, "P-KLIMA");
+            t["scope"] = json!("svi");
+            t["when"] = json!({ "months": ["jun"] });
+        },
+        "svi",
+    );
 }

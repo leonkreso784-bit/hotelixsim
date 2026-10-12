@@ -7,8 +7,8 @@ use sim_hotel_v2::department::UsaliClass;
 
 use crate::ContentError;
 use crate::templates::{
-    Bounds, Conditions, MajorRule, NameList, Names, Param, Quantity, Scope, Template, TemplateFile,
-    TemplateMechanic,
+    Bounds, Conditions, MajorRule, NameList, Names, Param, Quantity, RoleSource, Scope, Template,
+    TemplateFile, TemplateMechanic,
 };
 
 fn invalid<T>(msg: String) -> Result<T, ContentError> {
@@ -107,6 +107,13 @@ fn check_template(
             "{ctx}: veća situacija je za jedan hotel, ne za sve (scope 'svi')"
         ));
     }
+    if t.scope == Scope::All
+        && (has_state(&t.when) || t.chance.boost.iter().any(|b| has_state(&b.when)))
+    {
+        return invalid(format!(
+            "{ctx}: kolektivna situacija (scope 'svi') je ista za sve hotele, pa uvjeti i pojačanja smiju              gledati samo mjesece, ne stanje hotela"
+        ));
+    }
     let months = check_conditions(ctx, "when", &t.when, depts.is_some())?;
     if t.chance.base == 0 {
         return invalid(format!("{ctx}: chance.base mora biti barem 1"));
@@ -127,7 +134,7 @@ fn check_template(
         return invalid(format!("{ctx}: repeat.max_per_season mora biti barem 1"));
     }
     let allowed = check_roles_and_params(ctx, t, depts.as_ref())?;
-    check_texts(ctx, t, &allowed)?;
+    let in_texts = check_texts(ctx, t, &allowed)?;
     if t.rubric.len() != 5 || t.rubric.iter().any(|r| r.trim().is_empty()) {
         return invalid(format!(
             "{ctx}: rubrika mora imati točno 5 nepraznih kriterija"
@@ -160,7 +167,63 @@ fn check_template(
     }
     let uctx = format!("{ctx}: unanswered");
     band.check_cost(&uctx, &mech.costs(&uctx, &t.unanswered)?, base, &months)?;
+    check_usage(ctx, t, &in_texts)
+}
+
+/// Uvjeti osim mjeseca (stanje hotela ili odjela).
+fn has_state(c: &Conditions) -> bool {
+    let mut rest = c.clone();
+    rest.months.clear();
+    !rest.is_empty()
+}
+
+/// Svaka uloga i svako mjesto se negdje koriste (tekst, lik, mehanika); inače je to vjerojatno tipfeler.
+fn check_usage(ctx: &str, t: &Template, in_texts: &BTreeSet<String>) -> Result<(), ContentError> {
+    let in_mechanics: BTreeSet<&str> = t
+        .answers
+        .iter()
+        .flat_map(|a| &a.mechanics)
+        .chain(&t.unanswered)
+        .flat_map(mechanic_params)
+        .collect();
+    for key in t.params.keys() {
+        if !in_texts.contains(key) && !in_mechanics.contains(key.as_str()) {
+            return invalid(format!("{ctx}: params.{key}: mjesto se nigdje ne koristi"));
+        }
+    }
+    for key in t.roles.keys() {
+        let prefix = format!("{key}.");
+        let in_character = t.character.as_ref().is_some_and(|c| &c.role == key);
+        if !in_character && !in_texts.iter().any(|p| p.starts_with(&prefix)) {
+            return invalid(format!("{ctx}: uloga '{key}' se nigdje ne koristi"));
+        }
+    }
     Ok(())
+}
+
+/// Imena mjesta na koja mehanika pokazuje.
+fn mechanic_params(m: &TemplateMechanic) -> Vec<&str> {
+    let qs: Vec<&Quantity> = match m {
+        TemplateMechanic::ServiceRecovery { compensation } => vec![compensation],
+        TemplateMechanic::EquipmentRepair { .. } => vec![],
+        TemplateMechanic::StaffRetention {
+            raise_one_pct,
+            bonus,
+        } => vec![raise_one_pct, bonus],
+        TemplateMechanic::GroupBooking {
+            rooms,
+            nights,
+            discount_bp,
+            ..
+        } => vec![rooms, nights, discount_bp],
+        TemplateMechanic::CrisisCommunication { backup } => vec![backup],
+    };
+    qs.into_iter()
+        .filter_map(|q| match q {
+            Quantity::Param(name) => Some(name.as_str()),
+            Quantity::Fixed(_) => None,
+        })
+        .collect()
 }
 
 /// Odjeli koje predložak može dobiti; `None` za cijeli hotel.
@@ -274,6 +337,11 @@ fn check_roles_and_params(
                 "{ctx}: uloga '{key}' (mala slova, brojke, '_'; ne smije biti i u params)"
             ));
         }
+        if role.from == RoleSource::Staff && depts.is_none() {
+            return invalid(format!(
+                "{ctx}: uloga '{key}' (staff) je zaposlenik odjela situacije, pa traži predložak s odjelom"
+            ));
+        }
         if role.types.iter().any(|x| x.trim().is_empty()) {
             return invalid(format!("{ctx}: uloga '{key}' ima prazan tip"));
         }
@@ -337,7 +405,12 @@ fn check_by_department(
     Ok(())
 }
 
-fn check_texts(ctx: &str, t: &Template, allowed: &BTreeSet<String>) -> Result<(), ContentError> {
+/// Provjeri tekstove; vraća sva mjesta koja se u njima pojavljuju.
+fn check_texts(
+    ctx: &str,
+    t: &Template,
+    allowed: &BTreeSet<String>,
+) -> Result<BTreeSet<String>, ContentError> {
     if t.title.trim().is_empty() || t.description.trim().is_empty() {
         return invalid(format!("{ctx}: naslov i opis ne smiju biti prazni"));
     }
@@ -359,14 +432,16 @@ fn check_texts(ctx: &str, t: &Template, allowed: &BTreeSet<String>) -> Result<()
         texts.push(("character.opening".to_string(), &c.opening));
         texts.push(("character.fallback_reply".to_string(), &c.fallback_reply));
     }
+    let mut seen = BTreeSet::new();
     for (field, text) in texts {
         let found = placeholders(text)
             .map_err(|e| ContentError::Invalid(format!("{ctx}: {field}: {e}")))?;
         if let Some(bad) = found.iter().find(|p| !allowed.contains(*p)) {
             return invalid(format!("{ctx}: {field}: nepoznato mjesto {{{bad}}}"));
         }
+        seen.extend(found);
     }
-    Ok(())
+    Ok(seen)
 }
 
 /// Imena mjesta `{…}` u tekstu, redom; greška za zagradu bez para.

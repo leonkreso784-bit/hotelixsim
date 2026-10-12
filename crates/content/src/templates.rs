@@ -26,6 +26,9 @@ pub struct TemplateFile {
 
 /// Kad dolazi „veća situacija" (Leon 13.10.): prosjek pet pokazatelja (0–100) na početku kruga je barem
 /// `high_avg_min` ili najviše `low_avg_max`; takvih je najviše `max_per_month` u kalendarskom mjesecu.
+/// Pet pokazatelja su indeksi jezgre `sim_hotel::Index` (`crates/sim-hotel/src/index.rs:4-10`): Gosti (G),
+/// Recenzije (R), Zaposlenici (Z), Poslovanje (O) i Financije (F); u v2 ih računa `period_indices`
+/// (`crates/sim-hotel-v2/src/indices.rs:112`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MajorRule {
@@ -43,7 +46,8 @@ pub struct Template {
     /// Šifra odjela iz `v2/departments.json`, `hotel` (cijeli hotel) ili skupina `*staffed` / `*guest_facing`
     /// iz koje igra izabere jedan odjel.
     pub department: String,
-    /// Važnost 1–4: redoslijed na ekranu (od najvažnije) i prednost u izvlačenju.
+    /// Važnost 1–4, **4 = najvažnije**: na ekranu se situacije redaju od veće važnosti prema manjoj (4 prva), a veća
+    /// važnost ima prednost u izvlačenju.
     pub weight: u8,
     #[serde(default, skip_serializing_if = "Scope::is_hotel")]
     pub scope: Scope,
@@ -204,7 +208,7 @@ pub struct Role {
 pub enum RoleSource {
     /// Gost hotela.
     Guest,
-    /// Zaposlenik odjela situacije (u sloju 2 stvarna osoba iz odjela).
+    /// Zaposlenik odjela situacije (u sloju 2 stvarna osoba iz odjela); traži predložak s odjelom.
     Staff,
     /// Vanjski partner (agencija, dobavljač).
     Partner,
