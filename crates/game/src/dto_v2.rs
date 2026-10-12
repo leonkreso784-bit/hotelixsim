@@ -458,6 +458,15 @@ pub struct DeptPlanDto {
     pub seasonal_target: u16,
     pub price_level_pct: u16,
     pub maintenance: MaintenanceCode,
+    /// Iznos obnove odjela za mjesec kruga (obnova v2). U dnevniku: iznos, a 0 se ne zapisuje (čita se kao 0). U tijelu
+    /// zahtjeva: `None` = zadrži iznos važećeg plana (`Game::plan_from_dto`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal_cents: Option<i64>,
+}
+
+/// Iznos obnove u dnevniku: 0 se ne zapisuje (stari oblik JSON-a plana bez obnove ostaje bajt-isti).
+fn stored_amount(cents: i64) -> Option<i64> {
+    (cents != 0).then_some(cents)
 }
 
 /// Serde-zrcalo `sim_hotel_v2::HotelState` (polje za polje): odjeli umjesto v1 agregata osoblja, opreme i
@@ -529,10 +538,12 @@ impl From<&DeptPlan> for DeptPlanDto {
             seasonal_target: d.seasonal_target,
             price_level_pct: d.price_level_pct,
             maintenance: d.maintenance.into(),
+            renewal_cents: stored_amount(d.renewal_cents),
         }
     }
 }
 
+/// Iz dnevnika (ili tijela kojem je `Game::plan_from_dto` već dopunio iznose): `None` je 0.
 impl From<&DeptPlanDto> for DeptPlan {
     fn from(d: &DeptPlanDto) -> Self {
         DeptPlan {
@@ -540,8 +551,7 @@ impl From<&DeptPlanDto> for DeptPlan {
             seasonal_target: d.seasonal_target,
             price_level_pct: d.price_level_pct,
             maintenance: d.maintenance.into(),
-            // Iznos obnove v2 u planu dolazi s Taskom O-3 (tijelo plana); dotad 0.
-            renewal_cents: 0,
+            renewal_cents: d.renewal_cents.unwrap_or(0),
         }
     }
 }
@@ -667,12 +677,14 @@ impl From<&PeriodPlan> for PlanDto {
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
             departments: by_string(&p.departments, |d| DeptPlanDto::from(d)),
+            building_renewal_cents: stored_amount(p.building_renewal_cents),
         }
     }
 }
 
 /// v2 plan traži postavke odjela; `seasonal_target` i `maintenance` iz DTO-a se ne čitaju (izvode se iz odjela).
-/// Prazni `departments` ovdje je pokvaren dnevnik: zahtjev bez odjela dopunjuje `Game::plan_from_dto`.
+/// Prazni `departments` ovdje je pokvaren dnevnik: zahtjev bez odjela dopunjuje `Game::plan_from_dto`. Iznos obnove
+/// `None` je 0 (dnevnik ne zapisuje 0; zahtjevu bez iznosa ga je `Game::plan_from_dto` već dopunio).
 impl TryFrom<&PlanDto> for PeriodPlan {
     type Error = GameError;
 
@@ -692,8 +704,7 @@ impl TryFrom<&PlanDto> for PeriodPlan {
                 .iter()
                 .map(|(k, v)| (DeptCode(k.clone()), DeptPlan::from(v)))
                 .collect(),
-            // Iznos obnove zgrade u planu dolazi s Taskom O-3 (tijelo plana); dotad 0.
-            building_renewal_cents: 0,
+            building_renewal_cents: p.building_renewal_cents.unwrap_or(0),
         })
     }
 }

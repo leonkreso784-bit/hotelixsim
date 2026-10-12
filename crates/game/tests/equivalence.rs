@@ -38,6 +38,7 @@ fn v2_monthly_degenerate_game_matches_v1_game() {
             assert!(ha.plan.departments.is_empty() && !hb.plan.departments.is_empty());
             let v1_part = dto::PlanDto {
                 departments: std::collections::BTreeMap::new(),
+                building_renewal_cents: None,
                 ..hb.plan.clone()
             };
             assert_eq!(ha.plan, v1_part, "{m:?}");

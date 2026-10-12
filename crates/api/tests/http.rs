@@ -148,12 +148,15 @@ fn openapi_documents_contract() {
         "bad_text",
         "unknown_department",
         "department_plan_invalid",
+        "renewal_unavailable",
+        "renewal_locked",
+        "renewal_out_of_range",
         "no_resolved_round",
         "season_not_over",
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
-    assert_eq!(codes.len(), 33);
+    assert_eq!(codes.len(), 36);
     let schemas = &doc["components"]["schemas"];
     assert!(schemas["FeedItemBody"]["oneOf"].is_array());
     assert_eq!(

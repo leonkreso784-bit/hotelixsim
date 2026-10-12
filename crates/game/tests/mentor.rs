@@ -39,6 +39,7 @@ fn july_plan() -> PlanDto {
         renovation: false,
         reply_reviews: false,
         departments: std::collections::BTreeMap::new(),
+        building_renewal_cents: None,
     }
 }
 
@@ -744,6 +745,7 @@ fn plan_decisions_in_words() {
         renovation: true,
         reply_reviews: true,
         departments: std::collections::BTreeMap::new(),
+        building_renewal_cents: None,
     };
     input.seasonal_before = 1;
     let p = &facts_json(&input)["odluke_u_planu"];

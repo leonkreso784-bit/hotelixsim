@@ -91,6 +91,27 @@ pub fn gain_pts(spec: &RenewalSpec, amount_cents: i64) -> Calc<i32> {
     )?)
 }
 
+/// Raspored iznosa `A` na `n0` krugova mjeseca (F4): rata `⌊A / n0⌋` u svakom krugu osim zadnjeg, a zadnji nosi
+/// ostatak `A − rata·(n0 − 1)`. Isto pravilo plaća obračun (`renew_round`) i pokazuje izbor iznosa u planu.
+pub fn installments(amount_cents: i64, n0: u8) -> Calc<(i64, i64)> {
+    let a = i128::from(amount_cents);
+    let n = i128::from(n0.max(1));
+    let installment = c::div_floor(a, n)?;
+    let last = c::sub(a, c::mul(installment, c::sub(n, 1)?)?)?;
+    Ok((c::narrow(installment)?, c::narrow(last)?))
+}
+
+/// Bodovi koje je obnova donijela do sada (prije granice 100): `div_round(E·plaćeno, A)`; zbroj Δ kruga do sada.
+pub fn gained_pts(r: &Renewal) -> Calc<i32> {
+    if r.total_cents <= 0 {
+        return Ok(0);
+    }
+    c::narrow(c::div_round(
+        c::mul(i128::from(r.gain_pts), i128::from(r.paid_cents))?,
+        i128::from(r.total_cents),
+    )?)
+}
+
 /// Obnova jednog dijela u krugu: plaćeno u krugu i bodovi koje krug donosi (prije granice 100).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct RoundRenewal {
@@ -111,11 +132,11 @@ pub fn renew_round(
     let m = p.start_month();
     book.roll(m)?;
     if book.locked_in(m).is_none() && amount_cents > 0 {
-        let n0 = rounds_left_in_month(p);
+        let (installment_cents, _) = installments(amount_cents, rounds_left_in_month(p))?;
         book.renewal = Some(Renewal {
             month: m,
             total_cents: amount_cents,
-            installment_cents: c::narrow(c::div_floor(i128::from(amount_cents), i128::from(n0))?)?,
+            installment_cents,
             paid_cents: 0,
             gain_pts: gain_pts(spec, amount_cents)?,
         });

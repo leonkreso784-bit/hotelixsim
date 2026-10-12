@@ -16,6 +16,7 @@ pub mod ids;
 pub mod kpi;
 mod mentor;
 mod model;
+pub mod renewal;
 mod resolve;
 mod round;
 pub mod season;

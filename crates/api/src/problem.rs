@@ -35,6 +35,9 @@ pub enum ProblemCode {
     GameOutdated,
     InvalidSettings,
     DepartmentPlanInvalid,
+    RenewalUnavailable,
+    RenewalLocked,
+    RenewalOutOfRange,
     NoResolvedRound,
     SeasonNotOver,
     ModelV1,
@@ -76,6 +79,9 @@ impl From<app::ErrorCode> for ProblemCode {
             E::GameOutdated => Self::GameOutdated,
             E::InvalidSettings => Self::InvalidSettings,
             E::DepartmentPlanInvalid => Self::DepartmentPlanInvalid,
+            E::RenewalUnavailable => Self::RenewalUnavailable,
+            E::RenewalLocked => Self::RenewalLocked,
+            E::RenewalOutOfRange => Self::RenewalOutOfRange,
             E::InvalidBody => Self::InvalidBody,
             E::NoResolvedRound => Self::NoResolvedRound,
             E::SeasonNotOver => Self::SeasonNotOver,
@@ -117,6 +123,15 @@ impl ProblemCode {
             Self::InvalidSettings => "Te postavke igre nisu dopuštene.",
             Self::DepartmentPlanInvalid => {
                 "Postavke odjela nisu dopuštene: provjeri broj sezonaca, razinu cijena i odjele koji se ne smiju zatvoriti."
+            }
+            Self::RenewalUnavailable => {
+                "Ovdje se obnova ne bira. U ovoj igri obnova se bira iznosom, po odjelu i za zgradu."
+            }
+            Self::RenewalLocked => {
+                "Obnova je za ovaj mjesec već odlučena i ne mijenja se do kraja mjeseca."
+            }
+            Self::RenewalOutOfRange => {
+                "Iznos obnove nije dopušten: provjeri najveći mjesečni iznos i korak."
             }
             Self::NoResolvedRound => "Još nijedan krug nije obračunan, pa nema računa dobiti.",
             Self::SeasonNotOver => {

@@ -43,16 +43,38 @@ fn pl_lines_align_actual_and_budget() {
         pl.actual.ebitda_cents,
         pl.actual.gop_cents - pl.actual.total_fixed_charges_cents
     );
+    // Obnova v2 (O-3, svjesna izmjena): iza EBITDA dolaze sekcije Amortizacija (oprema, zgrada, ukupno) i EBIT.
+    // Njihovi retci nemaju ime iz sadržaja (`names`), nego stalno ime u API-ju, kao GOP i EBITDA.
+    use sim_hotel_v2::usali::Section;
     for l in &pl.lines {
         assert_eq!(l.variance_cents, l.actual_cents - l.budget_cents);
         assert!(
             pl.names.contains_key(&l.code)
                 || l.is_total
-                || ["gop", "ebitda"].contains(&l.code.as_str()),
+                || ["gop", "ebitda", "ebit"].contains(&l.code.as_str())
+                || (l.section == Section::Depreciation
+                    && ["equipment", "building"].contains(&l.code.as_str())),
             "{}",
             l.code
         );
     }
+    let tail: Vec<(Section, &str, i64)> = pl
+        .lines
+        .iter()
+        .skip_while(|l| l.section != Section::Ebitda)
+        .map(|l| (l.section, l.code.as_str(), l.budget_cents))
+        .collect();
+    assert_eq!(
+        tail,
+        [
+            (Section::Ebitda, "ebitda", pl.budget.ebitda_cents),
+            (Section::Depreciation, "equipment", 0),
+            (Section::Depreciation, "building", 0),
+            (Section::Depreciation, "total", 0),
+            (Section::Ebit, "ebit", pl.budget.ebitda_cents),
+        ]
+    );
+    assert_eq!(pl.actual.ebit_cents, pl.actual.ebitda_cents); // sadržaj bez obnove: amortizacija 0
     let gop = pl.lines.iter().find(|l| l.code == "gop").unwrap();
     assert_eq!(
         gop.actual_cents,

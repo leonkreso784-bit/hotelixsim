@@ -99,7 +99,10 @@ async fn pl_has_sections_in_usali_order_and_aligned_lines() {
             "undistributed",
             "gop",
             "fixed_charges",
-            "ebitda"
+            "ebitda",
+            // Obnova v2 (O-3): amortizacija i EBIT ispod EBITDA.
+            "depreciation",
+            "ebit"
         ]
     );
     for s in r.body["sections"].as_array().unwrap() {

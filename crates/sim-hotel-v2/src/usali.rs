@@ -197,7 +197,8 @@ fn assemble(
 
 /// Račun dobiti jednog razdoblja. Rashodi odjela = plaće + nabavna vrijednost + ostali izravni (održavanje je u
 /// „Održavanju"); `room_nights = sobe · dani`; ispod EBITDA amortizacija (daje EBIT, koji ulazi u indeks F kad
-/// sadržaj tako kaže), a kamata i ulaganja (capex) su samo za prikaz.
+/// sadržaj tako kaže). Kamata i ulaganja (capex) nisu retci računa: ulaganja su plaćena iz blagajne (ispod EBITDA,
+/// kao promjena blagajne), a u račun dobiti ulaze samo kroz amortizaciju.
 pub fn statement(a: &PeriodAccounts) -> Calc<UsaliStatement> {
     let departments = a
         .departments
@@ -304,6 +305,10 @@ pub enum Section {
     Gop,
     FixedCharges,
     Ebitda,
+    /// Amortizacija iz obnove v2 (oprema odjela, zgrada, ukupno), ispod EBITDA.
+    Depreciation,
+    /// EBIT = EBITDA − amortizacija.
+    Ebit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -313,8 +318,8 @@ pub enum LineKind {
     Result,
 }
 
-/// `is_total` označava samo retke "total" sekcija s više redaka; GOP i EBITDA su pojedinačni retci vrste `Result` s
-/// `is_total = false` — sučelje ih mora isticati po sekciji/vrsti, ne po `is_total`.
+/// `is_total` označava samo retke "total" sekcija s više redaka; GOP, EBITDA i EBIT su pojedinačni retci vrste `Result`
+/// s `is_total = false` — sučelje ih mora isticati po sekciji/vrsti, ne po `is_total`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VarianceLine {
     pub section: Section,
@@ -368,8 +373,9 @@ fn section_lines(
 }
 
 /// Retci oba izvješća (unija kodova; kojeg nema → 0), redom sekcija; `variance = actual − budget`. Svaka sekcija s
-/// više redaka ima i redak `is_total` (kod "total"); Gop i Ebitda imaju po jedan redak ("gop", "ebitda", `is_total`
-/// false). Odjeli su poredani kao u računu dobiti: rang razreda, pa kod.
+/// više redaka ima i redak `is_total` (kod "total"); Gop, Ebitda i Ebit imaju po jedan redak ("gop", "ebitda",
+/// "ebit", `is_total` false). Amortizacija ima retke "equipment" i "building" pa "total" (obnova v2; budžet je zadani
+/// plan bez obnove, pa 0). Odjeli su poredani kao u računu dobiti: rang razreda, pa kod.
 pub fn budget_variance(actual: &UsaliStatement, budget: &UsaliStatement) -> Vec<VarianceLine> {
     let dept_rows = |pick: fn(&DeptAccount) -> i64| {
         let mut m: BTreeMap<(u8, String), (i64, i64)> = BTreeMap::new();
@@ -473,6 +479,36 @@ pub fn budget_variance(actual: &UsaliStatement, budget: &UsaliStatement) -> Vec<
         LineKind::Result,
         false,
         (actual.ebitda_cents, budget.ebitda_cents),
+    ));
+    let depreciation = BTreeMap::from([
+        (
+            (0, "equipment".to_string()),
+            (
+                actual.depreciation_equipment_cents,
+                budget.depreciation_equipment_cents,
+            ),
+        ),
+        (
+            (1, "building".to_string()),
+            (
+                actual.depreciation_building_cents,
+                budget.depreciation_building_cents,
+            ),
+        ),
+    ]);
+    section_lines(
+        &mut out,
+        Section::Depreciation,
+        LineKind::Expense,
+        &depreciation,
+        (actual.depreciation_cents, budget.depreciation_cents),
+    );
+    out.push(line(
+        Section::Ebit,
+        "ebit",
+        LineKind::Result,
+        false,
+        (actual.ebit_cents, budget.ebit_cents),
     ));
     out
 }

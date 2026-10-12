@@ -32,6 +32,9 @@ pub enum ErrorCode {
     GameOutdated,
     InvalidSettings,
     DepartmentPlanInvalid,
+    RenewalUnavailable,
+    RenewalLocked,
+    RenewalOutOfRange,
     InvalidBody,
     NoResolvedRound,
     SeasonNotOver,
@@ -52,7 +55,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 32] = [
+    pub const ALL: [ErrorCode; 35] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -79,6 +82,9 @@ impl ErrorCode {
         ErrorCode::GameOutdated,
         ErrorCode::InvalidSettings,
         ErrorCode::DepartmentPlanInvalid,
+        ErrorCode::RenewalUnavailable,
+        ErrorCode::RenewalLocked,
+        ErrorCode::RenewalOutOfRange,
         ErrorCode::InvalidBody,
         ErrorCode::NoResolvedRound,
         ErrorCode::SeasonNotOver,
@@ -108,6 +114,9 @@ impl ErrorCode {
             | RenovationTwice
             | InvalidSettings
             | DepartmentPlanInvalid
+            | RenewalUnavailable
+            | RenewalLocked
+            | RenewalOutOfRange
             | InvalidBody => ErrorKind::Invalid,
             StorageUnavailable => ErrorKind::Unavailable,
             Internal => ErrorKind::Internal,
@@ -144,6 +153,9 @@ impl ErrorCode {
             GameOutdated => "game_outdated",
             InvalidSettings => "invalid_settings",
             DepartmentPlanInvalid => "department_plan_invalid",
+            RenewalUnavailable => "renewal_unavailable",
+            RenewalLocked => "renewal_locked",
+            RenewalOutOfRange => "renewal_out_of_range",
             InvalidBody => "invalid_body",
             NoResolvedRound => "no_resolved_round",
             SeasonNotOver => "season_not_over",
@@ -218,11 +230,10 @@ impl From<GameError> for AppError {
                 | PlanErrorV2::DepartmentSeasonalOutOfRange
                 | PlanErrorV2::ClosedWithSeasonal
                 | PlanErrorV2::PriceLevelOutOfRange => C::DepartmentPlanInvalid,
-                // Obnova v2: vlastite šifre (renewal_*) dolaze s Taskom O-3; dotad je sadržaj bez obnove pa do
-                // ovih grešaka ne dolazi.
-                PlanErrorV2::RenewalUnavailable
-                | PlanErrorV2::RenewalLocked
-                | PlanErrorV2::RenewalOutOfRange => C::DepartmentPlanInvalid,
+                // Obnova v2 (obnova-v2-spec §4.3): svaka greška svoja šifra.
+                PlanErrorV2::RenewalUnavailable => C::RenewalUnavailable,
+                PlanErrorV2::RenewalLocked => C::RenewalLocked,
+                PlanErrorV2::RenewalOutOfRange => C::RenewalOutOfRange,
             },
             GameError::Outdated { .. } => C::GameOutdated,
             GameError::InvalidSettings => C::InvalidSettings,

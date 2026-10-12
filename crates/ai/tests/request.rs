@@ -162,6 +162,7 @@ fn sample_debrief() -> game::DebriefInput {
             renovation: false,
             reply_reviews: false,
             departments: std::collections::BTreeMap::new(),
+            building_renewal_cents: None,
         },
         price_ref_cents: 12_000,
         seasonal_before: 14,

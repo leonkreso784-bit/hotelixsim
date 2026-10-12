@@ -11,6 +11,7 @@ use crate::event::*;
 use crate::game::{Game, RoundStatus};
 use crate::ids::{GameId, GuestId, HotelId};
 use crate::model::{CorePlan, Model};
+use crate::renewal::RenewalChoice;
 use crate::round::RoundKey;
 
 const ROBOTS: [(&str, &str); 3] = [
@@ -230,7 +231,7 @@ impl Game {
 }
 
 /// Granice jednog odjela u planu v2 (zrcalo `sim_hotel_v2::plan::DeptLimits`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DeptLimitsView {
     pub seasonal_min: u16,
     pub seasonal_max: u16,
@@ -241,6 +242,8 @@ pub struct DeptLimitsView {
     pub maintenance: LevelCosts,
     /// Plaća jednog sezonskog radnika odjela za krug, pri sadašnjem postotku plaće.
     pub seasonal_worker_cents: i64,
+    /// Obnova v2 odjela: izbor iznosa; `None` kad obnova nije ponuđena (neraspoređeni, lokal, sadržaj bez obnove).
+    pub renewal: Option<RenewalChoice>,
 }
 
 /// Granice izbornika radnji za ekran.

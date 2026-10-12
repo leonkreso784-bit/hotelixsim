@@ -12,7 +12,7 @@ use utoipa::{IntoParams, ToSchema};
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{parse_hotel, parse_round};
+use crate::schema::{RenewalStateBody, parse_hotel, parse_round};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
@@ -75,6 +75,15 @@ pub struct DeptRoundBody {
     pub satisfaction_after_pts: i32,
     /// Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).
     pub departures: u16,
+    /// Obnova plaćena u krugu (obnova v2; ulaganje iz blagajne, nije trošak odjela).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal_cents: Option<i64>,
+    /// Bodovi stanja koje je obnova u krugu stvarno donijela (nakon granice 100).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal_pts: Option<i32>,
+    /// Stanje koje gost osjeća: stanje odjela pomiješano sa stanjem zgrade (0–10 000).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub felt_condition_pts: Option<i32>,
 }
 
 impl DeptRoundBody {
@@ -104,6 +113,9 @@ impl DeptRoundBody {
             satisfaction_before_pts: o.satisfaction_before_pts,
             satisfaction_after_pts: o.satisfaction_after_pts,
             departures: o.departures,
+            renewal_cents: Some(o.renewal_cents),
+            renewal_pts: Some(o.renewal_pts),
+            felt_condition_pts: Some(o.felt_condition_pts),
         }
     }
 }
@@ -156,6 +168,15 @@ pub struct DepartmentBody {
     pub seasonal: u16,
     /// Stanje prostora 0–10 000 (na ekranu 0–100).
     pub condition_pts: i32,
+    /// Početno stanje prostora iz profila (0–10 000).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_condition_pts: Option<i32>,
+    /// Uloženo u obnovu odjela do sada, u centima.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub invested_cents: Option<i64>,
+    /// Obnova odjela odlučena u mjesecu trenutnog kruga (zaključana do kraja mjeseca); izostavljeno bez nje.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal: Option<RenewalStateBody>,
     /// Zadovoljstvo gostiju odjelom 0–10 000; `null` za odjele bez gostiju.
     #[schema(required = true)]
     pub guest_satisfaction_pts: Option<i32>,
@@ -178,6 +199,9 @@ impl From<&DepartmentView> for DepartmentBody {
             permanent: d.permanent,
             seasonal: d.seasonal,
             condition_pts: d.condition_pts,
+            start_condition_pts: Some(d.start_condition_pts),
+            invested_cents: Some(d.invested_cents),
+            renewal: d.renewal.as_ref().map(RenewalStateBody::from),
             guest_satisfaction_pts: d.guest_satisfaction_pts,
             last: d.last.as_ref().map(|(r, o)| DeptRoundBody::of(*r, o)),
             service_last: d
@@ -281,6 +305,10 @@ pub enum PlSectionCode {
     Gop,
     FixedCharges,
     Ebitda,
+    /// Amortizacija iz obnove (oprema, zgrada, ukupno), ispod EBITDA.
+    Depreciation,
+    /// EBIT = EBITDA − amortizacija.
+    Ebit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
@@ -308,7 +336,7 @@ pub struct PlLineBody {
 pub struct PlSectionBody {
     pub section: PlSectionCode,
     pub lines: Vec<PlLineBody>,
-    /// Zbroj sekcije (sekcije s više redaka); GOP i EBITDA su jedan redak u `lines`, pa je `null`.
+    /// Zbroj sekcije (sekcije s više redaka); GOP, EBITDA i EBIT su jedan redak u `lines`, pa je `null`.
     #[schema(required = true)]
     pub total: Option<PlLineBody>,
 }
@@ -334,9 +362,15 @@ pub struct PlBody {
     pub gop_margin_bp: PlRatioBody,
     pub goppar_cents: PlRatioBody,
     pub ebitda_margin_bp: PlRatioBody,
+    /// EBIT kao udio prihoda (bazni bodovi).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebit_margin_bp: Option<PlRatioBody>,
+    /// Ulaganja u obnovu: plaćeno iz blagajne, nije trošak (u račun dobiti ulazi samo amortizacija).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capex_cents: Option<PlRatioBody>,
 }
 
-const SECTIONS: [(Section, PlSectionCode); 7] = [
+const SECTIONS: [(Section, PlSectionCode); 9] = [
     (Section::Revenue, PlSectionCode::Revenue),
     (
         Section::DepartmentalExpenses,
@@ -350,6 +384,8 @@ const SECTIONS: [(Section, PlSectionCode); 7] = [
     (Section::Gop, PlSectionCode::Gop),
     (Section::FixedCharges, PlSectionCode::FixedCharges),
     (Section::Ebitda, PlSectionCode::Ebitda),
+    (Section::Depreciation, PlSectionCode::Depreciation),
+    (Section::Ebit, PlSectionCode::Ebit),
 ];
 
 /// Ime redaka zbroja i rezultata po sekciji (imena odjela i naknada dolaze iz sadržaja kroz `PlView::names`).
@@ -362,6 +398,10 @@ fn fixed_name(section: Section, code: &str) -> Option<&'static str> {
         (Section::Gop, "gop") => Some("Bruto operativna dobit (GOP)"),
         (Section::FixedCharges, "total") => Some("Ukupne fiksne naknade"),
         (Section::Ebitda, "ebitda") => Some("EBITDA (dobit prije kamata, poreza i amortizacije)"),
+        (Section::Depreciation, "equipment") => Some("Amortizacija opreme"),
+        (Section::Depreciation, "building") => Some("Amortizacija zgrade"),
+        (Section::Depreciation, "total") => Some("Ukupna amortizacija"),
+        (Section::Ebit, "ebit") => Some("EBIT (dobit iz poslovanja, prije kamata i poreza)"),
         _ => None,
     }
 }
@@ -421,6 +461,8 @@ impl PlBody {
             gop_margin_bp: ratio(a.gop_margin_bp, b.gop_margin_bp),
             goppar_cents: ratio(a.goppar_cents, b.goppar_cents),
             ebitda_margin_bp: ratio(a.ebitda_margin_bp, b.ebitda_margin_bp),
+            ebit_margin_bp: Some(ratio(a.ebit_margin_bp, b.ebit_margin_bp)),
+            capex_cents: Some(ratio(Some(a.capex_cents), Some(b.capex_cents))),
         }
     }
 }

@@ -1469,6 +1469,48 @@
         },
         "additionalProperties": false
       },
+      "BuildingBody": {
+        "type": "object",
+        "description": "Zgrada hotela (v2).",
+        "required": [
+          "condition_pts",
+          "start_pts",
+          "wear_pts_per_month",
+          "locked",
+          "invested_cents"
+        ],
+        "properties": {
+          "condition_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Stanje zgrade 0–10 000 (na ekranu 0–100)."
+          },
+          "invested_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "locked": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalStateBody",
+                "description": "Obnova zgrade odlučena u mjesecu trenutnog kruga."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wear_pts_per_month": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Trošenje u bodovima mjesečno (50 = 0,5 boda)."
+          }
+        }
+      },
       "CauseCode": {
         "type": "string",
         "description": "Uzrok promjene; šifra situacije ide u zasebno polje stavke, ne ovdje.",
@@ -1675,6 +1717,14 @@
             "format": "int32",
             "description": "Zadovoljstvo gostiju odjelom 0–10 000; `null` za odjele bez gostiju."
           },
+          "invested_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Uloženo u obnovu odjela do sada, u centima."
+          },
           "last": {
             "oneOf": [
               {
@@ -1697,6 +1747,17 @@
             "format": "int32",
             "minimum": 0
           },
+          "renewal": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalStateBody",
+                "description": "Obnova odjela odlučena u mjesecu trenutnog kruga (zaključana do kraja mjeseca); izostavljeno bez nje."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "seasonal": {
             "type": "integer",
             "format": "int32",
@@ -1712,6 +1773,14 @@
                 "type": "null"
               }
             ]
+          },
+          "start_condition_pts": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Početno stanje prostora iz profila (0–10 000)."
           }
         }
       },
@@ -1799,6 +1868,17 @@
             "format": "int32",
             "minimum": 0
           },
+          "renewal": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalLimitsBody",
+                "description": "Obnova odjela (v2): izbor iznosa; izostavljeno kad je odjel ne nudi."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "seasonal_max": {
             "type": "integer",
             "format": "int32",
@@ -1836,6 +1916,14 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "renewal_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Iznos obnove odjela za mjesec kruga, u centima. Bez njega se zadržava iznos važećeg plana (zaključana obnova\nostaje); u odgovoru uvijek postoji."
           },
           "seasonal_target": {
             "type": "integer",
@@ -1905,6 +1993,14 @@
             "description": "Zaposleni odjela koji su u krugu otišli (zamijenjeni novima; trošak zamjene je u Upravi).",
             "minimum": 0
           },
+          "felt_condition_pts": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Stanje koje gost osjeća: stanje odjela pomiješano sa stanjem zgrade (0–10 000)."
+          },
           "load_hundredths": {
             "type": "integer",
             "format": "int32",
@@ -1950,6 +2046,22 @@
           "quality_pts": {
             "type": "integer",
             "format": "int32"
+          },
+          "renewal_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Obnova plaćena u krugu (obnova v2; ulaganje iz blagajne, nije trošak odjela)."
+          },
+          "renewal_pts": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Bodovi stanja koje je obnova u krugu stvarno donijela (nakon granice 100)."
           },
           "revenue_cents": {
             "type": "integer",
@@ -3040,10 +3152,32 @@
           "ebitda_margin_bp"
         ],
         "properties": {
+          "capex_cents": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PlRatioBody",
+                "description": "Ulaganja u obnovu: plaćeno iz blagajne, nije trošak (u račun dobiti ulazi samo amortizacija)."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "days": {
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "ebit_margin_bp": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PlRatioBody",
+                "description": "EBIT kao udio prihoda (bazni bodovi)."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "ebitda_margin_bp": {
             "$ref": "#/components/schemas/PlRatioBody"
@@ -3179,7 +3313,7 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/PlLineBody",
-                "description": "Zbroj sekcije (sekcije s više redaka); GOP i EBITDA su jedan redak u `lines`, pa je `null`."
+                "description": "Zbroj sekcije (sekcije s više redaka); GOP, EBITDA i EBIT su jedan redak u `lines`, pa je `null`."
               },
               {
                 "type": "null"
@@ -3197,7 +3331,9 @@
           "undistributed",
           "gop",
           "fixed_charges",
-          "ebitda"
+          "ebitda",
+          "depreciation",
+          "ebit"
         ]
       },
       "PlanBody": {
@@ -3214,6 +3350,14 @@
           "reply_reviews"
         ],
         "properties": {
+          "building_renewal_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Iznos obnove zgrade za mjesec kruga, u centima (samo v2). Bez njega se zadržava iznos važećeg plana; u odgovoru\nv2 plana uvijek postoji."
+          },
           "departments": {
             "type": [
               "object",
@@ -3275,6 +3419,17 @@
           "payroll_round_cents"
         ],
         "properties": {
+          "building_renewal": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalLimitsBody",
+                "description": "Obnova zgrade (v2): izbor iznosa; izostavljeno u v1 i kad obnova zgrade nije ponuđena."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "maintenance": {
             "$ref": "#/components/schemas/LevelCostsBody",
             "description": "Održavanje hotela (v1) odnosno Smještaja (v2) u krugu."
@@ -3288,6 +3443,17 @@
             "type": "integer",
             "format": "int64",
             "description": "Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje)."
+          },
+          "renewal_guide": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalGuideBody",
+                "description": "Smjernica ulaganja u sezoni (v2 s obnovom); izostavljeno u v1 i u igri bez obnove po iznosu."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "renovation_cents": {
             "type": "integer",
@@ -3428,6 +3594,17 @@
           "plan"
         ],
         "properties": {
+          "building": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BuildingBody",
+                "description": "Zgrada (v2); izostavljeno u v1 igri."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "last_month": {
             "oneOf": [
               {
@@ -3512,6 +3689,9 @@
           "game_outdated",
           "invalid_settings",
           "department_plan_invalid",
+          "renewal_unavailable",
+          "renewal_locked",
+          "renewal_out_of_range",
           "no_resolved_round",
           "season_not_over",
           "model_v1",
@@ -3634,6 +3814,190 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          }
+        }
+      },
+      "RenewalGuideBody": {
+        "type": "object",
+        "description": "Smjernica ulaganja u sezoni: pričuva za obnovu (FF&E) kao udio prihoda sezone iz budžeta.",
+        "required": [
+          "reserve_bp",
+          "season_revenue_budget_cents",
+          "guide_cents",
+          "invested_cents"
+        ],
+        "properties": {
+          "guide_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "invested_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Uloženo do sada (svi odjeli i zgrada)."
+          },
+          "reserve_bp": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Udio prihoda u baznim bodovima (400 = 4 %).",
+            "minimum": 0
+          },
+          "season_revenue_budget_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RenewalLimitsBody": {
+        "type": "object",
+        "description": "Obnova jednog dijela (odjel ili zgrada) u krugu: izbor iznosa i, ako je već odlučena, zaključana obnova.",
+        "required": [
+          "month",
+          "rounds_left",
+          "max_monthly_cents",
+          "step_cents",
+          "life_months",
+          "condition_pts",
+          "locked",
+          "options"
+        ],
+        "properties": {
+          "condition_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Stanje sada (bodovi 0–10 000; na ekranu 0–100)."
+          },
+          "life_months": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Vijek za amortizaciju u mjesecima.",
+            "minimum": 0
+          },
+          "locked": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RenewalStateBody",
+                "description": "Obnova već odlučena u ovom mjesecu; ne mijenja se do kraja mjeseca."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_monthly_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode",
+            "description": "Mjesec kruga: odluka vrijedi taj mjesec."
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RenewalOptionBody"
+            },
+            "description": "0, korak, 2·korak … najviše."
+          },
+          "rounds_left": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Krugova mjeseca od ovoga (uključivo); na toliko rata se dijeli iznos odlučen sada.",
+            "minimum": 0
+          },
+          "step_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RenewalOptionBody": {
+        "type": "object",
+        "description": "Jedan iznos obnove s ratama, učinkom i amortizacijom.",
+        "required": [
+          "amount_cents",
+          "installment_cents",
+          "last_installment_cents",
+          "gain_pts",
+          "gain_capped_pts",
+          "depreciation_monthly_cents"
+        ],
+        "properties": {
+          "amount_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "depreciation_monthly_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Mjesečna amortizacija, od idućeg mjeseca."
+          },
+          "gain_capped_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak do granice 100 iz sadašnjeg stanja (približno: stanje se do kraja mjeseca još troši i održava)."
+          },
+          "gain_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak cijelog iznosa za mjesec (bodovi 0–10 000)."
+          },
+          "installment_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaća se ovaj i svaki idući krug mjeseca osim zadnjeg."
+          },
+          "last_installment_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Zadnji krug mjeseca (ostatak); u mjesečnoj igri cijeli iznos."
+          }
+        }
+      },
+      "RenewalStateBody": {
+        "type": "object",
+        "description": "Obnova odlučena u mjesecu (zaključana do kraja mjeseca).",
+        "required": [
+          "month",
+          "total_cents",
+          "installment_cents",
+          "paid_cents",
+          "rounds_left",
+          "gain_pts",
+          "gained_pts"
+        ],
+        "properties": {
+          "gain_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak cijelog iznosa (bodovi 0–10 000)."
+          },
+          "gained_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak plaćenog do sada (prije granice 100)."
+          },
+          "installment_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Rata svakog kruga mjeseca osim zadnjeg (zadnji nosi ostatak)."
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
+          },
+          "paid_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rounds_left": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko krugova mjeseca još plaća; 0 = plaćeno.",
+            "minimum": 0
+          },
+          "total_cents": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -3871,12 +4235,19 @@
             "type": "integer",
             "format": "int64"
           },
+          "renewals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeasonRenewalBody"
+            },
+            "description": "Obnove po iznosu (v2) po mjesecu i dijelu, redom mjeseca; izostavljeno kad ih nije bilo."
+          },
           "renovation_round": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Kod kruga obnove; prazno ako obnove nije bilo."
+            "description": "Kod kruga obnove (stari oblik: jedna kvačica); prazno ako obnove nije bilo."
           },
           "reply_reviews_rounds": {
             "type": "integer",
@@ -3937,6 +4308,22 @@
           "cash_start_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "depreciation_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Amortizacija sezone iz obnove (ispod EBITDA), isti broj kao račun dobiti za sezonu."
+          },
+          "ebit_cents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "EBIT sezone = EBITDA − amortizacija."
           },
           "gop_cents": {
             "type": "integer",
@@ -4059,6 +4446,32 @@
         "properties": {
           "text": {
             "type": "string"
+          }
+        }
+      },
+      "SeasonRenewalBody": {
+        "type": "object",
+        "description": "Obnova jednog dijela u jednom mjesecu sezone.",
+        "required": [
+          "asset_code",
+          "asset_name",
+          "month",
+          "amount_cents"
+        ],
+        "properties": {
+          "amount_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "asset_code": {
+            "type": "string",
+            "description": "Kod odjela ili `building` (zgrada)."
+          },
+          "asset_name": {
+            "type": "string"
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthCode"
           }
         }
       },

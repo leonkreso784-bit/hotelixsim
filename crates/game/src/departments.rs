@@ -16,6 +16,7 @@ use crate::error::{GameError, corrupt};
 use crate::event::HotelResolution;
 use crate::game::Game;
 use crate::ids::HotelId;
+use crate::renewal::RenewalStatus;
 use crate::round::RoundKey;
 
 /// Jedan odjel hotela: stanje na kraju zadnjeg obračunatog kruga i njegov zadnji rezultat.
@@ -29,6 +30,12 @@ pub struct DepartmentView {
     pub permanent: u16,
     pub seasonal: u16,
     pub condition_pts: i32,
+    /// Početno stanje prostora iz profila (obnova v2: okidač robota i usporedba).
+    pub start_condition_pts: i32,
+    /// Uloženo u obnovu odjela do sada (kapitalizirano + plaćeno u tekućem mjesecu).
+    pub invested_cents: i64,
+    /// Obnova odjela odlučena u mjesecu trenutnog kruga; `None` bez nje ili kad je sezona gotova.
+    pub renewal: Option<RenewalStatus>,
     /// Zadovoljstvo gostiju OVIM odjelom (`DeptState::satisfaction_pts`), 0–10 000. Nije hotelsko zadovoljstvo
     /// (indeks): hotelsko uključuje i obnovu i situacije, odjelno ne. Za Smještaj je to također odjelna brojka.
     /// `None` za odjele bez gostiju (neraspoređeni, najam, parking).
@@ -165,6 +172,9 @@ impl Game {
                 permanent: ds.permanent,
                 seasonal: ds.seasonal,
                 condition_pts: ds.condition_pts,
+                start_condition_pts: ds.start_condition_pts,
+                invested_cents: ds.book.invested_cents(),
+                renewal: self.dept_renewal_status(&ds.book)?,
                 guest_satisfaction_pts,
                 last: last.and_then(|(r, a)| a.departments.get(code).map(|o| (*r, o.clone()))),
                 undistributed_last: last
