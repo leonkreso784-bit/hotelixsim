@@ -262,3 +262,13 @@ fn building_and_reserve() {
     assert_eq!(pts, [8_000, 4_500, 6_500]);
     assert!(c.renewal_enabled());
 }
+
+/// Korak d′ (Leonova odluka): F iz GOP-a nakon ulaganja — GOP po sobi i danu umanjen za amortizaciju obnova, bez
+/// fiksnih naknada; nazivnik ostaje GOPPAR referentnog hotela (O12).
+#[test]
+fn finance_index_is_gop_after_investment() {
+    assert_eq!(
+        v2().economy.finance_index,
+        sim_hotel_v2::FinanceBasis::GopAfterInvestment
+    );
+}

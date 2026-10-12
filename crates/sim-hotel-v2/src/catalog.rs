@@ -60,12 +60,15 @@ impl BuildingSpec {
     }
 }
 
-/// Osnova financijskog indeksa F (obnova-v2-spec §3.9): GOP po sobi i danu (v1) ili EBIT po sobi i danu (nakon
-/// amortizacije i fiksnih naknada, nazivnik ostaje GOPPAR referentnog hotela — O12).
+/// Osnova financijskog indeksa F (obnova-v2-spec §3.9): GOP po sobi i danu (v1), EBIT po sobi i danu (nakon
+/// amortizacije i fiksnih naknada) ili GOP nakon ulaganja (GOP umanjen samo za amortizaciju obnova — Leonova odluka
+/// O-2 d′: upravitelja se ocjenjuje po onome što kontrolira, fiksne naknade su ispod GOP-a). Nazivnik je uvijek
+/// GOPPAR referentnog hotela (O12).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FinanceBasis {
     Gop,
     Ebit,
+    GopAfterInvestment,
 }
 
 impl FinanceBasis {
@@ -74,6 +77,7 @@ impl FinanceBasis {
         match self {
             FinanceBasis::Gop => "gop",
             FinanceBasis::Ebit => "ebit",
+            FinanceBasis::GopAfterInvestment => "gop_after_investment",
         }
     }
 
@@ -81,6 +85,7 @@ impl FinanceBasis {
         match s {
             "gop" => Some(FinanceBasis::Gop),
             "ebit" => Some(FinanceBasis::Ebit),
+            "gop_after_investment" => Some(FinanceBasis::GopAfterInvestment),
             _ => None,
         }
     }

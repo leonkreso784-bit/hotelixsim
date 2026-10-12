@@ -620,6 +620,7 @@ fn finance_index_with_gop_basis_is_unchanged_and_with_ebit_follows_f11() {
                     point.goppar_cents
                         + (r.finance.ebitpar_cents - refs.ebitpar_cents[usize::from(p.index)])
                 }
+                FinanceBasis::GopAfterInvestment => unreachable!("samo GOP i EBIT"),
             };
             let raw =
                 sim_hotel::raw_indices(&r.summary.after, x, labor, point.goppar_cents, &cat.base)
@@ -715,4 +716,106 @@ fn weekly_season_with_renewal_runs_for_every_profile_and_strategy() {
             }
         }
     }
+}
+
+// ------------------------------------------------------------------ indeks F iz GOP-a nakon ulaganja (O-2 d′)
+
+/// Leonova odluka (O-2 d′): brojnik F je GOP po sobi i danu umanjen za amortizaciju obnova (od mjeseca nakon obnove),
+/// prema referentnom hotelu; fiksne naknade ne ulaze; nazivnik ostaje GOPPAR referentnog hotela. Na početku nema
+/// amortizacije, pa su početni indeksi točno oni iz GOP-a.
+#[test]
+fn gop_after_investment_start_is_the_gop_start() {
+    let mut gop = common::catalog_with_renewal();
+    gop.economy.finance_index = FinanceBasis::Gop;
+    let mut gai = gop.clone();
+    gai.economy.finance_index = FinanceBasis::GopAfterInvestment;
+    for kind in PeriodKind::ALL {
+        let periods = season_periods(kind);
+        for profile in Profile::ALL {
+            let category = gop.base.profile(profile).unwrap().category;
+            let start = |c: &Catalog| {
+                let refs = RefTable::compute(c, category, &periods).unwrap();
+                let s = HotelState::from_profile(c, profile).unwrap();
+                start_indices(&s, c, &refs).unwrap()
+            };
+            assert_eq!(start(&gai), start(&gop), "{profile:?} {kind:?}");
+        }
+    }
+}
+
+/// Ručni primjer, profil A, mjesečna igra: obnova Smještaja 150.000 € u lipnju. U lipnju nema amortizacije (O13), pa
+/// je F isti kao iz GOP-a. Od srpnja je amortizacija div_round(15.000.000, 84) = 178.571 centi mjesečno, po sobi i
+/// danu div_round(178.571, 120 · 31) = 48 centi u srpnju; F dobiva GOPPAR − 48 centi (referentni hotel ne obnavlja).
+#[test]
+fn gop_after_investment_lowers_f_by_depreciation_per_room_day() {
+    let mut gop = common::catalog_with_renewal();
+    gop.economy.finance_index = FinanceBasis::Gop;
+    let mut gai = gop.clone();
+    gai.economy.finance_index = FinanceBasis::GopAfterInvestment;
+    let periods = season_periods(PeriodKind::Month);
+    let category = gai.base.profile(Profile::A).unwrap().category;
+    let refs = RefTable::compute(&gai, category, &periods).unwrap();
+    let gop_refs = RefTable::compute(&gop, category, &periods).unwrap();
+    assert_eq!(refs.points, gop_refs.points);
+    assert!(refs.deppar_cents.iter().all(|d| *d == 0));
+    let mut s = HotelState::from_profile(&gai, Profile::A).unwrap();
+    for p in &periods {
+        let plan = if p.start_month() == Month::Jun {
+            plan_with(&s, p, &gai, &[("rooms", 150_000)], 0)
+        } else {
+            common::hold_plan(&s, p, &gai)
+        };
+        let r = resolve_period(&s, p, &plan, &[], &gai).unwrap();
+        let point = &refs.points[usize::from(p.index)];
+        let money = &r.summary.money;
+        let nights = i64::from(r.accounts.rooms) * i64::from(p.days);
+        let dep = r.finance.depreciation_cents;
+        let deppar = (2 * dep + nights) / (2 * nights);
+        match p.start_month() {
+            Month::Jun => assert_eq!(dep, 0),
+            Month::Jul => {
+                assert_eq!((dep, nights, deppar), (178_571, 3_720, 48));
+            }
+            _ => assert_eq!(dep, 178_571),
+        }
+        let labor = sim_hotel_v2::calendar::per_month_equiv(money.labor_cents, p).unwrap();
+        let raw = sim_hotel::raw_indices(
+            &r.summary.after,
+            money.goppar_cents - deppar,
+            labor,
+            point.goppar_cents,
+            &gai.base,
+        )
+        .unwrap();
+        let idx = period_indices(&r, &gai, &refs).unwrap();
+        assert_eq!(
+            idx,
+            sim_hotel::centred(&raw, &point.raw).unwrap(),
+            "{}",
+            p.code()
+        );
+        let with_gop = period_indices(&r, &gop, &gop_refs).unwrap();
+        let f = |i: &sim_hotel::IndexSet| i.get(sim_hotel_v2::Index::Finance).hundredths();
+        if dep == 0 {
+            assert_eq!(idx, with_gop, "{}", p.code());
+        } else {
+            assert!(f(&idx) < f(&with_gop), "{}", p.code());
+        }
+        s = r.after;
+    }
+}
+
+#[test]
+fn finance_basis_codes_round_trip() {
+    for b in [
+        FinanceBasis::Gop,
+        FinanceBasis::Ebit,
+        FinanceBasis::GopAfterInvestment,
+    ] {
+        assert_eq!(FinanceBasis::from_code(b.code()), Some(b));
+    }
+    assert_eq!(
+        FinanceBasis::GopAfterInvestment.code(),
+        "gop_after_investment"
+    );
 }

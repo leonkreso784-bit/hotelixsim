@@ -221,7 +221,7 @@ pub(crate) struct EconomyDto {
     /// Smjernica pričuve za obnovu (FF&E) u bp; bez ključa 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     ffe_reserve_bp: Option<u16>,
-    /// Osnova indeksa F: `gop` | `ebit`; bez ključa `gop`.
+    /// Osnova indeksa F: `gop` | `ebit` | `gop_after_investment`; bez ključa `gop`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     finance_index: Option<String>,
 }
@@ -462,7 +462,7 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
         None => FinanceBasis::Gop,
         Some(code) => FinanceBasis::from_code(code).ok_or_else(|| {
             ContentError::Invalid(format!(
-                "v2.economy.finance_index: nepoznata osnova '{code}' (gop ili ebit)"
+                "v2.economy.finance_index: nepoznata osnova '{code}' (gop, ebit ili gop_after_investment)"
             ))
         })?,
     };

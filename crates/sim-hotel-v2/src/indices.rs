@@ -6,7 +6,8 @@
 //! Financijski indeks F (obnova-v2-spec §3.9, O12): uz `FinanceBasis::Gop` v1 funkcija dobiva GOPPAR kruga; uz
 //! `FinanceBasis::Ebit` dobiva GOPPAR referentnog hotela pomaknut za razliku EBITPAR-a prema referentnom hotelu
 //! (`x = ref_goppar + (ebitpar − ref_ebitpar)`), pa je brojnik razlika EBIT-a, a nazivnik ostaje GOPPAR referentnog
-//! hotela. v1 funkcija se ne mijenja; referentni hotel prema sebi daje `x = g`.
+//! hotela. Uz `FinanceBasis::GopAfterInvestment` (O-2 d′) `x = goppar − (amortizacija po sobi i danu − ista
+//! referentnog hotela)`: bez amortizacije točno GOP. v1 funkcija se ne mijenja; referentni hotel prema sebi daje `x = g`.
 
 use engine::calc as c;
 use sim_hotel::{CatalogError, Category, IndexSet, RefPoint, centred, raw_indices};
@@ -27,6 +28,32 @@ pub struct RefTable {
     pub periods: Vec<Period>,
     pub start_ebitpar_cents: i64,
     pub ebitpar_cents: Vec<i64>,
+    /// Amortizacija referentnog hotela po sobi i danu (početak: prognoza prvog kruga) za F iz GOP-a nakon ulaganja.
+    pub start_deppar_cents: i64,
+    pub deppar_cents: Vec<i64>,
+}
+
+/// Brojke kruga koje ulaze u indeks F: GOPPAR, EBITPAR i amortizacija po sobi i danu.
+#[derive(Clone, Copy)]
+struct FinancePoint {
+    goppar: i64,
+    ebitpar: i64,
+    deppar: i64,
+}
+
+impl FinancePoint {
+    /// Amortizacija kruga po sobi i danu: `div_round(amortizacija, sobe · dani)` (nazivnik kao GOPPAR).
+    fn of(r: &PeriodReport) -> Result<FinancePoint, ResolveError> {
+        let nights = c::mul(i128::from(r.accounts.rooms), i128::from(r.accounts.days))?;
+        Ok(FinancePoint {
+            goppar: r.summary.money.goppar_cents,
+            ebitpar: r.finance.ebitpar_cents,
+            deppar: c::narrow(c::div_round(
+                i128::from(r.finance.depreciation_cents),
+                nights,
+            )?)?,
+        })
+    }
 }
 
 /// Mjesečni rad na početku (likvidnost u početnim indeksima): Σ po odjelima zaposleni · ⌊plaća odjela / 100⌋ ·
@@ -42,29 +69,34 @@ pub fn start_labor_cents(s: &HotelState, cat: &Catalog) -> Result<i64, ResolveEr
     Ok(c::narrow(c::add(wage, i128::from(s.extra_wage_cents))?)?)
 }
 
-/// GOPPAR i EBITPAR prognoze prvog kruga uz zadani plan, bez situacija.
+/// GOPPAR, EBITPAR i amortizacija po sobi i danu prognoze prvog kruga uz zadani plan, bez situacija.
 fn first_forecast(
     s: &HotelState,
     first: &Period,
     cat: &Catalog,
-) -> Result<(i64, i64), ResolveError> {
+) -> Result<FinancePoint, ResolveError> {
     let plan = PeriodPlan::default_for(s, first, cat)?;
     let r = resolve_period(s, first, &plan, &[], cat)?;
-    Ok((r.summary.money.goppar_cents, r.finance.ebitpar_cents))
+    FinancePoint::of(&r)
 }
 
 /// „GOPPAR" koji se predaje v1 `raw_indices`: uz osnovu GOP stvarni GOPPAR, uz osnovu EBIT GOPPAR referentnog
-/// hotela pomaknut za razliku EBITPAR-a (F11).
+/// hotela pomaknut za razliku EBITPAR-a (F11), uz GOP nakon ulaganja GOPPAR umanjen za razliku amortizacije po
+/// sobi i danu prema referentnom hotelu.
 fn finance_input(
     cat: &Catalog,
-    (goppar, ebitpar): (i64, i64),
-    (ref_goppar, ref_ebitpar): (i64, i64),
+    me: FinancePoint,
+    reference: FinancePoint,
 ) -> Result<i64, ResolveError> {
     match cat.economy.finance_index {
-        FinanceBasis::Gop => Ok(goppar),
+        FinanceBasis::Gop => Ok(me.goppar),
         FinanceBasis::Ebit => Ok(c::narrow(c::add(
-            i128::from(ref_goppar),
-            c::sub(i128::from(ebitpar), i128::from(ref_ebitpar))?,
+            i128::from(reference.goppar),
+            c::sub(i128::from(me.ebitpar), i128::from(reference.ebitpar))?,
+        )?)?),
+        FinanceBasis::GopAfterInvestment => Ok(c::narrow(c::sub(
+            i128::from(me.goppar),
+            c::sub(i128::from(me.deppar), i128::from(reference.deppar))?,
         )?)?),
     }
 }
@@ -87,13 +119,15 @@ impl RefTable {
                 CatalogError::Missing(format!("reference_profiles.{}", category.code()))
             })?;
         let mut s = HotelState::from_profile(cat, profile)?;
-        let (g0, e0) = first_forecast(&s, first, cat)?;
+        let f0 = first_forecast(&s, first, cat)?;
+        let g0 = f0.goppar;
         let start = RefPoint {
             raw: raw_indices(&s.summary(), g0, start_labor_cents(&s, cat)?, g0, base)?,
             goppar_cents: g0,
         };
         let mut points = Vec::with_capacity(periods.len());
         let mut ebitpar_cents = Vec::with_capacity(periods.len());
+        let mut deppar_cents = Vec::with_capacity(periods.len());
         for p in periods {
             let plan = PeriodPlan::default_for(&s, p, cat)?;
             let r = resolve_period(&s, p, &plan, &[], cat)?;
@@ -104,15 +138,19 @@ impl RefTable {
                 raw: raw_indices(&r.summary.after, g, labor, g, base)?,
                 goppar_cents: g,
             });
-            ebitpar_cents.push(r.finance.ebitpar_cents);
+            let f = FinancePoint::of(&r)?;
+            ebitpar_cents.push(f.ebitpar);
+            deppar_cents.push(f.deppar);
             s = r.after;
         }
         Ok(RefTable {
             start,
             points,
             periods: periods.to_vec(),
-            start_ebitpar_cents: e0,
+            start_ebitpar_cents: f0.ebitpar,
             ebitpar_cents,
+            start_deppar_cents: f0.deppar,
+            deppar_cents,
         })
     }
 }
@@ -131,7 +169,11 @@ pub fn start_indices(
     let x = finance_input(
         cat,
         forecast,
-        (refs.start.goppar_cents, refs.start_ebitpar_cents),
+        FinancePoint {
+            goppar: refs.start.goppar_cents,
+            ebitpar: refs.start_ebitpar_cents,
+            deppar: refs.start_deppar_cents,
+        },
     )?;
     let summary = s.summary();
     let raw = raw_indices(
@@ -156,13 +198,13 @@ pub fn period_indices(
     let missing = || CatalogError::Missing(format!("ref_table.{}", r.period.code()));
     let i = usize::from(r.period.index);
     let p = refs.points.get(i).ok_or_else(missing)?;
-    let ref_ebitpar = refs.ebitpar_cents.get(i).copied().ok_or_else(missing)?;
+    let reference = FinancePoint {
+        goppar: p.goppar_cents,
+        ebitpar: refs.ebitpar_cents.get(i).copied().ok_or_else(missing)?,
+        deppar: refs.deppar_cents.get(i).copied().ok_or_else(missing)?,
+    };
     let money = &r.summary.money;
-    let x = finance_input(
-        cat,
-        (money.goppar_cents, r.finance.ebitpar_cents),
-        (p.goppar_cents, ref_ebitpar),
-    )?;
+    let x = finance_input(cat, FinancePoint::of(r)?, reference)?;
     let raw = raw_indices(
         &r.summary.after,
         x,
