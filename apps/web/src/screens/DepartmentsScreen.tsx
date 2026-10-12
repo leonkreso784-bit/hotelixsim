@@ -11,6 +11,7 @@ import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { DepartmentCard } from "./departments/DepartmentCard";
 import { DepartmentDetail } from "./departments/DepartmentDetail";
 import { isService } from "./departments/helpers";
+import { LEVEL_GOOD_FROM, LEVEL_MID_FROM } from "./departments/levels";
 import { ServiceList } from "./departments/ServiceCard";
 
 export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | null }) {
@@ -75,8 +76,16 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
       </div>
       <div className={`min-w-0 ${code === null ? "hidden lg:block" : ""}`}>
         {code === null ? (
-          <Card>
+          // Desno okno od 1024 px: uz uputu i kako čitati ocjenu, da okno ne bude prazno (M-5).
+          <Card className="space-y-2">
             <p className="text-muted">{t("dept.pick")}</p>
+            <p className="text-sm text-muted">
+              {t("dept.legend", {
+                good: LEVEL_GOOD_FROM,
+                mid: LEVEL_MID_FROM,
+                midTo: LEVEL_GOOD_FROM - 1,
+              })}
+            </p>
           </Card>
         ) : gameFailed ? (
           <div className="space-y-3">

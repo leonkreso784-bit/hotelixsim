@@ -230,8 +230,13 @@ export function useSavePlan(hotelId: string) {
       void qc.invalidateQueries({ queryKey: keys.me });
       void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
     },
+    // Krug se promijenio ili se obračunava: osvježi moj hotel i igru. Igra tada vidi „closing“ i ispituje dok se ne
+    // otvori novi krug, pa se plan sam vrati (UI krug 3, M-2); bez igre bi plan zapeo na „mijenja se dok je otvoren“.
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 409) void qc.invalidateQueries({ queryKey: keys.me });
+      if (error instanceof ApiError && error.status === 409) {
+        void qc.invalidateQueries({ queryKey: keys.me });
+        void qc.invalidateQueries({ queryKey: ["game"] });
+      }
     },
   });
 }

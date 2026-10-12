@@ -12,6 +12,7 @@ import { formatCount, formatEuros, formatPercentWhole, formatRange, tw } from ".
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
 import { Choice } from "../plan/Choice";
 import { maintenanceOptions } from "../plan/costs";
+import { anyDecision, decisionsIntro } from "./decisionsIntro";
 import { isLease } from "./helpers";
 import { OpenToggle } from "./OpenToggle";
 import { Stepper } from "./Stepper";
@@ -62,6 +63,16 @@ export function DecisionsEditor(props: {
   const lease = isLease(dept.class);
   const fixedPrice = lease || l.price_level_min_pct === l.price_level_max_pct;
   const fixedSeasonal = l.seasonal_min === l.seasonal_max;
+  // Održavanje koje ništa ne stoji (lokal u najmu: brine zakupac) nije izbor.
+  const m = l.maintenance;
+  const freeUpkeep = m.deferred_cents === 0 && m.regular_cents === 0 && m.intensive_cents === 0;
+  const offered = {
+    close: l.can_close,
+    seasonal: !fixedSeasonal,
+    price: !fixedPrice,
+    upkeep: !freeUpkeep,
+    lease,
+  };
   const legendId = `dept-name-${code}`;
 
   const set = (patch: Partial<Entry>) => {
@@ -103,11 +114,18 @@ export function DecisionsEditor(props: {
     );
   }
 
+  if (!anyDecision(offered))
+    return (
+      <Card className="space-y-2">
+        <h2 className="text-lg font-bold">{tw(weekly, "dept.decide")}</h2>
+        <p className="text-muted">{t("dept.decide.none")}</p>
+      </Card>
+    );
   return (
     <Card className="space-y-3">
       <div className="space-y-1">
         <h2 className="text-lg font-bold">{tw(weekly, "dept.decide")}</h2>
-        <p className="text-sm text-muted">{t(lease ? "dept.decide.intro.lease" : "dept.decide.intro")}</p>
+        <p className="text-sm text-muted">{decisionsIntro(offered)}</p>
         {!fixedSeasonal && (
           <p role="status" className="text-sm font-semibold">
             {left > 0
@@ -171,20 +189,24 @@ export function DecisionsEditor(props: {
             <p className="text-sm text-muted">{t("plan.dept.priceNote")}</p>
           </div>
         )}
-        <div className="space-y-1">
-          <Choice
-            legend={t("plan.dept.maintenance")}
-            name={`dept-maintenance-${code}`}
-            value={draft.maintenance}
-            disabled={!draft.open}
-            describedBy={legendId}
-            options={maintenanceOptions(l.maintenance)}
-            onChange={(v) => set({ maintenance: v })}
-          />
-          <p className="text-sm text-muted">
-            {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
-          </p>
-        </div>
+        {freeUpkeep ? (
+          <p className="text-sm text-muted">{t("plan.dept.noUpkeep")}</p>
+        ) : (
+          <div className="space-y-1">
+            <Choice
+              legend={t("plan.dept.maintenance")}
+              name={`dept-maintenance-${code}`}
+              value={draft.maintenance}
+              disabled={!draft.open}
+              describedBy={legendId}
+              options={maintenanceOptions(l.maintenance)}
+              onChange={(v) => set({ maintenance: v })}
+            />
+            <p className="text-sm text-muted">
+              {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
+            </p>
+          </div>
+        )}
       </fieldset>
       {list.isError && (
         <div className="space-y-2">
@@ -207,7 +229,7 @@ export function DecisionsEditor(props: {
       {save.isSuccess && <StatusText>{t("dept.decide.saved")}</StatusText>}
       {differs(entry, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
       {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
-      <Button aria-disabled={save.isPending || !list.isSuccess} onClick={onSave}>
+      <Button aria-disabled={save.isPending || !list.isSuccess} className="md:max-w-md" onClick={onSave}>
         {t("dept.decide.save")}
       </Button>
     </Card>

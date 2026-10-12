@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DeptRoundBody } from "../../api/types";
 import { departmentsBody } from "../../test/fixtures";
 import { type DeptKind, INSIGHT_LIMITS, insights, staffUsePct } from "./insights";
+import { scoreLevel } from "./score";
 
 /** Restoran iz t01, s neutralnim vrijednostima: nijedno pravilo ne pali dok ga test ne pomakne. */
 function round(over: Partial<DeptRoundBody> = {}): DeptRoundBody {
@@ -36,8 +37,8 @@ describe("pragovi u jednoj tablici", () => {
       worstLoadHundredths: 240,
       overloadedPct: 100,
       idlePct: 60,
-      conditionWorn: 50,
-      conditionGood: 70,
+      conditionWorn: 60,
+      conditionGood: 80,
       satisfactionStep: 2,
     });
   });
@@ -110,24 +111,49 @@ describe("kapacitet: korištenja, za Smještaj noćenja", () => {
   });
 });
 
-describe("stanje prostora", () => {
-  it("ispod 50/100: dotrajao, s prijedlogom održavanja", () => {
-    const x = insights(RESTAURANT, round({ condition_after_pts: 4949 }), true);
+describe("stanje prostora: iste granice kao boja ocjene (N-I3)", () => {
+  it("ispod 60/100: dotrajao, s prijedlogom održavanja", () => {
+    const x = insights(RESTAURANT, round({ condition_after_pts: 5949 }), true);
     expect(x.weak).toContainEqual({
-      text: "Prostor je dotrajao (49/100)",
+      text: "Prostor je dotrajao (59/100)",
       suggestion: "Prijedlog: pojačano održavanje odjela.",
     });
   });
-  it("50–69/100: ni slaba ni jaka strana", () => {
-    for (const pts of [4950, 6949]) {
-      const x = texts(round({ condition_after_pts: pts }));
-      expect([...x.weak, ...x.strong].filter((s) => s.startsWith("Prostor"))).toEqual([]);
+  it("60–79/100: prosječno stanje je slaba strana, ne „dobro“", () => {
+    for (const [pts, shown] of [
+      [5950, 60],
+      [7949, 79],
+    ] as const) {
+      const x = insights(RESTAURANT, round({ condition_after_pts: pts }), true);
+      expect(x.weak).toContainEqual({
+        text: `Prostor je u prosječnom stanju (${shown}/100)`,
+        suggestion: "Prijedlog: pojačano održavanje odjela.",
+      });
+      expect(x.strong.filter((i) => i.text.startsWith("Prostor"))).toEqual([]);
     }
   });
-  it("od 70/100: dobro stanje", () => {
-    expect(texts(round({ condition_after_pts: 6950 })).strong).toContain(
-      "Prostor je u dobrom stanju (70/100)",
+  it("od 80/100: dobro stanje", () => {
+    expect(texts(round({ condition_after_pts: 7950 })).strong).toContain(
+      "Prostor je u dobrom stanju (80/100)",
     );
+  });
+  it("najam: iste rečenice, bez prijedloga održavanja (održavanje najma dolazi s obnovom v2)", () => {
+    const x = insights(
+      { class: "rentals", open: true },
+      round({ served: 0, demand: 0, condition_after_pts: 7000 }),
+      true,
+    );
+    expect(x.weak).toContainEqual({ text: "Prostor je u prosječnom stanju (70/100)", suggestion: null });
+  });
+  it("granice su iste kao razina ocjene za svaki prikazani broj", () => {
+    for (let shown = 0; shown <= 100; shown++) {
+      const pts = shown * 100;
+      const level = scoreLevel(pts);
+      const x = texts(round({ condition_after_pts: pts }));
+      const sentence = [...x.weak, ...x.strong].find((s) => s.startsWith("Prostor")) ?? "";
+      const expected = level === "good" ? "dobrom" : level === "mid" ? "prosječnom" : "dotrajao";
+      expect(sentence, `${shown}`).toContain(expected);
+    }
   });
 });
 

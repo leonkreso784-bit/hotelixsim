@@ -4,9 +4,9 @@ import type { PlanBody } from "../api/types";
 import { draftKey, readDraft, writeDraft } from "../drafts";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
-import { HOTEL_ID, myHotel, plan, standardApi, v2Api, v2PlanHotel } from "../test/fixtures";
+import { HOTEL_ID, myHotel, plan, standardApi, v2Api, v2PlanHotel, weeklyGame } from "../test/fixtures";
 import { joined } from "../test/joined";
-import { renderApp } from "../test/renderApp";
+import { fastPolling, renderApp } from "../test/renderApp";
 
 afterEach(() => {
   cleanup();
@@ -305,5 +305,35 @@ describe("plan: nespremljene izmjene (I1)", () => {
     renderApp(v2Api(), "/plan");
     writeDraft(draftKey("dept", HOTEL_ID, "t01", "lobby_bar"), { seasonal_target: 4 });
     expect(await screen.findByRole("link", { name: "Lobby bar: izmjene još nisu spremljene" })).toBeTruthy();
+  });
+});
+
+describe("plan: krug zatvoren izvana (UI krug 3, M-2)", () => {
+  it("dok se krug obračunava plan čeka, a kad se otvori novi tjedan, sam se vrati", async () => {
+    fastPolling();
+    let closedOutside = false;
+    let gameReads = 0;
+    let nextOpen = false;
+    const noPlan = v2PlanHotel();
+    if (noPlan.private) noPlan.private.plan = null;
+    const week2 = v2PlanHotel();
+    if (week2.private?.plan) week2.private.plan.round = "t02";
+    const api = v2Api()
+      .on("GET", "/v1/games/:game", () => {
+        if (!closedOutside) return json(200, weeklyGame());
+        gameReads += 1;
+        if (gameReads === 1) return json(200, weeklyGame({ status: "closing" }));
+        nextOpen = true;
+        return json(200, weeklyGame({ week: 2 }));
+      })
+      .on("GET", "/v1/me/hotel", () => json(200, !closedOutside ? v2PlanHotel() : nextOpen ? week2 : noPlan));
+    renderApp(api, "/plan");
+    const button = await screen.findByRole("button", { name: "Spremi plan" });
+    closedOutside = true;
+    fireEvent.click(button);
+    expect(await screen.findByText("Plan se mijenja dok je tjedan otvoren.")).toBeTruthy();
+    expect(await screen.findByText(/^Za tjedan 2/, {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Spremi plan" })).toBeTruthy();
+    expect(api.calls.filter((c) => c.method === "PUT")).toHaveLength(0);
   });
 });

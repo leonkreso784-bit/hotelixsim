@@ -373,4 +373,51 @@ describe("Odjeli", () => {
     expect(head.className).not.toMatch(/whitespace-nowrap/);
     expect(screen.getByRole("rowheader").className).toMatch(/whitespace-nowrap/);
   });
+
+  it("lokal u najmu bez troška održavanja: nema odluka, samo rečenica (N-I3)", async () => {
+    const hotel = v2PlanHotel();
+    const plan = hotel.private?.plan;
+    if (!plan?.plan.departments || !plan.limits.departments?.parking) throw new Error("nema plana");
+    plan.plan.departments.parking = {
+      open: true,
+      seasonal_target: 0,
+      price_level_pct: 100,
+      maintenance: "regular",
+    };
+    Object.assign(plan.limits.departments.parking, {
+      seasonal_max: 0,
+      can_close: false,
+      maintenance: { deferred_cents: 0, regular_cents: 0, intensive_cents: 0 },
+    });
+    renderApp(v2Api().on("GET", "/v1/me/hotel", hotel), "/odjeli/parking");
+    expect(
+      await screen.findByText("Ovdje nema odluka: prihod je ugovoren, a o prostoru brine zakupac."),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Spremi odluke odjela" })).toBeNull();
+    expect(screen.queryByRole("radio")).toBeNull();
+  });
+
+  it("desno okno od 1024 px: uputa i kako čitati ocjenu; služba s kratkim natpisom troška", async () => {
+    renderApp(v2Api(), "/odjeli");
+    expect(
+      await screen.findByText(
+        "Ocjena odjela je dobra od 80/100, srednja od 60/100 do 79/100, a slaba ispod 60/100; uz boju uvijek piše i riječ.",
+      ),
+    ).toBeTruthy();
+    expect(
+      await screen.findByText(
+        "Ove službe nemaju prihod, ali hotel na njih troši novac. Uz svaku je trošak zadnjeg tjedna.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Uprava/ }).textContent).toContain("Trošak");
+    expect(screen.queryByText("Trošak zadnjeg tjedna")).toBeNull();
+  });
+
+  it("Restoran (ne zatvara se): uvod ne spominje otvaranje; gumb spremanja je u stupcu odluka", async () => {
+    renderApp(v2Api(), "/odjeli/restaurant");
+    expect(
+      await screen.findByText(/^Odredi koliko sezonskih radnika ima, razinu cijena i održavanje\./),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Spremi odluke odjela" }).className).toMatch(/md:max-w-md/);
+  });
 });

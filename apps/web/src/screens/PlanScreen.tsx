@@ -2,9 +2,10 @@
 // učinkom. U v1 igri i sezonski radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo
 // sažetak promjena po odjelima. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
 import { t } from "@hotelixsim/i18n";
-import { type FormEvent, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError, problemMessage } from "../api/errors";
-import { useGame, useSavePlan } from "../api/queries";
+import { keys, useGame, useSavePlan } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { differs, draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
 import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
@@ -36,6 +37,13 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const newRound = useRoundChanged(state?.round ?? null);
   const stale = useStaleDrafts("plan", me.hotel.hotel_id, state?.round ?? null);
   const [invalid, setInvalid] = useState(false);
+  // Plana nema, a spremljena igra još kaže da je krug otvoren: krug je zatvoren izvana (druga kartica, profesor).
+  // Ponovni dohvat igre vidi „closing“, ispituje do novog kruga i tada osvježi moj hotel (UI krug 3, M-2).
+  const qc = useQueryClient();
+  const staleOpen = !state && game?.current?.status === "open";
+  useEffect(() => {
+    if (staleOpen) void qc.invalidateQueries({ queryKey: keys.game(me.game_id) });
+  }, [staleOpen, qc, me.game_id]);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;

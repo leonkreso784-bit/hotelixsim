@@ -12,6 +12,8 @@ import {
   tw,
   wholePoints,
 } from "../../format";
+import { isLease } from "./helpers";
+import { LEVEL_GOOD_FROM, LEVEL_MID_FROM } from "./levels";
 
 export type Insight = { text: string; suggestion: string | null };
 
@@ -30,10 +32,10 @@ export const INSIGHT_LIMITS = {
   overloadedPct: 100,
   /** Ispod ovog postotka granice: previše ljudi. */
   idlePct: 60,
-  /** Stanje prostora (prikazano 0–100) ispod kojeg je prostor dotrajao. */
-  conditionWorn: 50,
-  /** Stanje prostora od kojeg je prostor u dobrom stanju. */
-  conditionGood: 70,
+  /** Stanje prostora (prikazano 0–100) ispod kojeg je prostor dotrajao: granica „slabo“ ocjene (`levels.ts`). */
+  conditionWorn: LEVEL_MID_FROM,
+  /** Stanje prostora od kojeg je prostor u dobrom stanju: granica „dobro“ ocjene (`levels.ts`). */
+  conditionGood: LEVEL_GOOD_FROM,
   /** Najmanja promjena zadovoljstva (prikazani bodovi) koja je slaba ili jaka strana; 1 bod je šum zaokruživanja. */
   satisfactionStep: 2,
 } as const;
@@ -80,10 +82,14 @@ export function insights(
 
   const condition = wholePoints(r.condition_after_pts);
   const n = formatIndex(r.condition_after_pts);
+  // Najmu održavanje danas gotovo ne pomaže (to dolazi s obnovom v2), pa mu se ne predlaže.
+  const hint = isLease(dept.class) ? null : t("insight.worn.hint");
   if (condition < INSIGHT_LIMITS.conditionWorn)
-    weak.push({ text: t("insight.worn", { n }), suggestion: t("insight.worn.hint") });
-  else if (condition >= INSIGHT_LIMITS.conditionGood && dept.open)
-    strong.push(plain(t("insight.wellKept", { n })));
+    weak.push({ text: t("insight.worn", { n }), suggestion: hint });
+  else if (condition < INSIGHT_LIMITS.conditionGood) {
+    // Srednje stanje: ista jantarna razina kao ocjena, pa ni rečenica ne kaže da je dobro (N-I3).
+    if (dept.open) weak.push({ text: t("insight.average", { n }), suggestion: hint });
+  } else if (dept.open) strong.push(plain(t("insight.wellKept", { n })));
 
   if (!dept.open) return { weak, strong };
 

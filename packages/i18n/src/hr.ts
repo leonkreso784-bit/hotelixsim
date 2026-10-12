@@ -491,11 +491,15 @@ export const hr = {
   "dept.noResult": "Rezultat se pojavi nakon prvog obračunatog mjeseca.",
   "dept.noResult.week": "Rezultat se pojavi nakon prvog obračunatog tjedna.",
   "dept.pick": "Izaberi odjel na popisu da vidiš njegov prostor, goste, novac i ljude.",
+  "dept.legend":
+    "Ocjena odjela je dobra od {good}/100, srednja od {mid}/100 do {midTo}/100, a slaba ispod {mid}/100; uz boju uvijek piše i riječ.",
   "dept.back": "Odjeli",
   "dept.services": "Službe bez prihoda",
-  "dept.services.intro": "Ove službe nemaju prihod, ali hotel na njih troši novac.",
-  "dept.cost": "Trošak zadnjeg mjeseca",
-  "dept.cost.week": "Trošak zadnjeg tjedna",
+  "dept.services.intro":
+    "Ove službe nemaju prihod, ali hotel na njih troši novac. Uz svaku je trošak zadnjeg mjeseca.",
+  "dept.services.intro.week":
+    "Ove službe nemaju prihod, ali hotel na njih troši novac. Uz svaku je trošak zadnjeg tjedna.",
+  "dept.cost.short": "Trošak",
   "dept.costNone": "Nema obračuna",
   "dept.space": "Prostor",
   "dept.space.note": "Stanje prostora mjeri se od 0 do 100 bodova.",
@@ -508,7 +512,7 @@ export const hr = {
   "dept.usage": "Gosti hotela koji dnevno dođu u odjel",
   "dept.usage.rooms": "Popunjenost soba",
   "dept.value": "Vrijednost za novac",
-  "dept.priceLevel": "Razina cijene (100 % je uobičajena)",
+  "dept.priceLevel": "Razina cijene (100\u00a0% je uobičajena)",
   "dept.money": "Novac",
   "dept.revenue": "Prihod",
   "dept.payroll": "Plaće",
@@ -521,7 +525,7 @@ export const hr = {
   "dept.permanent": "Stalni radnici",
   "dept.seasonal": "Sezonski radnici",
   "dept.load": "Opterećenje osoblja: {p} granice za dobru uslugu.",
-  "dept.load.note": "Iznad 100 % osoblje ne stigne sve dobro poslužiti i kvaliteta usluge pada.",
+  "dept.load.note": "Iznad 100\u00a0% osoblje ne stigne sve dobro poslužiti i kvaliteta usluge pada.",
   "dept.history": "Po mjesecima",
   "dept.history.week": "Po tjednima",
   "dept.listEmpty": "Rezultati odjela pojave se nakon prvog obračunatog mjeseca.",
@@ -585,6 +589,7 @@ export const hr = {
   "insight.worn": "Prostor je dotrajao ({n}/100)",
   "insight.worn.hint": "Prijedlog: pojačano održavanje odjela.",
   "insight.wellKept": "Prostor je u dobrom stanju ({n}/100)",
+  "insight.average": "Prostor je u prosječnom stanju ({n}/100)",
   "insight.satisfactionDown": "Zadovoljstvo gostiju palo s {from}/100 na {to}/100",
   "insight.satisfactionUp": "Zadovoljstvo gostiju poraslo s {from}/100 na {to}/100",
   "insight.loss": "Odjel je ovaj mjesec u gubitku ({amount})",
@@ -598,8 +603,16 @@ export const hr = {
   // Odluke odjela na ekranu odjela (samo v2)
   "dept.decide": "Odluke za ovaj mjesec",
   "dept.decide.week": "Odluke za ovaj tjedan",
-  "dept.decide.intro":
-    "Odredi je li odjel otvoren, koliko sezonskih radnika ima, razinu cijena i održavanje. Broj sezonskih radnika smije se ukupno promijeniti samo malo odjednom, za cijeli hotel.",
+  // Uvod nabraja samo ponuđene odluke (decisionsIntro.ts)
+  "dept.decide.intro": "Odredi {parts}.",
+  "dept.decide.part.open": "je li odjel otvoren",
+  "dept.decide.part.seasonal": "koliko sezonskih radnika ima",
+  "dept.decide.part.price": "razinu cijena",
+  "dept.decide.part.upkeep": "održavanje",
+  "dept.decide.intro.step":
+    "Broj sezonskih radnika smije se ukupno promijeniti samo malo odjednom, za cijeli hotel.",
+  "dept.decide.none": "Ovdje nema odluka: prihod je ugovoren, a o prostoru brine zakupac.",
+  "plan.dept.noUpkeep": "O održavanju ovog prostora brine zakupac.",
   "dept.decide.intro.lease":
     "Najam ima ugovoreni prihod i nema svojih gostiju ni sezonskih radnika: ovdje se odlučuje o održavanju prostora.",
   "dept.decide.save": "Spremi odluke odjela",

@@ -7,6 +7,7 @@ import type { DepartmentBody, DeptRoundBody } from "../../api/types";
 import { wholePoints } from "../../format";
 import { isLease, isService } from "./helpers";
 import { INSIGHT_LIMITS } from "./insights";
+import { levelOf, type ScoreLevel } from "./levels";
 
 export type DeptScore = {
   /** Ocjena u bodovima 0–10 000 (na ekranu 0–100). */
@@ -16,11 +17,7 @@ export type DeptScore = {
   staffFit: number | null;
 };
 
-export type ScoreLevel = "good" | "mid" | "weak";
-
-/** Pragovi boje po prikazanom cijelom broju (Leonova odluka 13.10.): ≥ 80 dobro, 60–79 srednje, < 60 slabo. */
-const GOOD_FROM = 80;
-const MID_FROM = 60;
+export type { ScoreLevel } from "./levels";
 
 /** Riječ i boja trake po razini; boje su tokeni iz `styles.css` (UI_PRAVILA §1.1), riječ stoji uz boju (§6.8). */
 export const SCORE_LEVELS: Record<ScoreLevel, { word: string; bar: string }> = {
@@ -70,6 +67,5 @@ export function scoreParts(s: DeptScore): string {
 
 /** Razina po prikazanom broju, da „80/100“ nikad ne bude „srednje“. */
 export function scoreLevel(points: number): ScoreLevel {
-  const shown = wholePoints(points);
-  return shown >= GOOD_FROM ? "good" : shown >= MID_FROM ? "mid" : "weak";
+  return levelOf(wholePoints(points));
 }
