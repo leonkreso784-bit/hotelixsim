@@ -11,7 +11,13 @@
     "name": "Zgrada",
     "wear_pts_per_month": 50,
     "satisfaction_share_bp": 2000,
-    "renewal": { "gain_pts": 5000, "half_cents": 15000000, "max_monthly_cents": 20000000, "step_cents": 1000000, "life_months": 480 }
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 15000000,
+      "max_monthly_cents": 20000000,
+      "step_cents": 1000000,
+      "life_months": 480
+    }
   },
   "ffe_reserve_bp": 400,
   "finance_index": "gop_after_investment",
