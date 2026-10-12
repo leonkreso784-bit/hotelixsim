@@ -140,7 +140,8 @@ pub struct DeptSpec {
     pub direct_per_use_cents: i64,
     pub wage_cents: i64,
     /// Korištenja po zaposlenom na dan, u desetinkama (Smještaj 24 = 2,4 prodane noći kao u v1); 0 = odjel bez ljudi
-    /// i bez gornje granice usluženih (parking), opterećenje 0.
+    /// i bez gornje granice usluženih (parking), opterećenje 0. Odjel s ljudima ili sezoncima i kapacitetom 0 nije
+    /// valjan (`Catalog::validate`, osim neraspoređenih), pa „bez granice" vrijedi samo za odjel bez ljudi.
     pub capacity_tenths_per_staff_day: u16,
     /// Trošenje stanja prostora mjesečno (pozitivan broj, oduzima se).
     pub wear_pts_per_month: i32,
@@ -387,7 +388,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         10,
     )?;
 
-    // 7 usluženo; odjel bez kapaciteta po zaposlenom (parking) nema gornje granice
+    // 7 usluženo; odjel bez kapaciteta po zaposlenom (parking; katalog jamči da nema ljudi) nema gornje granice
     let unlimited = spec.capacity_tenths_per_staff_day == 0;
     let served = if unlimited {
         demand

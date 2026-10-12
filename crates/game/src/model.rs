@@ -307,6 +307,34 @@ impl Model {
         }
     }
 
+    /// Plan za obračun: v2 razinu cijene svakog odjela stisne u granice kruga (istim izrazom kao `carry_into`), da plan
+    /// poslan prije promjene granica (O-P: odjeli bez prihoda po gostu 100–100) ne zaglavi obračun runde. Valjan plan
+    /// ostaje isti; provjera pri predaji ostaje. v1 plan se ne mijenja.
+    pub(crate) fn plan_for_resolve(
+        self,
+        p: CorePlan,
+        s: &CoreState,
+        r: &RoundInfo,
+        c: &Content,
+    ) -> Result<CorePlan, GameError> {
+        match (self, p, s) {
+            (Model::V1, p @ CorePlan::V1(_), CoreState::V1(_)) => Ok(p),
+            (Model::V2, CorePlan::V2(mut p), CoreState::V2(s)) => {
+                let limits = PeriodPlan::limits(s, &r.period, v2_catalog(c)?).map_err(debug)?;
+                for (code, d) in p.departments.iter_mut() {
+                    if let Some(dl) = limits.departments.get(code) {
+                        d.price_level_pct = d
+                            .price_level_pct
+                            .max(dl.price_level_min_pct)
+                            .min(dl.price_level_max_pct);
+                    }
+                }
+                Ok(CorePlan::V2(p))
+            }
+            _ => Err(mismatch()),
+        }
+    }
+
     /// Plan drugog modela je `WrongModel`; pravila plana daju `Plan` (v1) ili `PlanV2` (v2).
     pub(crate) fn validate_plan(
         self,
