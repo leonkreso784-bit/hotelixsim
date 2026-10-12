@@ -45,6 +45,11 @@ export const hr = {
   "problem.unknown_profile": "Taj profil hotela ne postoji.",
   "problem.round_not_open": "Mjesec nije otvoren — sad se ne može mijenjati.",
   "problem.round_not_open.week": "Tjedan nije otvoren — sad se ne može mijenjati.",
+  // Samo web: krug se promijenio između otvaranja obrasca i spremanja (poslužitelj već ima novi krug).
+  "problem.round_changed":
+    "U međuvremenu je otvoren novi mjesec, pa odluke nisu spremljene. Pogledaj ih za novi mjesec i spremi ponovno.",
+  "problem.round_changed.week":
+    "U međuvremenu je otvoren novi tjedan, pa odluke nisu spremljene. Pogledaj ih za novi tjedan i spremi ponovno.",
   "problem.already_answered": "Na ovu situaciju je već odgovoreno.",
   "problem.not_free_text": "Ova situacija nema odgovor svojim riječima.",
   "problem.chat_limit": "Poruke za ovaj razgovor su potrošene.",
@@ -54,7 +59,7 @@ export const hr = {
   "problem.price_out_of_range": "Cijena je izvan dopuštenog raspona.",
   "problem.marketing_out_of_range": "Marketing je izvan dopuštenog raspona.",
   "problem.seasonal_out_of_range": "Broj sezonskih radnika je izvan dopuštenog raspona.",
-  "problem.seasonal_step_too_big": "Sezonce možeš mijenjati najviše za 10 mjesečno.",
+  "problem.seasonal_step_too_big": "Sezonske radnike možeš mijenjati najviše za 10 mjesečno.",
   "problem.seasonal_step_too_big.week":
     "Broj sezonskih radnika možeš mijenjati samo malo odjednom; smanji promjenu.",
   "problem.wage_out_of_range": "Plaće su izvan dopuštenog raspona.",
@@ -274,7 +279,8 @@ export const hr = {
   "plan.dept.tooMany":
     "Odjeli zajedno imaju previše sezonskih radnika: hotel smije imati najviše {n}. Smanji ih u nekom odjelu.",
   "plan.dept.open": "Otvoren",
-  "plan.dept.closedNote": "Zatvoren odjel nema sezonskih radnika i ne prima goste.",
+  "plan.dept.closedNote":
+    "Zatvoren odjel nema sezonskih radnika i ne prima goste; stalni radnici se i dalje plaćaju.",
   "plan.dept.noClose":
     "Zatvaranje bi otpustilo više sezonskih radnika nego što se ovaj mjesec još smije promijeniti.",
   "plan.dept.noClose.week":
@@ -286,11 +292,19 @@ export const hr = {
   "plan.dept.morePrice": "Više cijene",
   "plan.dept.lessPrice": "Manje cijene",
   "plan.dept.maintenance": "Održavanje odjela",
+  "plan.dept.seasonalCost":
+    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj mjesec. Više ljudi posluži više gostiju bez preopterećenja; manje ljudi znači manje plaća.",
+  "plan.dept.seasonalCost.week":
+    "Jedan sezonski radnik u ovom odjelu stoji {amount} ovaj tjedan. Više ljudi posluži više gostiju bez preopterećenja; manje ljudi znači manje plaća.",
+  "plan.dept.priceNote":
+    "Više cijene donose više novca od svakog gosta, ali dolazi manje gostiju i pada vrijednost za novac, a s njom zadovoljstvo gostiju.",
   // Cijene odluka (Leon 12.10.): brojke iz granica plana, za krug
-  "plan.cost.training":
-    "{level} obuka: {amount} ovaj mjesec; iskustvo osoblja {experience}, moral {morale} od idućeg mjeseca.",
-  "plan.cost.training.week":
-    "{level} obuka: {amount} ovaj tjedan; iskustvo osoblja {experience}, moral {morale} od idućeg tjedna.",
+  "plan.cost.training": "{level} obuka: {amount} ovaj mjesec; od idućeg mjeseca {effect}.",
+  "plan.cost.training.week": "{level} obuka: {amount} ovaj tjedan; od idućeg tjedna {effect}.",
+  "plan.training.experience": "iskustvo osoblja {n}",
+  "plan.training.experience.same": "iskustvo osoblja bez promjene",
+  "plan.training.morale": "moral {n}",
+  "plan.training.morale.same": "moral bez promjene",
   "plan.cost.reply": "Trošak {amount} ovaj mjesec.",
   "plan.cost.reply.week": "Trošak {amount} ovaj tjedan.",
   "plan.cost.levels": "Iznosi ispod izbora su trošak za ovaj mjesec.",
@@ -300,6 +314,24 @@ export const hr = {
   "plan.renovation.negative": "Pozor: nakon obnove blagajna bi bila u minusu.",
   "plan.renovation.thin": "Pozor: nakon obnove u blagajni ostaje manje od jednog tjedna plaća ({payroll}).",
   "plan.invalid": "Upiši brojeve u dopuštenom rasponu.",
+  "plan.unsaved": "Izmjene još nisu spremljene.",
+  "plan.newRound":
+    "Otvoren je novi mjesec. Odluke sada vrijede za njega; nespremljene izmjene prošlog mjeseca nisu prenesene.",
+  "plan.newRound.week":
+    "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
+  // Učinak odluka plana (UI I3): kratko što odluka mijenja
+  "plan.price.note":
+    "Viša cijena donosi više novca po noći, ali manje gostiju rezervira; niža privlači goste.",
+  "plan.marketing.note":
+    "Upisani iznos je trošak ovog mjeseca. Marketing dovodi više gostiju, ali svaki idući euro donese manje od prethodnog.",
+  "plan.marketing.note.week":
+    "Upisani iznos je trošak ovog tjedna. Marketing dovodi više gostiju, ali svaki idući euro donese manje od prethodnog.",
+  "plan.wage.note":
+    "Pri sadašnjim plaćama hotel ovaj mjesec na plaće troši oko {amount}. Viša plaća podiže moral osoblja, pa manje ljudi odlazi; niža štedi novac, a moral pada.",
+  "plan.wage.note.week":
+    "Pri sadašnjim plaćama hotel ovaj tjedan na plaće troši oko {amount}. Viša plaća podiže moral osoblja, pa manje ljudi odlazi; niža štedi novac, a moral pada.",
+  "plan.maintenance.note":
+    "Redovno održavanje čuva prostor, pojačano ga popravlja, a odgođeno štedi novac dok se prostor troši.",
   "maintenance.deferred": "odgođeno",
   "maintenance.regular": "redovno",
   "maintenance.intensive": "pojačano",
@@ -439,6 +471,12 @@ export const hr = {
   "plural.seasonalWorkerAcc.one": "sezonskog radnika",
   "plural.seasonalWorkerAcc.few": "sezonska radnika",
   "plural.seasonalWorkerAcc.other": "sezonskih radnika",
+  "plural.use.one": "korištenje",
+  "plural.use.few": "korištenja",
+  "plural.use.other": "korištenja",
+  "plural.stay.one": "noćenje",
+  "plural.stay.few": "noćenja",
+  "plural.stay.other": "noćenja",
   "dept.title": "Odjeli",
   "dept.intro": "Svaki odjel ima prostor koji se troši, goste koje služi, svoj novac i svoje ljude.",
   "dept.condition": "Stanje prostora",
@@ -459,14 +497,15 @@ export const hr = {
   "dept.cost.week": "Trošak zadnjeg tjedna",
   "dept.costNone": "Nema obračuna",
   "dept.space": "Prostor",
-  "dept.space.note": "Promjene su u bodovima od 100.",
+  "dept.space.note": "Stanje prostora mjeri se od 0 do 100 bodova.",
   "dept.wear": "trošenje {n}",
   "dept.loadWear": "preopterećenje {n}",
   "dept.upkeep": "održavanje {n}",
   "dept.upkeepCost": "Trošak održavanja",
   "dept.guests": "Gosti",
-  "dept.served": "Posluženo korištenja",
-  "dept.usage": "udio gostiju koji dolaze {p}",
+  "dept.served": "Posluženo",
+  "dept.usage": "Gosti hotela koji dnevno dođu u odjel",
+  "dept.usage.rooms": "Popunjenost soba",
   "dept.value": "Vrijednost za novac",
   "dept.priceLevel": "Razina cijene (100 % je uobičajena)",
   "dept.money": "Novac",
@@ -480,9 +519,8 @@ export const hr = {
   "dept.staff": "Ljudi",
   "dept.permanent": "Stalni radnici",
   "dept.seasonal": "Sezonski radnici",
-  "dept.capacity": "Kapacitet odjela",
-  "dept.capacityUses": "{n} korištenja",
-  "dept.load": "opterećenje {load} po zaposlenom na dan",
+  "dept.load": "Opterećenje osoblja: {p} granice za dobru uslugu.",
+  "dept.load.note": "Iznad 100 % osoblje ne stigne sve dobro poslužiti i kvaliteta usluge pada.",
   "dept.history": "Po mjesecima",
   "dept.history.week": "Po tjednima",
   "dept.listEmpty": "Rezultati odjela pojave se nakon prvog obračunatog mjeseca.",
@@ -511,15 +549,21 @@ export const hr = {
   "dept.departures.note": "Tko ode, zamijeni se novim zaposlenim; trošak zamjene je u Upravi.",
   "dept.staff.note":
     "Stalni rade cijelu godinu. Sezonski su zaposleni samo za ljeto (lipanj–rujan) i trošak su samo dok rade.",
-  // Ocjena odjela (🟨): prosjek kvalitete usluge, stanja prostora i zadovoljstva gostiju.
+  // Ocjena odjela (🟨, Leon 12.10.): prosjek stanja prostora, zadovoljstva gostiju i usklađenosti ljudi s poslom.
   "dept.score": "Ocjena odjela",
   "dept.score.value": "{n}/100 · {level}",
   "dept.score.bar": "{label}: {value} od 100, {level}",
-  "dept.score.note": "Prosjek kvalitete usluge, stanja prostora i zadovoljstva gostiju.",
+  "dept.score.note": "Prosjek {parts}.",
+  "dept.score.note.one": "Ocjena je stanje prostora.",
+  "dept.score.part.condition": "stanja prostora",
+  "dept.score.part.satisfaction": "zadovoljstva gostiju",
+  "dept.score.part.staffFit": "usklađenosti ljudi s poslom",
+  "dept.score.fitNote":
+    "Usklađenost ljudi s poslom je 100 kad broj ljudi odgovara poslu; premalo ili previše ljudi je spušta.",
   "dept.score.good": "dobro",
   "dept.score.mid": "srednje",
   "dept.score.weak": "slabo",
-  "dept.quality": "Kvaliteta usluge",
+  "dept.staffFit": "Usklađenost ljudi s poslom",
   // Što odjelu fali i u čemu je dobar (🟨, zadnji obračunati krug)
   "dept.weak": "Što mu fali",
   "dept.strong": "U čemu je dobar",
@@ -529,14 +573,14 @@ export const hr = {
   "dept.strong.none.week": "U zadnjem tjednu odjel nema jakih strana.",
   "dept.insights.empty": "Slabe i jake strane odjela vide se nakon prvog obračunatog mjeseca.",
   "dept.insights.empty.week": "Slabe i jake strane odjela vide se nakon prvog obračunatog tjedna.",
-  "insight.overloaded": "Premalo ljudi: odjel radi na {p} svojih mogućnosti",
+  "insight.overloaded": "Osoblje je preopterećeno: {p} granice za dobru uslugu, kvaliteta usluge pada",
   "insight.overloaded.hint": "Prijedlog: zaposli više sezonskih radnika u ovom odjelu.",
-  "insight.idle": "Previše ljudi za ovoliko gostiju ({p})",
-  "insight.staffOk": "Broj ljudi odgovara poslu: odjel radi na {p} svojih mogućnosti",
-  "insight.refused.one": "Odbijen {n} jer nije bilo kapaciteta",
+  "insight.idle": "Previše ljudi za ovoliko gostiju: osoblje radi na {p} granice za dobru uslugu",
+  "insight.staffOk": "Broj ljudi odgovara poslu: osoblje radi na {p} granice za dobru uslugu",
+  "insight.refused.one": "Odbijeno {n} jer nije bilo kapaciteta",
   "insight.refused.few": "Odbijena {n} jer nije bilo kapaciteta",
   "insight.refused.other": "Odbijeno {n} jer nije bilo kapaciteta",
-  "insight.allServed": "Posluženi su svi gosti koji su htjeli doći ({n} korištenja)",
+  "insight.allServed": "Posluženi su svi gosti koji su htjeli doći ({n})",
   "insight.worn": "Prostor je dotrajao ({n}/100)",
   "insight.worn.hint": "Prijedlog: pojačano održavanje odjela.",
   "insight.wellKept": "Prostor je u dobrom stanju ({n}/100)",
@@ -546,6 +590,10 @@ export const hr = {
   "insight.loss.week": "Odjel je ovaj tjedan u gubitku ({amount})",
   "insight.profit": "Odjel je ovaj mjesec u dobiti ({amount})",
   "insight.profit.week": "Odjel je ovaj tjedan u dobiti ({amount})",
+  "insight.closed":
+    "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće {amount} ovaj mjesec)",
+  "insight.closed.week":
+    "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće {amount} ovaj tjedan)",
   // Odluke odjela na ekranu odjela (samo v2)
   "dept.decide": "Odluke za ovaj mjesec",
   "dept.decide.week": "Odluke za ovaj tjedan",
@@ -557,4 +605,7 @@ export const hr = {
   "dept.decide.closed.week": "Odluke odjela mijenjaju se dok je tjedan otvoren.",
   "dept.decide.yes": "da",
   "dept.decide.no": "ne",
+  "dept.decide.retry": "Ponovno učitaj odjele",
+  "dept.decide.lastPrice": "Cijene u zadnjem mjesecu",
+  "dept.decide.lastPrice.week": "Cijene u zadnjem tjednu",
 } as const;

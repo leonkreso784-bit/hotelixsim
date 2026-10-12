@@ -17,11 +17,12 @@ describe("Odjeli", () => {
     const spa = (await screen.findByRole("link", { name: /Mali wellness/ })).closest(
       "article",
     ) as HTMLElement;
-    // Jedna traka „Ocjena odjela“: prosjek kvalitete 70, prostora 65 i zadovoljstva 74 = 70, uz broj i riječ.
+    // Jedna traka „Ocjena odjela“: prosjek prostora 65, zadovoljstva 74 i usklađenosti ljudi 83 (opterećenje 190)
+    // = 74, uz broj i riječ.
     expect(within(spa).getByText("Ocjena odjela")).toBeTruthy();
-    expect(within(spa).getByText("70/100 · dobro")).toBeTruthy();
+    expect(within(spa).getByText("74/100 · dobro")).toBeTruthy();
     expect(within(spa).getAllByRole("img")).toHaveLength(1);
-    expect(within(spa).getByRole("img").getAttribute("aria-label")).toBe("Ocjena odjela: 70 od 100, dobro");
+    expect(within(spa).getByRole("img").getAttribute("aria-label")).toBe("Ocjena odjela: 74 od 100, dobro");
     expect(within(spa).getByText("Ljudi: 2 stalna, 1 sezonski")).toBeTruthy();
     expect(screen.queryByText("Rooftop bar")).toBeNull();
     expect(screen.getByRole("heading", { name: "Službe bez prihoda" })).toBeTruthy();
@@ -43,17 +44,27 @@ describe("Odjeli", () => {
     const h1 = await screen.findByRole("heading", { level: 1, name: "Restoran" });
     // Stupac detalja (popis lijevo ima svoju karticu Restorana s istom ocjenom).
     const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
-    expect(detail.getByRole("img", { name: "Ocjena odjela: 70 od 100, dobro" })).toBeTruthy();
-    expect(detail.getByText("70/100 · dobro")).toBeTruthy();
-    expect(detail.getByRole("img", { name: "Kvaliteta usluge: 70 od 100" })).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Ocjena odjela: 74 od 100, dobro" })).toBeTruthy();
+    expect(detail.getByText("74/100 · dobro")).toBeTruthy();
+    // Kvaliteta usluge hotela više ne ulazi (Leon 12.10.); usklađenost ljudi je ista mjera kao rečenica ispod.
+    expect(detail.queryByRole("img", { name: /Kvaliteta usluge/ })).toBeNull();
     expect(detail.getByRole("img", { name: "Stanje prostora: 69 od 100" })).toBeTruthy();
     expect(detail.getByRole("img", { name: "Zadovoljstvo gostiju: 69 od 100" })).toBeTruthy();
+    expect(detail.getByRole("img", { name: "Usklađenost ljudi s poslom: 83 od 100" })).toBeTruthy();
+    expect(
+      detail.getByText("Prosjek stanja prostora, zadovoljstva gostiju i usklađenosti ljudi s poslom."),
+    ).toBeTruthy();
     const weak = screen
       .getByRole("heading", { level: 2, name: "Što mu fali" })
       .closest("section") as HTMLElement;
-    expect(within(weak).getByText("Premalo ljudi: odjel radi na 106 % svojih mogućnosti")).toBeTruthy();
+    expect(
+      within(weak).getByText(
+        "Osoblje je preopterećeno: 106 % granice za dobru uslugu, kvaliteta usluge pada",
+      ),
+    ).toBeTruthy();
     expect(within(weak).getByText("Prijedlog: zaposli više sezonskih radnika u ovom odjelu.")).toBeTruthy();
-    expect(within(weak).getByText("Zadovoljstvo gostiju palo s 70/100 na 69/100")).toBeTruthy();
+    // Pad za 1 prikazani bod (70 → 69) nije slaba strana (M7).
+    expect(within(weak).queryByText(/Zadovoljstvo gostiju palo/)).toBeNull();
     const strong = screen
       .getByRole("heading", { level: 2, name: "U čemu je dobar" })
       .closest("section") as HTMLElement;
@@ -77,9 +88,9 @@ describe("Odjeli", () => {
     for (const h of ["Prostor", "Gosti", "Novac", "Ljudi"])
       expect(screen.getByRole("heading", { level: 2, name: h })).toBeTruthy();
     expect(screen.getByText("67.200 €")).toBeTruthy();
-    expect(screen.getByText("trošenje −3")).toBeTruthy();
-    expect(screen.getByText("preopterećenje −1")).toBeTruthy();
-    expect(screen.getByText("održavanje +3")).toBeTruthy();
+    expect(screen.getByText("trošenje −3 boda")).toBeTruthy();
+    expect(screen.getByText("preopterećenje −1 bod")).toBeTruthy();
+    expect(screen.getByText("održavanje +3 boda")).toBeTruthy();
     // Poslužiteljeve promjene već nose predznak: prije + promjene = poslije.
     const r = departmentDetailBody("restaurant")?.department.last;
     expect(r && r.condition_before_pts + r.wear_pts + r.load_wear_pts + r.maintenance_pts).toBe(
@@ -87,7 +98,100 @@ describe("Odjeli", () => {
     );
     expect(screen.getByRole("heading", { level: 2, name: "Po tjednima" })).toBeTruthy();
     expect(screen.getByRole("heading", { level: 3, name: "Restoran" })).toBeTruthy();
-    expect(screen.getByText("udio gostiju koji dolaze 45 %")).toBeTruthy();
+    const guests = screen.getByRole("heading", { level: 2, name: "Gosti" }).closest("section") as HTMLElement;
+    expect(within(guests).getByText("Gosti hotela koji dnevno dođu u odjel")).toBeTruthy();
+    expect(within(guests).getByText("45 %")).toBeTruthy();
+    expect(within(guests).getByText("2.100 korištenja")).toBeTruthy();
+    // Jedna mjera iskorištenosti (I4): opterećenje u postotku granice, bez kapaciteta i gostiju po zaposlenom.
+    const people = screen.getByRole("heading", { level: 2, name: "Ljudi" }).closest("section") as HTMLElement;
+    expect(within(people).getByText("Opterećenje osoblja: 106 % granice za dobru uslugu.")).toBeTruthy();
+    expect(within(people).queryByText(/Kapacitet|po zaposlenom/)).toBeNull();
+  });
+
+  it("Smještaj broji noćenja i pokazuje popunjenost soba (M3)", async () => {
+    renderApp(v2Api(), "/odjeli/rooms");
+    expect(await screen.findByRole("heading", { level: 1, name: "Smještaj" })).toBeTruthy();
+    const guests = screen.getByRole("heading", { level: 2, name: "Gosti" }).closest("section") as HTMLElement;
+    expect(within(guests).getByText("Popunjenost soba")).toBeTruthy();
+    expect(within(guests).getByText("2.100 noćenja")).toBeTruthy();
+    expect(screen.getByText("Posluženi su svi gosti koji su htjeli doći (2.100 noćenja)")).toBeTruthy();
+    expect(screen.queryByText(/korištenja/)).toBeNull();
+  });
+
+  it("srednja ocjena je jantarna traka, uz broj i riječ (I2)", async () => {
+    const body = departmentsBody();
+    const spa = body.departments.find((d) => d.code === "spa");
+    if (spa) Object.assign(spa, { condition_pts: 4000, guest_satisfaction_pts: 6000 });
+    renderApp(v2Api().on("GET", "/v1/hotels/:hotel/departments", body), "/odjeli");
+    const card = (await screen.findByRole("link", { name: /Mali wellness/ })).closest(
+      "article",
+    ) as HTMLElement;
+    // (40 + 60 + 83) / 3 = 61
+    expect(within(card).getByText("61/100 · srednje")).toBeTruthy();
+    expect(within(card).getByRole("img").querySelector(".bg-warn")).toBeTruthy();
+  });
+
+  it("zatvoren odjel: bez ocjene, razlog gubitka su plaće stalnih radnika (M2)", async () => {
+    const body = departmentsBody();
+    const spa = body.departments.find((d) => d.code === "spa");
+    if (!spa?.last) throw new Error("wellness bez kruga");
+    Object.assign(spa, {
+      open: false,
+      seasonal: 0,
+      last: {
+        ...spa.last,
+        served: 0,
+        demand: 0,
+        load_hundredths: 0,
+        payroll_cents: 116_666,
+        profit_cents: -116_666,
+      },
+    });
+    const api = v2Api()
+      .on("GET", "/v1/hotels/:hotel/departments", body)
+      .on("GET", "/v1/hotels/:hotel/departments/:code", { department: spa, history: [spa.last] });
+    renderApp(api, "/odjeli/spa");
+    const h1 = await screen.findByRole("heading", { level: 1, name: "Mali wellness" });
+    const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
+    expect(detail.queryByRole("img", { name: /Ocjena odjela/ })).toBeNull();
+    const weak = screen
+      .getByRole("heading", { level: 2, name: "Što mu fali" })
+      .closest("section") as HTMLElement;
+    expect(
+      within(weak).getByText(
+        "Odjel je zatvoren: ne prima goste, a stalni radnici se i dalje plaćaju (plaće 1.167 € ovaj tjedan)",
+      ),
+    ).toBeTruthy();
+    expect(within(weak).queryByText(/u gubitku/)).toBeNull();
+    const card = screen.getAllByRole("link", { name: /Mali wellness/ })[0]?.closest("article") as HTMLElement;
+    expect(within(card).queryByRole("img")).toBeNull();
+    expect(within(card).getByText("Zatvoren")).toBeTruthy();
+  });
+
+  it("najam bez ljudi (parking): ocjena je samo stanje prostora, bez redaka o ljudima i gostima", async () => {
+    const body = departmentsBody();
+    const parking = body.departments.find((d) => d.code === "parking");
+    const restaurant = body.departments.find((d) => d.code === "restaurant");
+    if (!parking || !restaurant?.last) throw new Error("nema parkinga");
+    Object.assign(parking, {
+      open: true,
+      condition_pts: 4200,
+      guest_satisfaction_pts: 7000,
+      last: { ...restaurant.last, served: 0, demand: 0, load_hundredths: 0, payroll_cents: 0 },
+    });
+    const api = v2Api()
+      .on("GET", "/v1/hotels/:hotel/departments", body)
+      .on("GET", "/v1/hotels/:hotel/departments/:code", { department: parking, history: [parking.last] });
+    renderApp(api, "/odjeli/parking");
+    const h1 = await screen.findByRole("heading", { level: 1, name: "Parking" });
+    const detail = within(h1.closest("[data-layout] > div") as HTMLElement);
+    expect(detail.getByRole("img", { name: "Ocjena odjela: 42 od 100, slabo" })).toBeTruthy();
+    expect(detail.getByText("Ocjena je stanje prostora.")).toBeTruthy();
+    expect(detail.queryByRole("img", { name: /Zadovoljstvo|Usklađenost/ })).toBeNull();
+    for (const h of ["Gosti", "Ljudi"])
+      expect(detail.queryByRole("heading", { level: 2, name: h })).toBeNull();
+    const card = screen.getAllByRole("link", { name: "Parking" })[0]?.closest("article") as HTMLElement;
+    expect(within(card).queryByText(/Ljudi:/)).toBeNull();
   });
 
   it("računalo: popis i detalj u dva stupca", async () => {
@@ -222,9 +326,9 @@ describe("Odjeli", () => {
       "/odjeli/restaurant",
     );
     expect(await screen.findByText("78/100 → 77/100")).toBeTruthy();
-    expect(screen.getByText("trošenje −1")).toBeTruthy();
-    expect(screen.getByText("preopterećenje 0")).toBeTruthy();
-    expect(screen.getByText("održavanje 0")).toBeTruthy();
+    expect(screen.getByText("trošenje −1 bod")).toBeTruthy();
+    expect(screen.getByText("preopterećenje 0 bodova")).toBeTruthy();
+    expect(screen.getByText("održavanje 0 bodova")).toBeTruthy();
   });
 
   it("povijest: ne lomi se samo naziv kruga, zaglavlja stupaca se smiju prelomiti", async () => {

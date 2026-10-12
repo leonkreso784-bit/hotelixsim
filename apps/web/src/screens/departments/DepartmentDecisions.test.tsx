@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HotelBody, PlanBody } from "../../api/types";
+import { navigate } from "../../router";
 import { json, problem } from "../../test/fakeApi";
-import { HOTEL_ID, plan, v2Api, v2PlanHotel } from "../../test/fixtures";
+import { departmentsBody, HOTEL_ID, plan, v2Api, v2PlanHotel } from "../../test/fixtures";
 import { renderApp } from "../../test/renderApp";
 
 afterEach(() => {
@@ -29,6 +30,20 @@ function withTarget(p: PlanBody, code: string, seasonal_target: number): PlanBod
   const d = p.departments?.[code];
   if (!d) throw new Error(`nema odjela ${code}`);
   return { ...p, departments: { ...p.departments, [code]: { ...d, seasonal_target } } };
+}
+
+/**
+ * Poslužitelj koji pamti plan: PUT ga sprema (kroz `change`, kao da poslužitelj nešto prilagodi), a moj hotel ga
+ * nakon toga vraća, kao pravi poslužitelj.
+ */
+function storingApi(change: (sent: PlanBody) => PlanBody = (x) => x) {
+  let stored: PlanBody | null = null;
+  return v2Api()
+    .on("GET", "/v1/me/hotel", () => json(200, stored ? hotelWith(() => stored as PlanBody) : v2PlanHotel()))
+    .on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) => {
+      stored = change(body as PlanBody);
+      return json(200, stored);
+    });
 }
 
 /** Moj hotel kad krug nije otvoren: poslužitelj ne šalje plan. */
@@ -131,16 +146,13 @@ describe("Odluke odjela na ekranu odjela", () => {
   });
 
   it("odgovor poslužitelja (spremljeni plan) osvježava prikaz", async () => {
-    const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) => {
-      const sent = body as PlanBody;
-      return json(200, {
-        ...sent,
-        departments: {
-          ...sent.departments,
-          lobby_bar: { open: true, seasonal_target: 1, price_level_pct: 90, maintenance: "deferred" },
-        },
-      });
-    });
+    const api = storingApi((sent) => ({
+      ...sent,
+      departments: {
+        ...sent.departments,
+        lobby_bar: { open: true, seasonal_target: 1, price_level_pct: 90, maintenance: "deferred" },
+      },
+    }));
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
     fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
@@ -186,7 +198,13 @@ describe("Odluke odjela na ekranu odjela", () => {
     expect(
       screen.getByText("Ovaj tjedan možeš još promijeniti 1 sezonskog radnika u cijelom hotelu"),
     ).toBeTruthy();
-    expect((within(bar).getByRole("checkbox", { name: "Otvoren" }) as HTMLInputElement).disabled).toBe(true);
+    // Kvačica ostaje u redu tipkovnice (aria-disabled, kao gumbi brojača; M5), a klik je ne mijenja.
+    const open = within(bar).getByRole("checkbox", { name: "Otvoren" }) as HTMLInputElement;
+    expect(open.getAttribute("aria-disabled")).toBe("true");
+    expect(open.disabled).toBe(false);
+    fireEvent.click(open);
+    expect(open.checked).toBe(true);
+    expect(within(bar).getByText("3 sezonska radnika")).toBeTruthy();
     expect(
       screen.getByText(
         "Zatvaranje bi otpustilo više sezonskih radnika nego što se ovaj tjedan još smije promijeniti.",
@@ -266,6 +284,9 @@ describe("Odluke odjela na ekranu odjela", () => {
     expect(screen.queryByRole("button", { name: "Spremi odluke odjela" })).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.getByText("3 sezonska radnika")).toBeTruthy();
+    // Razina cijena zadnjeg obračunatog tjedna (M6).
+    const price = screen.getByText("Cijene u zadnjem tjednu").parentElement as HTMLElement;
+    expect(within(price).getByText("100 %")).toBeTruthy();
   });
 
   it("„Spremi odluke odjela“ čeka popis odjela (sadašnji broj ljudi ostalih odjela)", async () => {
@@ -290,5 +311,93 @@ describe("Odluke odjela na ekranu odjela", () => {
     ).toBeTruthy();
     for (const b of screen.getAllByRole("button"))
       expect(b.getAttribute("aria-label") ?? "").not.toMatch(/sezonc/i);
+  });
+});
+
+describe("nespremljene izmjene i svjež plan", () => {
+  it("izmjena odjela preživi odlazak na drugi odjel i povratak (I1)", async () => {
+    const api = echoApi();
+    renderApp(api, "/odjeli/lobby_bar");
+    let bar = await decisions("Lobby bar");
+    fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
+    expect(within(bar).getByText("4 sezonska radnika")).toBeTruthy();
+    expect(screen.getByText("Izmjene još nisu spremljene.")).toBeTruthy();
+    act(() => navigate("/odjeli/restaurant"));
+    await decisions("Restoran");
+    expect(screen.queryByText("Izmjene još nisu spremljene.")).toBeNull();
+    act(() => navigate("/odjeli/lobby_bar"));
+    bar = await decisions("Lobby bar");
+    expect(within(bar).getByText("4 sezonska radnika")).toBeTruthy();
+    expect(screen.getByText("Izmjene još nisu spremljene.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    expect(await screen.findByText("Odluke odjela su spremljene.")).toBeTruthy();
+    expect(screen.queryByText("Izmjene još nisu spremljene.")).toBeNull();
+  });
+
+  it("šalju se samo dirana polja: ono što je u međuvremenu spremljeno drugdje ostaje (minor 1)", async () => {
+    let reads = 0;
+    // Dok je ekran otvoren, netko je spremio višu razinu cijena Lobby bara (npr. druga kartica preglednika).
+    const fresh = hotelWith((p) => {
+      const d = p.departments?.lobby_bar;
+      if (!d) throw new Error("nema lobby bara");
+      return { ...p, departments: { ...p.departments, lobby_bar: { ...d, price_level_pct: 110 } } };
+    });
+    const api = echoApi().on("GET", "/v1/me/hotel", () => {
+      reads += 1;
+      return json(200, reads === 1 ? v2PlanHotel() : fresh);
+    });
+    renderApp(api, "/odjeli/lobby_bar");
+    const bar = await decisions("Lobby bar");
+    fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    await waitFor(() => expect(api.posts(PUT)).toHaveLength(1));
+    const body = api.posts(PUT)[0]?.body as PlanBody;
+    expect(body.departments?.lobby_bar).toEqual({
+      open: true,
+      seasonal_target: 4,
+      price_level_pct: 110,
+      maintenance: "regular",
+    });
+  });
+
+  it("u međuvremenu otvoren novi tjedan: bez PUT-a, rečenica da odluke vrijede za novi tjedan (minor 2)", async () => {
+    let reads = 0;
+    const next = v2PlanHotel();
+    if (next.private?.plan) next.private.plan.round = "t02";
+    const api = echoApi().on("GET", "/v1/me/hotel", () => {
+      reads += 1;
+      return json(200, reads === 1 ? v2PlanHotel() : next);
+    });
+    renderApp(api, "/odjeli/lobby_bar");
+    const bar = await decisions("Lobby bar");
+    fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    expect(
+      await screen.findByText(
+        "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
+      ),
+    ).toBeTruthy();
+    expect(api.posts(PUT)).toHaveLength(0);
+    expect(within(await decisions("Lobby bar")).getByText("3 sezonska radnika")).toBeTruthy();
+  });
+
+  it("popis odjela se ne učita: u odlukama je ponovni pokušaj (mobitel, minor 3)", async () => {
+    let failing = true;
+    const api = echoApi().on("GET", "/v1/hotels/:hotel/departments", () =>
+      failing ? problem(500, "internal") : json(200, departmentsBody()),
+    );
+    renderApp(api, "/odjeli/restaurant");
+    const rest = await decisions("Restoran");
+    const card = rest.closest("section") as HTMLElement;
+    const retry = await within(card).findByRole("button", { name: "Ponovno učitaj odjele" });
+    expect(retry.className).toMatch(/lg:hidden/);
+    failing = false;
+    fireEvent.click(retry);
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("button", { name: "Spremi odluke odjela" }) as HTMLButtonElement).disabled,
+      ).toBe(false),
+    );
+    expect(within(card).queryByRole("button", { name: "Ponovno učitaj odjele" })).toBeNull();
   });
 });

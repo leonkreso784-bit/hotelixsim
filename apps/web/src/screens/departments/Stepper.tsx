@@ -82,7 +82,8 @@ export function Stepper(props: {
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2">
+        // Od 768 px kartica je široka: − i + ostaju uz vrijednost umjesto na rubovima kartice (M4).
+        <div className="flex items-center gap-2 md:max-w-xs">
           {less}
           {output}
           {more}

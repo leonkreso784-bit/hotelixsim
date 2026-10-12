@@ -18,6 +18,15 @@ export function isService(cls: DeptClassCode): boolean {
   return SERVICE_CLASSES.includes(cls);
 }
 
+/** Najam bez ljudi (parking, lokal u najmu): nema goste po korištenju ni zaposlene, pa ni redak o ljudima. */
+export function leaseWithoutPeople(d: {
+  class: DeptClassCode;
+  permanent: number;
+  seasonal: number;
+}): boolean {
+  return d.class === "rentals" && d.permanent === 0 && d.seasonal === 0;
+}
+
 /**
  * Rezultat sa strelicom i predznakom, da se rast i pad ne razlikuju samo bojom: „▲ +7.896 €“. Strelica ide po
  * prikazanim (zaokruženim) eurima, pa blizu nule nema „▼ 0 €“.

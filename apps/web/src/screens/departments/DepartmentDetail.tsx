@@ -13,7 +13,7 @@ import { DepartmentDecisions } from "./DepartmentDecisions";
 import { DepartmentFacts, People } from "./DepartmentFacts";
 import { DepartmentHistory } from "./DepartmentHistory";
 import { DepartmentInsights } from "./DepartmentInsights";
-import { FOCUS, isService } from "./helpers";
+import { FOCUS, isService, leaseWithoutPeople } from "./helpers";
 import { DeptIcon } from "./icons";
 import { ScoreCard } from "./ScoreCard";
 import { ServiceCosts } from "./ServiceCard";
@@ -94,7 +94,7 @@ export function DepartmentDetail({
         {!dept.open && <Badge tone="muted">{t("dept.closed")}</Badge>}
       </div>
       {score && <ScoreCard score={score} />}
-      {!service && <DepartmentInsights r={dept.last} weekly={weekly} />}
+      {!service && <DepartmentInsights dept={dept} weekly={weekly} />}
       {!service && (
         <DepartmentDecisions hotelId={hotelId} dept={dept} planState={planState} weekly={weekly} />
       )}
@@ -105,7 +105,7 @@ export function DepartmentDetail({
       )}
       {dept.service_last && <ServiceCosts cost={dept.service_last} />}
       {!service && dept.last && <DepartmentFacts dept={dept} r={dept.last} weekly={weekly} />}
-      {(service || empty) && (
+      {(service || empty) && !leaseWithoutPeople(dept) && (
         <People
           dept={dept}
           r={service ? null : dept.last}

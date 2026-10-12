@@ -34,7 +34,7 @@ describe("cijene odluka u planu", () => {
     expect(description(screen.getByRole("radio", { name: "osnovna" }))).toContain("5.000 €");
     fireEvent.click(screen.getByRole("radio", { name: "puna" }));
     expect(
-      screen.getByText("Puna obuka: 10.000 € ovaj mjesec; iskustvo osoblja +7, moral +2 od idućeg mjeseca."),
+      screen.getByText("Puna obuka: 10.000 € ovaj mjesec; od idućeg mjeseca iskustvo osoblja +7, moral +2."),
     ).toBeTruthy();
     expect(screen.getByText("Trošak 1.500 € ovaj mjesec.")).toBeTruthy();
   });
@@ -75,6 +75,40 @@ describe("cijene odluka u planu", () => {
     fireEvent.click(await screen.findByLabelText("Obnova (jednom u sezoni)"));
     expect(screen.getByText("Blagajna sada 200.000 €, nakon obnove 50.000 €.")).toBeTruthy();
     expect(screen.queryByText(/Pozor/)).toBeNull();
+  });
+
+  it("obuka: nulta promjena riječima, ne „moral 0“ (I3)", async () => {
+    renderApp(v2Api(), "/plan");
+    fireEvent.click(await screen.findByRole("radio", { name: "osnovna" }));
+    expect(
+      screen.getByText(
+        "Osnovna obuka: 1.167 € ovaj tjedan; od idućeg tjedna iskustvo osoblja +1, moral bez promjene.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/moral 0/)).toBeNull();
+  });
+
+  it("cijena sobe, marketing i plaće: uz svako polje što mijenja, plaće s iznosom (I3)", async () => {
+    renderApp(v2Api(), "/plan");
+    const price = await screen.findByLabelText("Cijena sobe po noći (€)");
+    expect(description(price)).toContain(
+      "Viša cijena donosi više novca po noći, ali manje gostiju rezervira",
+    );
+    expect(description(screen.getByLabelText("Marketing (€)"))).toContain(
+      "Upisani iznos je trošak ovog tjedna. Marketing dovodi više gostiju",
+    );
+    const wage = description(screen.getByLabelText("Plaće (% uobičajene plaće)"));
+    expect(wage).toContain("Pri sadašnjim plaćama hotel ovaj tjedan na plaće troši oko 30.000 €.");
+    expect(wage).toContain("Viša plaća podiže moral osoblja");
+  });
+
+  it("odluke odjela: cijena sezonskog radnika i učinak cijena (I3)", async () => {
+    renderApp(v2Api(), "/odjeli/restaurant");
+    const rest = await screen.findByRole("group", { name: "Restoran" }, { timeout: 3000 });
+    expect(
+      within(rest).getByText(/^Jedan sezonski radnik u ovom odjelu stoji 490 € ovaj tjedan\. Više ljudi/),
+    ).toBeTruthy();
+    expect(within(rest).getByText(/^Više cijene donose više novca od svakog gosta/)).toBeTruthy();
   });
 
   it("održavanje odjela: tjedna cijena uz svaki izbor", async () => {

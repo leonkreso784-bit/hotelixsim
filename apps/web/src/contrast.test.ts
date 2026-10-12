@@ -39,6 +39,9 @@ const TEXT_PAIRS: [string, string][] = [
   ["muted", "canvas"],
   ["muted", "line"],
   ["ink", "surface"],
+  // Jantarna „srednje“ (ocjena odjela): traka, a ako ikad bude tekst, i on mora biti čitljiv.
+  ["warn", "surface"],
+  ["warn", "canvas"],
 ];
 
 describe("kontrast tokena (I3)", () => {

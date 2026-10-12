@@ -1,7 +1,7 @@
 // Izbori plana s cijenom kruga (iz granica plana; poslužitelj ih čita iz kataloga). Bez Reacta.
 import { t } from "@hotelixsim/i18n";
 import type { PlanBody, PlanLimitsBody } from "../../api/types";
-import { capitalize, formatEuros, formatSignedPoints, tw } from "../../format";
+import { capitalize, formatEuros, formatSignedPoints, tw, wholePoints } from "../../format";
 
 type Costs = PlanLimitsBody["costs"];
 type Levels = Costs["maintenance"];
@@ -24,14 +24,20 @@ export function trainingOptions(c: Costs): { v: PlanBody["training"]; label: str
   ];
 }
 
-/** „Puna obuka: 10.000 € ovaj mjesec; iskustvo osoblja +7, moral +2 od idućeg mjeseca.“; bez obuke ništa. */
+/** Učinak s predznakom, a nulta promjena riječima („moral bez promjene“, ne „moral 0“; UI I3). */
+function effect(key: "experience" | "morale", pts: number): string {
+  return wholePoints(pts) === 0
+    ? t(`plan.training.${key}.same` as const)
+    : t(`plan.training.${key}` as const, { n: formatSignedPoints(pts) });
+}
+
+/** „Puna obuka: 10.000 € ovaj mjesec; od idućeg mjeseca iskustvo osoblja +7, moral +2.“; bez obuke ništa. */
 export function trainingEffect(level: PlanBody["training"], c: Costs, weekly: boolean): string | null {
   if (level === "none") return null;
   const x = level === "basic" ? c.training_basic : c.training_full;
   return tw(weekly, "plan.cost.training", {
     level: capitalize(t(`training.${level}` as const)),
     amount: formatEuros(x.cost_cents),
-    experience: formatSignedPoints(x.experience_pts),
-    morale: formatSignedPoints(x.morale_pts),
+    effect: `${effect("experience", x.experience_pts)}, ${effect("morale", x.morale_pts)}`,
   });
 }

@@ -17,6 +17,8 @@
   --color-mint: #d8f0ee;
   --color-up: #0f7a3c;
   --color-down: #c42626;
+  /* Jantarna „srednje“ (ocjena odjela, Leon 12.10.): ≥ 4,5:1 na bijeloj i na canvas, pa smije biti i tekst. */
+  --color-warn: #b45309;
   --radius-card: 1.25rem;
 }
 
@@ -25,4 +27,11 @@ html {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+}
+
+/* Ispod 768 px donja traka izbornika prekriva dno ekrana: element u fokusu se pomakne iznad nje (M8). */
+@media (width < 48rem) {
+  html {
+    scroll-padding-bottom: 6rem;
+  }
 }

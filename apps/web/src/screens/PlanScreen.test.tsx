@@ -1,5 +1,7 @@
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { PlanBody } from "../api/types";
+import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
 import { HOTEL_ID, myHotel, plan, standardApi, v2Api, v2PlanHotel } from "../test/fixtures";
 import { joined } from "../test/joined";
@@ -82,7 +84,7 @@ describe("plan mjeseca", () => {
     renderApp(api, "/plan");
     fireEvent.change(await screen.findByLabelText("Sezonski radnici"), { target: { value: "38" } });
     fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
-    expect(await screen.findByText("Sezonce možeš mijenjati najviše za 10 mjesečno.")).toBeTruthy();
+    expect(await screen.findByText("Sezonske radnike možeš mijenjati najviše za 10 mjesečno.")).toBeTruthy();
   });
 
   it("prazno ili decimalno polje ne šalje zahtjev nego traži ispravak", async () => {
@@ -198,5 +200,57 @@ describe("plan tjedna: greške", () => {
     expect(
       await screen.findByText("Broj sezonskih radnika možeš mijenjati samo malo odjednom; smanji promjenu."),
     ).toBeTruthy();
+  });
+});
+
+describe("plan: nespremljene izmjene (I1)", () => {
+  it("upisana cijena preživi odlazak u odjele i povratak; nakon spremanja nema napomene", async () => {
+    const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", (_r, _p, body) =>
+      json(200, body as object),
+    );
+    renderApp(api, "/plan");
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "150" } });
+    expect(screen.getByText("Izmjene još nisu spremljene.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("link", { name: "Svi odjeli" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Odjeli" })).toBeTruthy();
+    act(() => navigate("/plan"));
+    const price = (await screen.findByLabelText("Cijena sobe po noći (€)")) as HTMLInputElement;
+    expect(price.value).toBe("150");
+    expect(screen.getByText("Izmjene još nisu spremljene.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    await waitFor(() => expect(api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)).toHaveLength(1));
+    const sent = api.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`)[0]?.body as PlanBody;
+    expect(sent.price_cents).toBe(15_000);
+    await waitFor(() => expect(screen.queryByText("Izmjene još nisu spremljene.")).toBeNull());
+  });
+
+  it("vraćena ista vrijednost nije nespremljena izmjena", async () => {
+    renderApp(v2Api(), "/plan");
+    const price = (await screen.findByLabelText("Cijena sobe po noći (€)")) as HTMLInputElement;
+    const was = price.value;
+    fireEvent.change(price, { target: { value: "150" } });
+    fireEvent.change(price, { target: { value: was } });
+    expect(screen.queryByText("Izmjene još nisu spremljene.")).toBeNull();
+  });
+
+  it("u međuvremenu otvoren novi tjedan: bez PUT-a, jedna rečenica o novom tjednu (minor 2)", async () => {
+    let reads = 0;
+    const next = v2PlanHotel();
+    if (next.private?.plan) next.private.plan.round = "t02";
+    const api = v2Api().on("GET", "/v1/me/hotel", () => {
+      reads += 1;
+      return json(200, reads === 1 ? v2PlanHotel() : next);
+    });
+    renderApp(api, "/plan");
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "150" } });
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    expect(
+      await screen.findByText(
+        "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/pa odluke nisu spremljene/)).toBeNull();
+    expect(api.calls.filter((c) => c.method === "PUT")).toHaveLength(0);
+    expect((screen.getByLabelText("Cijena sobe po noći (€)") as HTMLInputElement).value).not.toBe("150");
   });
 });

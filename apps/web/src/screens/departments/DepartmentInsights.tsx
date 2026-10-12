@@ -1,7 +1,7 @@
 // „Što mu fali“ i „U čemu je dobar“: rečenice iz zadnjeg obračunatog kruga (pravila u `insights.ts`). Prije prvog
 // obračuna jedna rečenica kada će se vidjeti.
 import { t } from "@hotelixsim/i18n";
-import type { DeptRoundBody } from "../../api/types";
+import type { DepartmentBody } from "../../api/types";
 import { tw } from "../../format";
 import { Card } from "../../ui/primitives";
 import { type Insight, insights } from "./insights";
@@ -20,7 +20,8 @@ function List({ items, empty }: { items: Insight[]; empty: string }) {
   );
 }
 
-export function DepartmentInsights({ r, weekly }: { r: DeptRoundBody | null; weekly: boolean }) {
+export function DepartmentInsights({ dept, weekly }: { dept: DepartmentBody; weekly: boolean }) {
+  const r = dept.last;
   if (!r)
     return (
       <Card className="space-y-2">
@@ -28,7 +29,7 @@ export function DepartmentInsights({ r, weekly }: { r: DeptRoundBody | null; wee
         <p>{tw(weekly, "dept.insights.empty")}</p>
       </Card>
     );
-  const x = insights(r, weekly);
+  const x = insights(dept, r, weekly);
   return (
     <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
       <Card className="space-y-2">

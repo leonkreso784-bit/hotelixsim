@@ -6,10 +6,13 @@ import { vi } from "vitest";
 import { App } from "../App";
 import { ApiProvider } from "../api/ApiContext";
 import { poll } from "../api/poll";
+import { clearDrafts } from "../drafts";
 import type { FakeApi } from "./fakeApi";
 
 /** Cijela aplikacija na zadanoj putanji, nad lažnim API-jem. `fetch` se lažira PRIJE stvaranja klijenta. */
 export function renderApp(api: FakeApi, path = "/") {
+  // Nespremljene izmjene žive u sessionStorage-u preglednika; svaki test počinje bez njih.
+  clearDrafts();
   window.history.replaceState(null, "", path);
   vi.stubGlobal("fetch", vi.fn(api.fetch));
   const client = createApiClient("http://localhost");

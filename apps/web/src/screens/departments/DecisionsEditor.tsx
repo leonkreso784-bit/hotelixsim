@@ -1,15 +1,18 @@
-// Uređivanje odluka odjela u otvorenom krugu: otvoren/zatvoren, sezonski radnici, razina cijena i održavanje.
-// „Spremi odluke odjela“ šalje cijeli plan kruga: svježe dohvaćen važeći plan + izmjene ovog odjela (`useSavePlan`).
+// Uređivanje odluka odjela u otvorenom krugu: otvoren/zatvoren, sezonski radnici, razina cijena i održavanje, svaka s
+// cijenom i učinkom. Nespremljene izmjene čuva nacrt (`useDraft`, preživi odlazak u plan i natrag) i to su samo dirana
+// polja: „Spremi odluke odjela“ šalje svježe dohvaćen plan kruga s izmjenama preko odjela (`useSavePlan`), pa polja koja
+// student nije dirao ostaju kakva su na poslužitelju.
 import { t } from "@hotelixsim/i18n";
 import { useRef, useState } from "react";
 import { problemMessage } from "../../api/errors";
 import { useDepartments, useSavePlan } from "../../api/queries";
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
-import { formatCount, formatPercentWhole, formatRange, tw } from "../../format";
+import { differs, draftKey, useDraft } from "../../drafts";
+import { formatCount, formatEuros, formatPercentWhole, formatRange, tw } from "../../format";
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
 import { Choice } from "../plan/Choice";
 import { maintenanceOptions } from "../plan/costs";
-import { FOCUS } from "./helpers";
+import { OpenToggle } from "./OpenToggle";
 import { Stepper } from "./Stepper";
 import { type DeptPlans, stepLeftForOthers } from "./step";
 
@@ -21,24 +24,26 @@ function seasonalTotal(plans: DeptPlans): number {
 }
 
 type DeptLimits = NonNullable<PlanStateBody["limits"]["departments"]>[string];
+type Entry = DeptPlans[string];
 
 export function DecisionsEditor(props: {
   hotelId: string;
   dept: DepartmentBody;
   round: string;
   plans: DeptPlans;
-  entry: DeptPlans[string];
+  entry: Entry;
   limits: DeptLimits;
   stepTotal: number;
   seasonalMax: number;
   weekly: boolean;
 }) {
-  const { dept, plans, limits: l, weekly } = props;
+  const { dept, plans, entry, limits: l, weekly } = props;
   const code = dept.code;
   const list = useDepartments(props.hotelId);
   const save = useSavePlan(props.hotelId);
   const inFlight = useRef(false);
-  const [draft, setDraft] = useState(props.entry);
+  const changes = useDraft<Entry>(draftKey("dept", props.hotelId, props.round, code));
+  const draft: Entry = { ...entry, ...changes.changes };
   const [tooMany, setTooMany] = useState(false);
 
   // Sadašnji broj sezonskih radnika po odjelu: korak troši pomak od njega (Σ |cilj − sada|, kao poslužitelj).
@@ -51,12 +56,11 @@ export function DecisionsEditor(props: {
   const cost = (target: number) => Math.abs(target - base) - Math.abs(draft.seasonal_target - base);
   const canMove = (target: number) =>
     draft.open && target >= l.seasonal_min && target <= l.seasonal_max && cost(target) <= left;
-  const closeFits = cost(0) <= left;
   const fixedPrice = l.price_level_min_pct === l.price_level_max_pct;
   const legendId = `dept-name-${code}`;
 
-  const set = (patch: Partial<DeptPlans[string]>) => {
-    setDraft({ ...draft, ...patch });
+  const set = (patch: Partial<Entry>) => {
+    changes.update(patch);
     setTooMany(false);
     save.reset();
   };
@@ -68,11 +72,13 @@ export function DecisionsEditor(props: {
       return;
     }
     inFlight.current = true;
+    const mine = changes.changes;
     save.mutate(
       {
         round: props.round,
         patch: (cur) => {
-          const departments = { ...(cur.departments ?? {}), [code]: draft };
+          const fresh = cur.departments?.[code] ?? entry;
+          const departments = { ...(cur.departments ?? {}), [code]: { ...fresh, ...mine } };
           // Ukupni sezonski radnici i održavanje Smještaja izvode se iz odjela, kao na poslužitelju.
           return {
             ...cur,
@@ -83,10 +89,7 @@ export function DecisionsEditor(props: {
         },
       },
       {
-        onSuccess: (saved) => {
-          const mine = saved.departments?.[code];
-          if (mine) setDraft(mine);
-        },
+        onSuccess: () => changes.clear(),
         onSettled: () => {
           inFlight.current = false;
         },
@@ -110,43 +113,32 @@ export function DecisionsEditor(props: {
           {dept.name}
         </legend>
         {l.can_close && (
-          <div>
-            <label htmlFor={`dept-open-${code}`} className="flex min-h-11 items-center gap-3 font-semibold">
-              <input
-                id={`dept-open-${code}`}
-                type="checkbox"
-                checked={draft.open}
-                disabled={draft.open && !closeFits}
-                aria-describedby={legendId}
-                onChange={(e) =>
-                  set(
-                    e.target.checked
-                      ? { open: true, seasonal_target: base }
-                      : { open: false, seasonal_target: 0 },
-                  )
-                }
-                className={`size-5 accent-accent ${FOCUS}`}
-              />
-              {t("plan.dept.open")}
-            </label>
-            {!draft.open && <p className="text-sm text-muted">{t("plan.dept.closedNote")}</p>}
-            {draft.open && !closeFits && (
-              <p className="text-sm text-muted">{tw(weekly, "plan.dept.noClose")}</p>
-            )}
-          </div>
+          <OpenToggle
+            code={code}
+            open={draft.open}
+            closeFits={cost(0) <= left}
+            describedBy={legendId}
+            weekly={weekly}
+            onChange={(open) => set(open ? { open, seasonal_target: base } : { open, seasonal_target: 0 })}
+          />
         )}
-        <Stepper
-          named
-          label={t("plan.dept.seasonal")}
-          value={formatCount(draft.seasonal_target, "seasonalWorker")}
-          moreLabel={t("plan.dept.moreSeasonal")}
-          lessLabel={t("plan.dept.lessSeasonal")}
-          describedBy={legendId}
-          moreDisabled={!canMove(draft.seasonal_target + 1)}
-          lessDisabled={!canMove(draft.seasonal_target - 1)}
-          onMore={() => set({ seasonal_target: draft.seasonal_target + 1 })}
-          onLess={() => set({ seasonal_target: draft.seasonal_target - 1 })}
-        />
+        <div className="space-y-1">
+          <Stepper
+            named
+            label={t("plan.dept.seasonal")}
+            value={formatCount(draft.seasonal_target, "seasonalWorker")}
+            moreLabel={t("plan.dept.moreSeasonal")}
+            lessLabel={t("plan.dept.lessSeasonal")}
+            describedBy={legendId}
+            moreDisabled={!canMove(draft.seasonal_target + 1)}
+            lessDisabled={!canMove(draft.seasonal_target - 1)}
+            onMore={() => set({ seasonal_target: draft.seasonal_target + 1 })}
+            onLess={() => set({ seasonal_target: draft.seasonal_target - 1 })}
+          />
+          <p className="text-sm text-muted">
+            {tw(weekly, "plan.dept.seasonalCost", { amount: formatEuros(l.seasonal_worker_cents) })}
+          </p>
+        </div>
         {!fixedPrice && (
           <div className="space-y-1">
             <Stepper
@@ -165,21 +157,33 @@ export function DecisionsEditor(props: {
                 range: formatRange(l.price_level_min_pct, l.price_level_max_pct, "percent"),
               })}
             </p>
+            <p className="text-sm text-muted">{t("plan.dept.priceNote")}</p>
           </div>
         )}
-        <Choice
-          legend={t("plan.dept.maintenance")}
-          name={`dept-maintenance-${code}`}
-          value={draft.maintenance}
-          disabled={!draft.open}
-          describedBy={legendId}
-          options={maintenanceOptions(l.maintenance)}
-          onChange={(v) => set({ maintenance: v })}
-        />
-        <p className="text-xs text-muted">{tw(weekly, "plan.cost.levels")}</p>
+        <div className="space-y-1">
+          <Choice
+            legend={t("plan.dept.maintenance")}
+            name={`dept-maintenance-${code}`}
+            value={draft.maintenance}
+            disabled={!draft.open}
+            describedBy={legendId}
+            options={maintenanceOptions(l.maintenance)}
+            onChange={(v) => set({ maintenance: v })}
+          />
+          <p className="text-sm text-muted">
+            {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
+          </p>
+        </div>
       </fieldset>
-      {/* Ponovni pokušaj nudi stupac popisa (isti upit), da gumb ne bude dvaput na ekranu. */}
-      {list.isError && <ErrorText>{problemMessage(list.error)}</ErrorText>}
+      {list.isError && (
+        <div className="space-y-2">
+          <ErrorText>{problemMessage(list.error)}</ErrorText>
+          {/* Od 1024 px isti ponovni pokušaj nudi stupac popisa; ispod toga popis nije na ekranu. */}
+          <Button variant="secondary" className="lg:hidden" onClick={() => void list.refetch()}>
+            {t("dept.decide.retry")}
+          </Button>
+        </div>
+      )}
       {tooMany && (
         <ErrorText>
           {t("plan.dept.tooMany", { n: formatCount(props.seasonalMax, "seasonalWorker") })}
@@ -187,6 +191,7 @@ export function DecisionsEditor(props: {
       )}
       {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("dept.decide.saved")}</StatusText>}
+      {differs(entry, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
       <Button disabled={save.isPending || !list.isSuccess} onClick={onSave}>
         {t("dept.decide.save")}
       </Button>

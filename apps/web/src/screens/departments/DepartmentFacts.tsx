@@ -1,4 +1,5 @@
-// Četiri kartice odjela s prihodom: Prostor, Gosti, Novac, Ljudi (zadnji obračunati krug).
+// Kartice odjela s prihodom: Prostor, Gosti, Novac, Ljudi (zadnji obračunati krug). Najam bez ljudi (parking, lokal)
+// nema ni goste po korištenju ni ljude, pa ima samo Prostor i Novac.
 import { t } from "@hotelixsim/i18n";
 import type { ReactNode } from "react";
 import type { DepartmentBody, DeptRoundBody } from "../../api/types";
@@ -6,14 +7,14 @@ import {
   formatCount,
   formatEuros,
   formatIndex,
-  formatLoad,
   formatPercentBp,
-  formatWhole,
+  formatPercentWhole,
   formatWholeSigned,
   tw,
 } from "../../format";
 import { Card } from "../../ui/primitives";
-import { resultText, shownChanges } from "./helpers";
+import { leaseWithoutPeople, resultText, shownChanges } from "./helpers";
+import { staffUsePct, usesText } from "./insights";
 
 function Lines({ children }: { children: ReactNode }) {
   return <dl className="divide-y divide-line">{children}</dl>;
@@ -32,6 +33,11 @@ function fromTo(before: number, after: number): string {
   return t("dept.fromTo", { from: formatIndex(before), to: formatIndex(after) });
 }
 
+/** Promjena stanja prostora s jedinicom: „−1 bod“, „+2 boda“, „0 bodova“ (UI_PRAVILA §2.1, M8). */
+function points(n: number): string {
+  return formatCount(n, "point", formatWholeSigned(n));
+}
+
 function Space({ r }: { r: DeptRoundBody }) {
   // Poslužitelj šalje promjene s predznakom (trošenje −, održavanje +); ne okreću se, samo se zaokružuju zajedno.
   const [wear = 0, loadWear = 0, upkeep = 0] = shownChanges(
@@ -47,21 +53,23 @@ function Space({ r }: { r: DeptRoundBody }) {
         <Line label={t("dept.upkeepCost")} value={formatEuros(r.maintenance_cents)} />
       </Lines>
       <ul className="space-y-1">
-        <li>{t("dept.wear", { n: formatWholeSigned(wear) })}</li>
-        <li>{t("dept.loadWear", { n: formatWholeSigned(loadWear) })}</li>
-        <li>{t("dept.upkeep", { n: formatWholeSigned(upkeep) })}</li>
+        <li>{t("dept.wear", { n: points(wear) })}</li>
+        <li>{t("dept.loadWear", { n: points(loadWear) })}</li>
+        <li>{t("dept.upkeep", { n: points(upkeep) })}</li>
       </ul>
       <p className="text-sm text-muted">{t("dept.space.note")}</p>
     </Card>
   );
 }
 
-function Guests({ r }: { r: DeptRoundBody }) {
+function Guests({ dept, r }: { dept: DepartmentBody; r: DeptRoundBody }) {
+  const rooms = dept.class === "rooms";
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.guests")}</h2>
       <Lines>
-        <Line label={t("dept.served")} value={formatWhole(r.served)} />
+        <Line label={t("dept.served")} value={usesText(r.served, dept.class)} />
+        <Line label={rooms ? t("dept.usage.rooms") : t("dept.usage")} value={formatPercentBp(r.usage_bp)} />
         <Line
           label={t("dept.satisfaction")}
           value={fromTo(r.satisfaction_before_pts, r.satisfaction_after_pts)}
@@ -69,7 +77,6 @@ function Guests({ r }: { r: DeptRoundBody }) {
         <Line label={t("dept.value")} value={t("dept.outOf", { n: formatIndex(r.value_pts) })} />
         <Line label={t("dept.priceLevel")} value={formatPercentBp(r.price_level_pct * 100)} />
       </Lines>
-      <p>{t("dept.usage", { p: formatPercentBp(r.usage_bp) })}</p>
     </Card>
   );
 }
@@ -94,8 +101,9 @@ function Money({ r, foodAndBeverage }: { r: DeptRoundBody; foodAndBeverage: bool
 }
 
 /**
- * Ljudi odjela; kapacitet i opterećenje se pokazuju samo kad postoji obračunati krug. Odlasci zadnjeg kruga
- * (`departures`, `null` prije prvog obračuna) stoje i kad je 0 („nitko“): i mirno osoblje je ishod.
+ * Ljudi odjela; opterećenje osoblja se pokazuje samo kad postoji obračunati krug s gostima, i to istom mjerom kao
+ * „Što mu fali / U čemu je dobar“ (postotak granice za dobru uslugu, UI I4). Odlasci zadnjeg kruga (`departures`,
+ * `null` prije prvog obračuna) stoje i kad je 0 („nitko“): i mirno osoblje je ishod.
  */
 export function People({
   dept,
@@ -108,15 +116,13 @@ export function People({
   departures: number | null;
   weekly: boolean;
 }) {
+  const busy = r !== null && (r.demand > 0 || r.served > 0);
   return (
     <Card className="space-y-2">
       <h2 className="text-lg font-bold">{t("dept.staff")}</h2>
       <Lines>
         <Line label={t("dept.permanent")} value={formatCount(dept.permanent, "person")} />
         <Line label={t("dept.seasonal")} value={formatCount(dept.seasonal, "person")} />
-        {r && (
-          <Line label={t("dept.capacity")} value={t("dept.capacityUses", { n: formatWhole(r.capacity) })} />
-        )}
         {departures !== null && (
           <Line
             label={tw(weekly, "dept.departures")}
@@ -125,7 +131,12 @@ export function People({
         )}
       </Lines>
       <p className="text-sm text-muted">{t("dept.staff.note")}</p>
-      {r && <p>{t("dept.load", { load: formatLoad(r.load_hundredths) })}</p>}
+      {busy && r && (
+        <div className="space-y-1">
+          <p>{t("dept.load", { p: formatPercentWhole(staffUsePct(r.load_hundredths)) })}</p>
+          <p className="text-sm text-muted">{t("dept.load.note")}</p>
+        </div>
+      )}
       {departures !== null && departures > 0 && (
         <p className="text-sm text-muted">{t("dept.departures.note")}</p>
       )}
@@ -142,12 +153,13 @@ export function DepartmentFacts({
   r: DeptRoundBody;
   weekly: boolean;
 }) {
+  const lease = leaseWithoutPeople(dept);
   return (
     <div className="space-y-3 xl:grid xl:grid-cols-2 xl:items-start xl:gap-3 xl:space-y-0">
       <Space r={r} />
-      <Guests r={r} />
+      {!lease && <Guests dept={dept} r={r} />}
       <Money r={r} foodAndBeverage={dept.class === "food_beverage"} />
-      <People dept={dept} r={r} departures={r.departures} weekly={weekly} />
+      {!lease && <People dept={dept} r={r} departures={r.departures} weekly={weekly} />}
     </div>
   );
 }

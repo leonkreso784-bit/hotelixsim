@@ -1,11 +1,11 @@
-// Kartica odjela na popisu: ikona i ime (poveznica na cijelu karticu), ocjena odjela kao jedna traka, rezultat
-// zadnjeg kruga i broj ljudi.
+// Kartica odjela na popisu: ikona i ime (poveznica na cijelu karticu), ocjena odjela kao jedna traka (zatvoren odjel
+// je nema, uz njega stoji značka „Zatvoren“), rezultat zadnjeg kruga i broj ljudi (najam bez ljudi ga nema).
 import { t } from "@hotelixsim/i18n";
 import type { DepartmentBody } from "../../api/types";
 import { tw } from "../../format";
 import { Link } from "../../router";
 import { Badge } from "../../ui/primitives";
-import { FOCUS, peopleText, resultText } from "./helpers";
+import { FOCUS, leaseWithoutPeople, peopleText, resultText } from "./helpers";
 import { DeptIcon } from "./icons";
 import { Meter } from "./Meter";
 import { deptScore, scoreLevel } from "./score";
@@ -51,7 +51,9 @@ export function DepartmentCard({
           <strong className="whitespace-nowrap tabular-nums">{resultText(dept.last.profit_cents)}</strong>
         </p>
       )}
-      <p className="text-sm text-muted">{peopleText(dept.permanent, dept.seasonal)}</p>
+      {!leaseWithoutPeople(dept) && (
+        <p className="text-sm text-muted">{peopleText(dept.permanent, dept.seasonal)}</p>
+      )}
     </article>
   );
 }

@@ -57,7 +57,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`min-h-12 ${width === "full" ? "w-full" : "w-auto shrink-0"} rounded-2xl px-4 py-3 text-base font-bold disabled:opacity-50 ${look} ${className}`}
+      className={`min-h-12 ${width === "full" ? "w-full" : "w-auto shrink-0"} rounded-2xl px-4 py-3 text-base font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50 ${look} ${className}`}
       {...rest}
     />
   );

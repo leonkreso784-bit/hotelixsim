@@ -1,10 +1,12 @@
-// Plan kruga: odluke za cijeli hotel (cijena sobe, marketing, plaće, obuka, obnova, recenzije). U v1 igri i sezonski
-// radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo sažetak promjena po odjelima.
+// Plan kruga: odluke za cijeli hotel (cijena sobe, marketing, plaće, obuka, obnova, recenzije), svaka s cijenom ili
+// učinkom. U v1 igri i sezonski radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo
+// sažetak promjena po odjelima. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
 import { t } from "@hotelixsim/i18n";
 import { type FormEvent, useRef, useState } from "react";
-import { problemMessage } from "../api/errors";
+import { ApiError, problemMessage } from "../api/errors";
 import { useGame, useSavePlan } from "../api/queries";
-import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
+import type { HotelBody } from "../api/types";
+import { differs, draftKey, useDraft, useRoundChanged } from "../drafts";
 import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
@@ -13,57 +15,10 @@ import { Choice } from "./plan/Choice";
 import { maintenanceOptions, trainingEffect, trainingOptions } from "./plan/costs";
 import { DepartmentSummary } from "./plan/DepartmentSummary";
 import { NumberField, Toggle } from "./plan/fields";
+import { type Draft, hotelPatch, toDraft } from "./plan/hotelDraft";
 import { Renovation } from "./plan/Renovation";
 
-type Draft = {
-  price: string;
-  marketing: string;
-  seasonal: string;
-  wage: string;
-  training: PlanBody["training"];
-  maintenance: PlanBody["maintenance"];
-  renovation: boolean;
-  reply: boolean;
-};
-
-const toDraft = (p: PlanBody): Draft => ({
-  price: String(p.price_cents / 100),
-  marketing: String(Math.round(p.marketing_cents / 100)),
-  seasonal: String(p.seasonal_target),
-  wage: String(p.wage_pct),
-  training: p.training,
-  maintenance: p.maintenance,
-  renovation: p.renovation,
-  reply: p.reply_reviews,
-});
-
-/** Cijeli broj u granicama ili null (prazno, decimalno, izvan raspona). */
-function int(s: string, min: number, max: number): number | null {
-  if (!/^\d+$/.test(s.trim())) return null;
-  const n = Number(s.trim());
-  return n >= min && n <= max ? n : null;
-}
-
-/**
- * Odluke hotela iz obrasca kao izmjena plana kruga; null kad neki broj nije u rasponu. U v2 se sezonski radnici,
- * održavanje i odjeli ne diraju: ostaju iz svježeg plana kruga (odlučuju se na ekranu odjela).
- */
-function hotelPatch(d: Draft, l: PlanLimitsBody, v2: boolean): Partial<PlanBody> | null {
-  const price = int(d.price, l.price_min_cents / 100, l.price_max_cents / 100);
-  const marketing = int(d.marketing, 0, l.marketing_max_cents / 100);
-  const wage = int(d.wage, l.wage_min_pct, l.wage_max_pct);
-  const seasonal = v2 ? 0 : int(d.seasonal, l.seasonal_min, l.seasonal_max);
-  if (price === null || marketing === null || seasonal === null || wage === null) return null;
-  const hotel: Partial<PlanBody> = {
-    price_cents: price * 100,
-    marketing_cents: marketing * 100,
-    wage_pct: wage,
-    training: d.training,
-    renovation: d.renovation,
-    reply_reviews: d.reply,
-  };
-  return v2 ? hotel : { ...hotel, seasonal_target: seasonal, maintenance: d.maintenance };
-}
+const roundChanged = (e: unknown) => e instanceof ApiError && e.code === "round_changed";
 
 export function PlanScreen({ me }: { me: HotelBody }) {
   const state = me.private?.plan ?? null;
@@ -72,30 +27,33 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
-  const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
+  const changes = useDraft<Draft>(draftKey("plan", me.hotel.hotel_id, state?.round ?? "-"));
+  const newRound = useRoundChanged(state?.round ?? null);
   const [invalid, setInvalid] = useState(false);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
-  if (!state || !draft)
+  if (!state)
     return (
       <>
         <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
         <p className="text-muted">{tw(weekly, "plan.closed")}</p>
       </>
     );
+  const saved = toDraft(state.plan);
+  const draft: Draft = { ...saved, ...changes.changes };
   const l = state.limits;
   const depts = state.plan.departments ?? null;
   const v2 = depts !== null && !!l.departments;
   const set = (patch: Partial<Draft>) => {
-    setDraft({ ...draft, ...patch });
+    changes.update(patch);
     setInvalid(false);
     save.reset();
   };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!state || !draft || save.isPending || inFlight.current) return;
+    if (!state || save.isPending || inFlight.current) return;
     const hotel = hotelPatch(draft, l, v2);
     if (!hotel) {
       setInvalid(true);
@@ -105,6 +63,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
     save.mutate(
       { round: state.round, patch: (cur) => ({ ...cur, ...hotel }) },
       {
+        onSuccess: () => changes.clear(),
         onSettled: () => {
           inFlight.current = false;
         },
@@ -120,6 +79,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       <p className="text-sm text-muted">
         {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
       </p>
+      {newRound && <StatusText>{tw(weekly, "plan.newRound")}</StatusText>}
       <Card className="space-y-4">
         <NumberField
           id="plan-price"
@@ -128,6 +88,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           min={l.price_min_cents / 100}
           max={l.price_max_cents / 100}
           unit="euro"
+          note={t("plan.price.note")}
           onChange={(v) => set({ price: v })}
         />
         {!v2 && (
@@ -149,7 +110,9 @@ export function PlanScreen({ me }: { me: HotelBody }) {
                 options={maintenanceOptions(l.costs.maintenance)}
                 onChange={(v) => set({ maintenance: v })}
               />
-              <p className="text-xs text-muted">{tw(weekly, "plan.cost.levels")}</p>
+              <p className="text-sm text-muted">
+                {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
+              </p>
             </div>
           </>
         )}
@@ -165,6 +128,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             min={0}
             max={l.marketing_max_cents / 100}
             unit="euro"
+            note={tw(weekly, "plan.marketing.note")}
             onChange={(v) => set({ marketing: v })}
           />
           <NumberField
@@ -174,6 +138,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             min={l.wage_min_pct}
             max={l.wage_max_pct}
             unit="percent"
+            note={tw(weekly, "plan.wage.note", { amount: formatEuros(l.costs.payroll_round_cents) })}
             onChange={(v) => set({ wage: v })}
           />
           <div className="space-y-1">
@@ -208,8 +173,11 @@ export function PlanScreen({ me }: { me: HotelBody }) {
         </div>
       </details>
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
+      {save.isError && !(newRound && roundChanged(save.error)) && (
+        <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
+      )}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
+      {differs(saved, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
       <Button type="submit" disabled={save.isPending}>
         {t("plan.save")}
       </Button>
