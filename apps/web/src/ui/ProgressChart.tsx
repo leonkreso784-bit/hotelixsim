@@ -169,7 +169,8 @@ export function ProgressChart({
           ))}
           {ticks.map((tk, i) => {
             const prev = ticks[i - 1];
-            const label = wide ? tk.text : tk.short;
+            // Na uskom se „Poč.“ ne piše: sudarila bi se s prvim mjesecem (UI KS-3 M-3), a početak je crta 0.
+            const label = wide ? tk.text : i === 0 ? null : tk.short;
             const tx = prev ? (x(prev.at) + x(tk.at)) / 2 : x(tk.at);
             return (
               <g key={`${tk.at}-${tk.text}`}>

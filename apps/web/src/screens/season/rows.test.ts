@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { roundPhrase } from "../../format";
 import { HOTEL_ID, ranked, seasonBody, seasonHotel, weekInfo } from "../../test/fixtures";
 import {
+  allTied,
   axisTicks,
   curveSeries,
   decisionRows,
   financeRows,
+  gopMargin,
   hotelLabel,
   indexRows,
   rankingRows,
@@ -56,6 +58,8 @@ describe("poredak i pobjednik", () => {
   it("svi s istim napretkom: jedna rečenica, nitko nije posebno istaknut", () => {
     const body = withProgress([300, 300, 300, 300]);
     expect(winnerLine(body)).toBe("Svi hoteli su napredovali jednako i dijele prvo mjesto.");
+    expect(allTied(body)).toBe(true);
+    expect(allTied(seasonBody())).toBe(false);
     expect(rankingRows(body).every((r) => !r.winner)).toBe(true);
     expect(rankingRows(body).every((r) => r.rank === 1)).toBe(true);
   });
@@ -79,11 +83,12 @@ describe("preciznost bodova prati sezonskog mentora", () => {
       "+8,4 boda",
       "+7,6 boda",
       "−3,1 boda",
-      "−7 bodova",
+      "−7,0 boda",
     ]);
     expect(winnerLine(body)).toBe("Pobijedio je Brižni (robot) s napretkom od +8,4 boda.");
     const curve = curveSeries(body);
-    expect(curve.map((s) => s.valueText)).toEqual(["+7,6 boda", "−3,1 boda", "+8,4 boda", "−7 bodova"]);
+    // Krivulja ide redom poretka, istom preciznošću (i „−7,0“ uz „−3,1“, UI KS-3 M-1).
+    expect(curve.map((s) => s.valueText)).toEqual(["+8,4 boda", "+7,6 boda", "−3,1 boda", "−7,0 boda"]);
   });
 });
 
@@ -95,12 +100,20 @@ describe("krivulja", () => {
       expect(s.values[0]).toBe(0);
       expect(s.values).toHaveLength(18);
     }
-    // Stil prati hotel (slot), ne mjesto: moj 0, roboti 1, 2, 3.
+    // Redom poretka (kao ljestvica), a stil prati hotel (slot), ne mjesto: moj 0, roboti 1, 2, 3 po slotu.
     expect(series.map((s) => [s.label, s.style])).toEqual([
+      ["Brižni (robot)", 2],
       ["Tvoj hotel", 0],
       ["Štediša (robot)", 1],
-      ["Brižni (robot)", 2],
       ["Lovac na popunjenost (robot)", 3],
+    ]);
+    // Drugačiji poredak ne mijenja stil hotela.
+    const other = curveSeries(seasonBody({ progress: [100, 900, -500, 400] }));
+    expect(other.map((s) => [s.label, s.style])).toEqual([
+      ["Štediša (robot)", 1],
+      ["Lovac na popunjenost (robot)", 3],
+      ["Tvoj hotel", 0],
+      ["Brižni (robot)", 2],
     ]);
   });
 
@@ -143,10 +156,13 @@ describe("kartica hotela", () => {
   it("financije sezone kroz format.ts; bez financija nema redaka (ne nule)", () => {
     expect(financeRows(brizni)?.map((r) => [r.label, r.value, r.note])).toEqual([
       ["Prihod (sobe i ostalo)", "412.300 €", null],
-      ["GOP — bruto operativna dobit", "131.900 €", "32 % prihoda ostalo je kao dobit"],
+      ["GOP — bruto operativna dobit", "131.900 €", "32,0 % prihoda ostalo je kao dobit"],
       ["Blagajna: početak → kraj", "80.000 € → 151.200 €", null],
     ]);
     expect(financeRows({ ...brizni, finances: null })).toBeNull();
+    // GOP marža u tablici uvijek s jednom decimalom, da se stupac može usporediti („38,0 %“ uz „42,3 %“).
+    expect(gopMargin(brizni)).toBe("32,0 %");
+    expect(gopMargin({ ...brizni, finances: null })).toBeNull();
   });
 
   it("odluke u brojkama: isti retci za robota i za mene", () => {
@@ -186,16 +202,22 @@ describe("kartica hotela", () => {
     const monthly = seasonBody({ weekly: false });
     const h = monthly.hotels[0];
     if (!h) throw new Error("fixture");
-    expect(decisionRows(h, monthly)?.find((r) => r.key === "training")?.value).toBe("6 od 4 mjeseca");
+    expect(decisionRows(h, monthly)?.find((r) => r.key === "training")?.value).toBe("4 od 4 mjeseca");
   });
 
   it("rečenica strategije za svakog robota; moj hotel je nema", () => {
-    expect(strategySentence(brizni)).toMatch(/^Brižni je ulagao u ljude i goste: cijena sobe 5\s%\siznad/);
+    expect(strategySentence(brizni, true)).toMatch(
+      /^Brižni je ulagao u ljude i goste: cijena sobe 5\s%\siznad/,
+    );
     const stedisa = body.hotels.find((h) => h.name === "Štediša");
     const lovac = body.hotels.find((h) => h.name === "Lovac na popunjenost");
-    expect(stedisa && strategySentence(stedisa)).toMatch(/^Štediša je cijelu sezonu čuvao novac/);
-    expect(lovac && strategySentence(lovac)).toMatch(/^Lovac na popunjenost htio je puni hotel/);
-    expect(strategySentence(mine)).toBeNull();
+    expect(stedisa && strategySentence(stedisa, true)).toMatch(/^Štediša je cijelu sezonu čuvao novac/);
+    expect(lovac && strategySentence(lovac, true)).toMatch(/^Lovac na popunjenost htio je puni hotel/);
+    expect(strategySentence(mine, true)).toBeNull();
+    // Mjesečna igra: Brižni bez rečenice o tjednom zapošljavanju (UI KS-3 M-8).
+    expect(strategySentence(brizni, true)).toContain("u tjednoj igri");
+    expect(strategySentence(brizni, false)).not.toContain("tjedn");
+    expect(strategySentence(brizni, false)).toMatch(/plaće 103\s% uobičajenih/);
   });
 
   it("tuđi ljudski hotel ima oznaku drugog studenta", () => {

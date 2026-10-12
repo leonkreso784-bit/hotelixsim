@@ -1,5 +1,6 @@
-// Kartica jednog hotela na kraju sezone: kako je igrao (robot: pravilo riječima), odluke u brojkama (isti retci za
-// robota i za mene), a ispod 1024 px i indeksi početak → kraj i financije sezone (od 1024 px su u tablicama).
+// Kartica jednog hotela na kraju sezone: kako je igrao (robot: pravilo riječima), a ispod 1024 px i odluke u brojkama
+// (isti retci za robota i za mene), indeksi početak → kraj i financije sezone. Od 1024 px su odluke, indeksi i
+// financije u tablicama (`SeasonTables.tsx`), pa kartica ostaje samo robotima, s rečenicom „Kako je igrao“.
 // Kartice robota su na mobitelu sklopljene, od 768 px otvorene; moja je uvijek otvorena.
 import { t } from "@hotelixsim/i18n";
 import { ChevronDown } from "lucide-react";
@@ -16,7 +17,6 @@ import { decisionRows, financeRows, hotelLabel, strategySentence } from "./rows"
 const H4 = "text-sm font-bold";
 
 function seatLabel(h: SeasonHotelBody): string {
-  if (h.mine) return t("season.mine");
   return t(h.seat.kind === "robot" ? "season.robot" : "season.otherHuman");
 }
 
@@ -29,7 +29,8 @@ function Head({ h, digits }: { h: SeasonHotelBody; digits: PointDigits }) {
           {h.rank}. {hotelLabel(h)}
         </h3>
         <span className="block text-sm text-muted">
-          {seatLabel(h)} ·{" "}
+          {/* Moj hotel već piše „Tvoj hotel“ u naslovu (UI KS-3 M-6). */}
+          {!h.mine && `${seatLabel(h)} · `}
           <span className="whitespace-nowrap">{formatPointsPrecise(h.progress_hundredths, digits)}</span>
         </span>
       </span>
@@ -43,7 +44,8 @@ function Rows({ rows }: { rows: { key: string; label: string; value: string; not
       {rows.map((r) => (
         <div key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-3 py-1.5">
           <dt className="min-w-0">{r.label}</dt>
-          <dd className="text-right font-semibold tabular-nums">
+          {/* `ml-auto`: i prelomljena vrijednost ostaje desno, kao u susjednim retcima (UI KS-3 I-1, M-7). */}
+          <dd className="ml-auto text-right font-semibold tabular-nums">
             {r.value}
             {r.note && <span className="block text-xs font-normal text-muted">{r.note}</span>}
           </dd>
@@ -53,8 +55,7 @@ function Rows({ rows }: { rows: { key: string; label: string; value: string; not
   );
 }
 
-function Body({ h, body }: { h: SeasonHotelBody; body: SeasonBody }) {
-  const sentence = strategySentence(h);
+function Body({ h, body, sentence }: { h: SeasonHotelBody; body: SeasonBody; sentence: string | null }) {
   const decisions = decisionRows(h, body);
   const money = financeRows(h);
   return (
@@ -65,15 +66,15 @@ function Body({ h, body }: { h: SeasonHotelBody; body: SeasonBody }) {
           <p className="text-sm">{sentence}</p>
         </div>
       )}
-      {decisions ? (
-        <div className="space-y-1">
-          <h4 className={H4}>{t(h.mine ? "season.myDecisions" : "season.decisions")}</h4>
-          <Rows rows={decisions} />
-        </div>
-      ) : (
-        <p className="text-sm text-muted">{t("season.private")}</p>
-      )}
       <div className="space-y-3 lg:hidden">
+        {decisions ? (
+          <div className="space-y-1">
+            <h4 className={H4}>{t(h.mine ? "season.myDecisions" : "season.decisions")}</h4>
+            <Rows rows={decisions} />
+          </div>
+        ) : (
+          <p className="text-sm text-muted">{t("season.private")}</p>
+        )}
         <div className="space-y-1">
           <h4 className={H4}>{t("season.indices")}</h4>
           <IndexBars
@@ -105,21 +106,24 @@ export function HotelCard({
   digits: PointDigits;
 }) {
   const wide = useMinWidth(768);
+  const sentence = strategySentence(h, body.round_kind === "week");
+  // Bez rečenice „Kako je igrao“ (moj hotel, drugi student) od 1024 px kartica nema ništa što tablice nemaju.
+  const desktop = sentence ? "" : "lg:hidden";
   if (h.mine)
     return (
-      <Card emphasis className="min-w-0">
+      <Card emphasis className={`min-w-0 ${desktop}`}>
         <Head h={h} digits={digits} />
-        <Body h={h} body={body} />
+        <Body h={h} body={body} sentence={sentence} />
       </Card>
     );
   return (
-    <Card className="min-w-0">
+    <Card className={`min-w-0 ${desktop}`}>
       <details open={wide} className="group">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
           <Head h={h} digits={digits} />
           <ChevronDown size={20} aria-hidden="true" className="shrink-0 text-muted group-open:rotate-180" />
         </summary>
-        <Body h={h} body={body} />
+        <Body h={h} body={body} sentence={sentence} />
       </details>
     </Card>
   );

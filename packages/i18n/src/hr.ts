@@ -533,6 +533,7 @@ export const hr = {
   "season.gopShare": "{pct} prihoda ostalo je kao dobit",
   "season.cash": "Blagajna: početak → kraj",
   "season.cashRange": "{start} → {end}",
+  "season.decision": "Odluka",
   "season.decision.price": "Prosječna cijena sobe",
   "season.decision.marketing": "Marketing u sezoni",
   "season.decision.wage": "Plaće",
@@ -550,6 +551,8 @@ export const hr = {
     "Štediša je cijelu sezonu čuvao novac: cijena sobe uobičajena, bez marketinga, pet sezonskih radnika manje nego što takav hotel obično zapošljava, plaće 95\u00a0% uobičajenih, bez obuke i s odgođenim održavanjem. U situacijama je birao najjeftiniji odgovor.",
   "season.strategy.brizni":
     "Brižni je ulagao u ljude i goste: cijena sobe 5\u00a0% iznad uobičajene, 5.000\u00a0€ marketinga mjesečno, sezonskih radnika koliko traži očekivana popunjenost (u tjednoj igri zapošljava prije gužve i otpušta prije pada), plaće 103\u00a0% uobičajenih, osnovna obuka i redovno održavanje. U situacijama je birao najbolji odgovor.",
+  "season.strategy.brizni.month":
+    "Brižni je ulagao u ljude i goste: cijena sobe 5\u00a0% iznad uobičajene, 5.000\u00a0€ marketinga mjesečno, sezonskih radnika koliko traži očekivana popunjenost, plaće 103\u00a0% uobičajenih, osnovna obuka i redovno održavanje. U situacijama je birao najbolji odgovor.",
   "season.strategy.lovac":
     "Lovac na popunjenost htio je puni hotel: cijena sobe 15\u00a0% ispod uobičajene, 25.000\u00a0€ marketinga mjesečno, isti broj sezonskih radnika cijelu sezonu, uobičajene plaće, bez obuke, redovno održavanje. U situacijama je prihvaćao grupe s najvećim popustom, a inače birao srednji odgovor.",
   "season.strategy.nasumicni": "Nasumični je svaki krug izvlačio odluke nasumce.",

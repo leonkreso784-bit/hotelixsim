@@ -254,14 +254,17 @@ describe("bodovi napretka s preciznošću kraja sezone", () => {
     expect(pointsAt(-844, 1)).toBe(-8.4);
     expect(pointsAt(842, 2)).toBe(8.42);
   });
-  it("formatPointsPrecise: cijeli bodovi kao prije, decimale bez suvišnih nula i uz „boda“", () => {
+  it("formatPointsPrecise: cijeli bodovi kao prije; uz decimale uvijek isti broj decimala i „boda“", () => {
     expect(formatPointsPrecise(800, 0)).toBe("+8 bodova");
     expect(formatPointsPrecise(840, 1)).toBe("+8,4 boda");
-    expect(formatPointsPrecise(800, 1)).toBe("+8 bodova");
+    // Ista preciznost u istoj usporedbi: „−4,0“ uz „−3,7“, ne „−4“ (UI KS-3 M-1).
+    expect(formatPointsPrecise(800, 1)).toBe("+8,0 boda");
+    expect(formatPointsPrecise(-401, 1)).toBe("−4,0 boda");
     expect(formatPointsPrecise(-760, 1)).toBe("−7,6 boda");
     expect(formatPointsPrecise(842, 2)).toBe("+8,42 boda");
-    expect(formatPointsPrecise(840, 2)).toBe("+8,4 boda");
-    expect(formatPointsPrecise(4, 1)).toBe("0 bodova");
+    expect(formatPointsPrecise(840, 2)).toBe("+8,40 boda");
+    expect(formatPointsPrecise(4, 1)).toBe("0,0 boda");
+    expect(formatPointsPrecise(4, 0)).toBe("0 bodova");
     expect(formatPointsPrecise(100, 0)).toBe("+1 bod");
   });
   it("progressDigits: najmanje decimala uz koje se različiti napretci i dalje razlikuju", () => {

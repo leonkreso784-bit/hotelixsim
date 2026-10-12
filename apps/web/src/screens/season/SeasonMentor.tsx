@@ -44,16 +44,17 @@ export function SeasonMentor({ text }: { text: string | null }) {
     return () => clearTimeout(id);
   }, []);
   return (
-    <Card tone="mint" className="flex items-start gap-3">
-      <Avatar look={MENTOR_LOOK} size={56} />
-      <div className="min-w-0 flex-1 space-y-1">
+    // Lik stoji uz naslov, a tekst ide ispod preko cijele širine kartice (UI KS-3 M-5: stupac lika suzio je tekst).
+    <Card tone="mint" className="space-y-2">
+      <div className="flex items-center gap-3">
+        <Avatar look={MENTOR_LOOK} size={48} />
         <h2 className="font-bold text-accent-ink">{t("season.mentor")}</h2>
-        {text !== null ? (
-          <MentorText text={text} />
-        ) : (
-          <p role="status">{gaveUp ? t("month.mentorMissing") : t("month.mentorWaiting")}</p>
-        )}
       </div>
+      {text !== null ? (
+        <MentorText text={text} />
+      ) : (
+        <p role="status">{gaveUp ? t("month.mentorMissing") : t("month.mentorWaiting")}</p>
+      )}
     </Card>
   );
 }

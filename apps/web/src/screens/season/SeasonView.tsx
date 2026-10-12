@@ -10,6 +10,7 @@ import { Card } from "../../ui/primitives";
 import { Leaderboard } from "../month/Leaderboard";
 import { HotelCard } from "./HotelCard";
 import {
+  allTied,
   axisTicks,
   curveColumns,
   curveSeries,
@@ -20,7 +21,7 @@ import {
   winnerLine,
 } from "./rows";
 import { SeasonMentor } from "./SeasonMentor";
-import { IndexTable, MoneyTable } from "./SeasonTables";
+import { DecisionTable, IndexTable, MoneyTable } from "./SeasonTables";
 
 const ACTION =
   "flex min-h-12 items-center justify-center rounded-2xl px-6 py-3 text-base font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -38,7 +39,8 @@ function Result({ body }: { body: SeasonBody }) {
       </p>
       <p>{rankLine(body)}</p>
       <p className="flex items-center justify-center gap-2 font-bold text-ink">
-        {me.winner && <Trophy size={20} aria-hidden="true" className="shrink-0" />}
+        {/* Pehar uz svakog pobjednika, ali ne kad su svi jednaki (pregled koda KS-3 Minor 1, UI M-12). */}
+        {!allTied(body) && <Trophy size={20} aria-hidden="true" className="shrink-0" />}
         <span>{winnerLine(body)}</span>
       </p>
       <p className="text-sm text-muted">{t("season.fairNote")}</p>
@@ -94,12 +96,13 @@ export function SeasonView({ body }: { body: SeasonBody }) {
           </h2>
           <p className="text-sm text-muted">{t("season.robotsNote")}</p>
         </div>
-        <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 xl:grid-cols-4">
+        <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:grid-cols-3">
           {body.hotels.map((h) => (
             <HotelCard key={h.hotel_id} h={h} body={body} digits={digits} />
           ))}
         </div>
       </section>
+      <DecisionTable body={body} />
 
       <div className="flex flex-col gap-3 md:flex-row">
         <Link to="/nova" className={`${ACTION} bg-accent text-white`}>

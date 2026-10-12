@@ -603,3 +603,46 @@ fn season_debrief_text_needs_all_four_parts() {
         "Kako je prošla sezona\nDobro.\n\n  Što je išlo dobro \nSve.\nŠto nije valjalo\nNišta.\nŠto ponijeti u sljedeću igru\nObuku."
     ));
 }
+
+// ---------------------------------------------------------------- popravak 1 (UI čuvar KS-3, I-2)
+
+/// Usporedba s robotom: glagol za studentov hotel prati njegov smjer, ne robotov („porastao …, a tvom hotelu je pao").
+#[test]
+fn robot_comparison_verb_follows_each_hotels_direction() {
+    let tip = |robot: (u16, u16), mine: (u16, u16)| {
+        let g = weekly_done();
+        let mut input = g.season_debrief_input(me()).unwrap();
+        input.me.hotel.progress_hundredths = -5_000;
+        input.me.hotel.start = [mine.0; 5];
+        input.me.hotel.end = [mine.1; 5];
+        for o in &mut input.others {
+            o.hotel.start = [robot.0; 5];
+            o.hotel.end = [robot.1; 5];
+        }
+        let text = fallback_season_debrief(&input);
+        text.split("Što ponijeti u sljedeću igru\n")
+            .nth(1)
+            .unwrap()
+            .to_owned()
+    };
+    let up_down = tip((5_000, 7_000), (3_500, 2_800));
+    assert!(
+        up_down.contains("mu je porastao s 50 na 70, a tvom hotelu je pao s 35 na 28."),
+        "{up_down}"
+    );
+    let up_up = tip((5_000, 7_000), (3_500, 3_800));
+    assert!(
+        up_up.contains("mu je porastao s 50 na 70, a tvom hotelu je porastao s 35 na 38."),
+        "{up_up}"
+    );
+    let down_down = tip((5_000, 4_500), (3_500, 2_800));
+    assert!(
+        down_down.contains("mu je pao s 50 na 45, a tvom hotelu je pao s 35 na 28."),
+        "{down_down}"
+    );
+    let up_flat = tip((5_000, 7_000), (3_500, 3_500));
+    assert!(
+        up_flat.contains("mu je porastao s 50 na 70, a tvom hotelu je ostao na 35."),
+        "{up_flat}"
+    );
+}

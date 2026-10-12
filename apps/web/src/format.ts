@@ -139,13 +139,19 @@ export function formatRange(min: number, max: number, unit: "euro" | "percent" |
   return formatCount(max, "person", span);
 }
 
-/** Napredak s `digits` decimala i množinom, bez suvišnih nula: (840, 1) → "+8,4 boda", (800, 1) → "+8 bodova". */
+/**
+ * Napredak s točno `digits` decimala i množinom: (840, 1) → "+8,4 boda", (800, 1) → "+8,0 boda", (800, 0) → "+8 bodova".
+ * Isti broj decimala za sve brojke jedne usporedbe (UI_PRAVILA §2.3), pa „−4,0“ stoji uz „−3,7“, ne „−4“.
+ */
 export function formatPointsPrecise(hundredths: number, digits: PointDigits): string {
   const n = pointsAt(hundredths, digits);
-  const abs = new Intl.NumberFormat("hr-HR", { maximumFractionDigits: digits, useGrouping: "always" }).format(
-    Math.abs(n),
-  );
-  return formatCount(n, "point", signed(n, abs));
+  const abs = new Intl.NumberFormat("hr-HR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: "always",
+  }).format(Math.abs(n));
+  // Uz decimale („8,0“) imenica je uvijek „boda“, kao uz svaki necijeli broj.
+  return digits > 0 ? `${signed(n, abs)} ${t("plural.point.few")}` : formatCount(n, "point", signed(n, abs));
 }
 
 /** Prosjek ocjena situacija 1–5 (stotinke), jedna decimala: 360 → "3,6/5". */

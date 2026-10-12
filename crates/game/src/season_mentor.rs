@@ -754,15 +754,22 @@ fn robot_comparison(input: &SeasonDebriefInput) -> Option<String> {
     let Some((t, m)) = gap else {
         return Some(format!("{decided}."));
     };
-    let moved = match t.change.signum() {
-        1 => format!("porastao s {} na {}", t.start, t.end),
-        -1 => format!("pao s {} na {}", t.start, t.end),
-        _ => format!("ostao na {}", t.end),
-    };
+    // Svaki hotel dobiva glagol svog smjera (UI KS-3 I-2: „porastao …, a tvom hotelu je pao", ne „… s 35 na 28").
     Some(format!(
-        "{decided}; indeks {} mu je {moved}, a tvom hotelu s {} na {}.",
-        t.name, m.start, m.end
+        "{decided}; indeks {} mu je {}, a tvom hotelu je {}.",
+        t.name,
+        moved_text(t),
+        moved_text(m)
     ))
+}
+
+/// Pomak indeksa riječima, po smjeru: „porastao s 50 na 70", „pao s 35 na 28", „ostao na 35".
+fn moved_text(i: &SeasonIndexFact) -> String {
+    match i.change.signum() {
+        1 => format!("porastao s {} na {}", i.start, i.end),
+        -1 => format!("pao s {} na {}", i.start, i.end),
+        _ => format!("ostao na {}", i.end),
+    }
 }
 
 /// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v1` i rezerva).
@@ -782,9 +789,11 @@ pub fn season_debrief_has_parts(text: &str) -> bool {
 /// Sezonski mentor bez AI-ja (kraj-sezone-spec §7): ista četiri dijela kao uputa, iz istih činjenica.
 pub fn fallback_season_debrief(input: &SeasonDebriefInput) -> String {
     let f = season_debrief_facts(input);
+    // Pravilo poštene usporedbe ostaje u činjenicama za AI; ekran kraja sezone ga piše ispod rezultata, pa ga rezerva
+    // ne ponavlja (UI KS-3 M-4).
     let mut out = format!(
-        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {} {}\n\n",
-        f.progress, f.place, f.winner, f.fairness
+        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {}\n\n",
+        f.progress, f.place, f.winner
     );
 
     let mut risen: Vec<&SeasonIndexFact> = f.indices.iter().filter(|i| i.change > 0).collect();

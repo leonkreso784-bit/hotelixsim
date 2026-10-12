@@ -858,7 +858,7 @@ export function seasonHotel(
       wage_pct_min: 100,
       wage_pct_max: 105,
       seasonal_peak: 24,
-      training_rounds: 6,
+      training_rounds: Math.min(6, n),
       maintenance_deferred_rounds: 0,
       renovation_round: null,
       reply_reviews_rounds: 0,

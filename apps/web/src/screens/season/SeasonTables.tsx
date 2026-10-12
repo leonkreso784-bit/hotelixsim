@@ -1,15 +1,18 @@
-// Računalo (od 1024 px): indeksi početak → kraj i financije sezone svih hotela u dvije tablice. Isti retci kao
-// kartice hotela ispod 1024 px (`rows.ts`), pa se brojke ne razilaze.
+// Računalo (od 1024 px): indeksi početak → kraj, financije sezone i odluke u brojkama svih hotela u tablicama. Isti
+// retci kao kartice hotela ispod 1024 px (`rows.ts`), pa se brojke ne razilaze; ista odluka svih hotela stoji u istom
+// retku, da se moja odluka može usporediti s robotovom (Leon 13.10.).
 import { indexLabel, t } from "@hotelixsim/i18n";
 import type { ReactNode } from "react";
-import type { SeasonHotelBody } from "../../api/types";
+import type { SeasonBody, SeasonHotelBody } from "../../api/types";
 import { formatWhole } from "../../format";
 import { INDEX_ORDER } from "../../game";
-import { Delta, INDEX_ICON } from "../../ui/IndexBars";
+import { Delta } from "../../ui/IndexBars";
 import { Card } from "../../ui/primitives";
-import { financeRows, gopMargin, hotelLabel, indexRows } from "./rows";
+import { decisionRows, financeRows, gopMargin, hotelLabel, indexRows } from "./rows";
 
 const CELL = "border-b border-line px-3 py-2";
+// Tablica indeksa ima šest stupaca: uži razmak, da na 1024 px stane bez pomicanja.
+const TIGHT = "border-b border-line px-2 py-2";
 const NUM = `${CELL} whitespace-nowrap text-right tabular-nums`;
 
 function TableCard({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -24,7 +27,7 @@ function TableCard({ id, title, children }: { id: string; title: string; childre
         aria-labelledby={id}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: pomična tablica mora biti dostupna tipkovnicom
         tabIndex={0}
-        className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {children}
       </div>
@@ -51,11 +54,8 @@ export function IndexTable({ hotels }: { hotels: SeasonHotelBody[] }) {
               {t("season.curve.hotel")}
             </th>
             {INDEX_ORDER.map((code) => (
-              <th key={code} scope="col" className={`${CELL} text-right font-semibold`}>
-                <span className="inline-flex items-center gap-1">
-                  <span className="text-accent">{INDEX_ICON[code]}</span>
-                  {indexLabel(code)}
-                </span>
+              <th key={code} scope="col" className={`${TIGHT} text-right font-semibold`}>
+                {indexLabel(code)}
               </th>
             ))}
           </tr>
@@ -65,7 +65,7 @@ export function IndexTable({ hotels }: { hotels: SeasonHotelBody[] }) {
             <tr key={h.hotel_id} aria-current={h.mine ? "true" : undefined}>
               <HotelCell h={h} />
               {indexRows(h).map((r) => (
-                <td key={r.code} className={NUM}>
+                <td key={r.code} className={`${TIGHT} whitespace-nowrap text-right tabular-nums`}>
                   {t("index.range", { start: formatWhole(r.start), end: formatWhole(r.end) })}{" "}
                   <Delta value={r.delta} />
                 </td>
@@ -125,6 +125,55 @@ export function MoneyTable({ hotels }: { hotels: SeasonHotelBody[] }) {
           })}
         </tbody>
       </table>
+    </TableCard>
+  );
+}
+
+/** Odluke u brojkama: retci = odluke, stupci = hoteli redom poretka (moj hotel podebljan). */
+export function DecisionTable({ body }: { body: SeasonBody }) {
+  const columns = body.hotels.map((h) => ({ h, rows: decisionRows(h, body) }));
+  const keys = columns.find((c) => c.rows)?.rows ?? [];
+  if (keys.length === 0) return null;
+  const hidden = columns.some((c) => c.rows === null);
+  return (
+    <TableCard id="sezona-odluke" title={t("season.decisions")}>
+      <table className="w-full border-separate border-spacing-0 text-sm">
+        <caption className="sr-only">{t("season.decisions")}</caption>
+        <thead>
+          <tr>
+            <th scope="col" className={`${CELL} pl-0 text-left font-semibold text-muted`}>
+              {t("season.decision")}
+            </th>
+            {columns.map(({ h }) => (
+              <th
+                key={h.hotel_id}
+                scope="col"
+                className={`${CELL} text-right align-bottom ${h.mine ? "font-bold" : "font-semibold"}`}
+              >
+                {h.rank}. {hotelLabel(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {keys.map((k) => (
+            <tr key={k.key}>
+              <th scope="row" className={`${CELL} pl-0 text-left font-normal`}>
+                {k.label}
+              </th>
+              {columns.map(({ h, rows }) => (
+                <td
+                  key={h.hotel_id}
+                  className={`${CELL} text-right tabular-nums ${h.mine ? "font-bold" : ""}`}
+                >
+                  {rows?.find((r) => r.key === k.key)?.value ?? "—"}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {hidden && <p className="text-sm text-muted">{t("season.private")}</p>}
     </TableCard>
   );
 }

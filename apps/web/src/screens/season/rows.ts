@@ -6,7 +6,7 @@ import type { IndexCode, SeasonBody, SeasonHotelBody } from "../../api/types";
 import {
   formatCount,
   formatEuros,
-  formatPercentBp,
+  formatPercentBpFixed,
   formatPercentWhole,
   formatPointsPrecise,
   formatQuality,
@@ -36,8 +36,8 @@ function isWeekly(body: SeasonBody): boolean {
   return body.round_kind === "week";
 }
 
-/** Imaju li svi hoteli isto mjesto (jednak napredak): tada nitko nije posebno istaknut kao pobjednik. */
-function allTied(body: SeasonBody): boolean {
+/** Imaju li svi hoteli isto mjesto (jednak napredak): tada nitko nije posebno istaknut kao pobjednik (ni pehar). */
+export function allTied(body: SeasonBody): boolean {
   return body.hotels.length > 1 && body.hotels.every((h) => h.rank === 1);
 }
 
@@ -103,14 +103,17 @@ export function winnerLine(body: SeasonBody): string {
   });
 }
 
-/** Crte krivulje: stil 0 = moj hotel, 1–3 = ostali redom slota (stil prati hotel, ne mjesto ni boju). */
+/** Crte krivulje redom poretka: stil 0 = moj hotel, 1–3 = ostali redom slota (stil prati hotel, ne mjesto). */
 export function curveSeries(body: SeasonBody): ChartLine[] {
   const digits = seasonDigits(body);
-  const bySlot = [...body.hotels].sort((a, b) => a.slot - b.slot);
+  // Stil po slotu (stalan za hotel), a redoslijed legende i tablice po mjestu, kao poredak (UI KS-3 M-9).
   const robotStyles = [1, 2, 3] as const;
+  const styleOf = new Map<string, ChartLine["style"]>();
   let next = 0;
-  return bySlot.map((h) => {
-    const style: ChartLine["style"] = h.mine ? 0 : (robotStyles[Math.min(2, next++)] ?? 3);
+  for (const h of [...body.hotels].sort((a, b) => a.slot - b.slot))
+    styleOf.set(h.hotel_id, h.mine ? 0 : (robotStyles[Math.min(2, next++)] ?? 3));
+  return body.hotels.map((h) => {
+    const style = styleOf.get(h.hotel_id) ?? 3;
     return {
       id: h.hotel_id,
       label: hotelLabel(h),
@@ -178,7 +181,10 @@ export function financeRows(h: SeasonHotelBody): FinanceRow[] | null {
       key: "gop",
       label: t("season.gop"),
       value: formatEuros(f.gop_cents),
-      note: f.gop_margin_bp === null ? null : t("season.gopShare", { pct: formatPercentBp(f.gop_margin_bp) }),
+      note:
+        f.gop_margin_bp === null
+          ? null
+          : t("season.gopShare", { pct: formatPercentBpFixed(f.gop_margin_bp) }),
     },
     {
       key: "cash",
@@ -243,14 +249,18 @@ export function decisionRows(h: SeasonHotelBody, body: SeasonBody): DecisionRow[
   ];
 }
 
-/** Kako je robot igrao, riječima (pravilo robota iz `sim-hotel-v2/src/robots.rs`); null za ljudski hotel. */
-export function strategySentence(h: SeasonHotelBody): string | null {
+/**
+ * Kako je robot igrao, riječima (pravilo robota iz `sim-hotel-v2/src/robots.rs`); null za ljudski hotel. Brižni u
+ * mjesečnoj igri nema rečenicu o tjednom zapošljavanju (UI KS-3 M-8).
+ */
+export function strategySentence(h: SeasonHotelBody, weekly: boolean): string | null {
   const s = h.seat.strategy;
-  return h.seat.kind === "robot" && s ? t(`season.strategy.${s}` as const) : null;
+  if (h.seat.kind !== "robot" || !s) return null;
+  return s === "brizni" && !weekly ? t("season.strategy.brizni.month") : t(`season.strategy.${s}` as const);
 }
 
-/** GOP marža za tablicu financija („32 %“); null bez financija ili bez prihoda. */
+/** GOP marža za tablicu financija, uvijek s jednom decimalom da se stupac može usporediti („32,0 %“). */
 export function gopMargin(h: SeasonHotelBody): string | null {
   const bp = h.finances?.gop_margin_bp;
-  return bp === null || bp === undefined ? null : formatPercentBp(bp);
+  return bp === null || bp === undefined ? null : formatPercentBpFixed(bp);
 }

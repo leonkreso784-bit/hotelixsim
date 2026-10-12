@@ -1,5 +1,6 @@
 // Tablica „Prikaži brojke“ uz krivulju napretka: retci = crte, stupci = točke. Na uskom ekranu pomiče se samo
-// tablica (regija s fokusom), nikad stranica.
+// tablica (regija s fokusom), nikad stranica: regija je `relative`, inače se `sr-only` puna imena krugova
+// (position: absolute) računaju u širinu stranice i ona se pomiče vodoravno (UI KS-3 C-1).
 import type { ChartColumn, ChartLine, ChartText } from "./ProgressChart";
 
 export function ChartTable({
@@ -20,7 +21,7 @@ export function ChartTable({
       aria-label={text.table}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: pomična tablica mora biti dostupna tipkovnicom
       tabIndex={0}
-      className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <table className="w-full border-separate border-spacing-0 text-left text-sm">
         <caption className="sr-only">{text.table}</caption>

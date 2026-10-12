@@ -181,7 +181,41 @@ describe("Kraj sezone: podaci", () => {
     const text = screen.getByRole("img", { name: "Krivulja napretka" }).textContent ?? "";
     expect(text).toContain("lipanj");
     expect(text).not.toMatch(/\bjun\b|t\d\d/);
-    expect(card("2. Tvoj hotel").getByText("6 od 4 mjeseca")).toBeTruthy();
+    expect(card("2. Tvoj hotel").getByText("4 od 4 mjeseca")).toBeTruthy();
+    // Brižni u mjesečnoj igri bez rečenice o tjednom zapošljavanju.
+    expect(card("1. Brižni (robot)").queryByText(/u tjednoj igri/)).toBeNull();
+  });
+
+  it("odluke u brojkama u tablici: ista odluka svih hotela u istom retku (od 1024 px)", async () => {
+    await open();
+    const table = within(screen.getByRole("table", { name: "Odluke u brojkama" }));
+    const headers = table.getAllByRole("columnheader").map((h) => h.textContent);
+    expect(headers).toEqual([
+      "Odluka",
+      "1. Brižni (robot)",
+      "2. Tvoj hotel",
+      "3. Štediša (robot)",
+      "4. Lovac na popunjenost (robot)",
+    ]);
+    const wage = table.getByRole("rowheader", { name: "Plaće" }).closest("tr");
+    expect(wage && within(wage).getAllByRole("cell")).toHaveLength(4);
+    expect(table.getAllByRole("row")).toHaveLength(11);
+  });
+
+  it("pehar uz rečenicu pobjednika, ali ne kad su svi jednaki", async () => {
+    await open();
+    const line = screen.getByText("Pobijedio je Brižni (robot) s napretkom od +12 bodova.").closest("p");
+    expect(line?.querySelector("svg")).not.toBeNull();
+    cleanup();
+    await open(seasonBody({ progress: [300, 300, 300, 300] }));
+    const tied = screen.getByText("Svi hoteli su napredovali jednako i dijele prvo mjesto.").closest("p");
+    expect(tied?.querySelector("svg")).toBeNull();
+  });
+
+  it("zaglavlje moje kartice ne ponavlja „Tvoj hotel“", async () => {
+    await open();
+    expect(card("2. Tvoj hotel").queryByText(/^Tvoj hotel ·/)).toBeNull();
+    expect(card("1. Brižni (robot)").getByText(/^Robot ·/)).toBeTruthy();
   });
 
   it("radnje: „Nova igra“ vodi na izbor nove igre, „Natrag na hotel“ na hotel", async () => {
@@ -226,6 +260,23 @@ describe("Kraj sezone: mentor", () => {
     expect(calls).toBeLessThanOrEqual(6);
     await new Promise((r) => setTimeout(r, 200));
     expect(seasonCalls(api)).toBe(calls);
+  });
+  it("ispitivanje staje i kad dohvati padaju (broje se i neuspjesi)", async () => {
+    let n = 0;
+    const api = seasonApi().on("GET", "/v1/games/:game/season", () => {
+      n += 1;
+      return n === 1 ? json(200, seasonBody({ mentor: null })) : problem(500, "internal");
+    });
+    renderApp(api, "/kraj-sezone");
+    expect(await screen.findByText("Mentor piše…")).toBeTruthy();
+    expect(await screen.findByText("Mentor se ovaj put nije javio.")).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 400));
+    const calls = seasonCalls(api);
+    expect(calls).toBeLessThanOrEqual(6);
+    await new Promise((r) => setTimeout(r, 200));
+    expect(seasonCalls(api)).toBe(calls);
+    // Podaci ostaju na ekranu i kad osvježavanje padne.
+    expect(screen.getByRole("list", { name: "Konačni poredak" })).toBeTruthy();
   });
 });
 

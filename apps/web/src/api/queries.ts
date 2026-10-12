@@ -41,6 +41,14 @@ export const keys = {
   season: (gameId: string) => ["season", gameId] as const,
 };
 
+/**
+ * Koliko je dohvata upit dosad završio, uspješnih i neuspješnih: ispitivanje „najviše N puta“ mora stati i kad
+ * dohvati padaju (pregled koda KS-3 Minor 2), ne samo kad uspijevaju.
+ */
+function attempts(state: { dataUpdateCount: number; errorUpdateCount: number } | undefined): number {
+  return state ? state.dataUpdateCount + state.errorUpdateCount : 0;
+}
+
 export function useMe() {
   const api = useApi();
   return useQuery<HotelBody>({
@@ -264,7 +272,7 @@ export function useFeed(hotelId: string, opts: { untilMentorFor?: string | undef
   const api = useApi();
   const qc = useQueryClient();
   // Budžet se računa „od sada“: dnevnik je mogao biti dohvaćen i prije nego što je ovaj ekran montiran.
-  const startCount = useRef(qc.getQueryState(keys.feed(hotelId))?.dataUpdateCount ?? 0);
+  const startCount = useRef(attempts(qc.getQueryState(keys.feed(hotelId))));
   return useQuery<FeedItemBody[]>({
     queryKey: keys.feed(hotelId),
     queryFn: async () =>
@@ -273,7 +281,7 @@ export function useFeed(hotelId: string, opts: { untilMentorFor?: string | undef
       const m = opts.untilMentorFor;
       if (!m) return false;
       const has = q.state.data?.some((i) => i.kind === "mentor" && i.round === m);
-      return has || q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
+      return has || attempts(q.state) - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
     },
   });
 }
@@ -349,7 +357,7 @@ export function usePl(hotelId: string, code: string | null, scope: PlScopeCode) 
 export function useSeason(gameId: string, enabled: boolean) {
   const api = useApi();
   const qc = useQueryClient();
-  const startCount = useRef(qc.getQueryState(keys.season(gameId))?.dataUpdateCount ?? 0);
+  const startCount = useRef(attempts(qc.getQueryState(keys.season(gameId))));
   return useQuery<SeasonBody>({
     queryKey: keys.season(gameId),
     enabled,
@@ -357,7 +365,7 @@ export function useSeason(gameId: string, enabled: boolean) {
       unwrap(await api.GET("/v1/games/{game_id}/season", { params: { path: { game_id: gameId } } })),
     refetchInterval: (q) => {
       if (!q.state.data || q.state.data.mentor !== null) return false;
-      return q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
+      return attempts(q.state) - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
     },
   });
 }
