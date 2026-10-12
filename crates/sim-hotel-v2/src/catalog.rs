@@ -345,6 +345,36 @@ impl Catalog {
                 "v2.economy.ffe_reserve_bp".to_string(),
             ));
         }
+        self.validate_leases()
+    }
+
+    /// Najmovi (obnova-o1-review „Prijedlog formule najmova"): udio odjela u osjećaju sobe ima samo odjel koji nije
+    /// Smještaj ni neraspoređen, a zgrada i svi takvi udjeli zajedno najviše 10 000; najamnina ovisna o stanju samo
+    /// uz stalni prihod (`Fixed`), prag u 0–10 000 i popust najviše 10 000 bp.
+    fn validate_leases(&self) -> Result<(), CatalogError> {
+        let mut shares = u32::from(self.economy.building.satisfaction_share_bp);
+        for (code, d) in &self.departments {
+            let field = |f: &str| format!("v2.departments.{}.{f}", code.as_str());
+            if d.guest_share_bp > 0 && (d.class == UsaliClass::Rooms || d.class.is_undistributed())
+            {
+                return Err(CatalogError::OutOfRange(field("guest_share_bp")));
+            }
+            shares = shares.saturating_add(u32::from(d.guest_share_bp));
+            if let Some(r) = &d.rent_condition {
+                let fixed = matches!(d.revenue, RevenueModel::Fixed { .. });
+                let threshold_ok = r
+                    .threshold_pts
+                    .is_none_or(|t| (0_i32..=10_000_i32).contains(&t));
+                if !fixed || !threshold_ok || r.max_cut_bp > 10_000 {
+                    return Err(CatalogError::OutOfRange(field("rent_condition")));
+                }
+            }
+        }
+        if shares > 10_000 {
+            return Err(CatalogError::OutOfRange(
+                "v2.departments.guest_share_bp".to_string(),
+            ));
+        }
         Ok(())
     }
 }
@@ -452,6 +482,8 @@ fn bare(name: &str, class: UsaliClass, revenue: RevenueModel) -> DeptSpec {
         can_close: false,
         staffing: BTreeMap::new(),
         renewal: RenewalSpec::default(),
+        guest_share_bp: 0,
+        rent_condition: None,
     }
 }
 

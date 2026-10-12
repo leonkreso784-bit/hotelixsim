@@ -83,3 +83,107 @@ fn maintenance_numbers_match_the_table() {
     assert_eq!(c.dept(&code("pool_bar")).unwrap().wear_pts_per_month, 450);
     assert_eq!(level("pool_bar", Maintenance::Intensive), (300_000, 600));
 }
+
+/// Najmovi (korak b′, Leonova anketa 13.10. (3)): parking je 5 % osjećaja sobe, lokal ima popust na najamninu ispod
+/// početnog stanja (2 % po bodu, najviše 30 %); nitko drugi nema ni jedno ni drugo.
+#[test]
+fn lease_rules_in_content() {
+    use sim_hotel_v2::department::RentCondition;
+    let c = v2();
+    for (k, d) in &c.departments {
+        let (share, rule) = match k.as_str() {
+            "parking" => (500, None),
+            "retail_lease" => (
+                0,
+                Some(RentCondition {
+                    threshold_pts: None,
+                    cut_bp_per_pt: 200,
+                    max_cut_bp: 3_000,
+                }),
+            ),
+            _ => (0, None),
+        };
+        assert_eq!(
+            (d.guest_share_bp, d.rent_condition),
+            (share, rule),
+            "{}",
+            k.as_str()
+        );
+    }
+}
+
+/// Ručni primjer na sadržaju: profil B, mjesečna sezona, zadani plan uz odgođeno održavanje lokala. Lokal počinje
+/// na 60 i gubi 0,5 boda mjesečno, pa najamnina (6.000 €) pada 1 % po mjesecu: 5.940, 5.880, 5.820, 5.760 €.
+#[test]
+fn lease_rent_falls_with_deferred_upkeep_by_hand() {
+    use sim_hotel_v2::{Category, PeriodKind, PeriodPlan, Profile, RefTable};
+    let c = v2();
+    let lokal = code("retail_lease");
+    let periods = sim_hotel_v2::season_periods(PeriodKind::Month);
+    let refs = RefTable::compute(&c, Category::Four, &periods).unwrap();
+    let r = sim_hotel_v2::run_season_with(
+        Profile::B,
+        PeriodKind::Month,
+        &c,
+        &[],
+        &refs,
+        &mut |s, p| {
+            let mut plan = PeriodPlan::default_for(s, p, &c)?;
+            plan.departments.get_mut(&lokal).unwrap().maintenance = Maintenance::Deferred;
+            Ok(plan)
+        },
+        &mut |_| Err(sim_hotel_v2::ResolveError::BadChoice),
+    )
+    .unwrap();
+    let got: Vec<(i32, i64)> = r
+        .periods
+        .iter()
+        .map(|(rep, _)| {
+            let o = &rep.accounts.departments[&lokal];
+            (o.condition_after_pts, o.revenue_cents)
+        })
+        .collect();
+    assert_eq!(
+        got,
+        [
+            (5_950, 594_000),
+            (5_900, 588_000),
+            (5_850, 582_000),
+            (5_800, 576_000)
+        ]
+    );
+}
+
+/// Nova polja najmova se čitaju i pišu bez gubitka; bez ključeva odjel nema udio ni pravilo najamnine.
+#[test]
+fn lease_fields_round_trip() {
+    use serde_json::json;
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    v["v2"]["departments"]["retail_lease"]["rent_condition"]["threshold_pts"] = json!(6500);
+    let s = Snapshot::from_value(&v).unwrap();
+    assert_eq!(s.to_value(), v);
+    let c = s.build().unwrap().v2.unwrap();
+    let rule = c
+        .dept(&code("retail_lease"))
+        .unwrap()
+        .rent_condition
+        .unwrap();
+    assert_eq!(rule.threshold_pts, Some(6_500));
+    let d = v["v2"]["departments"].as_object_mut().unwrap();
+    d["parking"]
+        .as_object_mut()
+        .unwrap()
+        .remove("guest_share_bp");
+    d["retail_lease"]
+        .as_object_mut()
+        .unwrap()
+        .remove("rent_condition");
+    let s = Snapshot::from_value(&v).unwrap();
+    assert_eq!(s.to_value(), v);
+    let c = s.build().unwrap().v2.unwrap();
+    assert!(
+        c.departments
+            .values()
+            .all(|d| d.guest_share_bp == 0 && d.rent_condition.is_none())
+    );
+}

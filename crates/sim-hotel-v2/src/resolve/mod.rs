@@ -291,7 +291,14 @@ pub fn resolve_period(
     // 3. operativni odjeli s iskustvom i moralom nakon faze ljudi
     let mut depts = ops_in(&s, c::narrow(pe.experience)?, c::narrow(pe.morale)?)?;
 
-    // 4. oprema i gosti, račun Smještaja
+    // 4. oprema i gosti, račun Smještaja; osjećaj sobe uključuje odjele s udjelom (parking, stanje nakon kruga)
+    let mut felt_parts: Vec<(i32, u16)> = Vec::new();
+    for o in depts.values() {
+        let share = cat.dept(&o.code)?.guest_share_bp;
+        if share > 0 {
+            felt_parts.push((o.condition_after_pts, share));
+        }
+    }
     let r_penalty = w(sim_hotel::load_penalty(c::narrow(r_load)?)?);
     let others: Vec<(u32, i32, i32)> = depts
         .values()
@@ -321,6 +328,7 @@ pub fn resolve_period(
             renewal_delta_pts: rooms_renewal.delta_pts,
             building_pts: building.after_pts,
             building_share_bp: share_bp,
+            felt_parts: &felt_parts,
         },
         base,
     )?;

@@ -283,6 +283,8 @@ fn operated(
         can_close,
         staffing: BTreeMap::new(),
         renewal: sim_hotel_v2::RenewalSpec::default(),
+        guest_share_bp: 0,
+        rent_condition: None,
     }
 }
 

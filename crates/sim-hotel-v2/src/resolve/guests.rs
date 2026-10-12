@@ -9,7 +9,7 @@ use sim_hotel::{GuestOutcome, Pending};
 
 use super::{step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
-use crate::department::{DeptSpec, after_renewal, felt_condition};
+use crate::department::{DeptSpec, after_renewal, felt_condition_mix};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -70,6 +70,8 @@ pub(super) struct GuestIn<'a> {
     /// Stanje zgrade nakon kruga i njen udio u stanju koje gost osjeća.
     pub(super) building_pts: i32,
     pub(super) building_share_bp: u16,
+    /// Ostali odjeli koje gost Smještaja osjeća (parking): (stanje nakon kruga, udio u bp); prazno = samo zgrada.
+    pub(super) felt_parts: &'a [(i32, u16)],
 }
 
 pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
@@ -105,7 +107,9 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     .clamp(0, 10_000);
     let equipment = after_renewal(base, i.renewal_delta_pts)?;
     let renewal_pts = c::sub(equipment, base)?;
-    let felt = felt_condition(c::narrow(equipment)?, i.building_pts, i.building_share_bp)?;
+    let mut parts = vec![(i.building_pts, i.building_share_bp)];
+    parts.extend_from_slice(i.felt_parts);
+    let felt = felt_condition_mix(c::narrow(equipment)?, &parts)?;
     let quality = c::div_round(
         c::sum(&[
             c::mul(4_000, i.experience)?,

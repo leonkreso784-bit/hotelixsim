@@ -5,7 +5,9 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use sim_hotel::{Category, LevelEffect, MonthTable};
-use sim_hotel_v2::department::{DeptCode, DeptSpec, RevenueModel, StaffingNorm, UsaliClass};
+use sim_hotel_v2::department::{
+    DeptCode, DeptSpec, RentCondition, RevenueModel, StaffingNorm, UsaliClass,
+};
 use sim_hotel_v2::{
     BuildingSpec, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, ProfileV2, RenewalSpec,
 };
@@ -55,6 +57,33 @@ fn renewal(r: Option<&RenewalDto>) -> RenewalSpec {
         step_cents: r.step_cents,
         life_months: r.life_months,
     })
+}
+
+/// Najamnina ovisna o stanju prostora (najam lokala); bez ključa najamnina ne ovisi o stanju. Bez `threshold_pts`
+/// prag je početno stanje prostora iz profila.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RentConditionDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    threshold_pts: Option<i32>,
+    cut_bp_per_pt: u16,
+    max_cut_bp: u16,
+}
+
+fn rent_to_dto(r: &RentCondition) -> RentConditionDto {
+    RentConditionDto {
+        threshold_pts: r.threshold_pts,
+        cut_bp_per_pt: r.cut_bp_per_pt,
+        max_cut_bp: r.max_cut_bp,
+    }
+}
+
+fn rent(r: &RentConditionDto) -> RentCondition {
+    RentCondition {
+        threshold_pts: r.threshold_pts,
+        cut_bp_per_pt: r.cut_bp_per_pt,
+        max_cut_bp: r.max_cut_bp,
+    }
 }
 
 /// Jedna vrijednost po mjesecu sezone (lipanj–rujan).
@@ -141,6 +170,12 @@ pub(crate) struct DeptDto {
     /// Obnova opreme odjela (obnova v2); bez ključa odjel nema obnovu.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     renewal: Option<RenewalDto>,
+    /// Udio stanja odjela u osjećaju sobe gosta Smještaja (parking), u bp; bez ključa 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    guest_share_bp: Option<u16>,
+    /// Najamnina ovisna o stanju prostora (najam lokala); bez ključa ne ovisi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    rent_condition: Option<RentConditionDto>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -288,6 +323,8 @@ pub(crate) fn dept_to_dto(d: &DeptSpec) -> DeptDto {
             })
             .collect(),
         renewal: renewal_to_dto(&d.renewal),
+        guest_share_bp: (d.guest_share_bp != 0).then_some(d.guest_share_bp),
+        rent_condition: d.rent_condition.as_ref().map(rent_to_dto),
     }
 }
 
@@ -335,6 +372,8 @@ pub(crate) fn build_dept(code: &str, d: &DeptDto) -> Result<DeptSpec, ContentErr
         can_close: d.can_close,
         staffing,
         renewal: renewal(d.renewal.as_ref()),
+        guest_share_bp: d.guest_share_bp.unwrap_or(0),
+        rent_condition: d.rent_condition.as_ref().map(rent),
     })
 }
 

@@ -41,6 +41,8 @@ fn restaurant() -> DeptSpec {
         can_close: false,
         staffing: BTreeMap::new(),
         renewal: Default::default(),
+        guest_share_bp: 0,
+        rent_condition: None,
     }
 }
 

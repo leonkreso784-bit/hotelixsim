@@ -168,7 +168,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "guest_share_bp": 500
   },
   "retail_lease": {
     "name": "Najam lokala",
@@ -188,7 +189,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "rent_condition": { "cut_bp_per_pt": 200, "max_cut_bp": 3000 }
   },
   "admin": {
     "name": "Uprava",
