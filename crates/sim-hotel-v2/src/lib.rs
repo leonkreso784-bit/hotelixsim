@@ -18,6 +18,7 @@ pub mod plan;
 pub mod resolve;
 pub mod robots;
 pub mod season;
+pub mod situations;
 pub mod state;
 pub mod streams;
 pub mod usali;

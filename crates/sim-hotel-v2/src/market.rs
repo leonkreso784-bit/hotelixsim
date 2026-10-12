@@ -17,7 +17,8 @@ fn f_price_bp(price: i64, reference: i64, elasticity_bp: i32) -> Calc<i32> {
     c::narrow(c::add(10_000, shift)?.clamp(3_000, 16_000))
 }
 
-fn f_reputation_bp(rating: u16) -> Calc<i32> {
+/// Faktor ugleda u potražnji (bp); dijeli ga i očekivana popunjenost za broj situacija (`situations::count`).
+pub(crate) fn f_reputation_bp(rating: u16) -> Calc<i32> {
     let gap = c::sub(i128::from(rating), 840)?;
     let shift = c::div_round(c::mul(54, gap)?, 10)?;
     c::narrow(c::add(10_000, shift)?.max(0))
