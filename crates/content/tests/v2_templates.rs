@@ -1,6 +1,6 @@
 //! Predlošci situacija v2 (`content/hotel/v2/situation_templates.json`, `v2/names.json`): format i provjera (S-1).
 
-use content::templates::{Kind, MajorSide, Quantity, TemplateMechanic};
+use content::templates::{Conditions, Kind, MajorSide, Quantity, TemplateMechanic};
 use content::{Content, ContentError, Snapshot, fingerprint_value, repo_dir};
 use serde_json::{Value, json};
 use sim_hotel_v2::department::UsaliClass;
@@ -145,6 +145,101 @@ fn repo_templates_cover_kinds_and_departments() {
             x.code,
             x.repeat.gap_rounds
         );
+    }
+}
+
+/// Tipično stanje hotela na početku kruga za provjeru kapaciteta (S-3): odjeli otvoreni, stanje prostora 65/100,
+/// moral 60/100, opterećenje 1,5, pet zaposlenih po odjelu, bez odlazaka i bez prihvaćene grupe.
+struct Typical {
+    occupancy_bp: i64,
+}
+
+impl Typical {
+    fn value(&self, field: &str) -> i64 {
+        match field {
+            "occupancy_bp" => self.occupancy_bp,
+            "morale_pts" => 6_000,
+            "cash_cents" => 100_000_000,
+            "dept_condition_pts" => 6_500,
+            "dept_satisfaction_pts" => 7_000,
+            "dept_load_hundredths" => 150,
+            "dept_staff" => 5,
+            "dept_departures" => 0,
+            _ => unreachable!("{field}"),
+        }
+    }
+
+    /// Dopušta li uvjet `when` predložak u mjesecu `month` (`at_least` uključivo, `below` isključivo).
+    fn allows(&self, c: &Conditions, month: &str) -> bool {
+        if !c.months.is_empty() && !c.months.iter().any(|m| m == month) {
+            return false;
+        }
+        if c.group_accepted == Some(true) {
+            return false;
+        }
+        let fields = [
+            ("occupancy_bp", c.occupancy_bp),
+            ("morale_pts", c.morale_pts),
+            ("cash_cents", c.cash_cents),
+            ("dept_condition_pts", c.dept_condition_pts),
+            ("dept_satisfaction_pts", c.dept_satisfaction_pts),
+            ("dept_load_hundredths", c.dept_load_hundredths),
+            ("dept_staff", c.dept_staff),
+            ("dept_departures", c.dept_departures),
+        ];
+        fields.into_iter().all(|(f, b)| {
+            b.is_none_or(|b| {
+                let v = self.value(f);
+                b.at_least.is_none_or(|a| v >= a) && b.below.is_none_or(|x| v < x)
+            })
+        })
+    }
+}
+
+/// Kapacitet sadržaja (S-3, Leon: „oboje“ — novi predlošci i ponavljanje uz razmak ≥ 4 tjedna): mjesečna igra u
+/// kolovozu traži do 22 različite situacije, tjedna igra ~65 po sezoni. Veće situacije se ne broje (dolaze samo u
+/// krajnostima). Ponovljeni predložak traži drugo ime, pa svaki popis imena ima barem 20 imena po rodu.
+#[test]
+fn repo_templates_fill_a_season() {
+    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let v2 = c.v2.unwrap();
+    let t = c.situation_templates.unwrap();
+    let ordinary: Vec<_> = t.templates.iter().filter(|x| x.major.is_none()).collect();
+    let always_open = |d: &str| {
+        d == "hotel"
+            || v2
+                .departments
+                .iter()
+                .any(|(k, s)| k.as_str() == d && !s.can_close)
+    };
+    let general = ordinary
+        .iter()
+        .filter(|x| x.when.is_empty() && always_open(&x.department))
+        .count();
+    assert!(general >= 8, "pravih općih predložaka {general} < 8");
+    for (month, occupancy_bp, need) in [("aug", 10_000, 22), ("sep", 7_500, 14)] {
+        let st = Typical { occupancy_bp };
+        let n = ordinary
+            .iter()
+            .filter(|x| st.allows(&x.when, month))
+            .count();
+        assert!(n >= need, "{month}: dopušteno {n} predložaka < {need}");
+    }
+    let per_season: u32 = ordinary
+        .iter()
+        .map(|x| u32::from(x.repeat.max_per_season))
+        .sum();
+    assert!(per_season >= 70, "zbroj max_per_season {per_season} < 70");
+    let n = &t.names;
+    for (list, v) in [
+        ("guest.f", &n.guest.f),
+        ("guest.m", &n.guest.m),
+        ("staff.f", &n.staff.f),
+        ("staff.m", &n.staff.m),
+        ("partner.f", &n.partner.f),
+        ("partner.m", &n.partner.m),
+    ] {
+        assert!(v.len() >= 20, "names.{list}: {} imena < 20", v.len());
     }
 }
 
