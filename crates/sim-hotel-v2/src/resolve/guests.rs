@@ -9,7 +9,7 @@ use sim_hotel::{GuestOutcome, Pending};
 
 use super::{step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
-use crate::department::{DeptSpec, after_renewal, felt_condition_mix};
+use crate::department::{DeptSpec, after_renewal, felt_condition_mix, wear_pts};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -72,15 +72,19 @@ pub(super) struct GuestIn<'a> {
     pub(super) building_share_bp: u16,
     /// Ostali odjeli koje gost Smještaja osjeća (parking): (stanje nakon kruga, udio u bp); prazno = samo zgrada.
     pub(super) felt_parts: &'a [(i32, u16)],
+    /// Faktor trošenja dok je održavanje odgođeno (bp).
+    pub(super) deferred_wear_bp: u16,
 }
 
 pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let p = i.period;
     let level = i.rooms_spec.maintenance_level(i.plan.rooms_maintenance());
     let maintenance_eff = w(prorate(i64::from(level.equipment_pts), p)?);
-    // Mjesečno trošenje Smještaja (v1: 400), razmjerno krugu.
-    let wear = w(prorate(
-        c::narrow(c::sub(0, w(i.rooms_spec.wear_pts_per_month))?)?,
+    // Mjesečno trošenje Smještaja (v1: 400; uz odgođeno održavanje puta faktor), razmjerno krugu.
+    let wear = w(wear_pts(
+        i.rooms_spec.wear_pts_per_month,
+        i.plan.rooms_maintenance(),
+        i.deferred_wear_bp,
         p,
     )?);
     let equipment_load = if i.rooms_load > 180 {

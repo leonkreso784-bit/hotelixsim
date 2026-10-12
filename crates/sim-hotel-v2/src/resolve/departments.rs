@@ -66,6 +66,7 @@ pub(super) fn operated(i: &OperatedIn) -> Result<BTreeMap<DeptCode, DeptOutcome>
             renewal: i.renewals.get(code).copied().unwrap_or_default(),
             building_pts: i.building_pts,
             building_share_bp: i.building_share_bp,
+            deferred_wear_bp: i.cat.economy.deferred_wear_bp,
         })?;
         out.insert(code.clone(), o);
     }

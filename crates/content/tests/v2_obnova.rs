@@ -272,3 +272,19 @@ fn finance_index_is_gop_after_investment() {
         sim_hotel_v2::FinanceBasis::GopAfterInvestment
     );
 }
+
+/// Korak e (jezgra): faktor trošenja uz odgođeno održavanje čita se iz `economy.deferred_wear_bp`; bez ključa je
+/// 10 000 (kao redovno). Vrijednost u sadržaju bira Leon (izvještaj O-2, nastavak).
+#[test]
+fn deferred_wear_factor_round_trips() {
+    use serde_json::json;
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    assert!(v["v2"]["economy"].get("deferred_wear_bp").is_none());
+    assert_eq!(v2().economy.deferred_wear_bp, 10_000);
+    v["v2"]["economy"]["deferred_wear_bp"] = json!(15_000);
+    let s = Snapshot::from_value(&v).unwrap();
+    assert_eq!(s.to_value(), v);
+    let c = s.build().unwrap().v2.unwrap();
+    assert_eq!(c.economy.deferred_wear_bp, 15_000);
+    c.validate().unwrap();
+}

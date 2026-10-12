@@ -33,6 +33,8 @@ pub struct EconomyV2 {
     /// Smjernica „pričuva za obnovu ≈ x % prihoda sezone" (FF&E), u bp; 0 = bez smjernice.
     pub ffe_reserve_bp: u16,
     pub finance_index: FinanceBasis,
+    /// Faktor mjesečnog trošenja dok je održavanje odjela odgođeno (bp; 10 000 = kao redovno, O-2 korak e).
+    pub deferred_wear_bp: u16,
 }
 
 /// Zgrada hotela (model B, obnova-v2-spec §2.2): jedno stanje za cijeli hotel, troši se sporo, diže ga samo obnova
@@ -350,6 +352,12 @@ impl Catalog {
                 "v2.economy.ffe_reserve_bp".to_string(),
             ));
         }
+        // Zapušten prostor propada barem kao održavan, najviše pet puta brže.
+        if !(10_000..=50_000).contains(&self.economy.deferred_wear_bp) {
+            return Err(CatalogError::OutOfRange(
+                "v2.economy.deferred_wear_bp".to_string(),
+            ));
+        }
         self.validate_leases()
     }
 
@@ -633,6 +641,7 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             building: BuildingSpec::none(),
             ffe_reserve_bp: 0,
             finance_index: FinanceBasis::Gop,
+            deferred_wear_bp: 10_000,
         },
     }
 }

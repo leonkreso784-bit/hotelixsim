@@ -205,6 +205,8 @@ pub struct DeptInput<'a> {
     /// Stanje zgrade nakon kruga i njen udio u stanju koje gost osjeća (F8); udio 0 = gost osjeća samo odjel.
     pub building_pts: i32,
     pub building_share_bp: u16,
+    /// Faktor trošenja dok je održavanje odgođeno (gospodarstvo v2, bp; 10 000 = kao redovno).
+    pub deferred_wear_bp: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -412,10 +414,12 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
 
     // 10 stanje prostora (prije prihoda: najamnina lokala ovisi o stanju nakon kruga)
     let lvl = spec.maintenance_level(pl.maintenance);
-    let wear_pts: i32 = c::narrow(w(prorate(
-        c::narrow(c::sub(0, w(spec.wear_pts_per_month))?)?,
+    let wear_pts: i32 = wear_pts(
+        spec.wear_pts_per_month,
+        pl.maintenance,
+        i.deferred_wear_bp,
         p,
-    )?))?;
+    )?;
     let load_wear_pts: i32 = if load > 180 {
         c::narrow(w(prorate(-100, p)?))?
     } else {
@@ -546,6 +550,23 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         renewal_pts,
         felt_condition_pts: felt,
     })
+}
+
+/// Trošenje stanja prostora u krugu (negativan broj): mjesečno trošenje, uz odgođeno održavanje pomnoženo s
+/// `div_round(trošenje · deferred_wear_bp, 10 000)` (zapušten prostor propada brže, O-2 korak e), razmjerno krugu.
+/// Uz 10 000 bp ili drugu razinu održavanja točno mjesečno trošenje.
+pub fn wear_pts(
+    wear_per_month: i32,
+    m: Maintenance,
+    deferred_wear_bp: u16,
+    p: &Period,
+) -> Calc<i32> {
+    let monthly = if m == Maintenance::Deferred {
+        c::div_round(c::mul(w(wear_per_month), w(deferred_wear_bp))?, 10_000)?
+    } else {
+        w(wear_per_month)
+    };
+    c::narrow(w(prorate(c::narrow(c::sub(0, monthly)?)?, p)?))
 }
 
 /// F6: stanje nakon obnove `min(osnova + Δ, 10 000)`; `base` je već u 0–10 000.

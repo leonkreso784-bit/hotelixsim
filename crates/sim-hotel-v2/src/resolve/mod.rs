@@ -329,6 +329,7 @@ pub fn resolve_period(
             building_pts: building.after_pts,
             building_share_bp: share_bp,
             felt_parts: &felt_parts,
+            deferred_wear_bp: cat.economy.deferred_wear_bp,
         },
         base,
     )?;

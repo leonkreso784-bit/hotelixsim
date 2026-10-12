@@ -87,6 +87,7 @@ fn june(spec: &DeptSpec, st: &DeptState, pl: &DeptPlan) -> DeptOutcome {
         renewal: Default::default(),
         building_pts: 0,
         building_share_bp: 0,
+        deferred_wear_bp: 10_000,
     })
     .unwrap()
 }
@@ -177,6 +178,7 @@ fn week_two_pays_seven_thirtieths_of_june_payroll() {
         renewal: Default::default(),
         building_pts: 0,
         building_share_bp: 0,
+        deferred_wear_bp: 10_000,
     })
     .unwrap();
     assert_eq!(o.payroll_cents, 3_780_000 * 14 / 30 - 3_780_000 * 7 / 30);

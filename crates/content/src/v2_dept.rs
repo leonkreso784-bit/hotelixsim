@@ -17,6 +17,9 @@ use crate::ContentError;
 /// Stanje zgrade profila kad ga sadržaj ne navodi: zgrada bez trošenja i bez učinka (`BuildingSpec::none`).
 const BUILDING_PTS_DEFAULT: i32 = 10_000;
 
+/// Faktor trošenja uz odgođeno održavanje kad ga sadržaj ne navodi: kao redovno (bajt-isto prije koraka e).
+const DEFERRED_WEAR_DEFAULT_BP: u16 = 10_000;
+
 /// Krivulja i granice obnove (obnova v2); odjel ili zgrada bez ključa `renewal` nema obnovu.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -224,6 +227,9 @@ pub(crate) struct EconomyDto {
     /// Osnova indeksa F: `gop` | `ebit` | `gop_after_investment`; bez ključa `gop`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     finance_index: Option<String>,
+    /// Faktor trošenja uz odgođeno održavanje u bp; bez ključa 10 000 (kao redovno).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    deferred_wear_bp: Option<u16>,
 }
 
 fn level_to_dto(l: &LevelEffect) -> LevelDto {
@@ -453,6 +459,8 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
         ffe_reserve_bp: (e.ffe_reserve_bp != 0).then_some(e.ffe_reserve_bp),
         finance_index: (e.finance_index != FinanceBasis::Gop)
             .then(|| e.finance_index.code().to_string()),
+        deferred_wear_bp: (e.deferred_wear_bp != DEFERRED_WEAR_DEFAULT_BP)
+            .then_some(e.deferred_wear_bp),
     }
 }
 
@@ -493,5 +501,6 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
             }),
         ffe_reserve_bp: e.ffe_reserve_bp.unwrap_or(0),
         finance_index,
+        deferred_wear_bp: e.deferred_wear_bp.unwrap_or(DEFERRED_WEAR_DEFAULT_BP),
     })
 }
