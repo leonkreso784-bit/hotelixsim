@@ -1,4 +1,4 @@
-// Mali usmjerivač nad History API-jem (ADR-022 t. 1): četrnaest ruta (krug: /krug/:kod, a stari /mjesec/:kod vrijedi i dalje), bez učitavača.
+// Mali usmjerivač nad History API-jem (ADR-022 t. 1): petnaest ruta (krug: /krug/:kod, a stari /mjesec/:kod vrijedi i dalje), bez učitavača.
 import { type AnchorHTMLAttributes, type MouseEvent, useSyncExternalStore } from "react";
 import type { DriverCode, IndexCode } from "./api/types";
 
@@ -16,6 +16,7 @@ export type Route =
   | { name: "pl"; code: string | null }
   | { name: "avatars" }
   | { name: "new" }
+  | { name: "season" }
   | { name: "notFound" };
 
 /** Kodovi krugova: mjeseci (v1 i mjesečna v2) i tjedni t01…t17. */
@@ -90,6 +91,7 @@ export function matchRoute(pathname: string): Route {
   if (a === "tijek" && b === undefined) return { name: "feed" };
   if (a === "likovi" && b === undefined) return { name: "avatars" };
   if (a === "nova" && b === undefined) return { name: "new" };
+  if (a === "kraj-sezone" && b === undefined) return { name: "season" };
   return { name: "notFound" };
 }
 

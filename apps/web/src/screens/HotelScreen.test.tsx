@@ -12,6 +12,7 @@ import {
   myHotel,
   resolvedWeekApi,
   roundInfo,
+  seasonApi,
   standardApi,
   v2Api,
   weekInfo,
@@ -304,6 +305,8 @@ describe("Moj hotel", () => {
     expect(screen.queryByRole("link", { name: /Plan mjeseca/ })).toBeNull();
     expect(screen.getByRole("link", { name: /Rezultat: srpanj/ })).toBeTruthy();
     // „Nova igra“ je poveznica na početni ekran s izborom; zahtjev ne šalje (v1 se ne pokreće tiho).
+    // Stara (v1) igra nema ekran kraja sezone.
+    expect(screen.queryByRole("link", { name: "Rezultati sezone" })).toBeNull();
     const link = screen.getByRole("link", { name: "Nova igra" });
     expect(link.getAttribute("href")).toBe("/nova");
     fireEvent.click(link);
@@ -399,5 +402,16 @@ describe("Moj hotel: tjedna igra", () => {
     renderApp(api);
     expect(await screen.findByText(joined("Obračun je u tijeku: tjedan 1 (1. 6. – 7. 6.)."))).toBeTruthy();
     expect(screen.getByRole("link", { name: "Pogledaj obračun" }).getAttribute("href")).toBe("/krug/t01");
+  });
+});
+
+describe("Hotel nakon v2 sezone", () => {
+  it("„Rezultati sezone“ vodi na kraj sezone, iznad „Nova igra“", async () => {
+    renderApp(seasonApi());
+    expect(await screen.findByText("Sezona je završena.")).toBeTruthy();
+    const results = screen.getByRole("link", { name: "Rezultati sezone" });
+    expect(results.getAttribute("href")).toBe("/kraj-sezone");
+    const links = screen.getAllByRole("link").map((l) => l.textContent);
+    expect(links.indexOf("Rezultati sezone")).toBeLessThan(links.indexOf("Nova igra"));
   });
 });

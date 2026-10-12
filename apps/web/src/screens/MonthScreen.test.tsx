@@ -1,4 +1,4 @@
-import { act, cleanup, configure, screen, within } from "@testing-library/react";
+import { act, cleanup, configure, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { poll } from "../api/poll";
 import type { FeedItemBody } from "../api/types";
@@ -14,6 +14,7 @@ import {
   resolvedWeekApi,
   robot,
   roundInfo,
+  seasonApi,
   standardApi,
   v2Api,
   weeklyGame,
@@ -315,6 +316,33 @@ describe("Mjesec završen", () => {
     expect(screen.getByText("To je bio zadnji mjesec sezone.")).toBeTruthy();
     expect(screen.queryByRole("link", { name: /Nastavi u/ })).toBeNull();
     expect(screen.getByRole("link", { name: "Natrag na hotel" })).toBeTruthy();
+    // Stara (v1) igra nema ekran kraja sezone.
+    expect(screen.queryByRole("link", { name: "Pogledaj kraj sezone" })).toBeNull();
+  });
+
+  it("zadnji tjedan v2 igre: „Pogledaj kraj sezone“ (primarno) vodi na kraj sezone, uz „Natrag na hotel“", async () => {
+    const t17 = {
+      month: "sep" as const,
+      round: "t17",
+      indices: ix(5600, 5200, 5000, 5400, 5000),
+      progress_hundredths: 825,
+    };
+    const over = {
+      ...weeklyGame({ hotels: [myPublic([t17]), robot("h2", 2, "Štediša", "stedisa", [t17])] }),
+      current: null,
+    };
+    const api = seasonApi()
+      .on("GET", "/v1/games/:game", over)
+      .on("GET", "/v1/hotels/:hotel/feed", {
+        items: [{ kind: "mentor", seq: 9, month: "sep", round: "t17", text: "Dobar tjedan." }],
+      });
+    renderApp(api, "/krug/t17");
+    expect(await screen.findByText("To je bio zadnji tjedan sezone.")).toBeTruthy();
+    const open = screen.getByRole("link", { name: "Pogledaj kraj sezone" });
+    expect(open.getAttribute("href")).toBe("/kraj-sezone");
+    expect(screen.getByRole("link", { name: "Natrag na hotel" })).toBeTruthy();
+    fireEvent.click(open);
+    expect(await screen.findByRole("heading", { level: 1, name: "Kraj sezone" })).toBeTruthy();
   });
 
   it("mjesec koji još nije ni zatvoren", async () => {

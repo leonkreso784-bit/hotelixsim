@@ -23,6 +23,7 @@ import type {
   PlanBody,
   PlBody,
   PlScopeCode,
+  SeasonBody,
   SituationsBody,
 } from "./types";
 
@@ -37,6 +38,7 @@ export const keys = {
   departments: (hotelId: string) => ["departments", hotelId] as const,
   department: (hotelId: string, code: string) => ["departments", hotelId, code] as const,
   pl: (hotelId: string, code: string | null, scope: PlScopeCode) => ["pl", hotelId, code, scope] as const,
+  season: (gameId: string) => ["season", gameId] as const,
 };
 
 export function useMe() {
@@ -337,5 +339,25 @@ export function usePl(hotelId: string, code: string | null, scope: PlScopeCode) 
           params: { path: { hotel_id: hotelId }, query: { scope, ...(code ? { round: code } : {}) } },
         }),
       ),
+  });
+}
+
+/**
+ * Kraj sezone: poredak, krivulja, financije i odluke svih hotela. Dohvaća se tek kad je sezona gotova (`enabled`); dok
+ * sezonski mentor još piše (`mentor === null`), ispituje svakih `poll.feedMs`, najviše `poll.maxFeedPolls` puta.
+ */
+export function useSeason(gameId: string, enabled: boolean) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const startCount = useRef(qc.getQueryState(keys.season(gameId))?.dataUpdateCount ?? 0);
+  return useQuery<SeasonBody>({
+    queryKey: keys.season(gameId),
+    enabled,
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/games/{game_id}/season", { params: { path: { game_id: gameId } } })),
+    refetchInterval: (q) => {
+      if (!q.state.data || q.state.data.mentor !== null) return false;
+      return q.state.dataUpdateCount - startCount.current >= poll.maxFeedPolls ? false : poll.feedMs;
+    },
   });
 }

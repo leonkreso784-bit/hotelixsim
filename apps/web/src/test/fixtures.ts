@@ -20,6 +20,8 @@ import type {
   PublicHotelBody,
   RoundBody,
   RoundInfoBody,
+  SeasonBody,
+  SeasonHotelBody,
   ServiceRoundBody,
   SituationBody,
   SituationsBody,
@@ -807,4 +809,108 @@ export function v2PlApi(): FakeApi {
   return v2Api().on("GET", "/v1/hotels/:hotel/pl", (req) =>
     json(200, plBody(new URL(req.url).searchParams.get("scope") === "season" ? "season" : "round")),
   );
+}
+
+/** Svi krugovi sezone: tjedna (17) ili mjesečna (4) v2 igra. */
+export function seasonRounds(weekly = true): RoundInfoBody[] {
+  return weekly
+    ? Array.from({ length: 17 }, (_v, i) => weekInfo(i + 1))
+    : SEASON_MONTHS.map((m) => roundInfo(m));
+}
+
+/** Hotel na kraju sezone: krivulja raste ravnomjerno do `progress`; financije i odluke kao u pravoj igri. */
+export function seasonHotel(
+  id: string,
+  slot: number,
+  name: string,
+  strategy: StrategyCode | null,
+  progress: number,
+  over: Partial<SeasonHotelBody> = {},
+  weekly = true,
+): SeasonHotelBody {
+  const rounds = seasonRounds(weekly);
+  const n = rounds.length;
+  return {
+    hotel_id: id,
+    slot,
+    name,
+    seat: strategy ? { kind: "robot", strategy } : { kind: "human", strategy: null },
+    mine: id === HOTEL_ID,
+    rank: 1,
+    winner: false,
+    progress_hundredths: progress,
+    start: ix(4500, 5000, 3000, 5500, 5000),
+    end: ix(6100, 5200, 5200, 5400, 4700),
+    curve: rounds.map((r, i) => ({
+      round: r.code,
+      progress_hundredths: Math.round((progress * (i + 1)) / n),
+    })),
+    finances: {
+      total_revenue_cents: 41_230_000,
+      gop_cents: 13_190_000,
+      gop_margin_bp: 3199,
+      cash_start_cents: 8_000_000,
+      cash_end_cents: 15_120_000,
+    },
+    decisions: {
+      avg_price_cents: 9800,
+      marketing_total_cents: 4_200_000,
+      wage_pct_min: 100,
+      wage_pct_max: 105,
+      seasonal_peak: 24,
+      training_rounds: 6,
+      maintenance_deferred_rounds: 0,
+      renovation_round: null,
+      reply_reviews_rounds: 0,
+      situations: 34,
+      unanswered: 2,
+      avg_quality_hundredths: 360,
+    },
+    ...over,
+  };
+}
+
+/** Mjesta i pobjednici iz napretka, kao poslužitelj: 1 + broj hotela sa strogo većim napretkom; redom mjesta, pa slota. */
+export function ranked(hotels: SeasonHotelBody[]): SeasonHotelBody[] {
+  return hotels
+    .map((h) => {
+      const rank = 1 + hotels.filter((o) => o.progress_hundredths > h.progress_hundredths).length;
+      return { ...h, rank, winner: rank === 1 };
+    })
+    .sort((a, b) => a.rank - b.rank || a.slot - b.slot);
+}
+
+/** Kraj tjedne (ili mjesečne) v2 sezone: Brižni +12, Tvoj hotel +8, Štediša −3, Lovac −7. */
+export function seasonBody(
+  opts: { weekly?: boolean; progress?: [number, number, number, number]; mentor?: string | null } = {},
+): SeasonBody {
+  const weekly = opts.weekly ?? true;
+  const [mine, stedisa, brizni, lovac] = opts.progress ?? [825, -310, 1210, -700];
+  return {
+    game_id: GAME_ID,
+    round_kind: weekly ? "week" : "month",
+    rounds: seasonRounds(weekly),
+    my_hotel_id: HOTEL_ID,
+    hotels: ranked([
+      seasonHotel(HOTEL_ID, 1, "Tvoj hotel", null, mine, {}, weekly),
+      seasonHotel("h2", 2, "Štediša", "stedisa", stedisa, {}, weekly),
+      seasonHotel("h3", 3, "Brižni", "brizni", brizni, {}, weekly),
+      seasonHotel("h4", 4, "Lovac na popunjenost", "lovac", lovac, {}, weekly),
+    ]),
+    mentor: opts.mentor === undefined ? null : opts.mentor === null ? null : { text: opts.mentor },
+  };
+}
+
+/** Tjedna v2 igra nakon zadnjeg tjedna: nema trenutnog kruga, plana ni situacija; ruta sezone vraća `body`. */
+export function seasonApi(body: SeasonBody = seasonBody()): FakeApi {
+  const weekly = body.round_kind === "week";
+  const base = weekly
+    ? weeklyGame()
+    : { ...weeklyGame(), round_kind: "month" as const, rounds: seasonRounds(false) };
+  const me = myHotel({ planMonth: null });
+  return v2Api()
+    .on("GET", "/v1/me/hotel", me)
+    .on("GET", "/v1/games/:game", { ...base, current: null })
+    .on("GET", "/v1/hotels/:hotel/situations", situations([]))
+    .on("GET", "/v1/games/:game/season", body);
 }
