@@ -1777,11 +1777,17 @@
           "seasonal_max",
           "price_level_min_pct",
           "price_level_max_pct",
-          "can_close"
+          "can_close",
+          "maintenance",
+          "seasonal_worker_cents"
         ],
         "properties": {
           "can_close": {
             "type": "boolean"
+          },
+          "maintenance": {
+            "$ref": "#/components/schemas/LevelCostsBody",
+            "description": "Trošak razina održavanja odjela u ovom krugu."
           },
           "price_level_max_pct": {
             "type": "integer",
@@ -1802,6 +1808,11 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "seasonal_worker_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće."
           }
         }
       },
@@ -1846,6 +1857,7 @@
           "profit_cents",
           "margin_bp",
           "served",
+          "demand",
           "capacity",
           "load_hundredths",
           "usage_bp",
@@ -1880,6 +1892,12 @@
           "cost_of_sales_cents": {
             "type": "integer",
             "format": "int64"
+          },
+          "demand": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko su korištenja gosti htjeli (potražnja); posluženo je najviše kapacitet. 0 za odjel bez gostiju po korištenju.",
+            "minimum": 0
           },
           "departures": {
             "type": "integer",
@@ -2904,6 +2922,29 @@
           }
         }
       },
+      "LevelCostsBody": {
+        "type": "object",
+        "description": "Trošak triju razina održavanja u krugu (centi).",
+        "required": [
+          "deferred_cents",
+          "regular_cents",
+          "intensive_cents"
+        ],
+        "properties": {
+          "deferred_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intensive_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "regular_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "MaintenanceCode": {
         "type": "string",
         "enum": [
@@ -3219,6 +3260,63 @@
         },
         "additionalProperties": false
       },
+      "PlanCostsBody": {
+        "type": "object",
+        "description": "Cijene odluka plana hotela u krugu.",
+        "required": [
+          "renovation_cents",
+          "renovation_equipment_pts",
+          "renovation_satisfaction_pts",
+          "reply_cents",
+          "training_basic",
+          "training_full",
+          "maintenance",
+          "payroll_week_cents",
+          "payroll_round_cents"
+        ],
+        "properties": {
+          "maintenance": {
+            "$ref": "#/components/schemas/LevelCostsBody",
+            "description": "Održavanje hotela (v1) odnosno Smještaja (v2) u krugu."
+          },
+          "payroll_round_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće."
+          },
+          "payroll_week_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje)."
+          },
+          "renovation_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Obnova: jednokratno, puni iznos."
+          },
+          "renovation_equipment_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak obnove na opremu (bodovi 0–10 000)."
+          },
+          "renovation_satisfaction_pts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Učinak obnove na zadovoljstvo gostiju (bodovi 0–10 000)."
+          },
+          "reply_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Odgovaranje na recenzije u krugu."
+          },
+          "training_basic": {
+            "$ref": "#/components/schemas/TrainingCostBody"
+          },
+          "training_full": {
+            "$ref": "#/components/schemas/TrainingCostBody"
+          }
+        }
+      },
       "PlanLimitsBody": {
         "type": "object",
         "description": "Granice izbornika radnji za ekran.",
@@ -3230,9 +3328,14 @@
           "seasonal_max",
           "wage_min_pct",
           "wage_max_pct",
-          "renovation_available"
+          "renovation_available",
+          "costs"
         ],
         "properties": {
+          "costs": {
+            "$ref": "#/components/schemas/PlanCostsBody",
+            "description": "Cijene odluka plana u ovom krugu (iz kataloga) i procjena tjednih plaća hotela."
+          },
           "departments": {
             "type": [
               "object",
@@ -4199,6 +4302,29 @@
           "basic",
           "full"
         ]
+      },
+      "TrainingCostBody": {
+        "type": "object",
+        "description": "Trošak obuke u krugu i odgođeni učinak (bodovi 0–10 000; stiže idući krug).",
+        "required": [
+          "cost_cents",
+          "experience_pts",
+          "morale_pts"
+        ],
+        "properties": {
+          "cost_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "experience_pts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "morale_pts": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "UnitCode": {
         "type": "string",

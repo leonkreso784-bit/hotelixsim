@@ -57,7 +57,7 @@ function signed(value: number, abs: string): string {
 /** Centi → cijeli euri: 9 800 000 → "98.000 €". */
 export function formatEuros(cents: number): string {
   const euros = Math.round(cents / 100);
-  return `${euros < 0 ? MINUS : ""}${nf0.format(Math.abs(euros))} €`;
+  return `${euros < 0 ? MINUS : ""}${nf0.format(Math.abs(euros))}${NBSP}€`;
 }
 
 /** Iznos s predznakom, cijeli euri: 789 600 → "+7.896 €", −80 000 → "−800 €", 0 → "0 €". */
@@ -74,19 +74,19 @@ export function formatLoad(hundredths: number): string {
 /** Centi → euri s centima (pokazatelji po sobi): 4003 → "40,03 €"; bez vrijednosti crtica. */
 export function formatEurosCents(cents: number | null): string {
   if (cents === null) return NONE;
-  return `${cents < 0 ? MINUS : ""}${nfCents.format(Math.abs(cents) / 100)} €`;
+  return `${cents < 0 ? MINUS : ""}${nfCents.format(Math.abs(cents) / 100)}${NBSP}€`;
 }
 
 /** Bazni bodovi → postotak, najviše jedna decimala: 6800 → "68 %", 3173 → "31,7 %"; bez vrijednosti crtica. */
 export function formatPercentBp(bp: number | null): string {
   if (bp === null) return NONE;
-  return `${bp < 0 ? MINUS : ""}${nf1.format(Math.abs(bp) / 100)} %`;
+  return `${bp < 0 ? MINUS : ""}${nf1.format(Math.abs(bp) / 100)}${NBSP}%`;
 }
 
 /** Bazni bodovi → postotak, uvijek jedna decimala (usporedba ostvareno/budžet u istom retku): 1300 → "13,0 %". */
 export function formatPercentBpFixed(bp: number | null): string {
   if (bp === null) return NONE;
-  return `${bp < 0 ? MINUS : ""}${nfFixed1.format(Math.abs(bp) / 100)} %`;
+  return `${bp < 0 ? MINUS : ""}${nfFixed1.format(Math.abs(bp) / 100)}${NBSP}%`;
 }
 
 /** Ocjena u stotinkama na ljestvici do 10, uvijek jedna decimala: 840 → "8,4/10", 800 → "8,0/10", 898 → "9,0/10". */
@@ -96,7 +96,7 @@ export function formatRating(hundredths: number): string {
 
 /** Cijeli postotak (razina cijene u odjelu): 110 → "110 %". */
 export function formatPercentWhole(pct: number): string {
-  return `${formatWhole(pct)} %`;
+  return `${formatWhole(pct)}${NBSP}%`;
 }
 
 /** Cijeli broj s grupiranjem, bez jedinice (samo kao dio oznake s jedinicom): 40000 → "40.000". */
@@ -107,8 +107,8 @@ export function formatWhole(n: number): string {
 /** Dopušteni raspon s jedinicom: (0, 40000, "euro") → "0–40.000 €", (18, 38, "person") → "18–38 osoba". */
 export function formatRange(min: number, max: number, unit: "euro" | "percent" | "person"): string {
   const span = `${formatWhole(min)}–${formatWhole(max)}`;
-  if (unit === "euro") return `${span} €`;
-  if (unit === "percent") return `${span} %`;
+  if (unit === "euro") return `${span}${NBSP}€`;
+  if (unit === "percent") return `${span}${NBSP}%`;
   // Imenica se slaže s gornjom granicom: „18–38 osoba“, „1–2 osobe“.
   return formatCount(max, "person", span);
 }
@@ -197,18 +197,30 @@ export function tw(weekly: boolean, base: WeekBase<MessageKey>, params?: Message
 
 const pluralRules = new Intl.PluralRules("hr");
 
+/** Hrvatski množinski oblik broja („one“: 1, 21; „few“: 2–4, 22–24, necijeli; „other“: ostalo). */
+export function pluralForm(n: number): "one" | "few" | "other" {
+  const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
+  return category === "one" || category === "few" ? category : "other";
+}
+
 /**
  * Broj s imenicom u ispravnom hrvatskom množinskom obliku: 1 bod, 3 boda, 8 bodova.
  * Necijeli brojevi (8,25) uzimaju oblik uz 2–4 („8,25 boda“).
  */
 export function formatCount(
   n: number,
-  noun: "point" | "person" | "night" | "guest" | "permanent" | "seasonal" | "seasonalWorker",
+  noun:
+    | "point"
+    | "person"
+    | "night"
+    | "guest"
+    | "permanent"
+    | "seasonal"
+    | "seasonalWorker"
+    | "seasonalWorkerAcc",
   shown: string = nf2.format(n),
 ): string {
-  const category = Number.isInteger(n) ? pluralRules.select(Math.abs(n)) : "few";
-  const form = category === "one" || category === "few" ? category : "other";
-  return `${shown} ${t(`plural.${noun}.${form}` as const)}`;
+  return `${shown} ${t(`plural.${noun}.${pluralForm(n)}` as const)}`;
 }
 
 /** Noći s grupiranjem i množinom: 1 noć, 3 noći, 3.600 noći. */

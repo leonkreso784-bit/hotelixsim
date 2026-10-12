@@ -11,6 +11,7 @@ import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { DepartmentCard } from "./departments/DepartmentCard";
 import { DepartmentDetail } from "./departments/DepartmentDetail";
 import { isService } from "./departments/helpers";
+import { LEVEL_GOOD_FROM, LEVEL_MID_FROM } from "./departments/levels";
 import { ServiceList } from "./departments/ServiceCard";
 
 export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | null }) {
@@ -57,7 +58,8 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
         ) : (
           <>
             {list.data?.round === null && <p className="text-muted">{tw(weekly, "dept.listEmpty")}</p>}
-            <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 lg:block lg:space-y-3">
+            {/* Jedan stupac: od 768 px uz bočnu traku dva stupca bila bi preuska (lomljena ocjena i rezultat, M-4). */}
+            <div className="space-y-3">
               {revenue.map((d) => (
                 <DepartmentCard
                   key={d.code}
@@ -67,20 +69,23 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
                   level={code === null ? 2 : 3}
                 />
               ))}
-              <ServiceList
-                services={services}
-                weekly={weekly}
-                selected={code}
-                className="md:col-span-2 lg:col-span-1"
-              />
+              <ServiceList services={services} weekly={weekly} selected={code} />
             </div>
           </>
         )}
       </div>
       <div className={`min-w-0 ${code === null ? "hidden lg:block" : ""}`}>
         {code === null ? (
-          <Card>
+          // Desno okno od 1024 px: uz uputu i kako čitati ocjenu, da okno ne bude prazno (M-5).
+          <Card className="space-y-2">
             <p className="text-muted">{t("dept.pick")}</p>
+            <p className="text-sm text-muted">
+              {t("dept.legend", {
+                good: LEVEL_GOOD_FROM,
+                mid: LEVEL_MID_FROM,
+                midTo: LEVEL_GOOD_FROM - 1,
+              })}
+            </p>
           </Card>
         ) : gameFailed ? (
           <div className="space-y-3">
@@ -95,6 +100,7 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
             game={game}
             gamePending={gameQuery.isPending}
             weekly={weekly}
+            planState={me.private?.plan ?? null}
           />
         )}
       </div>

@@ -8,7 +8,7 @@ import {
 import { useRef } from "react";
 import { navigate, roundPath } from "../router";
 import { useApi } from "./ApiContext";
-import { unwrap } from "./errors";
+import { ApiError, unwrap } from "./errors";
 import { poll } from "./poll";
 import type {
   ConversationBody,
@@ -199,20 +199,44 @@ export function useSubmitResponse(hotelId: string, code: string) {
   });
 }
 
+/**
+ * Spremanje plana kruga, uvijek kao cijeli plan. Prije slanja se dohvati svježi važeći plan kruga (moj hotel) i na
+ * njega se primijene izmjene ekrana (`patch`); sve ostalo ostaje kakvo je na poslužitelju (npr. odluke drugih odjela
+ * ili hotela). Krug koji više nije otvoren je 409 `round_not_open`, a otvoren novi krug 409 `round_changed` (samo
+ * web), oboje bez slanja; tada se moj hotel osvježi, da ekran pokaže novi krug. Spremljeni plan iz odgovora odmah
+ * osvježava moj hotel.
+ */
 export function useSavePlan(hotelId: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ round, plan }: { round: string; plan: PlanBody }) =>
-      unwrap(
+    mutationFn: async ({ round, patch }: { round: string; patch: (current: PlanBody) => PlanBody }) => {
+      const state = unwrap(await api.GET("/v1/me/hotel")).private?.plan;
+      if (!state) throw new ApiError(409, "round_not_open");
+      if (state.round !== round) throw new ApiError(409, "round_changed");
+      return unwrap(
         await api.PUT("/v1/hotels/{hotel_id}/plans/{month}", {
           params: { path: { hotel_id: hotelId, month: round } },
-          body: plan,
+          body: patch(state.plan),
         }),
-      ),
-    onSuccess: () => {
+      );
+    },
+    onSuccess: (saved) => {
+      qc.setQueryData<HotelBody>(keys.me, (me) =>
+        me?.private?.plan
+          ? { ...me, private: { ...me.private, plan: { ...me.private.plan, plan: saved } } }
+          : me,
+      );
       void qc.invalidateQueries({ queryKey: keys.me });
       void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+    // Krug se promijenio ili se obračunava: osvježi moj hotel i igru. Igra tada vidi „closing“ i ispituje dok se ne
+    // otvori novi krug, pa se plan sam vrati (UI krug 3, M-2); bez igre bi plan zapeo na „mijenja se dok je otvoren“.
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        void qc.invalidateQueries({ queryKey: keys.me });
+        void qc.invalidateQueries({ queryKey: ["game"] });
+      }
     },
   });
 }

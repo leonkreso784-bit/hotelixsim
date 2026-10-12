@@ -55,6 +55,8 @@ pub struct DeptRoundBody {
     pub margin_bp: Option<i64>,
     /// Posluženo korištenja (noćenja, obroci…).
     pub served: u32,
+    /// Koliko su korištenja gosti htjeli (potražnja); posluženo je najviše kapacitet. 0 za odjel bez gostiju po korištenju.
+    pub demand: u32,
     /// Kapacitet u korištenjima za krug.
     pub capacity: u32,
     /// Gostiju po zaposlenom na dan, u stotinkama.
@@ -86,6 +88,7 @@ impl DeptRoundBody {
             profit_cents: o.profit_cents,
             margin_bp: game::department_margin_bp(o),
             served: o.served_uses,
+            demand: o.demand_uses,
             capacity: o.capacity_uses,
             load_hundredths: o.load_hundredths,
             usage_bp: o.usage_bp,

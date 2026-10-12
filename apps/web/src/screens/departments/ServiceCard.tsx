@@ -6,6 +6,7 @@ import { formatEuros, tw } from "../../format";
 import { Link } from "../../router";
 import { Card } from "../../ui/primitives";
 import { FOCUS } from "./helpers";
+import { DeptIcon } from "./icons";
 
 export function ServiceList({
   services,
@@ -22,7 +23,7 @@ export function ServiceList({
   return (
     <Card className={`space-y-2 ${className}`}>
       <h2 className="text-lg font-bold">{t("dept.services")}</h2>
-      <p className="text-sm text-muted">{t("dept.services.intro")}</p>
+      <p className="text-sm text-muted">{tw(weekly, "dept.services.intro")}</p>
       <ul className="divide-y divide-line">
         {services.map((s) => (
           <li key={s.code}>
@@ -31,9 +32,11 @@ export function ServiceList({
               aria-current={s.code === selected ? "page" : undefined}
               className={`flex min-h-12 items-center gap-3 rounded-xl py-2 ${s.code === selected ? "bg-accent-soft px-2" : ""} ${FOCUS}`}
             >
+              <DeptIcon code={s.code} />
               <span className="min-w-0 flex-1 font-semibold">{s.name}</span>
               <span className="text-right text-sm">
-                <span className="block text-muted">{tw(weekly, "dept.cost")}</span>
+                {/* Kratak natpis, da ime službe ne ide u dva retka (M-7); razdoblje kaže uvod. */}
+                <span className="block text-muted">{t("dept.cost.short")}</span>
                 <strong className="whitespace-nowrap tabular-nums">
                   {s.service_last ? formatEuros(s.service_last.total_cents) : t("dept.costNone")}
                 </strong>

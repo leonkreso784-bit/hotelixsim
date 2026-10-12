@@ -1,127 +1,26 @@
+// Plan kruga: odluke za cijeli hotel (cijena sobe, marketing, plaće, obuka, obnova, recenzije), svaka s cijenom ili
+// učinkom. U v1 igri i sezonski radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo
+// sažetak promjena po odjelima. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
 import { t } from "@hotelixsim/i18n";
-import { type FormEvent, type ReactNode, useCallback, useRef, useState } from "react";
-import { problemMessage } from "../api/errors";
-import { useGame, useSavePlan } from "../api/queries";
-import type { HotelBody, PlanBody, PlanLimitsBody } from "../api/types";
-import { formatCount, formatRange, roundPhrase, roundWithoutGame, tw } from "../format";
+import { useQueryClient } from "@tanstack/react-query";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { ApiError, problemMessage } from "../api/errors";
+import { keys, useGame, useSavePlan } from "../api/queries";
+import type { HotelBody } from "../api/types";
+import { differs, draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
+import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
 import { Choice } from "./plan/Choice";
-import { DepartmentPlan, type DeptPlans } from "./plan/DepartmentPlan";
+import { maintenanceOptions, trainingEffect, trainingOptions } from "./plan/costs";
+import { DepartmentSummary } from "./plan/DepartmentSummary";
+import { NumberField, Toggle } from "./plan/fields";
+import { type Draft, hotelPatch, toDraft, touchedOnly } from "./plan/hotelDraft";
+import { Renovation } from "./plan/Renovation";
+import { RoundNotice } from "./plan/RoundNotice";
 
-type Draft = {
-  price: string;
-  marketing: string;
-  seasonal: string;
-  wage: string;
-  training: PlanBody["training"];
-  maintenance: PlanBody["maintenance"];
-  renovation: boolean;
-  reply: boolean;
-};
-
-const toDraft = (p: PlanBody): Draft => ({
-  price: String(p.price_cents / 100),
-  marketing: String(Math.round(p.marketing_cents / 100)),
-  seasonal: String(p.seasonal_target),
-  wage: String(p.wage_pct),
-  training: p.training,
-  maintenance: p.maintenance,
-  renovation: p.renovation,
-  reply: p.reply_reviews,
-});
-
-/** Cijeli broj u granicama ili null (prazno, decimalno, izvan raspona). */
-function int(s: string, min: number, max: number): number | null {
-  if (!/^\d+$/.test(s.trim())) return null;
-  const n = Number(s.trim());
-  return n >= min && n <= max ? n : null;
-}
-
-/** Ukupan broj sezonaca u planu odjela (poslužitelj ga drži unutar `seasonal_max` iz granica). */
-function seasonalTotal(depts: DeptPlans): number {
-  return Object.values(depts).reduce((sum, x) => sum + x.seasonal_target, 0);
-}
-
-function toPlan(d: Draft, l: PlanLimitsBody, depts: DeptPlans | null): PlanBody | null {
-  const price = int(d.price, l.price_min_cents / 100, l.price_max_cents / 100);
-  const marketing = int(d.marketing, 0, l.marketing_max_cents / 100);
-  // v2: sezonci i održavanje su po odjelu; ukupni sezonci i održavanje Smještaja izvode se iz njih (kao na poslužitelju).
-  const seasonal = depts ? seasonalTotal(depts) : int(d.seasonal, l.seasonal_min, l.seasonal_max);
-  const wage = int(d.wage, l.wage_min_pct, l.wage_max_pct);
-  if (price === null || marketing === null || seasonal === null || wage === null) return null;
-  return {
-    price_cents: price * 100,
-    marketing_cents: marketing * 100,
-    seasonal_target: seasonal,
-    wage_pct: wage,
-    training: d.training,
-    maintenance: depts?.rooms?.maintenance ?? d.maintenance,
-    renovation: d.renovation,
-    reply_reviews: d.reply,
-    ...(depts ? { departments: depts } : {}),
-  };
-}
-
-function NumberField(props: {
-  id: string;
-  label: string;
-  value: string;
-  min: number;
-  max: number;
-  /** Jedinica raspona ispod polja (UI_PRAVILA §2.1: broj ima ime i jedinicu, i u rasponu). */
-  unit: "euro" | "percent" | "person";
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={props.id} className="block font-semibold">
-        {props.label}
-      </label>
-      <input
-        id={props.id}
-        type="number"
-        inputMode="numeric"
-        step={1}
-        min={props.min}
-        max={props.max}
-        value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
-        className="min-h-12 w-full rounded-2xl border border-line bg-surface px-3 text-lg tabular-nums"
-      />
-      <p className="text-xs text-muted">
-        {t("plan.range", { range: formatRange(props.min, props.max, props.unit) })}
-      </p>
-    </div>
-  );
-}
-
-function Toggle(props: {
-  id: string;
-  label: string;
-  checked: boolean;
-  disabled?: boolean | undefined;
-  note?: ReactNode | undefined;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div>
-      <label htmlFor={props.id} className="flex min-h-11 items-center gap-3 font-semibold">
-        <input
-          id={props.id}
-          type="checkbox"
-          checked={props.checked}
-          disabled={props.disabled}
-          onChange={(e) => props.onChange(e.target.checked)}
-          className="size-5 accent-accent"
-        />
-        {props.label}
-      </label>
-      {props.note}
-    </div>
-  );
-}
+const roundChanged = (e: unknown) => e instanceof ApiError && e.code === "round_changed";
 
 export function PlanScreen({ me }: { me: HotelBody }) {
   const state = me.private?.plan ?? null;
@@ -130,46 +29,56 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
   const inFlight = useRef(false);
-  const [draft, setDraft] = useState<Draft | null>(state ? toDraft(state.plan) : null);
-  const [depts, setDepts] = useState<DeptPlans | null>(state?.plan.departments ?? null);
-  const [deptsReady, setDeptsReady] = useState(false);
-  const onDeptsReady = useCallback((ready: boolean) => setDeptsReady(ready), []);
-  // „range“: neki broj je izvan raspona; „total“: odjeli zajedno imaju više sezonaca nego što hotel smije.
-  const [invalid, setInvalid] = useState<"range" | "total" | null>(null);
+  const saved = state ? toDraft(state.plan) : null;
+  const changes = useDraft<Draft>(
+    draftKey("plan", me.hotel.hotel_id, state?.round ?? "-"),
+    saved ?? ({} as Draft),
+  );
+  const newRound = useRoundChanged(state?.round ?? null);
+  const stale = useStaleDrafts("plan", me.hotel.hotel_id, state?.round ?? null);
+  const [invalid, setInvalid] = useState(false);
+  // Plana nema, a spremljena igra još kaže da je krug otvoren: krug je zatvoren izvana (druga kartica, profesor).
+  // Ponovni dohvat igre vidi „closing“, ispituje do novog kruga i tada osvježi moj hotel (UI krug 3, M-2).
+  const qc = useQueryClient();
+  const staleOpen = !state && game?.current?.status === "open";
+  useEffect(() => {
+    if (staleOpen) void qc.invalidateQueries({ queryKey: keys.game(me.game_id) });
+  }, [staleOpen, qc, me.game_id]);
   // Tekstovi ovise o tome je li igra tjedna, pa se čeka igra (kao Pokazatelji i Rezultat).
   if (gameQuery.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (!game) return <GameError error={gameQuery.error} onRetry={() => void gameQuery.refetch()} />;
-  if (!state || !draft)
+  if (!state || !saved)
     return (
       <>
         <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "plan.title")}</h1>
         <p className="text-muted">{tw(weekly, "plan.closed")}</p>
       </>
     );
+  const draft: Draft = { ...saved, ...changes.changes };
   const l = state.limits;
+  const depts = state.plan.departments ?? null;
   const v2 = depts !== null && !!l.departments;
   const set = (patch: Partial<Draft>) => {
-    setDraft({ ...draft, ...patch });
-    setInvalid(null);
+    changes.update(patch);
+    setInvalid(false);
     save.reset();
   };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!state || !draft || save.isPending || inFlight.current || (v2 && !deptsReady)) return;
-    if (v2 && depts && seasonalTotal(depts) > l.seasonal_max) {
-      setInvalid("total");
-      return;
-    }
-    const plan = toPlan(draft, l, v2 ? depts : null);
-    if (!plan) {
-      setInvalid("range");
+    if (!state || save.isPending || inFlight.current) return;
+    const all = hotelPatch(draft, l, v2);
+    if (!all) {
+      setInvalid(true);
       return;
     }
     inFlight.current = true;
+    const sent = changes.changes;
+    const hotel = touchedOnly(all, Object.keys(sent) as (keyof Draft)[]);
     save.mutate(
-      { round: state.round, plan },
+      { round: state.round, patch: (cur) => ({ ...cur, ...hotel }) },
       {
+        onSuccess: () => changes.settle(sent),
         onSettled: () => {
           inFlight.current = false;
         },
@@ -185,6 +94,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       <p className="text-sm text-muted">
         {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
       </p>
+      <RoundNotice show={newRound || stale || roundChanged(save.error)} weekly={weekly} />
       <Card className="space-y-4">
         <NumberField
           id="plan-price"
@@ -193,6 +103,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
           min={l.price_min_cents / 100}
           max={l.price_max_cents / 100}
           unit="euro"
+          note={t("plan.price.note")}
           onChange={(v) => set({ price: v })}
         />
         {!v2 && (
@@ -206,34 +117,23 @@ export function PlanScreen({ me }: { me: HotelBody }) {
               unit="person"
               onChange={(v) => set({ seasonal: v })}
             />
-            <Choice
-              legend={t("plan.maintenance")}
-              name="maintenance"
-              value={draft.maintenance}
-              options={[
-                { v: "deferred", label: t("maintenance.deferred") },
-                { v: "regular", label: t("maintenance.regular") },
-                { v: "intensive", label: t("maintenance.intensive") },
-              ]}
-              onChange={(v) => set({ maintenance: v })}
-            />
+            <div className="space-y-1">
+              <Choice
+                legend={t("plan.maintenance")}
+                name="maintenance"
+                value={draft.maintenance}
+                options={maintenanceOptions(l.costs.maintenance)}
+                onChange={(v) => set({ maintenance: v })}
+              />
+              <p className="text-sm text-muted">
+                {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
+              </p>
+            </div>
           </>
         )}
       </Card>
-      {v2 && depts && l.departments && (
-        <DepartmentPlan
-          hotelId={me.hotel.hotel_id}
-          plan={depts}
-          limits={l.departments}
-          stepTotal={l.seasonal_step_total ?? 0}
-          weekly={weekly}
-          onReady={onDeptsReady}
-          onChange={(next) => {
-            setDepts(next);
-            setInvalid(null);
-            save.reset();
-          }}
-        />
+      {v2 && depts && (
+        <DepartmentSummary hotelId={me.hotel.hotel_id} round={state.round} plans={depts} weekly={weekly} />
       )}
       <details className="rounded-card border border-line bg-surface p-4">
         <summary className="min-h-11 cursor-pointer font-bold">{t("plan.more")}</summary>
@@ -245,6 +145,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             min={0}
             max={l.marketing_max_cents / 100}
             unit="euro"
+            note={tw(weekly, "plan.marketing.note")}
             onChange={(v) => set({ marketing: v })}
           />
           <NumberField
@@ -254,42 +155,48 @@ export function PlanScreen({ me }: { me: HotelBody }) {
             min={l.wage_min_pct}
             max={l.wage_max_pct}
             unit="percent"
+            note={tw(weekly, "plan.wage.note", { amount: formatEuros(l.costs.payroll_round_cents) })}
             onChange={(v) => set({ wage: v })}
           />
-          <Choice
-            legend={t("plan.training")}
-            name="training"
-            value={draft.training}
-            options={[
-              { v: "none", label: t("training.none") },
-              { v: "basic", label: t("training.basic") },
-              { v: "full", label: t("training.full") },
-            ]}
-            onChange={(v) => set({ training: v })}
-          />
-          <Toggle
-            id="plan-renovation"
-            label={t("plan.renovation")}
+          <div className="space-y-1">
+            <Choice
+              legend={t("plan.training")}
+              name="training"
+              value={draft.training}
+              options={trainingOptions(l.costs)}
+              onChange={(v) => set({ training: v })}
+            />
+            <p className="text-sm">
+              {trainingEffect(draft.training, l.costs, weekly) ?? tw(weekly, "plan.cost.levels")}
+            </p>
+          </div>
+          <Renovation
             checked={draft.renovation}
-            disabled={!l.renovation_available}
-            note={!l.renovation_available && <p className="text-xs text-muted">{t("plan.renovationUsed")}</p>}
+            limits={l}
+            cashCents={me.private?.now.cash_cents ?? 0}
             onChange={(v) => set({ renovation: v })}
           />
           <Toggle
             id="plan-reply"
             label={t("plan.replyReviews")}
             checked={draft.reply}
+            note={
+              <p className="text-sm text-muted">
+                {tw(weekly, "plan.cost.reply", { amount: formatEuros(l.costs.reply_cents) })}
+              </p>
+            }
             onChange={(v) => set({ reply: v })}
           />
         </div>
       </details>
-      {invalid === "range" && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {invalid === "total" && (
-        <ErrorText>{t("plan.dept.tooMany", { n: formatCount(l.seasonal_max, "seasonalWorker") })}</ErrorText>
+      {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
+      {save.isError && !roundChanged(save.error) && (
+        <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
       )}
-      {save.isError && <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>}
       {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
-      <Button type="submit" disabled={save.isPending || (v2 && !deptsReady)}>
+      {differs(saved, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
+      {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
+      <Button type="submit" aria-disabled={save.isPending}>
         {t("plan.save")}
       </Button>
     </form>

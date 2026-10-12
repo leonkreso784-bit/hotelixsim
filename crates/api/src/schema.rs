@@ -250,6 +250,8 @@ pub struct PlanLimitsBody {
     /// Granice po odjelu (v2); izostavljeno u v1 igri.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub departments: Option<std::collections::BTreeMap<String, DeptLimitsBody>>,
+    /// Cijene odluka plana u ovom krugu (iz kataloga) i procjena tjednih plaća hotela.
+    pub costs: PlanCostsBody,
 }
 
 /// Granice postavki jednog odjela.
@@ -260,6 +262,83 @@ pub struct DeptLimitsBody {
     pub price_level_min_pct: u16,
     pub price_level_max_pct: u16,
     pub can_close: bool,
+    /// Trošak razina održavanja odjela u ovom krugu.
+    pub maintenance: LevelCostsBody,
+    /// Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće.
+    pub seasonal_worker_cents: i64,
+}
+
+/// Trošak triju razina održavanja u krugu (centi).
+#[derive(Serialize, ToSchema)]
+pub struct LevelCostsBody {
+    pub deferred_cents: i64,
+    pub regular_cents: i64,
+    pub intensive_cents: i64,
+}
+
+/// Trošak obuke u krugu i odgođeni učinak (bodovi 0–10 000; stiže idući krug).
+#[derive(Serialize, ToSchema)]
+pub struct TrainingCostBody {
+    pub cost_cents: i64,
+    pub experience_pts: i32,
+    pub morale_pts: i32,
+}
+
+/// Cijene odluka plana hotela u krugu.
+#[derive(Serialize, ToSchema)]
+pub struct PlanCostsBody {
+    /// Obnova: jednokratno, puni iznos.
+    pub renovation_cents: i64,
+    /// Učinak obnove na opremu (bodovi 0–10 000).
+    pub renovation_equipment_pts: i32,
+    /// Učinak obnove na zadovoljstvo gostiju (bodovi 0–10 000).
+    pub renovation_satisfaction_pts: i32,
+    /// Odgovaranje na recenzije u krugu.
+    pub reply_cents: i64,
+    pub training_basic: TrainingCostBody,
+    pub training_full: TrainingCostBody,
+    /// Održavanje hotela (v1) odnosno Smještaja (v2) u krugu.
+    pub maintenance: LevelCostsBody,
+    /// Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje).
+    pub payroll_week_cents: i64,
+    /// Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće.
+    pub payroll_round_cents: i64,
+}
+
+impl From<&game::costs::LevelCosts> for LevelCostsBody {
+    fn from(l: &game::costs::LevelCosts) -> Self {
+        LevelCostsBody {
+            deferred_cents: l.deferred_cents,
+            regular_cents: l.regular_cents,
+            intensive_cents: l.intensive_cents,
+        }
+    }
+}
+
+impl From<&game::costs::TrainingCost> for TrainingCostBody {
+    fn from(t: &game::costs::TrainingCost) -> Self {
+        TrainingCostBody {
+            cost_cents: t.cost_cents,
+            experience_pts: t.experience_pts,
+            morale_pts: t.morale_pts,
+        }
+    }
+}
+
+impl From<&game::costs::PlanCosts> for PlanCostsBody {
+    fn from(c: &game::costs::PlanCosts) -> Self {
+        PlanCostsBody {
+            renovation_cents: c.renovation_cents,
+            renovation_equipment_pts: c.renovation_equipment_pts,
+            renovation_satisfaction_pts: c.renovation_satisfaction_pts,
+            reply_cents: c.reply_cents,
+            training_basic: (&c.training_basic).into(),
+            training_full: (&c.training_full).into(),
+            maintenance: (&c.maintenance).into(),
+            payroll_week_cents: c.payroll_week_cents,
+            payroll_round_cents: c.payroll_round_cents,
+        }
+    }
 }
 
 impl From<&PlanLimits> for PlanLimitsBody {
@@ -286,11 +365,14 @@ impl From<&PlanLimits> for PlanLimitsBody {
                                 price_level_min_pct: d.price_level_min_pct,
                                 price_level_max_pct: d.price_level_max_pct,
                                 can_close: d.can_close,
+                                maintenance: (&d.maintenance).into(),
+                                seasonal_worker_cents: d.seasonal_worker_cents,
                             },
                         )
                     })
                     .collect()
             }),
+            costs: (&l.costs).into(),
         }
     }
 }

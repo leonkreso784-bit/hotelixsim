@@ -19,6 +19,24 @@ export function isService(cls: DeptClassCode): boolean {
 }
 
 /**
+ * Najam (parking, lokal; razred `rentals`): prihod je ugovoren i ne ovisi o gostima ni cijenama, pa najam nema
+ * kartice Gosti, zadovoljstva, razine cijena ni usklađenosti ljudi, a ocjena mu je samo stanje prostora (jedno pravilo
+ * za prikaz i ocjenu, minor pregleda 6). Ljude pokazuje samo ako ih ima (`leaseWithoutPeople`).
+ */
+export function isLease(cls: DeptClassCode): boolean {
+  return cls === "rentals";
+}
+
+/** Najam bez ljudi: ni redak ni kartica o ljudima. */
+export function leaseWithoutPeople(d: {
+  class: DeptClassCode;
+  permanent: number;
+  seasonal: number;
+}): boolean {
+  return d.class === "rentals" && d.permanent === 0 && d.seasonal === 0;
+}
+
+/**
  * Rezultat sa strelicom i predznakom, da se rast i pad ne razlikuju samo bojom: „▲ +7.896 €“. Strelica ide po
  * prikazanim (zaokruženim) eurima, pa blizu nule nema „▼ 0 €“.
  */

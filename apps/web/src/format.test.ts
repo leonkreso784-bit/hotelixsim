@@ -59,13 +59,13 @@ describe("formatPointsCount", () => {
 
 describe("novac i ocjena", () => {
   it("formatEuros zaokružuje na cijele eure s točkom za tisuće", () => {
-    expect(formatEuros(9_800_000)).toBe("98.000 €");
-    expect(formatEuros(4_200_049)).toBe("42.000 €");
-    expect(formatEuros(13_200)).toBe("132 €");
+    expect(formatEuros(9_800_000)).toBe("98.000\u00a0€");
+    expect(formatEuros(4_200_049)).toBe("42.000\u00a0€");
+    expect(formatEuros(13_200)).toBe("132\u00a0€");
   });
   it("formatEuros uvijek grupira tisuće, i za četiri znamenke", () => {
-    expect(formatEuros(123_400)).toBe("1.234 €");
-    expect(formatEuros(-123_400)).toBe("−1.234 €");
+    expect(formatEuros(123_400)).toBe("1.234\u00a0€");
+    expect(formatEuros(-123_400)).toBe("−1.234\u00a0€");
   });
   it("formatRating je ocjena do 10, uvijek s točno jednom decimalom", () => {
     expect(formatRating(840)).toBe("8,4/10");
@@ -75,23 +75,32 @@ describe("novac i ocjena", () => {
     expect(formatRating(1000)).toBe("10,0/10");
   });
   it("formatRange: raspon s grupiranjem i jedinicom, imenica po gornjoj granici", () => {
-    expect(formatRange(0, 40_000, "euro")).toBe("0–40.000 €");
-    expect(formatRange(81, 202, "euro")).toBe("81–202 €");
-    expect(formatRange(90, 115, "percent")).toBe("90–115 %");
+    expect(formatRange(0, 40_000, "euro")).toBe("0–40.000\u00a0€");
+    expect(formatRange(81, 202, "euro")).toBe("81–202\u00a0€");
+    expect(formatRange(90, 115, "percent")).toBe("90–115\u00a0%");
     expect(formatRange(18, 38, "person")).toBe("18–38 osoba");
     expect(formatRange(1, 2, "person")).toBe("1–2 osobe");
     expect(formatWhole(40_000)).toBe("40.000");
   });
   it("pokazatelji: postotak iz baznih bodova, euri s centima, noći; null je crtica", () => {
-    expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual(["68 %", "31,7 %", "121,2 %", "−4,5 %"]);
+    expect([6800, 3173, 12_121, -450].map(formatPercentBp)).toEqual([
+      "68\u00a0%",
+      "31,7\u00a0%",
+      "121,2\u00a0%",
+      "−4,5\u00a0%",
+    ]);
     expect(formatPercentBp(null)).toBe("—");
-    expect([1300, 1590, -450].map(formatPercentBpFixed)).toEqual(["13,0 %", "15,9 %", "−4,5 %"]);
+    expect([1300, 1590, -450].map(formatPercentBpFixed)).toEqual([
+      "13,0\u00a0%",
+      "15,9\u00a0%",
+      "−4,5\u00a0%",
+    ]);
     expect(formatPercentBpFixed(null)).toBe("—");
     expect([4003, 123_456, -5500, 0].map(formatEurosCents)).toEqual([
-      "40,03 €",
-      "1.234,56 €",
-      "−55,00 €",
-      "0,00 €",
+      "40,03\u00a0€",
+      "1.234,56\u00a0€",
+      "−55,00\u00a0€",
+      "0,00\u00a0€",
     ]);
     expect(formatEurosCents(null)).toBe("—");
     expect([1, 3, 60, 3600].map(formatNights)).toEqual(["1 noć", "3 noći", "60 noći", "3.600 noći"]);
@@ -166,9 +175,9 @@ describe("oznaka kruga", () => {
 
 describe("formatEurosSigned", () => {
   it("predznak i cijeli euri, nula bez predznaka", () => {
-    expect(formatEurosSigned(789_600)).toBe("+7.896 €");
-    expect(formatEurosSigned(-80_000)).toBe("−800 €");
-    expect(formatEurosSigned(0)).toBe("0 €");
+    expect(formatEurosSigned(789_600)).toBe("+7.896\u00a0€");
+    expect(formatEurosSigned(-80_000)).toBe("−800\u00a0€");
+    expect(formatEurosSigned(0)).toBe("0\u00a0€");
   });
 });
 
@@ -189,13 +198,19 @@ describe("formatLoad i množina ljudi", () => {
 });
 
 describe("plan odjela", () => {
-  it("sezonci s množinom, razina cijene kao cijeli postotak", () => {
+  it("sezonski radnici s množinom (i u akuzativu), razina cijene kao cijeli postotak", () => {
     expect([1, 3, 5].map((n) => formatCount(n, "seasonalWorker"))).toEqual([
-      "1 sezonac",
-      "3 sezonca",
-      "5 sezonaca",
+      "1 sezonski radnik",
+      "3 sezonska radnika",
+      "5 sezonskih radnika",
     ]);
-    expect(formatPercentWhole(110)).toBe("110 %");
+    expect([1, 3, 5, 21].map((n) => formatCount(n, "seasonalWorkerAcc"))).toEqual([
+      "1 sezonskog radnika",
+      "3 sezonska radnika",
+      "5 sezonskih radnika",
+      "21 sezonskog radnika",
+    ]);
+    expect(formatPercentWhole(110)).toBe("110\u00a0%");
   });
 });
 

@@ -18,10 +18,13 @@ export function DepartmentHistory({
   history,
   titleOf,
   weekly,
+  satisfaction,
 }: {
   history: DeptRoundBody[];
   titleOf: (code: string) => string;
   weekly: boolean;
+  /** Stupac zadovoljstva gostiju; najam ga nema (N-I1). */
+  satisfaction: boolean;
 }) {
   if (history.length === 0) return null;
   return (
@@ -51,9 +54,11 @@ export function DepartmentHistory({
               <th scope="col" className={HEAD}>
                 {t("dept.condition")}
               </th>
-              <th scope="col" className={HEAD}>
-                {t("dept.satisfaction")}
-              </th>
+              {satisfaction && (
+                <th scope="col" className={HEAD}>
+                  {t("dept.satisfaction")}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -65,7 +70,7 @@ export function DepartmentHistory({
                 <td className={NUM}>{resultText(h.profit_cents)}</td>
                 <td className={NUM}>{formatPercentBp(h.margin_bp)}</td>
                 <td className={NUM}>{points(h.condition_after_pts)}</td>
-                <td className={NUM}>{points(h.satisfaction_after_pts)}</td>
+                {satisfaction && <td className={NUM}>{points(h.satisfaction_after_pts)}</td>}
               </tr>
             ))}
           </tbody>
@@ -80,7 +85,7 @@ export function DepartmentHistory({
                 [t("dept.profit"), resultText(h.profit_cents)],
                 [t("dept.margin"), formatPercentBp(h.margin_bp)],
                 [t("dept.condition"), points(h.condition_after_pts)],
-                [t("dept.satisfaction"), points(h.satisfaction_after_pts)],
+                ...(satisfaction ? [[t("dept.satisfaction"), points(h.satisfaction_after_pts)]] : []),
               ].map(([label, value]) => (
                 <div key={label} className="flex items-baseline justify-between gap-3">
                   <dt className="min-w-0 text-muted">{label}</dt>
