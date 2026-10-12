@@ -139,6 +139,16 @@ describe("formatCount", () => {
       "32 osobe",
     ]);
   });
+  it("tjedan, mjesec i godina (obnova: „još 2 tjedna“, „kroz 7 godina“)", () => {
+    expect([1, 2, 5].map((n) => formatCount(n, "week"))).toEqual(["1 tjedan", "2 tjedna", "5 tjedana"]);
+    expect([1, 3, 6].map((n) => formatCount(n, "month"))).toEqual(["1 mjesec", "3 mjeseca", "6 mjeseci"]);
+    expect([1, 2, 7, 15].map((n) => formatCount(n, "yearAcc"))).toEqual([
+      "1 godinu",
+      "2 godine",
+      "7 godina",
+      "15 godina",
+    ]);
+  });
 });
 
 describe("oznaka kruga", () => {

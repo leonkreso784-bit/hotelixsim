@@ -1,11 +1,17 @@
-// Pokazatelji ispod računa: GOP marža, GOPPAR i EBITDA marža, ostvareno i budžet, svaki s rečenicom što znači.
+// Pokazatelji ispod računa: GOP marža, GOPPAR, EBITDA marža i (v2) EBIT marža, ostvareno i budžet, svaki s rečenicom
+// što znači.
 import { t } from "@hotelixsim/i18n";
 import type { PlBody } from "../../api/types";
 import { formatEurosCents, formatPercentBpFixed } from "../../format";
 import { Card } from "../../ui/primitives";
 
 export function PlRatios({ pl }: { pl: PlBody }) {
-  const rows = [
+  const ebit = pl.ebit_margin_bp;
+  const rows: {
+    key: "gopMargin" | "goppar" | "ebitdaMargin" | "ebitMargin";
+    actual: string;
+    budget: string;
+  }[] = [
     {
       key: "gopMargin",
       actual: formatPercentBpFixed(pl.gop_margin_bp.actual),
@@ -21,7 +27,16 @@ export function PlRatios({ pl }: { pl: PlBody }) {
       actual: formatPercentBpFixed(pl.ebitda_margin_bp.actual),
       budget: formatPercentBpFixed(pl.ebitda_margin_bp.budget),
     },
-  ] as const;
+    ...(ebit
+      ? [
+          {
+            key: "ebitMargin" as const,
+            actual: formatPercentBpFixed(ebit.actual),
+            budget: formatPercentBpFixed(ebit.budget),
+          },
+        ]
+      : []),
+  ];
   return (
     <Card className="space-y-1">
       <h2 className="text-lg font-bold">{t("pl.ratios")}</h2>

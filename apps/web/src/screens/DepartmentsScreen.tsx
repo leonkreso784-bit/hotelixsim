@@ -101,6 +101,7 @@ export function DepartmentsScreen({ me, code }: { me: HotelBody; code: string | 
             gamePending={gameQuery.isPending}
             weekly={weekly}
             planState={me.private?.plan ?? null}
+            cashCents={me.private?.now.cash_cents ?? 0}
           />
         )}
       </div>

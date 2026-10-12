@@ -1,6 +1,6 @@
 // Plan kruga: odluke za cijeli hotel (cijena sobe, marketing, plaće, obuka, obnova, recenzije), svaka s cijenom ili
 // učinkom. U v1 igri i sezonski radnici i održavanje hotela; u v2 su oni po odjelu, na ekranu odjela, a ovdje stoji samo
-// sažetak promjena po odjelima. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
+// sažetak promjena po odjelima i (v2 s obnovom) zgrada s obnovom iznosom. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
 import { t } from "@hotelixsim/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -8,17 +8,19 @@ import { ApiError, problemMessage } from "../api/errors";
 import { keys, useGame, useSavePlan } from "../api/queries";
 import type { HotelBody } from "../api/types";
 import { differs, draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
-import { formatEuros, roundPhrase, roundWithoutGame, tw } from "../format";
+import { roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
 import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
+import { BuildingRenewal } from "./plan/BuildingRenewal";
 import { Choice } from "./plan/Choice";
-import { maintenanceOptions, trainingEffect, trainingOptions } from "./plan/costs";
+import { maintenanceOptions } from "./plan/costs";
 import { DepartmentSummary } from "./plan/DepartmentSummary";
-import { NumberField, Toggle } from "./plan/fields";
+import { NumberField } from "./plan/fields";
 import { type Draft, hotelPatch, toDraft, touchedOnly } from "./plan/hotelDraft";
-import { Renovation } from "./plan/Renovation";
+import { MoreDecisions } from "./plan/MoreDecisions";
 import { RoundNotice } from "./plan/RoundNotice";
+import { BUILDING, planPayNow } from "./renewal/renewal";
 
 const roundChanged = (e: unknown) => e instanceof ApiError && e.code === "round_changed";
 
@@ -58,6 +60,8 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const l = state.limits;
   const depts = state.plan.departments ?? null;
   const v2 = depts !== null && !!l.departments;
+  const buildingRenewal = v2 ? (l.costs.building_renewal ?? null) : null;
+  const cash = me.private?.now.cash_cents ?? 0;
   const set = (patch: Partial<Draft>) => {
     changes.update(patch);
     setInvalid(false);
@@ -135,60 +139,28 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       {v2 && depts && (
         <DepartmentSummary hotelId={me.hotel.hotel_id} round={state.round} plans={depts} weekly={weekly} />
       )}
-      <details className="rounded-card border border-line bg-surface p-4">
-        <summary className="min-h-11 cursor-pointer font-bold">{t("plan.more")}</summary>
-        <div className="mt-3 space-y-4">
-          <NumberField
-            id="plan-marketing"
-            label={t("plan.marketing")}
-            value={draft.marketing}
-            min={0}
-            max={l.marketing_max_cents / 100}
-            unit="euro"
-            note={tw(weekly, "plan.marketing.note")}
-            onChange={(v) => set({ marketing: v })}
-          />
-          <NumberField
-            id="plan-wage"
-            label={t("plan.wage")}
-            value={draft.wage}
-            min={l.wage_min_pct}
-            max={l.wage_max_pct}
-            unit="percent"
-            note={tw(weekly, "plan.wage.note", { amount: formatEuros(l.costs.payroll_round_cents) })}
-            onChange={(v) => set({ wage: v })}
-          />
-          <div className="space-y-1">
-            <Choice
-              legend={t("plan.training")}
-              name="training"
-              value={draft.training}
-              options={trainingOptions(l.costs)}
-              onChange={(v) => set({ training: v })}
-            />
-            <p className="text-sm">
-              {trainingEffect(draft.training, l.costs, weekly) ?? tw(weekly, "plan.cost.levels")}
-            </p>
-          </div>
-          <Renovation
-            checked={draft.renovation}
-            limits={l}
-            cashCents={me.private?.now.cash_cents ?? 0}
-            onChange={(v) => set({ renovation: v })}
-          />
-          <Toggle
-            id="plan-reply"
-            label={t("plan.replyReviews")}
-            checked={draft.reply}
-            note={
-              <p className="text-sm text-muted">
-                {tw(weekly, "plan.cost.reply", { amount: formatEuros(l.costs.reply_cents) })}
-              </p>
-            }
-            onChange={(v) => set({ reply: v })}
-          />
-        </div>
-      </details>
+      {buildingRenewal && (
+        <BuildingRenewal
+          limits={buildingRenewal}
+          building={me.private?.building ?? null}
+          guide={l.costs.renewal_guide ?? null}
+          amount={draft.building}
+          cashCents={cash}
+          payNowTotal={planPayNow(state, { code: BUILDING, amount: draft.building })}
+          payrollWeekCents={l.costs.payroll_week_cents}
+          weekly={weekly}
+          onChange={(v) => set({ building: v })}
+        />
+      )}
+      <MoreDecisions
+        draft={draft}
+        limits={l}
+        cashCents={cash}
+        weekly={weekly}
+        // v2 s obnovom: zgrada se obnavlja iznosom (gore), a stara kvačica obnove se ne nudi.
+        renovation={!(buildingRenewal && !l.renovation_available)}
+        set={set}
+      />
       {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
       {save.isError && !roundChanged(save.error) && (
         <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>

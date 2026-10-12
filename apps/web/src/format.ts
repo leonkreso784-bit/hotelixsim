@@ -217,7 +217,10 @@ export function formatCount(
     | "permanent"
     | "seasonal"
     | "seasonalWorker"
-    | "seasonalWorkerAcc",
+    | "seasonalWorkerAcc"
+    | "week"
+    | "month"
+    | "yearAcc",
   shown: string = nf2.format(n),
 ): string {
   return `${shown} ${t(`plural.${noun}.${pluralForm(n)}` as const)}`;

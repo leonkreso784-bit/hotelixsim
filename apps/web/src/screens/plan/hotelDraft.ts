@@ -10,6 +10,8 @@ export type Draft = {
   maintenance: PlanBody["maintenance"];
   renovation: boolean;
   reply: boolean;
+  /** Iznos obnove zgrade u centima (v2 s obnovom; inače 0). */
+  building: number;
 };
 
 export const toDraft = (p: PlanBody): Draft => ({
@@ -21,6 +23,7 @@ export const toDraft = (p: PlanBody): Draft => ({
   maintenance: p.maintenance,
   renovation: p.renovation,
   reply: p.reply_reviews,
+  building: p.building_renewal_cents ?? 0,
 });
 
 /** Cijeli broj u granicama ili null (prazno, decimalno, izvan raspona). */
@@ -32,7 +35,8 @@ function int(s: string, min: number, max: number): number | null {
 
 /**
  * Odluke hotela iz obrasca kao izmjena plana kruga; null kad neki broj nije u rasponu. U v2 se sezonski radnici,
- * održavanje i odjeli ne diraju: ostaju iz svježeg plana kruga (odlučuju se na ekranu odjela).
+ * održavanje i odjeli ne diraju: ostaju iz svježeg plana kruga (odlučuju se na ekranu odjela); obnova zgrade je
+ * odluka hotela.
  */
 export function hotelPatch(d: Draft, l: PlanLimitsBody, v2: boolean): Partial<PlanBody> | null {
   const price = int(d.price, l.price_min_cents / 100, l.price_max_cents / 100);
@@ -48,7 +52,9 @@ export function hotelPatch(d: Draft, l: PlanLimitsBody, v2: boolean): Partial<Pl
     renovation: d.renovation,
     reply_reviews: d.reply,
   };
-  return v2 ? hotel : { ...hotel, seasonal_target: seasonal, maintenance: d.maintenance };
+  return v2
+    ? { ...hotel, building_renewal_cents: d.building }
+    : { ...hotel, seasonal_target: seasonal, maintenance: d.maintenance };
 }
 
 /** Polje plana kruga koje puni svako polje obrasca. */
@@ -61,6 +67,7 @@ const FIELD: Record<keyof Draft, keyof PlanBody> = {
   maintenance: "maintenance",
   renovation: "renovation",
   reply: "reply_reviews",
+  building: "building_renewal_cents",
 };
 
 /**

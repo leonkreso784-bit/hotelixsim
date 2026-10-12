@@ -45,7 +45,7 @@ export function DepartmentSummary({
         </Button>
       </Card>
     );
-  const changes = deptChanges(plans, list.data.departments, roundDrafts(hotelId, round).depts);
+  const changes = deptChanges(plans, list.data.departments, roundDrafts(hotelId, round).depts, weekly);
   return (
     <Card className="space-y-2">
       {heading}

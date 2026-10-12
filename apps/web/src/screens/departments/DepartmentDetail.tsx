@@ -26,6 +26,7 @@ export function DepartmentDetail({
   gamePending,
   weekly,
   planState,
+  cashCents,
 }: {
   hotelId: string;
   code: string;
@@ -35,6 +36,8 @@ export function DepartmentDetail({
   weekly: boolean;
   /** Plan otvorenog kruga (moj hotel) za odluke odjela; `null` kad krug nije otvoren. */
   planState: PlanStateBody | null;
+  /** Blagajna sada (moj hotel), za blagajnu nakon plaćanja obnove. */
+  cashCents: number;
 }) {
   const q = useDepartment(hotelId, code);
   const titleOf = (round: string) => {
@@ -96,7 +99,13 @@ export function DepartmentDetail({
       {score && <ScoreCard score={score} />}
       {!service && <DepartmentInsights dept={dept} weekly={weekly} />}
       {!service && (
-        <DepartmentDecisions hotelId={hotelId} dept={dept} planState={planState} weekly={weekly} />
+        <DepartmentDecisions
+          hotelId={hotelId}
+          dept={dept}
+          planState={planState}
+          weekly={weekly}
+          cashCents={cashCents}
+        />
       )}
       {service && empty && (
         <Card>

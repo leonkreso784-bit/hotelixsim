@@ -2,8 +2,9 @@
 // („Restoran: +2 sezonska radnika, cijene 105 %“). Kontrole su na ekranu odjela. Bez Reacta.
 import { t } from "@hotelixsim/i18n";
 import type { DepartmentBody, PlanBody } from "../../api/types";
-import { formatCount, formatPercentWhole, formatWholeSigned } from "../../format";
+import { formatCount, formatEuros, formatPercentWhole, formatWholeSigned } from "../../format";
 import { isService } from "../departments/helpers";
+import { lockedPhrase } from "../renewal/renewal";
 
 type DeptPlans = NonNullable<PlanBody["departments"]>;
 
@@ -17,6 +18,7 @@ export function deptChanges(
   plans: DeptPlans,
   departments: DepartmentBody[],
   unsaved: readonly string[] = [],
+  weekly = false,
 ): DeptChange[] {
   const out: DeptChange[] = [];
   for (const d of departments) {
@@ -34,6 +36,10 @@ export function deptChanges(
       if (p.maintenance !== "regular")
         parts.push(t("plan.dept.maintenanceChange", { level: t(`maintenance.${p.maintenance}` as const) }));
     }
+    // Obnova (i u zatvorenom odjelu): odlučena je zaključana do kraja mjeseca, inače iznos iz plana.
+    const renewal = p.renewal_cents ?? 0;
+    if (d.renewal) parts.push(t("plan.dept.renewalLocked", { phrase: lockedPhrase(d.renewal, weekly) }));
+    else if (renewal > 0) parts.push(t("plan.dept.renewal", { amount: formatEuros(renewal) }));
     if (unsaved.includes(d.code)) parts.push(t("plan.dept.unsaved"));
     if (parts.length > 0) out.push({ code: d.code, name: d.name, text: parts.join(", ") });
   }
