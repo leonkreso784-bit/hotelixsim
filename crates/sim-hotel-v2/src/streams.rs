@@ -1,6 +1,7 @@
 //! Tokovi kocke po svrsi (MODEL_V2 §6.2): svaka svrha ima svoj niz brojeva izveden iz sjemena igre, kruga,
 //! utora i ključa, pa novo bacanje nikad ne pomiče postojeća. Oznake se nikad ne mijenjaju (promijenile bi
-//! brojke budućih igara). U sloju 1 nijedna formula ne zove `stream`.
+//! brojke budućih igara). U sloju 1 nijedna formula obračuna ne zove `stream`; tok situacija koristi samo
+//! izvlačenje situacija iz predložaka (`situations::draw`).
 
 use engine::{Rng, label};
 
@@ -10,14 +11,17 @@ pub enum Purpose {
     Breakdowns,
     Reviews,
     LabourMarket,
+    /// Izvlačenje situacija iz predložaka i popunjavanje uloga i mjesta (J-2).
+    Situations,
 }
 
 impl Purpose {
-    pub const ALL: [Purpose; 4] = [
+    pub const ALL: [Purpose; 5] = [
         Purpose::Departures,
         Purpose::Breakdowns,
         Purpose::Reviews,
         Purpose::LabourMarket,
+        Purpose::Situations,
     ];
 
     /// Stabilna oznaka toka; nikad se ne mijenja.
@@ -27,6 +31,7 @@ impl Purpose {
             Purpose::Breakdowns => "v2:kvarovi",
             Purpose::Reviews => "v2:recenzije",
             Purpose::LabourMarket => "v2:burza-rada",
+            Purpose::Situations => "v2:situacije",
         }
     }
 }

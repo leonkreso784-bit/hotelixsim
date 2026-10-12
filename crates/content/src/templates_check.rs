@@ -3,7 +3,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_hotel::{Catalog, Month};
-use sim_hotel_v2::department::UsaliClass;
 
 use crate::ContentError;
 use crate::templates::{
@@ -232,22 +231,18 @@ fn departments(
     dept: &str,
     v2: &sim_hotel_v2::Catalog,
 ) -> Result<Option<BTreeSet<String>>, ContentError> {
-    let pick = |f: &dyn Fn(&sim_hotel_v2::department::DeptSpec) -> bool| -> BTreeSet<String> {
-        v2.departments
+    // Članove skupina određuje jezgra (`DeptTarget::members`), da provjera i izvlačenje vide iste odjele.
+    let group = |code: &str| -> BTreeSet<String> {
+        crate::templates_core::dept_target(code)
+            .members(v2)
+            .unwrap_or_default()
             .iter()
-            .filter(|(_, s)| f(s))
-            .map(|(k, _)| k.as_str().to_string())
+            .map(|k| k.as_str().to_string())
             .collect()
     };
     let set = match dept {
         "hotel" => return Ok(None),
-        "*staffed" => pick(&|s| s.wage_cents > 0),
-        "*guest_facing" => pick(&|s| {
-            matches!(
-                s.class,
-                UsaliClass::Rooms | UsaliClass::FoodBeverage | UsaliClass::OtherOperated
-            )
-        }),
+        "*staffed" | "*guest_facing" => group(dept),
         _ if dept.starts_with('*') => {
             return invalid(format!("{ctx}: nepoznata skupina odjela '{dept}'"));
         }
