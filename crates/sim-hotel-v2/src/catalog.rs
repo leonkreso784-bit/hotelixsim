@@ -7,6 +7,7 @@ use sim_hotel::{CatalogError, Month, MonthTable, Profile};
 
 use crate::calendar::PeriodKind;
 use crate::department::{DeptCode, DeptSpec, RevenueModel, UndistributedKind, UsaliClass};
+use crate::renewal::RenewalSpec;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PeriodCoefficients {
@@ -20,13 +21,69 @@ pub struct PeriodCoefficients {
     pub seasonal_step: u16,
 }
 
-/// Gospodarstvo v2: gosti po sobi, granice razine cijene, popis fiksnih naknada (osiguranje, najam, porez).
+/// Gospodarstvo v2: gosti po sobi, granice razine cijene, popis fiksnih naknada (osiguranje, najam, porez),
+/// zgrada, smjernica pričuve za obnovu (FF&E) i osnova financijskog indeksa.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EconomyV2 {
     pub guests_per_room_hundredths: u16,
     pub price_level_min_pct: u16,
     pub price_level_max_pct: u16,
     pub fixed_charges: BTreeMap<String, FixedChargeSpec>,
+    pub building: BuildingSpec,
+    /// Smjernica „pričuva za obnovu ≈ x % prihoda sezone" (FF&E), u bp; 0 = bez smjernice.
+    pub ffe_reserve_bp: u16,
+    pub finance_index: FinanceBasis,
+}
+
+/// Zgrada hotela (model B, obnova-v2-spec §2.2): jedno stanje za cijeli hotel, troši se sporo, diže ga samo obnova
+/// zgrade, a gost ga osjeća u svakom odjelu s gostima kao udio `satisfaction_share_bp` u stanju prostora.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BuildingSpec {
+    pub name: String,
+    /// Trošenje stanja zgrade mjesečno (pozitivan broj, oduzima se).
+    pub wear_pts_per_month: i32,
+    /// Udio stanja zgrade u stanju prostora koje gost osjeća (bp).
+    pub satisfaction_share_bp: u16,
+    pub renewal: RenewalSpec,
+}
+
+impl BuildingSpec {
+    /// Zgrada bez učinka: ne troši se, gost je ne osjeća, obnova nije ponuđena (degenerirani katalog, sadržaj bez
+    /// zgrade).
+    pub fn none() -> BuildingSpec {
+        BuildingSpec {
+            name: "Zgrada".to_string(),
+            wear_pts_per_month: 0,
+            satisfaction_share_bp: 0,
+            renewal: RenewalSpec::default(),
+        }
+    }
+}
+
+/// Osnova financijskog indeksa F (obnova-v2-spec §3.9): GOP po sobi i danu (v1) ili EBIT po sobi i danu (nakon
+/// amortizacije i fiksnih naknada, nazivnik ostaje GOPPAR referentnog hotela — O12).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FinanceBasis {
+    Gop,
+    Ebit,
+}
+
+impl FinanceBasis {
+    /// Stabilan kod u sadržaju: `gop` | `ebit`.
+    pub fn code(self) -> &'static str {
+        match self {
+            FinanceBasis::Gop => "gop",
+            FinanceBasis::Ebit => "ebit",
+        }
+    }
+
+    pub fn from_code(s: &str) -> Option<FinanceBasis> {
+        match s {
+            "gop" => Some(FinanceBasis::Gop),
+            "ebit" => Some(FinanceBasis::Ebit),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -52,6 +109,8 @@ pub struct DeptStart {
 pub struct ProfileV2 {
     pub departments: BTreeMap<DeptCode, DeptStart>,
     pub fixed_charges_cents: BTreeMap<String, i64>,
+    /// Početno stanje zgrade (0–10 000).
+    pub building_pts: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -88,6 +147,13 @@ impl Catalog {
         self.profiles
             .get(&p)
             .ok_or_else(|| CatalogError::Missing(format!("v2.profiles.{}", p.code())))
+    }
+
+    /// Obnova v2 je ponuđena: zgrada ili bilo koji odjel ima najveći mjesečni iznos veći od 0. Tada stara obnova
+    /// (jedna kvačica) nije dostupna.
+    pub fn renewal_enabled(&self) -> bool {
+        self.economy.building.renewal.offered()
+            || self.departments.values().any(|d| d.renewal.offered())
     }
 
     /// Ime odjela u profilu (ime iz profila ako postoji, inače iz kataloga).
@@ -250,9 +316,62 @@ impl Catalog {
                     )));
                 }
             }
+            if !(0_i32..=10_000_i32).contains(&p.building_pts) {
+                return Err(CatalogError::OutOfRange(label("building_pts")));
+            }
+        }
+        self.validate_renewal()
+    }
+
+    /// Obnova v2 (obnova-v2-spec §2.4): krivulje i granice odjela i zgrade, zgrada, pričuva. Neraspoređeni odjel s
+    /// obnovom je greška.
+    fn validate_renewal(&self) -> Result<(), CatalogError> {
+        for (code, d) in &self.departments {
+            let field = format!("v2.departments.{}.renewal", code.as_str());
+            if d.class.is_undistributed() && d.renewal != RenewalSpec::default() {
+                return Err(CatalogError::OutOfRange(field));
+            }
+            renewal_within(&d.renewal, &field)?;
+        }
+        let b = &self.economy.building;
+        let field = "v2.economy.building";
+        if !(0_i32..=10_000_i32).contains(&b.wear_pts_per_month) || b.satisfaction_share_bp > 10_000
+        {
+            return Err(CatalogError::OutOfRange(field.to_string()));
+        }
+        renewal_within(&b.renewal, field)?;
+        if self.economy.ffe_reserve_bp > 10_000 {
+            return Err(CatalogError::OutOfRange(
+                "v2.economy.ffe_reserve_bp".to_string(),
+            ));
         }
         Ok(())
     }
+}
+
+/// Ponuđena obnova (`max_monthly_cents > 0`): `gain_pts ∈ 1..=10 000`, `half_cents > 0`, `step_cents > 0`, najveći
+/// iznos višekratnik koraka, vijek veći od 0. Negativan najveći iznos je uvijek greška.
+fn renewal_within(r: &RenewalSpec, field: &str) -> Result<(), CatalogError> {
+    let bad = || Err(CatalogError::OutOfRange(field.to_string()));
+    if r.max_monthly_cents < 0 {
+        return bad();
+    }
+    if !r.offered() {
+        return Ok(());
+    }
+    if !(1_i32..=10_000_i32).contains(&r.gain_pts)
+        || r.half_cents <= 0
+        || r.step_cents <= 0
+        || r.life_months == 0
+    {
+        return bad();
+    }
+    let whole = engine::calc::div_floor(i128::from(r.max_monthly_cents), i128::from(r.step_cents))
+        .and_then(|k| engine::calc::mul(k, i128::from(r.step_cents)));
+    if whole != Ok(i128::from(r.max_monthly_cents)) {
+        return bad();
+    }
+    Ok(())
 }
 
 impl Catalog {
@@ -332,6 +451,7 @@ fn bare(name: &str, class: UsaliClass, revenue: RevenueModel) -> DeptSpec {
         seasonal_plan: MonthTable([0; 4]),
         can_close: false,
         staffing: BTreeMap::new(),
+        renewal: RenewalSpec::default(),
     }
 }
 
@@ -434,6 +554,7 @@ fn degenerate_profiles(base: &sim_hotel::Catalog) -> BTreeMap<Profile, ProfileV2
             ProfileV2 {
                 departments,
                 fixed_charges_cents: BTreeMap::new(),
+                building_pts: 10_000,
             },
         );
     }
@@ -472,6 +593,9 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             price_level_min_pct: 90,
             price_level_max_pct: 120,
             fixed_charges: BTreeMap::new(),
+            building: BuildingSpec::none(),
+            ffe_reserve_bp: 0,
+            finance_index: FinanceBasis::Gop,
         },
     }
 }

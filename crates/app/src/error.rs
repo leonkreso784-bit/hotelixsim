@@ -218,6 +218,11 @@ impl From<GameError> for AppError {
                 | PlanErrorV2::DepartmentSeasonalOutOfRange
                 | PlanErrorV2::ClosedWithSeasonal
                 | PlanErrorV2::PriceLevelOutOfRange => C::DepartmentPlanInvalid,
+                // Obnova v2: vlastite šifre (renewal_*) dolaze s Taskom O-3; dotad je sadržaj bez obnove pa do
+                // ovih grešaka ne dolazi.
+                PlanErrorV2::RenewalUnavailable
+                | PlanErrorV2::RenewalLocked
+                | PlanErrorV2::RenewalOutOfRange => C::DepartmentPlanInvalid,
             },
             GameError::Outdated { .. } => C::GameOutdated,
             GameError::InvalidSettings => C::InvalidSettings,

@@ -53,8 +53,23 @@ pub struct UsaliStatement {
     pub total_fixed_charges_cents: i64,
     pub ebitda_cents: i64,
     pub ebitda_margin_bp: Option<i64>,
+    /// Amortizacija opreme (odjeli) i zgrade iz obnove v2, ispod EBITDA; EBIT = EBITDA − amortizacija.
+    pub depreciation_equipment_cents: i64,
+    pub depreciation_building_cents: i64,
+    pub depreciation_cents: i64,
+    pub ebit_cents: i64,
+    pub ebit_margin_bp: Option<i64>,
     pub interest_cents: i64,
+    /// Ulaganja (stara obnova i obnova v2) plaćena iz blagajne; nisu trošak, u račun ulazi samo amortizacija.
     pub capex_cents: i64,
+}
+
+/// Iznosi ispod EBITDA koje račun nosi uz retke: kamata, ulaganja, amortizacija opreme i zgrade.
+struct BelowEbitda {
+    interest: i64,
+    capex: i64,
+    depreciation_equipment: i64,
+    depreciation_building: i64,
 }
 
 /// `div_round(part·10 000, whole)`; `None` kad je `whole` 0 (marža bez prihoda nije definirana).
@@ -127,13 +142,13 @@ fn undistributed_account(u: &UndistributedOutcome) -> Calc<UndistributedAccount>
     })
 }
 
-/// Zajednički završetak: zbrojevi, GOP, EBITDA i marže iz već složenih redaka.
+/// Zajednički završetak: zbrojevi, GOP, EBITDA, EBIT i marže iz već složenih redaka.
 fn assemble(
     (days, room_nights): (u32, u32),
     mut departments: Vec<DeptAccount>,
     mut undistributed: Vec<UndistributedAccount>,
     fixed_charges: Vec<(String, i64)>,
-    (interest_cents, capex_cents): (i64, i64),
+    below: BelowEbitda,
 ) -> Calc<UsaliStatement> {
     departments.sort_by(|a, b| (a.class.rank(), &a.code).cmp(&(b.class.rank(), &b.code)));
     undistributed.sort_by(|a, b| {
@@ -147,6 +162,8 @@ fn assemble(
     let gop = sub64(dept_profit, total_undist)?;
     let total_fixed = total(fixed_charges.iter().map(|(_, v)| *v))?;
     let ebitda = sub64(gop, total_fixed)?;
+    let depreciation = add64(below.depreciation_equipment, below.depreciation_building)?;
+    let ebit = sub64(ebitda, depreciation)?;
     let goppar = if room_nights == 0 {
         None
     } else {
@@ -168,13 +185,19 @@ fn assemble(
         total_fixed_charges_cents: total_fixed,
         ebitda_cents: ebitda,
         ebitda_margin_bp: margin_bp(ebitda, total_revenue)?,
-        interest_cents,
-        capex_cents,
+        depreciation_equipment_cents: below.depreciation_equipment,
+        depreciation_building_cents: below.depreciation_building,
+        depreciation_cents: depreciation,
+        ebit_cents: ebit,
+        ebit_margin_bp: margin_bp(ebit, total_revenue)?,
+        interest_cents: below.interest,
+        capex_cents: below.capex,
     })
 }
 
 /// Račun dobiti jednog razdoblja. Rashodi odjela = plaće + nabavna vrijednost + ostali izravni (održavanje je u
-/// „Održavanju"); `room_nights = sobe · dani`; kamata i obnova su ispod EBITDA, samo za prikaz.
+/// „Održavanju"); `room_nights = sobe · dani`; ispod EBITDA amortizacija (daje EBIT, koji ulazi u indeks F kad
+/// sadržaj tako kaže), a kamata i ulaganja (capex) su samo za prikaz.
 pub fn statement(a: &PeriodAccounts) -> Calc<UsaliStatement> {
     let departments = a
         .departments
@@ -198,7 +221,12 @@ pub fn statement(a: &PeriodAccounts) -> Calc<UsaliStatement> {
         departments,
         undistributed,
         fixed,
-        (a.interest_cents, a.capex_cents),
+        BelowEbitda {
+            interest: a.interest_cents,
+            capex: a.capex_cents,
+            depreciation_equipment: a.depreciation_equipment_cents,
+            depreciation_building: a.depreciation_building_cents,
+        },
     )
 }
 
@@ -207,12 +235,22 @@ pub fn sum_statements(xs: &[UsaliStatement]) -> Calc<UsaliStatement> {
     let mut depts: BTreeMap<DeptCode, DeptAccount> = BTreeMap::new();
     let mut undist: BTreeMap<DeptCode, UndistributedAccount> = BTreeMap::new();
     let mut fixed: BTreeMap<String, i64> = BTreeMap::new();
-    let (mut days, mut nights, mut interest, mut capex) = (0_i128, 0_i128, 0_i64, 0_i64);
+    let (mut days, mut nights) = (0_i128, 0_i128);
+    let mut below = BelowEbitda {
+        interest: 0,
+        capex: 0,
+        depreciation_equipment: 0,
+        depreciation_building: 0,
+    };
     for x in xs {
         days = c::add(days, w(x.days))?;
         nights = c::add(nights, w(x.room_nights))?;
-        interest = add64(interest, x.interest_cents)?;
-        capex = add64(capex, x.capex_cents)?;
+        below.interest = add64(below.interest, x.interest_cents)?;
+        below.capex = add64(below.capex, x.capex_cents)?;
+        below.depreciation_equipment =
+            add64(below.depreciation_equipment, x.depreciation_equipment_cents)?;
+        below.depreciation_building =
+            add64(below.depreciation_building, x.depreciation_building_cents)?;
         for d in &x.departments {
             let e = depts.entry(d.code.clone()).or_insert_with(|| DeptAccount {
                 revenue_cents: 0,
@@ -253,7 +291,7 @@ pub fn sum_statements(xs: &[UsaliStatement]) -> Calc<UsaliStatement> {
         departments,
         undist.into_values().collect(),
         fixed.into_iter().collect(),
-        (interest, capex),
+        below,
     )
 }
 

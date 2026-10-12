@@ -15,6 +15,7 @@ mod people;
 mod situations;
 
 pub(crate) use guests::GuestStep;
+pub use money::FinanceOutcome;
 pub(crate) use money::MoneyStep;
 pub(crate) use people::PeopleStep;
 
@@ -22,27 +23,29 @@ use departments::{
     OperatedIn, RoomsIn, fixed_charges, operated, rooms_outcome, rooms_payroll, undistributed,
 };
 use guests::{GuestIn, guests};
-use money::{MoneyIn, decisions, money, rooms_maintenance_cost};
+use money::{MoneyIn, decisions, finance, money, rooms_maintenance_cost};
 use people::{LoadUnit, PeopleIn, department_departures, hotel_load, people, rooms_load, staffing};
 use situations::{group_done, situation_effects};
 
+use std::collections::BTreeMap;
+
 use engine::calc::{self as c, Calc, CalcError};
+use sim_hotel::Training;
 use sim_hotel::{
-    CatalogError, LevelEffect, MechanicError, MonthReport, Pending, SituationOutcome,
-    TrainingEffect,
+    CatalogError, MechanicError, MonthReport, Pending, SituationOutcome, TrainingEffect,
 };
-use sim_hotel::{Maintenance, Training};
 
 use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
-use crate::department::{DeptCode, PeriodAccounts};
+use crate::department::{BuildingOutcome, DeptCode, PeriodAccounts, after_renewal};
 use crate::explain::{Explain, Lines, explain};
 use crate::market::market;
 use crate::plan::{PeriodPlan, PlanError};
+use crate::renewal::{RoundRenewal, depreciation, renew_round};
 use crate::state::HotelState;
 
 /// Izvješće kruga: v2 stanje prije i poslije, v1 sažetak (isti oblik kao v1 `MonthReport`, složen iz odjela) i
-/// računi odjela kruga (USALI).
+/// računi odjela kruga (USALI), uz EBITDA, amortizaciju i EBIT kruga.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PeriodReport {
     pub period: Period,
@@ -50,6 +53,7 @@ pub struct PeriodReport {
     pub after: HotelState,
     pub summary: MonthReport,
     pub accounts: PeriodAccounts,
+    pub finance: FinanceOutcome,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -148,23 +152,51 @@ fn training_effect(t: Training, cat: &sim_hotel::Catalog, p: &Period) -> Calc<Tr
     })
 }
 
-/// Održavanje za krug: trošak i bodovi razine razmjerno krugu.
-fn maintenance_effect(m: Maintenance, cat: &sim_hotel::Catalog, p: &Period) -> Calc<LevelEffect> {
-    let monthly = match m {
-        Maintenance::Deferred => cat.actions.maintenance_deferred.clone(),
-        Maintenance::Regular => cat.actions.maintenance_regular.clone(),
-        Maintenance::Intensive => cat.actions.maintenance_intensive.clone(),
-    };
-    Ok(LevelEffect {
-        cost_cents: prorate(monthly.cost_cents, p)?,
-        equipment_pts: c::narrow(w(prorate(i64::from(monthly.equipment_pts), p)?))?,
-    })
+/// Obnova v2 kruga (obnova-v2-spec §3.3, §3.5) nad knjigama u stanju `s`: svaka knjiga se zarola u mjesec kruga,
+/// plaća se rata planiranog iznosa; zgrada se troši i dobiva bodove obnove prije odjela (treba je mješavina).
+fn renewals(
+    s: &mut HotelState,
+    p: &Period,
+    plan: &PeriodPlan,
+    cat: &Catalog,
+) -> Result<(BTreeMap<DeptCode, RoundRenewal>, BuildingOutcome), ResolveError> {
+    let mut out = BTreeMap::new();
+    for (code, d) in s.departments.iter_mut() {
+        let amount = plan.departments.get(code).map_or(0, |pl| pl.renewal_cents);
+        let r = renew_round(&mut d.book, &cat.dept(code)?.renewal, amount, p)?;
+        out.insert(code.clone(), r);
+    }
+    let b = &cat.economy.building;
+    let r = renew_round(
+        &mut s.building.book,
+        &b.renewal,
+        plan.building_renewal_cents,
+        p,
+    )?;
+    let before = s.building.condition_pts;
+    let wear: i32 = c::narrow(w(prorate(
+        c::narrow(c::sub(0, w(b.wear_pts_per_month))?)?,
+        p,
+    )?))?;
+    let base = c::add(w(before), w(wear))?.clamp(0, 10_000);
+    let after = after_renewal(base, r.delta_pts)?;
+    Ok((
+        out,
+        BuildingOutcome {
+            before_pts: before,
+            wear_pts: wear,
+            renewal_pts: c::narrow(c::sub(after, base)?)?,
+            after_pts: c::narrow(after)?,
+            renewal_cents: r.cents,
+        },
+    ))
 }
 
-/// Obračun kruga. Redoslijed: osoblje → tržište i Smještaj (prodane noći, noćenja gostiju) → ljudi (opterećenje
-/// hotela ponderirano osobljem odjela) → računi operativnih odjela → oprema i gosti (kvaliteta i zadovoljstvo
-/// hotela ponderirani gostima) → račun Smještaja → neraspoređeni odjeli s troškovima odluka → fiksne naknade →
-/// v1 sažetak novca iz računa → objašnjenje.
+/// Obračun kruga. Redoslijed: obnova v2 (knjige, plaćanja, zgrada) → osoblje → tržište i Smještaj (prodane noći,
+/// noćenja gostiju) → ljudi (opterećenje hotela ponderirano osobljem odjela) → računi operativnih odjela (sa
+/// zgradom u cilju zadovoljstva) → oprema i gosti (kvaliteta i zadovoljstvo hotela ponderirani gostima) → račun
+/// Smještaja → neraspoređeni odjeli s troškovima odluka → fiksne naknade → v1 sažetak novca iz računa (capex) →
+/// amortizacija i EBIT → objašnjenje.
 pub fn resolve_period(
     state: &HotelState,
     p: &Period,
@@ -185,6 +217,14 @@ pub fn resolve_period(
     let rooms_before = state.rooms_state()?.clone();
     let st = staffing(state, plan)?;
     let mut s = st.state;
+    // 0. obnova v2: knjige u `s` (pa i u stanju nakon kruga), plaćanja kruga, zgrada
+    let (round_renewals, building) = renewals(&mut s, p, plan, cat)?;
+    let share_bp = cat.economy.building.satisfaction_share_bp;
+    let rooms_spec = cat.dept(&DeptCode::rooms())?;
+    let rooms_renewal = round_renewals
+        .get(&DeptCode::rooms())
+        .copied()
+        .unwrap_or_default();
     s.groups.extend(sit.groups);
     s.extra_wage_cents = c::narrow(c::add(w(s.extra_wage_cents), sit.extra_wage)?)?;
     let mkt = market(&s, p, plan, st.rooms_staff, rooms_capacity, base)?;
@@ -208,6 +248,9 @@ pub fn resolve_period(
             experience_pts,
             morale_pts,
             satisfaction_step_bp: coeffs.satisfaction_step_bp,
+            renewals: &round_renewals,
+            building_pts: building.after_pts,
+            building_share_bp: share_bp,
         })
     };
 
@@ -274,6 +317,10 @@ pub fn resolve_period(
             sit_equipment: sit.equipment,
             sit_satisfaction: sit.satisfaction,
             sit_rating: sit.rating,
+            rooms_spec,
+            renewal_delta_pts: rooms_renewal.delta_pts,
+            building_pts: building.after_pts,
+            building_share_bp: share_bp,
         },
         base,
     )?;
@@ -290,7 +337,7 @@ pub fn resolve_period(
         revenue_cents: rooms_revenue,
         payroll_cents: rooms_payroll(
             st.rooms_staff,
-            cat.dept(&DeptCode::rooms())?.wage_cents,
+            rooms_spec.wage_cents,
             plan.wage_pct,
             s.extra_wage_cents,
             p,
@@ -300,8 +347,9 @@ pub fn resolve_period(
         penalty: r_penalty,
         condition_before_pts: rooms_before.condition_pts,
         satisfaction_before_pts: rooms_before.satisfaction_pts,
-        maintenance_cents: rooms_maintenance_cost(plan, p, base)?,
+        maintenance_cents: rooms_maintenance_cost(plan, p, rooms_spec)?,
         guest_nights,
+        renewal_cents: rooms_renewal.cents,
     })?;
     depts.insert(DeptCode::rooms(), rooms);
 
@@ -326,6 +374,9 @@ pub fn resolve_period(
         fixed_charges: fixed_charges(&s, p)?,
         interest_cents: 0,
         capex_cents: 0,
+        building,
+        depreciation_equipment_cents: 0,
+        depreciation_building_cents: 0,
     };
     let dept_departures = department_departures(&s, pe.out.departures)?;
     for (code, n) in &dept_departures {
@@ -336,7 +387,11 @@ pub fn resolve_period(
         }
     }
 
-    // 7. v1 sažetak novca iz računa
+    // 7. v1 sažetak novca iz računa; ulaganja = stara obnova + obnova v2 odjela i zgrade
+    let mut renewal_cents = w(accounts.building.renewal_cents);
+    for r in round_renewals.values() {
+        renewal_cents = c::add(renewal_cents, w(r.cents))?;
+    }
     let mo = money(
         &MoneyIn {
             state: &s,
@@ -344,13 +399,29 @@ pub fn resolve_period(
             accounts: &accounts,
             decisions: &dec,
             period: p,
+            renewal_cents,
         },
         base,
     )?;
     accounts.interest_cents = mo.out.interest_cents;
     accounts.capex_cents = mo.out.capex_cents;
 
+    // 8. amortizacija (od mjeseca nakon obnove) i EBIT
+    let mut equipment_dep: i128 = 0;
+    for (code, d) in &s.departments {
+        let life = cat.dept(code)?.renewal.life_months;
+        equipment_dep = c::add(equipment_dep, w(depreciation(&d.book, life, p)?))?;
+    }
+    accounts.depreciation_equipment_cents = c::narrow(equipment_dep)?;
+    accounts.depreciation_building_cents = depreciation(
+        &s.building.book,
+        cat.economy.building.renewal.life_months,
+        p,
+    )?;
+    let fin = finance(mo.out.gop_cents, &accounts)?;
+
     let mut after = s;
+    after.building.condition_pts = accounts.building.after_pts;
     after.morale_pts = c::narrow(pe.morale)?;
     after.experience_pts = c::narrow(pe.experience)?;
     for (code, o) in &accounts.departments {
@@ -382,8 +453,9 @@ pub fn resolve_period(
         renovation: plan.renovation,
     };
 
-    // 8. objašnjenje: „oprema" sažetka je 70/30 (Smještaj i ostali operativni); promjenu Smještaja objašnjavaju v1
-    // uzroci, ostatak ide u redak održavanja
+    // 9. objašnjenje: „oprema" sažetka je 70/30 (Smještaj i ostali operativni); promjenu Smještaja objašnjavaju v1
+    // uzroci i obnova v2 Smještaja, ostatak ide u redak održavanja, osim dijela koji donosi obnova ostalih odjela
+    // (`renewal_others`: sažetak nakon kruga prema sažetku s ostalim odjelima umanjenim za njihove bodove obnove)
     let (summary_before, summary_after) = (state.summary(), after.summary());
     let equipment_others = c::sub(
         c::sub(
@@ -391,6 +463,18 @@ pub fn resolve_period(
             w(summary_before.equipment_pts),
         )?,
         c::sub(gu.equipment, w(rooms_before.condition_pts))?,
+    )?;
+    let mut without = after.clone();
+    for (code, o) in &accounts.departments {
+        if *code != DeptCode::rooms()
+            && let Some(d) = without.departments.get_mut(code)
+        {
+            d.condition_pts = c::narrow(c::sub(w(d.condition_pts), w(o.renewal_pts))?)?;
+        }
+    }
+    let renewal_others = c::sub(
+        w(summary_after.equipment_pts),
+        w(without.summary().equipment_pts),
     )?;
     let mut lines = Lines::default();
     explain(
@@ -406,6 +490,7 @@ pub fn resolve_period(
             situations: &sit.shown,
             sit_extra_wage: sit.shown_extra_wage,
             equipment_others,
+            renewal_others,
         },
     )?;
 
@@ -425,5 +510,6 @@ pub fn resolve_period(
         after,
         summary,
         accounts,
+        finance: fin,
     })
 }

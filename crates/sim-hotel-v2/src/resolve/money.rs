@@ -1,15 +1,48 @@
 //! Faza novca (4): troškovi odluka kruga i v1 sažetak novca složen iz računa odjela (prihodi, troškovi, GOP), pa
-//! blagajna nakon fiksnih naknada i obnove, kamata i GOPPAR kruga.
+//! blagajna nakon fiksnih naknada i ulaganja (stara obnova i obnova v2), kamata i GOPPAR kruga; zatim EBITDA,
+//! amortizacija, EBIT i EBITPAR (`finance`).
 
 use engine::calc::{self as c, Calc};
 use sim_hotel::MoneyOutcome;
 
 use super::departments::Decisions;
-use super::{maintenance_effect, neg, training_effect, w};
+use super::{neg, training_effect, w};
 use crate::calendar::{Period, prorate};
-use crate::department::{DeptCode, PeriodAccounts};
+use crate::department::{DeptCode, DeptSpec, PeriodAccounts};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
+
+/// EBITDA, amortizacija, EBIT i EBIT po raspoloživoj sobi i danu kruga (obnova-v2-spec §3.9). `MoneyOutcome` je v1
+/// tip i ne mijenja se, pa ovo ide uz njega.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FinanceOutcome {
+    pub ebitda_cents: i64,
+    pub depreciation_cents: i64,
+    pub ebit_cents: i64,
+    pub ebitpar_cents: i64,
+}
+
+/// EBITDA = GOP − fiksne naknade; EBIT = EBITDA − amortizacija (oprema i zgrada); EBITPAR = `div_round(EBIT, sobe ·
+/// dani)` (isti nazivnik kao GOPPAR).
+pub(super) fn finance(gop: i64, a: &PeriodAccounts) -> Calc<FinanceOutcome> {
+    let charges = a
+        .fixed_charges
+        .values()
+        .try_fold(0_i128, |s, v| c::add(s, w(*v)))?;
+    let ebitda = c::sub(w(gop), charges)?;
+    let depreciation = c::add(
+        w(a.depreciation_equipment_cents),
+        w(a.depreciation_building_cents),
+    )?;
+    let ebit = c::sub(ebitda, depreciation)?;
+    let ebitpar = c::div_round(ebit, c::mul(w(a.rooms), w(a.days))?)?;
+    Ok(FinanceOutcome {
+        ebitda_cents: c::narrow(ebitda)?,
+        depreciation_cents: c::narrow(depreciation)?,
+        ebit_cents: c::narrow(ebit)?,
+        ebitpar_cents: c::narrow(ebitpar)?,
+    })
+}
 
 /// Troškovi odluka kruga: marketing (iznos iz plana je za krug), odgovaranje na recenzije i obuka razmjerno,
 /// zapošljavanje (najam i odlasci) i situacije u punom iznosu; održavanje je zbroj odjela (`maintenance`).
@@ -37,13 +70,12 @@ pub(super) fn decisions(
     })
 }
 
-/// Trošak održavanja Smještaja u krugu (razina iz plana, v1 cijene održavanja).
-pub(super) fn rooms_maintenance_cost(
-    plan: &PeriodPlan,
-    p: &Period,
-    cat: &sim_hotel::Catalog,
-) -> Calc<i64> {
-    Ok(maintenance_effect(plan.rooms_maintenance(), cat, p)?.cost_cents)
+/// Trošak održavanja Smještaja u krugu (razina iz plana, cijena iz odjela Smještaj; degenerirani katalog: v1).
+pub(super) fn rooms_maintenance_cost(plan: &PeriodPlan, p: &Period, rooms: &DeptSpec) -> Calc<i64> {
+    prorate(
+        rooms.maintenance_level(plan.rooms_maintenance()).cost_cents,
+        p,
+    )
 }
 
 pub(crate) struct MoneyStep {
@@ -72,6 +104,8 @@ pub(super) struct MoneyIn<'a> {
     pub(super) accounts: &'a PeriodAccounts,
     pub(super) decisions: &'a Decisions,
     pub(super) period: &'a Period,
+    /// Obnova v2 plaćena u krugu (odjeli i zgrada); s njom ide stara obnova u ulaganja (capex).
+    pub(super) renewal_cents: i128,
 }
 
 /// v1 sažetak novca iz računa odjela: prihod soba = Smještaj, ostali prihod = Σ ostalih odjela; trošak = rad (Σ
@@ -116,11 +150,12 @@ pub(super) fn money(i: &MoneyIn, cat: &sim_hotel::Catalog) -> Calc<MoneyStep> {
         w(d.situation),
     ])?;
     let gop = c::sub(c::add(rooms_revenue, other)?, costs)?;
-    let capex = if i.plan.renovation {
+    let old = if i.plan.renovation {
         w(cat.actions.renovation_cents)
     } else {
         0
     };
+    let capex = c::add(old, i.renewal_cents)?;
     let mut cash = c::sub(c::sub(c::add(w(i.state.cash_cents), gop)?, charges)?, capex)?;
     let mut interest = 0;
     if cash < 0 {

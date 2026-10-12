@@ -9,9 +9,9 @@ use sim_hotel_v2::department::{
     AssignedCosts, DeptCode, DeptOutcome, DeptPlan, DeptState, PeriodAccounts,
     UndistributedOutcome, UsaliClass,
 };
-use sim_hotel_v2::{HotelState, PeriodPlan};
+use sim_hotel_v2::{AssetBook, Building, BuildingOutcome, HotelState, PeriodPlan, Renewal};
 
-use crate::dto::{GroupBlockDto, MaintenanceCode, PendingDto, PlanDto};
+use crate::dto::{GroupBlockDto, MaintenanceCode, MonthCode, PendingDto, PlanDto};
 use crate::error::{GameError, corrupt};
 
 /// v2 dio obračuna kruga uz v1 sažetak (`HotelResolution.report`).
@@ -60,6 +60,116 @@ pub struct DeptOutcomeDto {
     /// Odlasci zaposlenih odjela u krugu; krugovi obračunati prije Taska 23 ga nemaju (0).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub departures: u16,
+    /// Obnova v2 plaćena u krugu i bodovi koje je stvarno donijela; krugovi bez obnove ih nemaju (0).
+    #[serde(default, skip_serializing_if = "is_zero_i64")]
+    pub renewal_cents: i64,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub renewal_pts: i32,
+    /// Stanje koje gost osjeća (sa zgradom); krugovi obračunati prije obnove v2 ga nemaju (= stanje nakon kruga).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub felt_condition_pts: Option<i32>,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::department::BuildingOutcome` (zgrada u krugu).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BuildingOutcomeDto {
+    pub before_pts: i32,
+    pub wear_pts: i32,
+    pub renewal_pts: i32,
+    pub after_pts: i32,
+    pub renewal_cents: i64,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::Renewal` (obnova odlučena u mjesecu, zaključana do kraja mjeseca).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RenewalDto {
+    pub month: MonthCode,
+    pub total_cents: i64,
+    pub installment_cents: i64,
+    pub paid_cents: i64,
+    pub gain_pts: i32,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::AssetBook`; prazna knjiga se ne zapisuje.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssetBookDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal: Option<RenewalDto>,
+    #[serde(default, skip_serializing_if = "is_zero_i64")]
+    pub capitalized_cents: i64,
+}
+
+/// Serde-zrcalo `sim_hotel_v2::Building` (stanje zgrade i knjiga).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BuildingStateDto {
+    pub condition_pts: i32,
+    pub start_pts: i32,
+    #[serde(default, skip_serializing_if = "AssetBookDto::is_empty")]
+    pub book: AssetBookDto,
+}
+
+impl AssetBookDto {
+    fn is_empty(&self) -> bool {
+        *self == AssetBookDto::default()
+    }
+}
+
+impl From<&AssetBook> for AssetBookDto {
+    fn from(b: &AssetBook) -> Self {
+        AssetBookDto {
+            renewal: b.renewal.map(|r| RenewalDto {
+                month: r.month.into(),
+                total_cents: r.total_cents,
+                installment_cents: r.installment_cents,
+                paid_cents: r.paid_cents,
+                gain_pts: r.gain_pts,
+            }),
+            capitalized_cents: b.capitalized_cents,
+        }
+    }
+}
+
+impl From<&AssetBookDto> for AssetBook {
+    fn from(b: &AssetBookDto) -> Self {
+        AssetBook {
+            renewal: b.renewal.as_ref().map(|r| Renewal {
+                month: r.month.into(),
+                total_cents: r.total_cents,
+                installment_cents: r.installment_cents,
+                paid_cents: r.paid_cents,
+                gain_pts: r.gain_pts,
+            }),
+            capitalized_cents: b.capitalized_cents,
+        }
+    }
+}
+
+impl From<&BuildingOutcome> for BuildingOutcomeDto {
+    fn from(b: &BuildingOutcome) -> Self {
+        BuildingOutcomeDto {
+            before_pts: b.before_pts,
+            wear_pts: b.wear_pts,
+            renewal_pts: b.renewal_pts,
+            after_pts: b.after_pts,
+            renewal_cents: b.renewal_cents,
+        }
+    }
+}
+
+impl From<&BuildingOutcomeDto> for BuildingOutcome {
+    fn from(b: &BuildingOutcomeDto) -> Self {
+        BuildingOutcome {
+            before_pts: b.before_pts,
+            wear_pts: b.wear_pts,
+            renewal_pts: b.renewal_pts,
+            after_pts: b.after_pts,
+            renewal_cents: b.renewal_cents,
+        }
+    }
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::AssignedCosts`.
@@ -102,9 +212,25 @@ pub struct PeriodAccountsDto {
     pub fixed_charges: BTreeMap<String, i64>,
     pub interest_cents: i64,
     pub capex_cents: i64,
+    /// Zgrada u krugu; krugovi obračunati prije obnove v2 je nemaju.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building: Option<BuildingOutcomeDto>,
+    /// Amortizacija opreme i zgrade (obnova v2); bez nje 0.
+    #[serde(default, skip_serializing_if = "is_zero_i64")]
+    pub depreciation_equipment_cents: i64,
+    #[serde(default, skip_serializing_if = "is_zero_i64")]
+    pub depreciation_building_cents: i64,
 }
 
 fn is_zero(n: &u16) -> bool {
+    *n == 0
+}
+
+fn is_zero_i32(n: &i32) -> bool {
+    *n == 0
+}
+
+fn is_zero_i64(n: &i64) -> bool {
     *n == 0
 }
 
@@ -144,6 +270,9 @@ impl From<&DeptOutcome> for DeptOutcomeDto {
             satisfaction_after_pts: o.satisfaction_after_pts,
             guest_weight: o.guest_weight,
             departures: o.departures,
+            renewal_cents: o.renewal_cents,
+            renewal_pts: o.renewal_pts,
+            felt_condition_pts: Some(o.felt_condition_pts),
         }
     }
 }
@@ -182,6 +311,9 @@ impl TryFrom<&DeptOutcomeDto> for DeptOutcome {
             satisfaction_after_pts: o.satisfaction_after_pts,
             guest_weight: o.guest_weight,
             departures: o.departures,
+            renewal_cents: o.renewal_cents,
+            renewal_pts: o.renewal_pts,
+            felt_condition_pts: o.felt_condition_pts.unwrap_or(o.condition_after_pts),
         })
     }
 }
@@ -259,6 +391,9 @@ impl From<&PeriodAccounts> for PeriodAccountsDto {
             fixed_charges: a.fixed_charges.clone(),
             interest_cents: a.interest_cents,
             capex_cents: a.capex_cents,
+            building: Some(BuildingOutcomeDto::from(&a.building)),
+            depreciation_equipment_cents: a.depreciation_equipment_cents,
+            depreciation_building_cents: a.depreciation_building_cents,
         }
     }
 }
@@ -283,6 +418,13 @@ impl TryFrom<&PeriodAccountsDto> for PeriodAccounts {
             fixed_charges: a.fixed_charges.clone(),
             interest_cents: a.interest_cents,
             capex_cents: a.capex_cents,
+            building: a
+                .building
+                .as_ref()
+                .map(BuildingOutcome::from)
+                .unwrap_or_default(),
+            depreciation_equipment_cents: a.depreciation_equipment_cents,
+            depreciation_building_cents: a.depreciation_building_cents,
         })
     }
 }
@@ -300,6 +442,12 @@ pub struct DeptStateDto {
     /// Odlasci odjela u dosadašnjim krugovima sezone; stari dnevnici ga nemaju (čita se kao 0).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub season_departures: u16,
+    /// Početno stanje prostora iz profila (obnova v2); stari dnevnici ga nemaju (čita se kao stanje).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_condition_pts: Option<i32>,
+    /// Knjiga imovine odjela (obnova v2); prazna se ne zapisuje.
+    #[serde(default, skip_serializing_if = "AssetBookDto::is_empty")]
+    pub book: AssetBookDto,
 }
 
 /// Serde-zrcalo `sim_hotel_v2::department::DeptPlan` (postavke jednog odjela u planu kruga).
@@ -334,6 +482,9 @@ pub struct HotelStateV2Dto {
     pub departments: BTreeMap<String, DeptStateDto>,
     pub undistributed_fixed_cents: BTreeMap<String, i64>,
     pub fixed_charges_cents: BTreeMap<String, i64>,
+    /// Zgrada (obnova v2); stari dnevnici je nemaju (zgrada 100/100 bez knjige).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building: Option<BuildingStateDto>,
 }
 
 impl From<&DeptState> for DeptStateDto {
@@ -346,6 +497,8 @@ impl From<&DeptState> for DeptStateDto {
             condition_pts: d.condition_pts,
             satisfaction_pts: d.satisfaction_pts,
             season_departures: d.season_departures,
+            start_condition_pts: Some(d.start_condition_pts),
+            book: AssetBookDto::from(&d.book),
         }
     }
 }
@@ -363,6 +516,8 @@ impl TryFrom<&DeptStateDto> for DeptState {
             condition_pts: d.condition_pts,
             satisfaction_pts: d.satisfaction_pts,
             season_departures: d.season_departures,
+            start_condition_pts: d.start_condition_pts.unwrap_or(d.condition_pts),
+            book: AssetBook::from(&d.book),
         })
     }
 }
@@ -385,6 +540,8 @@ impl From<&DeptPlanDto> for DeptPlan {
             seasonal_target: d.seasonal_target,
             price_level_pct: d.price_level_pct,
             maintenance: d.maintenance.into(),
+            // Iznos obnove v2 u planu dolazi s Taskom O-3 (tijelo plana); dotad 0.
+            renewal_cents: 0,
         }
     }
 }
@@ -427,6 +584,11 @@ impl From<&HotelState> for HotelStateV2Dto {
             departments: by_string(&s.departments, |d| DeptStateDto::from(d)),
             undistributed_fixed_cents: by_string(&s.undistributed_fixed_cents, |v| *v),
             fixed_charges_cents: s.fixed_charges_cents.clone(),
+            building: Some(BuildingStateDto {
+                condition_pts: s.building.condition_pts,
+                start_pts: s.building.start_pts,
+                book: AssetBookDto::from(&s.building.book),
+            }),
         }
     }
 }
@@ -475,6 +637,18 @@ impl TryFrom<&HotelStateV2Dto> for HotelState {
                 .map(|(k, v)| (DeptCode(k.clone()), *v))
                 .collect(),
             fixed_charges_cents: d.fixed_charges_cents.clone(),
+            building: d.building.as_ref().map_or_else(
+                || Building {
+                    condition_pts: 10_000,
+                    start_pts: 10_000,
+                    book: AssetBook::default(),
+                },
+                |b| Building {
+                    condition_pts: b.condition_pts,
+                    start_pts: b.start_pts,
+                    book: AssetBook::from(&b.book),
+                },
+            ),
         })
     }
 }
@@ -518,6 +692,8 @@ impl TryFrom<&PlanDto> for PeriodPlan {
                 .iter()
                 .map(|(k, v)| (DeptCode(k.clone()), DeptPlan::from(v)))
                 .collect(),
+            // Iznos obnove zgrade u planu dolazi s Taskom O-3 (tijelo plana); dotad 0.
+            building_renewal_cents: 0,
         })
     }
 }

@@ -7,6 +7,7 @@ use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::{Category, LevelEffect, Maintenance, MonthTable, load_penalty};
 
 use crate::calendar::{Period, avg_u16, prorate};
+use crate::renewal::{AssetBook, RenewalSpec, RoundRenewal};
 
 /// Stabilan kod odjela (`rooms`, `restaurant`, …); ključ svih mapa odjela.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -140,6 +141,8 @@ pub struct DeptSpec {
     pub can_close: bool,
     /// Norma osoblja po kategoriji hotela; prazno = odjel bez norme (hrana i piće, energija, degenerirani katalog).
     pub staffing: BTreeMap<Category, StaffingNorm>,
+    /// Obnova opreme odjela (krivulja, granice, vijek); nule = nije ponuđena.
+    pub renewal: RenewalSpec,
 }
 
 /// `class` se prepisuje iz `DeptSpec` pri stvaranju stanja i ne mijenja se; služi da `HotelState::summary(&self)`
@@ -154,6 +157,10 @@ pub struct DeptState {
     pub satisfaction_pts: i32,
     /// Odlasci zaposlenih ovog odjela u dosadašnjim krugovima sezone (`split_season_departures`); počinje od 0.
     pub season_departures: u16,
+    /// Početno stanje prostora iz profila; ne mijenja se (okidač robota, prikaz).
+    pub start_condition_pts: i32,
+    /// Knjiga imovine odjela (obnova v2).
+    pub book: AssetBook,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -162,6 +169,8 @@ pub struct DeptPlan {
     pub seasonal_target: u16,
     pub price_level_pct: u16,
     pub maintenance: Maintenance,
+    /// Iznos obnove odjela za mjesec kruga (0 = bez); dok traje mjesec odluke mora biti zaključani iznos.
+    pub renewal_cents: i64,
 }
 
 pub struct DeptInput<'a> {
@@ -176,6 +185,11 @@ pub struct DeptInput<'a> {
     pub morale_pts: i32,
     pub wage_pct: u16,
     pub satisfaction_step_bp: u16,
+    /// Obnova odjela u krugu (plaćeno i bodovi prije granice 100); bez obnove `RoundRenewal::default()`.
+    pub renewal: RoundRenewal,
+    /// Stanje zgrade nakon kruga i njen udio u stanju koje gost osjeća (F8); udio 0 = gost osjeća samo odjel.
+    pub building_pts: i32,
+    pub building_share_bp: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -212,6 +226,22 @@ pub struct DeptOutcome {
     pub guest_weight: u32,
     /// Odlasci zaposlenih ovog odjela u krugu (dio hotelskog broja, `split_departures`); popunjava ih obračun kruga.
     pub departures: u16,
+    /// Obnova odjela plaćena u krugu (capex, ispod EBITDA).
+    pub renewal_cents: i64,
+    /// Bodovi stanja prostora koje je obnova stvarno donijela u krugu (nakon granice 100).
+    pub renewal_pts: i32,
+    /// Stanje koje gost osjeća: mješavina stanja prostora nakon kruga i stanja zgrade (F8).
+    pub felt_condition_pts: i32,
+}
+
+/// Zgrada u krugu (F7): stanje prije, trošenje, bodovi obnove (nakon granice 100), stanje poslije, plaćeno.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct BuildingOutcome {
+    pub before_pts: i32,
+    pub wear_pts: i32,
+    pub renewal_pts: i32,
+    pub after_pts: i32,
+    pub renewal_cents: i64,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -248,7 +278,12 @@ pub struct PeriodAccounts {
     /// Osiguranje, najam, porez — razmjerno razdoblju.
     pub fixed_charges: BTreeMap<String, i64>,
     pub interest_cents: i64,
+    /// Ulaganja kruga: stara obnova + obnova odjela + obnova zgrade (blagajna, ne trošak).
     pub capex_cents: i64,
+    pub building: BuildingOutcome,
+    /// Amortizacija kruga: Σ odjela i zgrada (ispod EBITDA).
+    pub depreciation_equipment_cents: i64,
+    pub depreciation_building_cents: i64,
 }
 
 fn w(x: impl Into<i128>) -> i128 {
@@ -269,6 +304,13 @@ fn level_index(m: Maintenance) -> usize {
         Maintenance::Deferred => 0,
         Maintenance::Regular => 1,
         Maintenance::Intensive => 2,
+    }
+}
+
+impl DeptSpec {
+    /// Mjesečni trošak i bodovi razine održavanja odjela.
+    pub fn maintenance_level(&self, m: Maintenance) -> &LevelEffect {
+        &self.maintenance[level_index(m)]
     }
 }
 
@@ -388,7 +430,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
     )?;
 
     // 13 stanje prostora
-    let lvl = &spec.maintenance[level_index(pl.maintenance)];
+    let lvl = spec.maintenance_level(pl.maintenance);
     let wear_pts: i32 = c::narrow(w(prorate(
         c::narrow(c::sub(0, w(spec.wear_pts_per_month))?)?,
         p,
@@ -401,15 +443,17 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
     let maintenance_pts: i32 = c::narrow(w(prorate(i64::from(lvl.equipment_pts), p)?))?;
     let maintenance_cents = prorate(lvl.cost_cents, p)?;
     let condition_before = w(st.condition_pts);
-    let condition_after: i32 = c::narrow(
-        c::sum(&[
-            condition_before,
-            w(wear_pts),
-            w(load_wear_pts),
-            w(maintenance_pts),
-        ])?
-        .clamp(0, 10_000),
-    )?;
+    let condition_base = c::sum(&[
+        condition_before,
+        w(wear_pts),
+        w(load_wear_pts),
+        w(maintenance_pts),
+    ])?
+    .clamp(0, 10_000);
+    // F6: obnova na osnovu stisnutu u 0–10 000, pa granica 100; bez obnove točno današnji račun.
+    let condition_after: i32 = c::narrow(after_renewal(condition_base, i.renewal.delta_pts)?)?;
+    let renewal_pts: i32 = c::narrow(c::sub(w(condition_after), condition_base)?)?;
+    let felt = felt_condition(condition_after, i.building_pts, i.building_share_bp)?;
 
     // 14 vrijednost za novac
     let value: i32 = c::narrow(c::sub(7_000, c::mul(100, c::sub(level, 100)?)?)?.clamp(0, 10_000))?;
@@ -418,7 +462,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
     let target: i32 = c::narrow(c::div_round(
         c::sum(&[
             c::mul(4_500, quality)?,
-            c::mul(3_000, w(condition_after))?,
+            c::mul(3_000, w(felt))?,
             c::mul(2_500, w(value))?,
         ])?,
         10_000,
@@ -478,7 +522,27 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         satisfaction_after_pts: sat_after,
         guest_weight,
         departures: 0,
+        renewal_cents: i.renewal.cents,
+        renewal_pts,
+        felt_condition_pts: felt,
     })
+}
+
+/// F6: stanje nakon obnove `min(osnova + Δ, 10 000)`; `base` je već u 0–10 000.
+pub(crate) fn after_renewal(base: i128, delta_pts: i32) -> Calc<i128> {
+    Ok(c::add(base, w(delta_pts))?.min(10_000))
+}
+
+/// F8: stanje koje gost osjeća, `div_round(stanje·(10 000 − s) + zgrada·s, 10 000)`; uz `s = 0` točno stanje.
+pub fn felt_condition(condition_pts: i32, building_pts: i32, share_bp: u16) -> Calc<i32> {
+    let s = w(share_bp);
+    c::narrow(c::div_round(
+        c::add(
+            c::mul(w(condition_pts), c::sub(10_000, s)?)?,
+            c::mul(w(building_pts), s)?,
+        )?,
+        10_000,
+    )?)
 }
 
 /// Neraspoređeni odjel: plaće + stalni dio + po prodanoj noći + troškovi odluka koje mu pripadaju.

@@ -40,6 +40,7 @@ fn restaurant() -> DeptSpec {
         seasonal_plan: MonthTable([10, 12, 15, 12]),
         can_close: false,
         staffing: BTreeMap::new(),
+        renewal: Default::default(),
     }
 }
 
@@ -52,6 +53,8 @@ fn state() -> DeptState {
         condition_pts: 7_000,
         satisfaction_pts: 7_000,
         season_departures: 0,
+        start_condition_pts: 7_000,
+        book: Default::default(),
     }
 }
 
@@ -61,6 +64,7 @@ fn plan(seasonal: u16, level: u16) -> DeptPlan {
         seasonal_target: seasonal,
         price_level_pct: level,
         maintenance: Maintenance::Regular,
+        renewal_cents: 0,
     }
 }
 
@@ -78,6 +82,9 @@ fn june(spec: &DeptSpec, st: &DeptState, pl: &DeptPlan) -> DeptOutcome {
         morale_pts: 5_500,
         wage_pct: 100,
         satisfaction_step_bp: 5_000,
+        renewal: Default::default(),
+        building_pts: 0,
+        building_share_bp: 0,
     })
     .unwrap()
 }
@@ -165,6 +172,9 @@ fn week_two_pays_seven_thirtieths_of_june_payroll() {
         morale_pts: 5_500,
         wage_pct: 100,
         satisfaction_step_bp: 1_500,
+        renewal: Default::default(),
+        building_pts: 0,
+        building_share_bp: 0,
     })
     .unwrap();
     assert_eq!(o.payroll_cents, 3_780_000 * 14 / 30 - 3_780_000 * 7 / 30);
@@ -204,6 +214,8 @@ fn undistributed_admin_by_hand() {
         condition_pts: 10_000,
         satisfaction_pts: 0,
         season_departures: 0,
+        start_condition_pts: 10_000,
+        book: Default::default(),
     };
     let assigned = AssignedCosts {
         training_cents: 500_000,

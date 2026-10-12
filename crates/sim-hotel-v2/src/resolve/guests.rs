@@ -1,13 +1,15 @@
-//! Faza opreme i gostiju (5): trošenje i održavanje stanja prostora Smještaja (v1 pravila opreme, razina održavanja
-//! Smještaja), kvaliteta, vrijednost i zadovoljstvo Smještaja, pa kvaliteta, zadovoljstvo i ocjena hotela.
+//! Faza opreme i gostiju (5): trošenje i održavanje stanja prostora Smještaja (trošenje i razine održavanja iz
+//! odjela Smještaj; u degeneriranom katalogu to su v1 brojke), obnova v2 Smještaja, kvaliteta, vrijednost i
+//! zadovoljstvo Smještaja (stanje koje gost osjeća uključuje zgradu), pa kvaliteta, zadovoljstvo i ocjena hotela.
 //! Kvaliteta i cilj zadovoljstva hotela su prosjeci odjela ponderirani gostima (Smještaj: noćenja; ostali:
 //! usluženi); u degeneriranom katalogu goste ima samo Smještaj, pa je to točno v1.
 
 use engine::calc::{self as c, Calc};
 use sim_hotel::{GuestOutcome, Pending};
 
-use super::{maintenance_effect, step_toward, w, weighted};
+use super::{step_toward, w, weighted};
 use crate::calendar::{Period, prorate};
+use crate::department::{DeptSpec, after_renewal, felt_condition};
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -29,8 +31,12 @@ pub(crate) struct GuestStep {
     pub(crate) reply_rating: i128,
     pub(crate) satisfaction_gain: i128,
     pub(crate) rating_gain: i128,
-    /// Trošenje opreme u ovom krugu (mjesečnih -400 razmjerno).
+    /// Trošenje opreme u ovom krugu (mjesečno trošenje Smještaja razmjerno).
     pub(crate) wear: i128,
+    /// Bodovi koje je obnova v2 Smještaja stvarno donijela (nakon granice 100).
+    pub(crate) renewal_pts: i128,
+    /// Stanje Smještaja koje gost osjeća (sa zgradom, F8).
+    pub(crate) felt: i32,
 }
 
 pub(super) struct GuestIn<'a> {
@@ -57,13 +63,24 @@ pub(super) struct GuestIn<'a> {
     pub(super) sit_equipment: i128,
     pub(super) sit_satisfaction: i128,
     pub(super) sit_rating: i128,
+    /// Odjel Smještaj iz kataloga (trošenje i razine održavanja).
+    pub(super) rooms_spec: &'a DeptSpec,
+    /// Bodovi obnove v2 Smještaja u krugu (prije granice 100).
+    pub(super) renewal_delta_pts: i32,
+    /// Stanje zgrade nakon kruga i njen udio u stanju koje gost osjeća.
+    pub(super) building_pts: i32,
+    pub(super) building_share_bp: u16,
 }
 
 pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let p = i.period;
-    let maintenance_eff = w(maintenance_effect(i.plan.rooms_maintenance(), cat, p)?.equipment_pts);
-    // v1 mjesečna konstanta -400, razmjerno krugu.
-    let wear = w(prorate(-400, p)?);
+    let level = i.rooms_spec.maintenance_level(i.plan.rooms_maintenance());
+    let maintenance_eff = w(prorate(i64::from(level.equipment_pts), p)?);
+    // Mjesečno trošenje Smještaja (v1: 400), razmjerno krugu.
+    let wear = w(prorate(
+        c::narrow(c::sub(0, w(i.rooms_spec.wear_pts_per_month))?)?,
+        p,
+    )?);
     let equipment_load = if i.rooms_load > 180 {
         w(prorate(-100, p)?)
     } else {
@@ -77,7 +94,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     } else {
         (0, 0)
     };
-    let equipment = c::sum(&[
+    let base = c::sum(&[
         w(i.equipment_pts),
         wear,
         equipment_load,
@@ -86,6 +103,9 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         i.sit_equipment,
     ])?
     .clamp(0, 10_000);
+    let equipment = after_renewal(base, i.renewal_delta_pts)?;
+    let renewal_pts = c::sub(equipment, base)?;
+    let felt = felt_condition(c::narrow(equipment)?, i.building_pts, i.building_share_bp)?;
     let quality = c::div_round(
         c::sum(&[
             c::mul(4_000, i.experience)?,
@@ -103,7 +123,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
     let rooms_target = c::div_round(
         c::sum(&[
             c::mul(4_500, quality)?,
-            c::mul(3_000, equipment)?,
+            c::mul(3_000, w(felt))?,
             c::mul(2_500, value)?,
         ])?,
         10_000,
@@ -162,5 +182,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         satisfaction_gain,
         rating_gain,
         wear,
+        renewal_pts,
+        felt,
     })
 }

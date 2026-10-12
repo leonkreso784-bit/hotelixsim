@@ -6,11 +6,12 @@
 use std::collections::BTreeMap;
 
 use engine::calc::{self, CalcError};
-use sim_hotel::{CatalogError, Maintenance, Training, euro_bounds};
+use sim_hotel::{CatalogError, Maintenance, Month, Training, euro_bounds};
 
-use crate::calendar::{Period, avg_i64, avg_u16, prorate};
+use crate::calendar::{Period, avg_i64, avg_u16, prorate, rounds_left_in_month};
 use crate::catalog::Catalog;
 use crate::department::{DeptCode, DeptPlan, allocate_seasonal};
+use crate::renewal::{AssetBook, Renewal, RenewalSpec};
 use crate::state::HotelState;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -22,6 +23,8 @@ pub struct PeriodPlan {
     pub renovation: bool,
     pub reply_reviews: bool,
     pub departments: BTreeMap<DeptCode, DeptPlan>,
+    /// Iznos obnove zgrade za mjesec kruga (0 = bez); dok traje mjesec odluke mora biti zaključani iznos.
+    pub building_renewal_cents: i64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,6 +50,12 @@ pub enum PlanError {
     ClosedWithSeasonal,
     /// Razina cijene odjela izvan granica (Smještaj uvijek 100).
     PriceLevelOutOfRange,
+    /// Obnova se ovdje ne bira: dio bez krivulje obnove ili stara kvačica u katalogu s obnovom v2.
+    RenewalUnavailable,
+    /// Obnova je za ovaj mjesec već odlučena i ne mijenja se do kraja mjeseca.
+    RenewalLocked,
+    /// Iznos obnove negativan, iznad najvećeg mjesečnog ili nije u koraku.
+    RenewalOutOfRange,
 }
 
 impl From<calc::CalcError> for PlanError {
@@ -79,6 +88,68 @@ pub struct DeptLimits {
     pub price_level_min_pct: u16,
     pub price_level_max_pct: u16,
     pub can_close: bool,
+    pub renewal: RenewalLimits,
+}
+
+/// Granice obnove jednog dijela (odjel ili zgrada) u krugu: najveći mjesečni iznos (0 = nije ponuđena), korak,
+/// vijek, koliko krugova mjeseca ostaje (plaćanje), mjesec kruga i zaključana obnova tog mjeseca.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RenewalLimits {
+    pub max_monthly_cents: i64,
+    pub step_cents: i64,
+    pub life_months: u16,
+    pub rounds_left: u8,
+    pub month: Month,
+    pub locked: Option<Renewal>,
+}
+
+impl RenewalLimits {
+    fn of(spec: &RenewalSpec, book: &AssetBook, p: &Period) -> RenewalLimits {
+        let month = p.start_month();
+        RenewalLimits {
+            max_monthly_cents: spec.max_monthly_cents.max(0),
+            step_cents: spec.step_cents,
+            life_months: spec.life_months,
+            rounds_left: rounds_left_in_month(p),
+            month,
+            locked: book.locked_in(month).copied(),
+        }
+    }
+}
+
+/// Zaključani iznos mjesečne obnove u mjesecu kruga, inače 0 (zadani i preneseni plan).
+fn locked_amount(book: &AssetBook, p: &Period) -> i64 {
+    book.locked_in(p.start_month()).map_or(0, |r| r.total_cents)
+}
+
+/// Pravila iznosa obnove jednog dijela (obnova-v2-spec §4.2): nije ponuđena → `RenewalUnavailable`; zaključana s
+/// drugim iznosom → `RenewalLocked`; negativno, iznad najvećeg ili izvan koraka → `RenewalOutOfRange`.
+fn check_renewal(
+    spec: &RenewalSpec,
+    book: &AssetBook,
+    amount: i64,
+    p: &Period,
+) -> Result<(), PlanError> {
+    if !spec.offered() {
+        return if amount == 0 {
+            Ok(())
+        } else {
+            Err(PlanError::RenewalUnavailable)
+        };
+    }
+    if let Some(r) = book.locked_in(p.start_month())
+        && r.total_cents != amount
+    {
+        return Err(PlanError::RenewalLocked);
+    }
+    let step = i128::from(spec.step_cents);
+    if amount < 0
+        || amount > spec.max_monthly_cents
+        || calc::mul(calc::div_floor(i128::from(amount), step)?, step)? != i128::from(amount)
+    {
+        return Err(PlanError::RenewalOutOfRange);
+    }
+    Ok(())
 }
 
 /// Granice plana za jedan krug (koriste ih `validate`, `carry_into`, roboti i, kasnije, sučelje).
@@ -96,6 +167,7 @@ pub struct PlanLimits {
     /// Najveći zbroj |cilj − trenutno| po odjelima u ovom krugu.
     pub seasonal_step_total: u16,
     pub departments: BTreeMap<DeptCode, DeptLimits>,
+    pub building_renewal: RenewalLimits,
 }
 
 fn catalog_calc(_: CalcError) -> CatalogError {
@@ -230,6 +302,7 @@ impl PeriodPlan {
                         seasonal_target: alloc.get(k).copied().unwrap_or(0),
                         price_level_pct: 100,
                         maintenance,
+                        renewal_cents: 0,
                     },
                 )
             })
@@ -238,7 +311,8 @@ impl PeriodPlan {
 
     /// Zadano (ADR-013 t. 3): referentna cijena kruga u cijelom euru, marketing 0, ukupno sezonaca po planovima
     /// otvorenih odjela (najviše ±korak od današnjeg), raspoređeno prema planovima odjela, plaća kao sad, bez obuke,
-    /// redovno održavanje svugdje, razine cijene 100, bez obnove i odgovaranja.
+    /// redovno održavanje svugdje, razine cijene 100, bez obnove i odgovaranja; obnova v2 zaključana u mjesecu kruga
+    /// ostaje (odluka vrijedi mjesec).
     pub fn default_for(
         state: &HotelState,
         p: &Period,
@@ -259,7 +333,7 @@ impl PeriodPlan {
         );
         let target = planned.clamp(lo, hi.max(lo)).min(base.actions.seasonal_max);
         let reference = avg_i64(&spec.price_ref_cents, p).map_err(catalog_calc)?;
-        Ok(PeriodPlan {
+        let mut plan = PeriodPlan {
             price_cents: whole_euro_cents(reference)?,
             marketing_cents: 0,
             wage_pct: state.wage_pct,
@@ -267,7 +341,21 @@ impl PeriodPlan {
             renovation: false,
             reply_reviews: false,
             departments: PeriodPlan::departments_for(state, p, cat, target, Maintenance::Regular)?,
-        })
+            building_renewal_cents: 0,
+        };
+        plan.keep_locked_renewals(state, p);
+        Ok(plan)
+    }
+
+    /// Iznosi obnove plana = zaključani iznosi mjeseca kruga (odjeli i zgrada), 0 gdje obnove nema.
+    pub(crate) fn keep_locked_renewals(&mut self, state: &HotelState, p: &Period) {
+        for (code, d) in self.departments.iter_mut() {
+            d.renewal_cents = state
+                .departments
+                .get(code)
+                .map_or(0, |st| locked_amount(&st.book, p));
+        }
+        self.building_renewal_cents = locked_amount(&state.building.book, p);
     }
 
     /// Granice plana u ovom krugu: cijena u cijelim eurima oko reference kruga, marketing razmjerno krugu,
@@ -302,7 +390,7 @@ impl PeriodPlan {
             .max(seasonal_min);
         let e = &cat.economy;
         let mut departments = BTreeMap::new();
-        for code in state.departments.keys() {
+        for (code, st) in &state.departments {
             let d = cat.dept(code)?;
             let rooms = *code == DeptCode::rooms();
             departments.insert(
@@ -313,6 +401,7 @@ impl PeriodPlan {
                     price_level_min_pct: if rooms { 100 } else { e.price_level_min_pct },
                     price_level_max_pct: if rooms { 100 } else { e.price_level_max_pct },
                     can_close: d.can_close && !rooms,
+                    renewal: RenewalLimits::of(&d.renewal, &st.book, p),
                 },
             );
         }
@@ -324,9 +413,15 @@ impl PeriodPlan {
             seasonal_max,
             wage_min_pct: a.wage_min_pct,
             wage_max_pct: a.wage_max_pct,
-            renovation_available: !state.renovated,
+            // Stara obnova (jedna kvačica) nestaje kad katalog nudi obnovu v2.
+            renovation_available: !state.renovated && !cat.renewal_enabled(),
             seasonal_step_total: step,
             departments,
+            building_renewal: RenewalLimits::of(
+                &cat.economy.building.renewal,
+                &state.building.book,
+                p,
+            ),
         })
     }
 
@@ -361,6 +456,16 @@ impl PeriodPlan {
         if self.renovation && state.renovated {
             return Err(PlanError::RenovationTwice);
         }
+        // (1a) stara kvačica uz obnovu v2, (1b) obnova zgrade
+        if self.renovation && cat.renewal_enabled() {
+            return Err(PlanError::RenewalUnavailable);
+        }
+        check_renewal(
+            &cat.economy.building.renewal,
+            &state.building.book,
+            self.building_renewal_cents,
+            p,
+        )?;
         // (2) struktura
         if self
             .departments
@@ -393,6 +498,9 @@ impl PeriodPlan {
             {
                 return Err(PlanError::PriceLevelOutOfRange);
             }
+            let spec = cat.dept(code).map_err(|_| PlanError::Calc)?;
+            let st = state.departments.get(code).ok_or(PlanError::Calc)?;
+            check_renewal(&spec.renewal, &st.book, d.renewal_cents, p)?;
         }
         if self.seasonal_total() > a.seasonal_max {
             return Err(PlanError::SeasonalOutOfRange);
@@ -442,6 +550,8 @@ impl PeriodPlan {
                         .max(dl.price_level_min_pct)
                         .min(dl.price_level_max_pct),
                     maintenance: prev.map_or(Maintenance::Regular, |d| d.maintenance),
+                    // Odluka o obnovi vrijedi mjesec: u istom mjesecu zaključani iznos, u novom 0.
+                    renewal_cents: locked_amount(&now.book, p),
                 },
             );
         }
@@ -467,6 +577,7 @@ impl PeriodPlan {
             renovation: false,
             reply_reviews: self.reply_reviews,
             departments: settings,
+            building_renewal_cents: locked_amount(&state.building.book, p),
         })
     }
 }

@@ -6,9 +6,56 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use sim_hotel::{Category, LevelEffect, MonthTable};
 use sim_hotel_v2::department::{DeptCode, DeptSpec, RevenueModel, StaffingNorm, UsaliClass};
-use sim_hotel_v2::{DeptStart, EconomyV2, FixedChargeSpec, ProfileV2};
+use sim_hotel_v2::{
+    BuildingSpec, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, ProfileV2, RenewalSpec,
+};
 
 use crate::ContentError;
+
+/// Stanje zgrade profila kad ga sadržaj ne navodi: zgrada bez trošenja i bez učinka (`BuildingSpec::none`).
+const BUILDING_PTS_DEFAULT: i32 = 10_000;
+
+/// Krivulja i granice obnove (obnova v2); odjel ili zgrada bez ključa `renewal` nema obnovu.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RenewalDto {
+    gain_pts: i32,
+    half_cents: i64,
+    max_monthly_cents: i64,
+    step_cents: i64,
+    life_months: u16,
+}
+
+/// Zgrada hotela (obnova v2); gospodarstvo bez ključa `building` ima zgradu bez učinka.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct BuildingDto {
+    name: String,
+    wear_pts_per_month: i32,
+    satisfaction_share_bp: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    renewal: Option<RenewalDto>,
+}
+
+fn renewal_to_dto(r: &RenewalSpec) -> Option<RenewalDto> {
+    (*r != RenewalSpec::default()).then_some(RenewalDto {
+        gain_pts: r.gain_pts,
+        half_cents: r.half_cents,
+        max_monthly_cents: r.max_monthly_cents,
+        step_cents: r.step_cents,
+        life_months: r.life_months,
+    })
+}
+
+fn renewal(r: Option<&RenewalDto>) -> RenewalSpec {
+    r.map_or_else(RenewalSpec::default, |r| RenewalSpec {
+        gain_pts: r.gain_pts,
+        half_cents: r.half_cents,
+        max_monthly_cents: r.max_monthly_cents,
+        step_cents: r.step_cents,
+        life_months: r.life_months,
+    })
+}
 
 /// Jedna vrijednost po mjesecu sezone (lipanj–rujan).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,6 +138,9 @@ pub(crate) struct DeptDto {
     /// Bez ključa (stari snimci, degenerirani katalog) odjel nema normu.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     staffing_tenths_per_100_rooms: BTreeMap<String, [u16; 2]>,
+    /// Obnova opreme odjela (obnova v2); bez ključa odjel nema obnovu.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    renewal: Option<RenewalDto>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -112,6 +162,9 @@ pub(crate) struct DeptStartDto {
 pub(crate) struct ProfileDto {
     departments: BTreeMap<String, DeptStartDto>,
     fixed_charges_cents: BTreeMap<String, i64>,
+    /// Početno stanje zgrade (obnova v2); bez ključa 10 000.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    building_pts: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,6 +180,15 @@ pub(crate) struct EconomyDto {
     price_level_min_pct: u16,
     price_level_max_pct: u16,
     fixed_charges: BTreeMap<String, FixedChargeDto>,
+    /// Zgrada (obnova v2); bez ključa zgrada bez učinka.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    building: Option<BuildingDto>,
+    /// Smjernica pričuve za obnovu (FF&E) u bp; bez ključa 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    ffe_reserve_bp: Option<u16>,
+    /// Osnova indeksa F: `gop` | `ebit`; bez ključa `gop`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    finance_index: Option<String>,
 }
 
 fn level_to_dto(l: &LevelEffect) -> LevelDto {
@@ -225,6 +287,7 @@ pub(crate) fn dept_to_dto(d: &DeptSpec) -> DeptDto {
                 )
             })
             .collect(),
+        renewal: renewal_to_dto(&d.renewal),
     }
 }
 
@@ -271,6 +334,7 @@ pub(crate) fn build_dept(code: &str, d: &DeptDto) -> Result<DeptSpec, ContentErr
         seasonal_plan: d.seasonal_plan.table(),
         can_close: d.can_close,
         staffing,
+        renewal: renewal(d.renewal.as_ref()),
     })
 }
 
@@ -295,6 +359,7 @@ pub(crate) fn profile_to_dto(p: &ProfileV2) -> ProfileDto {
             })
             .collect(),
         fixed_charges_cents: p.fixed_charges_cents.clone(),
+        building_pts: (p.building_pts != BUILDING_PTS_DEFAULT).then_some(p.building_pts),
     }
 }
 
@@ -319,6 +384,7 @@ pub(crate) fn build_profile(p: &ProfileDto) -> ProfileV2 {
             })
             .collect(),
         fixed_charges_cents: p.fixed_charges_cents.clone(),
+        building_pts: p.building_pts.unwrap_or(BUILDING_PTS_DEFAULT),
     }
 }
 
@@ -339,11 +405,29 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
                 )
             })
             .collect(),
+        building: (e.building != BuildingSpec::none()).then(|| BuildingDto {
+            name: e.building.name.clone(),
+            wear_pts_per_month: e.building.wear_pts_per_month,
+            satisfaction_share_bp: e.building.satisfaction_share_bp,
+            renewal: renewal_to_dto(&e.building.renewal),
+        }),
+        ffe_reserve_bp: (e.ffe_reserve_bp != 0).then_some(e.ffe_reserve_bp),
+        finance_index: (e.finance_index != FinanceBasis::Gop)
+            .then(|| e.finance_index.code().to_string()),
     }
 }
 
-pub(crate) fn build_economy(e: &EconomyDto) -> EconomyV2 {
-    EconomyV2 {
+/// Gospodarstvo iz DTO-a; nepoznata osnova indeksa F je `ContentError::Invalid` s imenom polja.
+pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
+    let finance_index = match e.finance_index.as_deref() {
+        None => FinanceBasis::Gop,
+        Some(code) => FinanceBasis::from_code(code).ok_or_else(|| {
+            ContentError::Invalid(format!(
+                "v2.economy.finance_index: nepoznata osnova '{code}' (gop ili ebit)"
+            ))
+        })?,
+    };
+    Ok(EconomyV2 {
         guests_per_room_hundredths: e.guests_per_room_hundredths,
         price_level_min_pct: e.price_level_min_pct,
         price_level_max_pct: e.price_level_max_pct,
@@ -359,5 +443,16 @@ pub(crate) fn build_economy(e: &EconomyDto) -> EconomyV2 {
                 )
             })
             .collect(),
-    }
+        building: e
+            .building
+            .as_ref()
+            .map_or_else(BuildingSpec::none, |b| BuildingSpec {
+                name: b.name.clone(),
+                wear_pts_per_month: b.wear_pts_per_month,
+                satisfaction_share_bp: b.satisfaction_share_bp,
+                renewal: renewal(b.renewal.as_ref()),
+            }),
+        ffe_reserve_bp: e.ffe_reserve_bp.unwrap_or(0),
+        finance_index,
+    })
 }

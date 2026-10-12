@@ -42,8 +42,11 @@ pub(crate) struct Explain<'a> {
     /// isti iznosi kao `extra_wage_cents` u `situations`.
     pub(crate) sit_extra_wage: i128,
     /// Dio promjene „opreme" sažetka (70 % Smještaj, 30 % ostali operativni odjeli) koji ne dolazi od promjene
-    /// stanja prostora Smještaja; objašnjava se u retku održavanja (u degeneriranom katalogu 0).
+    /// stanja prostora Smještaja; objašnjava se u retku održavanja (u degeneriranom katalogu 0), osim dijela
+    /// `renewal_others`.
     pub(crate) equipment_others: i128,
+    /// Dio promjene „opreme" sažetka koji donosi obnova v2 ostalih odjela; ide u redak obnove.
+    pub(crate) renewal_others: i128,
 }
 
 pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
@@ -169,13 +172,17 @@ pub(crate) fn explain(l: &mut Lines, e: &Explain) -> Calc<()> {
     l.push(
         Var::Equipment,
         Cause::Maintenance,
-        c::add(g.maintenance_eff, e.equipment_others)?,
+        c::sub(
+            c::add(g.maintenance_eff, e.equipment_others)?,
+            e.renewal_others,
+        )?,
         pts,
     )?;
+    // Obnova: stara obnova (v1) + obnova v2 Smještaja + dio sažetka koji donosi obnova ostalih odjela.
     l.push(
         Var::Equipment,
         Cause::Renovation,
-        g.renovation_equipment,
+        c::sum(&[g.renovation_equipment, g.renewal_pts, e.renewal_others])?,
         pts,
     )?;
     // Zadovoljstvo i ocjena

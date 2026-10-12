@@ -2,7 +2,8 @@
 //! sezonce i razinu održavanja; sezonci se raspodijele po odjelima prema planovima odjela (`allocate_seasonal`),
 //! održavanje je isto u svim odjelima, razina cijene 100 (Nasumični: jednoliko u granicama, u koracima od 5, samo
 //! operativni odjeli). Izbor odgovora na situacije ostaje v1 `Strategy::choose`. Sva slučajnost dolazi iz predanog
-//! `Rng`-a; razine cijene Nasumičnog izvlače se nakon svih v1 izvlačenja, pa v1 dio plana ostaje isti.
+//! `Rng`-a; razine cijene Nasumičnog izvlače se nakon svih v1 izvlačenja, pa v1 dio plana ostaje isti. Obnova v2
+//! (`renew`) ne izvlači ništa.
 
 use engine::Rng;
 use engine::calc::{self as c, Calc, CalcError};
@@ -10,8 +11,9 @@ use sim_hotel::{Maintenance, Strategy, Training, euro_bounds};
 
 use crate::calendar::{Period, PeriodKind, avg_i64, avg_u16, prorate, season_periods};
 use crate::catalog::Catalog;
-use crate::department::UsaliClass;
+use crate::department::{DeptCode, UsaliClass};
 use crate::plan::PeriodPlan;
+use crate::renewal::smallest_amount_for;
 use crate::resolve::ResolveError;
 use crate::state::HotelState;
 
@@ -231,7 +233,7 @@ pub fn robot_plan(
             }
         }
     }
-    Ok(PeriodPlan {
+    let mut out = PeriodPlan {
         price_cents: plan.price_cents,
         marketing_cents: plan.marketing_cents,
         wage_pct: plan.wage_pct,
@@ -239,5 +241,53 @@ pub fn robot_plan(
         renovation: plan.renovation,
         reply_reviews: plan.reply_reviews,
         departments,
-    })
+        building_renewal_cents: 0,
+    };
+    out.keep_locked_renewals(s, p);
+    renew(strategy, s, p, cat, &mut out)?;
+    Ok(out)
+}
+
+/// Okidači obnove robota: stanje ispod 60 ili 5 bodova ispod početnog (🟨 O6).
+const LOW_PTS: i32 = 6_000;
+const BELOW_START_PTS: i32 = 500;
+
+/// Obnova robota (obnova-v2-spec §5.1, 🟨 O6), bez ijednog izvlačenja iz `Rng`: brižni obnavlja svaki odjel s
+/// krivuljom, lovac samo Smještaj, kad odjel padne ispod 60 ili 5 bodova ispod početnog stanja, najviše jednom po
+/// odjelu u sezoni (ništa još nije uloženo), najmanjim iznosom u koraku koji ga vraća na početno (najmanje 60).
+/// Štediša i Nasumični nikad; zgradu ne obnavlja nijedan robot. Zaključanu obnovu plan već nosi.
+fn renew(
+    strategy: Strategy,
+    s: &HotelState,
+    p: &Period,
+    cat: &Catalog,
+    plan: &mut PeriodPlan,
+) -> Result<(), ResolveError> {
+    let only_rooms = match strategy {
+        Strategy::Caring => false,
+        Strategy::OccupancyHunter => true,
+        Strategy::Saver | Strategy::Random => return Ok(()),
+    };
+    let m = p.start_month();
+    for (code, d) in plan.departments.iter_mut() {
+        if only_rooms && *code != DeptCode::rooms() {
+            continue;
+        }
+        let spec = &cat.dept(code)?.renewal;
+        let Some(st) = s.departments.get(code) else {
+            continue;
+        };
+        if !spec.offered() || st.book.locked_in(m).is_some() || st.book.invested_cents() != 0 {
+            continue;
+        }
+        let low = st.condition_pts < LOW_PTS
+            || st.condition_pts < st.start_condition_pts.saturating_sub(BELOW_START_PTS);
+        if !low {
+            continue;
+        }
+        let target = st.start_condition_pts.max(LOW_PTS);
+        let need = target.saturating_sub(st.condition_pts);
+        d.renewal_cents = smallest_amount_for(spec, need)?;
+    }
+    Ok(())
 }

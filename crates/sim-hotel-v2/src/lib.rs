@@ -15,6 +15,7 @@ pub mod explain;
 pub mod indices;
 pub mod market;
 pub mod plan;
+pub mod renewal;
 pub mod resolve;
 pub mod robots;
 pub mod season;
@@ -24,12 +25,14 @@ pub mod usali;
 
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
-    Catalog, DeptStart, EconomyV2, FixedChargeSpec, PeriodCoefficients, ProfileV2, degenerate,
+    BuildingSpec, Catalog, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, PeriodCoefficients,
+    ProfileV2, degenerate,
 };
-pub use department::StaffingNorm;
+pub use department::{BuildingOutcome, StaffingNorm};
 pub use indices::{RefTable, period_indices, start_indices};
-pub use plan::{PeriodPlan, PlanError, PlanLimits};
-pub use resolve::{PeriodReport, ResolveError, resolve_period};
+pub use plan::{PeriodPlan, PlanError, PlanLimits, RenewalLimits};
+pub use renewal::{AssetBook, Renewal, RenewalSpec};
+pub use resolve::{FinanceOutcome, PeriodReport, ResolveError, resolve_period};
 pub use robots::robot_plan;
 pub use season::{SeasonResult, run_season, run_season_with, situations_for};
 pub use sim_hotel::{
@@ -38,7 +41,7 @@ pub use sim_hotel::{
     MonthTable, OfferedAnswer, Pending, PeopleOutcome, Profile, ProfileSpec, SituationOutcome,
     SituationTemplate, Strategy, Training, Unit, Var, gain_bp, progress_pts,
 };
-pub use state::HotelState;
+pub use state::{Building, HotelState};
 
 /// Verzija jezgre v2 u `GameCreated` (MODEL_V2 §6.2 t. 3); raste po sloju, ne unutar sloja 1.
 pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
