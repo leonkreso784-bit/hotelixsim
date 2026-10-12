@@ -503,7 +503,6 @@ export const hr = {
   "season.curve": "Krivulja napretka",
   "season.curve.zero": "Crta 0 = početak: svaki hotel mjeri napredak od svog početka.",
   "season.curve.start": "Početak",
-  "season.curve.startShort": "Poč.",
   "season.month.jun": "lip.",
   "season.month.jul": "srp.",
   "season.month.aug": "kol.",

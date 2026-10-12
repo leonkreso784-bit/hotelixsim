@@ -1,5 +1,5 @@
 // Ekran „Kraj sezone“ s podacima: moj rezultat i pobjednik, konačni poredak, sezonski mentor, krivulja napretka,
-// tablice (od 1024 px) i kartice „Kako su igrali“. Mobitel: jedan stupac tim redom; od 1024 px gore dva stupca.
+// tablice (od 1024 px) i kartice „Kako su igrali“. Do 1024 px jedan stupac tim redom; od 1024 px gore dva stupca.
 import { t } from "@hotelixsim/i18n";
 import { Trophy } from "lucide-react";
 import type { SeasonBody } from "../../api/types";
@@ -99,8 +99,9 @@ export function SeasonView({ body }: { body: SeasonBody }) {
           </h2>
           {robots && <p className="text-sm text-muted">{t("season.robotsNote")}</p>}
         </div>
-        {/* Rečenica strategije je tekst za čitanje: na 1024 px dvije kartice u redu, tri tek od 1280 px (N-2). */}
-        <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0 xl:grid-cols-3">
+        {/* Do 1024 px jedan stupac: uz bočnu traku dvije kartice od 226 px stisnu imena indeksa preko brojki (UI C-A).
+            Rečenica strategije je tekst za čitanje: od 1024 px dvije kartice u redu, tri tek od 1280 px (N-2). */}
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0 xl:grid-cols-3">
           {body.hotels.map((h) => (
             <HotelCard key={h.hotel_id} h={h} body={body} digits={digits} />
           ))}

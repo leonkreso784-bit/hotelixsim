@@ -241,11 +241,42 @@ fn untouched_wages_and_plan_are_not_attributed_to_student() {
     let f = facts_json(&weekly_done());
     let wages = f["odluke"]["place"].as_str().unwrap();
     assert!(
-        wages.contains("takve su od početka, student ih nije mijenjao"),
+        wages.contains("takve su od početka i nisu se mijenjale"),
         "{wages}"
     );
     let own = f["vlastiti_plan"].as_str().unwrap();
-    assert!(own.contains("nijednom nije mijenjao plan"), "{own}");
+    assert!(own.contains("Plan se nijednom nije mijenjao"), "{own}");
+}
+
+/// Oblici koji bi otkrili rod studenta: student kao vršitelj u prošlom vremenu („Student nijednom nije mijenjao
+/// plan", „student ih nije mijenjao", „mogao ga je promijeniti") i „njegov". „Plan se nije mijenjao" je rod plana.
+const GENDERED: [&str; 12] = [
+    "Student",
+    "student ih",
+    "nije mijenjao plan",
+    "mijenjala",
+    "mogao",
+    "mogla",
+    "postavio",
+    "postavila",
+    "odlučio",
+    "odlučila",
+    "njegov",
+    "njezin",
+];
+
+/// UI KS-3 I-B: činjenice o studentovu hotelu ne nose rod prema studentu, jer ga AI preuzme u obraćanje („nisi
+/// mijenjao… mogao si"). Provjerava se sve osim opisa ostalih hotela (robot „je birao" govori o robotu).
+#[test]
+fn student_facts_have_no_gendered_forms() {
+    for g in [weekly_done(), monthly_done(), weekly_with_raised_wages()] {
+        let mut f = facts_json(&g);
+        f.as_object_mut().unwrap().remove("ostali_hoteli");
+        let text = f.to_string();
+        for word in GENDERED {
+            assert!(!text.contains(word), "„{word}“ u činjenicama: {text}");
+        }
+    }
 }
 
 #[test]

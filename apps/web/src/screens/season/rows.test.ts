@@ -117,18 +117,16 @@ describe("krivulja", () => {
     ]);
   });
 
-  it("tjedna os: Početak i mjeseci na granicama, nikad kod tjedna", () => {
+  it("tjedna os: mjeseci na granicama, bez „Početak“ (crta 0 to kaže), nikad kod tjedna", () => {
     const ticks = axisTicks(seasonBody());
-    expect(ticks.map((x) => x.text)).toEqual(["Početak", "lipanj", "srpanj", "kolovoz", "rujan"]);
-    expect(ticks[0]?.at).toBe(0);
+    expect(ticks.map((x) => x.text)).toEqual(["lipanj", "srpanj", "kolovoz", "rujan"]);
     expect(ticks.at(-1)?.at).toBe(17);
     expect(ticks.some((x) => /t\d/.test(x.text))).toBe(false);
   });
 
-  it("mjesečna os: Početak i četiri mjeseca", () => {
+  it("mjesečna os: četiri mjeseca, bez „Početak“ (UI KS-3 I-A)", () => {
     const ticks = axisTicks(seasonBody({ weekly: false }));
     expect(ticks.map((x) => [x.at, x.text])).toEqual([
-      [0, "Početak"],
       [1, "lipanj"],
       [2, "srpanj"],
       [3, "kolovoz"],

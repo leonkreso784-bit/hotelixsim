@@ -335,13 +335,17 @@ describe("Kraj sezone: raspored od 1024 px (ponovni pregled KS-3)", () => {
     return screen.getByRole("region", { name: "Kako su igrali" });
   }
 
-  it("kartice robota: dvije u redu od 1024 px, tri tek od 1280 px (N-2)", async () => {
+  it("kartice: jedan stupac do 1024 px, dvije u redu od 1024 px, tri tek od 1280 px (N-2, C-A)", async () => {
     await open();
     const grid = card("1. Brižni (robot)").getByText("Kako je igrao").closest("section")?.parentElement;
     const classes = grid?.className.split(" ") ?? [];
-    // `md:grid-cols-2` vrijedi i na 1024 px; tri stupca tek od `xl:` (1280 px).
-    expect(classes).toContain("md:grid-cols-2");
+    // 768–1023 px: uz bočnu traku ostaje ~464 px; dvije kartice od 226 px stisnu imena indeksa preko brojki (C-A),
+    // pa se mreža pali tek od `lg:` (1024 px). Nijedna `md:` klasa ne smije ponovno dati stupce ni ukinuti razmak.
+    expect(classes).toContain("lg:grid");
+    expect(classes).toContain("lg:grid-cols-2");
     expect(classes).toContain("xl:grid-cols-3");
+    expect(classes).toContain("space-y-3");
+    expect(classes.filter((c) => c.startsWith("md:"))).toEqual([]);
     expect(classes).not.toContain("lg:grid-cols-3");
   });
 

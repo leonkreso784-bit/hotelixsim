@@ -125,9 +125,10 @@ export function curveSeries(body: SeasonBody): ChartLine[] {
   });
 }
 
-/** Oznake osi X: „Početak“ (0), pa ime mjeseca na krugu u kojem taj mjesec završava. Nikad kod kruga. */
+/** Oznake osi X: ime mjeseca na krugu u kojem taj mjesec završava. Nikad kod kruga. Početak (točka 0) os ne piše:
+ *  to kaže crta 0, a uz prvi mjesec bi se sudarao („Početaklipanj“ na 1024 px, UI KS-3 I-A). */
 export function axisTicks(body: SeasonBody): ChartTick[] {
-  const ticks: ChartTick[] = [{ at: 0, text: t("season.curve.start"), short: t("season.curve.startShort") }];
+  const ticks: ChartTick[] = [];
   body.rounds.forEach((r, i) => {
     if (r.kind === "month" || r.month_ends)
       ticks.push({

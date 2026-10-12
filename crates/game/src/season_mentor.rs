@@ -474,7 +474,7 @@ fn wage_text(d: &SeasonDecisions, start: Option<u16>) -> String {
     match start {
         None => level,
         Some(s) if lo == hi && lo == s => {
-            format!("{level} (takve su od početka, student ih nije mijenjao)")
+            format!("{level} (takve su od početka i nisu se mijenjale)")
         }
         Some(s) => format!("{level} (na početku igre bile su {s} %)"),
     }
@@ -578,11 +578,11 @@ fn situations_text(d: &SeasonDecisions) -> Option<String> {
 fn own_plan_text(input: &SeasonDebriefInput) -> String {
     let weekly = is_weekly(input);
     let Some(&first) = input.own_plan_rounds.first() else {
-        return "Student nijednom nije mijenjao plan: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa te odluke nisu njegove promjene.".to_owned();
+        return "Plan se nijednom nije mijenjao: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa nijedna od tih odluka nije promjena napravljena u igri.".to_owned();
     };
     let n = u8::try_from(input.own_plan_rounds.len()).unwrap_or(u8::MAX);
     let mut out = format!(
-        "Student je sam postavio plan {}, prvi put {}; poslije toga njegov se plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
+        "Vlastiti plan postavljen je {}, prvi put {}; poslije toga se taj plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
         in_rounds(n, weekly),
         round_words(input, first).1
     );

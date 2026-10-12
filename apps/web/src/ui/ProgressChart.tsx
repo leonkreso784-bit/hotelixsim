@@ -20,7 +20,7 @@ export type ChartLine = {
   valueText: string;
 };
 
-/** Granica na osi X (indeks točke); oznaka stoji nad dijelom od prethodne granice do ove, prva je sama točka 0. */
+/** Granica na osi X (indeks točke); oznaka stoji nad dijelom od prethodne granice (prva: točka 0) do ove. */
 export type ChartTick = { at: number; text: string; short: string };
 
 export type ChartColumn = { short: string; full: string };
@@ -168,28 +168,25 @@ export function ProgressChart({
             </g>
           ))}
           {ticks.map((tk, i) => {
-            const prev = ticks[i - 1];
-            // Na uskom se „Poč.“ ne piše: sudarila bi se s prvim mjesecem (UI KS-3 M-3), a početak je crta 0.
-            const label = wide ? tk.text : i === 0 ? null : tk.short;
-            const tx = prev ? (x(prev.at) + x(tk.at)) / 2 : x(tk.at);
+            // Oznaka stoji na sredini odsječka od prethodne granice (prva: početak, točka 0) do ove granice.
+            const from = ticks[i - 1]?.at ?? 0;
             return (
               <g key={`${tk.at}-${tk.text}`}>
-                {i > 0 && (
-                  <line
-                    x1={x(tk.at)}
-                    x2={x(tk.at)}
-                    y1={PAD.top + plotH}
-                    y2={PAD.top + plotH + 5}
-                    className="stroke-muted"
-                  />
-                )}
+                <line
+                  x1={x(tk.at)}
+                  x2={x(tk.at)}
+                  y1={PAD.top + plotH}
+                  y2={PAD.top + plotH + 5}
+                  className="stroke-muted"
+                />
                 <text
-                  x={tx}
+                  data-axis-x
+                  x={(x(from) + x(tk.at)) / 2}
                   y={height - 8}
-                  textAnchor={prev ? "middle" : "start"}
+                  textAnchor="middle"
                   className="fill-muted text-[11px]"
                 >
-                  {label}
+                  {wide ? tk.text : tk.short}
                 </text>
               </g>
             );

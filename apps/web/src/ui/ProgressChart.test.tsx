@@ -11,6 +11,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/** Okvir zadane širine: ResizeObserver javi širinu odmah pri promatranju. */
+function stubWidth(width: number) {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      cb: ResizeObserverCallback;
+      constructor(cb: ResizeObserverCallback) {
+        this.cb = cb;
+      }
+      observe() {
+        this.cb([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver);
+      }
+      disconnect() {}
+      unobserve() {}
+    },
+  );
+}
+
 function renderChart(weekly = true) {
   const body = seasonBody({ weekly });
   return render(
@@ -70,12 +88,26 @@ describe("ProgressChart", () => {
     ]);
   });
 
-  it("os: početak i mjeseci, nikad kod tjedna; „0 = početak“ uz crtu nule", () => {
+  it("os: mjeseci, nikad kod tjedna; „0 = početak“ uz crtu nule", () => {
     const { container } = renderChart();
     const svgText = container.querySelector("svg")?.textContent ?? "";
-    for (const m of ["Početak", "lipanj", "srpanj", "kolovoz", "rujan"]) expect(svgText).toContain(m);
+    for (const m of ["lipanj", "srpanj", "kolovoz", "rujan"]) expect(svgText).toContain(m);
     expect(svgText).not.toMatch(/t\d\d/);
     expect(screen.getByText(/Crta 0 = početak/)).toBeTruthy();
+  });
+
+  it("široka krivulja (686 px, zaslon 1024 px): os bez „Početak“, prvi mjesec na sredini odsječka (UI KS-3 I-A)", () => {
+    // Na 686 px „Početak“ (poravnat na x osi Y) i „lipanj“ (sredina prvog mjeseca) sudarali su se u „Početaklipanj“.
+    // Početak već kaže crta 0, pa ga os ne piše; svaka oznaka osi je ime mjeseca na sredini svog odsječka.
+    stubWidth(686);
+    for (const weekly of [true, false]) {
+      const { container } = renderChart(weekly);
+      const axis = [...container.querySelectorAll("svg text[data-axis-x]")];
+      expect(axis.map((n) => n.textContent)).toEqual(["lipanj", "srpanj", "kolovoz", "rujan"]);
+      expect(axis.every((n) => n.getAttribute("text-anchor") === "middle")).toBe(true);
+      expect(container.querySelector("svg")?.textContent).not.toContain("Početak");
+      cleanup();
+    }
   });
 
   it("„Prikaži brojke“ otvara tablicu sa svim krugovima; prva točka je 0", () => {
@@ -107,30 +139,16 @@ describe("ProgressChart", () => {
     expect(region.querySelectorAll(".sr-only").length).toBeGreaterThan(0);
   });
 
-  it("uska krivulja (mobitel): os bez „Poč.“, mjeseci skraćeno (UI KS-3 M-3)", () => {
-    // Okvir širok 360 px: ResizeObserver javi širinu odmah pri promatranju.
-    vi.stubGlobal(
-      "ResizeObserver",
-      class {
-        cb: ResizeObserverCallback;
-        constructor(cb: ResizeObserverCallback) {
-          this.cb = cb;
-        }
-        observe() {
-          this.cb(
-            [{ contentRect: { width: 360 } } as ResizeObserverEntry],
-            this as unknown as ResizeObserver,
-          );
-        }
-        disconnect() {}
-        unobserve() {}
-      },
-    );
+  it("uska krivulja (mobitel): os bez „Poč.“ i bez praznog teksta, mjeseci skraćeno (UI KS-3 M-3, m-3)", () => {
+    stubWidth(360);
     const { container } = renderChart();
     const labels = [...container.querySelectorAll("svg text")].map((n) => n.textContent ?? "");
     expect(labels).toContain("lip.");
     expect(labels).not.toContain("Poč.");
     expect(labels).not.toContain("Početak");
+    expect(labels).not.toContain("");
+    const axis = [...container.querySelectorAll("svg text[data-axis-x]")].map((n) => n.textContent);
+    expect(axis).toEqual(["lip.", "srp.", "kol.", "ruj."]);
   });
 
   it("mjesečna igra: četiri kruga i početak", () => {
