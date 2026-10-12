@@ -52,6 +52,7 @@ fn parts() -> OpenApiRouter<AppState> {
         .routes(routes!(departments::department))
         .routes(routes!(departments::pl))
         .routes(routes!(games::game))
+        .routes(routes!(games::season))
         .routes(routes!(games::round))
         .routes(routes!(games::close))
 }

@@ -36,6 +36,7 @@ pub enum ProblemCode {
     InvalidSettings,
     DepartmentPlanInvalid,
     NoResolvedRound,
+    SeasonNotOver,
     ModelV1,
     StorageUnavailable,
     Internal,
@@ -77,6 +78,7 @@ impl From<app::ErrorCode> for ProblemCode {
             E::DepartmentPlanInvalid => Self::DepartmentPlanInvalid,
             E::InvalidBody => Self::InvalidBody,
             E::NoResolvedRound => Self::NoResolvedRound,
+            E::SeasonNotOver => Self::SeasonNotOver,
             E::WrongModel => Self::ModelV1,
             E::StorageUnavailable => Self::StorageUnavailable,
             E::Internal => Self::Internal,
@@ -117,6 +119,9 @@ impl ProblemCode {
                 "Postavke odjela nisu dopuštene: provjeri broj sezonaca, razinu cijena i odjele koji se ne smiju zatvoriti."
             }
             Self::NoResolvedRound => "Još nijedan krug nije obračunan, pa nema računa dobiti.",
+            Self::SeasonNotOver => {
+                "Sezona još traje. Rezultati se vide kad se obračuna zadnji krug."
+            }
             Self::ModelV1 => "Ova igra je na starom modelu i nema ovaj prikaz.",
             Self::StorageUnavailable => "Baza nije dostupna",
             Self::Internal => "Greška sustava",

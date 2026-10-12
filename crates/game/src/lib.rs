@@ -17,6 +17,7 @@ mod mentor;
 mod model;
 mod resolve;
 mod round;
+pub mod season;
 pub mod talk;
 mod verdict;
 pub mod view;
@@ -40,6 +41,7 @@ pub use mentor::{
 pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;
 pub use round::{MAX_WEEK, RoundKey};
+pub use season::{CurvePoint, SeasonDecisions, SeasonFinances, SeasonHotel, SeasonView};
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};
 pub use verdict::{
     NEUTRAL_DEADLINE, NEUTRAL_FAILED, ValidVerdict, VerdictDraft, VerdictError, quality_from,

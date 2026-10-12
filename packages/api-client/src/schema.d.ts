@@ -89,6 +89,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/games/{game_id}/season": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kraj sezone (samo v2 igra, tek kad su obračunati svi krugovi): konačni poredak napretka, krivulja, indeksi
+         *     početak → kraj, te financije i odluke robota i vlastitog hotela (tuđi ljudski hotel samo indekse).
+         */
+        get: operations["season"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/health": {
         parameters: {
             query?: never;
@@ -392,6 +412,16 @@ export interface components {
             n: number;
             reason: string;
             text: string;
+        };
+        /** @description Napredak hotela na kraju jednog kruga (krivulja; „Početak = 0" dodaje ekran). */
+        CurvePointBody: {
+            /**
+             * Format: int32
+             * @description Napredak u odnosu na početak, u stotinkama boda (10000 = +100).
+             */
+            progress_hundredths: number;
+            /** @description Kod kruga (`jun`... ili `t01`...). */
+            round: string;
         };
         /** @enum {string} */
         DatabaseState: "ok" | "error";
@@ -958,7 +988,7 @@ export interface components {
          * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
          * @enum {string}
          */
-        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
         /** @enum {string} */
         ProfileCode: "A" | "B" | "C";
         /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
@@ -1042,6 +1072,112 @@ export interface components {
         RoundKindCode: "month" | "week";
         /** @enum {string} */
         RoundStatusCode: "scheduled" | "open" | "closing" | "resolved";
+        /** @description Kraj sezone: konačni poredak napretka i kako je igrao svaki hotel. */
+        SeasonBody: {
+            game_id: string;
+            /** @description Redom poretka: mjesto, pa slot. */
+            hotels: components["schemas"]["SeasonHotelBody"][];
+            mentor: components["schemas"]["SeasonMentorBody"] | null;
+            my_hotel_id: string;
+            round_kind: components["schemas"]["RoundKindCode"];
+            /** @description Svi krugovi igre s kalendarom. */
+            rounds: components["schemas"]["RoundInfoBody"][];
+        };
+        /** @description Odluke hotela kroz sezonu (iz obračunatih planova i situacija). */
+        SeasonDecisionsBody: {
+            /**
+             * Format: int64
+             * @description Prosjek cijene sobe po krugovima, u centima.
+             */
+            avg_price_cents: number;
+            /**
+             * Format: int32
+             * @description Prosjek ocjena 1–5 puta 100 (360 = 3,6); prazno bez situacija.
+             */
+            avg_quality_hundredths: number | null;
+            /**
+             * Format: int32
+             * @description Krugovi u kojima je održavanje bar jednog odjela odgođeno.
+             */
+            maintenance_deferred_rounds: number;
+            /** Format: int64 */
+            marketing_total_cents: number;
+            /** @description Kod kruga obnove; prazno ako obnove nije bilo. */
+            renovation_round: string | null;
+            /** Format: int32 */
+            reply_reviews_rounds: number;
+            /**
+             * Format: int32
+             * @description Najviše sezonskih radnika istodobno (na kraju kruga).
+             */
+            seasonal_peak: number;
+            /**
+             * Format: int32
+             * @description Broj situacija u sezoni.
+             */
+            situations: number;
+            /**
+             * Format: int32
+             * @description Krugovi s obukom (osnovnom ili punom).
+             */
+            training_rounds: number;
+            /**
+             * Format: int32
+             * @description Koliko ih je ostalo bez odgovora.
+             */
+            unanswered: number;
+            /** Format: int32 */
+            wage_pct_max: number;
+            /** Format: int32 */
+            wage_pct_min: number;
+        };
+        /** @description Novac cijele sezone; prihod i GOP isti su brojevi kao račun dobiti za sezonu (`/pl?scope=season`). */
+        SeasonFinancesBody: {
+            /** Format: int64 */
+            cash_end_cents: number;
+            /** Format: int64 */
+            cash_start_cents: number;
+            /** Format: int64 */
+            gop_cents: number;
+            /**
+             * Format: int64
+             * @description GOP kao udio prihoda u baznim bodovima (10000 = 100 %); prazno bez prihoda.
+             */
+            gop_margin_bp: number | null;
+            /** Format: int64 */
+            total_revenue_cents: number;
+        };
+        /** @description Jedan hotel na kraju sezone. Financije i odluke vide se za robote i vlastiti hotel, nikad za tuđi ljudski hotel. */
+        SeasonHotelBody: {
+            /** @description Napredak nakon svakog kruga, redom sezone. */
+            curve: components["schemas"]["CurvePointBody"][];
+            decisions: components["schemas"]["SeasonDecisionsBody"] | null;
+            end: components["schemas"]["IndexEntry"][];
+            finances: components["schemas"]["SeasonFinancesBody"] | null;
+            hotel_id: string;
+            /** @description Hotel onoga tko gleda. */
+            mine: boolean;
+            name: string;
+            /**
+             * Format: int32
+             * @description Konačni napredak u odnosu na početak, u stotinkama boda.
+             */
+            progress_hundredths: number;
+            /**
+             * Format: int32
+             * @description Mjesto 1..4 po konačnom napretku; jednak napredak dijeli mjesto.
+             */
+            rank: number;
+            seat: components["schemas"]["SeatBody"];
+            /** Format: int32 */
+            slot: number;
+            start: components["schemas"]["IndexEntry"][];
+            /** @description Pobjednik je prvi po napretku (svi s mjestom 1). */
+            winner: boolean;
+        };
+        SeasonMentorBody: {
+            text: string;
+        };
         SeatBody: {
             kind: components["schemas"]["SeatKind"];
             strategy: components["schemas"]["StrategyCode"] | null;
@@ -1355,6 +1491,62 @@ export interface operations {
                 };
             };
             /** @description Runda još nije otvorena */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    season: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Igra (uuid) */
+                game_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kraj sezone */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Igra na starom modelu (model_v1) ili sezona još traje (season_not_over) */
             409: {
                 headers: {
                     [name: string]: unknown;

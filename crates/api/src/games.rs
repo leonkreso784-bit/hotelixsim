@@ -7,7 +7,7 @@ use axum::response::Json;
 use crate::AppState;
 use crate::auth::Token;
 use crate::problem::Problem;
-use crate::schema::{GameBody, RoundBody, parse_game, parse_round};
+use crate::schema::{GameBody, RoundBody, SeasonBody, parse_game, parse_round};
 
 /// Igra u kojoj sudjeluješ: mjeseci, trenutna runda i javni podaci četiriju hotela.
 #[utoipa::path(
@@ -29,6 +29,30 @@ pub async fn game(
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let v = app::game_view(&s.deps, &caller, parse_game(&id)?).await?;
     Ok(Json(GameBody::try_from(&v)?))
+}
+
+/// Kraj sezone (samo v2 igra, tek kad su obračunati svi krugovi): konačni poredak napretka, krivulja, indeksi
+/// početak → kraj, te financije i odluke robota i vlastitog hotela (tuđi ljudski hotel samo indekse).
+#[utoipa::path(
+    get,
+    path = "/v1/games/{game_id}/season",
+    params(("game_id" = String, Path, description = "Igra (uuid)")),
+    responses(
+        (status = 200, description = "Kraj sezone", body = SeasonBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json"),
+        (status = 409, description = "Igra na starom modelu (model_v1) ili sezona još traje (season_not_over)", body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn season(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path(id): Path<String>,
+) -> Result<Json<SeasonBody>, Problem> {
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let v = app::season_view(&s.deps, &caller, parse_game(&id)?).await?;
+    Ok(Json(SeasonBody::try_from(&v)?))
 }
 
 /// Stanje runde; `unanswered` kaže koliko situacija čeka odgovor.

@@ -34,6 +34,7 @@ pub enum ErrorCode {
     DepartmentPlanInvalid,
     InvalidBody,
     NoResolvedRound,
+    SeasonNotOver,
     WrongModel,
     StorageUnavailable,
     Internal,
@@ -51,7 +52,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 31] = [
+    pub const ALL: [ErrorCode; 32] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -80,6 +81,7 @@ impl ErrorCode {
         ErrorCode::DepartmentPlanInvalid,
         ErrorCode::InvalidBody,
         ErrorCode::NoResolvedRound,
+        ErrorCode::SeasonNotOver,
         ErrorCode::WrongModel,
         ErrorCode::StorageUnavailable,
         ErrorCode::Internal,
@@ -93,7 +95,7 @@ impl ErrorCode {
             UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile
             | UnknownDepartment => ErrorKind::NotFound,
             RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply | GameOutdated
-            | WrongModel | NoResolvedRound => ErrorKind::Conflict,
+            | WrongModel | NoResolvedRound | SeasonNotOver => ErrorKind::Conflict,
             UnknownAnswer
             | NotFreeText
             | BadText
@@ -144,6 +146,7 @@ impl ErrorCode {
             DepartmentPlanInvalid => "department_plan_invalid",
             InvalidBody => "invalid_body",
             NoResolvedRound => "no_resolved_round",
+            SeasonNotOver => "season_not_over",
             WrongModel => "model_v1",
             StorageUnavailable => "storage_unavailable",
             Internal => "internal",
@@ -221,6 +224,7 @@ impl From<GameError> for AppError {
             GameError::WrongModel => C::WrongModel,
             GameError::UnknownDepartment => C::UnknownDepartment,
             GameError::NothingResolved => C::NoResolvedRound,
+            GameError::SeasonNotOver => C::SeasonNotOver,
             GameError::PlanBody => C::InvalidBody,
             GameError::Corrupt(_) | GameError::CoreMismatch(_) => C::Internal,
         };

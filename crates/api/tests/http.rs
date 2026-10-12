@@ -94,6 +94,7 @@ fn openapi_documents_contract() {
         ("/v1/hotels/{hotel_id}", "get"),
         ("/v1/demo/profiles/{profile}/indices", "get"),
         ("/v1/games/{game_id}", "get"),
+        ("/v1/games/{game_id}/season", "get"),
         ("/v1/games/{game_id}/rounds/{month}", "get"),
         ("/v1/games/{game_id}/rounds/{month}/close", "post"),
         ("/v1/hotels/{hotel_id}/plans/{month}", "put"),
@@ -148,10 +149,11 @@ fn openapi_documents_contract() {
         "unknown_department",
         "department_plan_invalid",
         "no_resolved_round",
+        "season_not_over",
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
-    assert_eq!(codes.len(), 32);
+    assert_eq!(codes.len(), 33);
     let schemas = &doc["components"]["schemas"];
     assert!(schemas["FeedItemBody"]["oneOf"].is_array());
     assert_eq!(

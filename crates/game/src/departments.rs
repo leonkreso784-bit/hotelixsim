@@ -81,7 +81,10 @@ fn catalog(e: impl std::fmt::Debug) -> GameError {
 
 impl Game {
     /// Računi odjela obračunatih krugova hotela, redom sezone.
-    fn resolved_accounts(&self, h: HotelId) -> Result<Vec<(RoundKey, PeriodAccounts)>, GameError> {
+    pub(crate) fn resolved_accounts(
+        &self,
+        h: HotelId,
+    ) -> Result<Vec<(RoundKey, PeriodAccounts)>, GameError> {
         let mut out = Vec::new();
         for r in &self.rounds {
             let Some(rr) = self.resolved.get(r) else {

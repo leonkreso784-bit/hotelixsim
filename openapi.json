@@ -317,6 +317,72 @@
         }
       }
     },
+    "/v1/games/{game_id}/season": {
+      "get": {
+        "summary": "Kraj sezone (samo v2 igra, tek kad su obračunati svi krugovi): konačni poredak napretka, krivulja, indeksi\npočetak → kraj, te financije i odluke robota i vlastitog hotela (tuđi ljudski hotel samo indekse).",
+        "operationId": "season",
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "description": "Igra (uuid)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kraj sezone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Igra na starom modelu (model_v1) ili sezona još traje (season_not_over)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku.",
@@ -1527,6 +1593,25 @@
           },
           "text": {
             "type": "string"
+          }
+        }
+      },
+      "CurvePointBody": {
+        "type": "object",
+        "description": "Napredak hotela na kraju jednog kruga (krivulja; „Početak = 0\" dodaje ekran).",
+        "required": [
+          "round",
+          "progress_hundredths"
+        ],
+        "properties": {
+          "progress_hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Napredak u odnosu na početak, u stotinkama boda (10000 = +100)."
+          },
+          "round": {
+            "type": "string",
+            "description": "Kod kruga (`jun`... ili `t01`...)."
           }
         }
       },
@@ -3325,6 +3410,7 @@
           "invalid_settings",
           "department_plan_invalid",
           "no_resolved_round",
+          "season_not_over",
           "model_v1",
           "storage_unavailable",
           "internal",
@@ -3591,6 +3677,287 @@
           "closing",
           "resolved"
         ]
+      },
+      "SeasonBody": {
+        "type": "object",
+        "description": "Kraj sezone: konačni poredak napretka i kako je igrao svaki hotel.",
+        "required": [
+          "game_id",
+          "round_kind",
+          "rounds",
+          "my_hotel_id",
+          "hotels",
+          "mentor"
+        ],
+        "properties": {
+          "game_id": {
+            "type": "string"
+          },
+          "hotels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeasonHotelBody"
+            },
+            "description": "Redom poretka: mjesto, pa slot."
+          },
+          "mentor": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeasonMentorBody",
+                "description": "Sezonski mentor; prazno dok ga radnik ne zapiše."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "my_hotel_id": {
+            "type": "string"
+          },
+          "round_kind": {
+            "$ref": "#/components/schemas/RoundKindCode"
+          },
+          "rounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoundInfoBody"
+            },
+            "description": "Svi krugovi igre s kalendarom."
+          }
+        }
+      },
+      "SeasonDecisionsBody": {
+        "type": "object",
+        "description": "Odluke hotela kroz sezonu (iz obračunatih planova i situacija).",
+        "required": [
+          "avg_price_cents",
+          "marketing_total_cents",
+          "wage_pct_min",
+          "wage_pct_max",
+          "seasonal_peak",
+          "training_rounds",
+          "maintenance_deferred_rounds",
+          "renovation_round",
+          "reply_reviews_rounds",
+          "situations",
+          "unanswered",
+          "avg_quality_hundredths"
+        ],
+        "properties": {
+          "avg_price_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Prosjek cijene sobe po krugovima, u centima."
+          },
+          "avg_quality_hundredths": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Prosjek ocjena 1–5 puta 100 (360 = 3,6); prazno bez situacija.",
+            "minimum": 0
+          },
+          "maintenance_deferred_rounds": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Krugovi u kojima je održavanje bar jednog odjela odgođeno.",
+            "minimum": 0
+          },
+          "marketing_total_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "renovation_round": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Kod kruga obnove; prazno ako obnove nije bilo."
+          },
+          "reply_reviews_rounds": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seasonal_peak": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Najviše sezonskih radnika istodobno (na kraju kruga).",
+            "minimum": 0
+          },
+          "situations": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Broj situacija u sezoni.",
+            "minimum": 0
+          },
+          "training_rounds": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Krugovi s obukom (osnovnom ili punom).",
+            "minimum": 0
+          },
+          "unanswered": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Koliko ih je ostalo bez odgovora.",
+            "minimum": 0
+          },
+          "wage_pct_max": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "wage_pct_min": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "SeasonFinancesBody": {
+        "type": "object",
+        "description": "Novac cijele sezone; prihod i GOP isti su brojevi kao račun dobiti za sezonu (`/pl?scope=season`).",
+        "required": [
+          "total_revenue_cents",
+          "gop_cents",
+          "gop_margin_bp",
+          "cash_start_cents",
+          "cash_end_cents"
+        ],
+        "properties": {
+          "cash_end_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cash_start_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "gop_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "gop_margin_bp": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "GOP kao udio prihoda u baznim bodovima (10000 = 100 %); prazno bez prihoda."
+          },
+          "total_revenue_cents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SeasonHotelBody": {
+        "type": "object",
+        "description": "Jedan hotel na kraju sezone. Financije i odluke vide se za robote i vlastiti hotel, nikad za tuđi ljudski hotel.",
+        "required": [
+          "hotel_id",
+          "slot",
+          "name",
+          "seat",
+          "mine",
+          "rank",
+          "winner",
+          "progress_hundredths",
+          "start",
+          "end",
+          "curve",
+          "finances",
+          "decisions"
+        ],
+        "properties": {
+          "curve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurvePointBody"
+            },
+            "description": "Napredak nakon svakog kruga, redom sezone."
+          },
+          "decisions": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeasonDecisionsBody",
+                "description": "Prazno za tuđi ljudski hotel."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEntry"
+            }
+          },
+          "finances": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeasonFinancesBody",
+                "description": "Prazno za tuđi ljudski hotel."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hotel_id": {
+            "type": "string"
+          },
+          "mine": {
+            "type": "boolean",
+            "description": "Hotel onoga tko gleda."
+          },
+          "name": {
+            "type": "string"
+          },
+          "progress_hundredths": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Konačni napredak u odnosu na početak, u stotinkama boda."
+          },
+          "rank": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Mjesto 1..4 po konačnom napretku; jednak napredak dijeli mjesto.",
+            "minimum": 0
+          },
+          "seat": {
+            "$ref": "#/components/schemas/SeatBody"
+          },
+          "slot": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "start": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEntry"
+            }
+          },
+          "winner": {
+            "type": "boolean",
+            "description": "Pobjednik je prvi po napretku (svi s mjestom 1)."
+          }
+        }
+      },
+      "SeasonMentorBody": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        }
       },
       "SeatBody": {
         "type": "object",

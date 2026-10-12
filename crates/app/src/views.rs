@@ -3,7 +3,7 @@ use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
 use game::{
     AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, Model,
-    RoundInfo, RoundKey, RoundStatus, debrief_facts,
+    RoundInfo, RoundKey, RoundStatus, SeasonView, debrief_facts,
 };
 
 use crate::demo::load_game;
@@ -33,6 +33,14 @@ pub struct GameView {
     pub current: Option<RoundView>,
     pub my_hotel: HotelId,
     pub hotels: Vec<PublicHotel>,
+}
+
+/// Kraj sezone iz hotela pozivatelja (kraj-sezone-spec §6.1).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SeasonGameView {
+    pub game_id: GameId,
+    pub my_hotel: HotelId,
+    pub season: SeasonView,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -201,6 +209,22 @@ pub async fn game_view(
         current,
         my_hotel: mine,
         hotels,
+    })
+}
+
+/// Kraj sezone: vidi ga svatko u igri (kao `game_view`); financije i odluke tuđeg čovjeka skriva `Game::season`.
+pub async fn season_view(
+    deps: &Deps,
+    caller: &Caller,
+    game_id: GameId,
+) -> Result<SeasonGameView, AppError> {
+    let guest = caller.require()?;
+    let g = load_game(deps, game_id).await?;
+    let mine = member_hotel(&g, guest)?;
+    Ok(SeasonGameView {
+        game_id,
+        my_hotel: mine,
+        season: g.season(mine)?,
     })
 }
 

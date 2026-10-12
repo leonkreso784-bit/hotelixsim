@@ -670,6 +670,191 @@ impl TryFrom<&app::GameView> for GameBody {
     }
 }
 
+/// Napredak hotela na kraju jednog kruga (krivulja; „Početak = 0" dodaje ekran).
+#[derive(Serialize, ToSchema)]
+pub struct CurvePointBody {
+    /// Kod kruga (`jun`... ili `t01`...).
+    pub round: String,
+    /// Napredak u odnosu na početak, u stotinkama boda (10000 = +100).
+    pub progress_hundredths: i32,
+}
+
+/// Novac cijele sezone; prihod i GOP isti su brojevi kao račun dobiti za sezonu (`/pl?scope=season`).
+#[derive(Serialize, ToSchema)]
+pub struct SeasonFinancesBody {
+    pub total_revenue_cents: i64,
+    pub gop_cents: i64,
+    /// GOP kao udio prihoda u baznim bodovima (10000 = 100 %); prazno bez prihoda.
+    #[schema(required = true)]
+    pub gop_margin_bp: Option<i64>,
+    pub cash_start_cents: i64,
+    pub cash_end_cents: i64,
+}
+
+/// Odluke hotela kroz sezonu (iz obračunatih planova i situacija).
+#[derive(Serialize, ToSchema)]
+pub struct SeasonDecisionsBody {
+    /// Prosjek cijene sobe po krugovima, u centima.
+    pub avg_price_cents: i64,
+    pub marketing_total_cents: i64,
+    pub wage_pct_min: u16,
+    pub wage_pct_max: u16,
+    /// Najviše sezonskih radnika istodobno (na kraju kruga).
+    pub seasonal_peak: u16,
+    /// Krugovi s obukom (osnovnom ili punom).
+    pub training_rounds: u8,
+    /// Krugovi u kojima je održavanje bar jednog odjela odgođeno.
+    pub maintenance_deferred_rounds: u8,
+    /// Kod kruga obnove; prazno ako obnove nije bilo.
+    #[schema(required = true)]
+    pub renovation_round: Option<String>,
+    pub reply_reviews_rounds: u8,
+    /// Broj situacija u sezoni.
+    pub situations: u16,
+    /// Koliko ih je ostalo bez odgovora.
+    pub unanswered: u16,
+    /// Prosjek ocjena 1–5 puta 100 (360 = 3,6); prazno bez situacija.
+    #[schema(required = true)]
+    pub avg_quality_hundredths: Option<u16>,
+}
+
+/// Jedan hotel na kraju sezone. Financije i odluke vide se za robote i vlastiti hotel, nikad za tuđi ljudski hotel.
+#[derive(Serialize, ToSchema)]
+pub struct SeasonHotelBody {
+    pub hotel_id: String,
+    pub slot: u8,
+    pub name: String,
+    pub seat: SeatBody,
+    /// Hotel onoga tko gleda.
+    pub mine: bool,
+    /// Mjesto 1..4 po konačnom napretku; jednak napredak dijeli mjesto.
+    pub rank: u8,
+    /// Pobjednik je prvi po napretku (svi s mjestom 1).
+    pub winner: bool,
+    /// Konačni napredak u odnosu na početak, u stotinkama boda.
+    pub progress_hundredths: i32,
+    pub start: Vec<IndexEntry>,
+    pub end: Vec<IndexEntry>,
+    /// Napredak nakon svakog kruga, redom sezone.
+    pub curve: Vec<CurvePointBody>,
+    /// Prazno za tuđi ljudski hotel.
+    #[schema(required = true)]
+    pub finances: Option<SeasonFinancesBody>,
+    /// Prazno za tuđi ljudski hotel.
+    #[schema(required = true)]
+    pub decisions: Option<SeasonDecisionsBody>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct SeasonMentorBody {
+    pub text: String,
+}
+
+/// Kraj sezone: konačni poredak napretka i kako je igrao svaki hotel.
+#[derive(Serialize, ToSchema)]
+pub struct SeasonBody {
+    pub game_id: String,
+    pub round_kind: RoundKindCode,
+    /// Svi krugovi igre s kalendarom.
+    pub rounds: Vec<RoundInfoBody>,
+    pub my_hotel_id: String,
+    /// Redom poretka: mjesto, pa slot.
+    pub hotels: Vec<SeasonHotelBody>,
+    /// Sezonski mentor; prazno dok ga radnik ne zapiše.
+    #[schema(required = true)]
+    pub mentor: Option<SeasonMentorBody>,
+}
+
+impl From<&game::SeasonFinances> for SeasonFinancesBody {
+    fn from(f: &game::SeasonFinances) -> Self {
+        SeasonFinancesBody {
+            total_revenue_cents: f.total_revenue_cents,
+            gop_cents: f.gop_cents,
+            gop_margin_bp: f.gop_margin_bp,
+            cash_start_cents: f.cash_start_cents,
+            cash_end_cents: f.cash_end_cents,
+        }
+    }
+}
+
+impl From<&game::SeasonDecisions> for SeasonDecisionsBody {
+    fn from(d: &game::SeasonDecisions) -> Self {
+        SeasonDecisionsBody {
+            avg_price_cents: d.avg_price_cents,
+            marketing_total_cents: d.marketing_total_cents,
+            wage_pct_min: d.wage_pct_min,
+            wage_pct_max: d.wage_pct_max,
+            seasonal_peak: d.seasonal_peak,
+            training_rounds: d.training_rounds,
+            maintenance_deferred_rounds: d.maintenance_deferred_rounds,
+            renovation_round: d.renovation_round.map(|r| r.code()),
+            reply_reviews_rounds: d.reply_reviews_rounds,
+            situations: d.situations,
+            unanswered: d.unanswered,
+            avg_quality_hundredths: d.avg_quality_hundredths,
+        }
+    }
+}
+
+impl TryFrom<&game::SeasonHotel> for SeasonHotelBody {
+    type Error = Problem;
+
+    fn try_from(h: &game::SeasonHotel) -> Result<Self, Problem> {
+        Ok(SeasonHotelBody {
+            hotel_id: h.hotel_id.0.to_string(),
+            slot: h.slot,
+            name: h.name.clone(),
+            seat: (&h.seat).try_into()?,
+            mine: h.mine,
+            rank: h.rank,
+            winner: h.winner,
+            progress_hundredths: h.progress_hundredths,
+            start: entries(h.start),
+            end: entries(h.end),
+            curve: h
+                .curve
+                .iter()
+                .map(|p| CurvePointBody {
+                    round: p.round.code(),
+                    progress_hundredths: p.progress_hundredths,
+                })
+                .collect(),
+            finances: h.finances.as_ref().map(SeasonFinancesBody::from),
+            decisions: h.decisions.as_ref().map(SeasonDecisionsBody::from),
+        })
+    }
+}
+
+impl TryFrom<&app::SeasonGameView> for SeasonBody {
+    type Error = Problem;
+
+    fn try_from(v: &app::SeasonGameView) -> Result<Self, Problem> {
+        let s = &v.season;
+        Ok(SeasonBody {
+            game_id: v.game_id.0.to_string(),
+            round_kind: s
+                .rounds
+                .first()
+                .map_or(RoundKindCode::Month, |r| r.period.kind.into()),
+            rounds: s
+                .rounds
+                .iter()
+                .map(RoundInfoBody::try_from)
+                .collect::<Result<_, _>>()?,
+            my_hotel_id: v.my_hotel.0.to_string(),
+            hotels: s
+                .hotels
+                .iter()
+                .map(SeasonHotelBody::try_from)
+                .collect::<Result<_, _>>()?,
+            mentor: s
+                .mentor
+                .as_ref()
+                .map(|t| SeasonMentorBody { text: t.clone() }),
+        })
+    }
+}
+
 /// Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze.
 #[derive(Serialize, ToSchema)]
 pub struct SituationBody {
