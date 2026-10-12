@@ -63,6 +63,13 @@ pub struct DebriefSituation {
     pub chosen_label: Option<String>,
 }
 
+/// Odlasci zaposlenih jednog odjela u krugu (samo v2); ime je iz sadržaja, ne šifra.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct DepartmentDepartures {
+    pub name: String,
+    pub count: u16,
+}
+
 /// Ulaz za mentora nakon obračuna mjeseca.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DebriefInput {
@@ -95,6 +102,17 @@ pub struct DebriefInput {
     /// Stopa odlazaka (baze, 300 = 3 % osoblja u mjesecu) prije i poslije mjeseca; ulazi u zadržavanje (Z).
     pub turnover_before_bp: u16,
     pub turnover_after_bp: u16,
+    /// Odlasci po odjelu u krugu, od najvećeg broja (pa po šifri odjela); odjeli bez odlazaka se ne navode.
+    /// Prazno za v1 igru i za krug bez odlazaka; zbroj je hotelski broj odlazaka.
+    pub department_departures: Vec<DepartmentDepartures>,
+    /// Plaće (% uobičajenih) kakve je hotel imao na početku kruga i kakve je imao na početku igre (profil), da mentor
+    /// ne pripisuje studentu stanje koje je preuzeo.
+    pub wage_before_pct: u16,
+    pub wage_start_pct: u16,
+    /// Je li student u nekom od prošlih krugova imao plan s drugim plaćama od početnih (pa i ako ih je vratio).
+    pub wage_ever_changed: bool,
+    /// Plan prošlog kruga; `None` u prvom krugu (prije njega je samo početno stanje profila).
+    pub plan_before: Option<PlanDto>,
     pub lines: Vec<LineDto>,
 }
 
@@ -225,6 +243,26 @@ impl Game {
             self.model()
                 .price_ref_cents(category, &self.round_info(m)?, &self.content)?;
         let report = &res.report;
+        let department_departures = self.department_departures(hotel, res)?;
+        let wage_start_pct = h.start_state.summary().wage_pct;
+        let wage_ever_changed = self
+            .rounds
+            .iter()
+            .take(pos)
+            .filter_map(|r| {
+                self.resolved
+                    .get(r)
+                    .and_then(|rr| rr.hotels.iter().find(|x| x.hotel_id == hotel))
+            })
+            .any(|x| x.plan.wage_pct != wage_start_pct);
+        let plan_before = match prev_round {
+            None => None,
+            Some(prev) => self
+                .resolved
+                .get(prev)
+                .and_then(|r| r.hotels.iter().find(|x| x.hotel_id == hotel))
+                .map(|x| x.plan.clone()),
+        };
         let period = self.round_info(m)?.period;
         let (fd, fm) = period.first_date();
         let (ld, lm) = period.last_date();
@@ -248,6 +286,11 @@ impl Game {
             load_after_hundredths: report.after.load_hundredths,
             turnover_before_bp: report.before.turnover_bp,
             turnover_after_bp: report.after.turnover_bp,
+            department_departures,
+            wage_before_pct: report.before.wage_pct,
+            wage_start_pct,
+            wage_ever_changed,
+            plan_before,
             lines: report.lines.clone(),
         })
     }

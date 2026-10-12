@@ -24,7 +24,8 @@ pub mod view;
 
 pub use actor::{Actor, strategy_from_code};
 pub use ai_input::{
-    AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, OfferedForJudge,
+    AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation,
+    DepartmentDepartures, OfferedForJudge,
 };
 pub use departments::{
     DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,
