@@ -166,14 +166,21 @@ fn repo_names_have_twenty_per_list() {
     }
 }
 
-/// Leon (12.10.): pohvala je čista prilika. Neodgovorena (i prepuštena voditelju) nema nikakvog učinka, nijedan
-/// odgovor ne smanjuje moral (zadržavanje ljudi samo uz kvalitetu ≥ 3), a najbolji (javna pohvala, zahvala timu i
-/// nagrada) jedini nosi nagradu i najviše diže moral.
+/// Leon (12.10.): pohvala je čista prilika. Predložak ima oznaku „samo nagrada" (S-4), pa ni slobodan odgovor ne
+/// snižava moral (pravi put kroz obračun: `crates/game/tests/reward_only.rs`). Ovdje sadržaj: neodgovorena (i
+/// prepuštena voditelju) nema nikakvog učinka, nijedan ponuđeni odgovor ne smanjuje moral (zadržavanje ljudi samo
+/// uz kvalitetu ≥ 3), a najbolji (javna pohvala, zahvala timu i nagrada) jedini nosi nagradu i najviše diže moral.
 #[test]
-fn praise_never_lowers_morale() {
+fn praise_is_reward_only_and_offered_answers_never_lower_morale() {
     let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     let t = c.situation_templates.unwrap();
     let p = t.templates.iter().find(|x| x.code == "P-POHVALA").unwrap();
+    assert!(p.no_penalty, "P-POHVALA mora imati oznaku „samo nagrada\"");
+    assert!(
+        t.no_penalty("P-POHVALA.t03"),
+        "oznaka vrijedi i za primjerak"
+    );
+    assert!(!t.no_penalty("P-NOVINAR.t03"));
     let nothing =
         |m: &TemplateMechanic| matches!(m, TemplateMechanic::GroupBooking { accept: false, .. });
     assert!(p.unanswered.iter().all(nothing), "{:?}", p.unanswered);
@@ -695,4 +702,79 @@ fn collective_situation_needs_departments_that_cannot_close() {
     build(&v).expect("smještaj se ne može zatvoriti");
     rejected(|v| collective(tpl(v, "P-KLIMA"), "*staffed"), "zatvoriti");
     rejected(|v| collective(tpl(v, "P-KLIMA"), "spa"), "zatvoriti");
+}
+
+/// Primjerak predloška `code` u srpnju (mjesečni krug) za hotel profila C, složen kao u igri; brojevna mjesta
+/// uzimaju najmanju vrijednost, odjel prvi iz skupine.
+fn july_instance(c: &Content, code: &str) -> sim_hotel::SituationTemplate {
+    use sim_hotel_v2::situations::{DrawnSituation, NumberParam, Scope};
+    let tpl = c.situation_templates.as_ref().unwrap();
+    let cat = c.v2.as_ref().unwrap();
+    let set = tpl.to_core();
+    let spec = set.templates.iter().find(|t| t.code == code).unwrap();
+    let d = DrawnSituation {
+        code: format!("{code}.jul"),
+        template: code.to_string(),
+        period: sim_hotel_v2::calendar::month_period(sim_hotel::Month::Jul),
+        day: 30,
+        occurrence: 1,
+        slot: 1,
+        kind: spec.kind,
+        weight: spec.weight,
+        scope: Scope::Hotel,
+        major: None,
+        department: spec
+            .department
+            .members(cat)
+            .and_then(|m| m.first().cloned()),
+        roles: std::collections::BTreeMap::new(),
+        numbers: spec
+            .numbers
+            .iter()
+            .map(|(k, n)| {
+                let v = match n {
+                    NumberParam::Range(a, _) => *a,
+                    NumberParam::Pick(v) => v[0],
+                };
+                (k.clone(), v)
+            })
+            .collect(),
+    };
+    let category = cat.base.profile(sim_hotel::Profile::C).unwrap().category;
+    tpl.instance(&d, &cat.base, category).unwrap()
+}
+
+/// Leon (S-4, P-NOVINAR): loš odgovor i neodgovoreno daju isti ukupni učinak (−4 zadovoljstva), a ne loš odgovor
+/// dvostruko više (prije: oporavak −4 + kriza −6, granica −8).
+#[test]
+fn poor_answer_to_journalist_costs_the_same_as_silence() {
+    use sim_hotel::{SituationOutcome, effects};
+    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let t = july_instance(&c, "P-NOVINAR");
+    let cat = &c.v2.as_ref().unwrap().base;
+    let category = cat.profile(sim_hotel::Profile::C).unwrap().category;
+    let silent = effects(&SituationOutcome::unanswered(&t), t.month, cat, category).unwrap();
+    assert_eq!(silent.satisfaction_pts, -400);
+    let poor: Vec<_> = t.answers.iter().filter(|a| a.quality == 1).collect();
+    assert_eq!(poor.len(), 2);
+    for a in poor {
+        let e = effects(
+            &SituationOutcome::from_answer(&t.code, a),
+            t.month,
+            cat,
+            category,
+        )
+        .unwrap();
+        assert_eq!(
+            (e.satisfaction_pts, e.morale_pts, e.rating, e.equipment_pts),
+            (
+                silent.satisfaction_pts,
+                silent.morale_pts,
+                silent.rating,
+                silent.equipment_pts
+            ),
+            "'{}'",
+            a.label
+        );
+    }
 }

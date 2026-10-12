@@ -17,7 +17,7 @@ use crate::plan::PeriodPlan;
 use crate::resolve::{PeriodReport, ResolveError, resolve_period};
 use crate::robots::robot_plan;
 use crate::situations::{
-    Anchor, Draw, DrawView, DrawnSituation, Kind, TemplateSet, draw_situations,
+    Anchor, Draw, DrawView, DrawnSituation, Kind, TemplateSet, draw_situations, reward_only,
 };
 use crate::state::HotelState;
 
@@ -221,7 +221,8 @@ pub fn run_season_from(
     let mut history: Vec<DrawnSituation> = Vec::new();
     for p in &all {
         let plan = planner(&state, p)?;
-        let mut instances: Vec<SituationTemplate> = Vec::new();
+        // Primjerci kruga i oznaka „samo nagrada" njihova predloška (S-4).
+        let mut instances: Vec<(SituationTemplate, bool)> = Vec::new();
         let fixed = match source {
             SeasonSituations::Fixed(list) => situations_for(p, list),
             SeasonSituations::Drawn(d) => {
@@ -233,7 +234,7 @@ pub fn run_season_from(
                 };
                 let (anchors, found) = draw_round(d, p, &view, &history, cat)?;
                 for s in &found {
-                    instances.push((d.instance)(s)?);
+                    instances.push(((d.instance)(s)?, d.templates.no_penalty(&s.template)));
                 }
                 history.extend(found.iter().cloned());
                 drawn.push(found);
@@ -241,10 +242,12 @@ pub fn run_season_from(
             }
         };
         let mut outcomes = Vec::new();
-        for t in fixed.into_iter().chain(&instances) {
+        let anchors = fixed.into_iter().map(|t| (t, false));
+        for (t, no_penalty) in anchors.chain(instances.iter().map(|(t, n)| (t, *n))) {
             let i = chooser(t)?;
             let answer = t.answers.get(i).ok_or(ResolveError::BadChoice)?;
-            outcomes.push(SituationOutcome::from_answer(&t.code, answer));
+            let o = SituationOutcome::from_answer(&t.code, answer);
+            outcomes.push(if no_penalty { reward_only(o) } else { o });
         }
         let report = resolve_period(&state, p, &plan, &outcomes, cat)?;
         let idx = period_indices(&report, cat, refs)?;

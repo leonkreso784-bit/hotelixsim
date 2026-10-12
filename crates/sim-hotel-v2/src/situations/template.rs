@@ -21,6 +21,15 @@ pub struct TemplateSet {
     pub groups_per_month: Option<u8>,
 }
 
+impl TemplateSet {
+    /// Ima li predložak `code` oznaku „samo nagrada"; nepoznat predložak nema.
+    pub fn no_penalty(&self, code: &str) -> bool {
+        self.templates
+            .iter()
+            .any(|t| t.code == code && t.no_penalty)
+    }
+}
+
 /// Veća situacija (Leon 13.10.): prosjek pet pokazatelja na početku kruga ≥ `high_avg_min` (izvrstan hotel) ili
 /// ≤ `low_avg_max` (vrlo loš), najviše `max_per_month` u kalendarskom mjesecu kruga.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,6 +57,8 @@ pub struct SituationSpec {
     /// Mjesec dolaska grupe koju predložak nudi (prvi odgovor koji prihvaća grupu); `None` = ne nudi grupu.
     /// Broji se u `TemplateSet::group_limit` i `groups_per_month`.
     pub group_month: Option<Month>,
+    /// „Samo nagrada" (S-4): nijedan ishod primjerka ne snižava pokazatelje (`situations::reward_only`).
+    pub no_penalty: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

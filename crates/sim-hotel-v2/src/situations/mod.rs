@@ -3,6 +3,8 @@
 
 use std::collections::BTreeMap;
 
+use sim_hotel::SituationOutcome;
+
 use crate::calendar::Period;
 use crate::department::DeptCode;
 
@@ -62,4 +64,18 @@ pub struct RoleFill {
     pub name: String,
     /// Opis lika iz `types` predloška; `None` kad ga predložak nema.
     pub role_type: Option<String>,
+}
+
+/// Kvaliteta bez učinka: bodovi svih mehanika su `(kvaliteta − 3) × k` uz `k ≥ 0`.
+const NEUTRAL_QUALITY: u8 = 3;
+
+/// Ishod situacije „samo nagrada" (S-4, Leon 12.10.: pohvala je čista prilika): kvaliteta 1–2 računa se kao
+/// neutralna 3. Bodovi mehanika su `(q − 3) × k` s `k ≥ 0`, pa je to isto što i donja granica 0 za svaki pokazatelj
+/// (zadovoljstvo, moral, ocjena, oprema); trošak odluke (nagrada, kompenzacija) ostaje. Vrijedi za ponuđen,
+/// slobodan i neodgovoren ishod; kvaliteta izvan 1–5 ostaje kakva jest, pa je obračun i dalje odbija.
+pub fn reward_only(mut o: SituationOutcome) -> SituationOutcome {
+    if (1..NEUTRAL_QUALITY).contains(&o.quality) {
+        o.quality = NEUTRAL_QUALITY;
+    }
+    o
 }

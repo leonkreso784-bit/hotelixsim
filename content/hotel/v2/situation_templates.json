@@ -997,8 +997,7 @@
       "params": {
         "dani": { "pick": [3, 4] },
         "boravak": { "price_pct": 400 },
-        "sve": { "price_pct": 1200 },
-        "priprema": { "price_pct": 300 }
+        "sve": { "price_pct": 1500 }
       },
       "title": "Članak o hotelu: {novinarka.ime} traži posjet",
       "description": "{novinarka.ime}, {novinarka.tip}, piše o najboljim hotelima na Jadranu i čula je da je ovaj hotel među njima. Traži {dani} dana boravka s fotografom idućih tjedana, razgovore s osobljem i pristup kuhinji, sve na račun hotela.",
@@ -1035,18 +1034,12 @@
         {
           "label": "Ponuditi sve na račun hotela: najbolju sobu, poseban jelovnik i osoblje samo za nju",
           "criteria": [1],
-          "mechanics": [
-            { "type": "ServiceRecovery", "compensation": "sve" },
-            { "type": "CrisisCommunication", "backup": "priprema" }
-          ]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "sve" }]
         },
         {
           "label": "Pristati uz uvjet da članak prije objave pošalje hotelu na odobrenje",
           "criteria": [1],
-          "mechanics": [
-            { "type": "ServiceRecovery", "compensation": "boravak" },
-            { "type": "CrisisCommunication", "backup": 0 }
-          ]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "boravak" }]
         }
       ],
       "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
@@ -2194,6 +2187,7 @@
         { "type": "GroupBooking", "accept": false, "rooms": 0, "nights": 0, "discount_bp": 0, "month": "sep" }
       ],
       "effect_band": { "cost_night_pct": [0, 170] },
+      "no_penalty": true,
       "when": { "months": ["jun", "jul", "aug", "sep"] }
     },
     {
@@ -2736,7 +2730,7 @@
       "description": "Subota je, dan smjene gostiju. Od 14 sati na recepciji je red, a gosti na prijavu čekaju i po {minute} minuta. {gost.ime}, {gost.tip}, glasno se žali da ovo nije doček kakav je očekivao. Na recepciji rade dvije osobe.",
       "character": {
         "role": "gost",
-        "brief": "Ti si {gost.ime}, {gost.tip}. Na prijavu čekaš već {minute} minuta, umoran si i vruće ti je. Ne vičeš na recepcionarke jer vidiš da se trude, ali ljut si na hotel koji subotom nije spreman. Smiriš se ako ti netko priđe, ispriča se, ponudi nešto hladno i kaže koliko će još trajati. Ako ti kažu 'svi čekaju, takva je subota', tražiš upravu i spominješ recenziju.",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Na prijavu čekaš već {minute} minuta, umoran si i vruće ti je. Ne vičeš na ljude na recepciji jer vidiš da se trude, ali ljut si na hotel koji subotom nije spreman. Smiriš se ako ti netko priđe, ispriča se, ponudi nešto hladno i kaže koliko će još trajati. Ako ti kažu 'svi čekaju, takva je subota', tražiš upravu i spominješ recenziju.",
         "opening": "Čekam već {minute} minuta, a ispred mene je još pet obitelji. Je li ovo normalno svake subote?",
         "fallback_reply": "Gost se vratio u red; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
       },
@@ -2911,7 +2905,7 @@
       },
       "params": { "popravak": { "price_pct": 300 } },
       "title": "Gošća tvrdi da joj je auto oštećen na parkingu",
-      "description": "{gost.ime}, {gost.tip}, na recepciji pokazuje ogrebotinu i udubljenje na vratima auta. Kaže da je to nastalo na hotelskom parkingu i traži da hotel plati popravak. Parking ima kameru na ulazu, a na ulazu piše da hotel ne odgovara za štetu.",
+      "description": "{gost.ime}, {gost.tip}, na recepciji pokazuje ogrebotinu i udubljenje na vratima auta. Kaže da je to nastalo na hotelskom parkingu i traži da hotel plati popravak. Parking ima kameru na ulazu, a uz rampu piše da hotel ne odgovara za štetu.",
       "character": {
         "role": "gost",
         "brief": "Ti si {gost.ime}, {gost.tip}. Jutros si na vratima auta našla ogrebotinu i udubljenje i sigurna si da je to nastalo na hotelskom parkingu. Ljuta si i tražiš da hotel plati popravak. Smiriš se ako te netko ozbiljno shvati, zapiše štetu, fotografira je i provjeri snimke kamere. Prihvaćaš da se prijava riješi preko osiguranja ako ti netko jasno kaže što slijedi i do kada. Ako ti kažu samo da 'na ulazu piše da ne odgovaramo', tražiš upravu i pišeš recenziju.",
@@ -3140,7 +3134,7 @@
       "description": "Od jutra elektroničke brave na {kat}. katu ne prepoznaju kartice. Gosti se vraćaju s plaže i ne mogu u sobe, a recepcija svakome otvara glavnom karticom. {tehnicar.ime}, {tehnicar.tip}, kaže da je vjerojatno kvar na upravljačkoj jedinici i da servis može doći sutra.",
       "character": {
         "role": "tehnicar",
-        "brief": "Ti si {tehnicar.ime}, {tehnicar.tip}. Brave na {kat}. katu ne prepoznaju kartice jer je, misliš, pokvarena upravljačka jedinica. Servis može doći sutra, a hitni dolazak danas košta više. Baterije u bravama nitko nije mijenjao od prošle sezone i to ti je na savjesti. Smiriš se ako netko donese jasnu odluku i ako se dogovori redovni pregled brava. Ako te okrive za sve, braniš se da nitko nije planirao pregled.",
+        "brief": "Ti si {tehnicar.ime}, {tehnicar.tip}. Brave na {kat}. katu ne prepoznaju kartice jer je, misliš, pokvarena upravljačka jedinica. Servis može doći sutra, a hitni dolazak danas košta više. Baterije u bravama nitko nije mijenjao od prošle sezone i to te muči, iako ti to nitko nije zadao. Smiriš se ako netko donese jasnu odluku i ako se dogovori redovni pregled brava. Ako te okrive za sve, braniš se da nitko nije planirao pregled.",
         "opening": "Brave na katu ne čitaju kartice. Mislim da je upravljačka jedinica. Servis može sutra, hitno danas košta više. Što da radim?",
         "fallback_reply": "{tehnicar.ime} se vratio na kat; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
       },
@@ -3256,7 +3250,7 @@
       "weight": 2,
       "when": { "dept_staff": { "at_least": 5 } },
       "chance": { "base": 2 },
-      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
       "roles": { "prva": { "from": "staff", "gender": "f" }, "drugi": { "from": "staff", "gender": "m" } },
       "params": { "dodatak": { "wage_pct": 10 } },
       "title": "Dvoje traže isti slobodni vikend ({odjel})",
@@ -3489,11 +3483,11 @@
         }
       },
       "title": "Prepreka za gosta s teškoćama u kretanju ({odjel})",
-      "description": "{gost.ime}, {gost.tip}, ljubazno, ali razočarano javlja recepciji: {prepreka}. Pri rezervaciji je napisao da teško hoda i dobio odgovor da je hotel prilagođen.",
+      "description": "{gost.ime}, {gost.tip}, ljubazno, ali razočarano javlja recepciji: {prepreka}. Pri rezervaciji je napisao da se teško kreće i dobio odgovor da je hotel prilagođen.",
       "character": {
         "role": "gost",
-        "brief": "Ti si {gost.ime}, {gost.tip}. Pri rezervaciji si napisao da teško hodaš i dobio odgovor da je hotel prilagođen. Sad vidiš da nije sve tako: {prepreka}. Nisi ljut na ljude, ali ti je neugodno tražiti pomoć za sve i ne želiš da te nose. Smiriš se ako te netko pita što ti točno treba, ponudi rješenje odmah i kaže što će hotel promijeniti. Ako ti kažu da je zgrada stara i da se ne može ništa, osjećaš se nepoželjno i razmišljaš o odlasku.",
-        "opening": "Pri rezervaciji sam napisao da teško hodam i odgovorili ste da je hotel prilagođen. Ne želim smetati, ali ovako ne ide.",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Pri rezervaciji si napisao da se teško krećeš i dobio odgovor da je hotel prilagođen. Sad vidiš da nije sve tako: {prepreka}. Nisi ljut na ljude, ali ti je neugodno tražiti pomoć za sve i ne želiš da te nose. Smiriš se ako te netko pita što ti točno treba, ponudi rješenje odmah i kaže što će hotel promijeniti. Ako ti kažu da je zgrada stara i da se ne može ništa, osjećaš se nepoželjno i razmišljaš o odlasku.",
+        "opening": "Pri rezervaciji sam napisao da se teško krećem i odgovorili ste da je hotel prilagođen. Ne želim smetati, ali ovako ne ide.",
         "fallback_reply": "Gost čeka odgovor na recepciji. Odluči što ćeš ponuditi."
       },
       "rubric": [
@@ -3599,19 +3593,19 @@
       "description": "U deset ujutro, u vrijeme odjave, terminal za plaćanje karticama na recepciji prestao je raditi. Pred recepcijom čeka {gostiju} gostiju, a {gost.ime}, {gost.tip}, pita kako da plati. Banka kaže da je kvar na njihovoj strani i ne zna koliko će trajati.",
       "rubric": [
         "Gosti odmah saznaju što se događa i koliko bi moglo trajati, uz ispriku",
-        "Drugi načini plaćanja: plaćanje karticom preko poveznice ili kasnije, uz zapisane podatke",
+        "Drugi načini plaćanja: poveznica za plaćanje karticom ili naplata kasnije s kartice kojom je rezervacija zajamčena; broj kartice se nikad ne zapisuje",
         "Gost koji žuri ne čeka: odjava se završi, a račun stiže e-mailom",
         "Popis neplaćenih računa i provjera da je sve naplaćeno kad terminal proradi",
         "Prevencija: rezervni uređaj za plaćanje i poznat postupak za kvar"
       ],
       "answers": [
         {
-          "label": "Gostima odmah reći što se događa i ispričati se, ponuditi plaćanje karticom preko poveznice ili kasnije uz zapisane podatke, gostima koji žure završiti odjavu i račun poslati e-mailom, voditi popis neplaćenih računa i nabaviti rezervni uređaj za plaćanje",
+          "label": "Gostima odmah reći što se događa i ispričati se, ponuditi plaćanje preko poveznice ili kasniju naplatu s kartice iz jamstva rezervacije, gostima koji žure završiti odjavu i račun poslati e-mailom, voditi popis neplaćenih računa i nabaviti rezervni uređaj za plaćanje",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Gostima reći što se događa, ponuditi plaćanje preko poveznice i gostima koji žure račun poslati e-mailom",
+          "label": "Gostima reći što se događa, ponuditi plaćanje preko poveznice ili kasniju naplatu s kartice iz jamstva rezervacije i gostima koji žure račun poslati e-mailom",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },

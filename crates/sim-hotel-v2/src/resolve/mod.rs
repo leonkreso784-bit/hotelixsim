@@ -37,7 +37,7 @@ use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
 use crate::department::{DeptCode, PeriodAccounts};
 use crate::explain::{Explain, Lines, explain};
-use crate::market::market;
+use crate::market::{group_commission_cents, market};
 use crate::plan::{PeriodPlan, PlanError};
 use crate::state::HotelState;
 
@@ -215,6 +215,10 @@ pub fn resolve_period(
         c::mul(w(mkt.individual_sold), w(plan.price_cents))?,
         w(mkt.group_revenue_cents),
     )?)?;
+    // M1 po USALI-ju (S-4): prihod soba je bruto, provizija je trošak Smještaja. Osnovica odjela s prihodom kao
+    // udjelom prihoda soba ostaje prihod nakon provizije (kao prije S-4), pa je preknjiženje bez učinka na GOP.
+    let commission = group_commission_cents(mkt.group_revenue_cents, terms.commission_bp)?;
+    let share_basis: i64 = c::narrow(c::sub(w(rooms_revenue), w(commission))?)?;
     let guest_nights: u32 = c::narrow(c::div_round(
         c::mul(w(mkt.sold), w(cat.economy.guests_per_room_hundredths))?,
         100,
@@ -226,7 +230,7 @@ pub fn resolve_period(
             plan,
             cat,
             guest_nights,
-            rooms_revenue_cents: rooms_revenue,
+            rooms_revenue_cents: share_basis,
             experience_pts,
             morale_pts,
             satisfaction_step_bp: coeffs.satisfaction_step_bp,
@@ -311,6 +315,7 @@ pub fn resolve_period(
         staff: st.rooms_staff,
         price_level_pct: rooms_plan.price_level_pct,
         revenue_cents: rooms_revenue,
+        commission_cents: commission,
         payroll_cents: rooms_payroll(
             st.rooms_staff,
             cat.dept(&DeptCode::rooms())?.wage_cents,

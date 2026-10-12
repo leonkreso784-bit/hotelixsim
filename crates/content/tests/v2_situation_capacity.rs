@@ -11,6 +11,7 @@ mod situations_common;
 
 use std::collections::BTreeMap;
 
+use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::situations::{
     Draw, DrawView, DrawnSituation, Repeat, Scope, TemplateSet, draw_situations, situation_count,
 };
@@ -29,6 +30,8 @@ const STRATEGIES: [Strategy; 4] = [
     Strategy::Random,
 ];
 const SEEDS: u64 = 100;
+/// Zatvoreni odjeli od kolovoza: najviše ovoliko krugova (od 6.300) s jednom situacijom manje (izmjereno 1).
+const CLOSED_SHORT_MAX: usize = 2;
 /// Leon: kolovoz mjesečne igre traži barem ovoliko različitih dopuštenih predložaka po profilu.
 const AUGUST_DISTINCT_MIN: usize = 22;
 
@@ -141,6 +144,71 @@ fn typical_season_fills_every_round() {
         short.len(),
         &short[..short.len().min(10)]
     );
+}
+
+/// Zatvoreni odjeli (pregled S-3 popravak 1, m7): od kolovoza su zatvoreni svi odjeli koji se smiju zatvoriti
+/// (lobby bar, rooftop bar, bar uz bazen, wellness) u svakom krugu koji počinje u kolovozu ili rujnu. Generator
+/// ih tada ne nudi (`DrawView::state`), a krugovi su puni; tjedno i mjesečno, A/B/C, 100 sjemena.
+///
+/// Izmjereno (S-4): jedan od 6.300 krugova (mjesečni kolovoz, A, sjeme 69) dobije 20 od 21 situacije. Predložaka
+/// ima dovoljno (17 dopuštenih ostaje neizvučeno), ali su gosti tada samo u Smještaju i restoranu, a granica po
+/// odjelu je namjerno stroga (`draw.rs`: „radije manje situacija nego tri iz istog odjela u tjednu"). Zato ovdje
+/// najviše jedna situacija manje i najviše `CLOSED_SHORT_MAX` takvih krugova.
+#[test]
+fn closed_departments_from_august_keep_rounds_nearly_full() {
+    let (cat, set) = live();
+    let closable: Vec<DeptCode> = cat
+        .departments
+        .iter()
+        .filter(|(_, s)| s.can_close)
+        .map(|(k, _)| k.clone())
+        .collect();
+    assert_eq!(closable.len(), 4, "{closable:?}");
+    let mut short: Vec<String> = Vec::new();
+    for kind in KINDS {
+        for profile in PROFILES {
+            for seed in 0..SEEDS {
+                let mut history: Vec<DrawnSituation> = Vec::new();
+                for mut r in played(&cat, profile, kind, seed) {
+                    if r.period.start_month() >= Month::Aug {
+                        for code in &closable {
+                            if let Some(d) = r.state.departments.get_mut(code) {
+                                d.open = false;
+                            }
+                        }
+                    }
+                    let anchors = anchors_for(kind, r.period.index);
+                    let drawn = draw(&cat, &set, &r, &history, seed, &anchors);
+                    assert!(
+                        drawn.iter().all(|d| r.period.start_month() < Month::Aug
+                            || d.department.as_ref().is_none_or(|c| !closable.contains(c))),
+                        "{}: situacija na zatvorenom odjelu",
+                        r.period.code()
+                    );
+                    let n = usize::from(situation_count(&r.state, &r.period, &cat).unwrap());
+                    let want = n - anchors.len();
+                    assert!(
+                        drawn.len() + 1 >= want,
+                        "{} {} {profile:?} sjeme {seed}: {} od {want}",
+                        kind_code(kind),
+                        r.period.code(),
+                        drawn.len()
+                    );
+                    if drawn.len() != want {
+                        short.push(format!(
+                            "{} {} {profile:?} sjeme {seed}: {} od {want}",
+                            kind_code(kind),
+                            r.period.code(),
+                            drawn.len()
+                        ));
+                    }
+                    history.extend(drawn);
+                }
+            }
+        }
+    }
+    println!("zatvoreni odjeli od kolovoza, krugovi bez punog broja: {short:?}");
+    assert!(short.len() <= CLOSED_SHORT_MAX, "{short:?}");
 }
 
 /// Različiti predlošci koje generator u kolovozu mjesečne igre stvarno dopušta (svaki predložak sam u skupu, bez

@@ -552,6 +552,12 @@ fn situation_failures(f: &mut Vec<String>, sr: &SituationReport) {
                 pct(lo),
                 pct(hi)
             )),
+            // Udio gleda samo veličinu pomaka; situacije Brižnom moraju i pomagati (pregled J-3, minor 1).
+            Strategy::Caring if s.delta <= 0 => f.push(format!(
+                "J-3 brižni: {} situacije Brižnom smanjuju napredak ili ga ne mijenjaju (Δ {}, cilj više od 0)",
+                s.profile.code(),
+                hundredths(s.delta)
+            )),
             Strategy::Saver if s.delta >= 0 || s.delta < -SAVER_MAX_LOSS => f.push(format!(
                 "J-3 štediša: {} situacije mijenjaju napredak za {} (cilj manje od 0, najviše {} niže)",
                 s.profile.code(),

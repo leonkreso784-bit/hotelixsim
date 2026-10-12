@@ -46,11 +46,13 @@ impl Game {
                         quality: a.quality,
                         free_text: false,
                     });
-                    outcomes.push(SituationOutcome::from_answer(&t.code, a));
+                    let o = SituationOutcome::from_answer(&t.code, a);
+                    outcomes.push(model.situation_outcome(o, &self.content));
                 } else if let Some(fr) = h.responses.get(&key) {
                     // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
                     // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
-                    // kompenzacije iz `unanswered` je 0 €.
+                    // kompenzacije iz `unanswered` je 0 €. Situacija „samo nagrada" (v2, S-4) ni tada ne snižava
+                    // pokazatelje (`Model::situation_outcome`).
                     let v = fr
                         .verdict
                         .as_ref()
@@ -70,11 +72,12 @@ impl Game {
                         quality: v.quality,
                         free_text: true,
                     });
-                    outcomes.push(SituationOutcome {
+                    let o = SituationOutcome {
                         code: t.code.clone(),
                         mechanics,
                         quality: v.quality,
-                    });
+                    };
+                    outcomes.push(model.situation_outcome(o, &self.content));
                 } else {
                     let o = SituationOutcome::unanswered(t);
                     results.push(SituationResult {
@@ -83,7 +86,7 @@ impl Game {
                         quality: o.quality,
                         free_text: false,
                     });
-                    outcomes.push(o);
+                    outcomes.push(model.situation_outcome(o, &self.content));
                 }
             }
             let refs = self.refs(state.category())?;

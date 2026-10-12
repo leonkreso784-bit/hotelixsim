@@ -109,6 +109,15 @@ impl Amounts<'_> {
 }
 
 impl SituationTemplates {
+    /// Ima li situacija oznaku „samo nagrada" (`Template::no_penalty`): `code` je šifra predloška ili primjerka
+    /// (`P-POHVALA.t03`, predložak je dio prije prve točke); nepoznata šifra nema.
+    pub fn no_penalty(&self, code: &str) -> bool {
+        let template = code.split('.').next().unwrap_or(code);
+        self.templates
+            .iter()
+            .any(|t| t.code == template && t.no_penalty)
+    }
+
     /// Primjerak `d` kao situacija s ponuđenim odgovorima za hotel kategorije `category`: šifra primjerka,
     /// mjesec obračuna kruga (`Period::situation_month`), kvaliteta odgovora iz rubrike, iznosi iz kataloga.
     pub fn instance(

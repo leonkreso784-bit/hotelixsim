@@ -5,6 +5,7 @@
 mod common;
 
 use sim_hotel_v2::calendar::{PeriodKind, month_period, period_by_code};
+use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::*;
 
 fn cat(terms: GroupTerms) -> Catalog {
@@ -29,8 +30,10 @@ fn june() -> Period {
     month_period(Month::Jun)
 }
 
+/// M1 po USALI-ju (pregled J-3, S-4): prihod grupe i prihod soba ostaju bruto, provizija posrednika je trošak
+/// odjela Smještaj (ostali izravni trošak); preknjiženje ne mijenja GOP.
 #[test]
-fn commission_cuts_group_revenue_only() {
+fn commission_is_a_rooms_expense_and_revenue_stays_gross() {
     let zero = run_with_group(&cat(GroupTerms::default()), &june(), Month::Jun, 200);
     let m1 = run_with_group(
         &cat(GroupTerms {
@@ -41,14 +44,33 @@ fn commission_cuts_group_revenue_only() {
         Month::Jun,
         200,
     );
-    // 200 noćenja × 80 € = 16.000 €; provizija 15 % → 13.600 €.
+    // 200 noćenja × 80 € = 16.000 € bruto; provizija 15 % = 2.400 € u troškovima Smještaja.
     assert_eq!(zero.summary.market.group_sold, 200);
-    assert_eq!(zero.summary.market.group_revenue_cents, 1_600_000);
     assert_eq!(m1.summary.market.group_sold, 200);
-    assert_eq!(m1.summary.market.group_revenue_cents, 1_360_000);
+    assert_eq!(zero.summary.market.group_revenue_cents, 1_600_000);
+    assert_eq!(m1.summary.market.group_revenue_cents, 1_600_000);
     assert_eq!(
         m1.summary.market.individual_sold,
         zero.summary.market.individual_sold
+    );
+    let rooms = |r: &PeriodReport| r.accounts.departments[&DeptCode::rooms()].clone();
+    let (r0, r1) = (rooms(&zero), rooms(&m1));
+    assert_eq!(r1.revenue_cents, r0.revenue_cents);
+    assert_eq!(r1.other_direct_cents, r0.other_direct_cents + 240_000);
+    assert_eq!(r1.profit_cents, r0.profit_cents - 240_000);
+    assert_eq!(
+        m1.summary.money.rooms_revenue_cents,
+        zero.summary.money.rooms_revenue_cents
+    );
+    // GOP isti kao kad je provizija umanjivala prihod: manji za proviziju i za ostale prihode (degenerirani katalog:
+    // 30 % prihoda soba), koji se i dalje računaju od prihoda soba nakon provizije (30 % × 2.400 € = 720 €).
+    assert_eq!(
+        m1.summary.money.other_revenue_cents,
+        zero.summary.money.other_revenue_cents - 72_000
+    );
+    assert_eq!(
+        m1.summary.money.gop_cents,
+        zero.summary.money.gop_cents - 240_000 - 72_000
     );
     common::assert_lines_explain(&m1.summary);
 }

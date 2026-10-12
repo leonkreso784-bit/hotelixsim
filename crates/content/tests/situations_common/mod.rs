@@ -63,6 +63,7 @@ pub fn general(code: &str, kind: Kind, repeat: Repeat) -> SituationSpec {
         )]),
         numbers: BTreeMap::new(),
         group_month: None,
+        no_penalty: false,
     }
 }
 

@@ -44,6 +44,17 @@ pub(crate) fn block_nights(g: &GroupBlock, p: &Period) -> Calc<i128> {
     Ok(total)
 }
 
+/// M1 (J-3, po USALI-ju S-4): provizija posrednika na bruto prihod grupe; prihod soba ostaje bruto, a provizija je
+/// trošak odjela Smještaj. Zaokruženje je isto kao kad je provizija umanjivala prihod, pa je GOP isti do centa.
+pub(crate) fn group_commission_cents(gross_cents: i64, commission_bp: u16) -> Calc<i64> {
+    let gross = i128::from(gross_cents);
+    let net = c::div_round(
+        c::mul(gross, c::sub(10_000, i128::from(commission_bp))?)?,
+        10_000,
+    )?;
+    c::narrow(c::sub(gross, net)?)
+}
+
 /// Tržište kruga. Kapacitet osoblja daje Smještaj: `staff` su zaposleni Smještaja, `capacity_tenths` njegova
 /// korištenja po zaposlenom na dan u desetinkama (v1: 24); sobe izvan prodaje ovise o stanju prostora Smještaja.
 pub fn market(
@@ -129,8 +140,6 @@ pub fn market(
         revenue = c::add(revenue, c::mul(take, i128::from(g.price_cents))?)?;
         remaining = c::sub(remaining, take)?;
     }
-    // M1: provizija posrednika umanjuje prihod grupe.
-    let revenue = keep(revenue, terms.commission_bp)?;
 
     Ok(MarketOutcome {
         rooms_out: c::narrow(rooms_out)?,

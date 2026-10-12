@@ -7,6 +7,8 @@ use sim_hotel_v2::situations::{
 };
 use sim_hotel_v2::{Catalog, HotelState, PeriodKind, Profile, season_periods};
 
+/// Katalog iz repoa, ne zamrznuti (m9): pragovi i razmjer po danima su pravilo i ne ovise o katalogu, a tablice po
+/// profilu su alarm — opisuju broj situacija koji student stvarno vidi, pa promjena kataloga mora ovdje pasti.
 fn catalog() -> Catalog {
     Snapshot::read_v2(&repo_dir())
         .unwrap()

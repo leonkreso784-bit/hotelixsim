@@ -42,3 +42,34 @@ fn degenerate_v2_monthly_balance_matches_v1_numbers() {
         r2.reference_other_revenue_share_bp
     );
 }
+
+/// Pregled J-3 (minor 1): udio situacija u pojasu nije dovoljan — situacije Brižnom moraju pomagati (Δ > 0).
+#[test]
+fn caring_share_in_band_with_negative_delta_fails() {
+    let mut r = run_v2(
+        &content_v2(),
+        &OptionsV2 {
+            seeds: 3,
+            kind: PeriodKind::Week,
+        },
+    )
+    .unwrap();
+    let sr = r.situations.as_mut().expect("repo ima predloške");
+    let s = sr
+        .shares
+        .iter_mut()
+        .find(|s| s.strategy == sim_hotel_v2::Strategy::Caring)
+        .unwrap();
+    // Δ = −2,00, bez situacija 6,00 → udio 25 % (u pojasu), ali situacije smanjuju napredak.
+    s.delta = -200;
+    s.without = 600;
+    s.with = 400;
+    s.share_bp = 2_500;
+    let code = s.profile.code();
+    let f = failures_v2(&r);
+    assert!(
+        f.iter()
+            .any(|x| x.contains("Brižnom smanjuju napredak") && x.contains(code)),
+        "{f:?}"
+    );
+}

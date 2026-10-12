@@ -85,6 +85,10 @@ pub struct Template {
     /// Mehanike kad nitko ne odgovori (kvaliteta 1) i kad student situaciju prepusti voditelju odjela (kvaliteta 2).
     pub unanswered: Vec<TemplateMechanic>,
     pub effect_band: EffectBand,
+    /// „Samo nagrada" (Leon 12.10., S-4): nijedan ishod — ponuđen, slobodan ni neodgovoren — ne snižava pokazatelje
+    /// (zadovoljstvo, moral, ocjena, oprema); trošak nagrade ostaje. Bez polja = obična situacija.
+    #[serde(default, skip_serializing_if = "crate::is_false")]
+    pub no_penalty: bool,
 }
 
 /// Vrsta situacije (raznolikost u krugu).

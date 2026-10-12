@@ -600,6 +600,25 @@ impl Model {
         Ok(base.category(category).map_err(debug)?.cpor_cents)
     }
 
+    /// Ishod situacije za obračun: v1 kakav jest; v2 uz oznaku „samo nagrada" predloška (S-4) bez štete
+    /// (`sim_hotel_v2::situations::reward_only`), za ponuđen, slobodan i neodgovoren odgovor.
+    pub(crate) fn situation_outcome(self, o: SituationOutcome, c: &Content) -> SituationOutcome {
+        match self {
+            Model::V1 => o,
+            Model::V2 => {
+                let no_penalty = c
+                    .situation_templates
+                    .as_ref()
+                    .is_some_and(|t| t.no_penalty(&o.code));
+                if no_penalty {
+                    sim_hotel_v2::situations::reward_only(o)
+                } else {
+                    o
+                }
+            }
+        }
+    }
+
     /// Situacije kruga: v1 po mjesecu, v2 u krugu koji sadrži 1. dan mjeseca situacije (🟨 P13).
     pub(crate) fn situations_in<'a>(
         self,

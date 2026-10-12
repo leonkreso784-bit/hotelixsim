@@ -76,12 +76,9 @@ fn frozen_step3_fixture_matches_its_sealed_hash() {
         ["content-52ce161", "step3-snapshot.json"],
         "novi fixture mimo brane"
     );
-    let frozen = dir.join("content-52ce161");
-    let mut files: Vec<String> = ["", "v2"]
-        .iter()
-        .flat_map(|sub| std::fs::read_dir(frozen.join(sub)).unwrap())
-        .map(|e| e.unwrap().path())
-        .filter(|p| p.is_file())
+    // Rekurzivno (pregled S-3 popravak 1, m8): datoteka u bilo kojoj podmapi mora biti zapečaćena.
+    let mut files: Vec<String> = walk(&dir.join("content-52ce161"))
+        .into_iter()
         .map(|p| {
             p.strip_prefix(&dir)
                 .unwrap()
@@ -93,4 +90,18 @@ fn frozen_step3_fixture_matches_its_sealed_hash() {
     let mut sealed: Vec<&str> = SEALED.iter().map(|(n, _)| *n).skip(1).collect();
     sealed.sort_unstable();
     assert_eq!(files, sealed, "datoteka u zamrznutom sadržaju mimo brane");
+}
+
+/// Sve datoteke ispod `dir`, u svim podmapama.
+fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    for e in std::fs::read_dir(dir).unwrap() {
+        let p = e.unwrap().path();
+        if p.is_dir() {
+            out.extend(walk(&p));
+        } else {
+            out.push(p);
+        }
+    }
+    out
 }

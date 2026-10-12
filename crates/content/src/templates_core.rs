@@ -106,6 +106,7 @@ fn template(t: &Template) -> core::SituationSpec {
             })
             .collect(),
         group_month: group_month(t),
+        no_penalty: t.no_penalty,
     }
 }
 
