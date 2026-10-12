@@ -401,7 +401,7 @@ fn renewal_guide_is_four_percent_of_the_season_budget() {
 
 #[test]
 fn content_without_renewal_has_no_renewal_choices_but_a_building() {
-    let g = common::v2_weekly_game_resolved_through("none");
+    let g = v2_game_from(&common::no_renewal_snapshot(), 42, PeriodKind::Week);
     let hotel = g.private_hotel(me()).unwrap();
     let l = hotel.plan.unwrap().limits;
     assert!(l.departments.values().all(|d| d.renewal.is_none()));

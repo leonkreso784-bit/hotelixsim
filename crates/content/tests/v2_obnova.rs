@@ -187,3 +187,78 @@ fn lease_fields_round_trip() {
             .all(|d| d.guest_share_bp == 0 && d.rent_condition.is_none())
     );
 }
+
+/// O1, O2, O5, O10: krivulja obnove (G 50 bodova, K), najveći mjesečni iznos i korak, vijek za amortizaciju; svi
+/// odjeli s gostima i parking je imaju, lokal i neraspoređeni nemaju.
+#[test]
+fn renewal_curves_and_limits_per_department() {
+    let c = v2();
+    let want: [(&str, i64, i64, i64, u16); 7] = [
+        ("rooms", 15_000_000, 15_000_000, 500_000, 84),
+        ("restaurant", 5_500_000, 5_000_000, 500_000, 84),
+        ("lobby_bar", 2_500_000, 5_000_000, 500_000, 84),
+        ("rooftop_bar", 2_500_000, 5_000_000, 500_000, 84),
+        ("pool_bar", 2_000_000, 5_000_000, 500_000, 84),
+        ("spa", 4_000_000, 5_000_000, 500_000, 120),
+        ("parking", 6_000_000, 5_000_000, 500_000, 180),
+    ];
+    for (k, half, max, step, life) in want {
+        let r = &c.dept(&code(k)).unwrap().renewal;
+        assert_eq!(
+            (
+                r.gain_pts,
+                r.half_cents,
+                r.max_monthly_cents,
+                r.step_cents,
+                r.life_months
+            ),
+            (5_000, half, max, step, life),
+            "{k}"
+        );
+    }
+    for (k, d) in &c.departments {
+        if !want.iter().any(|w| w.0 == k.as_str()) {
+            assert_eq!(d.renewal, Default::default(), "{}", k.as_str());
+            assert!(
+                k.as_str() == "retail_lease" || d.class.is_undistributed(),
+                "{} nema obnovu",
+                k.as_str()
+            );
+        }
+    }
+}
+
+/// O4, O5, O9, O1, O2, O3/O15: zgrada (trošenje 0,5/mj, udio 20 %, K 150.000 €, najviše 200.000 € u koraku
+/// 10.000 €, vijek 40 g.), stanje zgrade po profilu i smjernica pričuve 4 %.
+#[test]
+fn building_and_reserve() {
+    use sim_hotel_v2::Profile;
+    let c = v2();
+    let b = &c.economy.building;
+    assert_eq!(
+        (
+            b.name.as_str(),
+            b.wear_pts_per_month,
+            b.satisfaction_share_bp
+        ),
+        ("Zgrada", 50, 2_000)
+    );
+    let r = &b.renewal;
+    assert_eq!(
+        (
+            r.gain_pts,
+            r.half_cents,
+            r.max_monthly_cents,
+            r.step_cents,
+            r.life_months
+        ),
+        (5_000, 15_000_000, 20_000_000, 1_000_000, 480)
+    );
+    assert_eq!(c.economy.ffe_reserve_bp, 400);
+    let pts: Vec<i32> = Profile::ALL
+        .iter()
+        .map(|p| c.profile_v2(*p).unwrap().building_pts)
+        .collect();
+    assert_eq!(pts, [8_000, 4_500, 6_500]);
+    assert!(c.renewal_enabled());
+}

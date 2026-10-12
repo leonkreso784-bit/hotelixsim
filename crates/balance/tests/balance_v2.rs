@@ -14,6 +14,18 @@ fn v2_balance_runs_for_both_kinds_and_is_reproducible() {
         assert_eq!(r.starts.len(), 3);
         assert!(render_v2(&r).contains("Marže odjela"));
         assert!(render_v2(&r).contains("Ostali prihodi C / prihod soba"));
+        // Sadržaj nudi obnovu v2: probe obnove (obnova-v2-spec §5.2) i F na kraju sezone.
+        let text = render_v2(&r);
+        for probe in [
+            "obnova svega najvećim iznosom u lipnju",
+            "obnova Smještaja pola u lipnju, pola u srpnju",
+            "obnova zgrade najvećim iznosom u lipnju",
+            "obnova Smještaja u zadnjem krugu",
+            "F na kraju sezone",
+        ] {
+            assert!(text.contains(probe), "{probe}");
+        }
+        assert_eq!(r.end_finance.len(), 12);
         assert!(r.reference_other_revenue_share_bp > 0);
         let _ = failures_v2(&r); // u ovom tasku smiju postojati
     }
@@ -33,6 +45,8 @@ fn degenerate_v2_monthly_balance_matches_v1_numbers() {
     .unwrap();
     let r1 = balance::run(&s.build().unwrap(), &balance::Options { seeds: 5 }).unwrap();
     assert_eq!(r2.starts, r1.starts);
+    // Degenerirani katalog nema obnovu v2, pa ni proba obnove.
+    assert!(!render_v2(&r2).contains("obnova svega"));
     assert_eq!(r2.profile_medians, r1.profile_medians);
     // Degenerirani katalog: jedan odjel `ostalo` = ShareOfRooms 3 000 bp (v1 `other_revenue_bp`) → omjer 30 % do
     // zaokruživanja po krugu.

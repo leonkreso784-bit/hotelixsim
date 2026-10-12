@@ -18,7 +18,8 @@
     "seasonal_max": 30,
     "seasonal_plan": { "jun": 14, "jul": 17, "aug": 22, "sep": 17 },
     "can_close": false,
-    "staffing_tenths_per_100_rooms": { "4": [170, 250] }
+    "staffing_tenths_per_100_rooms": { "4": [170, 250] },
+    "renewal": { "gain_pts": 5000, "half_cents": 15000000, "max_monthly_cents": 15000000, "step_cents": 500000, "life_months": 84 }
   },
   "restaurant": {
     "name": "Restoran",
@@ -44,7 +45,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 20,
     "seasonal_plan": { "jun": 10, "jul": 12, "aug": 15, "sep": 12 },
-    "can_close": false
+    "can_close": false,
+    "renewal": { "gain_pts": 5000, "half_cents": 5500000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 84 }
   },
   "lobby_bar": {
     "name": "Lobby bar",
@@ -70,7 +72,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 8,
     "seasonal_plan": { "jun": 3, "jul": 4, "aug": 5, "sep": 4 },
-    "can_close": true
+    "can_close": true,
+    "renewal": { "gain_pts": 5000, "half_cents": 2500000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 84 }
   },
   "rooftop_bar": {
     "name": "Rooftop bar",
@@ -96,7 +99,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 2, "jul": 3, "aug": 4, "sep": 2 },
-    "can_close": true
+    "can_close": true,
+    "renewal": { "gain_pts": 5000, "half_cents": 2500000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 84 }
   },
   "pool_bar": {
     "name": "Bar uz bazen",
@@ -122,7 +126,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 3, "jul": 4, "aug": 5, "sep": 3 },
-    "can_close": true
+    "can_close": true,
+    "renewal": { "gain_pts": 5000, "half_cents": 2000000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 84 }
   },
   "spa": {
     "name": "Wellness i spa",
@@ -148,7 +153,8 @@
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 1, "jul": 2, "aug": 2, "sep": 1 },
-    "can_close": true
+    "can_close": true,
+    "renewal": { "gain_pts": 5000, "half_cents": 4000000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 120 }
   },
   "parking": {
     "name": "Parking",
@@ -169,7 +175,8 @@
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
     "can_close": false,
-    "guest_share_bp": 500
+    "guest_share_bp": 500,
+    "renewal": { "gain_pts": 5000, "half_cents": 6000000, "max_monthly_cents": 5000000, "step_cents": 500000, "life_months": 180 }
   },
   "retail_lease": {
     "name": "Najam lokala",

@@ -134,3 +134,59 @@ fn weekly_caring_robot_releases_before_september() {
         );
     }
 }
+
+/// Obnova v2 (O6, obnova-v2-spec §5.1) na sadržaju: brižni u profilu B obnavlja Smještaj (počinje na 40, ispod 60)
+/// najmanjim iznosom u koraku koji ga vraća na 60, i to u prvom krugu sezone; lovac isto samo Smještaj; štediša i
+/// nasumični nikad; zgradu nitko.
+#[test]
+fn caring_robot_in_b_renews_rooms() {
+    use sim_hotel_v2::department::DeptCode;
+    use sim_hotel_v2::renewal::smallest_amount_for;
+    use sim_hotel_v2::{Category, PeriodKind, RefTable, run_season, season_periods};
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let cat = content.v2.as_ref().unwrap();
+    let rooms = DeptCode::rooms();
+    let start = HotelState::from_profile(cat, Profile::B).unwrap();
+    let need = 6_000 - start.departments[&rooms].condition_pts;
+    let amount = smallest_amount_for(&cat.dept(&rooms).unwrap().renewal, need).unwrap();
+    assert!(amount > 0);
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let refs = RefTable::compute(cat, Category::Four, &season_periods(kind)).unwrap();
+        let run = |s: Strategy| {
+            run_season(Profile::B, s, 7, kind, cat, &content.situations, &refs).unwrap()
+        };
+        let caring = run(Strategy::Caring);
+        let (first, _) = &caring.periods[0];
+        assert!(first.accounts.departments[&rooms].renewal_cents > 0);
+        let invested = caring.periods.last().unwrap().0.after.departments[&rooms]
+            .book
+            .invested_cents();
+        assert_eq!(invested, amount, "{kind:?}");
+        for s in Strategy::ALL {
+            let r = run(s);
+            let building: i64 = r
+                .periods
+                .iter()
+                .map(|(rep, _)| rep.accounts.building.renewal_cents)
+                .sum();
+            assert_eq!(building, 0, "{s:?} {kind:?}");
+            let others: i64 = r
+                .periods
+                .iter()
+                .flat_map(|(rep, _)| rep.accounts.departments.iter())
+                .filter(|(k, _)| **k != rooms)
+                .map(|(_, o)| o.renewal_cents)
+                .sum();
+            let rooms_paid: i64 = r
+                .periods
+                .iter()
+                .map(|(rep, _)| rep.accounts.departments[&rooms].renewal_cents)
+                .sum();
+            match s {
+                Strategy::Saver | Strategy::Random => assert_eq!(rooms_paid + others, 0, "{s:?}"),
+                Strategy::OccupancyHunter => assert_eq!(others, 0, "{s:?}"),
+                Strategy::Caring => assert!(rooms_paid > 0),
+            }
+        }
+    }
+}

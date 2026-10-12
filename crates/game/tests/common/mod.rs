@@ -277,6 +277,23 @@ pub fn renewal_snapshot() -> Snapshot {
     Snapshot::from_value(&v).unwrap()
 }
 
+/// Snimak v2 sadržaja bez obnove v2 (sadržaj je ima od O-2): odjeli bez krivulje obnove, zgrada bez učinka, bez
+/// pričuve, indeksa F iz EBIT-a i stanja zgrade profila — za staru kvačicu obnove i igru bez izbora obnove.
+pub fn no_renewal_snapshot() -> Snapshot {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    for d in v["v2"]["departments"].as_object_mut().unwrap().values_mut() {
+        d.as_object_mut().unwrap().remove("renewal");
+    }
+    for p in v["v2"]["profiles"].as_object_mut().unwrap().values_mut() {
+        p.as_object_mut().unwrap().remove("building_pts");
+    }
+    let e = v["v2"]["economy"].as_object_mut().unwrap();
+    for key in ["building", "ffe_reserve_bp", "finance_index"] {
+        e.remove(key);
+    }
+    Snapshot::from_value(&v).unwrap()
+}
+
 /// Zatvori i obračunaj krugove redom do uključivo `code`; `"none"` = nijedan, `"all"` = cijela sezona.
 pub fn play_through(mut g: Game, code: &str) -> Game {
     if code == "none" {

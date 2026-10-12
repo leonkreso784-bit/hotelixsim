@@ -19,7 +19,7 @@ fn renewal(half: i64, max: i64, step: i64, life: u16) -> Value {
 
 /// Snimak s obnovom restorana, zgradom, pričuvom 4 %, indeksom F iz EBIT-a i stanjem zgrade profila A.
 fn with_renewal() -> Value {
-    let mut v = snapshot();
+    let mut v = without_renewal_keys();
     v["v2"]["departments"]["restaurant"]["renewal"] = renewal(5_500_000, 5_000_000, 500_000, 84);
     v["v2"]["economy"]["building"] = json!({
         "name": "Zgrada",
@@ -40,9 +40,25 @@ fn invalid(v: &Value, label: &str) {
     }
 }
 
+/// Snimak sadržaja bez ključeva obnove v2 (sadržaj ih od O-2 ima; ovdje se provjerava zadano ponašanje bez njih).
+fn without_renewal_keys() -> Value {
+    let mut v = snapshot();
+    for d in v["v2"]["departments"].as_object_mut().unwrap().values_mut() {
+        d.as_object_mut().unwrap().remove("renewal");
+    }
+    for p in v["v2"]["profiles"].as_object_mut().unwrap().values_mut() {
+        p.as_object_mut().unwrap().remove("building_pts");
+    }
+    let e = v["v2"]["economy"].as_object_mut().unwrap();
+    for key in ["building", "ffe_reserve_bp", "finance_index"] {
+        e.remove(key);
+    }
+    v
+}
+
 #[test]
 fn content_without_new_fields_has_no_renewal() {
-    let v = snapshot();
+    let v = without_renewal_keys();
     assert!(
         v["v2"]["departments"]
             .as_object()
