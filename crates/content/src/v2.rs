@@ -8,6 +8,7 @@ use sim_hotel::{Catalog, Profile};
 use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::{PeriodCoefficients, PeriodKind};
 
+use crate::templates::{Names, SituationTemplates, TemplateFile};
 use crate::v2_dept::{
     DeptDto, EconomyDto, ProfileDto, build_dept, build_economy, build_profile, dept_to_dto,
     economy_to_dto, profile_to_dto,
@@ -32,9 +33,15 @@ pub(crate) struct V2Dto {
     /// Ključevi su kodovi profila (`A`, `B`, `C`).
     profiles: BTreeMap<String, ProfileDto>,
     economy: EconomyDto,
+    /// Predlošci situacija (S-1); izostavljeni kad ih nema, pa snimak bez njih daje isti zapis i otisak kao prije.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    situation_templates: Option<TemplateFile>,
+    /// Imena likova za uloge u predlošcima; dolaze zajedno s predlošcima.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    names: Option<Names>,
 }
 
-/// Čita `dir/v2/{periods,departments,profiles,economy}.json`.
+/// Čita `dir/v2/{periods,departments,profiles,economy,situation_templates,names}.json`.
 pub(crate) fn read_v2_dir(dir: &Path) -> Result<V2Dto, ContentError> {
     let d = dir.join("v2");
     Ok(V2Dto {
@@ -42,6 +49,8 @@ pub(crate) fn read_v2_dir(dir: &Path) -> Result<V2Dto, ContentError> {
         departments: read(&d, "departments.json")?,
         profiles: read(&d, "profiles.json")?,
         economy: read(&d, "economy.json")?,
+        situation_templates: Some(read(&d, "situation_templates.json")?),
+        names: Some(read(&d, "names.json")?),
     })
 }
 
@@ -74,6 +83,29 @@ pub(crate) fn degenerate_dto(base: &Catalog) -> V2Dto {
             .map(|(k, p)| (k.code().to_string(), profile_to_dto(p)))
             .collect(),
         economy: economy_to_dto(&d.economy),
+        situation_templates: None,
+        names: None,
+    }
+}
+
+/// Provjereni predlošci iz odjeljka; `None` kad ih snimak nema (stare v2 igre, degenerirani katalog).
+pub(crate) fn build_templates(
+    dto: &V2Dto,
+    v2: &sim_hotel_v2::Catalog,
+) -> Result<Option<SituationTemplates>, ContentError> {
+    match (&dto.situation_templates, &dto.names) {
+        (None, None) => Ok(None),
+        (Some(file), Some(names)) => {
+            crate::templates_check::check(file, names, &v2.base, v2)?;
+            Ok(Some(SituationTemplates {
+                major: file.major,
+                templates: file.templates.clone(),
+                names: names.clone(),
+            }))
+        }
+        _ => Err(ContentError::Invalid(
+            "v2: predlošci situacija i imena likova dolaze zajedno".to_string(),
+        )),
     }
 }
 
