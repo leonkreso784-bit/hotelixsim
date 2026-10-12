@@ -3,7 +3,9 @@
 
 use crate::round::RoundKey;
 use serde::Serialize;
+use sim_hotel_v2::FinanceBasis;
 
+pub use crate::debrief_v2::{DeferredWearFact, RenewalFact, RentCutFact};
 use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
 use crate::game::{ChatLine, Game, RoundStatus};
@@ -114,6 +116,33 @@ pub struct DebriefInput {
     /// Plan prošlog kruga; `None` u prvom krugu (prije njega je samo početno stanje profila).
     pub plan_before: Option<PlanDto>,
     pub lines: Vec<LineDto>,
+    // ---- obnova v2 (obnova-v2-spec §7); v1 igra: prazno i `None`, pa je njen ulaz bajt-isti kao prije.
+    /// Obnove koje se plaćaju u krugu, redom računa dobiti, zgrada zadnja.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub renewals: Vec<RenewalFact>,
+    /// Stanje zgrade (bodovi 0–10 000) prije i poslije kruga.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub building_before_pts: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub building_after_pts: Option<i32>,
+    /// Amortizacija kruga, EBIT, ulaganja kruga (blagajna) i GOP iz računa dobiti kruga.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub depreciation_round_cents: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ebit_cents: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capex_cents: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gop_cents: Option<i64>,
+    /// Iz čega se računa indeks Financije (sadržaj v2); mentor po tome objašnjava što ga miče.
+    #[serde(skip)]
+    pub finance_basis: Option<FinanceBasis>,
+    /// Odjeli čiji je prostor propao brže jer je održavanje bilo odgođeno.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub deferred_wear: Vec<DeferredWearFact>,
+    /// Najamnine umanjene zbog stanja prostora.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rent_cuts: Vec<RentCutFact>,
 }
 
 impl Game {
@@ -266,6 +295,7 @@ impl Game {
         let period = self.round_info(m)?.period;
         let (fd, fm) = period.first_date();
         let (ld, lm) = period.last_date();
+        let v2 = self.debrief_v2(hotel, &period, res)?;
         Ok(DebriefInput {
             round: m,
             next_round: pos.checked_add(1).and_then(|p| self.rounds.get(p)).copied(),
@@ -292,6 +322,16 @@ impl Game {
             wage_ever_changed,
             plan_before,
             lines: report.lines.clone(),
+            renewals: v2.renewals,
+            building_before_pts: v2.building_before_pts,
+            building_after_pts: v2.building_after_pts,
+            depreciation_round_cents: v2.depreciation_round_cents,
+            ebit_cents: v2.ebit_cents,
+            capex_cents: v2.capex_cents,
+            gop_cents: v2.gop_cents,
+            finance_basis: v2.finance_basis,
+            deferred_wear: v2.deferred_wear,
+            rent_cuts: v2.rent_cuts,
         })
     }
 }

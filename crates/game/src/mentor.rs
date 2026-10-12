@@ -14,6 +14,10 @@ use crate::ai_input::{DebriefInput, DepartmentDepartures};
 use crate::dto::{CauseDto, LineDto, MaintenanceCode, MonthCode, TrainingCode, UnitCode, VarCode};
 use crate::error::GameError;
 use crate::game::Game;
+use crate::mentor_v2::{
+    FinanceNote, InvestmentFacts, equipment_rows, fallback_notes, finance_note, investment_facts,
+    renewal_plan_text, revenue_rows,
+};
 use crate::round::RoundKey;
 
 const MINUS: char = '\u{2212}';
@@ -42,6 +46,12 @@ pub struct DebriefFacts {
     pub indices: Vec<IndexFact>,
     #[serde(rename = "situacije")]
     pub situations: Vec<SituationFact>,
+    /// Obnove kruga i stanje zgrade (samo v2).
+    #[serde(rename = "ulaganja", skip_serializing_if = "Option::is_none")]
+    pub investments: Option<InvestmentFacts>,
+    /// Što miče indeks Financije: dobit iz poslovanja nakon ulaganja, amortizacija, ulaganja (samo v2).
+    #[serde(rename = "financije_kruga", skip_serializing_if = "Option::is_none")]
+    pub finance_note: Option<FinanceNote>,
 }
 
 /// Odluke iz plana mjeseca riječima, da „Zašto" može pad povezati s konkretnom odlukom.
@@ -929,16 +939,18 @@ fn plan_facts(input: &DebriefInput) -> PlanFacts {
         }
         .to_owned()
             + &maintenance_note,
-        renovation: if p.renovation {
-            per(
-                weekly,
-                "pokrenuta: plaća se sada, a sobe su bolje od idućeg mjeseca",
-                "pokrenuta: plaća se sada, a sobe su bolje od idućeg tjedna",
-            )
-        } else {
-            "ne"
-        }
-        .to_owned(),
+        renovation: renewal_plan_text(input).unwrap_or_else(|| {
+            if p.renovation {
+                per(
+                    weekly,
+                    "pokrenuta: plaća se sada, a sobe su bolje od idućeg mjeseca",
+                    "pokrenuta: plaća se sada, a sobe su bolje od idućeg tjedna",
+                )
+            } else {
+                "ne"
+            }
+            .to_owned()
+        }),
         reply_reviews: if p.reply_reviews { "da" } else { "ne" }.to_owned(),
     }
 }
@@ -1000,6 +1012,12 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                     effect: Effect::of(pushed),
                 })
             }))
+            // Obnova v2: retci koje objašnjenje kruga nema (v1 ih nikad ne dobiva).
+            .chain(match var {
+                VarCode::Equipment => equipment_rows(input),
+                VarCode::Revenue => revenue_rows(input),
+                _ => Vec::new(),
+            })
             .collect();
         (!changes.is_empty()).then(|| DriverFact {
             source: DriverSource::Var(var),
@@ -1077,6 +1095,8 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
         plan: plan_facts(input),
         indices,
         situations,
+        investments: investment_facts(input),
+        finance_note: finance_note(input),
     }
 }
 
@@ -1276,6 +1296,10 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
             "Napomena: situacija „{}“ dobila je neutralnu ocjenu {} jer odgovor nije stigao biti ocijenjen; čeka pregled.\n\n",
             s.title, s.grade
         ));
+    }
+    for note in fallback_notes(input) {
+        out.push_str(&note);
+        out.push_str("\n\n");
     }
     out.push_str("AI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki.");
     out

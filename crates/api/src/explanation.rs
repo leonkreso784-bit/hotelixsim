@@ -3,7 +3,7 @@
 
 use axum::extract::{Path, State};
 use axum::response::Json;
-use game::{ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact};
+use game::{ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, FinanceNote, IndexFact};
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -99,6 +99,22 @@ pub struct ExplanationIndexBody {
     pub drivers: Vec<ExplanationDriverBody>,
 }
 
+/// Što miče indeks Financije u v2 igri (prikaz uz indeks F): amortizacija obnova nema retka u objašnjenju, pa
+/// ovdje stoje brojke kruga i rečenica za studenta.
+#[derive(Serialize, ToSchema)]
+pub struct FinanceNoteBody {
+    /// Amortizacija obnova u krugu.
+    pub depreciation_cents: i64,
+    /// EBIT kruga (GOP − fiksne naknade − amortizacija), kao u računu dobiti.
+    pub ebit_cents: i64,
+    /// Ulaganja kruga (obnove plaćene iz blagajne; nisu trošak kruga).
+    pub capex_cents: i64,
+    /// Dobit iz poslovanja nakon ulaganja: GOP − amortizacija obnova.
+    pub gop_after_investment_cents: i64,
+    /// Rečenica za studenta, već ljudska („Indeks Financije gleda dobit iz poslovanja nakon ulaganja: …").
+    pub text: String,
+}
+
 /// Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F.
 #[derive(Serialize, ToSchema)]
 pub struct ExplanationBody {
@@ -108,6 +124,21 @@ pub struct ExplanationBody {
     /// Napredak od početka igre riječima („−2 boda").
     pub progress_text: String,
     pub indices: Vec<ExplanationIndexBody>,
+    /// Samo v2 igra: što miče indeks Financije (dobit iz poslovanja nakon ulaganja, amortizacija, ulaganja).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finance_note: Option<FinanceNoteBody>,
+}
+
+impl From<&FinanceNote> for FinanceNoteBody {
+    fn from(n: &FinanceNote) -> Self {
+        FinanceNoteBody {
+            depreciation_cents: n.depreciation_cents,
+            ebit_cents: n.ebit_cents,
+            capex_cents: n.capex_cents,
+            gop_after_investment_cents: n.gop_after_investment_cents,
+            text: n.text.clone(),
+        }
+    }
 }
 
 impl From<&ChangeFact> for ExplanationLineBody {
@@ -151,6 +182,7 @@ impl ExplanationBody {
             round,
             progress_text: f.progress.clone(),
             indices: f.indices.iter().map(Into::into).collect(),
+            finance_note: f.finance_note.as_ref().map(Into::into),
         }
     }
 }

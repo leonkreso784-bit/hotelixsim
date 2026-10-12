@@ -181,14 +181,24 @@ fn sample_debrief() -> game::DebriefInput {
             amount: -600,
             unit: UnitCode::Points,
         }],
+        renewals: Vec::new(),
+        building_before_pts: None,
+        building_after_pts: None,
+        depreciation_round_cents: None,
+        ebit_cents: None,
+        capex_cents: None,
+        gop_cents: None,
+        finance_basis: None,
+        deferred_wear: Vec::new(),
+        rent_cuts: Vec::new(),
     }
 }
 
 #[test]
-fn debrief_body_sends_human_facts_with_mentor_v3() {
+fn debrief_body_sends_human_facts_with_mentor_v4() {
     let input = sample_debrief();
     let b = ai::request::debrief_body("claude-sonnet-5-5", &input);
-    assert_eq!(ai::prompts::MENTOR.version, "mentor.v3");
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v4");
     assert_eq!(b["system"], ai::prompts::MENTOR.text);
     assert!(ai::prompts::MENTOR.text.contains("Što je išlo dobro"));
     // OT-2: uputa zabranjuje pripisivanje nepromijenjenih odluka studentu.

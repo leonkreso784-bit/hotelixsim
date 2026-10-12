@@ -1,5 +1,5 @@
 //! Sezonski mentor (kraj-sezone-spec §6.3, §7): ulaz iz kraja sezone, činjenice cijele sezone u ljudskim jedinicama
-//! (obrazac `mentor.rs`, ADR-023) i rezerva bez AI-ja s istim četiri dijela kao uputa `mentor-sezona.v1`.
+//! (obrazac `mentor.rs`, ADR-023) i rezerva bez AI-ja s istim četiri dijela kao uputa `mentor-sezona.v2`.
 //! I AI i rezerva pišu samo iz ovih činjenica, pa nijedna interna jedinica (stotinke, centi, kodovi krugova) ne izlazi
 //! studentu. Pravilo OT-2: što je student preuzeo i nije mijenjao (plaće, cijeli plan) tako se i kaže.
 
@@ -15,6 +15,7 @@ use crate::mentor::{
     advice, decimal_hundredths, direction, euros, index_name, month_genitive, plural, points,
     round_div, round_locative, thousands, with_sign,
 };
+use crate::renewal::SeasonRenewal;
 use crate::round::RoundKey;
 use crate::season::{SeasonDecisions, SeasonFinances, SeasonHotel};
 use crate::view::Seat;
@@ -205,6 +206,20 @@ pub struct FinanceFacts {
     pub cash_start: String,
     #[serde(rename = "blagajna_na_kraju")]
     pub cash_end: String,
+    /// Obnova v2: uloženo u sezoni (blagajna), amortizacija sezone i dobit iz poslovanja nakon ulaganja; samo kad je
+    /// hotel išta obnovio ili ima amortizaciju, pa sezona bez obnove ostaje kakva je bila.
+    #[serde(rename = "ulaganja_u_obnovu", skip_serializing_if = "Option::is_none")]
+    pub investments: Option<String>,
+    #[serde(
+        rename = "amortizacija_sezone",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub depreciation: Option<String>,
+    #[serde(
+        rename = "dobit_iz_poslovanja_nakon_ulaganja",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub gop_after_investment: Option<String>,
 }
 
 /// Odluke sezone riječima (prosjeci i brojevi krugova iz obračunatih planova).
@@ -533,16 +548,58 @@ fn decision_facts(
             "nijednom odgođeno",
             "odgođeno ",
         ),
-        renovation: match d.renovation_round {
-            Some(r) => format!("pokrenuta {}", round_words(input, r).1),
-            None => "ne".to_owned(),
+        renovation: match (renewals_text(&d.renewals), d.renovation_round) {
+            (Some(text), _) => text,
+            (None, Some(r)) => format!("pokrenuta {}", round_words(input, r).1),
+            (None, None) => "ne".to_owned(),
         },
         reply_reviews: rounds_text(d.reply_reviews_rounds, total, weekly, "nikad", ""),
     }
 }
 
-fn finance_facts(f: &SeasonFinances) -> FinanceFacts {
+/// Obnove v2 sezone po dijelu i mjesecu: „Restoran 40.000 € u srpnju, Zgrada 100.000 € u lipnju"; `None` bez obnova.
+fn renewals_text(renewals: &[SeasonRenewal]) -> Option<String> {
+    if renewals.is_empty() {
+        return None;
+    }
+    let parts: Vec<String> = renewals
+        .iter()
+        .map(|r| {
+            format!(
+                "{} {} {}",
+                r.asset_name,
+                euros(r.amount_cents, false),
+                round_locative(RoundKey::Month(r.month))
+            )
+        })
+        .collect();
+    Some(parts.join(", "))
+}
+
+fn finance_facts(f: &SeasonFinances, renewals: &[SeasonRenewal]) -> FinanceFacts {
+    let invested: i64 = renewals
+        .iter()
+        .fold(0_i64, |s, r| s.saturating_add(r.amount_cents));
+    let with_renewal = invested != 0 || f.depreciation_cents != 0;
     FinanceFacts {
+        investments: with_renewal.then(|| {
+            format!(
+                "ukupno {} (plaćeno iz blagajne; to nije trošak sezone, nego se kroz amortizaciju raspoređuje na godine trajanja obnove)",
+                euros(invested, false)
+            )
+        }),
+        depreciation: with_renewal.then(|| {
+            format!(
+                "{} (dio cijene obnova koji pada na ovu sezonu, od mjeseca nakon obnove)",
+                euros(f.depreciation_cents, false)
+            )
+        }),
+        gop_after_investment: with_renewal.then(|| {
+            format!(
+                "{} (bruto operativna dobit umanjena za amortizaciju obnova; to gleda indeks Financije, a najam zgrade, osiguranje i porez ne ulaze)",
+                euros(f.gop_cents.saturating_sub(f.depreciation_cents), false)
+            )
+        }),
         revenue: euros(f.total_revenue_cents, false),
         gop: format!(
             "{} (GOP: ono što od prihoda ostane kad se plate troškovi poslovanja hotela)",
@@ -690,7 +747,12 @@ pub fn season_debrief_facts(input: &SeasonDebriefInput) -> SeasonFacts {
         indices: index_facts(me),
         best_round: extreme_round(input, true),
         worst_round: extreme_round(input, false),
-        finances: me.finances.as_ref().map(finance_facts),
+        finances: me.finances.as_ref().map(|f| {
+            finance_facts(
+                f,
+                me.decisions.as_ref().map_or(&[][..], |d| &d.renewals[..]),
+            )
+        }),
         decisions: me.decisions.as_ref().map(|d| {
             decision_facts(
                 d,
@@ -765,7 +827,7 @@ fn robot_comparison(input: &SeasonDebriefInput) -> Option<String> {
     ))
 }
 
-/// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v1` i rezerva).
+/// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v2` i rezerva).
 const PARTS: [&str; 4] = [
     "Kako je prošla sezona",
     "Što je išlo dobro",

@@ -2135,6 +2135,17 @@
           "indices"
         ],
         "properties": {
+          "finance_note": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FinanceNoteBody",
+                "description": "Samo v2 igra: što miče indeks Financije (dobit iz poslovanja nakon ulaganja, amortizacija, ulaganja)."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "indices": {
             "type": "array",
             "items": {
@@ -2642,6 +2653,43 @@
           }
         ],
         "description": "Stavka dnevnika hotela (osnova BitLife vremenske crte)."
+      },
+      "FinanceNoteBody": {
+        "type": "object",
+        "description": "Što miče indeks Financije u v2 igri (prikaz uz indeks F): amortizacija obnova nema retka u objašnjenju, pa\novdje stoje brojke kruga i rečenica za studenta.",
+        "required": [
+          "depreciation_cents",
+          "ebit_cents",
+          "capex_cents",
+          "gop_after_investment_cents",
+          "text"
+        ],
+        "properties": {
+          "capex_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Ulaganja kruga (obnove plaćene iz blagajne; nisu trošak kruga)."
+          },
+          "depreciation_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Amortizacija obnova u krugu."
+          },
+          "ebit_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "EBIT kruga (GOP − fiksne naknade − amortizacija), kao u računu dobiti."
+          },
+          "gop_after_investment_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Dobit iz poslovanja nakon ulaganja: GOP − amortizacija obnova."
+          },
+          "text": {
+            "type": "string",
+            "description": "Rečenica za studenta, već ljudska („Indeks Financije gleda dobit iz poslovanja nakon ulaganja: …\")."
+          }
+        }
       },
       "GameBody": {
         "type": "object",

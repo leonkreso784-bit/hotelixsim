@@ -102,6 +102,67 @@ async fn settled_month_explains_every_index_with_mentor_facts() {
     assert!(!text.contains("\"S1\"") && !text.contains("harm"), "{text}");
 }
 
+/// Obnova v2 (O-5): uz indeks Financije stoji što ga miče (dobit iz poslovanja nakon ulaganja, amortizacija,
+/// ulaganja); v1 mjesec tog polja nema.
+#[tokio::test]
+async fn finance_note_only_for_v2_round() {
+    let (app, d, mem) = app();
+    let (tok, game, hotel) = demo(&app).await;
+    close_june(&app, &d, &tok, &game).await;
+    let v1 = call(&app, "GET", &uri(&hotel, "jun"), Some(&tok), None).await;
+    assert_eq!(v1.status.as_u16(), 200, "{:?}", v1.body);
+    assert!(v1.body.get("finance_note").is_none(), "{}", v1.body);
+
+    let r = call(
+        &app,
+        "POST",
+        "/v1/demo",
+        None,
+        Some(serde_json::json!({ "model": "v2" })),
+    )
+    .await;
+    let c = cookie_value(r.set_cookie.as_deref().unwrap());
+    let g2 = r.body["game_id"].as_str().unwrap().to_owned();
+    let h2 = r.body["hotel_id"].as_str().unwrap().to_owned();
+    let close = call(
+        &app,
+        "POST",
+        &format!("/v1/games/{g2}/rounds/t01/close"),
+        Some(&c),
+        None,
+    )
+    .await;
+    assert!(close.status.is_success(), "{:?}", close.body);
+    drain(&d).await;
+    let v2 = call(&app, "GET", &uri(&h2, "t01"), Some(&c), None).await;
+    assert_eq!(v2.status.as_u16(), 200, "{:?}", v2.body);
+    let g = game_of(&mem, &g2);
+    let note = debrief_facts(
+        &g.debrief_input(
+            app::HotelId(h2.parse().unwrap()),
+            game::RoundKey::parse("t01").unwrap(),
+        )
+        .unwrap(),
+    )
+    .finance_note
+    .expect("v2 krug ima napomenu uz indeks Financije");
+    let body = &v2.body["finance_note"];
+    assert_eq!(body["depreciation_cents"], note.depreciation_cents);
+    assert_eq!(body["ebit_cents"], note.ebit_cents);
+    assert_eq!(body["capex_cents"], note.capex_cents);
+    assert_eq!(
+        body["gop_after_investment_cents"],
+        note.gop_after_investment_cents
+    );
+    assert_eq!(body["text"], note.text.as_str());
+    assert!(
+        note.text
+            .contains("Indeks Financije gleda dobit iz poslovanja nakon ulaganja"),
+        "{}",
+        note.text
+    );
+}
+
 #[tokio::test]
 async fn explanation_is_only_for_own_hotel_like_feed() {
     let (app, d, mem) = app();
@@ -174,4 +235,16 @@ async fn openapi_types_driver_and_effect() {
     assert_eq!(enum_of("EffectCode"), ["up", "down", "neutral"]);
     assert!(enum_of("DriverCode").contains(&"staff_load".to_owned()));
     assert!(enum_of("DriverCode").contains(&"morale".to_owned()));
+    // O-5: napomena uz indeks Financije (samo v2) nije obavezna u tijelu.
+    for p in [
+        "depreciation_cents",
+        "ebit_cents",
+        "capex_cents",
+        "gop_after_investment_cents",
+        "text",
+    ] {
+        assert!(s["FinanceNoteBody"]["properties"][p].is_object(), "{p}");
+    }
+    let required = s["ExplanationBody"]["required"].as_array().unwrap();
+    assert!(!required.iter().any(|r| r == "finance_note"));
 }

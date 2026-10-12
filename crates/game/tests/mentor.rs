@@ -153,6 +153,16 @@ fn sample() -> DebriefInput {
                 UnitCode::Points,
             ),
         ],
+        renewals: Vec::new(),
+        building_before_pts: None,
+        building_after_pts: None,
+        depreciation_round_cents: None,
+        ebit_cents: None,
+        capex_cents: None,
+        gop_cents: None,
+        finance_basis: None,
+        deferred_wear: Vec::new(),
+        rent_cuts: Vec::new(),
     }
 }
 

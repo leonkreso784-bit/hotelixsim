@@ -620,6 +620,7 @@ export interface components {
         EffectCode: "up" | "down" | "neutral";
         /** @description Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F. */
         ExplanationBody: {
+            finance_note?: components["schemas"]["FinanceNoteBody"] | null;
             indices: components["schemas"]["ExplanationIndexBody"][];
             month: components["schemas"]["MonthCode"];
             /** @description Napredak od početka igre riječima („−2 boda"). */
@@ -763,6 +764,34 @@ export interface components {
             round: string;
             /** Format: int64 */
             seq: number;
+            text: string;
+        };
+        /**
+         * @description Što miče indeks Financije u v2 igri (prikaz uz indeks F): amortizacija obnova nema retka u objašnjenju, pa
+         *     ovdje stoje brojke kruga i rečenica za studenta.
+         */
+        FinanceNoteBody: {
+            /**
+             * Format: int64
+             * @description Ulaganja kruga (obnove plaćene iz blagajne; nisu trošak kruga).
+             */
+            capex_cents: number;
+            /**
+             * Format: int64
+             * @description Amortizacija obnova u krugu.
+             */
+            depreciation_cents: number;
+            /**
+             * Format: int64
+             * @description EBIT kruga (GOP − fiksne naknade − amortizacija), kao u računu dobiti.
+             */
+            ebit_cents: number;
+            /**
+             * Format: int64
+             * @description Dobit iz poslovanja nakon ulaganja: GOP − amortizacija obnova.
+             */
+            gop_after_investment_cents: number;
+            /** @description Rečenica za studenta, već ljudska („Indeks Financije gleda dobit iz poslovanja nakon ulaganja: …"). */
             text: string;
         };
         GameBody: {
