@@ -8,7 +8,7 @@
       "weight": 2,
       "when": { "months": ["jun", "jul", "aug"], "occupancy_bp": { "at_least": 6000 } },
       "chance": { "base": 3, "boost": [{ "when": { "dept_condition_pts": { "below": 5000 } }, "times": 3 }] },
-      "repeat": { "max_per_season": 2, "gap_rounds": 5 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 5 },
       "roles": {
         "gost": {
           "from": "guest",
@@ -74,7 +74,7 @@
       "kind": "osoblje",
       "department": "*staffed",
       "weight": 3,
-      "when": { "months": ["jul", "aug"], "dept_staff": { "at_least": 4 } },
+      "when": { "months": ["jul", "aug", "sep"], "dept_staff": { "at_least": 4 } },
       "chance": {
         "base": 2,
         "boost": [
@@ -82,7 +82,7 @@
           { "when": { "dept_load_hundredths": { "at_least": 180 } }, "times": 2 }
         ]
       },
-      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 6 },
       "roles": { "radnik": { "from": "staff", "gender": "m" } },
       "params": {
         "uloga": {
@@ -124,6 +124,11 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus": "bonus" }]
         },
         {
+          "label": "Saslušati ga, dati 8 % povišice i u rasporedu mu vratiti slobodan dan u tjednu",
+          "criteria": [1, 2, 4],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus": 0 }]
+        },
+        {
           "label": "Odmah dati {ponuda_pct} %",
           "criteria": [1],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": "ponuda_pct", "bonus": 0 }]
@@ -144,7 +149,7 @@
       "weight": 2,
       "when": { "dept_condition_pts": { "below": 5500 } },
       "chance": { "base": 2, "boost": [{ "when": { "dept_condition_pts": { "below": 4000 } }, "times": 3 }] },
-      "repeat": { "max_per_season": 3, "gap_rounds": 3 },
+      "repeat": { "max_per_season": 4, "gap_rounds": 4 },
       "roles": {
         "gost": {
           "from": "guest",
@@ -166,7 +171,7 @@
         "noc_pola": { "price_pct": 50 }
       },
       "title": "Gost fotografira {stvar} ({odjel})",
-      "description": "{gost.ime}, {gost.tip}, na recepciji pokazuje fotografije: {stvar}. Kaže da će ih objaviti uz recenziju.",
+      "description": "{gost.ime}, {gost.tip}, fotografirao je {stvar} i fotografije pokazuje na recepciji. Kaže da će ih objaviti uz recenziju.",
       "rubric": [
         "Isprika bez umanjivanja problema",
         "Nadoknada razmjerna neugodnosti",
@@ -178,6 +183,14 @@
         {
           "label": "Ispričati se, dati popust od pola noćenja, hitno popraviti, odgovoriti na recenziju i pojačati održavanje",
           "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "noc_pola" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Ispričati se, dati popust od pola noćenja i hitno popraviti",
+          "criteria": [1, 2, 3],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "noc_pola" },
             { "type": "EquipmentRepair", "urgent": true }
@@ -205,6 +218,2226 @@
         { "type": "EquipmentRepair", "urgent": false }
       ],
       "effect_band": { "cost_night_pct": [0, 100] }
+    },
+    {
+      "code": "P-NOVI-LJUDI",
+      "kind": "prituzba",
+      "department": "restaurant",
+      "weight": 2,
+      "when": { "months": ["jul", "aug", "sep"], "dept_departures": { "at_least": 2 } },
+      "chance": {
+        "base": 2,
+        "boost": [
+          { "when": { "dept_departures": { "at_least": 4 } }, "times": 2 },
+          { "when": { "dept_load_hundredths": { "at_least": 200 } }, "times": 2 }
+        ]
+      },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["otac obitelji s malim djetetom", "poslovni gost koji žuri na sastanak", "gost koji dolazi već treću godinu"]
+        }
+      },
+      "params": {
+        "cekanje": { "pick": [40, 45, 50] },
+        "dorucak": { "price_pct": 40 },
+        "pice": { "price_pct": 10 },
+        "tri_noci": { "price_pct": 300 }
+      },
+      "title": "Doručak nakon {cekanje} minuta i krivi račun",
+      "description": "{gost.ime}, {gost.tip}, čekao je doručak {cekanje} minuta, narudžba je dvaput stigla kriva, a na računu mu je naplaćen doručak koji je uključen u cijenu sobe. Pola ekipe u restoranu radi u hotelu kraće od mjesec dana. Gost traži nekoga iz uprave i kaže da će napisati što misli.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Ljut si, ali pristojan: doručak si čekao {cekanje} minuta, narudžba je dvaput stigla kriva, a na računu ti je naplaćen doručak koji je u cijeni sobe. Vidiš da je konobar nov i zbunjen i ne želiš da on strada; smeta ti što nitko ne preuzima odgovornost. Smiriš se ako se netko ispriča u ime hotela, odmah ispravi račun i kaže što će se promijeniti da se ne ponovi. Ako ti kažu da je 'konobar nov' ili da će ga kazniti, postaješ hladan i kažeš da to ide u recenziju. Ne tražiš besplatan boravak; ako ti ga nude, pitaš se zašto hotel radije plaća nego popravi.",
+        "opening": "Dobar dan. Doručak sam čekao {cekanje} minuta, dvaput ste mi donijeli krivo, a sad mi naplaćujete doručak koji je u cijeni sobe. Tko je ovdje za to odgovoran?",
+        "fallback_reply": "Gost je otišao na plažu; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Isprika i preuzimanje odgovornosti u ime hotela, bez prebacivanja krivnje na novog konobara",
+        "Greške ispravljene odmah, pred gostom (račun, doručak), ne obećanjem",
+        "Razmjerna nadoknada (doručak, piće), ne besplatan boravak",
+        "Uzrok u sustavu: uhodavanje novih ljudi, mentor, kratak dogovor prije smjene; ne kažnjavanje pojedinca",
+        "Zaštita zaposlenika pred gostom i provjera s gostom kasnije"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se u ime hotela, odmah ispraviti račun, ponuditi doručak na račun hotela, uz svakog novog konobara odrediti mentora i uvesti kratak dogovor prije smjene, sutra pitati gosta je li sve u redu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
+        },
+        {
+          "label": "Ispričati se, ispraviti račun i ponuditi doručak na račun hotela",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
+        },
+        {
+          "label": "Ispričati se, objasniti da je konobar nov i da će dobiti ukor, ispraviti račun i ponuditi piće",
+          "criteria": [2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
+        },
+        {
+          "label": "Ispričati se, ispraviti račun i ponuditi besplatne preostale tri noći",
+          "criteria": [1, 2],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 300] }
+    },
+    {
+      "code": "P-BOJLER",
+      "kind": "kvar",
+      "department": "rooms",
+      "weight": 3,
+      "when": { "months": ["jul", "aug", "sep"], "dept_condition_pts": { "below": 6500 } },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_condition_pts": { "below": 4500 } }, "times": 3 }] },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": { "radnica": { "from": "staff", "gender": "f" } },
+      "params": {
+        "sobe": { "pick": [10, 12] },
+        "nadoknada": { "price_pct": 800 },
+        "nadoknada_mala": { "price_pct": 400 },
+        "popust": { "price_pct": 1700 }
+      },
+      "title": "Pukao bojler: {sobe} soba bez tople vode",
+      "description": "U krilu B pukao je bojler i {sobe} soba nema tople vode. Recepcija od jutra prima pozive. Tehničar kaže da stari bojler nitko nije servisirao već dvije sezone. {radnica.ime}, voditeljica recepcije, traži odluku: što reći gostima i što s bojlerom.",
+      "character": {
+        "role": "radnica",
+        "brief": "Ti si {radnica.ime}, voditeljica recepcije. Od jutra primaš pozive gostiju iz krila B: pukao je bojler i {sobe} soba nema tople vode. Iscrpljena si i štitiš svoj tim od ljutih gostiju. Trebaš jasnu odluku: smiješ li goste preseliti, koliku nadoknadu smiješ ponuditi i kad će bojler raditi. Slobodnih soba ima malo, pa se mogu preseliti samo neki gosti. Ne predlažeš sama rješenja; čekaš odluku. Znaš da je tehničar dvaput tražio servis bojlera i da je servis odgođen, ali to kažeš tek ako te netko pita zašto se pokvario. Smiriš se kad dobiješ konkretan plan s rokom. Ako ti kažu 'snađi se' ili 'reci im da je kvar', kažeš da to ne možeš reći gostima koji plaćaju punu cijenu.",
+        "opening": "Imam već dvadeset poziva iz krila B, nitko nema tople vode. Što smijem reći gostima i kad će bojler raditi?",
+        "fallback_reply": "{radnica.ime} se vratila na recepciju jer zvoni telefon. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Gosti saznaju od hotela prije nego sami nazovu; isprika",
+        "Trenutno rješenje za goste: preseljenje gdje se može, topli tuš u wellnessu, ne obećanje „sutra“",
+        "Razmjerna nadoknada po sobi i noći, ne popust na cijeli boravak",
+        "Popravak razmjeran riziku, s rokom: hitna zamjena, ne zakrpa koja će opet puknuti",
+        "Uzrok i prevencija: zašto je pukao (odgođen servis), provjera ostalih bojlera i temperature tople vode (legionela)"
+      ],
+      "answers": [
+        {
+          "label": "Obavijestiti goste krila B prije nego nazovu, preseliti koga se može, ostalima otvoriti tuševe u wellnessu, dati nadoknadu po sobi, hitno zamijeniti bojler, provjeriti ostale bojlere i temperaturu tople vode",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "nadoknada" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Obavijestiti goste, preseliti koga se može, dati manju nadoknadu i privremeno zakrpati bojler",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "nadoknada_mala" },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Ostaviti goste u sobama, dati 20 % popusta na noćenje u krilu B tjedan dana i čekati redovni servis",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "popust" },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Reći recepciji da gostima objašnjava kako je kvar i da se na njemu radi",
+          "criteria": [],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 1700] }
+    },
+    {
+      "code": "P-PREPORUKA",
+      "kind": "prilika",
+      "department": "sales",
+      "weight": 3,
+      "when": { "months": ["jun", "jul", "aug"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "gosca": {
+          "from": "partner",
+          "gender": "f",
+          "types": ["voditeljica ljudskih resursa u jednoj tvrtki", "voditeljica ureda u jednoj inženjerskoj tvrtki"]
+        }
+      },
+      "params": {
+        "sobe": { "pick": [20, 25] },
+        "noci": { "pick": [3, 4] }
+      },
+      "title": "Bivša gošća traži {sobe} soba za svoju tvrtku u rujnu",
+      "description": "{gosca.ime}, {gosca.tip}, bila je gošća hotela prošle sezone i ostala je zadovoljna. Sada traži {sobe} soba na {noci} noći u rujnu za tim svoje tvrtke, uz 20 % popusta, izravno, bez agencije.",
+      "character": {
+        "role": "gosca",
+        "brief": "Ti si {gosca.ime}, {gosca.tip}. Prošle sezone bila si gošća hotela i svidjelo ti se kako su riješili jedan tvoj problem, pa si hotel preporučila u tvrtki. Sada trebaš {sobe} soba na {noci} noći u rujnu za tim tvrtke i tražiš 20 % popusta jer dolazite izravno, bez agencije. Budžet ti je ograničen, ali važnije ti je da sve bude pouzdano: jasni uvjeti, sobe na vrijeme, mirno mjesto za sastanak. Prihvatiš manji popust ako dobiješ nešto zauzvrat (doručak, termin sredinom tjedna, fleksibilan rok za popis gostiju). Ako hotel pristane na sve bez ikakvih uvjeta, pomalo se čudiš; ako odbije bez razgovora, razočarana si i kažeš da ćeš pitati drugi hotel.",
+        "opening": "Dobar dan! Bila sam kod vas prošle sezone i preporučila sam vas u tvrtki. Trebamo {sobe} soba na {noci} noći u rujnu. Možete li nam dati 20 % popusta?",
+        "fallback_reply": "{gosca.ime} čeka pisanu ponudu. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Prepoznaje da je rujan mirniji mjesec: grupa popunjava prazne sobe i ne istiskuje goste koji plaćaju punu cijenu",
+        "Računa vrijednost grupe: prihod soba i ostali prihod, umanjen za trošak sobe, u odnosu na popust",
+        "Protuponuda koja čuva cijenu: manji popust za nešto zauzvrat (termin sredinom tjedna, paket doručka)",
+        "Uvjeti: depozit, rok otkaza, rok za popis gostiju i za puštanje neprodanih soba",
+        "Odnos: zahvala na preporuci i prijedlog dugoročne suradnje"
+      ],
+      "answers": [
+        {
+          "label": "Zahvaliti na preporuci i dati protuponudu: {sobe} soba na {noci} noći sredinom tjedna, 15 % popusta, depozit, rok otkaza i paket doručka; predložiti godišnju suradnju",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Zahvaliti na preporuci i prihvatiti {sobe} soba uz 15 % popusta, depozit i rok otkaza",
+          "criteria": [1, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Prihvatiti kako traži, uz 20 % popusta i bez uvjeta, i zahvaliti na preporuci",
+          "criteria": [1, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Odbiti: u rujnu hotel smanjuje osoblje i ne prima grupe",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+      ],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-VJENCANJE",
+      "kind": "zahtjev",
+      "department": "rooftop_bar",
+      "weight": 2,
+      "when": { "months": ["jun", "jul"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": { "organizatorica": { "from": "partner", "gender": "f" } },
+      "params": {
+        "sobe": { "pick": [15, 18, 20] },
+        "noci": { "pick": [2, 3] },
+        "pice_gostima": { "price_pct": 150 }
+      },
+      "title": "Vjenčanje na rooftopu: cijela večer i {sobe} soba u rujnu",
+      "description": "{organizatorica.ime}, organizatorica vjenčanja, traži rooftop bar samo za svatove jednu subotu u rujnu, glazbu do kasno i {sobe} soba na {noci} noći uz 10 % popusta. Gosti hotela tu večer ne bi mogli na rooftop, a sobe na zadnjem katu su odmah ispod.",
+      "character": {
+        "role": "organizatorica",
+        "brief": "Ti si {organizatorica.ime}, organizatorica vjenčanja. Mladenci sanjaju koktel uz zalazak sunca na rooftopu ovog hotela i već su ga pokazali obiteljima. Trebaš rooftop samo za svatove jednu subotu u rujnu, glazbu do kasno i {sobe} soba na {noci} noći uz 10 % popusta. Budžet je tijesan, ali mladenci bi platili više za sigurnost da sve prođe bez problema. Popustljiva si oko sata do kada glazba svira ako ti netko objasni zašto (gosti, propisi o buci), i cijeniš jasan ugovor. Ako hotel samo kaže 'da' na sve, brine te tko će paziti na red te večeri. Odgovor trebaš u tjedan dana, inače ideš u drugi hotel.",
+        "opening": "Dobar dan! Mladenci su se zaljubili u vaš rooftop. Trebamo ga samo za svatove jednu subotu u rujnu, s glazbom, i {sobe} soba. Može li?",
+        "fallback_reply": "{organizatorica.ime} čeka pisanu ponudu do kraja tjedna. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Pita i razumije što točno traže (broj ljudi, sat, glazba, sobe) prije odluke",
+        "Računa vrijednost: sobe i piće prema popustu i prema gostima koji tu večer ostaju bez rooftopa",
+        "Štiti goste hotela: obavijest unaprijed, zamjensko mjesto ili mala pažnja, granica buke i sata",
+        "Uvjeti ugovora: depozit, rok otkaza, broj ljudi, odgovornost za štetu",
+        "Plan za osoblje: dodatni ljudi u baru i za red te večeri, bez preopterećenja ostalih odjela"
+      ],
+      "answers": [
+        {
+          "label": "Prihvatiti uz uvjete: rooftop do 23 sata, glazba prema pravilima o buci, depozit i rok otkaza, dodatni ljudi te večeri, 10 % popusta na sobe; goste hotela unaprijed obavijestiti i ponuditi im piće u lobby baru",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": "pice_gostima" }
+          ]
+        },
+        {
+          "label": "Prihvatiti uz depozit i rok otkaza, glazbu do 23 sata i 10 % popusta na sobe; goste hotela ne obavještavati posebno",
+          "criteria": [1, 2, 4],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": 0 }
+          ]
+        },
+        {
+          "label": "Prihvatiti sve kako traže: rooftop cijelu večer, glazba do 1 sat, 10 % popusta na sobe",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": 0 }
+          ]
+        },
+        {
+          "label": "Odbiti: rooftop je za goste hotela",
+          "criteria": [3],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "sep" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "sep" }
+      ],
+      "effect_band": { "cost_night_pct": [0, 150] }
+    },
+    {
+      "code": "P-ROOFTOP-BUKA",
+      "kind": "prituzba",
+      "department": "rooftop_bar",
+      "weight": 2,
+      "when": { "months": ["jul", "aug"], "occupancy_bp": { "at_least": 8500 } },
+      "chance": { "base": 2, "boost": [{ "when": { "occupancy_bp": { "at_least": 9500 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["umirovljenik na odmoru sa suprugom", "otac s bebom", "gost koji svako jutro rano ide na izlete"]
+        }
+      },
+      "params": {
+        "soba": { "pick": [508, 510, 512, 514] },
+        "tri_noci": { "price_pct": 300 }
+      },
+      "title": "Glazba s rooftopa ne da spavati gostu u sobi {soba}",
+      "description": "{gost.ime}, {gost.tip}, iz sobe {soba} na zadnjem katu treću noć ne može spavati: glazba s rooftop bara svira do iza ponoći. Rooftop bar je ovih večeri pun.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Tvoja soba {soba} je ispod rooftop bara i treću noć ne spavaš jer glazba i smijeh traju do iza ponoći. Umoran si i razočaran, jer si hotel izabrao zbog mira. Ne želiš da bar zatvore, razumiješ da drugi gosti uživaju, ali želiš spavati. Smiriš se ako ti ponude tihu sobu odmah ili jasan dogovor o satu i glasnoći, i ako netko kaže što će hotel promijeniti. Ako ti kažu da je 'ljeto i takav je rooftop' ili da se žališ samo ti, kažeš da odlaziš ranije i pišeš recenziju. Novac ti nije bitan.",
+        "opening": "Treću noć ne spavam. Glazba s krova svira do iza ponoći, a soba {soba} je točno ispod. Zašto mi to nitko nije rekao kad sam rezervirao?",
+        "fallback_reply": "Gost je otišao na doručak; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Sasluša gosta i ispriča se, bez umanjivanja („ljeto je, takav je rooftop“)",
+        "Rješenje odmah, za ovu noć: tiša soba ili jasno vrijeme kad glazba prestaje",
+        "Uzrok: pravilo za glazbu (sat, glasnoća) usklađeno s gostima u sobama i propisima o buci, ne zatvaranje bara",
+        "Ravnoteža prihoda bara i mira gostiju: dogovor s voditeljem bara, ne odluka protiv jednog odjela",
+        "Sobe ispod rooftopa prodaju se uz obavijest; provjera s gostom sutradan"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, odmah ponuditi tihu sobu, s voditeljem bara dogovoriti tišu glazbu nakon 23 sata, sobe ispod rooftopa ubuduće prodavati uz obavijest i sutra pitati gosta kako je spavao",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ispričati se, odmah ponuditi tihu sobu i sutra pitati gosta kako je spavao",
+          "criteria": [1, 2, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ispričati se i odmah zatvarati rooftop u 22 sata do kraja sezone",
+          "criteria": [1, 2],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ispričati se i vratiti novac za tri noći, a glazba ostaje kao i dosad",
+          "criteria": [1],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 300] }
+    },
+    {
+      "code": "P-LEZALJKE",
+      "kind": "prituzba",
+      "department": "pool_bar",
+      "weight": 2,
+      "when": { "months": ["jul", "aug"], "occupancy_bp": { "at_least": 8000 } },
+      "chance": { "base": 3, "boost": [{ "when": { "occupancy_bp": { "at_least": 9500 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["otac dvoje djece", "gost koji je ljetovanje platio unaprijed", "mladić koji je došao s prijateljima"]
+        }
+      },
+      "params": {
+        "sat": { "pick": [7, 8] },
+        "pice": { "price_pct": 10 }
+      },
+      "title": "Sve ležaljke uz bazen zauzete ručnicima već u {sat} ujutro",
+      "description": "{gost.ime}, {gost.tip}, dolazi ljut u bar uz bazen: u {sat} ujutro sve su ležaljke već zauzete ručnicima, a na većini nitko ne leži do podneva. Kaže da je to treći dan zaredom i da drugi gosti misle isto.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Treći dan zaredom dolaziš na bazen u {sat} ujutro i sve su ležaljke već 'rezervirane' ručnicima, a na njima satima nitko ne leži. Ljut si jer si platio isto kao i drugi i osjećaš da hotel nagrađuje one koji ustaju u šest. Ne tražiš novac, tražiš pravilo koje vrijedi za sve. Smiriš se ako netko prizna problem, danas ti nađe mjesto i kaže jasno pravilo koje će se provoditi. Ako ti kažu 'dođite ranije', postaješ sarkastičan. Ne želiš da se pred tobom bacaju tuđi ručnici; želiš pošteno, ne svađu među gostima.",
+        "opening": "Dobar dan. Treći dan dolazim na bazen u {sat} ujutro i sve je zauzeto ručnicima, a nikoga nema. Kakvo je to pravilo kod vas?",
+        "fallback_reply": "Gost je otišao na plažu; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Prizna problem i ispriča se, bez „dođite ranije“",
+        "Rješenje danas za ovog gosta: mjesto u hladu ili dodatna ležaljka",
+        "Jasno i pošteno pravilo za sve goste (npr. ručnik bez gosta duže od sat vremena se sklanja), napisano i najavljeno unaprijed",
+        "Provedba bez sukoba među gostima: osoblje bazena dobiva upute i podršku, ne prepušta se gostima",
+        "Uzrok: broj ležaljki prema broju gostiju u špici, raspored ili rezervacija ležaljki"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, danas mu naći mjesto i ponuditi piće, uvesti i najaviti pravilo da se ručnik bez gosta duže od sat vremena sklanja, dati upute osoblju bazena i provjeriti ima li dovoljno ležaljki za špicu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
+        },
+        {
+          "label": "Ispričati se, naći mu mjesto i najaviti pravilo o ručnicima",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Naložiti osoblju da odmah skloni sve ručnike s praznih ležaljki, bez najave",
+          "criteria": [2],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Objasniti da su ležaljke za one koji dođu prvi",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 10] }
+    },
+    {
+      "code": "P-BAZEN-PUMPA",
+      "kind": "kvar",
+      "department": "pool_bar",
+      "weight": 3,
+      "when": { "dept_condition_pts": { "below": 6000 } },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_condition_pts": { "below": 4500 } }, "times": 3 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 5 },
+      "params": { "prijevoz": { "price_pct": 150 } },
+      "title": "Stala pumpa, voda u bazenu je mutna",
+      "description": "Pumpa za pročišćavanje vode u bazenu stala je u noći i voda je od jutra mutna. Spasilac pita smije li pustiti goste u vodu. Bar uz bazen je prazan, a obitelji s djecom pitaju na recepciji kad će bazen raditi.",
+      "rubric": [
+        "Sigurnost i propis prvi: bazen zatvoren dok voda nije čista i provjerena",
+        "Gosti saznaju razlog i rok od hotela (natpis, recepcija), ne nagađaju",
+        "Zamjena za goste dok bazen ne radi (prijevoz do plaže, aktivnosti za djecu)",
+        "Hitan popravak, a ne otvaranje prije provjere vode",
+        "Prevencija: redovni servis, pričuvna pumpa ili rezervni dio u skladištu"
+      ],
+      "answers": [
+        {
+          "label": "Odmah zatvoriti bazen i jasno obavijestiti goste (razlog i rok), hitno popraviti pumpu, prije otvaranja provjeriti vodu, ponuditi prijevoz do plaže i u plan održavanja staviti pričuvnu pumpu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "prijevoz" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Zatvoriti bazen, obavijestiti goste i hitno popraviti pumpu",
+          "criteria": [1, 2, 4],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Zatvoriti bazen bez objašnjenja i čekati redovni servis",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Dodati više kemikalija i ostaviti bazen otvoren dok tehničar ne stigne",
+          "criteria": [],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 150] }
+    },
+    {
+      "code": "P-SPA-TERMIN",
+      "kind": "prituzba",
+      "department": "spa",
+      "weight": 2,
+      "when": { "dept_load_hundredths": { "at_least": 200 } },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_load_hundredths": { "at_least": 230 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gosca": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["gošća koja s mužem slavi godišnjicu braka", "gošća koja je hotel izabrala zbog wellnessa", "gošća kojoj je ovo zadnji dan odmora"]
+        }
+      },
+      "params": { "masaza": { "price_pct": 60 } },
+      "title": "Rezervirana masaža, a terapeutkinja je zauzeta",
+      "description": "{gosca.ime}, {gosca.tip}, došla je na masažu koju je rezervirala, ali termin je dvaput upisan i terapeutkinja je zauzeta. Wellness je ovih dana pun, a recepcija wellnessa kaže da slobodnog termina nema do sutra navečer.",
+      "character": {
+        "role": "gosca",
+        "brief": "Ti si {gosca.ime}, {gosca.tip}. Masažu si rezervirala unaprijed, došla si na vrijeme, a na recepciji wellnessa kažu da je termin dvaput upisan i da je terapeutkinja zauzeta. Razočarana si više nego ljuta: ovo ti je trebao biti poseban trenutak. Ne tražiš novac nego da se to riješi: termin danas, makar kraći ili kasnije, ili nešto drugo jednako lijepo. Smiriš se ako se netko ispriča bez izgovora i ponudi konkretan termin. Ako ti kažu 'sustav je kriv' ili 'dođite sutra', kažeš da ćeš to napisati u recenziji.",
+        "opening": "Rezervirala sam masažu unaprijed, došla sam na vrijeme, a sad mi kažete da je terapeutkinja zauzeta? Kako se to moglo dogoditi?",
+        "fallback_reply": "Gošća je otišla u sobu; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Isprika bez izgovora („sustav“, „gužva“)",
+        "Konkretno rješenje danas: kasniji termin, druga terapeutkinja ili drugi tretman",
+        "Razmjerna pažnja (tretman na račun hotela), ne povrat cijelog boravka",
+        "Uzrok: kako je termin dvaput upisan (sustav rezervacija, provjera) i je li wellness preopterećen za ovoliko gostiju",
+        "Raspored i osoblje wellnessa prema potražnji u špici, a da isti ljudi ne rade stalno prekovremeno"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, ponuditi termin večeras s drugom terapeutkinjom i masažu na račun hotela, provjeriti kako je termin dvaput upisan i za špicu dodati termine ili sezonca u wellnessu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "masaza" }]
+        },
+        {
+          "label": "Ispričati se, ponuditi termin večeras i provjeriti sustav rezervacija",
+          "criteria": [1, 2, 4],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ispričati se i ponuditi masažu na račun hotela sutra navečer",
+          "criteria": [1, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "masaza" }]
+        },
+        {
+          "label": "Objasniti da je pogreška u sustavu i ponuditi termin sutra",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 60] }
+    },
+    {
+      "code": "P-SPA-TECAJ",
+      "kind": "osoblje",
+      "department": "spa",
+      "weight": 3,
+      "when": { "months": ["jun", "sep"], "dept_staff": { "at_least": 2 } },
+      "chance": { "base": 2, "boost": [{ "when": { "morale_pts": { "below": 5000 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": { "terapeutkinja": { "from": "staff", "gender": "f" } },
+      "params": { "tecaj": { "wage_pct": 60 } },
+      "title": "{terapeutkinja.ime} traži tečaj ili odlazi u drugi wellness",
+      "description": "{terapeutkinja.ime}, terapeutkinja koju gosti najčešće hvale u recenzijama, drugu sezonu traži da hotel plati tečaj za novu vrstu masaže. Wellness hotel u susjednom mjestu nudi joj plaćen tečaj i nešto veću plaću.",
+      "character": {
+        "role": "terapeutkinja",
+        "brief": "Ti si {terapeutkinja.ime}, terapeutkinja u wellnessu hotela. Gosti te hvale, a ti već drugu sezonu tražiš da hotel plati tečaj za novu vrstu masaže koju bi ponudila gostima. Nitko ti nije odgovorio. Sada imaš ponudu wellness hotela u susjednom mjestu: plaćen tečaj i nešto veća plaća. Voliš ovaj tim i ne želiš otići, ali želiš napredovati. Novac ti nije glavni: važnije ti je da te netko shvati ozbiljno. Rado bi naučila kolegice novi tretman. Pristaješ ostati iduću sezonu ako ti plate tečaj; obveza ostanka ti je u redu ako je poštena. Ako ti ponude samo povišicu bez tečaja, kažeš da to nije ono što tražiš.",
+        "opening": "Drugu sezonu pitam za tečaj i nitko mi ne odgovara. Sad imam ponudu iz susjednog mjesta, s plaćenim tečajem. Želim ostati, ali trebam odgovor.",
+        "fallback_reply": "{terapeutkinja.ime} se vratila klijentici; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Sasluša što zapravo traži (razvoj, priznanje, novac)",
+        "Računa trošak i korist: cijena tečaja prema novom tretmanu i trošku zamjene",
+        "Pravednost prema ostatku tima: jasno pravilo za obuku, ne povlastica jednoj osobi",
+        "Dogovor koji štiti hotel: obveza ostanka ili povrat dijela troška ako ode",
+        "Znanje ostaje u timu: ona novi tretman prenosi kolegicama"
+      ],
+      "answers": [
+        {
+          "label": "Saslušati je, platiti tečaj uz dogovor da ostane barem do kraja iduće sezone, uvesti jasno pravilo za obuku cijelog tima, novi tretman staviti u ponudu i dogovoriti da ga prenese kolegicama",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "tecaj" }]
+        },
+        {
+          "label": "Platiti tečaj uz dogovor da ostane do kraja iduće sezone",
+          "criteria": [1, 2, 4],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "tecaj" }]
+        },
+        {
+          "label": "Dati 10 % povišice da ostane, bez tečaja",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 10, "bonus": 0 }]
+        },
+        {
+          "label": "Odbiti: hotel ove sezone ne plaća tečajeve",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 1000], "raise_pct": [0, 10] }
+    },
+    {
+      "code": "P-LOBBY-SUKOB",
+      "kind": "osoblje",
+      "department": "lobby_bar",
+      "weight": 3,
+      "when": { "morale_pts": { "below": 5500 } },
+      "chance": {
+        "base": 2,
+        "boost": [
+          { "when": { "morale_pts": { "below": 4000 } }, "times": 3 },
+          { "when": { "dept_load_hundredths": { "at_least": 200 } }, "times": 2 }
+        ]
+      },
+      "repeat": { "max_per_season": 3, "gap_rounds": 6 },
+      "roles": { "barmen": { "from": "staff", "gender": "m" } },
+      "title": "Svađa za šankom: {barmen.ime} traži da kolega ode",
+      "description": "{barmen.ime}, barmen u lobby baru, kaže da kolega sezonac odlazi ranije sa smjene, a napojnice se dijele kao da je radio do kraja. Jučer su se posvađali pred gostima. Traži da kolegu premjeste ili će on dati otkaz.",
+      "character": {
+        "role": "barmen",
+        "brief": "Ti si {barmen.ime}, barmen u lobby baru; u hotelu radiš već nekoliko sezona. Ljut si na kolegu sezonca: odlazi ranije, a napojnice se dijele kao da je radio cijelu smjenu. Jučer ste se posvađali pred gostima i sramiš se toga. Iskreno, umoran si: bar je pun, a ljudi je premalo, pa ti svaka nepravda smeta dvostruko. Prvo tražiš da kolegu premjeste. Smiriš se ako te netko sasluša, prizna da pravila nisu jasna i dogovori isto pravilo za sve. Priznaš svoj dio krivnje za svađu ako te ne napadaju. Ako ti ponude novac da šutiš, kažeš da to nije poanta.",
+        "opening": "Ili on ili ja. Odlazi ranije, a napojnice dijelimo kao da je radio do kraja. Jučer je bilo i vike pred gostima. Dosta mi je.",
+        "fallback_reply": "{barmen.ime} se vratio za šank; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Sasluša obje strane prije odluke, ne samo onoga tko se žali",
+        "Razdvaja činjenice od osjećaja: što se točno dogodilo pred gostima i koliko puta",
+        "Jasno i pošteno pravilo za napojnice i smjene, isto za sve u timu",
+        "Ponašanje pred gostima rješava odmah (razgovor, upozorenje), bez javnog ponižavanja",
+        "Uzrok: preopterećenje i nizak moral u timu, ne samo dvoje ljudi"
+      ],
+      "answers": [
+        {
+          "label": "Saslušati njega pa kolegu, zajedno dogovoriti pravilo za napojnice i smjene, obojici reći da svađa pred gostima nije prihvatljiva i provjeriti je li bar preopterećen",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Saslušati obojicu i zajedno dogovoriti isto pravilo za napojnice i smjene",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Premjestiti kolegu u drugi bar, kako traži",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Dati mu 5 % povišice da ostane i ništa drugo ne mijenjati",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 5, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 0], "raise_pct": [0, 5] }
+    },
+    {
+      "code": "P-LOBBY-KAVA",
+      "kind": "kvar",
+      "department": "lobby_bar",
+      "weight": 2,
+      "when": { "dept_condition_pts": { "below": 6000 } },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_load_hundredths": { "at_least": 200 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 5 },
+      "params": { "kava": { "price_pct": 30 } },
+      "title": "Aparat za kavu opet stao u jutarnjoj špici",
+      "description": "Aparat za kavu u lobby baru opet je stao usred jutarnje špice, već nekoliko puta ovaj tjedan. Gosti čekaju u redu, a barmeni ne stignu ni ispričati se. Tehničar kaže da je aparat star i da mu servis više ne pomaže dugo.",
+      "rubric": [
+        "Gosti u redu odmah dobivaju objašnjenje i pažnju (kava iz restorana, kava na račun hotela)",
+        "Privremeno rješenje dok aparat ne radi: zamjenski aparat od dobavljača kave, više ljudi u špici",
+        "Odluka o popravku ili zamjeni prema trošku kvarova i izgubljenoj prodaji, ne samo prema cijeni aparata",
+        "Hitno, ali ne skuplje nego treba: popravak sada, zamjena planirana",
+        "Prevencija: redovni servis i plan zamjene opreme po starosti"
+      ],
+      "answers": [
+        {
+          "label": "Gostima u redu ponuditi kavu na račun hotela, zatražiti zamjenski aparat od dobavljača kave i do tada kavu nositi iz restorana, hitno popraviti stari, u plan nabave staviti novi i uvesti redovni servis ostale opreme bara",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "kava" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Gostima u redu ponuditi kavu na račun hotela, zatražiti zamjenski aparat od dobavljača kave i hitno popraviti stari",
+          "criteria": [1, 2, 4],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "kava" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Gostima ponuditi kavu na račun hotela, a aparat poslati na servis nakon sezone",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "kava" },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Zakrpati aparat i nastaviti do kraja sezone",
+          "criteria": [],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 30] }
+    },
+    {
+      "code": "P-NOVINAR",
+      "kind": "prilika",
+      "department": "hotel",
+      "weight": 4,
+      "major": "high",
+      "chance": { "base": 3 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": {
+        "novinarka": {
+          "from": "partner",
+          "gender": "f",
+          "types": ["novinarka putopisnog časopisa", "autorica putopisnog bloga s mnogo čitatelja"]
+        }
+      },
+      "params": {
+        "dani": { "pick": [3, 4] },
+        "boravak": { "price_pct": 400 },
+        "sve": { "price_pct": 1200 },
+        "priprema": { "price_pct": 300 }
+      },
+      "title": "Članak o hotelu: {novinarka.ime} traži posjet",
+      "description": "{novinarka.ime}, {novinarka.tip}, piše o najboljim hotelima na Jadranu i čula je da je ovaj hotel među njima. Traži {dani} dana boravka s fotografom idućih tjedana, razgovore s osobljem i pristup kuhinji, sve na račun hotela.",
+      "character": {
+        "role": "novinarka",
+        "brief": "Ti si {novinarka.ime}, {novinarka.tip}. Pišeš o najboljim hotelima na Jadranu i čula si da je ovaj hotel među njima. Želiš doći na {dani} dana s fotografom, razgovarati s osobljem, vidjeti kuhinju i fotografirati bazen i restoran. Navikla si da ti hoteli nude sve besplatno i glume savršenstvo, i to ti je dosadno: najviše cijeniš hotel koji ti pokaže kako stvarno radi i pusti ljude da pričaju. Ne pristaješ da hotel unaprijed čita ili odobrava članak; to je za tebe crvena linija. Prihvaćaš da je dio troška tvoj ako je dogovor jasan. Ako hotel traži da pišeš samo lijepe stvari, postaješ hladna.",
+        "opening": "Dobar dan! Pišem o najboljim hotelima na Jadranu i vaš hotel mi stalno spominju. Mogu li doći na {dani} dana s fotografom? Zanimaju me ljudi iza hotela.",
+        "fallback_reply": "{novinarka.ime} čeka pisani odgovor. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Prepozna priliku i dogovori jasne uvjete posjeta (termin, što je na račun hotela, što nije)",
+        "Pokazuje hotel kakav jest: bez posebne predstave za novinarku i bez skrivanja slabosti",
+        "Štiti goste: fotografiranje samo uz pristanak, privatnost na bazenu i u restoranu",
+        "Uključuje tim: osoblje zna za posjet, priča o svom poslu i dobiva priznanje za ono što radi dobro",
+        "Trošak razmjeran koristi i plan kako hotel iskoristiti članak (web stranica, budući gosti)"
+      ],
+      "answers": [
+        {
+          "label": "Dogovoriti posjet sredinom tjedna: soba i obroci za nju i fotografa na račun hotela, ostalo uz plaćanje; najaviti posjet timu i pustiti ljude da pričaju o svom poslu, goste fotografirati samo uz pristanak, a hotel neka radi kao svaki dan",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "boravak" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Dogovoriti posjet uz jasne uvjete (soba i obroci za nju i fotografa na račun hotela), najaviti ga timu i goste fotografirati samo uz pristanak",
+          "criteria": [1, 3, 4],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "boravak" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Ponuditi sve na račun hotela: najbolju sobu, poseban jelovnik i osoblje samo za nju",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "sve" },
+            { "type": "CrisisCommunication", "backup": "priprema" }
+          ]
+        },
+        {
+          "label": "Pristati uz uvjet da članak prije objave pošalje hotelu na odobrenje",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "boravak" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 1500] }
+    },
+    {
+      "code": "P-KONGRES",
+      "kind": "zahtjev",
+      "department": "hotel",
+      "weight": 4,
+      "major": "high",
+      "when": { "months": ["jun", "jul"] },
+      "chance": { "base": 3 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "params": {
+        "sobe": { "pick": [45, 50] },
+        "noci": { "pick": [3, 4] },
+        "priprema": { "price_pct": 200 }
+      },
+      "title": "Međunarodni kongres traži {sobe} soba u rujnu",
+      "description": "Organizatoru međunarodnog liječničkog kongresa drugi je hotel otkazao smještaj. Piše da je ovaj hotel izabrao zbog odličnih ocjena i traži {sobe} soba na {noci} noći u rujnu, prostor za predavanja, gala večeru u restoranu, doručak od 6.30, prijevoz od zračne luke i 20 % popusta. Odgovor treba do kraja tjedna.",
+      "rubric": [
+        "Računa istiskivanje: koliko gostiju koji plaćaju punu cijenu grupa u rujnu potiskuje",
+        "Vrijednost cijele grupe: sobe, prostor za predavanja, gala večera i ostali prihod, prema popustu",
+        "Uvjeti: depozit, rok otkaza, rok za popis sudionika, puštanje neprodanih soba",
+        "Kapacitet i ljudi: mogu li kuhinja, recepcija i domaćinstvo izdržati bez pada usluge drugim gostima",
+        "Ugled: kako veliki kongres koristi hotelu dugoročno (preporuke, sljedeći kongres)"
+      ],
+      "answers": [
+        {
+          "label": "Nakon provjere popunjenosti za te datume prihvatiti uz protuponudu: 15 % popusta, depozit i rok otkaza, rani doručak i prijevoz uz doplatu, plan osoblja za te dane i obavijest ostalim gostima o kongresu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": "priprema" }
+          ]
+        },
+        {
+          "label": "Nakon provjere popunjenosti ponuditi 30 soba uz 15 % popusta, depozit i rok otkaza",
+          "criteria": [1, 3, 4],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": 30, "nights": "noci", "discount_bp": 1500, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": 0 }
+          ]
+        },
+        {
+          "label": "Prihvatiti sve kako traže, uz 20 % popusta",
+          "criteria": [5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": 0 }
+          ]
+        },
+        {
+          "label": "Odbiti jer je to previše posla za osoblje",
+          "criteria": [4],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" },
+            { "type": "ServiceRecovery", "compensation": 0 }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
+      "effect_band": { "cost_night_pct": [0, 200] }
+    },
+    {
+      "code": "P-INSPEKCIJA",
+      "kind": "kriza",
+      "department": "restaurant",
+      "weight": 4,
+      "major": "low",
+      "chance": { "base": 3, "boost": [{ "when": { "dept_condition_pts": { "below": 5000 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": { "inspektor": { "from": "partner", "gender": "m" } },
+      "params": {
+        "temp": { "pick": [8, 9, 10] },
+        "mjere": { "price_pct": 800 },
+        "vanjska": { "price_pct": 2500 }
+      },
+      "title": "Sanitarna inspekcija u kuhinji nakon prijava gostiju",
+      "description": "Nakon nekoliko prijava gostiju zbog želučanih tegoba u hotel je došao sanitarni inspektor {inspektor.ime}. Hladnjača u kuhinji je na {temp} °C, evidencija temperatura nije vođena dva tjedna, a sirovo i kuhano meso stoje na istoj polici. Prijeti privremena zabrana rada kuhinje.",
+      "character": {
+        "role": "inspektor",
+        "brief": "Ti si {inspektor.ime}, sanitarni inspektor. Došao si nakon nekoliko prijava gostiju zbog želučanih tegoba. U kuhinji si našao hladnjaču na {temp} °C, evidencija temperatura nije vođena dva tjedna, a sirovo i kuhano meso stoje na istoj polici. Nisi neprijatelj hotela: želiš vidjeti da uprava shvaća problem ozbiljno, preuzima odgovornost i ima plan s rokovima. Ako dobiješ konkretne mjere i odgovornu osobu, spreman si dati rok za ispravak umjesto zatvaranja. Na izgovore, umanjivanje ili bilo kakav pokušaj 'dogovora' odgovaraš hladno i spominješ privremenu zabranu rada kuhinje. Ne govoriš što treba napraviti; pitaš što hotel predlaže.",
+        "opening": "Dobar dan, sanitarna inspekcija. Imamo nekoliko prijava gostiju zbog želučanih tegoba. Hladnjača vam je na {temp} °C, a evidencije temperatura nema dva tjedna. Što predlažete?",
+        "fallback_reply": "{inspektor.ime} piše zapisnik i čeka pisani plan mjera. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Surađuje s inspektorom i preuzima odgovornost, bez izgovora, umanjivanja ili „dogovora“",
+        "Zdravlje gostiju prvo: sporna hrana se baca, gosti s tegobama dobivaju liječnika i kontakt hotela",
+        "Hitne mjere s rokom: popravak hladnjače, dnevno vođenje temperatura, odvojeno sirovo i kuhano",
+        "Iskrena obavijest gostima i plan prehrane dok kuhinja ne radi punim kapacitetom",
+        "Uzrok u sustavu: obuka tima o higijeni hrane (sustav samokontrole, HACCP), odgovorna osoba i redovne kontrole, ne traženje krivca"
+      ],
+      "answers": [
+        {
+          "label": "Prihvatiti nalaz, baciti spornu hranu, hitno popraviti hladnjaču, gostima s tegobama osigurati liječnika, iskreno obavijestiti goste, uvesti dnevno vođenje temperatura s odgovornom osobom i obučiti cijelu kuhinju",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "mjere" },
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Prihvatiti nalaz, baciti spornu hranu i hitno popraviti hladnjaču, a gostima ništa ne govoriti",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "mjere" },
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Zatvoriti kuhinju na tri dana i naručiti hranu od vanjskog ugostitelja, bez promjena u radu kuhinje",
+          "criteria": [2, 4],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "vanjska" },
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Uvjeravati inspektora da su prijave gostiju pretjerane i tražiti da ne piše zapisnik",
+          "criteria": [],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 2500] }
+    },
+    {
+      "code": "P-VAL-RECENZIJA",
+      "kind": "prituzba",
+      "department": "hotel",
+      "weight": 4,
+      "major": "low",
+      "chance": { "base": 3 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "params": {
+        "odgovori": { "price_pct": 100 },
+        "bonovi": { "price_pct": 600 }
+      },
+      "title": "Val loših recenzija na portalima",
+      "description": "Na portalima za rezervacije u dva tjedna stiglo je više loših recenzija nego cijelo prošlo ljeto: prljave sobe, dugo čekanje na recepciji, nepristojno osoblje. Neke su točne, neke pretjerane, a jedna kaže da hotel „ne odgovara ni na što“. Rezervacije za iduće tjedne usporavaju.",
+      "rubric": [
+        "Odgovara javno, brzo i bez prepirke; priznaje što je točno i ne otkriva podatke o gostima",
+        "Traži zajednički uzrok u recenzijama (čistoća, čekanje, ljudi), ne gasi svaku pritužbu posebno",
+        "Mjere u radu koje gosti vide: raspored domaćinstva, recepcija u špici, provjera soba",
+        "Uključuje tim: osoblje čuje što gosti pišu, bez traženja krivca, i dobiva podršku",
+        "Prati učinak: nove recenzije i ocjena kroz iduće tjedne, ne jednokratna akcija"
+      ],
+      "answers": [
+        {
+          "label": "Odgovoriti na svaku recenziju u dva dana, iskreno i bez prepirke; sa šefovima odjela naći zajednički uzrok, promijeniti raspored domaćinstva i recepcije u špici, timu pokazati recenzije bez traženja krivca i pratiti ocjenu svaki tjedan",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "odgovori" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Iskreno odgovoriti na svaku recenziju i sa šefovima odjela promijeniti raspored domaćinstva i recepcije u špici",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "odgovori" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Na sve recenzije odgovoriti istim pristojnim tekstom",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Svakom gostu koji se žalio poslati bon za idući boravak i zamoliti ga da ublaži recenziju",
+          "criteria": [],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "bonovi" },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "CrisisCommunication", "backup": 0 }
+      ],
+      "effect_band": { "cost_night_pct": [0, 600] }
+    },
+    {
+      "code": "P-KRIZA-OSOBLJA",
+      "kind": "osoblje",
+      "department": "rooms",
+      "weight": 4,
+      "major": "low",
+      "chance": {
+        "base": 3,
+        "boost": [
+          { "when": { "morale_pts": { "below": 3000 } }, "times": 3 },
+          { "when": { "dept_load_hundredths": { "at_least": 220 } }, "times": 2 }
+        ]
+      },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": { "domacica": { "from": "staff", "gender": "f" } },
+      "params": {
+        "sobe_po": { "pick": [16, 18] },
+        "prekovremeni": { "wage_pct": 150 },
+        "agencija": { "price_pct": 1500 }
+      },
+      "title": "Sobarice na rubu: četiri najavljuju odlazak",
+      "description": "{domacica.ime}, glavna domaćica, dolazi u ime sobarica: svaka čisti {sobe_po} soba na dan, šest dana tjedno, a prekovremeni sati nisu plaćeni dva mjeseca. Četiri sobarice najavile su da odlaze idući tjedan. Gosti se već žale da sobe nisu spremljene na vrijeme.",
+      "character": {
+        "role": "domacica",
+        "brief": "Ti si {domacica.ime}, glavna domaćica; u hotelu radiš deset sezona i voliš ga. Došla si u ime sobarica: svaka čisti {sobe_po} soba na dan, šest dana tjedno, a prekovremeni sati nisu plaćeni dva mjeseca. Četiri cure su ti rekle da odlaze idući tjedan, a ti ih razumiješ. Ne prijetiš, ali govoriš otvoreno. Ne vjeruješ obećanjima 'kad se nađe novac' ili 'kad dođu novi ljudi': tražiš konkretno što, od kada i tko je odgovoran. Smiriš se ako se prekovremeni isplate odmah, ako se smanji broj soba po sobarici i ako uprava dođe razgovarati s timom. Ako ti kažu 'tko neće, može ići', kažeš da ćeš onda i ti razmisliti.",
+        "opening": "Dolazim u ime sobarica. Svaka čisti {sobe_po} soba na dan, šest dana tjedno, a prekovremeni nisu plaćeni dva mjeseca. Četiri cure odlaze idući tjedan ako se ništa ne promijeni.",
+        "fallback_reply": "{domacica.ime} se vratila na kat; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Sasluša i prizna problem, bez prijetnji i bez „tko neće, može ići“",
+        "Nepravdu ispravlja odmah: neplaćeni prekovremeni sati se isplaćuju, ne obećavaju",
+        "Opterećenje: broj soba po sobarici i slobodni dani u granicama, dodatni ljudi ili manje soba u prodaji",
+        "Kratkoročno pokriće bez pada kvalitete (agencija, sezonci, pomoć drugih odjela uz pristanak)",
+        "Komunikacija cijelom timu i praćenje: što se mijenja, od kada, i novi razgovor za dva tjedna"
+      ],
+      "answers": [
+        {
+          "label": "Saslušati je i sastati se s timom, odmah isplatiti prekovremene sate, smanjiti broj soba po sobarici uz pomoć agencije dok ne stignu novi sezonci, vratiti slobodni dan i za dva tjedna ponovno razgovarati",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "StaffRetention", "raise_one_pct": 0, "bonus": "prekovremeni" },
+            { "type": "CrisisCommunication", "backup": "agencija" }
+          ]
+        },
+        {
+          "label": "Odmah isplatiti prekovremene sate, uzeti agenciju dok ne stignu novi sezonci i vratiti slobodni dan",
+          "criteria": [2, 3, 4],
+          "mechanics": [
+            { "type": "StaffRetention", "raise_one_pct": 0, "bonus": "prekovremeni" },
+            { "type": "CrisisCommunication", "backup": "agencija" }
+          ]
+        },
+        {
+          "label": "Glavnoj domaćici dati 8 % povišice da smiri tim, ostalo ne mijenjati",
+          "criteria": [],
+          "mechanics": [
+            { "type": "StaffRetention", "raise_one_pct": 8, "bonus": 0 },
+            { "type": "CrisisCommunication", "backup": 0 }
+          ]
+        },
+        {
+          "label": "Reći da tko neće raditi, može otići, i za zamjenu uzeti agenciju",
+          "criteria": [4],
+          "mechanics": [
+            { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+            { "type": "CrisisCommunication", "backup": "agencija" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+        { "type": "CrisisCommunication", "backup": 0 }
+      ],
+      "effect_band": { "cost_night_pct": [0, 4000], "raise_pct": [0, 8] }
+    },
+    {
+      "code": "P-TOPLINSKI-VAL",
+      "kind": "kriza",
+      "department": "hotel",
+      "weight": 3,
+      "scope": "svi",
+      "when": { "months": ["jul", "aug"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "params": {
+        "temp": { "pick": [37, 38, 39] },
+        "voda": { "price_pct": 300 },
+        "voda_mala": { "price_pct": 100 },
+        "klime": { "price_pct": 800 }
+      },
+      "title": "Toplinski val: idućih dana do {temp} °C",
+      "description": "Meteorolozi najavljuju toplinski val: idućih dana do {temp} °C, a noću iznad 25 °C. Klime rade punom snagom, a najosjetljiviji su stariji gosti, djeca i osoblje u kuhinji i na otvorenom. Isto upozorenje dobili su svi hoteli na obali.",
+      "rubric": [
+        "Zdravlje prvo: voda, hlad i plan za osjetljive goste i osoblje (kuhinja, rad na otvorenom)",
+        "Gosti obaviješteni unaprijed: savjeti, raspored aktivnosti, gdje je hladno",
+        "Oprema spremna: provjera klima i rezervni uređaji prije nego zakažu",
+        "Prilagođen rad osoblja: kraće smjene na vrućini, pauze, voda",
+        "Trošak razmjeran riziku, bez panike i bez čekanja da se netko onesvijesti"
+      ],
+      "answers": [
+        {
+          "label": "Besplatna voda i hladan kutak za goste, savjeti i raspored aktivnosti izvan podneva, provjera svih klima i dva rezervna uređaja, kraće smjene i pauze za osoblje na vrućini",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "voda" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Staviti besplatnu vodu na recepciju, obavijestiti goste i provjeriti sve klime",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "voda_mala" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Unajmiti dodatne klima-uređaje za sve sobe i zajedničke prostore",
+          "criteria": [3],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "klime" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Ne mijenjati ništa: klime rade, a gosti su navikli na ljeto",
+          "criteria": [],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 800] }
+    },
+    {
+      "code": "P-OLUJA",
+      "kind": "kriza",
+      "department": "hotel",
+      "weight": 3,
+      "scope": "svi",
+      "when": { "months": ["jun", "sep"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "params": {
+        "dani": { "pick": [2, 3] },
+        "program": { "price_pct": 200 }
+      },
+      "title": "Najavljeno jugo i nevrijeme za {dani} dana",
+      "description": "Najavljeno je jako jugo s nevremenom: {dani} dana jaka kiša i udari vjetra. Trajekti i izleti brodom mogli bi biti otkazani, a bazen, terase i vanjski barovi su na udaru. Isto upozorenje dobili su svi hoteli na obali.",
+      "rubric": [
+        "Sigurnost: vanjski namještaj, suncobrani i tende osigurani prije vjetra, opasna mjesta zatvorena",
+        "Gosti obaviješteni na vrijeme: što se zatvara, što s izletima i trajektima, kome se obratiti",
+        "Zamjena u hotelu: program u zatvorenom, duže radno vrijeme unutarnjih prostora",
+        "Fleksibilnost za goste kojima je putovanje pogođeno (kasnija odjava, pomoć oko trajekta)",
+        "Nakon nevremena: pregled štete i brz povratak u normalan rad"
+      ],
+      "answers": [
+        {
+          "label": "Prije vjetra osigurati namještaj i zatvoriti bazen i terase, obavijestiti goste, organizirati program u zatvorenom, ponuditi kasniju odjavu gostima kojima je otkazan trajekt i nakon nevremena odmah pregledati štetu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "program" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Osigurati namještaj, obavijestiti goste i ponuditi kasniju odjavu onima kojima je otkazan trajekt",
+          "criteria": [1, 2, 4],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Zatvoriti sve vanjske prostore i otkazati sve aktivnosti, bez programa u zatvorenom",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Pričekati i vidjeti hoće li nevrijeme stvarno doći",
+          "criteria": [],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 200] }
+    },
+    {
+      "code": "P-REGATA",
+      "kind": "prilika",
+      "department": "hotel",
+      "weight": 2,
+      "scope": "svi",
+      "when": { "months": ["jun"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "params": {
+        "sobe": { "pick": [15, 20] },
+        "noci": { "pick": [3, 4] }
+      },
+      "title": "Regata u srpnju: posade traže {sobe} soba",
+      "description": "Organizator ljetne regate traži smještaj za posade: {sobe} soba na {noci} noći u srpnju, uz 20 % popusta. Isti upit poslan je svim hotelima u gradu. Posade dolaze kasno navečer, odlaze u zoru i trebaju mjesto za opremu.",
+      "rubric": [
+        "Računa ima li mjesta u srpnju bez istiskivanja gostiju koji plaćaju punu cijenu",
+        "Vrijednost grupe: sobe i ostali prihod prema popustu i trošku",
+        "Protuponuda: manji popust, depozit, rok otkaza i rok za popis posada",
+        "Prilagodba posadama: rani doručak, kasna prijava, mjesto za opremu, bez smetanja drugim gostima",
+        "Prilika za odnos: regata se vraća svake godine (preporuke, suradnja)"
+      ],
+      "answers": [
+        {
+          "label": "Protuponuda: {sobe} soba uz 10 % popusta, depozit i rok otkaza, rani doručak i mjesto za opremu; predložiti suradnju i iduće godine",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1000, "month": "jul" }
+          ]
+        },
+        {
+          "label": "Prihvatiti {sobe} soba uz 15 % popusta, depozit i rok otkaza",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "jul" }
+          ]
+        },
+        {
+          "label": "Prihvatiti kako traže, uz 20 % popusta",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "jul" }
+          ]
+        },
+        {
+          "label": "Odbiti jer posade dolaze kasno i smetaju drugim gostima",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "jul" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "jul" }
+      ],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-ALERGIJA",
+      "kind": "kriza",
+      "department": "restaurant",
+      "weight": 4,
+      "chance": {
+        "base": 1,
+        "boost": [
+          { "when": { "dept_departures": { "at_least": 3 } }, "times": 2 },
+          { "when": { "dept_load_hundredths": { "at_least": 200 } }, "times": 2 }
+        ]
+      },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": { "majka": { "from": "guest", "gender": "f" } },
+      "params": {
+        "mjere": { "price_pct": 500 },
+        "paznja": { "price_pct": 100 },
+        "restoran": { "price_pct": 300 }
+      },
+      "title": "Alergijska reakcija djeteta nakon deserta",
+      "description": "Dječak od sedam godina dobio je osip i otekle usne nakon deserta u restoranu. Njegova majka, {majka.ime}, rekla je konobaru da je sin alergičan na orašaste plodove, a u desertu je bio lješnjak. Hitna pomoć stigla je brzo i dijete je dobro, ali roditelji su uznemireni i ljuti i traže nekoga iz uprave.",
+      "character": {
+        "role": "majka",
+        "brief": "Ti si {majka.ime}, majka dječaka od sedam godina koji je alergičan na orašaste plodove. Pri narudžbi si konobaru jasno rekla za alergiju, a u desertu je bio lješnjak. Sin je dobio osip i otekle usne; hitna pomoć stigla je brzo i sada je dobro, ali jako si se uplašila. Ljuta si, a najviše te ljuti što nitko ne zna gdje se informacija izgubila. Ne tražiš novac. Smiriš se kad netko preuzme odgovornost, kaže što se točno mijenja u restoranu i tko će do kraja boravka paziti na ono što sin jede. Ako ti kažu da ste alergiju trebali napisati pri rezervaciji, tražiš direktora i spominješ prijavu. Ako ti nude samo besplatne obroke ili kažu da će konobar dobiti otkaz, kažeš da te to ne smiruje jer ne znaš je li idući obrok siguran.",
+        "opening": "Rekla sam konobaru da je moj sin alergičan na orašaste plodove, a u desertu je bio lješnjak! Mogao je završiti u bolnici. Kako se to moglo dogoditi?",
+        "fallback_reply": "{majka.ime} se vratila sinu u sobu; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Zdravlje djeteta prvo, zatim iskrena isprika obitelji, bez umanjivanja i bez skrivanja",
+        "Činjenice: što je konobar čuo, što je kuhinja znala, gdje se informacija izgubila",
+        "Sustav za alergene: označen jelovnik (14 alergena po propisu), zapis alergije uz stol, provjera u kuhinji",
+        "Obuka cijelog tima, osobito novih ljudi, a ne kažnjavanje jednog konobara",
+        "Briga za obitelj do kraja boravka: kontakt odgovorne osobe, siguran jelovnik za dijete"
+      ],
+      "answers": [
+        {
+          "label": "Ostati uz obitelj dok dijete ne bude dobro, iskreno se ispričati, utvrditi gdje se informacija izgubila, označiti alergene na jelovniku i uz stol, obučiti cijeli tim i do kraja boravka dogovoriti siguran jelovnik za dijete",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "mjere" }]
+        },
+        {
+          "label": "Iskreno se ispričati, označiti alergene na jelovniku i uz stol i do kraja boravka dogovoriti siguran jelovnik za dijete",
+          "criteria": [1, 3, 5],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "paznja" }]
+        },
+        {
+          "label": "Ispričati se, obitelji ne naplaćivati restoran do kraja boravka i konobaru dati otkaz",
+          "criteria": [1],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "restoran" }]
+        },
+        {
+          "label": "Objasniti roditeljima da su alergiju trebali napisati pri rezervaciji",
+          "criteria": [],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "CrisisCommunication", "backup": 0 }],
+      "effect_band": { "cost_night_pct": [0, 500] }
+    },
+    {
+      "code": "P-RANI-DOLAZAK",
+      "kind": "zahtjev",
+      "department": "rooms",
+      "weight": 2,
+      "chance": { "base": 3 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["majka koja putuje s dvoje male djece", "gošća koja je s mužem stigla noćnim letom", "baka koja je s unucima stigla noćnim autobusom"]
+        }
+      },
+      "params": {
+        "sat": { "pick": [7, 8, 9] },
+        "dorucak": { "price_pct": 30 }
+      },
+      "title": "Stigli su u {sat} ujutro, a soba je spremna tek u 14 sati",
+      "description": "{gost.ime}, {gost.tip}, stigla je na recepciju u {sat} ujutro nakon cijele noći putovanja. Soba je rezervirana od 14 sati, a hotel je pun: sobe se tek čiste nakon jutarnjih odlazaka. Gošća je umorna i pita mogu li odmah u sobu.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Stigla si u {sat} ujutro nakon cijele noći putovanja i jedva stojiš na nogama. Znaš da je ulazak u sobu od 14 sati, ali nadaš se da hotel može nešto učiniti. Najviše ti treba mjesto gdje se možete odmoriti, osvježiti i ostaviti prtljagu. Spremna si i platiti raniji ulazak ako je cijena poštena i netko ti je jasno kaže. Smiriš se ako ti netko ljubazno objasni kad će soba biti spremna, spremi prtljagu i ponudi gdje u međuvremenu možete sjesti, jesti ili se osvježiti. Ako ti samo kažu 'pravilo je 14 sati' i okrenu se drugom gostu, ljutiš se i kažeš da se tako ne dočekuje gost.",
+        "opening": "Dobro jutro. Putovali smo cijelu noć i jedva stojimo na nogama. Znam da je ulazak u sobu poslijepodne, ali možemo li ikako ranije?",
+        "fallback_reply": "{gost.ime} je s prtljagom sjela u predvorje i čeka odgovor. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Ljubazan doček i razumijevanje umora, bez hladnog „pravilo je 14 sati“",
+        "Jasna informacija: kad će soba biti spremna i kako će gošća to saznati (poziv, poruka)",
+        "Što hotel može odmah: spremište za prtljagu, mjesto za odmor i osvježenje, doručak dok čeka",
+        "Njezina soba na vrhu popisa domaćinstva, a gošća dobiva sobu čim je spremna, ako je moguće prije 14 sati",
+        "Pravilo za ubuduće: raniji ulazak kao usluga koja se rezervira unaprijed i naplaćuje, poznata gostima pri rezervaciji"
+      ],
+      "answers": [
+        {
+          "label": "Dočekati ih ljubazno, spremiti prtljagu, ponuditi doručak i mjesto za osvježenje dok čekaju, njihovu sobu staviti na vrh popisa domaćinstva i javiti im čim bude spremna; ubuduće raniji ulazak nuditi uz doplatu već pri rezervaciji",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
+        },
+        {
+          "label": "Spremiti prtljagu, ponuditi doručak dok čekaju i javiti im čim soba bude spremna",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
+        },
+        {
+          "label": "Spremiti prtljagu i reći im da se vrate u 14 sati",
+          "criteria": [3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Dati im prvu slobodnu sobu, iako domaćinstvo u njoj još nije završilo čišćenje",
+          "criteria": [1],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 30] }
+    },
+    {
+      "code": "P-NESTALA-STVAR",
+      "kind": "prituzba",
+      "department": "rooms",
+      "weight": 3,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["gost koji je na stolu u sobi ostavio skupi sat", "gost koji je u sobi ostavio novčanik s gotovinom", "gost koji je u sobi ostavio novi fotoaparat"]
+        }
+      },
+      "params": { "soba": { "range": [101, 520] } },
+      "title": "Gost kaže da mu je iz sobe {soba} nešto nestalo",
+      "description": "{gost.ime}, {gost.tip}, kaže da ga nakon jutarnjeg čišćenja sobe {soba} više nema. Ljut je, traži da se pozove policija i pita tko je ulazio u sobu. Sobu je čistila sobarica koja u hotelu radi treću sezonu i na nju nikad nije bilo pritužbi.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Nakon jutarnjeg čišćenja sobe {soba} ne možeš ga naći. Siguran si da si ga ostavio u sobi, ali ako te netko mirno pita, priznaš da si sinoć bio i u restoranu i u baru. Ljut si i uplašen jer ti je ta stvar važna. Tražiš da se pozove policija i želiš znati tko je ulazio u sobu. Smiriš se ako te netko ozbiljno shvati, nikoga ne optužuje unaprijed, objasni što hotel radi (provjera ulazaka u sobu, izgubljeno-nađeno, razgovor s osobljem) i pomogne ti prijaviti nestanak policiji ako to želiš. Ako ti kažu da hotel ne odgovara za stvari izvan sefa i time završe razgovor, kažeš da ćeš to napisati svima. Ako netko pred tobom optuži sobaricu, postaje ti neugodno.",
+        "opening": "Iz sobe {soba} mi je nakon čišćenja nestala vrijedna stvar. Tko je ulazio u moju sobu? Želim da zovete policiju.",
+        "fallback_reply": "Gost je otišao još jednom pretražiti sobu; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Ozbiljno shvaća gosta i smiruje situaciju, bez optuživanja gosta ili osoblja unaprijed",
+        "Činjenice: evidencija ulazaka u sobu (elektronička brava), tko je čistio, izgubljeno-nađeno, zajednička provjera sobe s gostom",
+        "Poštuje gostovo pravo da prijavi nestanak policiji i pomaže mu u tome, bez odvraćanja",
+        "Štiti zaposlenika: razgovor bez optužbe i bez sumnjičenja pred gostom",
+        "Jasno o odgovornosti hotela i sefu u sobi, bez skrivanja iza pravila; gost dobiva povratnu informaciju"
+      ],
+      "answers": [
+        {
+          "label": "Mirno saslušati gosta, s njim pregledati sobu, provjeriti evidenciju ulazaka u sobu i izgubljeno-nađeno, sa sobaricom razgovarati bez optužbe, pomoći mu prijaviti nestanak policiji i javiti mu što je hotel utvrdio",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Saslušati gosta, provjeriti evidenciju ulazaka u sobu i pomoći mu prijaviti nestanak policiji",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Odmah pred gostom pozvati sobaricu i pitati je je li uzela stvar",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Reći gostu da hotel ne odgovara za stvari koje nisu bile u sefu",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-POSEBNA-PREHRANA",
+      "kind": "zahtjev",
+      "department": "restaurant",
+      "weight": 2,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["gošća koja je u hotelu tjedan dana", "gošća koja je s obitelji došla na deset dana", "gošća na poslovnom putovanju"]
+        }
+      },
+      "params": { "namirnice": { "price_pct": 50 } },
+      "title": "Gošća s celijakijom traži siguran obrok cijeli boravak",
+      "description": "{gost.ime}, {gost.tip}, ima celijakiju: i mrvica glutena joj škodi. Pita može li cijeli boravak sigurno jesti u hotelskom restoranu, jer na švedskom stolu nije označeno što je bez glutena, a kruh se reže na istoj dasci kao i sve ostalo.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Imaš celijakiju: i mrvica glutena izaziva ti bolove danima. Na švedskom stolu nije označeno što je bez glutena, a vidjela si da se kruh reže na istoj dasci kao i sve ostalo. Ne želiš poseban tretman ni da te itko gleda kao da izmišljaš; želiš znati da je hrana sigurna. Smiriš se kad netko iz kuhinje razgovara s tobom, objasni kako će tvoje obroke pripremati odvojeno i kome se javljaš za svaki obrok. Ako ti kažu da 'samo izbjegavaš kruh' ili da hotel ne može jamčiti ništa, kažeš da ćeš jesti u gradu i to napisati u recenziji.",
+        "opening": "Dobar dan. Imam celijakiju i ne smijem ni mrvicu glutena, a na švedskom stolu ništa nije označeno. Mogu li kod vas uopće sigurno jesti?",
+        "fallback_reply": "{gost.ime} je otišla na ručak u grad; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Ozbiljno shvaća celijakiju kao zdravstvenu potrebu, ne kao hir",
+        "Uključuje kuhinju: šef kuhinje ili odgovorna osoba dogovara obroke izravno s gošćom",
+        "Odvojena priprema: posebna daska, posuđe i mjesto u kuhinji, provjera sastojaka",
+        "Alergeni jasno označeni na švedskom stolu i jelovniku (gluten je jedan od 14 alergena po propisu)",
+        "Jedna osoba za kontakt kroz cijeli boravak i provjera s gošćom nakon prvih obroka"
+      ],
+      "answers": [
+        {
+          "label": "Sa šefom kuhinje i gošćom dogovoriti obroke za cijeli boravak, pripremati ih odvojeno na posebnoj dasci i posuđu, nabaviti kruh bez glutena, označiti alergene na švedskom stolu, dati joj jednu osobu za kontakt i nakon prvog dana pitati je kako je",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "namirnice" }]
+        },
+        {
+          "label": "Sa šefom kuhinje dogovoriti odvojenu pripremu njezinih obroka i nabaviti kruh bez glutena",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "namirnice" }]
+        },
+        {
+          "label": "Označiti jela bez glutena na švedskom stolu i reći gošći da bira sama",
+          "criteria": [4],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Objasniti da kuhinja ne može ništa jamčiti i preporučiti restoran u gradu",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 50] }
+    },
+    {
+      "code": "P-GOST-POZLILO",
+      "kind": "kriza",
+      "department": "hotel",
+      "weight": 4,
+      "chance": { "base": 1 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "params": { "tecaj": { "price_pct": 300 } },
+      "title": "Gost se srušio na terasi restorana",
+      "description": "Za vrijeme ručka stariji gost srušio se na terasi restorana. Diše, ali je blijed i zbunjen. Supruga je u panici, drugi gosti snimaju mobitelima, a konobari ne znaju tko od njih ima tečaj prve pomoći.",
+      "rubric": [
+        "Prva pomoć i hitna pomoć (112 ili 194) odmah; jedna osoba vodi, a druga dočekuje hitnu na ulazu",
+        "Privatnost i dostojanstvo: zaklon od pogleda, ostali gosti mirno udaljeni, bez snimanja",
+        "Briga za suprugu: netko ostaje uz nju i pomaže oko bolnice, dokumenata i obitelji",
+        "Nakon događaja: zapis što se dogodilo i provjera s obitelji kako je gost",
+        "Priprema za idući put: u svakoj smjeni barem jedna osoba s tečajem prve pomoći i poznat postupak"
+      ],
+      "answers": [
+        {
+          "label": "Odmah pružiti prvu pomoć i zvati hitnu, jednu osobu poslati da je dočeka na ulazu, gosta zakloniti od pogleda i zamoliti goste da ne snimaju, uz suprugu ostaviti nekoga tko joj pomaže, zapisati što se dogodilo, kasnije provjeriti kako je gost i uvesti pravilo da u svakoj smjeni bude netko s tečajem prve pomoći",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "tecaj" }]
+        },
+        {
+          "label": "Odmah zvati hitnu, gosta zakloniti od pogleda i uz suprugu ostaviti nekoga tko joj pomaže",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+        },
+        {
+          "label": "Zvati hitnu i nastaviti posluživati ostale goste kao da se ništa nije dogodilo",
+          "criteria": [1],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+        },
+        {
+          "label": "Gosta odvesti autom u bolnicu, da se ne čeka hitna",
+          "criteria": [],
+          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "CrisisCommunication", "backup": 0 }],
+      "effect_band": { "cost_night_pct": [0, 300] }
+    },
+    {
+      "code": "P-OSPORENA-NAPLATA",
+      "kind": "prituzba",
+      "department": "admin",
+      "weight": 2,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["gost koji je otkazao boravak dva dana prije dolaska", "gost koji je otišao dan ranije nego što je rezervirao", "gost kojemu je naplaćena šteta u sobi"]
+        }
+      },
+      "params": {
+        "bon": { "price_pct": 50 },
+        "povrat": { "price_pct": 200 }
+      },
+      "title": "Gost osporava naplatu kartice kod banke",
+      "description": "{gost.ime}, {gost.tip}, osporio je naplatu kartice kod svoje banke i hotelu poslao ljutit e-mail. Banka traži od hotela dokaze u roku od deset dana; ako ih ne dobije, novac vraća gostu.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Smatraš da ti je hotel nepravedno naplatio karticu i zato si naplatu osporio kod svoje banke. Ljut si jer misliš da su uvjeti bili skriveni. Ako ti netko mirno pokaže uvjete koje si prihvatio pri rezervaciji i objasni naplatu, priznaš da ih nisi pažljivo pročitao. Prihvaćaš dogovor ako je pošten: dio iznosa natrag, bon za idući boravak ili jasno objašnjenje. Ako ti odgovore prijetnjom odvjetnikom ili tonom 'sami ste krivi', ideš do kraja i pišeš recenziju.",
+        "opening": "Naplatili ste mi nešto što nisam dugovao i to sam prijavio banci. Iskreno, od vas sam očekivao više.",
+        "fallback_reply": "{gost.ime} čeka pisani odgovor hotela. Odluči što ćeš odgovoriti."
+      },
+      "rubric": [
+        "Prvo činjenice: rezervacija, prihvaćeni uvjeti otkaza i naplate, račun i potvrde",
+        "Smiren i pristojan ton prema gostu, bez prijetnji i bez „sami ste krivi“",
+        "Banci dokazi u roku (uvjeti, potvrda rezervacije, račun), da hotel ne izgubi novac šutnjom",
+        "Pošteno rješenje kad je naplata sporna: djelomičan povrat ili bon, ne automatski cijeli iznos",
+        "Uzrok: uvjeti otkaza i naplate jasno napisani pri rezervaciji i na recepciji"
+      ],
+      "answers": [
+        {
+          "label": "Provjeriti rezervaciju, uvjete i račun, gostu mirno odgovoriti i pokazati uvjete koje je prihvatio, banci u roku poslati dokaze, za sporni dio ponuditi bon za idući boravak i uvjete otkaza jasnije napisati na webu i u potvrdi rezervacije",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "bon" }]
+        },
+        {
+          "label": "Banci u roku poslati dokaze i gostu pristojno objasniti uvjete koje je prihvatio",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Gostu odmah vratiti cijeli iznos da se izbjegne svađa",
+          "criteria": [2],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "povrat" }]
+        },
+        {
+          "label": "Ne odgovarati ni gostu ni banci jer je naplata bila po pravilima",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "povrat" }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": "povrat" }],
+      "effect_band": { "cost_night_pct": [0, 200] }
+    },
+    {
+      "code": "P-LJUBIMAC",
+      "kind": "zahtjev",
+      "department": "rooms",
+      "weight": 2,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["gošća koja putuje sama sa starim psom", "gošća koja je s mužem i malim psom došla autom iz daleka"]
+        }
+      },
+      "params": { "pansion": { "price_pct": 30 } },
+      "title": "Gošća je stigla sa psom, a hotel ne prima ljubimce",
+      "description": "{gost.ime}, {gost.tip}, stiže navečer na recepciju sa psom. Hotel ne prima kućne ljubimce i to piše u uvjetima rezervacije na webu. Gošća kaže da to nije vidjela, da je kasno i da nema kamo.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Pas je dio tvoje obitelji i mislila si da hotel prima ljubimce; pravilo u uvjetima rezervacije nisi vidjela. Vožnja je bila duga i umorna si. Ne želiš ostaviti psa u autu. Znaš da si trebala pročitati uvjete i to priznaš ako te nitko ne ponižava. Prihvaćaš rješenje u blizini (pansion za pse, smještaj koji prima ljubimce) ako ti netko pomogne da ga nađeš još večeras. Ako ti kažu samo 'pravila su pravila' i ništa ne ponude, postaješ očajna i kažeš da ćeš otkazati cijeli boravak.",
+        "opening": "Dobra večer. Nisam znala da ne primate pse. Vozim od jutra i sad je kasno. Što da radim s njim?",
+        "fallback_reply": "{gost.ime} čeka u predvorju sa psom. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Ljubazno i bez ponižavanja, iako je pravilo napisano",
+        "Zna zašto pravilo postoji (alergije drugih gostiju, čišćenje) i drži ga se ili jasno odluči o iznimci",
+        "Konkretna pomoć još večeras: pansion za pse ili smještaj koji prima ljubimce u blizini, poziv umjesto gošće",
+        "Čuva rezervaciju gošće: soba ostaje njezina, bez naplate otkaza ako mora otići",
+        "Uzrok: pravilo o ljubimcima jasno istaknuto pri rezervaciji i u potvrdi rezervacije"
+      ],
+      "answers": [
+        {
+          "label": "Ljubazno objasniti zašto hotel ne prima pse, nazvati pansion za pse u blizini i platiti prvu noć, gošći zadržati sobu bez naplate otkaza i pravilo o ljubimcima istaknuti u potvrdi rezervacije",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
+        },
+        {
+          "label": "Ljubazno objasniti pravilo i nazvati pansion za pse u blizini da večeras primi psa",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Iznimno pustiti psa u sobu, bez uvjeta i bez dodatnog čišćenja sobe",
+          "criteria": [1],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Reći da su pravila na webu i da hotel ne može pomoći",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 30] }
+    },
+    {
+      "code": "P-MANJAK-INVENTURA",
+      "kind": "osoblje",
+      "department": "restaurant",
+      "weight": 3,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "roles": { "voditelj": { "from": "staff", "gender": "m" } },
+      "params": { "boce": { "pick": [20, 25, 30] } },
+      "title": "Inventura u restoranu: nedostaje {boce} boca pića",
+      "description": "{voditelj.ime}, voditelj restorana, javlja da mjesečna inventura pokazuje manjak: nedostaje {boce} boca vina i žestokih pića. Ključ skladišta pića ima pet ljudi, a izdavanje se zapisuje na papir koji se često zaboravi ispuniti. Konobari su čuli za manjak i međusobno se sumnjiče.",
+      "character": {
+        "role": "voditelj",
+        "brief": "Ti si {voditelj.ime}, voditelj restorana. Inventura pokazuje da nedostaje {boce} boca vina i žestokih pića. Ključ skladišta ima pet ljudi, a izdavanje se zapisuje na papir koji se često zaboravi ispuniti. Sumnjaš na jednog sezonca jer je nov, ali dokaza nemaš i toga si svjestan. Tim je napet jer se konobari međusobno sumnjiče. Želiš da uprava odluči što dalje. Ako netko predloži da se svima pretraže ormarići ili da se sezonac odmah otpusti, upozoriš da to nije pošteno i da se bez dokaza ne smije. Smiriš se kad dobiješ jasan postupak: tko ima ključ, kako se piće izdaje i tko to kontrolira.",
+        "opening": "Inventura je loša: nedostaje {boce} boca pića. Ključ skladišta ima pet ljudi, a papiri se ne vode kako treba. Ekipa se već međusobno sumnjiči. Što da radimo?",
+        "fallback_reply": "{voditelj.ime} se vratio u restoran; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Nikoga ne optužuje bez dokaza i ne kažnjava cijeli tim",
+        "Činjenice: ponovno brojanje, usporedba s prodajom na blagajni i otpisima (lom, degustacije)",
+        "Kontrola ubuduće: manje ljudi s ključem, evidencija izdavanja koja se stvarno vodi, redovna inventura",
+        "Razgovor s timom: što je utvrđeno i ista nova pravila za sve, da prestane međusobno sumnjičenje",
+        "Ako se nađe dokaz, postupak po zakonu i pravilniku o radu (razgovor, upozorenje, prijava), bez javne osude"
+      ],
+      "answers": [
+        {
+          "label": "Ponovno prebrojati i usporediti s prodajom i otpisima, ključ skladišta ostaviti dvjema osobama, uvesti evidenciju izdavanja i tjednu inventuru, timu reći što je utvrđeno i da nitko nije optužen bez dokaza, a ako se dokaz nađe, postupiti po pravilniku o radu",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Ponovno prebrojati, ključ skladišta ostaviti dvjema osobama i uvesti evidenciju izdavanja pića",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Otpustiti novog sezonca na kojega se sumnja",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Svim konobarima manjak odbiti od plaće, na jednake dijelove",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-DOBAVLJAC",
+      "kind": "kvar",
+      "department": "restaurant",
+      "weight": 2,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "params": { "nabava": { "price_pct": 100 } },
+      "title": "Dobavljač ribe danas ne dostavlja",
+      "description": "Glavni dobavljač ribe i plodova mora javio je u podne da danas ne može dostaviti robu: pokvarila se hladnjača u kamionu. Za večeras su rezervirani gotovo svi stolovi, a tri od pet glavnih jela na jelovniku su riblja. Šef kuhinje pita što da radi.",
+      "rubric": [
+        "Gosti saznaju na vrijeme: konobari znaju što nema i nude zamjenu prije narudžbe, ne nakon nje",
+        "Zamjenski dobavljač ili lokalni ribari za danas, uz dokumente o podrijetlu i provjeru kvalitete",
+        "Prilagođen jelovnik za večeras: dnevna jela iz zaliha, bez pada kvalitete",
+        "Ugovor s dobavljačem: obavijest, popust ili kazna za neisporuku, razgovor o pouzdanosti",
+        "Prevencija: barem dva dobavljača za ključne namirnice i plan zaliha za špicu"
+      ],
+      "answers": [
+        {
+          "label": "Konobarima odmah reći što nema i što preporučiti, kupiti ribu od drugog dobavljača uz dokumente o podrijetlu, šefu kuhinje dopustiti dnevni jelovnik iz zaliha, s dobavljačem dogovoriti popust prema ugovoru i ubuduće imati drugog dobavljača za ključne namirnice",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "nabava" }]
+        },
+        {
+          "label": "Konobarima reći što nema, kupiti ribu od drugog dobavljača i večeras ponuditi dnevni jelovnik iz zaliha",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "nabava" }]
+        },
+        {
+          "label": "Kupiti ribu na tržnici bez računa i dokumenata o podrijetlu, da jelovnik ostane isti",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ne mijenjati ništa: kad gost naruči ribu, konobar kaže da je danas nema",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 100] }
+    },
+    {
+      "code": "P-BUCNA-SOBA",
+      "kind": "prituzba",
+      "department": "rooms",
+      "weight": 2,
+      "chance": { "base": 3 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["gošća koja je na odmoru s malim djetetom", "umirovljenica koja s prijateljicom putuje po obali", "gošća koja sutra rano ujutro ima let"]
+        }
+      },
+      "params": {
+        "soba": { "range": [101, 520] },
+        "dorucak": { "price_pct": 30 }
+      },
+      "title": "Glasna zabava u sobi do sobe {soba}",
+      "description": "{gost.ime}, {gost.tip}, iz sobe {soba} zove recepciju iza ponoći: u susjednoj sobi je glasna zabava, glazba i vika na balkonu. Kaže da je jednom već pokucala, ali nitko nije otvorio.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Iza je ponoći, a glazba i vika na balkonu susjedne sobe ne prestaju. Jednom si pokucala na njihova vrata, nitko nije otvorio i sad ti je neugodno opet ići. Umorna si i ljuta, ali ne želiš svađu sa susjedima; želiš da hotel to riješi odmah. Smiriš se kad ti kažu da zaposlenik odmah ide do sobe i kad ti ponude rješenje ako buka ne prestane (druga soba). Ako ti kažu da noćni recepcioner ne smije ostaviti recepciju ili da se 'mladi samo zabavljaju', ljutiš se i kažeš da plaćaš isto kao i oni.",
+        "opening": "Iza ponoći je, a u sobi do mene zabava, glazba i vika na balkonu. Već sam pokucala, nitko ne otvara. Možete li nešto učiniti?",
+        "fallback_reply": "Gošća čeka u sobi; razgovor se nastavlja kasnije. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Sasluša gošću i ispriča se, bez umanjivanja",
+        "Djeluje odmah: zaposlenik odlazi do sobe i mirno, ali odlučno traži tišinu, pozivajući se na kućni red",
+        "Rješenje za gošću ako buka ne prestane: druga soba još večeras",
+        "Dosljednost: noćni mir napisan u kućnom redu i jednako primijenjen; ponovljeno kršenje ima posljedicu",
+        "Provjera s gošćom ujutro i mala pažnja za neprospavanu noć"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, odmah poslati zaposlenika da mirno i odlučno zatraži tišinu prema kućnom redu, gošći ponuditi drugu sobu ako buka ne prestane, susjedima ujutro ponoviti pravilo noćnog mira i gošću ujutro pitati kako je spavala uz doručak na račun hotela",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
+        },
+        {
+          "label": "Ispričati se, odmah poslati zaposlenika da zatraži tišinu i ujutro nazvati gošću",
+          "criteria": [1, 2, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Premjestiti gošću u drugu sobu, a susjedima ništa ne reći",
+          "criteria": [3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Reći da noćni recepcioner ne smije ostaviti recepciju i da će se ujutro razgovarati sa susjedima",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 30] }
+    },
+    {
+      "code": "P-POHVALA",
+      "kind": "prilika",
+      "department": "*guest_facing",
+      "weight": 1,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 3, "gap_rounds": 4 },
+      "roles": { "radnica": { "from": "staff", "gender": "f" } },
+      "params": {
+        "uloga": {
+          "by_department": {
+            "rooms": "sobarica",
+            "restaurant": "konobarica",
+            "lobby_bar": "konobarica u lobby baru",
+            "rooftop_bar": "konobarica u rooftop baru",
+            "pool_bar": "konobarica u baru uz bazen",
+            "spa": "terapeutkinja"
+          }
+        },
+        "bonus": { "wage_pct": 10 }
+      },
+      "title": "Pohvala gosta: {radnica.ime}, {uloga}",
+      "description": "Gost koji je jučer otišao poslao je upravi pismo. Piše da mu je {radnica.ime}, {uloga}, pomogla kad je njegovo dijete noću dobilo temperaturu, i to izvan svog posla. Ista pohvala stoji i u njegovoj recenziji na portalu. Kolege su za pismo već čuli.",
+      "character": {
+        "role": "radnica",
+        "brief": "Ti si {radnica.ime}, {uloga} u hotelu. Gost je upravi poslao pismo s pohvalom za tebe jer si mu pomogla kad je njegovo dijete noću dobilo temperaturu. Drago ti je, ali ti je i neugodno: neki kolege se šale da se 'hvališ'. Ne trebaš veliku predstavu; voljela bi da se pohvala kaže pred timom i da se vidi da su ti kolege te noći pokrili posao. Ako ti ponude novac, zahvalno ga prihvatiš, ali važnije ti je da te netko pita za mišljenje. Imaš ideju: na recepciji bi trebao biti pribor prve pomoći i popis dežurnih ljekarni, jer te noći nisi znala gdje ih naći. To kažeš ako te netko pita što bi hotel mogao bolje.",
+        "opening": "Čula sam za pismo. Iskreno, napravila sam samo ono što bi svatko. Nadam se da kolege ne misle da se hvalim.",
+        "fallback_reply": "{radnica.ime} se vratila na posao; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Zahvala osobno i brzo, s konkretnim primjerom što je dobro napravila",
+        "Priznanje pred timom bez stvaranja zavisti: zahvala i kolegama koji su je podržali",
+        "Pravedno i dosljedno: pravilo za pohvale i nagrade koje vrijedi za sve, ne jednokratna povlastica",
+        "Pita je za ideju što bi hotel mogao bolje (pribor prve pomoći, postupak noću)",
+        "Zahvala gostu na pismu i odgovor na recenziju, bez otkrivanja osobnih podataka"
+      ],
+      "answers": [
+        {
+          "label": "Osobno joj zahvaliti, pohvalu pročitati na sastanku tima uz zahvalu i kolegama, dati mali bonus prema pravilu koje vrijedi za sve, pitati je što bi hotel mogao bolje i zahvaliti gostu na pismu i recenziji",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
+        },
+        {
+          "label": "Osobno joj zahvaliti, pohvalu pročitati pred timom i odgovoriti gostu na recenziju",
+          "criteria": [1, 2, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        },
+        {
+          "label": "Dati joj 10 % povišice, a timu ništa ne reći",
+          "criteria": [1],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 10, "bonus": 0 }]
+        },
+        {
+          "label": "Ne raditi ništa posebno jer je to njezin posao",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 170], "raise_pct": [0, 10] }
+    },
+    {
+      "code": "P-DIZALO",
+      "kind": "kvar",
+      "department": "hotel",
+      "weight": 3,
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "params": { "vecera": { "price_pct": 80 } },
+      "title": "Dizalo je stalo s gostima unutra",
+      "description": "Jedno od dva dizala stalo je između katova s četvero gostiju unutra, među njima i stariji gospodin. Alarm radi, gosti su uplašeni, ali dobro. Servis dizala kaže da tehničar može doći za sat vremena. Drugo dizalo radi, ali je u vrijeme odjave sve puno.",
+      "rubric": [
+        "Mir gostiju u dizalu: stalan razgovor s njima, objašnjenje što se događa i koliko će trajati",
+        "Oslobađanje samo preko ovlaštenog servisera ili vatrogasaca (112), bez vlastitih pokušaja otvaranja",
+        "Briga za goste kad izađu: voda, liječnik ako treba, isprika i mala pažnja",
+        "Ostali gosti: obavijest i pomoć s prtljagom dok radi samo jedno dizalo",
+        "Uzrok i prevencija: zapisnik servisa o kvaru i redovni pregledi dizala"
+      ],
+      "answers": [
+        {
+          "label": "Stalno razgovarati s gostima u dizalu i reći im koliko će trajati, zvati servis i vatrogasce ako se čeka predugo, nakon izlaska ponuditi vodu, liječnika ako treba i večeru na račun hotela, ostalim gostima pomoći s prtljagom i nakon popravka tražiti zapisnik i pregled oba dizala",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "vecera" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Stalno razgovarati s gostima u dizalu, zvati servis i nakon izlaska ponuditi vodu i ispriku",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Zvati servis i čekati, a gostima u dizalu ništa ne govoriti dok tehničar ne stigne",
+          "criteria": [2],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Poslati domara da sam pokuša otvoriti vrata dizala",
+          "criteria": [],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 80] }
+    },
+    {
+      "code": "P-OVERBOOKING",
+      "kind": "prituzba",
+      "department": "rooms",
+      "weight": 3,
+      "when": { "occupancy_bp": { "at_least": 9500 } },
+      "chance": { "base": 2, "boost": [{ "when": { "occupancy_bp": { "at_least": 10000 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["otac obitelji koji je vozio cijeli dan", "poslovni gost koji sutra ujutro ima sastanak u gradu", "gost koji je sobu rezervirao prije pola godine"]
+        }
+      },
+      "params": { "preseljenje": { "price_pct": 150 } },
+      "title": "Prebukirano: gost stiže navečer, a sobe nema",
+      "description": "{gost.ime}, {gost.tip}, stiže na recepciju u deset navečer s potvrđenom rezervacijom, a slobodne sobe više nema: hotel je prodao više soba nego što ih ima, računajući na otkazivanja koja nisu stigla. Recepcija ne zna što mu reći.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Stigao si u deset navečer s potvrđenom rezervacijom i sad ti kažu da sobe nema. Umoran si i bijesan: platio si i imaš potvrdu. Ne zanimaju te izgovori o sustavu. Smiriš se tek kad netko preuzme odgovornost, ispriča se i ponudi konkretno: sobu u dobrom hotelu u blizini, prijevoz, plaćenu noć i povratak sutra. Ako ti nude samo popust ili 'pričekajte, možda se netko odjavi', prijetiš recenzijom i prijavom portalu preko kojeg si rezervirao.",
+        "opening": "Imam potvrđenu rezervaciju, evo je. Kako to mislite da nemate sobu? Deset je navečer!",
+        "fallback_reply": "Gost stoji na recepciji i čeka odluku. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Preuzima odgovornost i ispričava se, bez izgovora o sustavu i otkazivanjima",
+        "Rješenje još večeras: soba iste ili bolje razine u obližnjem hotelu, prijevoz i prva noć na račun hotela",
+        "Povratak sutra: soba spremna, doček i mala pažnja (bolja soba ili večera)",
+        "Osobni kontakt: netko iz hotela javlja se gostu, ne „preseli ga i zaboravi“",
+        "Uzrok: prodaja iznad kapaciteta samo uz jasno pravilo, praćenje otkazivanja i dogovor s partnerskim hotelom"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se i preuzeti odgovornost, smjestiti gosta u obližnji hotel iste razine s prijevozom i plaćenom noći, sutra ga dočekati u boljoj sobi, ujutro ga nazvati i prodaju iznad kapaciteta uskladiti s brojem otkazivanja i dogovorom s partnerskim hotelom",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "preseljenje" }]
+        },
+        {
+          "label": "Ispričati se, smjestiti gosta u obližnji hotel s prijevozom i plaćenom noći i sutra ga vratiti",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "preseljenje" }]
+        },
+        {
+          "label": "Smjestiti ga u drugi hotel, ali noć i prijevoz neka plati sam, uz popust na ostatak boravka",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ponuditi popust i zamoliti ga da pričeka u predvorju, možda se netko odjavi",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 150] }
+    },
+    {
+      "code": "P-BOLOVANJE",
+      "kind": "osoblje",
+      "department": "*staffed",
+      "weight": 3,
+      "when": { "months": ["jul", "aug"] },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_load_hundredths": { "at_least": 180 } }, "times": 2 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": { "voditeljica": { "from": "staff", "gender": "f" } },
+      "params": {
+        "uloga": {
+          "by_department": {
+            "rooms": "voditeljica recepcije",
+            "restaurant": "voditeljica restorana",
+            "lobby_bar": "voditeljica lobby bara",
+            "rooftop_bar": "voditeljica rooftop bara",
+            "pool_bar": "voditeljica bara uz bazen",
+            "spa": "voditeljica wellnessa",
+            "admin": "voditeljica računovodstva",
+            "sales": "voditeljica prodaje",
+            "maintenance": "voditeljica održavanja"
+          }
+        },
+        "pokrice": { "price_pct": 800 },
+        "prekovremeni": { "wage_pct": 60 }
+      },
+      "title": "Dvoje na bolovanju usred špice ({odjel})",
+      "description": "{voditeljica.ime}, {uloga}, javlja da je dvoje ljudi iz njezina tima ovaj tjedan na bolovanju. Ostali već rade dvostruke smjene, a hotel je pun. Pita smije li svima uvesti prekovremeni rad ili uzeti ljude preko agencije.",
+      "character": {
+        "role": "voditeljica",
+        "brief": "Ti si {voditeljica.ime}, {uloga}. Dvoje ljudi iz tvog tima ovaj je tjedan na bolovanju, a hotel je pun. Ostali već rade dvostruke smjene i vidiš da su na rubu. Ne sumnjaš da su bolesni. Trebaš odluku danas: više ljudi ili manje posla. Znaš da prekovremeni rad ima zakonske granice i ne želiš da tvoji ljudi rade bez slobodnog dana. Smiriš se kad dobiješ konkretan plan: tko dolazi i od kada, što se privremeno smanjuje i da će prekovremeni sati biti plaćeni. Ako ti kažu 'snađi se' ili da bolesne treba provjeriti, kažeš da to ruši tim.",
+        "opening": "Dvoje mi je na bolovanju cijeli tjedan, a kuća je puna. Ostali već rade dvostruke smjene. Trebam odluku danas.",
+        "fallback_reply": "{voditeljica.ime} se vratila timu; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Poštuje bolovanje: bez sumnjičenja i bez pritiska na bolesne",
+        "Kratkoročno pokriće: agencija, sezonci ili pomoć drugih odjela uz pristanak i uputu",
+        "Prekovremeni rad u zakonskim granicama, plaćen, uz slobodan dan i odmor između smjena",
+        "Privremeno manje posla gdje se može (kraće radno vrijeme dijela usluge), uz obavijest gostima",
+        "Plan za iduću špicu: pričuva ljudi, popis za zamjene, raspored s rezervom"
+      ],
+      "answers": [
+        {
+          "label": "Bolesnima poželjeti brz oporavak bez pritiska, uzeti dvoje ljudi preko agencije za ovaj tjedan, prekovremene sate platiti i svima osigurati slobodan dan, privremeno skratiti radno vrijeme dijela usluge uz obavijest gostima i za iduću špicu napraviti popis zamjena",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "pokrice" }]
+        },
+        {
+          "label": "Uzeti dvoje ljudi preko agencije za ovaj tjedan i prekovremene sate platiti",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "pokrice" }]
+        },
+        {
+          "label": "Svima u timu naložiti plaćeni prekovremeni rad do kraja tjedna, bez slobodnog dana",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "prekovremeni" }]
+        },
+        {
+          "label": "Zamoliti bolesne da ipak dođu barem na pola smjene",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 800] }
+    },
+    {
+      "code": "P-NESTANAK-STRUJE",
+      "kind": "kriza",
+      "department": "hotel",
+      "weight": 4,
+      "scope": "svi",
+      "when": { "months": ["jul", "aug"] },
+      "chance": { "base": 1 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "params": { "mjere": { "price_pct": 300 } },
+      "title": "Nestalo je struje u cijelom mjestu",
+      "description": "U devet navečer nestalo je struje u cijelom mjestu; elektroprivreda kaže da će popravak trajati barem dva sata. Hotelski agregat pokreće samo nužnu rasvjetu i dizala. Restoran je pun, hladnjače se griju, a gosti s gornjih katova pitaju što se događa. Isto se događa svim hotelima u mjestu.",
+      "rubric": [
+        "Sigurnost prvo: nitko nije zarobljen u dizalu, nužna rasvjeta i stubišta rade, bazen je zatvoren",
+        "Gosti obaviješteni odmah i redovito: što se zna, koliko traje, gdje su svjetlo i pomoć",
+        "Hrana: hladnjače zatvorene, temperatura se prati, sporna hrana se baca po pravilima",
+        "Usluga koliko je moguće: hladna večera, svjetiljke, piće u predvorju",
+        "Nakon nestanka: pregled opreme i plan da agregat pokriva i hladnjače"
+      ],
+      "answers": [
+        {
+          "label": "Provjeriti dizala i zatvoriti bazen, gostima odmah i svakih pola sata javiti što se zna, hladnjače držati zatvorenima i pratiti temperaturu, u restoranu poslužiti hladnu večeru i piće uz svjetiljke, a poslije pregledati opremu i planirati agregat i za hladnjače",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": "mjere" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Provjeriti dizala, obavijestiti goste i hladnjače držati zatvorenima",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Zatvoriti restoran i zamoliti goste da odu u sobe dok ne dođe struja",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        },
+        {
+          "label": "Čekati struju i gostima ništa ne govoriti da se ne uznemire",
+          "criteria": [],
+          "mechanics": [
+            { "type": "CrisisCommunication", "backup": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 300] }
+    },
+    {
+      "code": "P-SUSJEDI-BAZEN",
+      "kind": "prituzba",
+      "department": "pool_bar",
+      "weight": 2,
+      "when": { "months": ["jul", "aug"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "susjed": {
+          "from": "partner",
+          "gender": "m",
+          "types": ["predsjednik mjesnog odbora", "vlasnik obiteljskih apartmana preko puta hotela"]
+        }
+      },
+      "title": "Susjedi se žale na glazbu s bazena",
+      "description": "{susjed.ime}, {susjed.tip}, došao je u hotel: glazba s večernjeg programa uz bazen svira do ponoći, a susjedi ne mogu spavati. Komunalni redar već je jednom bio i upozorio hotel. Večernji program je gostima omiljen i bar uz bazen tada najviše zarađuje.",
+      "character": {
+        "role": "susjed",
+        "brief": "Ti si {susjed.ime}, {susjed.tip}. Glazba s večernjeg programa uz bazen svira do ponoći, a ljudi u susjedstvu ne mogu spavati; mnogi rade rano ujutro. Komunalni redar već je jednom bio i upozorio hotel, ali ništa se nije promijenilo. Ne želiš hotelu zatvoriti posao: i susjedi žive od turizma. Želiš da se poštuje noćni mir i da te netko iz hotela shvati ozbiljno. Smiriš se ako ti ponude konkretan dogovor: do kada glazba, koliko glasno i kome se javiti kad nešto nije u redu. Ako ti kažu da hotel ima dozvolu i da je ovo turističko mjesto, kažeš da ćeš ići u općinu i tražiti kazne.",
+        "opening": "Dobar dan. Dolazim zbog glazbe s vašeg bazena. Svira do ponoći, a ljudi oko vas ne mogu spavati. Redar je već bio. Hoće li se išta promijeniti?",
+        "fallback_reply": "{susjed.ime} je otišao; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Sasluša susjeda i ozbiljno shvati pritužbu, bez „ovo je turističko mjesto“",
+        "Poštuje propise: komunalni red, noćni mir i dozvola za glazbu na otvorenom",
+        "Konkretan dogovor: kraj glazbe, glasnoća, zvučnici okrenuti od kuća",
+        "Ravnoteža prihoda bara i odnosa sa susjedima: program se prilagođava, ne ukida bez razloga",
+        "Odnos ubuduće: osoba za kontakt sa susjedima i provjera nakon nekoliko večeri"
+      ],
+      "answers": [
+        {
+          "label": "Saslušati ga i ispričati se, provjeriti dozvolu i pravila o noćnom miru, s voditeljem bara dogovoriti kraj glazbe u 23 sata i tiše zvučnike okrenute od kuća, susjedima dati broj za kontakt i za tjedan dana pitati jesu li zadovoljni",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Ispričati se i s voditeljem bara dogovoriti kraj glazbe u 23 sata i tiše zvučnike",
+          "criteria": [1, 2, 3],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Odmah ukinuti večernji program do kraja sezone",
+          "criteria": [1, 2],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        },
+        {
+          "label": "Objasniti da hotel ima dozvolu i da je ljeto u turističkom mjestu",
+          "criteria": [],
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-LAST-MINUTE",
+      "kind": "prilika",
+      "department": "sales",
+      "weight": 2,
+      "when": { "months": ["jul", "aug", "sep"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 2, "gap_rounds": 4 },
+      "roles": {
+        "zastupnica": {
+          "from": "partner",
+          "gender": "f",
+          "types": ["predstavnica velikog portala za rezervacije", "voditeljica prodaje u turističkoj agenciji"]
+        }
+      },
+      "params": {
+        "sobe": { "pick": [15, 20] },
+        "noci": { "pick": [4, 6] }
+      },
+      "title": "Portal predlaže akciju s 20 % popusta za rujan",
+      "description": "{zastupnica.ime}, {zastupnica.tip}, predlaže akciju za rujan: do {sobe} soba na {noci} noći sredinom tjedna uz 20 % popusta, a hotel bi bio istaknut na naslovnici. Provizija ostaje ista. Kaže da konkurentski hoteli već pristaju.",
+      "character": {
+        "role": "zastupnica",
+        "brief": "Ti si {zastupnica.ime}, {zastupnica.tip}. Nudiš hotelu akciju za rujan: do {sobe} soba na {noci} noći sredinom tjedna uz 20 % popusta i istaknuto mjesto na naslovnici. Želiš da hotel pristane i malo pritišćeš pričom da konkurencija već pristaje. Ako hotel postavlja dobra pitanja (provizija, koji datumi, smije li cijena na webu ostati ista), iskreno odgovaraš: provizija ostaje, a popust smije biti i manji uz manje istaknuto mjesto. Prihvaćaš 10 do 15 % popusta za slabije dane ako hotel jasno kaže uvjete. Ako hotel odbije bez razgovora, kažeš da ćeš ponudu dati drugom hotelu.",
+        "opening": "Dobar dan! Za rujan imamo akciju: {sobe} soba na {noci} noći sredinom tjedna uz 20 % popusta, a vi na naslovnici. Konkurencija je već pristala. Hoćete li i vi?",
+        "fallback_reply": "{zastupnica.ime} čeka odgovor do kraja tjedna. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Računa stvarnu cijenu: popust i provizija portala prema cijeni noćenja i trošku sobe",
+        "Gleda gdje su prazne sobe: popust samo za slabe dane, ne za datume koji se prodaju i bez njega",
+        "Čuva cijenu: manji popust, ograničen broj soba i jasan rok akcije, bez rušenja cijene gostima koji su već rezervirali",
+        "Ne ovisi samo o portalu: ista ili bolja ponuda izravno stalnim gostima (web, e-mail)",
+        "Prati rezultat akcije i prekida je ako ne donosi nove goste"
+      ],
+      "answers": [
+        {
+          "label": "Izračunati cijenu s provizijom, pristati na 15 % popusta samo za {sobe} soba sredinom tjedna u slabim tjednima rujna i s rokom akcije, istu ponudu poslati stalnim gostima i rezultat pratiti svaki tjedan",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Izračunati cijenu s provizijom i pristati na 15 % popusta samo sredinom tjedna i samo za {sobe} soba",
+          "criteria": [1, 2, 3],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Pristati na akciju kako je predložena, uz 20 % popusta",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Odbiti: hotel ne radi s popustima",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2000, "month": "sep" }
+      ],
+      "effect_band": { "cost_night_pct": [0, 0] }
+    },
+    {
+      "code": "P-WELLNESS-PAKET",
+      "kind": "prilika",
+      "department": "spa",
+      "weight": 2,
+      "when": { "months": ["aug", "sep"] },
+      "chance": { "base": 2 },
+      "repeat": { "max_per_season": 1, "gap_rounds": 4 },
+      "roles": {
+        "agentica": {
+          "from": "partner",
+          "gender": "f",
+          "types": ["vlasnica lokalne turističke agencije", "voditeljica agencije za vikend-putovanja"]
+        }
+      },
+      "params": {
+        "sobe": { "pick": [10, 12] },
+        "noci": { "pick": [2, 3] }
+      },
+      "title": "Agencija nudi wellness vikende u rujnu",
+      "description": "{agentica.ime}, {agentica.tip}, nudi wellness vikende za rujan: {sobe} soba na {noci} noći i dvije masaže po gostu, uz 25 % popusta na paket. Wellness je u rujnu poluprazan, ali terapeuta je manje jer sezonci odlaze.",
+      "character": {
+        "role": "agentica",
+        "brief": "Ti si {agentica.ime}, {agentica.tip}. Želiš prodavati wellness vikende u rujnu, kad je na obali mirnije: {sobe} soba na {noci} noći i dvije masaže po gostu, uz 25 % popusta na paket. Klijenti su ti uglavnom parovi iz grada. Budžet ti je ograničen, ali najvažnije ti je da gosti dobiju obećane termine masaža; prošle godine drugi hotel ih nije imao dovoljno i to te koštalo ugleda. Prihvaćaš manji popust ako hotel jamči termine i jasne uvjete. Ako hotel pristane na sve bez pitanja, pitaš ima li dovoljno terapeuta.",
+        "opening": "Dobar dan! Imam goste za wellness vikende u rujnu: {sobe} soba na {noci} noći i dvije masaže po osobi. Možemo li dogovoriti 25 % popusta na paket?",
+        "fallback_reply": "{agentica.ime} čeka pisanu ponudu. Odluči što ćeš ponuditi."
+      },
+      "rubric": [
+        "Prepoznaje priliku: posezona, poluprazan wellness, gosti koji ne istiskuju druge",
+        "Kapacitet: ima li dovoljno terapeuta i termina za sve masaže kad sezonci odu",
+        "Cijena paketa: popust prema vrijednosti soba i tretmana, protuponuda koja čuva cijenu",
+        "Uvjeti: depozit, rok otkaza, rok za popis gostiju i termini masaža dogovoreni unaprijed",
+        "Dugoročni odnos: prijedlog suradnje i iduće godine"
+      ],
+      "answers": [
+        {
+          "label": "Provjeriti raspored terapeuta, ponuditi {sobe} soba uz 15 % popusta na paket, s depozitom, rokom otkaza i terminima masaža dogovorenima unaprijed, jednog terapeuta sezonca zadržati do kraja rujna i predložiti suradnju i iduće godine",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Ponuditi {sobe} soba uz 15 % popusta na paket, depozit i rok otkaza",
+          "criteria": [1, 3, 4],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 1500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Pristati na 25 % popusta bez provjere termina",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": true, "rooms": "sobe", "nights": "noci", "discount_bp": 2500, "month": "sep" }
+          ]
+        },
+        {
+          "label": "Odbiti jer u rujnu wellness radi sa smanjenim timom",
+          "criteria": [],
+          "mechanics": [
+            { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2500, "month": "sep" }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "GroupBooking", "accept": false, "rooms": "sobe", "nights": "noci", "discount_bp": 2500, "month": "sep" }
+      ],
+      "effect_band": { "cost_night_pct": [0, 0] }
     }
   ]
 }
