@@ -1,0 +1,9 @@
+{
+  "month": {
+    "morale_step_bp": 3000,
+    "satisfaction_step_bp": 5000,
+    "rating_step_bp": 2500,
+    "seasonal_step": 10
+  },
+  "week": { "morale_step_bp": 1100, "satisfaction_step_bp": 1400, "rating_step_bp": 1000, "seasonal_step": 3 }
+}

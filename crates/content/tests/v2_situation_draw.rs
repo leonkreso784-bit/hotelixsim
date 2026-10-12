@@ -1,7 +1,8 @@
 //! Izvlačenje situacija iz predložaka (J-2, plan situacija §4): determinizam, ponavljanje, raznolikost, uvjeti i
-//! pojačanja iz stanja, veća i kolektivna situacija, uloge i mjesta, u tjednoj i mjesečnoj igri. Predlošci iz
-//! repoa (pretvoreni u jezgreni oblik) uz testne „opće" predloške, jer ih repo za sada ima samo tri. Najmanji
-//! razmak između dva pojavljivanja istog predloška je 4 tjedna (Leon), i kad predložak traži manje.
+//! pojačanja iz stanja, veća i kolektivna situacija, uloge i mjesta, u tjednoj i mjesečnoj igri. Zamrznuti
+//! predlošci s `52ce161` (tri predloška S-1, `situations_common::frozen`) uz testne „opće" predloške, da novi
+//! predlošci u repou ne pomiču pravila. Najmanji razmak između dva pojavljivanja istog predloška je 4 tjedna
+//! (Leon), i kad predložak traži manje.
 
 mod situations_common;
 
@@ -13,7 +14,9 @@ use sim_hotel_v2::situations::{
     Scope, situation_count,
 };
 use sim_hotel_v2::{HotelState, Month, PeriodKind, Profile, season_periods};
-use situations_common::{Hotel, content, general, indices, round, season, start, with_general};
+use situations_common::{
+    Hotel, frozen, general, indices, live, round, season, start, with_general,
+};
 
 const KINDS: [PeriodKind; 2] = [PeriodKind::Week, PeriodKind::Month];
 
@@ -36,7 +39,7 @@ fn anchor(kind: Kind) -> Anchor {
 
 #[test]
 fn same_seed_gives_same_instances() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let set = with_general(
         set,
         8,
@@ -69,7 +72,7 @@ fn same_seed_gives_same_instances() {
 /// tjednu i ⌈2n/5⌉ u krugu.
 #[test]
 fn thousand_seeds_respect_repeat_and_round_rules() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let set = with_general(
         set,
         8,
@@ -151,7 +154,7 @@ fn thousand_seeds_respect_repeat_and_round_rules() {
 /// razmak od 4 tjedna vrhunac (5 tjedno) traži barem 20 različitih dopuštenih predložaka.
 #[test]
 fn round_is_filled_to_its_count_minus_anchors() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let set = with_general(
         set,
         24,
@@ -199,7 +202,7 @@ fn round_is_filled_to_its_count_minus_anchors() {
 /// Poredak po važnosti: 4 prva.
 #[test]
 fn instances_are_ordered_by_importance() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     let repeat = Repeat {
         max_per_season: 17,
         gap_rounds: 1,
@@ -229,7 +232,7 @@ fn instances_are_ordered_by_importance() {
 /// iznad praga pojave (55) ih nema.
 #[test]
 fn worn_departments_raise_share_of_wear_complaints() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     // Samo pritužba na prostor uz mnogo općih, da udio prati težinu (bez drugih pojačanih predložaka).
     set.templates.retain(|t| t.code == "P-DOTRAJALO");
     let set = with_general(
@@ -284,7 +287,7 @@ fn worn_departments_raise_share_of_wear_complaints() {
 
 #[test]
 fn roles_and_numbers_are_filled_from_templates() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     // Najviše 3 pojave po predlošku: ranija imena istog predloška (najviše 2) i imena kruga (najviše 4) ne
     // potroše popis od 8 imena, pa se ime u tjednom krugu ne ponavlja.
     let set = with_general(
@@ -345,7 +348,7 @@ fn roles_and_numbers_are_filled_from_templates() {
 /// u tjednoj i u mjesečnoj igri (u mjesečnoj je svaki krug prvi u svom mjesecu).
 #[test]
 fn collective_situation_is_the_same_for_every_hotel() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     let mut svi = general(
         "P-SVI",
         Kind::Crisis,
@@ -410,7 +413,7 @@ fn collective_situation_is_the_same_for_every_hotel() {
 /// Veća situacija: samo kad je prosjek pokazatelja ≥ 85 (`high`) ili ≤ 35 (`low`), najviše jedna mjesečno.
 #[test]
 fn major_situation_only_in_extremes_and_once_a_month() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     for (code, side) in [
         ("P-VECA-DOBRO", MajorSide::High),
         ("P-VECA-LOSE", MajorSide::Low),
@@ -476,7 +479,7 @@ fn major_situation_only_in_extremes_and_once_a_month() {
 /// osam (svaka se smije ponoviti tek nakon 4 tjedna).
 #[test]
 fn kinds_vary_and_an_opportunity_comes_every_three_rounds() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let repeat = Repeat {
         max_per_season: 17,
         gap_rounds: 1,
@@ -520,7 +523,7 @@ fn kinds_vary_and_an_opportunity_comes_every_three_rounds() {
 /// Pretvorba iz sadržaja čuva pravila pojave.
 #[test]
 fn content_templates_convert_to_core_rules() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let klima = set.templates.iter().find(|t| t.code == "P-KLIMA").unwrap();
     assert_eq!(klima.kind, Kind::Complaint);
     assert_eq!(klima.department, DeptTarget::One(DeptCode::rooms()));
@@ -568,13 +571,13 @@ fn anchors_for(kind: PeriodKind, index: u8) -> Vec<Anchor> {
     }
 }
 
-/// Pokrivenost sadržaja (pregled J-2, I2): samo predlošci iz repoa, početno stanje A/B/C, tjedna i mjesečna igra
-/// — svaki krug dobiva točno `broj − sidra`. Pada dok S-2 ne doda predloške (sada su tri), pa je isključen;
-/// S-2 ga uključuje (ili J-3 doda provjeru balansa).
+/// Pokrivenost sadržaja (pregled J-2, I2): samo predlošci iz repoa (`live`), početno stanje A/B/C, tjedna i
+/// mjesečna igra — svaki krug dobiva točno `broj − sidra`. Sa 40 predložaka S-3 još pada (t13 A: 3 od 5), pa je
+/// isključen dok popravak S-3 ne doda predloške.
 #[test]
-#[ignore = "čeka S-2: repo ima samo tri predloška, a vrhunac traži barem 20 dopuštenih uz razmak od 4 tjedna"]
+#[ignore = "čeka S-3 popravak 1: s 40 predložaka t13 A dobiva 3 od 5"]
 fn repo_templates_fill_every_round() {
-    let (cat, set) = content();
+    let (cat, set) = live();
     for kind in KINDS {
         for profile in [Profile::A, Profile::B, Profile::C] {
             let state = start(&cat, profile);

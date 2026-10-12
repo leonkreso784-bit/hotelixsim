@@ -11,11 +11,11 @@ use sim_hotel_v2::situations::{
     virtual_weeks,
 };
 use sim_hotel_v2::{Month, PeriodKind, Profile, season_periods};
-use situations_common::{Hotel, content, indices, season, start, with_general};
+use situations_common::{Hotel, frozen, indices, season, start, with_general};
 
 /// Samo testni opći predlošci (bez uvjeta), dovoljno ih za kolovoz uz razmak od 4 tjedna.
 fn month_set() -> TemplateSet {
-    let (_, mut set) = content();
+    let (_, mut set) = frozen();
     set.templates.clear();
     let mut set = with_general(
         set,
@@ -41,7 +41,7 @@ fn period(m: Month) -> sim_hotel_v2::Period {
 
 #[test]
 fn virtual_weeks_split_the_month_count() {
-    let (cat, _) = content();
+    let (cat, _) = frozen();
     let split = |profile: Profile, m: Month| -> Vec<(u8, u8)> {
         let state = start(&cat, profile);
         let p = period(m);
@@ -89,7 +89,7 @@ fn virtual_weeks_split_the_month_count() {
 /// ime i druge brojeve.
 #[test]
 fn monthly_round_is_filled_and_repeats_keep_28_days() {
-    let (cat, _) = content();
+    let (cat, _) = frozen();
     let set = month_set();
     let mut repeated = 0;
     for profile in [Profile::A, Profile::B, Profile::C] {
@@ -167,7 +167,7 @@ fn monthly_round_is_filled_and_repeats_keep_28_days() {
 
 #[test]
 fn monthly_draw_is_reproducible() {
-    let (cat, _) = content();
+    let (cat, _) = frozen();
     let set = month_set();
     let state = start(&cat, Profile::A);
     let h = Hotel {

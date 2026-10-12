@@ -1,8 +1,9 @@
-//! Zajedničko za testove izvlačenja situacija (J-2): sadržaj iz repoa, testni „opći" predlošci, krug i sezona
-//! jednog hotela uz nepromijenjeno početno stanje.
+//! Zajedničko za testove izvlačenja situacija (J-2): zamrznuti sadržaj (`frozen`) i sadržaj iz repoa (`live`),
+//! testni „opći" predlošci, krug i sezona jednog hotela uz nepromijenjeno početno stanje.
 #![allow(dead_code)]
 
 use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use content::{Snapshot, repo_dir};
 use sim_hotel_v2::situations::{
@@ -11,13 +12,26 @@ use sim_hotel_v2::situations::{
 };
 use sim_hotel_v2::{Catalog, HotelState, IndexSet, Period, PeriodKind, Profile, season_periods};
 
-pub fn content() -> (Catalog, TemplateSet) {
-    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+/// Sadržaj iz `dir` (katalog v2 i predlošci u jezgrenom obliku).
+fn read(dir: &Path) -> (Catalog, TemplateSet) {
+    let c = Snapshot::read_v2(dir).unwrap().build().unwrap();
     let set = c
         .situation_templates
         .expect("v2 snimak ima predloške")
         .to_core();
     (c.v2.expect("v2 katalog"), set)
+}
+
+/// Zamrznuti sadržaj s `52ce161` (tri predloška S-1, katalog i imena toga trenutka;
+/// `tests/fixtures/content-52ce161`, zapečaćen u `fixtures_sealed.rs`). Testovi pravila generatora i otisci
+/// koriste njega, da novi predlošci u repou ne pomiču ni pravila ni otiske.
+pub fn frozen() -> (Catalog, TemplateSet) {
+    read(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/content-52ce161"))
+}
+
+/// Sadržaj iz repoa (`content/hotel`): za testove pokrivenosti stvarnih predložaka.
+pub fn live() -> (Catalog, TemplateSet) {
+    read(&repo_dir())
 }
 
 pub fn indices(avg_hundredths: u16) -> IndexSet {

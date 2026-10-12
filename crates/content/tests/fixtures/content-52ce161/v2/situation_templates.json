@@ -1,0 +1,210 @@
+{
+  "major": { "high_avg_min": 85, "low_avg_max": 35, "max_per_month": 1 },
+  "templates": [
+    {
+      "code": "P-KLIMA",
+      "kind": "prituzba",
+      "department": "rooms",
+      "weight": 2,
+      "when": { "months": ["jun", "jul", "aug"], "occupancy_bp": { "at_least": 6000 } },
+      "chance": { "base": 3, "boost": [{ "when": { "dept_condition_pts": { "below": 5000 } }, "times": 3 }] },
+      "repeat": { "max_per_season": 2, "gap_rounds": 5 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "f",
+          "types": ["majka s dvoje male djece", "umirovljenica na godišnjem odmoru", "poslovna gošća na konferenciji"]
+        }
+      },
+      "params": {
+        "soba": { "range": [101, 520] },
+        "temp": { "pick": [32, 34, 36] },
+        "vecera": { "price_pct": 90 },
+        "boravak": { "price_pct": 700 }
+      },
+      "title": "Klima ne radi u sobi {soba}",
+      "description": "{gost.ime}, {gost.tip}, treći put zove recepciju: klima u sobi {soba} ne radi od jutra, a vani je {temp} °C.",
+      "character": {
+        "role": "gost",
+        "brief": "Ti si {gost.ime}, {gost.tip}. Umorna si i ljuta: klima u sobi {soba} ne radi od jutra, vani je {temp} °C, a ovo je tvoj treći poziv recepciji. Najviše ti treba hladna soba ODMAH; novac ti je sporedan. Smiriš se ako se netko iskreno ispriča i odmah ponudi rješenje. Ako ti kažu da je kriva vrućina ili da tehničar dolazi 'kad stigne', postaješ ljuća i spominješ lošu recenziju. Ne nudiš sama rješenja; čekaš da ih ponudi hotel.",
+        "opening": "Treći put zovem! Klima u sobi {soba} ne radi od jutra, a vani je {temp} °C. Što ćete poduzeti?",
+        "fallback_reply": "Gošća je previše ljuta da bi nastavila razgovor. Odluči što ćeš poduzeti."
+      },
+      "rubric": [
+        "Brza isprika i preuzimanje odgovornosti, bez prebacivanja krivnje (vrućina, tehničar)",
+        "Trenutno rješenje: druga soba ili prijenosni uređaj, odmah",
+        "Razmjerna kompenzacija (večera, popust na noćenje), ne povrat cijelog boravka",
+        "Uzrok se popravlja i prijavljuje održavanju",
+        "Provjera kasnije (follow-up)"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, odmah premjestiti gošću u drugu sobu, ponuditi večeru, poslati tehničara i sutra je nazvati",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "vecera" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Ispričati se, premjestiti gošću i poslati tehničara",
+          "criteria": [1, 2, 4],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Vratiti novac za cijeli boravak",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "boravak" },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 700] }
+    },
+    {
+      "code": "P-POVISICA",
+      "kind": "osoblje",
+      "department": "*staffed",
+      "weight": 3,
+      "when": { "months": ["jul", "aug"], "dept_staff": { "at_least": 4 } },
+      "chance": {
+        "base": 2,
+        "boost": [
+          { "when": { "morale_pts": { "below": 4500 } }, "times": 2 },
+          { "when": { "dept_load_hundredths": { "at_least": 180 } }, "times": 2 }
+        ]
+      },
+      "repeat": { "max_per_season": 2, "gap_rounds": 6 },
+      "roles": { "radnik": { "from": "staff", "gender": "m" } },
+      "params": {
+        "uloga": {
+          "by_department": {
+            "rooms": "voditelj recepcije",
+            "restaurant": "šef kuhinje",
+            "lobby_bar": "šef lobby bara",
+            "rooftop_bar": "šef rooftop bara",
+            "pool_bar": "šef bara uz bazen",
+            "spa": "voditelj wellnessa",
+            "admin": "voditelj računovodstva",
+            "sales": "voditelj prodaje",
+            "maintenance": "šef održavanja"
+          }
+        },
+        "ponuda_pct": { "pick": [15, 20, 25] },
+        "sezona": { "range": [3, 9] },
+        "bonus": { "wage_pct": 90 }
+      },
+      "title": "Povišica ili odlazak: {uloga} {radnik.ime}",
+      "description": "{radnik.ime}, {uloga} u odjelu {odjel}, radi u hotelu {sezona}. sezonu. Konkurentski hotel nudi mu {ponuda_pct} % veću plaću.",
+      "character": {
+        "role": "radnik",
+        "brief": "Ti si {radnik.ime}, {uloga} u odjelu {odjel}; u hotelu radiš {sezona}. sezonu. Konkurentski hotel nudi ti {ponuda_pct} % veću plaću. Novac je važan, ali pravi razlog je da radiš 12 sati dnevno bez slobodnog dana i da te nitko ne pita za mišljenje o poslu. Ne kažeš to odmah: prvo tražiš povišicu. Otkriješ pravi razlog tek ako te netko pita kako ti je i sasluša. Ne prihvaćaš prijetnje ni 'nitko nije nezamjenjiv'. Rado bi obučio zamjenika ako dobiješ više odgovornosti.",
+        "opening": "Imam ponudu iz hotela preko puta, {ponuda_pct} % više. Ili mi dignete plaću ili odlazim na kraju mjeseca.",
+        "fallback_reply": "{radnik.ime} se vratio na posao; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+      },
+      "rubric": [
+        "Saslušati ga i otkriti pravi razlog (plaća, opterećenje, priznanje)",
+        "Odluka u okviru budžeta, s obrazloženjem",
+        "Pravednost prema ostatku tima: bez presedana koji ruši moral drugih",
+        "Nenovčani elementi: raspored, odgovornost, priznanje, razvoj",
+        "Plan B: zamjenik ili nasljednik iz tima"
+      ],
+      "answers": [
+        {
+          "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus": "bonus" }]
+        },
+        {
+          "label": "Odmah dati {ponuda_pct} %",
+          "criteria": [1],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": "ponuda_pct", "bonus": 0 }]
+        },
+        {
+          "label": "Odbiti: „nitko nije nezamjenjiv“",
+          "criteria": [],
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+        }
+      ],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "effect_band": { "cost_night_pct": [0, 1500], "raise_pct": [0, 25] }
+    },
+    {
+      "code": "P-DOTRAJALO",
+      "kind": "prituzba",
+      "department": "*guest_facing",
+      "weight": 2,
+      "when": { "dept_condition_pts": { "below": 5500 } },
+      "chance": { "base": 2, "boost": [{ "when": { "dept_condition_pts": { "below": 4000 } }, "times": 3 }] },
+      "repeat": { "max_per_season": 3, "gap_rounds": 3 },
+      "roles": {
+        "gost": {
+          "from": "guest",
+          "gender": "m",
+          "types": ["gost na odmoru s obitelji", "gost koji dolazi već petu godinu", "poslovni gost"]
+        }
+      },
+      "params": {
+        "stvar": {
+          "by_department": {
+            "rooms": "otrcan tepih i plijesan u kupaonici",
+            "restaurant": "klimave stolice i mrlje na stolnjacima",
+            "lobby_bar": "izlizane fotelje i napuknut stol",
+            "rooftop_bar": "izblijedjele suncobrane i hrđavu ogradu",
+            "pool_bar": "oljuštene barske stolice i poderanu tendu",
+            "spa": "pokvaren tuš i hladnu saunu"
+          }
+        },
+        "noc_pola": { "price_pct": 50 }
+      },
+      "title": "Gost fotografira {stvar} ({odjel})",
+      "description": "{gost.ime}, {gost.tip}, na recepciji pokazuje fotografije: {stvar}. Kaže da će ih objaviti uz recenziju.",
+      "rubric": [
+        "Isprika bez umanjivanja problema",
+        "Nadoknada razmjerna neugodnosti",
+        "Hitan popravak, ne obećanje „nakon sezone“",
+        "Odgovor na recenziju koji kaže što je popravljeno",
+        "Pojačano održavanje odjela da se ne ponovi"
+      ],
+      "answers": [
+        {
+          "label": "Ispričati se, dati popust od pola noćenja, hitno popraviti, odgovoriti na recenziju i pojačati održavanje",
+          "criteria": [1, 2, 3, 4, 5],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": "noc_pola" },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Hitno popraviti, bez isprike i popusta",
+          "criteria": [3],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": true }
+          ]
+        },
+        {
+          "label": "Ispričati se i obećati popravak „nakon sezone“",
+          "criteria": [1],
+          "mechanics": [
+            { "type": "ServiceRecovery", "compensation": 0 },
+            { "type": "EquipmentRepair", "urgent": false }
+          ]
+        }
+      ],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "EquipmentRepair", "urgent": false }
+      ],
+      "effect_band": { "cost_night_pct": [0, 100] }
+    }
+  ]
+}

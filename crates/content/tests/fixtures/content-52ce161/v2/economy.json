@@ -1,0 +1,10 @@
+{
+  "guests_per_room_hundredths": 180,
+  "price_level_min_pct": 90,
+  "price_level_max_pct": 120,
+  "fixed_charges": {
+    "insurance": { "name": "Osiguranje" },
+    "lease": { "name": "Najam zgrade i opreme" },
+    "property_tax": { "name": "Porez na imovinu" }
+  }
+}

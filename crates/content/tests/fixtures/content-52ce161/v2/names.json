@@ -1,0 +1,46 @@
+{
+  "guest": {
+    "f": [
+      "Anna Müller",
+      "Sarah Thompson",
+      "Giulia Rossi",
+      "Maja Novak",
+      "Katarina Kovačević",
+      "Laura Schneider",
+      "Eszter Nagy",
+      "Iva Radman"
+    ],
+    "m": [
+      "Ivan Kovač",
+      "Thomas Weber",
+      "James Wilson",
+      "Marco Bianchi",
+      "Luka Jelić",
+      "Stefan Gruber",
+      "Tomaž Kranjc",
+      "Jan Dvořák"
+    ]
+  },
+  "staff": {
+    "f": [
+      "Ana Jurić",
+      "Ivana Marić",
+      "Sanja Perić",
+      "Mirela Knežević",
+      "Lucija Pavlović",
+      "Martina Vuković"
+    ],
+    "m": [
+      "Josip Matić",
+      "Davor Šimić",
+      "Ante Grgić",
+      "Nikola Božić",
+      "Tomislav Lovrić",
+      "Igor Brajković"
+    ]
+  },
+  "partner": {
+    "f": ["Vesna Radić", "Tea Barišić", "Nina Zorić", "Helena Vidović"],
+    "m": ["Damir Tomić", "Krešimir Šarić", "Goran Klarić", "Boris Herceg"]
+  }
+}

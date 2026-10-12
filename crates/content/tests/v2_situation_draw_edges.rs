@@ -15,7 +15,7 @@ use sim_hotel_v2::{
     Catalog, HotelState, IndexSet, Month, PeriodKind, PeriodPlan, Profile, ResolveError,
     resolve_period, season_periods,
 };
-use situations_common::{Hotel, content, general, indices, round, season, start, with_general};
+use situations_common::{Hotel, frozen, general, indices, round, season, start, with_general};
 
 const KINDS: [PeriodKind; 2] = [PeriodKind::Week, PeriodKind::Month];
 
@@ -34,7 +34,7 @@ fn closable(cat: &Catalog) -> BTreeSet<DeptCode> {
 
 #[test]
 fn closed_department_never_gets_a_situation() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let set = with_general(set, 24, OFTEN);
     let closed = closable(&cat);
     assert!(!closed.is_empty());
@@ -66,7 +66,7 @@ fn closed_department_never_gets_a_situation() {
 
 #[test]
 fn empty_template_set_draws_nothing() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     set.templates.clear();
     let state = start(&cat, Profile::A);
     let h = Hotel {
@@ -81,7 +81,7 @@ fn empty_template_set_draws_nothing() {
 
 #[test]
 fn round_without_allowed_templates_draws_nothing() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     set.templates.clear();
     for i in 0..10 {
         let mut t = general(&format!("P-RUJAN-{i}"), Kind::Request, OFTEN);
@@ -134,7 +134,7 @@ fn bounds(at_least: Option<i64>, below: Option<i64>) -> Option<Bounds> {
 /// očekivana za ovaj krug, a opterećenje 0.
 #[test]
 fn previous_report_drives_occupancy_and_load_conditions() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     let state = start(&cat, Profile::C);
     let weeks = season_periods(PeriodKind::Week);
     let (p1, p2) = (weeks[0], weeks[1]);
@@ -225,7 +225,7 @@ fn previous_report_drives_occupancy_and_load_conditions() {
 /// Granice veće situacije su uključive, a prosjek pet pokazatelja zaokružen prema dolje.
 #[test]
 fn major_thresholds_are_inclusive() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     for (code, side) in [
         ("P-VECA-HI", MajorSide::High),
         ("P-VECA-LO", MajorSide::Low),
@@ -268,7 +268,7 @@ fn major_thresholds_are_inclusive() {
 /// zatvorenim odjelom dobio problem u odjelu koji ne radi).
 #[test]
 fn collective_never_targets_a_closable_department() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     let closed = closable(&cat);
     for (code, dept) in [
         ("P-SVI-GOSTI", DeptTarget::GuestFacing),
@@ -311,7 +311,7 @@ fn collective_never_targets_a_closable_department() {
 /// Sidra se broje u granicu odjela i u vrste kruga (M3).
 #[test]
 fn anchors_count_toward_department_limit_and_kinds() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     set.templates.clear();
     for i in 0..6 {
         let mut t = general(&format!("P-SOBE-{i}"), Kind::Complaint, OFTEN);
@@ -362,7 +362,7 @@ fn anchors_count_toward_department_limit_and_kinds() {
 /// Povijest smije imati samo primjerke ovog hotela i kolektivne, svaku šifru jednom (M4).
 #[test]
 fn history_from_another_hotel_is_rejected() {
-    let (cat, set) = content();
+    let (cat, set) = frozen();
     let set = with_general(set, 24, OFTEN);
     let state = start(&cat, Profile::A);
     let t02 = season_periods(PeriodKind::Week)[1];
@@ -413,7 +413,7 @@ fn history_from_another_hotel_is_rejected() {
 /// Pojačanje množi težinu točno (M6): jedno mjesto, dva predloška; pojačani (×3) dolazi u ¾ slučajeva.
 #[test]
 fn boost_multiplies_weight_exactly() {
-    let (cat, mut set) = content();
+    let (cat, mut set) = frozen();
     let plain = general("P-OBICNO", Kind::Request, OFTEN);
     let mut boosted = general("P-POJACANO", Kind::Request, OFTEN);
     boosted.department = DeptTarget::One(DeptCode::rooms());

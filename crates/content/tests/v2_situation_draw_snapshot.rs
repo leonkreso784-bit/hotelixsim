@@ -1,12 +1,14 @@
 //! Brana regresije izvlačenja (J-2 popravak 1): tjedni rezultati za scenarije u kojima ponavljanje ne traži
 //! novo pravilo ostaju bajt-isti kao na `52ce161` (otisci zabilježeni PRIJE izmjena). Svi razmaci u scenarijima su
 //! barem 4 tjedna, pa Leonov najmanji razmak (4 tjedna) ne mijenja ništa; ne miješa se ni stanje sidara.
+//! Sadržaj (katalog, tri predloška S-1, imena) je zamrznut na `52ce161` (`situations_common::frozen`), pa otisci
+//! ostaju brana generatora i kad repo dobije nove predloške.
 
 mod situations_common;
 
 use sim_hotel_v2::situations::{DrawnSituation, Kind, MajorSide, Repeat, Scope, TemplateSet};
 use sim_hotel_v2::{Month, PeriodKind, Profile};
-use situations_common::{Hotel, content, general, indices, season, start, with_general};
+use situations_common::{Hotel, frozen, general, indices, season, start, with_general};
 
 /// FNV-1a 64, da otisak ne ovisi o verziji standardne knjižnice.
 fn fnv(acc: u64, s: &str) -> u64 {
@@ -49,7 +51,7 @@ fn at_least_four_weeks(mut set: TemplateSet) -> TemplateSet {
 
 /// Svaki predložak najviše jednom u sezoni; uz kolektivne i veće.
 fn no_repeat_set() -> TemplateSet {
-    let (_, mut set) = content();
+    let (_, mut set) = frozen();
     let once = Repeat {
         max_per_season: 1,
         gap_rounds: 4,
@@ -82,7 +84,7 @@ fn no_repeat_set() -> TemplateSet {
 
 /// Ponavljanje uz razmak barem 4 tjedna.
 fn repeat_set() -> TemplateSet {
-    let (_, set) = content();
+    let (_, set) = frozen();
     let set = at_least_four_weeks(set);
     let mut set = with_general(
         set,
@@ -106,7 +108,7 @@ fn repeat_set() -> TemplateSet {
 }
 
 fn fingerprint(set: &TemplateSet, avg: u16, worn: bool, roles: bool) -> u64 {
-    let (cat, _) = content();
+    let (cat, _) = frozen();
     let mut h = FNV_START;
     for profile in [Profile::A, Profile::B, Profile::C] {
         let mut state = start(&cat, profile);
