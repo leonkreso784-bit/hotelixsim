@@ -199,9 +199,12 @@ fn place_progress_and_winner_match_season_view() {
                 50
             })
             / 100;
+        // Napredak je u cijelim bodovima ili, kad se bodovi hotela poklapaju, s decimalama („−3,91 boda").
         let words = f["napredak_od_pocetka"].as_str().unwrap();
+        let whole = mine.progress_hundredths.unsigned_abs() / 100;
         assert!(
-            words.contains(&p.unsigned_abs().to_string()),
+            words.contains(&format!("{} bod", p.unsigned_abs()))
+                || words.contains(&format!("{whole},")),
             "{words} / {p}"
         );
         let place = f["mjesto"].as_str().unwrap();
