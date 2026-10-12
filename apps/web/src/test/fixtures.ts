@@ -91,6 +91,7 @@ export function limits(): PlanLimitsBody {
       training_full: { cost_cents: 1_000_000, experience_pts: 700, morale_pts: 200 },
       maintenance: { deferred_cents: 300_000, regular_cents: 1_500_000, intensive_cents: 3_000_000 },
       payroll_week_cents: 3_000_000,
+      payroll_round_cents: 12_857_143,
     },
   };
 }
@@ -514,6 +515,8 @@ export function v2PlanHotel(): HotelBody {
     maintenance: rooms
       ? { deferred_cents: 70_000, regular_cents: 350_000, intensive_cents: 700_000 }
       : { deferred_cents: 11_666, regular_cents: 93_333, intensive_cents: 186_666 },
+    // Plaća jednog sezonskog radnika za tjedan (7/30 mjesečne): Smještaj 2.500 €, ostali 2.100 € mjesečno.
+    seasonal_worker_cents: rooms ? 58_333 : 49_000,
   });
   const p = base.private;
   if (!p?.plan) return base;
@@ -546,6 +549,7 @@ export function v2PlanHotel(): HotelBody {
             training_basic: { cost_cents: 116_666, experience_pts: 93, morale_pts: 46 },
             training_full: { cost_cents: 233_333, experience_pts: 163, morale_pts: 46 },
             maintenance: { deferred_cents: 70_000, regular_cents: 350_000, intensive_cents: 700_000 },
+            payroll_round_cents: 3_000_000,
           },
           departments: {
             rooms: lim(20, false, true),

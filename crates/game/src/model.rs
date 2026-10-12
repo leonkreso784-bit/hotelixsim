@@ -475,7 +475,7 @@ impl Model {
             (Model::V2, CoreState::V2(s)) => {
                 let cat = v2_catalog(c)?;
                 let l = PeriodPlan::limits(s, &r.period, cat).map_err(debug)?;
-                let (costs, maintenance) = v2_costs(s, &r.period, cat)?;
+                let (costs, dept_costs) = v2_costs(s, &r.period, cat)?;
                 Ok(PlanLimits {
                     price_min_cents: l.price_min_cents,
                     price_max_cents: l.price_max_cents,
@@ -490,6 +490,10 @@ impl Model {
                         .departments
                         .iter()
                         .map(|(code, d)| {
+                            let own = dept_costs
+                                .get(code.as_str())
+                                .copied()
+                                .ok_or_else(|| corrupt("odjel bez cijena odluka"))?;
                             Ok((
                                 code.as_str().to_owned(),
                                 DeptLimitsView {
@@ -498,10 +502,8 @@ impl Model {
                                     price_level_min_pct: d.price_level_min_pct,
                                     price_level_max_pct: d.price_level_max_pct,
                                     can_close: d.can_close,
-                                    maintenance: maintenance
-                                        .get(code.as_str())
-                                        .copied()
-                                        .ok_or_else(|| corrupt("odjel bez cijene održavanja"))?,
+                                    maintenance: own.maintenance,
+                                    seasonal_worker_cents: own.seasonal_worker_cents,
                                 },
                             ))
                         })

@@ -447,6 +447,11 @@ export interface components {
             seasonal_max: number;
             /** Format: int32 */
             seasonal_min: number;
+            /**
+             * Format: int64
+             * @description Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće.
+             */
+            seasonal_worker_cents: number;
         };
         /** @description Postavke jednog odjela u planu kruga. */
         DeptPlanBody: {
@@ -927,6 +932,11 @@ export interface components {
         PlanCostsBody: {
             /** @description Održavanje hotela (v1) odnosno Smještaja (v2) u krugu. */
             maintenance: components["schemas"]["LevelCostsBody"];
+            /**
+             * Format: int64
+             * @description Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće.
+             */
+            payroll_round_cents: number;
             /**
              * Format: int64
              * @description Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje).

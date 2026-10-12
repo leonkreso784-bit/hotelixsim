@@ -239,6 +239,8 @@ pub struct DeptLimitsView {
     pub can_close: bool,
     /// Trošak razina održavanja odjela u krugu.
     pub maintenance: LevelCosts,
+    /// Plaća jednog sezonskog radnika odjela za krug, pri sadašnjem postotku plaće.
+    pub seasonal_worker_cents: i64,
 }
 
 /// Granice izbornika radnji za ekran.

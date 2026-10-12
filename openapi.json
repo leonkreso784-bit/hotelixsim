@@ -1693,7 +1693,8 @@
           "price_level_min_pct",
           "price_level_max_pct",
           "can_close",
-          "maintenance"
+          "maintenance",
+          "seasonal_worker_cents"
         ],
         "properties": {
           "can_close": {
@@ -1722,6 +1723,11 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "seasonal_worker_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće."
           }
         }
       },
@@ -3180,12 +3186,18 @@
           "training_basic",
           "training_full",
           "maintenance",
-          "payroll_week_cents"
+          "payroll_week_cents",
+          "payroll_round_cents"
         ],
         "properties": {
           "maintenance": {
             "$ref": "#/components/schemas/LevelCostsBody",
             "description": "Održavanje hotela (v1) odnosno Smještaja (v2) u krugu."
+          },
+          "payroll_round_cents": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće."
           },
           "payroll_week_cents": {
             "type": "integer",

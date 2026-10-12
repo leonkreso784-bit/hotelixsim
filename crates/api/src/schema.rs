@@ -264,6 +264,8 @@ pub struct DeptLimitsBody {
     pub can_close: bool,
     /// Trošak razina održavanja odjela u ovom krugu.
     pub maintenance: LevelCostsBody,
+    /// Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće.
+    pub seasonal_worker_cents: i64,
 }
 
 /// Trošak triju razina održavanja u krugu (centi).
@@ -299,6 +301,8 @@ pub struct PlanCostsBody {
     pub maintenance: LevelCostsBody,
     /// Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje).
     pub payroll_week_cents: i64,
+    /// Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće.
+    pub payroll_round_cents: i64,
 }
 
 impl From<&game::costs::LevelCosts> for LevelCostsBody {
@@ -332,6 +336,7 @@ impl From<&game::costs::PlanCosts> for PlanCostsBody {
             training_full: (&c.training_full).into(),
             maintenance: (&c.maintenance).into(),
             payroll_week_cents: c.payroll_week_cents,
+            payroll_round_cents: c.payroll_round_cents,
         }
     }
 }
@@ -361,6 +366,7 @@ impl From<&PlanLimits> for PlanLimitsBody {
                                 price_level_max_pct: d.price_level_max_pct,
                                 can_close: d.can_close,
                                 maintenance: (&d.maintenance).into(),
+                                seasonal_worker_cents: d.seasonal_worker_cents,
                             },
                         )
                     })

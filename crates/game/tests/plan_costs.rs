@@ -21,6 +21,8 @@ fn v1_plan_costs_are_the_monthly_catalog_amounts() {
         (300_000, 1_500_000, 3_000_000)
     );
     assert!(c.payroll_week_cents > 0);
+    // Mjesec je krug: plaće kruga su mjesečne, tjedne su 7/30 njih (lipanj, zaokruženo).
+    assert_eq!(c.payroll_week_cents, (c.payroll_round_cents * 7 + 15) / 30);
 }
 
 #[test]
@@ -45,4 +47,8 @@ fn v2_weekly_costs_are_prorated_to_seven_of_thirty_days_and_renovation_is_full()
     );
     assert_eq!(l.departments["rooms"].maintenance, c.maintenance);
     assert!(c.payroll_week_cents > 0);
+    // t01 ima 7 dana: plaće kruga i tjedna procjena razlikuju se najviše za zaokruživanje (1 cent).
+    assert!((c.payroll_round_cents - c.payroll_week_cents).abs() <= 1);
+    // Restoran: plaća 2.100 €/mjesec pri 100 % → 490 € za tjedan (7/30).
+    assert_eq!(l.departments["restaurant"].seasonal_worker_cents, 49_000);
 }

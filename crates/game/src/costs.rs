@@ -42,6 +42,16 @@ pub struct PlanCosts {
     pub maintenance: LevelCosts,
     /// Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi i postotku plaće (procjena za upozorenje).
     pub payroll_week_cents: i64,
+    /// Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće (v1 mjesec, v2 `prorate`).
+    pub payroll_round_cents: i64,
+}
+
+/// Cijene odluka jednog odjela u krugu (v2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DeptCosts {
+    pub maintenance: LevelCosts,
+    /// Plaća jednog sezonskog radnika tog odjela za krug, pri sadašnjem postotku plaće (pravilo obračuna).
+    pub seasonal_worker_cents: i64,
 }
 
 fn calc<T, E: std::fmt::Debug>(r: Result<T, E>) -> Result<T, GameError> {
@@ -92,10 +102,15 @@ fn training(
     })
 }
 
+fn narrow(x: i128, what: &str) -> Result<i64, GameError> {
+    i64::try_from(x).map_err(|_| corrupt(what))
+}
+
 fn hotel_costs(
     a: &sim_hotel::ActionSpec,
     scale: impl Fn(i64) -> Result<i64, GameError>,
     payroll_week_cents: i64,
+    payroll_round_cents: i64,
 ) -> Result<PlanCosts, GameError> {
     Ok(PlanCosts {
         renovation_cents: a.renovation_cents,
@@ -113,6 +128,7 @@ fn hotel_costs(
             &scale,
         )?,
         payroll_week_cents,
+        payroll_round_cents,
     })
 }
 
@@ -127,15 +143,21 @@ pub fn v1_costs(
     let monthly = monthly_payroll(staff, spec.wage_cents, s.wage_pct)?
         .checked_add(i128::from(s.extra_wage_cents))
         .ok_or_else(|| corrupt("mjesečne plaće"))?;
-    hotel_costs(&cat.actions, Ok, per_week(monthly, m.days())?)
+    hotel_costs(
+        &cat.actions,
+        Ok,
+        per_week(monthly, m.days())?,
+        narrow(monthly, "mjesečne plaće")?,
+    )
 }
 
-/// v2: iznosi razmjerno krugu `p`; uz to održavanje po odjelu (Smještaj iz kataloga radnji, kao obračun).
+/// v2: iznosi razmjerno krugu `p`; uz to po odjelu održavanje (Smještaj iz kataloga radnji, kao obračun) i plaća
+/// jednog sezonskog radnika.
 pub fn v2_costs(
     s: &sim_hotel_v2::HotelState,
     p: &Period,
     cat: &sim_hotel_v2::Catalog,
-) -> Result<(PlanCosts, BTreeMap<String, LevelCosts>), GameError> {
+) -> Result<(PlanCosts, BTreeMap<String, DeptCosts>), GameError> {
     let scale = |x: i64| calc(prorate(x, p));
     let mut monthly = i128::from(s.extra_wage_cents);
     let mut depts = BTreeMap::new();
@@ -161,12 +183,20 @@ pub fn v2_costs(
         } else {
             levels([&m[0], &m[1], &m[2]], scale)?
         };
-        depts.insert(code.as_str().to_owned(), own);
+        let one = monthly_payroll(1, spec.wage_cents, s.wage_pct)?;
+        depts.insert(
+            code.as_str().to_owned(),
+            DeptCosts {
+                maintenance: own,
+                seasonal_worker_cents: scale(narrow(one, "plaća sezonskog radnika")?)?,
+            },
+        );
     }
     let costs = hotel_costs(
         &cat.base.actions,
         scale,
         per_week(monthly, p.month_days_at_start())?,
+        scale(narrow(monthly, "plaće kruga")?)?,
     )?;
     Ok((costs, depts))
 }
