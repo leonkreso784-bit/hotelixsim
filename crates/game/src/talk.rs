@@ -7,7 +7,7 @@ use crate::round::RoundKey;
 use crate::error::GameError;
 use crate::event::{
     AiMeta, AiSource, CharacterReplied, ChatMessageSent, DebriefRecorded, GameEvent,
-    ResponseSubmitted,
+    ResponseSubmitted, SeasonDebriefRecorded,
 };
 use crate::game::{ChatLine, Game, RoundStatus, Speaker, student_count};
 use crate::ids::HotelId;
@@ -165,6 +165,32 @@ impl Game {
             source,
             meta,
         })))
+    }
+
+    /// Sezonski mentor hotela (v2, nakon zadnjeg kruga); `None` = već postoji.
+    pub fn record_season_debrief(
+        &self,
+        hotel: HotelId,
+        text: String,
+        source: AiSource,
+        meta: Option<AiMeta>,
+    ) -> Result<Option<GameEvent>, GameError> {
+        self.model().require_v2(&self.content)?;
+        let h = self.hotel(hotel)?;
+        if self.current_round().is_some() {
+            return Err(GameError::SeasonNotOver);
+        }
+        if h.season_debrief.is_some() {
+            return Ok(None);
+        }
+        Ok(Some(GameEvent::SeasonDebriefRecorded(
+            SeasonDebriefRecorded {
+                hotel_id: hotel,
+                text,
+                source,
+                meta,
+            },
+        )))
     }
 
     /// Razgovor igrača sa likom u situaciji (prazan ako ga nema).

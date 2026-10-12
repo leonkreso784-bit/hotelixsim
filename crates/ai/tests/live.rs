@@ -1,6 +1,8 @@
 //! Živi test: zove pravi Claude API. Ručno: `cargo test -p ai --test live -- --ignored`
 //! (treba ANTHROPIC_API_KEY). U CI-ju se ne pokreće.
 
+mod common;
+
 use app::AiPort;
 use content::{Snapshot, repo_dir};
 use game::command::new_game;
@@ -78,5 +80,41 @@ async fn character_speaks_only_its_own_words() {
             !t.contains("glumim") && !t.contains("kao lik"),
             "izlazak iz uloge: {t}"
         );
+    }
+}
+
+/// Sezonski mentor (kraj-sezone-spec §6.3): četiri dijela, uputa `mentor-sezona.v1`, bez oznaka oblikovanja i bez
+/// pripisivanja nepromijenjenih plaća studentu.
+#[tokio::test]
+#[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
+async fn season_mentor_writes_four_parts() {
+    let key = std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY nije postavljen");
+    let ai = ai::Anthropic::new(key, ai::Models::default());
+    let out = ai
+        .season_debrief(common::sample_season())
+        .await
+        .expect("sezonski mentor");
+    assert_eq!(out.meta.prompt, "mentor-sezona.v1");
+    let t = out.value;
+    for part in [
+        "Kako je prošla sezona",
+        "Što je išlo dobro",
+        "Što nije valjalo",
+        "Što ponijeti u sljedeću igru",
+    ] {
+        assert!(
+            t.lines().any(|l| l.trim() == part),
+            "nema dijela {part}: {t}"
+        );
+    }
+    assert!(!t.contains('*') && !t.contains('#'), "oblikovanje: {t}");
+    let low = t.to_lowercase();
+    for bad in [
+        "spustio plaće",
+        "podigao plaće",
+        "spustila plaće",
+        "podigla plaće",
+    ] {
+        assert!(!low.contains(bad), "pripisana promjena plaća: {t}");
     }
 }

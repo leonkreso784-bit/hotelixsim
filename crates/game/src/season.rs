@@ -84,7 +84,7 @@ pub struct SeasonView {
     pub rounds: Vec<RoundInfo>,
     /// Redom poretka: mjesto, pa slot.
     pub hotels: Vec<SeasonHotel>,
-    /// Sezonski mentor (KS-2); do tada uvijek `None`.
+    /// Sezonski mentor hotela koji gleda; `None` dok ga radnik ne zapiše (ili za igru završenu prije KS-2).
     pub mentor: Option<String>,
 }
 
@@ -108,7 +108,7 @@ impl Game {
     /// obračunati, `SeasonNotOver`.
     pub fn season(&self, viewer: HotelId) -> Result<SeasonView, GameError> {
         self.model().require_v2(&self.content)?;
-        self.hotel(viewer)?;
+        let me = self.hotel(viewer)?;
         if self.current_round().is_some() {
             return Err(GameError::SeasonNotOver);
         }
@@ -125,7 +125,7 @@ impl Game {
         Ok(SeasonView {
             rounds: self.rounds_info(),
             hotels,
-            mentor: None,
+            mentor: me.season_debrief.as_ref().map(|d| d.text.clone()),
         })
     }
 

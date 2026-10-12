@@ -1,7 +1,10 @@
 //! Tijela zahtjeva za Claude Messages API: čiste funkcije, testabilne bez mreže.
 //! Ne šalju se `thinking`, `temperature`, `top_p` ni `budget_tokens` (modeli ih odbijaju s 400).
 
-use game::{AssessInput, CharacterInput, ChatLine, DebriefInput, Speaker, debrief_facts};
+use game::{
+    AssessInput, CharacterInput, ChatLine, DebriefInput, SeasonDebriefInput, Speaker,
+    debrief_facts, season_debrief_facts,
+};
 use serde_json::{Value, json};
 use std::fmt::Write;
 
@@ -148,6 +151,21 @@ pub fn debrief_body(model: &str, input: &DebriefInput) -> Value {
             "model": model,
             "max_tokens": 4000,
             "system": prompts::MENTOR.text,
+            "messages": [{ "role": "user", "content": data }],
+            "output_config": { "effort": "low" }
+        }),
+    )
+}
+
+/// Sezonski mentor (kraj-sezone-spec §6.3): isto kao mentor kruga, ali činjenice cijele sezone i duži odgovor.
+pub fn season_debrief_body(model: &str, input: &SeasonDebriefInput) -> Value {
+    let data = serde_json::to_string_pretty(&season_debrief_facts(input)).unwrap_or_default();
+    with_fallback(
+        model,
+        json!({
+            "model": model,
+            "max_tokens": 4000,
+            "system": prompts::MENTOR_SEASON.text,
             "messages": [{ "role": "user", "content": data }],
             "output_config": { "effort": "low" }
         }),

@@ -416,3 +416,107 @@ async fn weekly_debrief_calls_ai_only_at_month_end() {
     assert_eq!(debriefs[4].payload["month"], "t05");
     assert_eq!(debriefs[4].payload["source"], "ai");
 }
+
+/// v2 mjesečna igra s danim AI-jem: (deps, memorija, pozivatelj, igra).
+async fn monthly_v2_with(ai: Arc<dyn AiPort>) -> (Deps, Arc<Memory>, Caller, DemoStarted) {
+    let (d, mem) = app::memory::deps_with_ai(Snapshot::read(&repo_dir()).unwrap(), ai);
+    let settings = NewGameSettings {
+        model: content::Model::V2,
+        kind: Some(sim_hotel_v2::PeriodKind::Month),
+    };
+    let s = start_demo(&d, None, settings).await.unwrap();
+    let me = caller(&d, s.new_token.as_deref()).await.unwrap();
+    (d, mem, me, s)
+}
+
+async fn close_and_work(d: &Deps, me: &Caller, g: GameId, m: Month) {
+    assert!(
+        close_round(d, me, g, RoundKey::Month(m))
+            .await
+            .unwrap()
+            .accepted
+    );
+    while run_next_job(d).await.unwrap() {}
+}
+
+fn season_jobs(mem: &Memory) -> usize {
+    mem.jobs()
+        .iter()
+        .filter(|j| j.kind == SEASON_DEBRIEF_KIND)
+        .count()
+}
+
+/// Kraj-sezone-spec §6.3: posao sezonskog mentora stavlja se u red samo uz obračun zadnjeg kruga v2 igre.
+#[tokio::test]
+async fn last_v2_round_queues_season_debrief_and_ai_writes_it() {
+    let ai = Arc::new(app::memory::FakeAi::good());
+    let (d, mem, me, s) = monthly_v2_with(ai.clone()).await;
+    for m in [Month::Jun, Month::Jul, Month::Aug] {
+        close_and_work(&d, &me, s.game_id, m).await;
+        assert_eq!(season_jobs(&mem), 0, "{m:?}");
+    }
+    close_and_work(&d, &me, s.game_id, Month::Sep).await;
+    assert_eq!(season_jobs(&mem), 1);
+    assert_eq!(ai.season_calls(), 1);
+    let evs: Vec<_> = mem
+        .events(s.game_id)
+        .into_iter()
+        .filter(|e| e.kind == "SeasonDebriefRecorded")
+        .collect();
+    assert_eq!(evs.len(), 1);
+    assert_eq!(evs[0].payload["source"], "ai");
+    assert_eq!(evs[0].payload["hotel_id"], s.hotel_id.0.to_string());
+    let view = season_view(&d, &me, s.game_id).await.unwrap();
+    assert_eq!(
+        view.season.mentor.as_deref(),
+        evs[0].payload["text"].as_str()
+    );
+
+    // Drugi prolaz istog posla ne dodaje ništa (mentor je već zapisan) i ne zove AI.
+    mem.push_job(NewJob {
+        key: "ponovno".into(),
+        kind: SEASON_DEBRIEF_KIND.into(),
+        game_id: s.game_id,
+        payload: serde_json::json!({ "hotel_id": s.hotel_id }),
+    });
+    assert!(run_next_job(&d).await.unwrap());
+    assert_eq!(events_of(&mem, s.game_id, "SeasonDebriefRecorded"), 1);
+    assert_eq!(ai.season_calls(), 1);
+}
+
+#[tokio::test]
+async fn without_ai_key_season_debrief_is_fallback_from_numbers() {
+    let (d, mem, me, s) = monthly_v2_with(Arc::new(DisabledAi)).await;
+    for m in [Month::Jun, Month::Jul, Month::Aug, Month::Sep] {
+        close_and_work(&d, &me, s.game_id, m).await;
+    }
+    let evs: Vec<_> = mem
+        .events(s.game_id)
+        .into_iter()
+        .filter(|e| e.kind == "SeasonDebriefRecorded")
+        .collect();
+    assert_eq!(evs.len(), 1);
+    assert_eq!(evs[0].payload["source"], "fallback");
+    assert!(evs[0].payload.get("meta").is_none());
+    let text = evs[0].payload["text"].as_str().unwrap();
+    assert!(text.starts_with("Kako je prošla sezona\n"), "{text}");
+    assert!(text.ends_with("ovo je sažetak iz brojki."), "{text}");
+}
+
+#[tokio::test]
+async fn v1_game_never_queues_season_debrief() {
+    let (d, mem) = setup();
+    let (me, s) = guest(&d).await;
+    for m in [Month::Jun, Month::Jul] {
+        close_and_work(&d, &me, s.game_id, m).await;
+    }
+    assert_eq!(
+        round_status(&d, &me, s.game_id, RoundKey::Month(Month::Jul))
+            .await
+            .unwrap()
+            .status,
+        RoundStatus::Resolved
+    );
+    assert_eq!(season_jobs(&mem), 0);
+    assert_eq!(events_of(&mem, s.game_id, "SeasonDebriefRecorded"), 0);
+}

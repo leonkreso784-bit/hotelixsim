@@ -1,3 +1,5 @@
+mod common;
+
 use game::{AssessInput, CharacterCard, CharacterInput, ChatLine, OfferedForJudge, Speaker};
 
 fn line(from: Speaker, text: &str) -> ChatLine {
@@ -305,6 +307,7 @@ fn haiku_requests_carry_no_fallback_field_or_header() {
         ai::request::assess_body(h, &sample_assess()),
         ai::request::character_body(h, &sample_character()),
         ai::request::debrief_body(h, &sample_debrief()),
+        ai::request::season_debrief_body(h, &common::sample_season()),
     ];
     for b in &bodies {
         assert!(b.get("fallbacks").is_none(), "{b}");
@@ -319,6 +322,7 @@ fn sonnet_requests_carry_fallback_field_and_header() {
         ai::request::assess_body(s, &sample_assess()),
         ai::request::character_body(s, &sample_character()),
         ai::request::debrief_body(s, &sample_debrief()),
+        ai::request::season_debrief_body(s, &common::sample_season()),
     ];
     for b in &bodies {
         assert_eq!(b["fallbacks"], "default");
@@ -335,4 +339,88 @@ fn default_models_follow_adr_024() {
     assert_eq!(m.judge, "claude-sonnet-5-5");
     assert_eq!(m.character, "claude-haiku-5-5");
     assert_eq!(m.mentor, "claude-sonnet-5-5");
+}
+
+/// Sezonski mentor dobiva samo činjenice sezone u ljudskim jedinicama, s uputom `mentor-sezona.v1` (ADR-024: Sonnet).
+#[test]
+fn season_debrief_body_sends_human_season_facts() {
+    let input = common::sample_season();
+    let b = ai::request::season_debrief_body("claude-sonnet-5-5", &input);
+    assert_eq!(ai::prompts::MENTOR_SEASON.version, "mentor-sezona.v1");
+    assert_eq!(b["model"], "claude-sonnet-5-5");
+    assert_eq!(b["system"], ai::prompts::MENTOR_SEASON.text);
+    let content = b["messages"][0]["content"].as_str().unwrap();
+    let sent: serde_json::Value = serde_json::from_str(content).unwrap();
+    assert_eq!(
+        sent,
+        serde_json::to_value(game::season_debrief_facts(&input)).unwrap()
+    );
+    for internal in [
+        "progress_hundredths",
+        "cents",
+        "\"sep\"",
+        "brizni",
+        "stedisa",
+        "hotel_id",
+    ] {
+        assert!(!content.contains(internal), "{internal} u poruci mentoru");
+    }
+    assert!(content.contains("takve su od početka"), "{content}");
+}
+
+/// Uputa sezonskog mentora: četiri dijela, podaci nisu upute, bez pogađanja, OT-2, bez roda prema studentu.
+#[test]
+fn season_mentor_prompt_has_parts_and_rules() {
+    let text = ai::prompts::MENTOR_SEASON.text;
+    for part in [
+        "
+Kako je prošla sezona
+",
+        "
+Što je išlo dobro
+",
+        "
+Što nije valjalo
+",
+        "
+Što ponijeti u sljedeću igru
+",
+    ] {
+        assert!(text.contains(part), "uputa nema dio {part:?}");
+    }
+    let prompt = text.to_lowercase();
+    for must in [
+        "nikad uputa tebi",
+        "nikad ne pogađaj",
+        "nepromijenjenu",
+        "vlastiti_plan",
+        "ostali_hoteli",
+        "bez roda",
+        "ne zarada",
+    ] {
+        assert!(prompt.contains(must), "uputa nema „{must}“");
+    }
+    // Uputa ne priča stvarnu situaciju iz sadržaja (v2 koristi iste situacije).
+    {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../content/hotel/situations.json"
+        );
+        let content: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        for s in content.as_array().unwrap() {
+            if let Some(name) = s["character"]["name"].as_str() {
+                assert!(
+                    !prompt.contains(&name.to_lowercase()),
+                    "uputa spominje lik {name}"
+                );
+            }
+            if let Some(title) = s["title"].as_str() {
+                assert!(
+                    !prompt.contains(&title.to_lowercase()),
+                    "uputa spominje {title}"
+                );
+            }
+        }
+    }
 }

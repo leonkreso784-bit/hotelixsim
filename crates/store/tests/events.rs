@@ -94,3 +94,59 @@ async fn actor_must_follow_convention(pool: PgPool) {
             .unwrap_or_else(|e| panic!("{ok}: {e}"));
     }
 }
+
+/// Sezonski mentor (KS-2) je novi događaj: baza ga prima i vraća bajt-isti JSON (hrvatski tekst, novi redovi, meta).
+/// Isti JSON `game/tests/season_mentor.rs` čita kao `GameEvent::SeasonDebriefRecorded`.
+#[sqlx::test]
+async fn season_debrief_event_roundtrips_through_database(pool: PgPool) {
+    use app::{Decision, EventLog, GameId, GuestId, Guests, HotelId, NewEvent, NewGame, NewHotel};
+    use uuid::Uuid;
+    let s = Store::from_pool(pool);
+    let (g, guest, h) = (
+        GameId(Uuid::from_u128(1)),
+        GuestId(Uuid::from_u128(2)),
+        HotelId(Uuid::from_u128(11)),
+    );
+    s.create_guest(guest, "sha256:sezona".into()).await.unwrap();
+    let ev = |kind: &str, payload: serde_json::Value| NewEvent {
+        kind: kind.into(),
+        schema_ver: 1,
+        payload,
+        actor: "system".into(),
+    };
+    s.create_game(NewGame {
+        game_id: g,
+        created_by: guest,
+        hotels: vec![NewHotel {
+            hotel_id: h,
+            slot: 1,
+            guest_id: Some(guest),
+        }],
+        events: vec![ev("GameCreated", serde_json::json!({}))],
+    })
+    .await
+    .unwrap();
+    let payload = serde_json::json!({
+        "hotel_id": "00000000-0000-0000-0000-00000000000b",
+        "text": "Kako je prošla sezona\nNapredak je +8 bodova.",
+        "source": "ai",
+        "meta": { "model": "claude-sonnet-5-5", "prompt": "mentor-sezona.v1", "input_tokens": 10, "output_tokens": 20 }
+    });
+    let sent = ev("SeasonDebriefRecorded", payload.clone());
+    s.decide(
+        g,
+        Box::new(move |_| {
+            Ok(Decision {
+                events: vec![sent],
+                ..Decision::default()
+            })
+        }),
+    )
+    .await
+    .unwrap();
+    let raw = s.load(g).await.unwrap();
+    let back = raw.last().unwrap();
+    assert_eq!((back.seq, back.kind.as_str()), (2, "SeasonDebriefRecorded"));
+    assert_eq!(back.schema_ver, 1);
+    assert_eq!(back.payload, payload);
+}

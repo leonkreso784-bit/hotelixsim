@@ -9,7 +9,7 @@ use crate::dto::PlanDto;
 use crate::error::{GameError, corrupt};
 use crate::event::{
     Controller, DebriefRecorded, GameCreated, GameEvent, HotelResolution, HotelSetup, Recorded,
-    RoundResolved, VerdictRecorded,
+    RoundResolved, SeasonDebriefRecorded, VerdictRecorded,
 };
 use crate::ids::{GameId, HotelId};
 use crate::model::{CorePlan, CoreRefs, CoreState, Model, RoundInfo};
@@ -63,6 +63,8 @@ pub struct HotelRecord {
     pub chats: BTreeMap<(RoundKey, String), Vec<ChatLine>>,
     pub responses: BTreeMap<(RoundKey, String), FreeResponse>,
     pub debriefs: BTreeMap<RoundKey, DebriefRecorded>,
+    /// Sezonski mentor (samo v2, nakon zadnjeg kruga).
+    pub season_debrief: Option<SeasonDebriefRecorded>,
 }
 
 /// Projekcija dnevnika: stanje igre dobiveno slijedom događaja (`fold`).
@@ -148,6 +150,7 @@ impl Game {
                 chats: BTreeMap::new(),
                 responses: BTreeMap::new(),
                 debriefs: BTreeMap::new(),
+                season_debrief: None,
             });
         }
         Ok(Game {
@@ -289,6 +292,18 @@ impl Game {
                 let h = self.hotel_mut(d.hotel_id)?;
                 if h.debriefs.insert(m, d.clone()).is_some() {
                     return Err(corrupt("dvostruki mentor"));
+                }
+            }
+            GameEvent::SeasonDebriefRecorded(d) => {
+                if self.model.require_v2(&self.content).is_err() {
+                    return Err(corrupt("sezonski mentor u v1 igri"));
+                }
+                if self.current_round().is_some() {
+                    return Err(corrupt("sezonski mentor prije kraja sezone"));
+                }
+                let h = self.hotel_mut(d.hotel_id)?;
+                if h.season_debrief.replace(d.clone()).is_some() {
+                    return Err(corrupt("dvostruki sezonski mentor"));
                 }
             }
             GameEvent::RoundClosed(c) => {

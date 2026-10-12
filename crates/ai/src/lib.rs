@@ -7,7 +7,7 @@ pub mod request;
 pub mod response;
 
 use app::{AiError, AiOut, AiPort, BoxFut};
-use game::{AiMeta, AssessInput, CharacterInput, DebriefInput, VerdictDraft};
+use game::{AiMeta, AssessInput, CharacterInput, DebriefInput, SeasonDebriefInput, VerdictDraft};
 use std::time::Duration;
 
 pub use app::DisabledAi as Disabled;
@@ -147,6 +147,21 @@ impl AiPort for Anthropic {
                 .await?;
             Ok(AiOut {
                 meta: meta(&reply, &prompts::MENTOR),
+                value: reply.text,
+            })
+        })
+    }
+
+    fn season_debrief(
+        &self,
+        input: SeasonDebriefInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async move {
+            let reply = self
+                .post(request::season_debrief_body(&self.models.mentor, &input))
+                .await?;
+            Ok(AiOut {
+                meta: meta(&reply, &prompts::MENTOR_SEASON),
                 value: reply.text,
             })
         })

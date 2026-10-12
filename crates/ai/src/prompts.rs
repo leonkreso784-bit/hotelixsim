@@ -17,3 +17,7 @@ pub const MENTOR: Prompt = Prompt {
     version: "mentor.v3",
     text: include_str!("../../../prompts/mentor.v3.md"),
 };
+pub const MENTOR_SEASON: Prompt = Prompt {
+    version: "mentor-sezona.v1",
+    text: include_str!("../../../prompts/mentor-sezona.v1.md"),
+};

@@ -1,4 +1,5 @@
-//! Radnik (ARHITEKTURA §9.4): preuzima poslove iz reda — obračun runde, odgovor lika, presudu i mentora.
+//! Radnik (ARHITEKTURA §9.4): preuzima poslove iz reda — obračun runde, odgovor lika, presudu, mentora kruga i
+//! sezonskog mentora.
 //! AI se zove IZVAN `decide`; unutar `decide` se nad svježom igrom ponovno provjerava smije li se rezultat upisati.
 use game::RoundKey;
 use game::{
@@ -16,6 +17,7 @@ pub const RESOLVE_KIND: &str = "resolve_round";
 pub const CHAT_KIND: &str = "character_reply";
 pub const ASSESS_KIND: &str = "assess_response";
 pub const DEBRIEF_KIND: &str = "debrief";
+pub const SEASON_DEBRIEF_KIND: &str = "season_debrief";
 /// Zakup posla (ARHITEKTURA §9.4): radnik koji ga ne završi u roku vraća ga u red.
 /// AI poziv za presudu može trajati desetke sekundi.
 pub const LEASE_SECS: i32 = 180;
@@ -37,6 +39,10 @@ pub fn assess_key(g: GameId, h: HotelId, code: &str) -> String {
 
 pub fn debrief_key(g: GameId, m: RoundKey, h: HotelId) -> String {
     format!("debrief:{}:{}:{}", g.0, m.code(), h.0)
+}
+
+pub fn season_debrief_key(g: GameId, h: HotelId) -> String {
+    format!("season_debrief:{}:{}", g.0, h.0)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -67,6 +73,12 @@ pub struct DebriefPayload {
     pub month: RoundKey,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SeasonDebriefPayload {
+    pub hotel_id: HotelId,
+}
+
 /// Jedan korak radnika: preuzmi posao, obradi ga, a grešku zapiši u red (ponovni pokušaj ili `failed`).
 /// `true` = obradio posao, `false` = red je prazan.
 pub async fn run_next_job(deps: &Deps) -> Result<bool, AppError> {
@@ -94,6 +106,7 @@ async fn run_job(deps: &Deps, job: &Job) -> Result<(), AppError> {
         CHAT_KIND => run_chat(deps, job).await,
         ASSESS_KIND => run_assess(deps, job).await,
         DEBRIEF_KIND => run_debrief(deps, job).await,
+        SEASON_DEBRIEF_KIND => run_season_debrief(deps, job).await,
         other => Err(AppError::internal(format!("nepoznata vrsta posla {other}"))),
     }
 }
@@ -179,12 +192,13 @@ async fn run_resolve(deps: &Deps, job: &Job) -> Result<(), AppError> {
                     .any(|(_, e)| matches!(e, GameEvent::RoundResolved(_)));
                 let mut enqueue = Vec::new();
                 if resolved {
-                    for h in g
+                    let humans: Vec<HotelId> = g
                         .hotels
                         .iter()
                         .filter(|h| matches!(h.setup.controller, Controller::Human { .. }))
-                    {
-                        let hotel_id = h.setup.hotel_id;
+                        .map(|h| h.setup.hotel_id)
+                        .collect();
+                    for &hotel_id in &humans {
                         enqueue.push(NewJob {
                             key: debrief_key(game_id, m, hotel_id),
                             kind: DEBRIEF_KIND.to_owned(),
@@ -192,6 +206,18 @@ async fn run_resolve(deps: &Deps, job: &Job) -> Result<(), AppError> {
                             payload: serde_json::to_value(DebriefPayload { hotel_id, month: m })
                                 .map_err(|e| AppError::internal(e.to_string()))?,
                         });
+                    }
+                    // Zadnji krug v2 igre: i sezonski mentor (u redu iza mentora kruga).
+                    if game::wants_season_mentor(&g, m) {
+                        for &hotel_id in &humans {
+                            enqueue.push(NewJob {
+                                key: season_debrief_key(game_id, hotel_id),
+                                kind: SEASON_DEBRIEF_KIND.to_owned(),
+                                game_id,
+                                payload: serde_json::to_value(SeasonDebriefPayload { hotel_id })
+                                    .map_err(|e| AppError::internal(e.to_string()))?,
+                            });
+                        }
                     }
                 }
                 Ok(Decision {
@@ -330,6 +356,42 @@ async fn run_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 let ev = g.record_debrief(hotel, m, text, source, meta)?;
+                Ok(Decision {
+                    events: system_events(ev.as_slice()),
+                    finish_job: Some(claim),
+                    ..Decision::default()
+                })
+            }),
+        )
+        .await?;
+    Ok(())
+}
+
+/// Sezonski mentor: AI (Sonnet, jedan poziv po hotelu), a bez ključa ili nakon zadnjeg pokušaja rezerva iz brojki.
+async fn run_season_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
+    let p: SeasonDebriefPayload = payload(job)?;
+    let claim = job.claim();
+    let g = load_game(deps, job.game_id).await?;
+    if g.hotel(p.hotel_id)?.season_debrief.is_some() {
+        return finish(deps, job.game_id, claim).await;
+    }
+    let input = g.season_debrief_input(p.hotel_id)?;
+    let (text, source, meta) = match deps.ai.season_debrief(input.clone()).await {
+        Ok(out) => (out.value, AiSource::Ai, Some(out.meta)),
+        Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
+        Err(_) => (
+            game::fallback_season_debrief(&input),
+            AiSource::Fallback,
+            None,
+        ),
+    };
+    let hotel = p.hotel_id;
+    deps.log
+        .decide(
+            job.game_id,
+            Box::new(move |raw: &[RawEvent]| {
+                let g = fold_raw(raw)?;
+                let ev = g.record_season_debrief(hotel, text, source, meta)?;
                 Ok(Decision {
                     events: system_events(ev.as_slice()),
                     finish_job: Some(claim),

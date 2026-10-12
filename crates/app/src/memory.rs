@@ -66,6 +66,7 @@ pub struct FakeAi {
     assess: AtomicU32,
     character: AtomicU32,
     debrief: AtomicU32,
+    season_debrief: AtomicU32,
 }
 
 impl FakeAi {
@@ -76,6 +77,7 @@ impl FakeAi {
             assess: AtomicU32::new(0),
             character: AtomicU32::new(0),
             debrief: AtomicU32::new(0),
+            season_debrief: AtomicU32::new(0),
         }
     }
 
@@ -99,6 +101,11 @@ impl FakeAi {
             self.character.load(Ordering::SeqCst),
             self.debrief.load(Ordering::SeqCst),
         )
+    }
+
+    /// Broj poziva sezonskog mentora.
+    pub fn season_calls(&self) -> u32 {
+        self.season_debrief.load(Ordering::SeqCst)
     }
 
     fn out<T: Send + 'static>(
@@ -158,6 +165,13 @@ impl AiPort for FakeAi {
 
     fn debrief(&self, _input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
         self.out(&self.debrief, "Mentor: dobar mjesec.".to_owned())
+    }
+
+    fn season_debrief(
+        &self,
+        _input: game::SeasonDebriefInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        self.out(&self.season_debrief, "Mentor: dobra sezona.".to_owned())
     }
 }
 

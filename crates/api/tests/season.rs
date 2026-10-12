@@ -68,7 +68,8 @@ async fn member_sees_season_after_last_round() {
     assert_eq!(b["my_hotel_id"], h.as_str());
     assert_eq!(b["round_kind"], "month");
     assert_eq!(b["rounds"].as_array().unwrap().len(), 4);
-    assert!(b["mentor"].is_null());
+    // Radnik je uz zadnji krug napisao i sezonskog mentora (lažni AI u testovima).
+    assert_eq!(b["mentor"]["text"], "Mentor: dobra sezona.");
     let hotels = b["hotels"].as_array().unwrap();
     assert_eq!(hotels.len(), 4);
     let ranks: Vec<i64> = hotels.iter().map(|x| x["rank"].as_i64().unwrap()).collect();

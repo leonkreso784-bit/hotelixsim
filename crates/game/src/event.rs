@@ -214,6 +214,17 @@ pub struct DebriefRecorded {
     pub meta: Option<AiMeta>,
 }
 
+/// Sezonski mentor (kraj-sezone-spec §6.3): jedan po ljudskom hotelu, kad je obračunat zadnji krug v2 igre.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SeasonDebriefRecorded {
+    pub hotel_id: HotelId,
+    pub text: String,
+    pub source: AiSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meta: Option<AiMeta>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GameEvent {
     GameCreated(GameCreated),
@@ -228,6 +239,7 @@ pub enum GameEvent {
     /// Presuda koja je stigla nakon neutralne presude ili obračuna: zapisana, ne mijenja obračun (ARHITEKTURA §9.4).
     VerdictLate(VerdictRecorded),
     DebriefRecorded(DebriefRecorded),
+    SeasonDebriefRecorded(SeasonDebriefRecorded),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -266,6 +278,7 @@ impl GameEvent {
             GameEvent::VerdictRecorded(_) => "VerdictRecorded",
             GameEvent::VerdictLate(_) => "VerdictLate",
             GameEvent::DebriefRecorded(_) => "DebriefRecorded",
+            GameEvent::SeasonDebriefRecorded(_) => "SeasonDebriefRecorded",
         }
     }
 
@@ -281,6 +294,7 @@ impl GameEvent {
             GameEvent::ResponseSubmitted(e) => serde_json::to_value(e),
             GameEvent::VerdictRecorded(e) | GameEvent::VerdictLate(e) => serde_json::to_value(e),
             GameEvent::DebriefRecorded(e) => serde_json::to_value(e),
+            GameEvent::SeasonDebriefRecorded(e) => serde_json::to_value(e),
         };
         v.expect("događaj nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
     }
@@ -308,6 +322,7 @@ impl GameEvent {
             "VerdictRecorded" => GameEvent::VerdictRecorded(body(kind, payload)?),
             "VerdictLate" => GameEvent::VerdictLate(body(kind, payload)?),
             "DebriefRecorded" => GameEvent::DebriefRecorded(body(kind, payload)?),
+            "SeasonDebriefRecorded" => GameEvent::SeasonDebriefRecorded(body(kind, payload)?),
             other => return Err(EventError::UnknownKind(other.to_owned())),
         })
     }

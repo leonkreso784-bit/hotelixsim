@@ -182,7 +182,7 @@ fn is_weekly(input: &DebriefInput) -> bool {
 
 // ---------------------------------------------------------------- nazivi
 
-fn index_name(i: Index) -> &'static str {
+pub(crate) fn index_name(i: Index) -> &'static str {
     match i {
         Index::Guests => "Zadovoljstvo gostiju",
         Index::Reviews => "Recenzije",
@@ -192,7 +192,7 @@ fn index_name(i: Index) -> &'static str {
     }
 }
 
-fn month_genitive(m: MonthCode) -> &'static str {
+pub(crate) fn month_genitive(m: MonthCode) -> &'static str {
     match m {
         MonthCode::Jun => "lipnja",
         MonthCode::Jul => "srpnja",
@@ -224,7 +224,7 @@ fn next_text(next: RoundKey) -> String {
 }
 
 /// Mjesec igre u lokativu („u lipnju"); tjedan se slaže u `place_text`.
-fn round_locative(r: RoundKey) -> &'static str {
+pub(crate) fn round_locative(r: RoundKey) -> &'static str {
     match r {
         RoundKey::Month(Month::Jun) => "u lipnju",
         RoundKey::Month(Month::Jul) => "u srpnju",
@@ -435,7 +435,7 @@ fn title<'a>(titles: &BTreeMap<&str, &'a str>, code: &str, weekly: bool) -> &'a 
 // ---------------------------------------------------------------- brojke
 
 /// Cjelobrojno dijeljenje zaokruženo pola od nule (4850/100 → 49, 4849/100 → 48, −453/100 → −5).
-fn round_div(v: i64, d: i64) -> i64 {
+pub(crate) fn round_div(v: i64, d: i64) -> i64 {
     let half = d / 2;
     if v >= 0 {
         (v + half) / d
@@ -445,7 +445,7 @@ fn round_div(v: i64, d: i64) -> i64 {
 }
 
 /// Točka za tisuće: 1234567 → „1.234.567".
-fn thousands(n: u64) -> String {
+pub(crate) fn thousands(n: u64) -> String {
     let digits = n.to_string();
     let mut out = String::with_capacity(digits.len() + digits.len() / 3);
     for (i, ch) in digits.chars().enumerate() {
@@ -458,7 +458,7 @@ fn thousands(n: u64) -> String {
 }
 
 /// Stotinke s decimalnim zarezom bez suvišnih nula: 230 → „2,3", 185 → „1,85", 200 → „2".
-fn decimal_hundredths(n: u64) -> String {
+pub(crate) fn decimal_hundredths(n: u64) -> String {
     match n % 100 {
         0 => format!("{}", n / 100),
         r if r.is_multiple_of(10) => format!("{},{}", n / 100, r / 10),
@@ -467,7 +467,7 @@ fn decimal_hundredths(n: u64) -> String {
 }
 
 /// „+" ili „−" ispred (nula bez predznaka) kad je `signed`; inače samo iznos.
-fn with_sign(n: i64, body: String, signed: bool) -> String {
+pub(crate) fn with_sign(n: i64, body: String, signed: bool) -> String {
     match (signed, n.signum()) {
         (true, 1) => format!("+{body}"),
         (_, -1) => format!("{MINUS}{body}"),
@@ -488,16 +488,16 @@ fn plural_class(n: u64) -> usize {
 }
 
 /// Hrvatski oblik uz broj: 1 bod, 2 boda, 5 bodova (21 bod, 12 bodova).
-fn plural(n: u64, forms: [&'static str; 3]) -> &'static str {
+pub(crate) fn plural(n: u64, forms: [&'static str; 3]) -> &'static str {
     forms[plural_class(n)]
 }
 
-fn euros(cents: i64, signed: bool) -> String {
+pub(crate) fn euros(cents: i64, signed: bool) -> String {
     let e = round_div(cents, 100);
     with_sign(e, format!("{} €", thousands(e.unsigned_abs())), signed)
 }
 
-fn points(n: i64) -> String {
+pub(crate) fn points(n: i64) -> String {
     let a = n.unsigned_abs();
     with_sign(
         n,
@@ -809,7 +809,7 @@ fn grade_words(q: u8) -> &'static str {
     }
 }
 
-fn direction(change: i64) -> &'static str {
+pub(crate) fn direction(change: i64) -> &'static str {
     match change.signum() {
         1 => "porastao",
         -1 => "pao",
@@ -1083,7 +1083,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
 // ---------------------------------------------------------------- mentor bez AI-ja
 
 /// Jedan savjet po indeksu, za najgori indeks mjeseca.
-fn advice(i: Index) -> &'static str {
+pub(crate) fn advice(i: Index) -> &'static str {
     match i {
         Index::Guests => {
             "Gledaj boravak očima gosta: cijena treba odgovarati onome što dobije, a uredne sobe i odmoran tim najbrže podižu zadovoljstvo."
@@ -1103,7 +1103,7 @@ fn advice(i: Index) -> &'static str {
     }
 }
 
-fn capitalize(s: &str) -> String {
+pub(crate) fn capitalize(s: &str) -> String {
     let mut c = s.chars();
     c.next()
         .map(|f| f.to_uppercase().chain(c).collect())

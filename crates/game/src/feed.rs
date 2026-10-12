@@ -173,6 +173,8 @@ impl Game {
                 | GameEvent::VerdictRecorded(_)
                 | GameEvent::VerdictLate(_)
                 | GameEvent::DebriefRecorded(_) => {}
+                // Sezonski mentor je na ekranu kraja sezone, ne u feedu.
+                GameEvent::SeasonDebriefRecorded(_) => {}
             }
         }
         Ok(out)

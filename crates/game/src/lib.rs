@@ -18,6 +18,7 @@ mod model;
 mod resolve;
 mod round;
 pub mod season;
+mod season_mentor;
 pub mod talk;
 mod verdict;
 pub mod view;
@@ -42,6 +43,11 @@ pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;
 pub use round::{MAX_WEEK, RoundKey};
 pub use season::{CurvePoint, SeasonDecisions, SeasonFinances, SeasonHotel, SeasonView};
+pub use season_mentor::{
+    DecisionFacts, FinanceFacts, OtherHotelFact, RoundFact, SeasonDebriefInput, SeasonFacts,
+    SeasonIndexFact, SeasonMentorHotel, SeasonRound, fallback_season_debrief, season_debrief_facts,
+    wants_season_mentor,
+};
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};
 pub use verdict::{
     NEUTRAL_DEADLINE, NEUTRAL_FAILED, ValidVerdict, VerdictDraft, VerdictError, quality_from,

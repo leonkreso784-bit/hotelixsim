@@ -169,6 +169,11 @@ pub trait AiPort: Send + Sync {
     ) -> BoxFut<'_, Result<AiOut<game::VerdictDraft>, AiError>>;
     fn character(&self, input: game::CharacterInput) -> BoxFut<'_, Result<AiOut<String>, AiError>>;
     fn debrief(&self, input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>>;
+    /// Sezonski mentor (kraj-sezone-spec §6.3): jedan poziv po ljudskom hotelu, nakon zadnjeg kruga v2 igre.
+    fn season_debrief(
+        &self,
+        input: game::SeasonDebriefInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>>;
 }
 
 /// AI bez ključa: sve uloge odmah vraćaju `Disabled`, pa rade rezerve.
@@ -188,6 +193,12 @@ impl AiPort for DisabledAi {
         Box::pin(async { Err(AiError::Disabled) })
     }
     fn debrief(&self, _input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn season_debrief(
+        &self,
+        _input: game::SeasonDebriefInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
         Box::pin(async { Err(AiError::Disabled) })
     }
 }
