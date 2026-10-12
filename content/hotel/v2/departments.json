@@ -159,7 +159,13 @@
   "parking": {
     "name": "Parking",
     "class": "rentals",
-    "revenue": { "type": "fixed", "monthly_cents": 0, "per_guest_night_cents": 150 },
+    "revenue": {
+      "type": "per_guest",
+      "usage_bp": { "jun": 1200, "jul": 1200, "aug": 1200, "sep": 1200 },
+      "check_cents": 1200,
+      "price_elasticity_bp": -10000,
+      "satisfaction_elasticity_bp": 0
+    },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 0,
     "wage_cents": 0,

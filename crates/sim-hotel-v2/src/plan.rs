@@ -10,7 +10,7 @@ use sim_hotel::{CatalogError, Maintenance, Month, Training, euro_bounds};
 
 use crate::calendar::{Period, avg_i64, avg_u16, prorate, rounds_left_in_month};
 use crate::catalog::Catalog;
-use crate::department::{DeptCode, DeptPlan, allocate_seasonal};
+use crate::department::{DeptCode, DeptPlan, RevenueModel, allocate_seasonal};
 use crate::renewal::{AssetBook, Renewal, RenewalSpec};
 use crate::state::HotelState;
 
@@ -80,7 +80,7 @@ impl From<sim_hotel::PlanError> for PlanError {
 }
 
 /// Granice jednog odjela: sezonci `0..=seasonal_max` (zbroj pomaka svih odjela drži `seasonal_step_total`), razina
-/// cijene u postocima, smije li se zatvoriti.
+/// cijene u postocima (samo odjeli s prihodom po gostu; ostali 100–100), smije li se zatvoriti.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DeptLimits {
     pub seasonal_min: u16,
@@ -393,13 +393,15 @@ impl PeriodPlan {
         for (code, st) in &state.departments {
             let d = cat.dept(code)?;
             let rooms = *code == DeptCode::rooms();
+            // Razinu cijene ima samo odjel s prihodom po gostu (restoran, spa, parking); ostali 100–100.
+            let priced = matches!(d.revenue, RevenueModel::PerGuest { .. });
             departments.insert(
                 code.clone(),
                 DeptLimits {
                     seasonal_min: 0,
                     seasonal_max: d.seasonal_max,
-                    price_level_min_pct: if rooms { 100 } else { e.price_level_min_pct },
-                    price_level_max_pct: if rooms { 100 } else { e.price_level_max_pct },
+                    price_level_min_pct: if priced { e.price_level_min_pct } else { 100 },
+                    price_level_max_pct: if priced { e.price_level_max_pct } else { 100 },
                     can_close: d.can_close && !rooms,
                     renewal: RenewalLimits::of(&d.renewal, &st.book, p),
                 },

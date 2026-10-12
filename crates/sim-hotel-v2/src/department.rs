@@ -139,7 +139,8 @@ pub struct DeptSpec {
     pub cost_of_sales_bp: u16,
     pub direct_per_use_cents: i64,
     pub wage_cents: i64,
-    /// Korištenja po zaposlenom na dan, u desetinkama (Smještaj 24 = 2,4 prodane noći kao u v1).
+    /// Korištenja po zaposlenom na dan, u desetinkama (Smještaj 24 = 2,4 prodane noći kao u v1); 0 = odjel bez ljudi
+    /// i bez gornje granice usluženih (parking), opterećenje 0.
     pub capacity_tenths_per_staff_day: u16,
     /// Trošenje stanja prostora mjesečno (pozitivan broj, oduzima se).
     pub wear_pts_per_month: i32,
@@ -239,7 +240,7 @@ pub struct DeptOutcome {
     pub satisfaction_before_pts: i32,
     pub satisfaction_target_pts: i32,
     pub satisfaction_after_pts: i32,
-    /// Težina u kvaliteti i zadovoljstvu hotela: korištenja (Smještaj: noćenja gostiju); 0 = ne dotiče goste.
+    /// Težina u kvaliteti i zadovoljstvu hotela: korištenja (Smještaj: noćenja gostiju); 0 = ne dotiče goste (i najam).
     pub guest_weight: u32,
     /// Odlasci zaposlenih ovog odjela u krugu (dio hotelskog broja, `split_departures`); popunjava ih obračun kruga.
     pub departures: u16,
@@ -386,16 +387,21 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         10,
     )?;
 
-    // 7 usluženo
-    let served = demand.min(capacity);
+    // 7 usluženo; odjel bez kapaciteta po zaposlenom (parking) nema gornje granice
+    let unlimited = spec.capacity_tenths_per_staff_day == 0;
+    let served = if unlimited {
+        demand
+    } else {
+        demand.min(capacity)
+    };
 
-    // 8 opterećenje (pri punom kapacitetu 240, kao u v1)
+    // 8 opterećenje (pri punom kapacitetu 240, kao u v1); bez ljudi ili bez kapaciteta po zaposlenom 0
     let denom = c::mul(
         c::mul(w(staff), w(p.days))?,
         w(spec.capacity_tenths_per_staff_day),
     )?;
     let load: i128 = if denom == 0 {
-        if served > 0 { 300 } else { 0 }
+        0
     } else {
         c::div_round(c::mul(served, 2_400)?, denom)?.clamp(0, 300)
     };
@@ -509,8 +515,8 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         )?
     };
 
-    // 16 težina
-    let guest_weight: u32 = if is_per_guest && open {
+    // 16 težina; najam (parking) ne ulazi u kvalitetu i zadovoljstvo hotela
+    let guest_weight: u32 = if is_per_guest && open && spec.class != UsaliClass::Rentals {
         c::narrow(served)?
     } else {
         0

@@ -219,6 +219,8 @@ pub fn robot_plan(
     let mut departments =
         PeriodPlan::departments_for(s, p, cat, plan.seasonal_target, plan.maintenance)?;
     if matches!(strategy, Strategy::Random) {
+        // Razina se izvlači samo za hranu i piće i ostale operativne odjele; parking (najam) s cijenom ne ulazi, pa
+        // niz slučajnih brojeva ostaje isti.
         let e = &cat.economy;
         for (code, d) in departments.iter_mut() {
             let operated = s.departments.get(code).is_some_and(|st| {
