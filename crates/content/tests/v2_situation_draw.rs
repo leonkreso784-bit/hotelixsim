@@ -10,12 +10,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use sim_hotel_v2::department::DeptCode;
 use sim_hotel_v2::situations::{
-    Anchor, DeptTarget, DrawnSituation, Gender, Kind, MajorSide, NumberParam, Repeat, RoleSource,
-    Scope, situation_count,
+    DeptTarget, DrawnSituation, Gender, Kind, MajorSide, NumberParam, Repeat, RoleSource, Scope,
+    situation_count,
 };
 use sim_hotel_v2::{HotelState, Month, PeriodKind, Profile, season_periods};
 use situations_common::{
-    Hotel, frozen, general, indices, live, round, season, start, with_general,
+    Hotel, anchor, frozen, general, indices, round, season, start, with_general,
 };
 
 const KINDS: [PeriodKind; 2] = [PeriodKind::Week, PeriodKind::Month];
@@ -28,13 +28,6 @@ fn min_gap_days(r: Repeat) -> u16 {
 /// Najviše iz istog odjela u cijelom krugu: 2 u tjednu, ⌈2n/5⌉ u mjesecu.
 fn round_dept_limit(n: u8) -> u8 {
     (n * 2).div_ceil(5).max(2)
-}
-
-fn anchor(kind: Kind) -> Anchor {
-    Anchor {
-        kind,
-        department: None,
-    }
 }
 
 #[test]
@@ -555,52 +548,4 @@ fn content_templates_convert_to_core_rules() {
         members.contains(&DeptCode::rooms()) && members.len() == 6,
         "{members:?}"
     );
-}
-
-/// Sidra S1–S4 po krugu (P7/P13): krug koji sadrži 1. lipnja (S1 i S3), 1. srpnja (S2) i 1. kolovoza (S4).
-fn anchors_for(kind: PeriodKind, index: u8) -> Vec<Anchor> {
-    let starts = match kind {
-        PeriodKind::Week => [0, 4, 8],
-        PeriodKind::Month => [0, 1, 2],
-    };
-    match starts.iter().position(|&i| i == index) {
-        Some(0) => vec![anchor(Kind::Complaint), anchor(Kind::Request)],
-        Some(1) => vec![anchor(Kind::Staff)],
-        Some(_) => vec![anchor(Kind::Crisis)],
-        None => vec![],
-    }
-}
-
-/// Pokrivenost sadržaja (pregled J-2, I2): samo predlošci iz repoa (`live`), početno stanje A/B/C, tjedna i
-/// mjesečna igra — svaki krug dobiva točno `broj − sidra`. Sa 40 predložaka S-3 još pada (t13 A: 3 od 5), pa je
-/// isključen dok popravak S-3 ne doda predloške.
-#[test]
-#[ignore = "čeka S-3 popravak 1: s 40 predložaka t13 A dobiva 3 od 5"]
-fn repo_templates_fill_every_round() {
-    let (cat, set) = live();
-    for kind in KINDS {
-        for profile in [Profile::A, Profile::B, Profile::C] {
-            let state = start(&cat, profile);
-            let h = Hotel {
-                state: &state,
-                indices: indices(5_000),
-                slot: 1,
-            };
-            for seed in 0..20 {
-                let mut history: Vec<DrawnSituation> = Vec::new();
-                for p in season_periods(kind) {
-                    let anchors = anchors_for(kind, p.index);
-                    let drawn = round(&cat, &set, &h, &p, &history, seed, &anchors);
-                    let n = usize::from(situation_count(&state, &p, &cat).unwrap());
-                    assert_eq!(
-                        drawn.len(),
-                        n - anchors.len(),
-                        "{} {profile:?} (sjeme {seed})",
-                        p.code()
-                    );
-                    history.extend(drawn);
-                }
-            }
-        }
-    }
 }

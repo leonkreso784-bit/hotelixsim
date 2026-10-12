@@ -129,3 +129,24 @@ pub fn season(
 pub fn start(cat: &Catalog, profile: Profile) -> HotelState {
     HotelState::from_profile(cat, profile).unwrap()
 }
+
+pub fn anchor(kind: Kind) -> Anchor {
+    Anchor {
+        kind,
+        department: None,
+    }
+}
+
+/// Sidra S1–S4 po krugu (P7/P13): krug koji sadrži 1. lipnja (S1 i S3), 1. srpnja (S2) i 1. kolovoza (S4).
+pub fn anchors_for(kind: PeriodKind, index: u8) -> Vec<Anchor> {
+    let starts = match kind {
+        PeriodKind::Week => [0, 4, 8],
+        PeriodKind::Month => [0, 1, 2],
+    };
+    match starts.iter().position(|&i| i == index) {
+        Some(0) => vec![anchor(Kind::Complaint), anchor(Kind::Request)],
+        Some(1) => vec![anchor(Kind::Staff)],
+        Some(_) => vec![anchor(Kind::Crisis)],
+        None => vec![],
+    }
+}
