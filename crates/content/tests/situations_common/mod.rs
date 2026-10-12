@@ -62,6 +62,7 @@ pub fn general(code: &str, kind: Kind, repeat: Repeat) -> SituationSpec {
             },
         )]),
         numbers: BTreeMap::new(),
+        group_month: None,
     }
 }
 
@@ -104,6 +105,7 @@ pub fn round(
         seed,
         slot: h.slot,
         anchors,
+        anchor_groups: &[],
     };
     draw_situations(&view, &draw, cat).unwrap()
 }

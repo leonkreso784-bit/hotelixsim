@@ -145,3 +145,64 @@ fn validate_reports_missing_kind() {
         Err(CatalogError::Missing("v2.periods.week".to_string()))
     );
 }
+
+/// J-3: ključevi učinka situacija i uvjeta grupe. Sadržaj iz repoa nosi Leonove brojke (13.10.); snimak bez
+/// tih ključeva (v2 igra prije J-3) gradi pravila kao prije (puni učinak, bez granica, grupa bez uvjeta) i
+/// zapisuje se bez njih, s istim otiskom.
+#[test]
+fn j3_keys_are_read_from_content_and_absent_keys_keep_old_rules() {
+    let s = Snapshot::read_v2(&repo_dir()).unwrap();
+    let c = s.build().unwrap();
+    let v2 = c.v2.unwrap();
+    for (k, effect) in [(PeriodKind::Week, 325), (PeriodKind::Month, 350)] {
+        let p = v2.coeffs(k).unwrap();
+        assert_eq!(
+            (p.situation_effect_bp, p.situation_round_bound_pts),
+            (effect, Some(800))
+        );
+    }
+    let g = &v2.economy.groups;
+    assert_eq!(
+        (
+            g.commission_bp,
+            g.attrition_bp,
+            g.displacement_bp,
+            g.load_satisfaction_pts,
+            g.load_morale_pts
+        ),
+        (1_500, 1_500, 3_000, 4_000, 4_000)
+    );
+    let set = c.situation_templates.unwrap().to_core();
+    assert_eq!((set.group_limit, set.groups_per_month), (Some(3), Some(1)));
+
+    let mut old = s.to_value();
+    for k in ["week", "month"] {
+        let p = old["v2"]["periods"][k].as_object_mut().unwrap();
+        assert!(p.remove("situation_effect_bp").is_some());
+        assert!(p.remove("situation_round_bound_pts").is_some());
+    }
+    assert!(
+        old["v2"]["economy"]
+            .as_object_mut()
+            .unwrap()
+            .remove("groups")
+            .is_some()
+    );
+    let t = old["v2"]["situation_templates"].as_object_mut().unwrap();
+    assert!(t.remove("groups_per_season").is_some());
+    assert!(t.remove("groups_per_month").is_some());
+    let back = Snapshot::from_value(&old).unwrap();
+    assert_eq!(fingerprint_value(&back.to_value()), fingerprint_value(&old));
+    let c = back.build().unwrap();
+    let v2 = c.v2.unwrap();
+    for k in PeriodKind::ALL {
+        let p = v2.coeffs(k).unwrap();
+        assert_eq!(
+            (p.situation_effect_bp, p.situation_round_bound_pts),
+            (10_000, None)
+        );
+    }
+    assert_eq!(v2.economy.groups, sim_hotel_v2::GroupTerms::default());
+    let set = c.situation_templates.unwrap().to_core();
+    assert_eq!((set.group_limit, set.groups_per_month), (None, None));
+}

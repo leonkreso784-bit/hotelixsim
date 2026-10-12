@@ -14,6 +14,7 @@ use sim_hotel::{
 pub mod templates;
 mod templates_check;
 mod templates_core;
+mod templates_instance;
 mod v2;
 mod v2_dept;
 

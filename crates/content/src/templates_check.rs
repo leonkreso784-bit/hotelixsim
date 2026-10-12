@@ -23,6 +23,12 @@ pub(crate) fn check(
 ) -> Result<(), ContentError> {
     check_names(names)?;
     check_major(&file.major)?;
+    if file.groups_per_season == Some(0) || file.groups_per_month == Some(0) {
+        return invalid(
+            "groups_per_season / groups_per_month: najmanje 1 (bez granice polje se izostavi)"
+                .to_string(),
+        );
+    }
     let mut seen = BTreeSet::new();
     for t in &file.templates {
         let ctx = format!("predložak {}", t.code);

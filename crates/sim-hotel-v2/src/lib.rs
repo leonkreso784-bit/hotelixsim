@@ -25,14 +25,18 @@ pub mod usali;
 
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
-    Catalog, DeptStart, EconomyV2, FixedChargeSpec, PeriodCoefficients, ProfileV2, degenerate,
+    Catalog, DeptStart, EconomyV2, FixedChargeSpec, GroupTerms, PeriodCoefficients, ProfileV2,
+    degenerate,
 };
 pub use department::StaffingNorm;
 pub use indices::{RefTable, period_indices, start_indices};
 pub use plan::{PeriodPlan, PlanError, PlanLimits};
 pub use resolve::{PeriodReport, ResolveError, resolve_period};
 pub use robots::robot_plan;
-pub use season::{SeasonResult, run_season, run_season_with, situations_for};
+pub use season::{
+    SeasonResult, SeasonSituations, TemplateDraw, anchor_of, group_month, run_robot_season,
+    run_season, run_season_from, run_season_with, situations_for,
+};
 pub use sim_hotel::{
     CatalogError, Category, Cause, Effects, GroupBlock, GuestOutcome, Index, IndexSet, Line,
     Maintenance, MarketOutcome, Mechanic, MechanicError, MoneyOutcome, Month, MonthReport,

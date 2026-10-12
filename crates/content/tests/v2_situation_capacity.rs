@@ -80,6 +80,7 @@ fn draw(
         seed,
         slot: 1,
         anchors,
+        anchor_groups: &[],
     };
     draw_situations(&view, &d, cat).unwrap()
 }
@@ -158,6 +159,8 @@ fn august_distinct(cat: &Catalog, set: &TemplateSet, r: &RoundStart) -> usize {
             major: set.major,
             templates: vec![one],
             names: set.names.clone(),
+            group_limit: None,
+            groups_per_month: None,
         };
         if draw(cat, &alone, r, &[], 0, &[])
             .iter()

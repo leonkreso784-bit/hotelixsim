@@ -22,6 +22,23 @@ pub(crate) struct PeriodCoefficientsDto {
     satisfaction_step_bp: u16,
     rating_step_bp: u16,
     seasonal_step: u16,
+    /// Udio učinka situacija na bodove (J-3); izostavljen = puni učinak, pa stari v2 snimak daje isti zapis,
+    /// otisak i obračun kao prije.
+    #[serde(default = "full_effect", skip_serializing_if = "is_full_effect")]
+    situation_effect_bp: u16,
+    /// Granica zbroja situacija kruga (±bodova); izostavljena = bez granice (kao prije).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    situation_round_bound_pts: Option<u16>,
+}
+
+const FULL_EFFECT_BP: u16 = 10_000;
+
+fn full_effect() -> u16 {
+    FULL_EFFECT_BP
+}
+
+fn is_full_effect(v: &u16) -> bool {
+    *v == FULL_EFFECT_BP
 }
 
 /// Odjeljak v2 snimka; ključevi `periods` su kodovi vrsta razdoblja (`month`, `week`).
@@ -60,6 +77,8 @@ fn to_dto(c: &PeriodCoefficients) -> PeriodCoefficientsDto {
         satisfaction_step_bp: c.satisfaction_step_bp,
         rating_step_bp: c.rating_step_bp,
         seasonal_step: c.seasonal_step,
+        situation_effect_bp: c.situation_effect_bp,
+        situation_round_bound_pts: c.situation_round_bound_pts,
     }
 }
 
@@ -101,6 +120,8 @@ pub(crate) fn build_templates(
                 major: file.major,
                 templates: file.templates.clone(),
                 names: names.clone(),
+                groups_per_season: file.groups_per_season,
+                groups_per_month: file.groups_per_month,
             }))
         }
         _ => Err(ContentError::Invalid(
@@ -126,6 +147,8 @@ pub(crate) fn build_v2(dto: &V2Dto, base: &Catalog) -> Result<sim_hotel_v2::Cata
                 satisfaction_step_bp: d.satisfaction_step_bp,
                 rating_step_bp: d.rating_step_bp,
                 seasonal_step: d.seasonal_step,
+                situation_effect_bp: d.situation_effect_bp,
+                situation_round_bound_pts: d.situation_round_bound_pts,
             },
         );
     }

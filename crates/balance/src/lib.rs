@@ -3,6 +3,7 @@
 
 use engine::calc;
 pub mod v2;
+mod v2_situations;
 
 use sim_hotel::{
     Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Mechanic, Month,

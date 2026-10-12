@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use engine::calc::CalcError;
 use engine::{Rng, label};
-use sim_hotel::CatalogError;
+use sim_hotel::{CatalogError, Month};
 
 use super::count::{expected_occupancy_bp, period_count, virtual_weeks};
 use super::eligible::{DrawView, Facts, WEEK_DAYS, dept_facts, major_side, repeat_allows, weight};
@@ -38,6 +38,9 @@ pub struct Draw<'a> {
     pub slot: u8,
     /// Sidra kruga (S1–S4): broje se u broj situacija, u granicu odjela i u vrste prvog (virtualnog) tjedna.
     pub anchors: &'a [Anchor],
+    /// Mjeseci dolaska grupa koje nude sidra, od početka sezone do ovog kruga uključivo: broje se u granice grupa
+    /// (sidra nisu u povijesti generatora).
+    pub anchor_groups: &'a [Month],
 }
 
 /// Mogućnosti predloška: odjel (ili cijeli hotel, `None`) s težinom u izvlačenju.
@@ -79,6 +82,39 @@ fn choose(
     let weights: Vec<u64> = options.iter().map(|(_, w)| *w).collect();
     let i = pick(rng, &weights)?.ok_or(CalcError::BadDivisor)?;
     Ok(options.get(i).and_then(|(d, _)| d.clone()))
+}
+
+/// Smije li doći primjerak koji nudi grupu s dolaskom u `month` (`None` = ne nudi grupu, uvijek smije): granica
+/// sezone i granica po mjesecu; broje se sidra, povijest i već izvučeni u ovom krugu.
+fn group_room(d: &Draw, out: &[DrawnSituation], month: Option<Month>) -> bool {
+    let Some(m) = month else {
+        return true;
+    };
+    let set = d.templates;
+    let month_of = |code: &str| {
+        set.templates
+            .iter()
+            .find(|t| t.code == code)
+            .and_then(|t| t.group_month)
+    };
+    let months: Vec<Month> = d
+        .anchor_groups
+        .iter()
+        .copied()
+        .chain(
+            d.history
+                .iter()
+                .chain(out)
+                .filter_map(|h| month_of(&h.template)),
+        )
+        .collect();
+    let season_ok = set
+        .group_limit
+        .is_none_or(|l| months.len() < usize::from(l));
+    let month_ok = set
+        .groups_per_month
+        .is_none_or(|l| months.iter().filter(|x| **x == m).count() < usize::from(l));
+    season_ok && month_ok
 }
 
 /// Povijest smije imati samo primjerke ovog hotela i kolektivne, svaku šifru jednom (ugovor s igrom).
@@ -254,7 +290,8 @@ pub fn draw_situations(
 
     // Kolektivna: prvi krug mjeseca, najviše jedna mjesečno (🟨), isti tok i utor za sve hotele.
     if slots > 0 && first_round_of_month(p) && in_month(&|h| h.scope == Scope::All) == 0 {
-        let pool = collective(d.templates, &facts, d, cat)?;
+        let mut pool = collective(d.templates, &facts, d, cat)?;
+        pool.retain(|c| group_room(d, &out, c.spec.group_month));
         let mut rng = stream(
             d.seed,
             Purpose::Situations,
@@ -290,7 +327,8 @@ pub fn draw_situations(
             .templates
             .iter()
             .filter(|t| t.scope == Scope::Hotel && t.major == Some(side));
-        let pool = candidates(specs, view, &facts, (d, &out, p.start_day), cat)?;
+        let mut pool = candidates(specs, view, &facts, (d, &out, p.start_day), cat)?;
+        pool.retain(|c| group_room(d, &out, c.spec.group_month));
         let mut rng = stream(d.seed, Purpose::Situations, p.index, d.slot, label("veca"));
         let weights: Vec<u64> = pool.iter().map(|c| best(&c.options)).collect();
         if let Some(c) = pick(&mut rng, &weights)?.and_then(|i| pool.get(i)) {
@@ -342,10 +380,12 @@ pub fn draw_situations(
                 in_week.get(x).copied().unwrap_or(0) < week_limit
                     && in_round.get(x).copied().unwrap_or(0) < round_limit
             };
-            // Granica po odjelu je stroga: radije manje situacija nego tri iz istog odjela u tjednu.
+            // Granica po odjelu je stroga: radije manje situacija nego tri iz istog odjela u tjednu. Kad je granica
+            // grupa puna (sezona ili mjesec dolaska), predlošci koji nude takvu grupu ne dolaze.
             let allowed: Vec<(usize, Options)> = pool
                 .iter()
                 .enumerate()
+                .filter(|(_, c)| group_room(d, &out, c.spec.group_month))
                 .map(|(i, c)| {
                     let opts: Options = c
                         .options

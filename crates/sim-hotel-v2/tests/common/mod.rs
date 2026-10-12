@@ -525,6 +525,7 @@ pub fn catalog_with_departments() -> sim_hotel_v2::Catalog {
         (Profile::C, profile_c),
     ]);
     c.economy = sim_hotel_v2::EconomyV2 {
+        groups: Default::default(),
         guests_per_room_hundredths: 180,
         price_level_min_pct: 90,
         price_level_max_pct: 120,

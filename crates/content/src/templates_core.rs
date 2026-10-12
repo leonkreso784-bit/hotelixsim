@@ -7,7 +7,7 @@ use sim_hotel_v2::situations as core;
 
 use crate::templates::{
     Bounds, Conditions, Gender, Kind, MajorSide, NameList, Param, RoleSource, Scope,
-    SituationTemplates, Template,
+    SituationTemplates, Template, TemplateMechanic,
 };
 
 impl SituationTemplates {
@@ -20,6 +20,8 @@ impl SituationTemplates {
                 max_per_month: self.major.max_per_month,
             },
             templates: self.templates.iter().map(template).collect(),
+            group_limit: self.groups_per_season,
+            groups_per_month: self.groups_per_month,
             names: core::NamePool {
                 guest: names(&self.names.guest),
                 staff: names(&self.names.staff),
@@ -103,7 +105,23 @@ fn template(t: &Template) -> core::SituationSpec {
                 Some((k.clone(), n))
             })
             .collect(),
+        group_month: group_month(t),
     }
+}
+
+/// Mjesec dolaska grupe iz prvog odgovora koji je prihvaća (provjera jamči poznat mjesec).
+fn group_month(t: &Template) -> Option<Month> {
+    t.answers
+        .iter()
+        .flat_map(|a| &a.mechanics)
+        .find_map(|m| match m {
+            TemplateMechanic::GroupBooking {
+                accept: true,
+                month,
+                ..
+            } => Month::from_code(month),
+            _ => None,
+        })
 }
 
 fn kind(k: Kind) -> core::Kind {

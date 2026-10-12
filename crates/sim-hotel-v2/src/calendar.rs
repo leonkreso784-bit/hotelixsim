@@ -187,6 +187,12 @@ impl Period {
             .map(|part| part.month)
     }
 
+    /// Mjesec s kojim se obračunavaju situacije kruga (cijene grupe, iznosi u postotku cijene noćenja): mjesec
+    /// koji počinje u krugu, a u krugu bez 1. dana mjeseca početni mjesec (u mjesečnom krugu uvijek isti mjesec).
+    pub fn situation_month(&self) -> Month {
+        self.month_starting_in().unwrap_or(self.start_month())
+    }
+
     /// Prvi dan razdoblja: (dan u mjesecu od 1, mjesec).
     pub fn first_date(&self) -> (u8, Month) {
         match self.parts().first() {

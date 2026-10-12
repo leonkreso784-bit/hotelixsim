@@ -127,6 +127,30 @@ pub(crate) struct EconomyDto {
     price_level_min_pct: u16,
     price_level_max_pct: u16,
     fixed_charges: BTreeMap<String, FixedChargeDto>,
+    /// Uvjeti grupnih rezervacija (J-3); izostavljeno = sve 0 (isti zapis i otisak kao prije).
+    #[serde(default, skip_serializing_if = "GroupTermsDto::is_zero")]
+    groups: GroupTermsDto,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct GroupTermsDto {
+    #[serde(default)]
+    commission_bp: u16,
+    #[serde(default)]
+    attrition_bp: u16,
+    #[serde(default)]
+    displacement_bp: u16,
+    #[serde(default)]
+    load_satisfaction_pts: u16,
+    #[serde(default)]
+    load_morale_pts: u16,
+}
+
+impl GroupTermsDto {
+    fn is_zero(&self) -> bool {
+        *self == GroupTermsDto::default()
+    }
 }
 
 fn level_to_dto(l: &LevelEffect) -> LevelDto {
@@ -323,7 +347,15 @@ pub(crate) fn build_profile(p: &ProfileDto) -> ProfileV2 {
 }
 
 pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
+    let g = &e.groups;
     EconomyDto {
+        groups: GroupTermsDto {
+            commission_bp: g.commission_bp,
+            attrition_bp: g.attrition_bp,
+            displacement_bp: g.displacement_bp,
+            load_satisfaction_pts: g.load_satisfaction_pts,
+            load_morale_pts: g.load_morale_pts,
+        },
         guests_per_room_hundredths: e.guests_per_room_hundredths,
         price_level_min_pct: e.price_level_min_pct,
         price_level_max_pct: e.price_level_max_pct,
@@ -343,7 +375,15 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
 }
 
 pub(crate) fn build_economy(e: &EconomyDto) -> EconomyV2 {
+    let g = &e.groups;
     EconomyV2 {
+        groups: sim_hotel_v2::GroupTerms {
+            commission_bp: g.commission_bp,
+            attrition_bp: g.attrition_bp,
+            displacement_bp: g.displacement_bp,
+            load_satisfaction_pts: g.load_satisfaction_pts,
+            load_morale_pts: g.load_morale_pts,
+        },
         guests_per_room_hundredths: e.guests_per_room_hundredths,
         price_level_min_pct: e.price_level_min_pct,
         price_level_max_pct: e.price_level_max_pct,

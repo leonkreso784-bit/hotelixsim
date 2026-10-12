@@ -14,6 +14,10 @@ pub struct SituationTemplates {
     pub major: MajorRule,
     pub templates: Vec<Template>,
     pub names: Names,
+    /// `TemplateFile::groups_per_season`.
+    pub groups_per_season: Option<u8>,
+    /// `TemplateFile::groups_per_month`.
+    pub groups_per_month: Option<u8>,
 }
 
 /// Sadržaj `situation_templates.json`.
@@ -22,6 +26,14 @@ pub struct SituationTemplates {
 pub struct TemplateFile {
     pub major: MajorRule,
     pub templates: Vec<Template>,
+    /// Najviše primjeraka koji nude grupu u sezoni hotela, sidra S1–S4 uključena (Leon 13.10., J-3): ponuda
+    /// grupe ostaje ista po veličini i cijeni, ali ih dođe manje. Pravilo generatora, isto za tjednu i mjesečnu
+    /// igru, pa živi uz predloške; izostavljeno = bez granice.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub groups_per_season: Option<u8>,
+    /// Najviše ponuda grupe s dolaskom u istom mjesecu (M4, J-3); izostavljeno = bez granice.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub groups_per_month: Option<u8>,
 }
 
 /// Kad dolazi „veća situacija" (Leon 13.10.): prosjek pet pokazatelja (0–100) na početku kruga je barem

@@ -18,6 +18,12 @@ pub struct PeriodCoefficients {
     pub rating_step_bp: u16,
     /// Najveća promjena broja sezonaca u jednom krugu (ljudi).
     pub seasonal_step: u16,
+    /// Udio učinka situacija na bodove (zadovoljstvo, moral, ocjena, oprema) koji krug primi, u bp; troškovi,
+    /// povišice i grupe ostaju puni (plan situacija §6, J-3). 10 000 = puni učinak (v1).
+    pub situation_effect_bp: u16,
+    /// Granica zbroja svih situacija kruga za zadovoljstvo i moral (±bodova), uz granicu po situaciji iz v1
+    /// kataloga; `None` = bez granice kruga (v1).
+    pub situation_round_bound_pts: Option<u16>,
 }
 
 /// Gospodarstvo v2: gosti po sobi, granice razine cijene, popis fiksnih naknada (osiguranje, najam, porez).
@@ -27,6 +33,23 @@ pub struct EconomyV2 {
     pub price_level_min_pct: u16,
     pub price_level_max_pct: u16,
     pub fixed_charges: BTreeMap<String, FixedChargeSpec>,
+    /// Uvjeti grupnih rezervacija (J-3, mehanike grupe); sve 0 = grupa kao u v1.
+    pub groups: GroupTerms,
+}
+
+/// Uvjeti grupnih rezervacija (J-3): grupa je odluka s cijenom, ne čisti dobitak. Sve 0 = v1 ponašanje.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct GroupTerms {
+    /// M1: provizija posrednika (agencija, organizator) na prihod grupe, bp.
+    pub commission_bp: u16,
+    /// M2: dio bloka koji grupa ne iskoristi (attrition), bp; neiskorištene blokirane sobe se ne prodaju.
+    pub attrition_bp: u16,
+    /// M5: pojedinačna potražnja odbijena zbog držanja bloka, bp noćenja bloka (i kad hotel nije pun).
+    pub displacement_bp: u16,
+    /// M3: pad zadovoljstva gostiju kad bi sva noćenja kruga bila grupna (bodovi); stvarni pad razmjeran udjelu.
+    pub load_satisfaction_pts: u16,
+    /// M3: pad ciljnog morala kad bi sva noćenja kruga bila grupna (bodovi); razmjerno udjelu.
+    pub load_morale_pts: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -103,7 +126,8 @@ impl Catalog {
         }
     }
 
-    /// v1 provjera pa koeficijenti obje vrste razdoblja: pomaci u `1..=10_000` bp, korak sezonaca barem 1.
+    /// v1 provjera pa koeficijenti obje vrste razdoblja: pomaci i učinak situacija u `1..=10_000` bp, korak sezonaca
+    /// barem 1, granica situacija kruga barem 1 bod.
     pub fn validate(&self) -> Result<(), CatalogError> {
         self.base.validate()?;
         for k in PeriodKind::ALL {
@@ -114,6 +138,10 @@ impl Catalog {
             step_within(p.rating_step_bp, &field("rating_step_bp"))?;
             if p.seasonal_step < 1 {
                 return Err(CatalogError::OutOfRange(field("seasonal_step")));
+            }
+            step_within(p.situation_effect_bp, &field("situation_effect_bp"))?;
+            if p.situation_round_bound_pts == Some(0) {
+                return Err(CatalogError::OutOfRange(field("situation_round_bound_pts")));
             }
         }
         self.validate_departments()
@@ -453,6 +481,8 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
                     satisfaction_step_bp: 5_000,
                     rating_step_bp: 2_500,
                     seasonal_step: base.actions.seasonal_step,
+                    situation_effect_bp: 10_000,
+                    situation_round_bound_pts: None,
                 },
             ),
             (
@@ -462,6 +492,8 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
                     satisfaction_step_bp: 1_500,
                     rating_step_bp: 700,
                     seasonal_step: 5,
+                    situation_effect_bp: 10_000,
+                    situation_round_bound_pts: None,
                 },
             ),
         ]),
@@ -472,6 +504,7 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             price_level_min_pct: 90,
             price_level_max_pct: 120,
             fixed_charges: BTreeMap::new(),
+            groups: GroupTerms::default(),
         },
     }
 }

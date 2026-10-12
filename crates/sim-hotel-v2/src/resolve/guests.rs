@@ -57,6 +57,8 @@ pub(super) struct GuestIn<'a> {
     pub(super) sit_equipment: i128,
     pub(super) sit_satisfaction: i128,
     pub(super) sit_rating: i128,
+    /// M3 (J-3): pad ciljnog zadovoljstva zbog grupnih noćenja u krugu (bodovi, ≥ 0).
+    pub(super) group_load_pts: i128,
 }
 
 pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
@@ -122,7 +124,7 @@ pub(super) fn guests(i: &GuestIn, cat: &sim_hotel::Catalog) -> Calc<GuestStep> {
         targets.push((*weight, w(*t)));
     }
     let hotel_quality = weighted(&qualities, quality)?;
-    let sat_target = weighted(&targets, rooms_target)?;
+    let sat_target = c::sub(weighted(&targets, rooms_target)?, i.group_load_pts)?.max(0);
     let sat_now = w(i.state.satisfaction_pts);
     let satisfaction_gain = step_toward(sat_now, sat_target, i.satisfaction_step_bp, p)?;
     let satisfaction = c::sum(&[

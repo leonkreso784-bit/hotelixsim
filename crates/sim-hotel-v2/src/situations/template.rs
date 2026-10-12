@@ -15,6 +15,10 @@ pub struct TemplateSet {
     pub major: MajorRule,
     pub templates: Vec<SituationSpec>,
     pub names: NamePool,
+    /// Najviše primjeraka koji nude grupu u sezoni hotela, sidra uključena (Leon 13.10., J-3); `None` = bez granice.
+    pub group_limit: Option<u8>,
+    /// Najviše ponuda grupe s dolaskom u istom mjesecu (M4, J-3); `None` = bez granice.
+    pub groups_per_month: Option<u8>,
 }
 
 /// Veća situacija (Leon 13.10.): prosjek pet pokazatelja na početku kruga ≥ `high_avg_min` (izvrstan hotel) ili
@@ -41,6 +45,9 @@ pub struct SituationSpec {
     pub roles: BTreeMap<String, RoleSpec>,
     /// Brojevna mjesta (`range`, `pick`); iznosi i tekst po odjelu ne traže kocku pa ih ovdje nema.
     pub numbers: BTreeMap<String, NumberParam>,
+    /// Mjesec dolaska grupe koju predložak nudi (prvi odgovor koji prihvaća grupu); `None` = ne nudi grupu.
+    /// Broji se u `TemplateSet::group_limit` i `groups_per_month`.
+    pub group_month: Option<Month>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

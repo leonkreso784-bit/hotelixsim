@@ -200,6 +200,7 @@ fn previous_report_drives_occupancy_and_load_conditions() {
             seed: 9,
             slot: 1,
             anchors: &[],
+            anchor_groups: &[],
         };
         draw_situations(&view, &draw, &cat)
             .unwrap()
@@ -388,6 +389,7 @@ fn history_from_another_hotel_is_rejected() {
             seed: 1,
             slot: 1,
             anchors: &[],
+            anchor_groups: &[],
         };
         draw_situations(&view, &draw, &cat)
     };
