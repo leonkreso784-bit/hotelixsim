@@ -113,7 +113,8 @@ fn lease_rules_in_content() {
 }
 
 /// Ručni primjer na sadržaju: profil B, mjesečna sezona, zadani plan uz odgođeno održavanje lokala. Lokal počinje
-/// na 60 i gubi 0,5 boda mjesečno, pa najamnina (6.000 €) pada 1 % po mjesecu: 5.940, 5.880, 5.820, 5.760 €.
+/// na 60 i uz odgođeno održavanje gubi div_round(50 · 12 500, 10 000) = 63 stotinke boda mjesečno (korak e), pa
+/// popust raste za 126 bp mjesečno: najamnina (6.000 €) 5.924,40, 5.848,80, 5.773,20, 5.697,60 €.
 #[test]
 fn lease_rent_falls_with_deferred_upkeep_by_hand() {
     use sim_hotel_v2::{Category, PeriodKind, PeriodPlan, Profile, RefTable};
@@ -146,10 +147,10 @@ fn lease_rent_falls_with_deferred_upkeep_by_hand() {
     assert_eq!(
         got,
         [
-            (5_950, 594_000),
-            (5_900, 588_000),
-            (5_850, 582_000),
-            (5_800, 576_000)
+            (5_937, 592_440),
+            (5_874, 584_880),
+            (5_811, 577_320),
+            (5_748, 569_760)
         ]
     );
 }
@@ -274,17 +275,30 @@ fn finance_index_is_gop_after_investment() {
 }
 
 /// Korak e (jezgra): faktor trošenja uz odgođeno održavanje čita se iz `economy.deferred_wear_bp`; bez ključa je
-/// 10 000 (kao redovno). Vrijednost u sadržaju bira Leon (izvještaj O-2, nastavak).
+/// 10 000 (kao redovno).
 #[test]
 fn deferred_wear_factor_round_trips() {
     use serde_json::json;
     let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
-    assert!(v["v2"]["economy"].get("deferred_wear_bp").is_none());
-    assert_eq!(v2().economy.deferred_wear_bp, 10_000);
+    v["v2"]["economy"]
+        .as_object_mut()
+        .unwrap()
+        .remove("deferred_wear_bp");
+    let none = Snapshot::from_value(&v).unwrap();
+    assert_eq!(
+        none.build().unwrap().v2.unwrap().economy.deferred_wear_bp,
+        10_000
+    );
     v["v2"]["economy"]["deferred_wear_bp"] = json!(15_000);
     let s = Snapshot::from_value(&v).unwrap();
     assert_eq!(s.to_value(), v);
     let c = s.build().unwrap().v2.unwrap();
     assert_eq!(c.economy.deferred_wear_bp, 15_000);
     c.validate().unwrap();
+}
+
+/// Korak e (presuda kontrolora 13.10.): zapušten prostor uz odgođeno održavanje troši se 1,25 × brže.
+#[test]
+fn deferred_wear_factor_in_content() {
+    assert_eq!(v2().economy.deferred_wear_bp, 12_500);
 }
