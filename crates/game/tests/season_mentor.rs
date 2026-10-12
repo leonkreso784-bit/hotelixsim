@@ -537,3 +537,69 @@ fn season_debrief_event_roundtrips_through_record() {
         fallback
     );
 }
+
+// ---------------------------------------------------------------- popravak 1 (pregled KS-2)
+
+/// Različito mjesto, a zaokruženo isti bodovi (+8,4 i +7,6 → „+8"): tada se napredak piše s desetinkama.
+#[test]
+fn close_progress_is_shown_with_tenths() {
+    let g = weekly_done();
+    let mut input = g.season_debrief_input(me()).unwrap();
+    input.me.hotel.progress_hundredths = 760;
+    input.me.hotel.rank = 2;
+    input.me.hotel.winner = false;
+    for (i, o) in input.others.iter_mut().enumerate() {
+        let (rank, p) = [(1, 840), (3, -300), (4, -600)][i];
+        o.hotel.rank = rank;
+        o.hotel.winner = rank == 1;
+        o.hotel.progress_hundredths = p;
+    }
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert_eq!(f["napredak_od_pocetka"], "+7,6 boda");
+    assert!(
+        f["pobjednik"].as_str().unwrap().contains("+8,4 boda"),
+        "{f}"
+    );
+    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "−3 boda");
+    // Kad se cijeli bodovi razlikuju, ostaju cijeli (kao na ekranu).
+    input.me.hotel.progress_hundredths = 520;
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert_eq!(f["napredak_od_pocetka"], "+5 bodova");
+}
+
+/// `carry_plan` plan prenosi uz prilagodbu (obnova se ne ponavlja, iznosi u granice kruga) — tekst to kaže.
+#[test]
+fn carried_plan_is_described_as_carried_and_adapted() {
+    let f = facts_json(&weekly_with_raised_wages());
+    let own = f["vlastiti_plan"].as_str().unwrap();
+    assert!(!own.contains("zadnji postavljeni plan"), "{own}");
+    assert!(own.contains("prenosio"), "{own}");
+    assert!(own.contains("granic"), "{own}");
+}
+
+/// Usporedba s robotom ne bira indeks u kojem je studentov hotel bolji; tada ostaju samo robotove odluke.
+#[test]
+fn robot_comparison_skips_index_where_student_did_better() {
+    let g = weekly_done();
+    let mut input = g.season_debrief_input(me()).unwrap();
+    input.me.hotel.end = [10_000; 5];
+    let text = fallback_season_debrief(&input);
+    let tip = text.split("Što ponijeti u sljedeću igru\n").nth(1).unwrap();
+    assert!(tip.contains("(robot) je imao plaće"), "{text}");
+    assert!(!tip.contains("mu je"), "{text}");
+}
+
+/// Tekst AI-ja se sprema samo ako ima sva četiri dijela; inače radnik piše rezervu.
+#[test]
+fn season_debrief_text_needs_all_four_parts() {
+    let input = weekly_done().season_debrief_input(me()).unwrap();
+    assert!(season_debrief_has_parts(&fallback_season_debrief(&input)));
+    assert!(!season_debrief_has_parts(""));
+    assert!(!season_debrief_has_parts("   \n"));
+    assert!(!season_debrief_has_parts(
+        "Kako je prošla sezona\nDobro.\nŠto je išlo dobro\nSve.\nŠto nije valjalo\nNišta."
+    ));
+    assert!(season_debrief_has_parts(
+        "Kako je prošla sezona\nDobro.\n\n  Što je išlo dobro \nSve.\nŠto nije valjalo\nNišta.\nŠto ponijeti u sljedeću igru\nObuku."
+    ));
+}

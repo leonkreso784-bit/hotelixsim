@@ -46,7 +46,7 @@ pub use season::{CurvePoint, SeasonDecisions, SeasonFinances, SeasonHotel, Seaso
 pub use season_mentor::{
     DecisionFacts, FinanceFacts, OtherHotelFact, RoundFact, SeasonDebriefInput, SeasonFacts,
     SeasonIndexFact, SeasonMentorHotel, SeasonRound, fallback_season_debrief, season_debrief_facts,
-    wants_season_mentor,
+    season_debrief_has_parts, wants_season_mentor,
 };
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};
 pub use verdict::{

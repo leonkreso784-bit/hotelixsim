@@ -171,7 +171,22 @@ impl AiPort for FakeAi {
         &self,
         _input: game::SeasonDebriefInput,
     ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
-        self.out(&self.season_debrief, "Mentor: dobra sezona.".to_owned())
+        // Sva četiri dijela, inače ga radnik zamijeni rezervom.
+        self.out(
+            &self.season_debrief,
+            "Kako je prošla sezona
+Mentor: dobra sezona.
+
+Što je išlo dobro
+Lažno.
+
+Što nije valjalo
+Lažno.
+
+Što ponijeti u sljedeću igru
+Lažno."
+                .to_owned(),
+        )
     }
 }
 

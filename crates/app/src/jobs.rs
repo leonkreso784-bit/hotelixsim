@@ -377,7 +377,16 @@ async fn run_season_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
     }
     let input = g.season_debrief_input(p.hotel_id)?;
     let (text, source, meta) = match deps.ai.season_debrief(input.clone()).await {
-        Ok(out) => (out.value, AiSource::Ai, Some(out.meta)),
+        Ok(out) if game::season_debrief_has_parts(&out.value) => {
+            (out.value, AiSource::Ai, Some(out.meta))
+        }
+        // Prazan ili nepotpun tekst (bez četiri dijela) ne ostaje zauvijek zapisan kao AI-jev; bez ponavljanja
+        // poziva (jedan poziv po igri), odmah rezerva iz brojki.
+        Ok(_) => (
+            game::fallback_season_debrief(&input),
+            AiSource::Fallback,
+            None,
+        ),
         Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
         Err(_) => (
             game::fallback_season_debrief(&input),

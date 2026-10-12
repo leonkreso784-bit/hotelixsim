@@ -318,13 +318,44 @@ fn points_tenths(hundredths: i64) -> String {
     with_sign(t, format!("{},{} boda", thousands(a / 10), a % 10), true)
 }
 
-fn whole_points(hundredths: i32) -> String {
-    let p = round_div(i64::from(hundredths), 100);
-    if p == 0 {
-        "0 bodova".to_owned()
-    } else {
-        points(p)
+/// Napredak s `digits` decimala (0–2), bez suvišnih nula: „+8 bodova", „+7,6 boda", „+8,42 boda".
+fn points_with(hundredths: i32, digits: u32) -> String {
+    let digits = digits.min(2);
+    let v = round_div(i64::from(hundredths), 10_i64.pow(2 - digits));
+    let scale = 10_u64.pow(digits);
+    let a = v.unsigned_abs();
+    if a.is_multiple_of(scale) {
+        let w = v / 10_i64.pow(digits);
+        return if w == 0 {
+            "0 bodova".to_owned()
+        } else {
+            points(w)
+        };
     }
+    let frac = format!(
+        "{:0width$}",
+        a % scale,
+        width = usize::try_from(digits).unwrap_or(2)
+    );
+    let frac = frac.trim_end_matches('0');
+    with_sign(v, format!("{},{frac} boda", thousands(a / scale)), true)
+}
+
+/// Koliko decimala napretka treba da hoteli s različitim napretkom (pa i mjestom) ne izgledaju jednako: cijeli bodovi
+/// kao na ekranu, a desetinke ili stotinke samo kad bi se zaokruženo poklopili (+8,4 i +7,6 nisu oba „+8 bodova").
+fn progress_digits(input: &SeasonDebriefInput) -> u32 {
+    let all: Vec<i32> = std::iter::once(&input.me)
+        .chain(&input.others)
+        .map(|h| h.hotel.progress_hundredths)
+        .collect();
+    (0..2)
+        .find(|&d| {
+            all.iter().all(|&a| {
+                all.iter()
+                    .all(|&b| a == b || points_with(a, d) != points_with(b, d))
+            })
+        })
+        .unwrap_or(2)
 }
 
 /// „u 6 tjedana" / „u 2 mjeseca" / „u 1 tjednu".
@@ -403,7 +434,7 @@ fn with_hotels(names: &[String]) -> String {
     }
 }
 
-fn winner_text(input: &SeasonDebriefInput) -> String {
+fn winner_text(input: &SeasonDebriefInput, digits: u32) -> String {
     let others: Vec<&SeasonHotel> = input
         .others
         .iter()
@@ -426,7 +457,7 @@ fn winner_text(input: &SeasonDebriefInput) -> String {
             format!(
                 "{verb} {} s napretkom od {}.",
                 join_and(&names),
-                whole_points(w.progress_hundredths)
+                points_with(w.progress_hundredths, digits)
             )
         }
         // Ne događa se (netko je uvijek prvi), ali tekst ostaje istinit.
@@ -552,7 +583,7 @@ fn own_plan_text(input: &SeasonDebriefInput) -> String {
     };
     let n = u8::try_from(input.own_plan_rounds.len()).unwrap_or(u8::MAX);
     let mut out = format!(
-        "Student je sam postavio plan {}, prvi put {}; poslije toga vrijedio je njegov zadnji postavljeni plan.",
+        "Student je sam postavio plan {}, prvi put {}; poslije toga njegov se plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
         in_rounds(n, weekly),
         round_words(input, first).1
     );
@@ -608,6 +639,7 @@ fn season_text(input: &SeasonDebriefInput) -> String {
 
 pub fn season_debrief_facts(input: &SeasonDebriefInput) -> SeasonFacts {
     let me = &input.me.hotel;
+    let digits = progress_digits(input);
     let total = input.others.len() + 1;
     let shared: Vec<String> = input
         .others
@@ -633,7 +665,7 @@ pub fn season_debrief_facts(input: &SeasonDebriefInput) -> SeasonFacts {
                 name: h.name.clone(),
                 kind,
                 strategy,
-                progress: whole_points(h.progress_hundredths),
+                progress: points_with(h.progress_hundredths, digits),
                 place: place_of(h, total),
                 indices: index_facts(h),
                 decisions: h
@@ -646,9 +678,9 @@ pub fn season_debrief_facts(input: &SeasonDebriefInput) -> SeasonFacts {
     SeasonFacts {
         hotel: me.name.clone(),
         season: season_text(input),
-        progress: whole_points(me.progress_hundredths),
+        progress: points_with(me.progress_hundredths, digits),
         place,
-        winner: winner_text(input),
+        winner: winner_text(input, digits),
         fairness: FAIRNESS,
         index_scale: if is_weekly(input) {
             INDEX_SCALE_WEEK
@@ -705,26 +737,46 @@ fn robot_comparison(input: &SeasonDebriefInput) -> Option<String> {
     } else {
         format!("marketing ukupno {}", euros(d.marketing_total_cents, false))
     };
+    let decided = format!("{} je imao {wages}, {training} i {marketing}", label(ahead));
     let (theirs, mine) = (index_facts(ahead), index_facts(me));
-    let (t, m) = theirs.iter().zip(&mine).fold(
-        None,
-        |best: Option<(&SeasonIndexFact, &SeasonIndexFact)>, (t, m)| match best {
-            Some((bt, bm)) if bt.change - bm.change >= t.change - m.change => Some((bt, bm)),
-            _ => Some((t, m)),
-        },
-    )?;
+    // Samo indeks u kojem je robot stvarno odmakao; ako je studentov hotel svugdje jednak ili bolji, bez indeksa.
+    let gap = theirs
+        .iter()
+        .zip(&mine)
+        .filter(|(t, m)| t.change > m.change)
+        .fold(
+            None,
+            |best: Option<(&SeasonIndexFact, &SeasonIndexFact)>, (t, m)| match best {
+                Some((bt, bm)) if bt.change - bm.change >= t.change - m.change => Some((bt, bm)),
+                _ => Some((t, m)),
+            },
+        );
+    let Some((t, m)) = gap else {
+        return Some(format!("{decided}."));
+    };
     let moved = match t.change.signum() {
         1 => format!("porastao s {} na {}", t.start, t.end),
         -1 => format!("pao s {} na {}", t.start, t.end),
         _ => format!("ostao na {}", t.end),
     };
     Some(format!(
-        "{} je imao {wages}, {training} i {marketing}; indeks {} mu je {moved}, a tvom hotelu s {} na {}.",
-        label(ahead),
-        t.name,
-        m.start,
-        m.end
+        "{decided}; indeks {} mu je {moved}, a tvom hotelu s {} na {}.",
+        t.name, m.start, m.end
     ))
+}
+
+/// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v1` i rezerva).
+const PARTS: [&str; 4] = [
+    "Kako je prošla sezona",
+    "Što je išlo dobro",
+    "Što nije valjalo",
+    "Što ponijeti u sljedeću igru",
+];
+
+/// Ima li tekst AI-ja sva četiri dijela (svaki podnaslov u svom retku). Radnik inače sprema rezervu, da prazan ili
+/// odrezan odgovor ne ostane zauvijek zapisan kao AI-jev.
+pub fn season_debrief_has_parts(text: &str) -> bool {
+    PARTS.iter().all(|p| text.lines().any(|l| l.trim() == *p))
 }
 
 /// Sezonski mentor bez AI-ja (kraj-sezone-spec §7): ista četiri dijela kao uputa, iz istih činjenica.

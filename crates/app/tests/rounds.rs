@@ -520,3 +520,92 @@ async fn v1_game_never_queues_season_debrief() {
     assert_eq!(season_jobs(&mem), 0);
     assert_eq!(events_of(&mem, s.game_id, "SeasonDebriefRecorded"), 0);
 }
+
+/// Radi sve poslove iz reda; greške posla (ponovni pokušaj) se preskaču.
+async fn work_through_failures(d: &Deps) {
+    while !matches!(run_next_job(d).await, Ok(false)) {}
+}
+
+fn season_event(mem: &Memory, g: GameId) -> RawEvent {
+    let evs: Vec<_> = mem
+        .events(g)
+        .into_iter()
+        .filter(|e| e.kind == "SeasonDebriefRecorded")
+        .collect();
+    assert_eq!(evs.len(), 1);
+    evs[0].clone()
+}
+
+/// Nedostupan AI: posao se ponavlja do `MAX_ATTEMPTS`, pa se zapiše rezerva.
+#[tokio::test]
+async fn failing_ai_retries_season_debrief_then_writes_fallback() {
+    let ai = Arc::new(app::memory::FakeAi::failing());
+    let (d, mem, me, s) = monthly_v2_with(ai.clone()).await;
+    for m in [Month::Jun, Month::Jul, Month::Aug, Month::Sep] {
+        assert!(
+            close_round(&d, &me, s.game_id, RoundKey::Month(m))
+                .await
+                .unwrap()
+                .accepted
+        );
+        work_through_failures(&d).await;
+    }
+    assert_eq!(ai.season_calls(), u32::try_from(MAX_ATTEMPTS).unwrap());
+    let e = season_event(&mem, s.game_id);
+    assert_eq!(e.payload["source"], "fallback");
+    assert!(
+        e.payload["text"]
+            .as_str()
+            .unwrap()
+            .starts_with("Kako je prošla sezona\n")
+    );
+}
+
+/// AI koji vrati tekst bez četiri dijela (ovdje prazan); sve ostale uloge su isključene.
+struct EmptySeasonAi;
+
+impl AiPort for EmptySeasonAi {
+    fn assess(
+        &self,
+        _: game::AssessInput,
+    ) -> BoxFut<'_, Result<AiOut<game::VerdictDraft>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn character(&self, _: game::CharacterInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn debrief(&self, _: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async { Err(AiError::Disabled) })
+    }
+    fn season_debrief(
+        &self,
+        _: game::SeasonDebriefInput,
+    ) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
+        Box::pin(async {
+            Ok(AiOut {
+                value: "  ".to_owned(),
+                meta: game::AiMeta {
+                    model: "prazan".into(),
+                    prompt: "mentor-sezona.v1".into(),
+                    input_tokens: 1,
+                    output_tokens: 0,
+                },
+            })
+        })
+    }
+}
+
+/// Prazan ili nepotpun odgovor AI-ja ne sprema se kao AI-jev: odmah rezerva (bez ponavljanja poziva).
+#[tokio::test]
+async fn incomplete_ai_season_text_is_replaced_by_fallback() {
+    let (d, mem, me, s) = monthly_v2_with(Arc::new(EmptySeasonAi)).await;
+    for m in [Month::Jun, Month::Jul, Month::Aug, Month::Sep] {
+        close_and_work(&d, &me, s.game_id, m).await;
+    }
+    let e = season_event(&mem, s.game_id);
+    assert_eq!(e.payload["source"], "fallback");
+    assert!(e.payload.get("meta").is_none());
+    assert!(game::season_debrief_has_parts(
+        e.payload["text"].as_str().unwrap()
+    ));
+}
