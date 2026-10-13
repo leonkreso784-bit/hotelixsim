@@ -178,6 +178,21 @@ fn facts_are_human_for_weekly_and_monthly_season() {
     }
 }
 
+/// Sezona bez obnove ne šalje polja obnove (mentor ih ne smije dobiti da ne izmišlja ulaganja).
+#[test]
+fn season_without_renewal_has_no_renewal_fields() {
+    for g in [weekly_done(), monthly_done()] {
+        let text = facts_json(&g).to_string();
+        for key in [
+            "ulaganja_u_obnovu",
+            "amortizacija_sezone",
+            "dobit_iz_poslovanja_nakon_ulaganja",
+        ] {
+            assert!(!text.contains(key), "{key} u sezoni bez obnove");
+        }
+    }
+}
+
 #[test]
 fn season_length_and_dates_in_words() {
     let w = facts_json(&weekly_done());

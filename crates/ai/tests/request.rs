@@ -379,6 +379,24 @@ fn season_debrief_body_sends_human_season_facts() {
     assert!(content.contains("takve su od početka"), "{content}");
 }
 
+/// Uputa sezonskog mentora tumači polja obnove v2: ulaganja nisu trošak sezone, amortizacija je dio cijene, indeks
+/// Financije gleda dobit nakon ulaganja; obnova se ne pripisuje novoj odluci i brojke su samo iz činjenica.
+#[test]
+fn season_mentor_prompt_explains_renewal_fields() {
+    let text = ai::prompts::MENTOR_SEASON.text;
+    for must in [
+        "ulaganja_u_obnovu",
+        "amortizacija_sezone",
+        "dobit_iz_poslovanja_nakon_ulaganja",
+        "nije trošak sezone",
+        "Financije",
+        "zaključan",
+        "nikad ne izmišljaj",
+    ] {
+        assert!(text.contains(must), "uputa nema „{must}“");
+    }
+}
+
 /// Uputa sezonskog mentora: četiri dijela, podaci nisu upute, bez pogađanja, OT-2, bez roda prema studentu.
 #[test]
 fn season_mentor_prompt_has_parts_and_rules() {
