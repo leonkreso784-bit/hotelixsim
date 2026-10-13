@@ -201,11 +201,6 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
   `docs/README.md`; naše pravilo 2 dopušta podindeks `X.md`), 1 „multiple-active-plans" (taskove u mapi plana broji kao
   planove), 1 „docs-lag" (točno). Uz to mjeri tekuće stablo i kad mu se zada druga mapa. Prijedlog: Sokratis za
   HotelixSim pokreće `corepack pnpm check:docs` repoa (jedan izvor pravila) — posao u repou Sokratisa, Leon odlučuje.
-- [alati] **Kod preko 1000 redaka — prijedlog, Leon odlučuje (2026-10-13)** — brana dokumentacije sad drži svaki `.md` ≤ 1000
-  redaka; kod nema takvu granicu. Najveći danas: `content/hotel/v2/situation_templates.json` ~3630 (grana `model-v2/sloj1-situacije`),
-  a na sloj1 @ e1dfa1c `crates/api/src/schema.rs` 1687, `crates/game/tests/mentor.rs` 1670, `crates/game/src/mentor.rs` 1367. Prijedlog: razdvojiti
-  po smislu (predlošci po odjelu/vrsti situacije; shema API-ja po području; testovi i mentor po temi), pa slična brana
-  za kod (npr. upozorenje iznad 1000, generirano izuzeto). Nije dirano u sesiji dokumentacije.
 
 - [ci] **Prelazak CI-ja na Ubuntu 26 svjesno, ne usput** — 13.10. slika je pribijena na `ubuntu-24.04` (a `checkout`/`setup-node` na v5) jer `ubuntu-latest` od 19.10. postaje Ubuntu 26; prijeći kao zasebnu ciglu kad se provjeri Postgres servis, `sqlx-cli` i Rust 1.98.1 na novoj slici. (cigla K0-1, [ROADMAP/kvaliteta](../plan/ROADMAP/kvaliteta.md))
 - [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)

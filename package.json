@@ -10,6 +10,7 @@
     "gen:api": "node scripts/pnpm.mjs gen:openapi && node scripts/pnpm.mjs --filter @hotelixsim/api-client gen",
     "check:api": "node scripts/pnpm.mjs gen:api && node scripts/check-clean.mjs openapi.json packages/api-client/src",
     "check:docs": "node scripts/check-docs.mjs",
+    "check:kod": "node scripts/check-kod.mjs",
     "test:docs": "node --test \"scripts/*.test.mjs\"",
     "docs:plan": "node scripts/razdvoji-plan.mjs",
     "docs:adr": "node scripts/adr.mjs indeks",
