@@ -21,6 +21,8 @@
 //   10) ADR: ako postoji docs/records/DECISIONS/ — imena ADR-NNN-slug.md, jedinstveni brojevi i
 //       DECISIONS.md jednak generiranom indeksu (scripts/adr.mjs); DECISIONS.md bez mape pada → ADR po datoteci
 //   11) poveznica koja cilja DECISIONS.md#adr-… (osim u prijelaznim iznimkama)  → stari način navođenja ADR-a
+//   12) BILO KOJI .md u repozitoriju preko 1000 redaka (TVRDA_GRANICA; bez prijelaznih iznimaka,
+//       izuzeti samo IZUZECI_TVRDE_GRANICE)                                  → nijedan dokument preko 1000
 //   (brojevi prate plan dokumentacije)
 //
 // Pokreni: pnpm check:docs   |   korijen se može zadati: node scripts/check-docs.mjs <dir>
@@ -33,7 +35,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { indeksAdr } from "./adr.mjs";
 import { prepisiRelativnePoveznice } from "./docs-alati.mjs";
-import { brojRedaka, granicaZa, jeIznimka } from "./docs-granice.mjs";
+import { brojRedaka, granicaZa, jeIznimka, jeIzuzetOdTvrde, TVRDA_GRANICA } from "./docs-granice.mjs";
 
 const POPIS = process.argv.includes("--popis");
 const ARGUMENTI = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -272,9 +274,22 @@ for (const r of mdFiles.filter((x) => /^docs\/plan\/(?:[^/]+\/)?[^/]+\.md$/.test
 for (const r of mdFiles.filter((x) => x.startsWith("docs/"))) {
   const g = granicaDatoteke(r);
   const redaka = brojRedaka(read(r));
-  if (g && redaka > g.redaka && !jeIznimka(r)) {
+  // Preko tvrde granice javlja pravilo 12 (jednom, bez obzira na iznimke).
+  if (g && redaka > g.redaka && redaka <= TVRDA_GRANICA && !jeIznimka(r)) {
     problems.push(
       `PREVELIKA DATOTEKA  ${r}  ${redaka} redaka > granica ${g.redaka} (${g.vrsta})\n      -> razdvoji u indeks + mapu istog imena (vidi docs/README.md)`,
+    );
+  }
+}
+
+// ── 12) tvrda granica: nijedan .md preko 1000 redaka ────────────────
+// Vrijedi za cijeli repozitorij (ne samo docs/) i ne poznaje prijelazne iznimke; izuzeti su samo
+// generirani/vanjski dokumenti izrijekom popisani u scripts/docs-granice.mjs.
+for (const r of mdFiles) {
+  const redaka = brojRedaka(read(r));
+  if (redaka > TVRDA_GRANICA && !jeIzuzetOdTvrde(r)) {
+    problems.push(
+      `PREKO 1000 REDAKA  ${r}  ${redaka} redaka > tvrda granica ${TVRDA_GRANICA}\n      -> razdvoji po smislu u indeks + mapu istog imena (vidi docs/README.md)`,
     );
   }
 }

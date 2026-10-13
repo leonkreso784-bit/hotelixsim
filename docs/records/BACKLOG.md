@@ -153,6 +153,12 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
 
 ## CI i alati
 
+- [alati] **Kod preko 1000 redaka — prijedlog, Leon odlučuje (2026-10-13)** — brana dokumentacije sad drži svaki `.md` ≤ 1000
+  redaka; kod nema takvu granicu. Najveći danas: `content/hotel/v2/situation_templates.json` ~3630 (grana `model-v2/sloj1-situacije`),
+  a na sloj1 @ e1dfa1c `crates/api/src/schema.rs` 1687, `crates/game/tests/mentor.rs` 1670, `crates/game/src/mentor.rs` 1367. Prijedlog: razdvojiti
+  po smislu (predlošci po odjelu/vrsti situacije; shema API-ja po području; testovi i mentor po temi), pa slična brana
+  za kod (npr. upozorenje iznad 1000, generirano izuzeto). Nije dirano u sesiji dokumentacije.
+
 - [ci] **Node 20 akcije zastarjele** — podići `actions/checkout@v4` i `actions/setup-node@v4` na novije verzije u nekom tasku CI-ja. (prvi CI 04.10., run 37167540215)
 - [ci] **`ubuntu-latest` prelazi na Ubuntu 26 od 19.10.** — provjeriti da poslovi `rust` i `web` prolaze, po potrebi pinirati sliku. (isto upozorenje CI-ja)
 - [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)

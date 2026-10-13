@@ -5,7 +5,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { brojRedaka, granicaZa, jeIznimka, PRIJELAZNE_IZNIMKE } from "./docs-granice.mjs";
+import {
+  brojRedaka,
+  granicaZa,
+  IZUZECI_TVRDE_GRANICE,
+  jeIznimka,
+  jeIzuzetOdTvrde,
+  PRIJELAZNE_IZNIMKE,
+  TVRDA_GRANICA,
+} from "./docs-granice.mjs";
 
 test("brojRedaka broji kao wc -l (samo \\n)", () => {
   assert.equal(brojRedaka(""), 0);
@@ -44,12 +52,12 @@ test("živi: sve ostalo pod docs/ = 300", () => {
   assert.deepEqual(granicaZa("docs/plan/2026-10-10-x/task-01-y.md", false), { vrsta: "zivi", redaka: 300 });
 });
 
-test("arhiva: docs/archive/** = 1100, i kad ima mapu istog imena", () => {
-  assert.deepEqual(granicaZa("docs/archive/2026-10-10-ekrani.md", false), { vrsta: "arhiva", redaka: 1100 });
-  assert.deepEqual(granicaZa("docs/archive/2026-10-10-ekrani.md", true), { vrsta: "arhiva", redaka: 1100 });
+test("arhiva: docs/archive/** = 1000, i kad ima mapu istog imena", () => {
+  assert.deepEqual(granicaZa("docs/archive/2026-10-10-ekrani.md", false), { vrsta: "arhiva", redaka: 1000 });
+  assert.deepEqual(granicaZa("docs/archive/2026-10-10-ekrani.md", true), { vrsta: "arhiva", redaka: 1000 });
   assert.deepEqual(granicaZa("docs/archive/2026-10-10-ekrani/task-01-a.md", false), {
     vrsta: "arhiva",
-    redaka: 1100,
+    redaka: 1000,
   });
 });
 
@@ -68,6 +76,15 @@ test("prijelazne iznimke: točno dvije, s razlogom", () => {
   assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1.md"), true);
   assert.equal(jeIznimka("docs/architecture/MODEL_V2.md"), true);
   assert.equal(jeIznimka("docs/plan/ROADMAP.md"), false);
+  // razdvojena iznimka: vrijedi i za dijelove u mapi istog imena, ne i za slično ime
+  assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1/task-02-x.md"), true);
+  assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1-b.md"), false);
+});
+
+test("tvrda granica: 1000 redaka, izuzeci samo izrijekom (danas nijedan)", () => {
+  assert.equal(TVRDA_GRANICA, 1000);
+  assert.deepEqual(Object.keys(IZUZECI_TVRDE_GRANICE), []);
+  assert.equal(jeIzuzetOdTvrde("docs/plan/2026-10-10-v2-sloj1.md"), false);
 });
 
 test("check-docs --popis: silazno, ❌ uz prekoračenje, exit 0, korijen kao argument", () => {

@@ -44,7 +44,7 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
 | ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 63 (ADR-015) |
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
 | živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; najveći današnji odjeljak (MODEL_V2 §3) ima 194; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
-| arhiva | `docs/archive/**` | 1100 | zamrznuto; najveći task ikad (ekrani T4) ima 1037 — task se ne reže na pola |
+| arhiva | `docs/archive/**` | 1000 | zamrznuto; 13.10. s 1100 na 1000 (Leon, tvrda granica, ADR-030) — ekrani T4 podijeljen na 4 i 4b |
 | `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
 
 3. **Planovi.** Plan ≤300 redaka smije biti jedna datoteka. Veći je **pregled** `docs/plan/<datum>-<ime>.md` (zaglavlje,
@@ -249,7 +249,8 @@ datoteka + `corepack pnpm docs:adr`; §4 arhiviranje plana s `docs:plan`; §2 pr
 
 **Files:** `docs/archive/2026-10-10-v2-sloj1.md` (ako ga `/kraj` sesije koda još nije premjestio: `git mv` iz `docs/plan/`
 uz pečat `✅ ISPUNJEN datum`) + mapa; ledger kao `docs/archive/2026-10-10-v2-sloj1-ledger.md` ako ga nema.
-- [ ] `node scripts/razdvoji-plan.mjs …` i `--provjeri` → 0; `node scripts/adr.mjs poveznice` na nove datoteke. Commit.
+- [ ] Plan je već razdvojen 13.10. (pregled + mapa `2026-10-10-v2-sloj1/`, tvrda granica 1000): `git mv` pregleda **i mape**,
+  ponovo izračunaj relativne poveznice (jedna razina se ne mijenja: obje ostaju u istoj mapi uloge); `node scripts/adr.mjs poveznice`. Commit.
 
 ### Task 13: Zatvaranje (val 7)
 

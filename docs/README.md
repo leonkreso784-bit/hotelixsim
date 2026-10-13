@@ -48,11 +48,14 @@
 6. **Nema ćirilice** u tekstu izvan koda (slovo-dvojnik zna ući kopiranjem).
 7. **Arhiva ne smije biti živa.** Plan u `plan/` ne smije proglasiti plan iz `archive/` aktivnim.
 8. **Podindeks:** `X.md` uz mapu `X/` mora postojati i biti naveden ovdje. Više od jedne razine mapa (`X/Y/…`) je zabranjeno.
-9. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1) su izuzeta
-   dok sloj traje.
+9. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1: plan
+   `2026-10-10-v2-sloj1` zajedno s mapom dijelova i `MODEL_V2.md`) izuzeta su od tih granica dok sloj traje.
 10. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
     `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
 11. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
+12. **Tvrda granica: nijedan `.md` u repozitoriju nema više od 1000 redaka** — ni izvan `docs/`, ni s prijelaznom
+    iznimkom. Izuzima se samo generirani ili vanjski dokument, izrijekom upisan u `IZUZECI_TVRDE_GRANICE`
+    (`scripts/docs-granice.mjs`, danas prazno); gitignorirano (`node_modules`, `target`, `.superpowers`) ne ulazi u branu.
 
 ### Granice veličine
 
@@ -66,7 +69,8 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 | ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 60 (ADR-015) |
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
 | živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
-| arhiva | `docs/archive/**` | 1100 | zamrznuto; task se ne reže na pola |
+| arhiva | `docs/archive/**` | 1000 | zamrznuto; task veći od toga dijeli se po smislu na dijelove (npr. ekrani Task 4 i 4b) |
+| **tvrda granica** | **svaki `.md` u repozitoriju** | **1000** | Leonovo pravilo (13.10.); vrijedi i za prijelazne iznimke |
 | `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
 
 ### Indeks + mapa istog imena
@@ -74,7 +78,7 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 Dokument `X.md` koji preraste granicu postaje kratak **indeks** (svrha i tablica „§ → datoteka"), a dijelovi idu u
 **mapu `X/`** pokraj njega. Ovaj `README.md` ostaje jedini ulaz: navodi `X.md`, a `X.md` navodi svoje dijelove. Brojevi
 paragrafa (§) ostaju u naslovima dijelova, pa navodi poput „ARHITEKTURA §7.2" i stare poveznice i dalje vrijede.
-Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova i ADR-ovi (`records/DECISIONS/`).
+Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i ADR-ovi (`records/DECISIONS/`).
 
 ### Planovi, područja i ADR-ovi
 

@@ -256,7 +256,7 @@ test("9) preko granice pada, točno na granici prolazi", () => {
   assert.equal(r.code, 0, r.out);
 });
 
-test("9) granice po vrsti: indeks 200, predaja 60, arhiva 1100", () => {
+test("9) granice po vrsti: indeks 200, predaja 60, arhiva 1000", () => {
   assertFails(
     { "docs/README.md": `${BASE["docs/README.md"]}${RED(200)}` },
     "PREVELIKA DATOTEKA  docs/README.md",
@@ -270,8 +270,45 @@ test("9) granice po vrsti: indeks 200, predaja 60, arhiva 1100", () => {
   );
   const r = run({
     "docs/SLJEDECA_SESIJA.md": RED(60),
-    "docs/archive/STARO.md": RED(1100),
+    "docs/archive/STARO.md": RED(1000),
     "docs/README.md": `${BASE["docs/README.md"]}- SLJEDECA_SESIJA.md\n- STARO.md\n`,
+  });
+  assert.equal(r.code, 0, r.out);
+});
+
+test("12) tvrda granica: bilo koji .md preko 1000 pada, i izvan docs/, točno 1000 prolazi", () => {
+  assertFails(
+    { "crates/x/README.md": RED(1001) },
+    "PREKO 1000 REDAKA  crates/x/README.md  1001 redaka > tvrda granica 1000",
+  );
+  assertFails(
+    { "docs/archive/STARO.md": RED(1001), "docs/README.md": `${BASE["docs/README.md"]}- STARO.md\n` },
+    "PREKO 1000 REDAKA  docs/archive/STARO.md",
+  );
+  const r = run({ "crates/x/README.md": RED(1000) });
+  assert.equal(r.code, 0, r.out);
+});
+
+test("12) prijelazna iznimka ne vrijedi za tvrdu granicu (ni za dio u mapi)", () => {
+  const indeks = `${BASE["docs/README.md"]}- [S](plan/2026-10-10-v2-sloj1.md)\n`;
+  const plan = "# Sloj 1\n\n**Status:** ⏸️ PAUZIRAN\n\n- [T1](2026-10-10-v2-sloj1/task-01-a.md)\n";
+  assertFails(
+    { "docs/README.md": indeks, "docs/plan/2026-10-10-v2-sloj1.md": `${plan}${RED(1001)}` },
+    "PREKO 1000 REDAKA  docs/plan/2026-10-10-v2-sloj1.md",
+  );
+  assertFails(
+    {
+      "docs/README.md": indeks,
+      "docs/plan/2026-10-10-v2-sloj1.md": plan,
+      "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(1001)}`,
+    },
+    "PREKO 1000 REDAKA  docs/plan/2026-10-10-v2-sloj1/task-01-a.md",
+  );
+  // isti dio s 400 redaka: preko granice 300, ali iznimka vrijedi i za mapu
+  const r = run({
+    "docs/README.md": indeks,
+    "docs/plan/2026-10-10-v2-sloj1.md": plan,
+    "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(400)}`,
   });
   assert.equal(r.code, 0, r.out);
 });

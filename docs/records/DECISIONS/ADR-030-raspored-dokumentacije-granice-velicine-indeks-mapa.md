@@ -27,6 +27,12 @@ je preko 4000 redaka, arhivirani planovi do 4700, ADR-ovi su bili jedna datoteka
 8. **Prijelazne iznimke** dok traje sloj 1: `docs/plan/2026-10-10-v2-sloj1.md` i `docs/architecture/MODEL_V2.md`
    (popis `PRIJELAZNE_IZNIMKE` u `docs-granice.mjs`); prazni se u Tasku 13 plana, a MODEL_V2 se razdvaja u Tasku 11.
 
+**Dopuna 2026-10-13 (Leonova odluka, ne pretpostavka).** *„Nijedan dokument (.md) u repou nema više od 1000 redaka;
+dugi se razgranaju u manje dijelove s kazalom, i brana pazi da se to ne vrati."* Zato: pravilo 12 u
+[docs/README.md](../../README.md) (tvrda granica 1000 za svaki `.md`, bez prijelaznih iznimaka; izuzeci samo za
+generirano/vanjsko, izrijekom), arhiva s 1100 na 1000 (ekrani Task 4 podijeljen po smislu na 4 i 4b), a plan Sloja 1
+razdvojen je odmah, dok sloj još traje (prijelazna iznimka sada pokriva i njegovu mapu, ali samo za granicu 300).
+
 **Pretpostavke izvedbe.** Zajednički alati (slug, prepoznavanje ograda koda, prepisivanje relativnih poveznica) žive u
 jednoj datoteci `scripts/docs-alati.mjs` da se ne razilaze. Slug ADR-a i taskova ima najviše 6 riječi. Razdvajanje
 ima `--provjeri` koji dokazuje „spoji natrag = izvornik" prije nego što se izvornik zamijeni. Broj ADR-029 ostaje
