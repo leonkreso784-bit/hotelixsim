@@ -1,41 +1,57 @@
 # HotelixSim — roadmap
 
-**Status:** 🟩 živ (faze projekta; nije plan taskova) · **Otvoren:** 2026-10-03
-Što gradimo: [VIZIJA.md](../product/VIZIJA.md) · kako: [ARHITEKTURA.md](../architecture/ARHITEKTURA.md) · demo: [DEMO.md](../product/DEMO.md)
+**Status:** 🟩 živ (faze projekta i put do pilota; nije plan taskova) · **Otvoren:** 2026-10-03
+Što gradimo: [VIZIJA.md](../product/VIZIJA.md) · kako: [ARHITEKTURA.md](../architecture/ARHITEKTURA.md) i
+[MODEL_V2.md](../architecture/MODEL_V2.md) · način rada: [ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md)
 
 > Faza ima ime, ne slovo. Svaka faza ima uvjet „gotovo kad…" izražen kroz ono što **čovjek može napraviti**,
-> nikad kroz „test je zelen". Stari plan (Python prototip do 10.10.) je napušten 04.10.: demo se gradi na pravoj
-> arhitekturi i ne baca se.
+> nikad kroz „test je zelen". Čvrsto se planira samo blisko (TEMELJ RADA, ZAVRŠETAK SLOJA 1, lokalni dio SPREMNO ZA
+> INTERNET). Sve iza toga je **smjer**: raspored se ponovno slaže kad profesor vidi igru. Sati su [PROC].
 
-## Faze
+## Faze projekta
 
 | faza | gotovo kad… |
 |---|---|
-| **TEMELJI** | …arhitektura i dizajn igre su zapisani i Leon ih je pregledao. Arhitektura v2 ✅ (04.10.) · DEMO.md nacrt ✅ (04.10.), čeka Leonovu provjeru domene |
-| **DEMO** (lokalno) | …profesor na Leonovom računalu otvori poveznicu, dobije hotel, odigra lipanj i srpanj (situacije, razgovor s likom, slobodan odgovor s AI ocjenom, izbornik radnji), zatvori mjesec i vidi napredak uz tri robota, te u profesorovom pogledu vidi **zašto** je hotel tu gdje jest ([DEMO.md](../product/DEMO.md) §1.5) |
-| **PREZENTACIJA** | …stoji prezentacija (vizija i osi situacija · fer start i relativna ocjena · živi demo · što tražimo od fakulteta) i profesori su dobili [pitanja](../product/PITANJA_ZA_PROFESORE.md) |
-| **PILOT** | …poslije profesorovog „da": grupa igra sezonu po kalendaru na Railwayu, s pravom prijavom, a profesor vidi relativni napredak svakog hotela |
-| **VIZIJA** | međusobni utjecaj, profesorova ploča, više hotela ([VIZIJA.md](../product/VIZIJA.md) §8) |
+| **TEMELJI** ✅ | …arhitektura i dizajn igre su zapisani. Arhitektura v2 i domena DEMO-a još čekaju Leonovu potvrdu (ADR-003, BACKLOG) |
+| **DEMO** ✅ | …igra radi u pregledniku: hotel, situacije, razgovor s likom, AI ocjena, mentor, napredak uz tri robota (koraci 1–5 i sloj 0, [CHANGELOG](../records/CHANGELOG.md), planovi u [archive/](../archive/2026-10-10-ekrani.md)) |
+| **PREZENTACIJA** | …profesor je vidio igru i dobio [pitanja](../product/PITANJA_ZA_PROFESORE.md) |
+| **VERZIJA ZA PROFESORE** | …profesori na internetu probaju igru s razredom (cilj sredina siječnja 2027., poželjno, ne nužno) — prekretnica P3 |
+| **PILOT** | …studenti ljetnog semestra igraju jedni protiv drugih, na satu ili kroz semestar, a profesor prati razred — prekretnica P4 |
+| **VIZIJA** | zajedničko tržište gostiju, više hotela i tržišta ([VIZIJA.md](../product/VIZIJA.md) §8) |
 
-## DEMO — redoslijed gradnje
+## Put do pilota: dva kolosijeka
 
-Po ARHITEKTURA §20. Svaki korak ima pregled koda prije idućeg. **Sve lokalno; Railway tek u PILOTU.**
+Kolosijeci su podijeljeni **po datotekama** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md)):
+**IGRA** drži srce igre (jezgra, `crates/game`, sadržaj, balans), a **PLATFORMA** server, bazu, prijavu i ekrane
+razreda. Pravila razreda: [ADR-037](../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md).
+Cigle po fazama (zaliha; kartica se razrađuje u planu faze kad faza krene):
 
-1. ✅ Kostur od kraja do kraja: workspace, CI, prazna jezgra → API → lokalni Postgres → jedan ekran
-   ([CHANGELOG 0.1.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-04-kostur.md)).
-2. ✅ Jezgra + alat za balans: stvarni sloj, indeksi, mehanike, obračun, kocka. Provjere iz DEMO §11 (točke 1–6).
-3. ✅ Dnevnik, runde (demo način: gumb) i red poslova ([CHANGELOG 0.3.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-05-dnevnik-runde.md);
-   [ADR-015](../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md), [ADR-016](../records/DECISIONS/ADR-016-leonove-proizvodne-odluke-za-korak-3.md)).
-4. ✅ AI sloj: razgovor s likom, presuda na slobodni odgovor po rubrici, mentor, mjerilo za DEMO §11 t. 7
-   ([CHANGELOG 0.4.0](../records/CHANGELOG.md), plan u [archive/](../archive/2026-10-09-ai-sloj.md);
-   [ADR-018](../records/DECISIONS/ADR-018-leonove-proizvodne-odluke-za-ai-sloj.md), [ADR-019](../records/DECISIONS/ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md)).
-5. **Sljedeće:** sučelje igrača (mobitel prvi, Tailwind, Leonov koncept u [DIZAJN.md](../product/DIZAJN.md)) i gost preko poveznice.
-6. Profesorov pogled (trag promjena, presude s kriterijima).
+| kolosijek | cigle |
+|---|---|
+| kvaliteta i TEMELJ RADA | [ROADMAP/kvaliteta.md](./ROADMAP/kvaliteta.md) |
+| IGRA | [ROADMAP/igra.md](./ROADMAP/igra.md) |
+| PLATFORMA | [ROADMAP/platforma.md](./ROADMAP/platforma.md) |
+
+**Prije oba kolosijeka: TEMELJ RADA** (~26 h). Pravila rada s agentima, popravak CI-ja (Ubuntu 26 od 19.10.), brana
+veličine koda, razdvajanje `api/src/schema.rs` i mentora, prijenos platformskog nacrta iz ledgera u `docs/` i Leonova
+sjednica ADR-ova 🟨. **Gotovo kad:** oba kolosijeka mogu krenuti bez ijedne zajedničke velike datoteke.
+
+| okvirno | IGRA | PLATFORMA | prekretnica: što čovjek može |
+|---|---|---|---|
+| listopad | **ZAVRŠETAK SLOJA 1** (~50 h): situacije u igri, obnova, kraj sezone, spajanje tri grane, zajednički balans, profesorov račun dobiti | **SPREMNO ZA INTERNET** (~48 h, lokalno, 0 €): postavke, gašenje, zaštita, server servira web, kopije, granica AI troška, brza igra za 30 igrača | **P1** · Leon odigra cijelu sezonu Sloja 1 sa situacijama, obnovom i krajem sezone |
+| studeni | **RAZRED U JEZGRI** (~45 h): N studentskih hotela, profesor otvara krug, obračun po hotelu | **RAZRED** (~116 h): računi studenata (korisničko ime i lozinka), kod igre, čekaonica, lista kolega, raspored otvaranja i rokovi, ekrani studenta i profesora | **P2** · profesor na internetu stvori igru, studenti uđu kodom i igraju jedni protiv drugih (izlazak samo uz Leonov OK, ~5–10 €/mj) |
+| prosinac – siječanj | **LJUDI** (~64 h) · **RAZGOVORI** (~35 h) · **NATJECANJE ZA LJUDE** (~45 h) | **PROFESOR** (~83 h do P3): pregled razreda, detalj studenta, pregled AI ocjena, profesor dodaje vlastite situacije | **P3** · profesori probaju verziju s ljudima i razgovorima i vode razred |
+| veljača – ožujak | **JEZICI I AGENCIJA** · **VRSTE SOBA I CIJENE** · **RECENZIJE** (~85 h) | **PILOT** (~95 h + ostatak PROFESORA): GDPR, opterećenje 30 studenata, domena, ispravak AI ocjene, izvoz | **P4** · studentski pilot |
+| poslije pilota | sobe (tlocrt), Hoteli u okolici, pošta s agencijama, događaji, dobavljači, novine; igra na engleskom (AI i sadržaj) | generator hotela, AAI@EduHr (čim fakultet odobri), sučelje na engleskom | — |
+
+**Do P3 je ~525 h** (IGRA ~240, PLATFORMA ~250, kvaliteta ~40), više od okvirnih 425 h iz razgovora: liste su
+detaljnije. Zato su linije reza dio plana, ne iznimka.
+
+**Linije reza** ako tempo zapne, redom: vlastite situacije profesora P3 → P4 · razgovori samo tri vrste ·
+NATJECANJE ZA LJUDE P3 → P4. **Nikad se ne režu** testovi, provjeravatelj i balans.
 
 ## Gdje smo
 
-**TEMELJI** su napisani, ali arhitektura v2 i domena u DEMO.md još čekaju Leonovu potvrdu (ADR-003, BACKLOG).
-**DEMO:** korak 1 ✅; korak 2 ✅ (jezgra i alat za balans, plan u [archive/](../archive/2026-10-04-jezgra.md)); korak 3 ✅ (dnevnik, runde, red poslova, plan u [archive/](../archive/2026-10-05-dnevnik-runde.md)); korak 4 ✅ (AI sloj, plan u [archive/](../archive/2026-10-09-ai-sloj.md)); korak 5 (ekrani) je sljedeći. Rokovi: demo ciljano **~14.10.**, prvo profesorovih 15 minuta (DEMO §1.5) —
-[ADR-012](../records/DECISIONS/ADR-012-ciljani-rok-demoa-14-10-prvo.md); pitanja profesorima idu tijekom tjedna 5.–11.10.; prijava u inkubator 16.11.
-
+Aktivan plan: [Sloj 1](./2026-10-10-v2-sloj1.md) (T1–T23 spojeni; situacije, obnova i kraj sezone na granama,
+predaja u ledgeru). Sljedeće: faza **TEMELJ RADA**, pa usporedno ZAVRŠETAK SLOJA 1 i SPREMNO ZA INTERNET.
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".

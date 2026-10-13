@@ -123,7 +123,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 
 | Dokument | Svrha |
 |---|---|
-| [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze (TEMELJI → DEMO → PREZENTACIJA → PILOT → VIZIJA), redoslijed gradnje demoa, gdje smo |
+| [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u mapi `ROADMAP/` |
 | [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | 🟩 **aktivan** — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
 | [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (čeka spajanje Sloja 1; Taskovi 11–13) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 

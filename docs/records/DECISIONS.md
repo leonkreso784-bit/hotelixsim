@@ -6,6 +6,8 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-038"></a>[ADR-038](DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) | Način rada: dva kolosijeka, faze i cigle, uloge agenata | ✅ Leonova odluka 13.10. | 2026-10-13 |
+| <a id="adr-037"></a>[ADR-037](DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) | Razred: studenti jedni protiv drugih, obračun po hotelu, natjecanje za ljude, igra kroz semestar | ✅ Leonove odluke 13.10. | 2026-10-13 |
 | <a id="adr-036"></a>[ADR-036](DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md) | Kraj sezone: poredak, financije robota i sezonski mentor | 🟨 ČEKA LEONOV PREGLED, osim Leonovih odluka ✅ 12. i 13.10. | 2026-10-13 |
 | <a id="adr-035"></a>[ADR-035](DECISIONS/ADR-035-sucelje-odjela-odluke-u-detalju-odjela.md) | Sučelje Odjela: odluke u detalju odjela i ocjena odjela | 🟨 ČEKA LEONOV PREGLED | 2026-10-12 |
 | <a id="adr-034"></a>[ADR-034](DECISIONS/ADR-034-zadani-model-igre-je-v2-tjedna.md) | Zadani model igre je v2, tjedna igra zadana | ✅ Leonova odluka 12.10. | 2026-10-12 |
