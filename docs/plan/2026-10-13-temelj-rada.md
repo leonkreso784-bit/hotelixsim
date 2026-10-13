@@ -1,6 +1,6 @@
 # Temelj rada (Faza 0) — plan izgradnje
 
-**Status:** 🟩 AKTIVAN · **Područje:** dokumentacija · **Otvoren:** 2026-10-13 · **Grana:** `model-v2/sloj1` (glavno stablo)
+**Status:** 🟩 AKTIVAN · **Područje:** kvaliteta · **Otvoren:** 2026-10-13 · **Grana:** `model-v2/sloj1` (glavno stablo)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

@@ -7,14 +7,27 @@
 ## 1 · Tok rada
 
 1. **Brainstorming** (`superpowers:brainstorming`) — što i zašto; arhitektura kroz dokument i raspravu, ne kroz anketu.
-2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** kod|dokumentacija`. Najviše jedan aktivni plan **po području**;
+2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** igra|platforma|kvaliteta|dokumentacija` (bez retka = `igra`; `kod` = stari naziv). Najviše jedan aktivni plan **po području**;
    dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan unutar granice živog dokumenta ([tablica](../README.md#granice-veličine)) smije biti jedna datoteka. Veći se **prije
    aktivacije** razdvaja u pregled + mapu taskova: prvo `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa
    `corepack pnpm docs:plan <plan.md>`. Pregled razdvojenog plana ima granicu indeksa iz iste tablice, pa
    velik plan treba pisati tako da pregled stane, inače se ne može aktivirati.
-3. **Gradnja** (`superpowers:subagent-driven-development`) na zasebnoj grani (npr. `gradnja/<ime>`): jedan izvođač po tasku.
-4. **Pregled nakon svakog taska** — zaseban pregledavatelj, ne izvođač. Nalaz se vraća izvođaču; tek zeleno ide dalje.
-5. **Završni pregled** cijele grane na najjačem modelu; odgođeni nalazi idu u [BACKLOG](../records/BACKLOG.md).
+3. **Cigla** (komad od ~2–8 h) u planu faze ima **karticu**: što se radi, koje datoteke smije dirati, dokaz, veličina.
+   Svaki korak radi **svjež agent** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 3):
+   1. **voditelj** (glavna sesija) otvara granu, daje karticu, vodi ledger i spaja;
+   2. **čuvar testova** piše testove iz kartice **prije koda** i dokazuje da padaju iz pravog razloga;
+   3. **graditelj** piše kod dok testovi ne prođu i polira što dira. **Testove ne mijenja**: ako misli da je test kriv,
+      vraća ga voditelju;
+   4. **provjeravatelj** sam ponovno pokreće sve provjere i čita kod naspram kartice (za jezgru i probe-mutaciju);
+      nalaz ide graditelju, a tek njegov „da" pušta ciglu dalje;
+   5. **čuvar dokumentacije** upisuje promjene (CHANGELOG, ADR, MODEL_V2, BACKLOG) i pokreće `check:docs`; ne prevodi
+      Rust pa radi usporedno.
+4. **Cigla je gotova** kad su testovi čuvara i sve stalne provjere zeleni (fmt, clippy, testovi, balans, `check:api`,
+   web), provjeravatelj kaže „da", dokumentacija je upisana i nijedna dirana datoteka nije prešla granicu veličine (t. 4).
+5. **Ritam.** Cigle unutar faze idu jedna za drugom bez čekanja; voditelj se javlja Leonu **na kraju faze**, kad treba
+   odluka o igri ili brojkama, ili kad nešto pukne (t. 6). **Kraj faze:** UI čuvar pregleda ekrane, završni pregled
+   radi najjači model, Leon igra u pregledniku (jedna adresa i put do novoga); odgođeni nalazi idu u
+   [BACKLOG](../records/BACKLOG.md) (t. 5).
 6. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
 
 ## 2 · Radni ledger, brief i pretinac
@@ -28,29 +41,34 @@ pregledu plana (`<datum>-<ime>`), i kad je plan razdvojen.
 - **Brief = task datoteka.** Izvođač dobiva putanju task datoteke (`docs/plan/<datum>-<ime>/task-NN-….md`) i pregleda.
   Ako je potreban `task-brief`, uvijek s trećim argumentom, inače radni prostor dobije ime taska:
   `task-brief <mapa>/task-NN-x.md N "$(sdd-workspace <pregled>.md)/task-N-brief.md"`
-- **Dvije sesije paralelno** samo na različitim područjima (`kod` i `dokumentacija`), svaka sa svojim aktivnim planom.
-- **Pretinac.** Dok traje faza A (plan dokumentacije, Protokol paralelnih sesija), sesija koda ne piše u
-  `docs/records/`. Svoje bilješke ostavlja u `.superpowers/sdd/<plan>/za-dokumentaciju.md`, u odjeljcima `## ADR`,
-  `## BACKLOG`, `## CHANGELOG`, `## PROGRESS`. Pretinac prenosi sesija koda kad spoji `main` (plan dokumentacije →
-  „Spajanje u sesiju koda”); sesija dokumentacije ga samo čita.
+- **Jedna sesija, dva kolosijeka.** Igra i platforma ne dijele datoteke (vlasništvo nad datotekama sprječava sudar,
+  ne tema), a svako područje ima najviše jedan aktivan plan. Zasebna sesija dokumentacije otpada: dokumentaciju piše
+  čuvar dokumentacije unutar cigle.
+- **Pretinac** (`.superpowers/sdd/<plan>/za-dokumentaciju.md`) služi samo za bilješke **nespojenih grana**, u odjeljcima
+  `## ADR`, `## BACKLOG`, `## CHANGELOG`, `## PROGRESS`; prenosi se kad se grana spoji.
 
 ## 3 · Model po poslu
 
-| posao | model |
+| uloga | model |
 |---|---|
-| izvođači taskova | sonnet |
-| pregled nakon taska | sonnet |
+| voditelj | glavna sesija |
+| čuvar testova, graditelj | sonnet |
+| provjeravatelj | sonnet; opus za rizične cigle (jezgra, balans, sigurnost, prijava) |
+| čuvar dokumentacije | haiku ili sonnet |
 | kratki ponovni pregled ispravka | haiku |
-| završni pregled grane | opus (najjači dostupan) |
+| završni pregled faze | opus (najjači dostupan) |
+
+Svaki korak dobiva **novog** agenta; nastavak samo za mali popravak. Izlazi idu u datoteke (ADR-038 t. 7).
 
 ## 4 · Paralelni agenti
 
 - Neovisne poslove (provjere, revizije, istraživanja, nacrti) pokreći **u jednoj poruci**, u pozadini.
+- Najviše **2 agenta istodobno prevode Rust**, zbrojeno preko oba kolosijeka (računalo).
 - **Jedan pisac po datoteci**: svaki agent dobiva popis datoteka koje smije dirati i ništa drugo. Eksperimenti nad
   kodom idu u worktree.
 - Tvrdnje agenata nisu dokaz: ključni nalaz provjeri sam ili ga daj drugom agentu da ga neovisno ponovi.
 - Leon prati rad u VS Code dodatku Pixel Agents: imenovani agenti dobiju vlastiti lik i sjedalo, neimenovani su
-  „Subtask" likovi uz glavnog. Broj agenata nije ograničen postavkom.
+  „Subtask" likovi uz glavnog. Broj agenata nije ograničen postavkom, nego računalom (vidi gore).
 
 ## 5 · CI i GitHub
 

@@ -40,9 +40,10 @@
 1. **Svaka poveznica vodi negdje.** Poveznica na datoteku, sliku, skriptu ili mapu koje nema pada.
 2. **Svaki `.md` pod `docs/` je naveden u svom indeksu.** Dokument koji nigdje nije naveden je „duh". Dokumenti u
    `docs/<uloga>/` navedeni su ovdje; dijelovi u mapi `X/` navedeni su u `X.md`.
-3. **Jedan aktivni plan po području.** Svaki plan u zaglavlju ima `**Područje:** kod` ili `**Područje:** dokumentacija`
-   (bez tog retka znači `kod`). U `plan/` smije biti najviše jedan aktivan plan za svako područje, uz `ROADMAP.md`.
-   Plan koji čeka nosi `**Status:** ⏸️ PAUZIRAN`. Dvije sesije smiju raditi usporedno samo na različitim područjima.
+3. **Jedan aktivni plan po području.** Svaki plan u zaglavlju ima `**Područje:** igra | platforma | kvaliteta | dokumentacija`
+   (bez tog retka znači `igra`; `kod` je stari naziv za `igra`, isti brojač). U `plan/` smije biti najviše jedan aktivan
+   plan za svako područje, uz `ROADMAP.md`. Plan koji čeka nosi `**Status:** ⏸️ PAUZIRAN`. Kolosijeci smiju raditi
+   usporedno samo na različitim područjima.
 4. **`product/` nije dnevnik** — najviše 3 ISO datuma (npr. 2026-10-10) po datoteci; kronologija ide u `records/`.
 5. **`CLAUDE.md` ima budžet znakova** (vidi tablicu), jer se učitava svaku sesiju.
 6. **Nema ćirilice** u tekstu izvan koda (slovo-dvojnik zna ući kopiranjem).
@@ -84,7 +85,8 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 
 - **Plan** do 300 redaka smije biti jedna datoteka. Veći je **pregled** `plan/<datum>-<ime>.md` + mapa istog imena sa
   po jednim taskom u datoteci; razdvaja ga alat (`corepack pnpm docs:plan <plan.md>`, vidi [AGENTI](./workflow/AGENTI.md)).
-- **Područje** je `kod` ili `dokumentacija`; za svako smije biti jedan aktivan plan.
+- **Područje** je `igra`, `platforma`, `kvaliteta` ili `dokumentacija` (bez retka = `igra`; `kod` = stari naziv za `igra`);
+  za svako smije biti jedan aktivan plan.
 - **Odluke** žive u `records/DECISIONS/`, jedna datoteka po ADR-u. `records/DECISIONS.md` je **popis koji se generira**
   (`corepack pnpm docs:adr`): ne uređuj ga ručno.
 - **Zapisnici** (`PROGRESS`, `CHANGELOG`, `BACKLOG`) imaju granicu živog dokumenta; kad je prijeđu, stariji unosi idu u

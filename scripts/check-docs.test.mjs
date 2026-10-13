@@ -215,15 +215,31 @@ test("3) dva aktivna plana u istom području padaju, u različitim prolaze", () 
   assert.equal(r.code, 0, r.out);
 });
 
-test("3) plan bez retka Područje je kod; nepoznato područje pada", () => {
+test("3) plan bez retka Područje je igra; nepoznato područje pada", () => {
   assertFails(
     { ...PLAN_B, "docs/plan/PLAN_B.md": "# B\n" },
-    "VISE AKTIVNIH PLANOVA u docs/plan/ (podrucje: kod)",
+    "VISE AKTIVNIH PLANOVA u docs/plan/ (podrucje: igra)",
   );
   assertFails(
     { ...PLAN_B, "docs/plan/PLAN_B.md": "# B\n\n**Status:** 🟩 AKTIVAN · **Područje:** infrastruktura\n" },
     "NEPOZNATO PODRUCJE  docs/plan/PLAN_B.md  ->  infrastruktura",
   );
+});
+
+test("3) kod je stari naziv za igru: kod + igra aktivni padaju; igra + platforma + kvaliteta prolaze", () => {
+  const plan = (p) => `# P\n\n**Status:** 🟩 AKTIVAN · **Područje:** ${p}\n`;
+  const indeks = `${BASE["docs/README.md"]}- [B](plan/PLAN_B.md)\n- [C](plan/PLAN_C.md)\n`;
+  assertFails(
+    { "docs/README.md": indeks, "docs/plan/PLAN_A.md": plan("kod"), "docs/plan/PLAN_B.md": plan("igra") },
+    "VISE AKTIVNIH PLANOVA u docs/plan/ (podrucje: igra)",
+  );
+  const r = run({
+    "docs/README.md": indeks,
+    "docs/plan/PLAN_A.md": plan("igra"),
+    "docs/plan/PLAN_B.md": plan("platforma"),
+    "docs/plan/PLAN_C.md": plan("kvaliteta"),
+  });
+  assert.equal(r.code, 0, r.out);
 });
 
 test("3) taskovi u docs/plan/X/ ne računaju se kao planovi", () => {

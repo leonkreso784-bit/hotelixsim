@@ -11,7 +11,7 @@
 //       docs/<uloga>/X/*.md u docs/<uloga>/X.md (koji mora postojati i biti u docs/README.md);
 //       dublja razina (X/Y/…) pada                                           → dokument-duh, jedna razina
 //    3) docs/plan/*.md ima više od JEDNOG aktivnog plana po **Područje:**
-//       (kod | dokumentacija; bez retka = kod; drugo pada)                   → „koji plan vrijedi?"
+//       (igra | platforma | kvaliteta | dokumentacija; bez retka = igra; kod = igra; drugo pada)                  → „koji plan vrijedi?"
 //    4) docs/product/** ima datoteku s više od 3 ISO datuma                  → definicija ≠ dnevnik
 //    5) CLAUDE.md je preko budžeta                                           → trošak svake sesije
 //    6) ćirilica u .md izvan koda                                            → kopirano slovo-dvojnik
@@ -176,20 +176,22 @@ if (!mdFiles.includes("docs/README.md")) {
 // ── 3) najviše jedan aktivni plan po području ───────────────────────
 // ROADMAP.md je stalni stanovnik (pregled), ne plan. Plan koji čeka nosi u zaglavlju
 // `**Status:** ⏸️ PAUZIRAN` pa ne računa; ispunjen plan ide u docs/archive/. Zaglavlje nosi
-// `**Područje:** kod` ili `**Područje:** dokumentacija` (bez retka = kod): dvije sesije smiju
-// raditi paralelno samo na različitim područjima. Računaju se samo docs/plan/*.md (taskovi iz
+// `**Područje:** igra | platforma | kvaliteta | dokumentacija` (bez retka = igra; `kod` je stari
+// naziv za igru, isti brojač; ADR-038 t. 8): kolosijeci rade paralelno samo na različitim područjima. Računaju se samo docs/plan/*.md (taskovi iz
 // docs/plan/X/ nisu planovi). Svrha: na pitanje „koji plan vrijedi?" po području jedan odgovor.
 const PAUZIRAN = /^\s*\*\*Status:\*\*\s*\u23F8\uFE0F?\s*PAUZIRAN\b/m;
-const PODRUCJA = ["kod", "dokumentacija"];
+const PODRUCJA = ["igra", "platforma", "kvaliteta", "dokumentacija"];
+const ALIAS_PODRUCJA = { kod: "igra" }; // Sloj 1 i stariji planovi (ADR-038 t. 8)
 const planFiles = mdFiles.filter((r) => /^docs\/plan\/[^/]+\.md$/.test(r) && r !== "docs/plan/ROADMAP.md");
 const aktivniPoPodrucju = new Map();
 for (const r of planFiles) {
   const tekst = read(r);
   const zaglavlje = tekst.split(/\r?\n/).slice(0, 10).join("\n");
-  const podrucje = /\*\*Područje:\*\*\s*([^\s·]+)/.exec(zaglavlje)?.[1] ?? "kod";
+  const procitano = /\*\*Područje:\*\*\s*([^\s·]+)/.exec(zaglavlje)?.[1] ?? "igra";
+  const podrucje = ALIAS_PODRUCJA[procitano] ?? procitano;
   if (!PODRUCJA.includes(podrucje)) {
     problems.push(
-      `NEPOZNATO PODRUCJE  ${r}  ->  ${podrucje}\n      -> dopušteno: ${PODRUCJA.join(" | ")} (bez retka = kod)`,
+      `NEPOZNATO PODRUCJE  ${r}  ->  ${podrucje}\n      -> dopušteno: ${PODRUCJA.join(" | ")} (bez retka = igra; kod = igra)`,
     );
     continue;
   }
