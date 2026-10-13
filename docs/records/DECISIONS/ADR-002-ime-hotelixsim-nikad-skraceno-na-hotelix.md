@@ -8,3 +8,8 @@ Leon je sam izabrao HotelixSim.
 „Hotelix" (bez Sim) postoji u istoj branši (AI softver za upravljanje hotelima i studio za hotelske stranice), pa se ime
 **nikad ne skraćuje** na „Hotelix".
 **Posljedice.** Prije javnog izlaska provjeriti žig (EUIPO/DZIV). Folder je `Documents\hotelixsim`.
+Provjera žiga 11.10. preko TrademarkElite (agregator, nije službeni registar): „Hotelix" i „HotelixSim" — 0 sličnih
+žigova u EU i SAD-u. TMview (EUIPO + DZIV i nacionalni uredi) odbija automatske upite, pa ga **Leon provjerava ručno**
+prije osnivanja firme. „Hotelix" se koristi bez žiga (Product Hunt, AI sustav za upravljanje hotelima); sličan
+postojeći brend: Hotelogix (PMS). Preporuka: prijaviti EU žig „HotelixSim" pri osnivanju firme (u EU vrijedi prvi koji
+prijavi).

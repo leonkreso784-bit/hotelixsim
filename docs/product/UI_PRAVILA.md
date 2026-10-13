@@ -7,14 +7,22 @@
 
 ## 1 · Boje, slova, oblik
 
-1. Boja, zaobljenje i slovo **samo kroz token** (`bg-accent`, `text-ink`, `text-muted`, `bg-sand`, `bg-mint`,
-   `text-up`, `text-down`, `border-line`, `rounded-card`). U `.tsx` nema heksa ni `style={{ color }}`; jedina
-   dopuštena inline vrijednost je širina trake (`style={{ width }}`) i boje lika u `src/avatar/`.
-2. **Tekst u boji naglaska na svijetloj podlozi** mora imati kontrast ≥ 4,5:1. Danas `text-accent` na `bg-accent-soft`
-   ima 4,03, `text-up` na bijeloj 4,01, `text-down` na `bg-sand` 3,86 (I3) — dok se tokeni ne poprave, nova mjesta
-   koriste `text-ink` uz ikonu/strelicu, ne obojeni sitni tekst. Bijeli tekst na `bg-accent` je u redu (4,57).
-3. `Card` (`ui/primitives.tsx`) se **ne boji kroz `className`**: `bg-*`, `border-*` i `p-*` dodani u `className`
-   tiho ne djeluju (I1). Boja kartice ide kroz prop (`tone`/`emphasis`) kad ga I1 uvede; do tada kartica je bijela.
+1. Boja, zaobljenje i slovo **samo kroz token** (`bg-accent`, `text-accent-ink`, `text-ink`, `text-muted`, `bg-sand`,
+   `bg-mint`, `text-up`, `text-down`, `text-warn`/`bg-warn`, `border-line`, `rounded-card`). `warn` (#a16207, jantar)
+   je razina „srednje" (ocjena odjela 60–79): jedan token za tekst i traku, jasno različit od crvene `down`. U `.tsx`
+   nema heksa ni `style={{ color }}`; jedina dopuštena inline vrijednost je širina trake (`style={{ width }}`) i boje
+   lika u `src/avatar/`. **Iznimka:** boje uvoda logotipa su u `apps/web/index.html` napisane izravno (prijepis
+   tokena), jer se uvod crta prije `styles.css`.
+2. **Tekst u boji na svijetloj podlozi** mora imati kontrast ≥ 4,5:1 (veliki tekst ≥ 24 px ili ≥ 18,66 px podebljan:
+   ≥ 3:1). Za **tekst** u boji naglaska koristi `text-accent-ink` (bijela 5,57 · `bg-accent-soft` 4,91 · pozadina
+   5,23); `text-accent` samo za ikone, obrube i veliki tekst (logo, naslov starta). `text-up` (bijela 5,43 ·
+   `bg-mint` 4,55) i `text-down` (bijela 5,75 · `bg-sand` 4,75) smiju na te podloge; `warn` ima 4,9 na bijeloj i
+   ≥ 3:1 na podlozi trake `bg-line`. Bijeli tekst na `bg-accent` je 4,57. Novi par boja = novi redak u
+   `src/contrast.test.ts` (test računa omjer iz tokena u `styles.css`).
+3. `Card` (`ui/primitives.tsx`) se **ne boji kroz `className`**: boja ide kroz `tone` (`plain` · `accent` · `mint` ·
+   `sand`), obrub naglaska kroz `emphasis` (2 px `border-accent`, za potvrdu i izbor), unutarnji razmak kroz `pad`
+   (`md` zadano · `sm` · `list` za popise s razdjelnicima · `lg` za istaknutu brojku). `className` nosi samo raspored
+   (razmaci među djecom, flex, `order-*`, vidljivost).
 4. Ljestvica slova: naslov ekrana `text-3xl font-extrabold tracking-tight`; naslov kartice `text-lg font-bold`;
    oznaka podatka `text-sm`; objašnjenje `text-sm text-muted` (`text-xs` samo za jednu kratku napomenu, ne odlomak);
    istaknuta brojka `text-xl`–`text-5xl font-extrabold tabular-nums`.
@@ -29,7 +37,9 @@
    noći `formatEurosCents`, postotak `formatPercentBp`, indeks i bodovi 0–10 000 `formatIndex` (prikaz 0–100),
    promjena `formatWholeSigned`/`formatSignedPoints`, broj s imenicom `formatCount`/`formatNights`, ocjena
    `formatRating`. Nikad `toFixed`, `toLocaleString` ni broj ugrađen u predložak bez funkcije. Nova jedinica = nova
-   funkcija u `format.ts` s testom u `format.test.ts`.
+   funkcija u `format.ts` s testom u `format.test.ts`. Novac i postotak imaju **nelomljivi razmak** prije jedinice
+   („2.100 €", „105 %"), da se jedinica ne odvoji u novi redak. Sloj 1 je dodao `formatEurosSigned`, `formatLoad` i
+   imenice `guest`, `permanent`, `seasonal` u `formatCount`.
 3. Predznak je pravi minus „−" i plus „+"; nula bez predznaka. Isti podatak ima isti broj decimala na svakom ekranu.
 4. Množina uvijek kroz `formatCount` („1 osoba, 3 osobe, 5 osoba"), i u rečenicama („Ljudi: 2 stalna, 1 sezonski").
 5. Datumi kruga samo kroz `roundDates`/`roundTitle` („Tjedan 5 (29. 6. – 5. 7.)"); ekran ne računa kalendar.
@@ -86,7 +96,8 @@
 4. **Vidljiv fokus** na svemu što prima tipkovnicu: `focus-visible:outline-2 focus-visible:outline-offset-2
    focus-visible:outline-accent`; za skriveni radio/checkbox fokus se crta na oznaci (`has-[:focus-visible]:…`, I7).
 5. Kad radnja ukloni gumb koji je kliknut (potvrda, slanje), fokus ide na novi sadržaj (naslov potvrde, rezultat) i
-   on se pomakne u vidno polje (I6).
+   on se pomakne u vidno polje (I6), i nakon uspješnog slanja (izbor odgovora, predaja). Gumb za spremanje dok traje
+   zahtjev ima `aria-disabled`, ne `disabled`, da fokus ostane na njemu („Spremi plan", „Spremi odluke odjela").
 6. Ponovljeni gumbi imaju razlikovno ime (`aria-describedby` na tekst stavke); „Izaberi" ×4 nije dopušteno (I8).
 7. Stanje koje se mijenja samo (AI ocjenjuje, obračun, spremljeno) je u `role="status"`; greška u `role="alert"`.
 8. **Boja nikad sama**: rast/pad uvijek sa znakom i strelicom (▲ +3 / ▼ −2) ili riječju („bolje od budžeta").
@@ -98,18 +109,24 @@ Svaki upit ima četiri stanja i svako se vidi: **učitavanje** (`StatusText` „
 gumb „Pokušaj ponovno", N13), **prazno** (rečenica što će se pojaviti i kada — nikad nule ni prazna kartica),
 **podaci**. Izravno otvorena putanja (osvježavanje usred tijeka) sama dohvaća podatke. Krug koji se još obračunava
 čeka i ispituje, ne pokazuje nule. v2 ekran u v1 igri pokazuje rečenicu (409 `model_v1`), ne grešku.
+**Nespremljene izmjene** obrasca (plan kruga, odluke odjela) čuvaju se kao dirana polja u `sessionStorage` (ključ
+hotel + krug + obrazac) i prežive navigaciju; dok se razlikuju od plana, ekran kaže „Izmjene još nisu spremljene.";
+spremanje slaže dirana polja preko svježe dohvaćenog plana. Novi krug je rečenica („Otvoren je novi tjedan…") s
+fokusom, ne greška ([ADR-035](../records/DECISIONS/ADR-035-sucelje-odjela-odluke-u-detalju-odjela.md) t. 8).
 
 ## 8 · Obrasci za nove ekrane (sloj 1)
 
-**Kartica odjela** (`screens/departments/DepartmentCard.tsx`): cijela kartica je `Link` na `/odjeli/:code`, unutra
-`<article>`; `h2` ime odjela; `Badge` „Zatvoren" kad je zatvoren; dvije trake kao u `IndexBars` („Stanje prostora
-72/100", „Zadovoljstvo gostiju 74/100", `role="img"`); redak „Rezultat zadnjeg tjedna +7.896 €" (iznos kroz
-`format.ts`, znak + boja); „Ljudi: 8 stalnih, 10 sezonskih" kroz `formatCount`. Na mobitelu jedna ispod druge, od 768
-px dvije u retku, od 1024 px popis lijevo i detalj desno. „Službe bez prihoda" su `Row` retci s troškom, bez traka.
+**Kartica odjela** (`screens/departments/DepartmentCard.tsx`): vanjski element je `<article>`, a jedina poveznica je
+ime odjela u `h2` (`Link` na `/odjeli/:code`) razvučeno preko cijele kartice (`after:absolute after:inset-0`) — jedna
+meta, jedan `Link`; ikona odjela (lucide); `Badge` „Zatvoren" kad je zatvoren; jedna traka **ocjene odjela**
+(„72/100 · srednje", boja po razini uz riječ: ≥ 80 `up`, 60–79 `warn`, < 60 `down`); redak „Rezultat zadnjeg tjedna
++7.896 €" (iznos kroz `format.ts`, znak + boja); „Ljudi: 8 stalnih, 10 sezonskih" kroz `formatCount`. Popis je u
+jednom stupcu do 1024 px (uz bočnu traku su dvije kartice u retku bile preuske), od 1024 px popis lijevo i detalj
+desno. „Službe bez prihoda" su `Row` retci s troškom, bez traka.
 
 **Račun dobiti** (`screens/pl/`): sekcije redom USALI-ja. **≥ 1024 px:** `<table>` s `<caption>` (može `sr-only`),
-stupci „Stavka | Ostvareno | Budžet | Razlika", `th scope="col"`, naziv sekcije kao redak `th scope="colgroup"
-colSpan={4}`, zbirni redak podebljan s gornjim obrubom; brojevi desno. **< 1024 px:** `Card` po sekciji, redak = ime
+stupci „Stavka | Ostvareno | Budžet | Razlika", `th scope="col"`, naziv sekcije kao redak `th scope="rowgroup"
+colSpan={4}` (ne `colgroup`, koji se čita kao zaglavlje stupca), zbirni redak podebljan s gornjim obrubom; brojevi desno. **< 1024 px:** `Card` po sekciji, redak = ime
 lijevo i ostvareno desno, ispod sitno „budžet 12.300 €" i razlika riječima. Naslov sekcije je `h2` u točno jednoj
 inačici (druga koristi `th`/`aria-labelledby`), da se ne čita dvaput. Na 360 px nijedan iznos ne prelama u dva retka.
 

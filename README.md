@@ -45,6 +45,11 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 
 Baza (`bash scripts/baza.sh start`), API i sučelje kao u koracima 3 i 4 gore; zatim otvori <http://localhost:5173/demo>.
 
+- **Izbor igre:** početni ekran (bez igre, ili `/nova`) nudi novi model s odjelima i računom dobiti — „Tjedna igra"
+  (17 krugova, zadano) ili „Mjesečna igra" (4 kruga); stari model (v1 demo lipanj–srpanj) je pod sklopivim „Za
+  profesora: postavke nove igre" → „Stari model (usporedba)" ([ADR-034](docs/records/DECISIONS/ADR-034-zadani-model-igre-je-v2-tjedna.md)).
+  Kroz API: `POST /v1/demo` s tijelom `{ "model": "v2" }` (tjedno) ili `{ "model": "v2", "round_kind": "month" }`;
+  bez tijela ostaje v1 demo.
 - **Bez AI-ja** (rezerve, bez troška): prije `cargo run -p server -- serve` upiši `unset ANTHROPIC_API_KEY`.
 - **Na mobitelu u istoj mreži:** `corepack pnpm --filter @hotelixsim/web dev --host`. Pazi: tada svatko u istoj mreži vidi igru.
 - **Modeli:** presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5 ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md));

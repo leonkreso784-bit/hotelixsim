@@ -2,7 +2,7 @@
 
 Ovo je JEDINO mjesto za ono što nije riješeno: odgođeni nalazi pregleda, otvorena pitanja i tehnički dug. Plan ne nosi tuđe stavke — plan uzima stavke odavde po oznaci; kad se stavka riješi, briše se (povijest je u gitu i `PROGRESS.md`).
 
-Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[korak 4]` uzima plan koraka 4 (AI, sadržaj) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[drugi val]` opseg poslije demoa · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor.
+Oznake: `[jezgra]` plan jezgre i balansa · `[dnevnik]` plan dnevnik/runde/red poslova (uključuje API dio, ARHITEKTURA §20.2) · `[korak 4]` uzima plan koraka 4 (AI, sadržaj) · `[ekrani]` ekrani igrača · `[prije Railwaya]` prije prvog deploya · `[drugi val]` opseg poslije demoa · `[možda nikad]` · `[ci]` CI i alati · `[leon]` čeka Leonov odgovor · `[sloj1]` put B, sloj 1 (grana `model-v2/sloj1`) · `[sloj2]` ulaz za plan sloja 2.
 Izvor „L37" = redak u [ledgeru kostura](../archive/2026-10-04-kostur-ledger.md); „Task N #k" = nalaz pregleda tog taska.
 
 ## Odgođeni nalazi — [jezgra]
@@ -99,6 +99,45 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 - [možda nikad] **`Cargo.lock` ima neaktivne sqlx-sqlite/libsqlite3-sys unose** — `cargo deny` s all-features ih može vidjeti (lokalno prolazi). (Task 4 note, L58)
 - [možda nikad] **README: uputa za `sqlx-cli`.** (Final minori, L96)
 
+## Odgođeni nalazi — [sloj1]
+
+Svjesno odgođeno u sloju 1 (pretpostavke: [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md) i ADR-031…036) i
+nalazi pregleda koji nisu popravljeni.
+
+**Opseg odgođen planom**
+- [sloj1] **Situacija s tjednom u mjesecu** (P13): situacija mjeseca dolazi u krugu koji sadrži 1. dan mjeseca (t01, t05, t09, t14); polje „tjedan u mjesecu" iz MODEL_V2 §4.3 nije napravljeno. Uvjet: mjesec situacije mora prvo postati podatak na ishodu (danas ga jezgra izvodi iz razdoblja, `Period::month_starting_in`).
+- [sloj1] **Zbirni mjesečni mentor u tjednoj igri** (P3): AI mentor gleda činjenice samo zadnjeg kruga mjeseca, ne zbroj mjeseca; ostali tjedni dobivaju „tri uzroka" bez AI-ja.
+- [sloj1] **Profesorov račun dobiti** — svi hoteli igre jedan uz drugoga (P17, MODEL_V2 §7.2); student vidi samo svoj hotel. Procjena ~4–6 h (ruta za profesora + ekran).
+- [sloj1] **„Zašto" po odjelu** (P18): detalj odjela pokazuje razlaganje brojkama, ne retke uzroka po odjelu.
+- [sloj1] **Naknada za upravljanje i informatika (I&T) nisu modelirani** (P10); „Fiksne naknade" = osiguranje, najam, porez na imovinu.
+- [sloj1] **Povišice iz situacija** (`extra_wage_cents`) idu u trošak rada Smještaja (P12); po odjelu u sloju 2.
+- [sloj1] **Probne v2 igre:** igre stvorene usred sloja 1 nisu zaštićene verzijom jezgre (stari v2 dnevnici postaju `Corrupt` pri podizanju `CORE_VERSION`; obračun bez `accounts` čita se kao `Corrupt`; krugovi prije Taska 23 nemaju odlaske po odjelu pa kartica „Ljudi" kaže „nitko"). Prije izdanja obrisati lokalne razvojne v2 igre ili ih ponovno obračunati.
+
+**Nalazi pregleda**
+- [sloj1] **Equipment/Maintenance redak** nosi i −30 % promjene Smještaja (miješanje 70/30 opreme sažetka; Task 12).
+- [sloj1] **`department_plan_invalid`** ima jednu poruku za svih šest vrsta greške (poruka po vrsti traži prošireni `Problem` s `detail`); neispravan `scope` u `/pl` daje axumov 400, ne problem+json. (Task 15)
+- [sloj1] **`hr.ts` nema `problem.game_outdated` ni `problem.invalid_settings`** — ekran pokazuje opću poruku greške. (Task 6)
+- [sloj1] **Prag opterećenja u webu:** `insights.ts`/`score.ts` drže 180 (granica kazne, v1 `LOAD_LIMIT_HUNDREDTHS`) i 240 (puni kapacitet) kao svoje konstante; API ne šalje normu odjela (`capacity_tenths_per_staff_day`). (Task 19, OD)
+- [sloj1] **Balans:** indeks likvidnosti u tjednu sa zapošljavanjem skalira jednokratni trošak ×D₀/7. (Task 16/17)
+- [sloj1] **Sadržaj v2:** jezgra za Smještaj ne čita `seasonal_plan`, `wear_pts_per_month` ni `maintenance` iz `departments.json` (uzima kategoriju hotela, [ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 1) — maknuti polja ili ih početi čitati; nema provjere da je plan sezonaca kategorije ≥ zbroj ostalih odjela po profilu i mjesecu. (Task 11)
+- [sloj1] **[PROC] bez obrazloženja:** `content/hotel/v2/profiles.json` — stalni dio Održavanja profila A (`fixed_monthly_cents` 12.400 €/mj., uz B 7.200 € i C 4.800 €) je oko 2.000 € viši nego što obrazloženje Taska 17 pokriva; treba izvor ili ispravak. (Task 23)
+- [sloj1] **Testovi i čuvari:** `crates/balance/tests/robots_v2.rs` ima `.min(50)` tvrdo (čitati `seasonal_max`); zastario komentar u `crates/game/tests/model_v2_catalog.rs:101`; `dispatch_lives_in_one_place` hvata samo doslovne nizove (dodati `matches!(…, Model::V1)` i `== Model::V1`); v1 tijelo s `departments` uz nepoznat krug daje `unknown_month` (prije `invalid_body`). (kontrolor ZP)
+- [sloj1] **UI čuvar:** rezervni tekst mentora lomi „7.|lipnja"; „Ta situacija nije u ovom tjednu." i „Ovaj tjedan još nije zatvoren." su bez `h1`. (kontrolor ZP)
+- [sloj1] **Rečenice strategije robota** su u Rustu (`strategy_words`, za sezonskog mentora), a ekran kraja sezone ih nosi u `hr.ts` — dva mjesta istog teksta; test koji ih drži jednakima ili jedan izvor (API šalje rečenicu). Ekran treba i isto pravilo zaokruživanja napretka kao mentor (cijeli bodovi, desetinke samo kad bi se različiti napretci poklopili). (KS-2)
+- [sloj1] **Mentor kruga sprema nepotpun AI tekst kao `ai`:** prazan ili odrezan tekst (`run_debrief`) ostaje zauvijek zapisan kao `source: ai`; ista provjera kao sezonski mentor (četiri dijela iz `mentor.v3`) pa rezerva `fallback_debrief`. (KS-2)
+- [sloj1] **Razmak prije „%" u tekstovima iz Rusta** (objašnjenje kruga, `crates/game/src/mentor.rs` „{pct} % potražnje") je običan, a web ga ima nelomljivog. Ne dirati dok v1 mora ostati bajt-ist (ili samo u v2 grani teksta). (OD-7)
+- [sloj1] **Mentor i sezonski ugovori:** mentor krajem kolovoza upozori „rujan pada, planiraj kraj sezonskih ugovora"; u v2 redak troškova „fiksni troškovi" (stalni dio zajedničkih službi) treba drugo ime, blizu Računa dobiti — tekst je zajednički s v1, pa objašnjenje mora nositi model (ili `LineDto` drugi uzrok); redak blagajne već se zove „fiksni troškovi zgrade (najam, osiguranje, porez)". (ZP)
+
+## Za plan sloja 2 — [sloj2]
+
+Leonove želje 12.10.; brojke idu kroz Leonovu anketu pri planu sloja 2. Ideje nakon profesorova pregleda: [IDEJE.md](../product/IDEJE.md).
+
+- [sloj2] **Odnosi među zaposlenima kao u BitLifeu** (Leon: „treba biti"): prijateljstva, sukobi, obitelj/kolege — odnos dvoje konkretnih ljudi (prijateljice odlaze zajedno, kuhar i konobar u sukobu). MODEL_V2 §3.4 danas ima samo osobine koje djeluju na cijeli odjel. U plan sloja 2 (2a ili zaseban dio).
+- [sloj2] **Obećanja iz odgovora koja se prate** (S1 kuhar): student obeća konkretne radnje (slobodan dan, jelovnik, zamjenik), a igra ih danas ne provodi niti provjerava. Prijedlog za 2c i plan situacija: presuda izvuče obećane radnje u strukturirani popis, igra ih pretvori u zadatke („zaposli zamjenika u kuhinji do t04") i prati — ispunjeno → motivacija lika +, neispunjeno → lik se vrati („obećali ste mi zamjenika"). Uz burzu rada (2a): zamjenik je stvarna osoba s burze.
+- [sloj2] **Plaća po radniku i pravednost plaća:** plaća se bira za svakog radnika (MODEL_V2 §3.3 već ima plaću po osobi). Novo pravilo: ako netko ima neopravdano višu plaću od kolega iste uloge (bez veće vještine ili staža), motivacija ostalih u odjelu pada — član „nepravednost u odjelu" u formuli motivacije.
+- [sloj2] **Dugotrajna i kratkotrajna oprema, realna amortizacija** (Leon: *„parking … jednom ga obnoviš i traje godinama"*): dugotrajna imovina (zgrada, parking, instalacije — sporo trošenje, skupa obnova) i kratkotrajna (posteljina, namještaj, sitna oprema); amortizacija ispod GOP-a (USALI). Ide u obnovu v2 (grana `model-v2/sloj1-obnova`, još nije spojena).
+- [sloj2] **Sezonski ugovor do datuma:** odlazak na kraju ugovora ne troši tjedni korak ±3. (ZP)
+
 ## Otvoreno za Leona
 
 Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretpostavkom i mijenja kad odgovori.
@@ -134,6 +173,11 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 - [leon] **Pretpostavke ADR-017** (odluke voditelja gradnje: identitet preuzimanja posla, 500 za nepoznat profil, provjere pristupa prije tijela, odgovor bez mjeseca u putanji, javne funkcije jezgre, zabrane u `game`) čekaju pregled. Odgovor: [ADR-017](DECISIONS/ADR-017-odluke-voditelja-gradnje-u-koraku-3.md).
 - [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md).
 - [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md).
+
+- [leon] **Pretpostavke Sloja 1** (P5–P18, pravila tjednog kruga i odjela, kalibracija, sučelje Odjela, kraj sezone)
+  čekaju pregled; posebno **norma osoblja 4\*** (Smještaj 17–25, Uprava 5–7, Prodaja 1,5–3, Održavanje 3–6 ljudi na
+  100 soba [PROC]). Odgovor: [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md), ADR-031…036
+  ([ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 9 za normu).
 
 ## Drugi val (poslije demoa)
 

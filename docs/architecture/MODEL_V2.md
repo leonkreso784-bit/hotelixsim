@@ -5,7 +5,8 @@
 > **Što** student dobiva po dodacima piše u [PROSIRENJA.md](../product/PROSIRENJA.md) (P1–P9). **Zašto** ovim putem piše u
 > [ADR-026](../records/DECISIONS.md#adr-026). Ovdje je samo **kako**.
 > **Status:** nacrt arhitekta. Leon je odgovorio na prvih 12 pitanja (§9), a nova pitanja i pretpostavke 🟨 čekaju
-> njegov pregled. Ništa od ovoga još nije izgrađeno.
+> njegov pregled. Sloj 0 je na `main`; sloj 1 je izgrađen na grani `model-v2/sloj1` (što je odstupilo od ovog nacrta:
+> §8 „Sloj 1 — izgrađeno" i [ADR-029](../records/DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md)); slojevi 2–4 nisu.
 > Oznake brojki kao u [istraživanju](../research/HOTELSKI_POKAZATELJI.md): **[P]** provjereno · **[PROC]** procjena.
 
 **Rječnik za ovaj dokument** (pojmovi koji se ponavljaju):
@@ -160,6 +161,14 @@ ljudi u njihovim ulogama (§3.4). Kvaliteta hotela je prosjek odjela, ponderiran
 | **B** „Profitabilni, ali zapušteni" | Restoran · Bar uz bazen (stara oprema) · Parking · Najam lokala | malo sadržaja, zdrava blagajna, stara oprema |
 | **C** „Prosječni" | Restoran · Lobby bar · Mali wellness · Parking | referentni hotel |
 
+**Sloj 1 je izgradio** (pravila: [ADR-032](../records/DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md)): održavanje
+svih odjela knjiži se u neraspoređeni odjel Održavanje (P9); naknada za upravljanje i I&T se ne modeliraju (P10).
+Smještaj, Uprava, Prodaja i marketing i Održavanje imaju **normu osoblja** po kategoriji hotela (ljudi na 100 soba,
+`staffing_tenths_per_100_rooms`), koju provjera sadržaja traži od početnog stanja profila. **Odlasci** se računaju za
+hotel i dijele po odjelima razmjerno broju ljudi kroz sezonu (`departures`, `season_departures`). Ekran pokazuje
+**ocjenu odjela** (prosjek stanja prostora, zadovoljstva gostiju odjela i usklađenosti ljudi s poslom; najam samo
+stanje prostora) — [ADR-035](../records/DECISIONS/ADR-035-sucelje-odjela-odluke-u-detalju-odjela.md).
+
 ### 3.3 Zaposlenik (sloj 2)
 
 Leon: *„kao Sims svijet"*. Svaka osoba ima osobnost, dobre i loše strane i vidljivu traku za svaku vještinu.
@@ -283,6 +292,11 @@ važno. Segmenti boje teme recenzija; **ne** uvode zasebnu potražnju (§7.3).
 | `fixed_cents` | neraspoređeni troškovi + fiksne naknade (ispod GOP-a) | katalog |
 | `cash`, `pending`, `groups`, `renovated`, `category` | isto (grupe po datumu, ne po mjesecu) | spremljeno |
 
+U sloju 1 (sezonci još bez pojedinaca): korak sezonaca vrijedi za **zbroj pomaka po odjelima** (Σ |cilj − trenutno| ≤
+`seasonal_step`), a najam i puštanje broje se po odjelu; kapacitet tržišta računa samo osoblje Smještaja; opterećenje
+hotela je prosjek odjela ponderiran zaposlenima, a kvaliteta i cilj zadovoljstva prosjek ponderiran gostima
+([ADR-032](../records/DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 2 i 4).
+
 ### 3.9 Pet indeksa na novom modelu
 
 Formule iz DEMO §4 i `crates/sim-hotel/src/indices.rs:82-128` ostaju iste.
@@ -323,8 +337,8 @@ mjesec". Novo pravilo: **v2 računa razdoblje od N dana**. Mjesec je samo jedna 
 | prodaja, kapacitet, trošenje sobe, CPOR | već po danu / noći | isto, puta dani razdoblja |
 | plaće, fiksni troškovi, smještaj radnika | mjesečni iznos | mjesečni iznos × dani / dani mjeseca (zaokruženo na cent, ostatak ide u zadnji dan mjeseca) |
 | marketing, održavanje (odluke) | iznos za mjesec | iznos za razdoblje; granice iz kataloga po vrsti razdoblja |
-| pomak motivacije (30 %), zadovoljstva (50 %), ocjene (25 %) | jedan korak | **koeficijent po vrsti razdoblja iz kataloga** (npr. tjedan: motivacija 8 %, zadovoljstvo 15 %, ocjena 7 % [PROC]); mjesec = današnji |
-| odlasci | rizik po mjesecu | rizik × dani / 30 |
+| pomak motivacije (30 %), zadovoljstva (50 %), ocjene (25 %) | jedan korak | **koeficijent po vrsti razdoblja iz kataloga** (sloj 1, tjedan: moral 11 %, zadovoljstvo 14 %, ocjena 10 % [PROC], [ADR-033](../records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md)); mjesec = današnji |
+| odlasci | rizik po mjesecu | sloj 1: razmjerni dio mjesečnih odlazaka, `prorate(div_round(staff·turnover, 10 000), p)` (nacrt je imao „× dani / 30") |
 | obuka | učinak idući mjesec | tečaj traje N dana (osoba je toliko odsutna); učinak nakon završetka |
 | obnova | jedan mjesec | 2–4 tjedna po katu; sobe izvan prodaje točno toliko dana |
 | recenzije | ~80 po mjesecu | ~20 po tjednu (iz istih boravaka) |
@@ -333,14 +347,21 @@ Koeficijente pomaka nije moguće točno preračunati cijelim brojevima (to bi tr
 zadaje izričito i balans ih kalibrira tako da **tjedna i mjesečna igra s istim odlukama daju sličan kraj sezone**.
 To postaje nova provjera balansa.
 
+Sloj 1 je dodao **mrtvu zonu koraka:** u razdoblju koje nije cijeli mjesec, kad je razmak do cilja ≠ 0 a zaokruženi
+korak 0, korak je ±1 jedinica prema cilju (`resolve::step_toward`); mjesečni krug je nepromijenjen. Tjedni korak
+sezonaca je ±3. Pravila: [ADR-031](../records/DECISIONS/ADR-031-sloj-1-tjedni-krug-u-jezgri.md), tablica „Pravila
+razdoblja" u [planu Sloja 1](../plan/2026-10-10-v2-sloj1.md).
+
 ### 4.3 Što to znači za igru
 
 - **Situacije** danas imaju mjesec (`crates/sim-hotel/src/mechanic.rs:51`). U v2 dobivaju i neobavezan tjedan u
-  mjesecu (1–4); u mjesečnoj igri tjedan se zanemaruje. Prijedlog je 1–2 situacije tjedno.
+  mjesecu (1–4); u mjesečnoj igri tjedan se zanemaruje. Prijedlog je 1–2 situacije tjedno. *Sloj 1 to još nema:*
+  situacija mjeseca dolazi u krugu koji sadrži 1. dan mjeseca i obračunava se s tim mjesecom (P13, ADR-031 t. 3).
 - **Grupe** (`state.rs:9-13`) se vežu za raspon datuma, ne za mjesec.
 - **Plan se prenosi.** Danas bez plana vrijedi zadani plan (`game.rs:411-419`). Uz 17 krugova to bi bilo nepodnošljivo,
   pa u v2 **vrijedi prošli plan dok ga student ne promijeni**, za obje vrste razdoblja. Jednokratni nalozi
-  (zaposli, obnovi) se ne ponavljaju.
+  (zaposli, obnovi) se ne ponavljaju. Sloj 1: krug bez plana uzima plan najbližeg ranijeg kruga koji ga ima, stisnut u
+  granice novog kruga (ADR-031 t. 4).
 - **Tjedni krug studenta** ima manje odluka po krugu: pogledaj što se dogodilo (3 najveća uzroka), odgovori na 1–2
   situacije ili razgovora, po želji prilagodi cijenu, ljude i recenzije, pa „Zatvori tjedan". Mjesečna lekcija
   (USALI izvještaj, mentor u četiri dijela) dolazi **na kraju svakog kalendarskog mjeseca**, i u tjednoj igri.
@@ -351,7 +372,9 @@ To postaje nova provjera balansa.
 ### 4.4 Zamke koje treba riješiti u temelju
 
 - **Likvidnost** dijeli blagajnu s troškovima razdoblja (`indices.rs` `raw_indices`, likvidnost). U tjednu bi
-  likvidnost skočila oko 4 puta. Nazivnik se zato preračunava na 30 dana.
+  likvidnost skočila oko 4 puta. Nazivnik se zato preračunava na mjesec — u sloju 1 na dane kalendarskog mjeseca u
+  kojem krug počinje (`D₀`), ne na 30 dana, jer bi „/30" u srpnju i kolovozu prekršio ekvivalenciju s v1 (P16; isto
+  kamata).
 - **Zadržavanje (Z)** koristi mjesečnu stopu odlazaka (DEMO §4: „8 % mjesečno → 0"). U tjednoj igri se koristi stopa
   zadnjih 30 dana, ne tjedna.
 - **Krug je danas `Month` posvuda:** u `game` (`closed`, `resolved`: `game.rs:78-79`), u događajima
@@ -470,6 +493,13 @@ engine ◄── sim-hotel (v1, ZAMRZNUT) ◄── sim-hotel-v2 (koristi Index,
 `sim-hotel-v2` počinje kao kopija v1 na početku sloja 1, uz razdoblje umjesto mjeseca. Sloj 0 ne mijenja brojke, pa
 ide u v1. Pravila ovisnosti (ARHITEKTURA §6.2) i zabrane (`crates/sim-hotel/src/lib.rs:2-7`) vrijede i za v2.
 
+**Kako je izgrađeno (sloj 1).** Obračun v2 je podijeljen po fazama u `crates/sim-hotel-v2/src/resolve/` (`mod.rs`
+redoslijed faza i zajednički tipovi; `situations.rs`, `people.rs`, `departments.rs`, `money.rs`, `guests.rs`);
+`PeriodReport` nosi `accounts: PeriodAccounts`, a `money.rs` iz njih slaže v1 sažetak novca. Sve grananje v1/v2 je u
+`crates/game/src/model.rs` (`Model`, `CoreState`, `CorePlan`, `CoreRefs`, `RoundInfo`); `app` i `api` zovu samo te
+tipove (test `dispatch_lives_in_one_place`). U `game` su još `departments.rs` (odjeli, račun dobiti, budžet),
+`costs.rs` (cijene odluka), `season.rs` (kraj sezone) i `season_mentor.rs`.
+
 ### 6.2 Stare igre (Leon: ostaju igrive na v1)
 
 Danas je `GameCreated.core_version` = `sim_hotel::CORE_VERSION` = `0.1.0` (`lib.rs:50`, `Cargo.toml:3`), a obračun se
@@ -479,7 +509,9 @@ indekse trenutnim kodom (`game.rs:131-141`). Svaka promjena formula u `sim-hotel
 **starih** igara. Odluka:
 
 1. Snimak dobiva polja `model` (`"v1"` kad ga nema) i `razdoblje`, s `serde(default, skip_serializing_if)`. Zato stari
-   otisak (`legacy_fingerprint`, `crates/content/src/lib.rs:607`) ostaje isti.
+   otisak (`legacy_fingerprint`, `crates/content/src/lib.rs:607`) ostaje isti. *Sloj 1:* vrsta kruga i kalendar
+   krugova su u postavkama igre (`GameCreated.rounds`, nikad se ne računaju ponovno), a snimak nosi koeficijente obiju
+   vrsta (P15).
 2. **v1 igre** se zauvijek čitaju, nastavljaju i obračunavaju v1 kodom, s istim brojkama. `sim-hotel` ostaje `0.1.0`.
    „Zlatni test" (ista sezona sa sjemenom 7 → isti otisak izvješća) ruši CI ako se ijedan v1 broj pomakne.
 3. **v2 igre** provjeravaju svoju verziju (od `2.0.0`, raste po sloju). Probna v2 igra iz starijeg sloja dobiva poruku
@@ -498,6 +530,11 @@ indekse trenutnim kodom (`game.rs:131-141`). Svaka promjena formula u `sim-hotel
 
 v2 sprema samo stanje entiteta **nakon** razdoblja; danas se spremaju `before` i `after` (`crates/game/src/dto.rs:538-547`).
 
+Sloj 1: `HotelResolution.detail` nosi stanje v2 nakon kruga i račun odjela kruga (`accounts`, `PeriodAccountsDto`);
+budžet i zbrojevi sezone računaju se pri čitanju. Novi događaj `SeasonDebriefRecorded` (sezonski mentor, jedan po
+ljudskom hotelu, tek nakon zadnjeg kruga, nije u feedu; [ADR-036](../records/DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md)).
+`SCHEMA_VER` je i dalje 1.
+
 ### 6.4 Gdje je najveći tehnički trošak
 
 `game` je danas čvrsto vezan na v1 tipove (`HotelState`, `MonthPlan`, `MonthReportDto`) i na `Month` kao ključ kruga
@@ -512,8 +549,9 @@ Postojeće putanje ostaju i primaju i kod razdoblja. Nove putanje vrijede za vla
 | putanja | sloj | što vraća |
 |---|---|---|
 | `GET /v1/hotels/{hotel_id}/kpi` | 0 | popunjenost, ADR, RevPAR, TRevPAR, GOPPAR, marža, udio rada, točka pokrića |
-| `GET /v1/hotels/{hotel_id}/pl?period=` | 1 | račun dobiti po USALI-ju |
-| `GET /v1/hotels/{hotel_id}/departments` · `/{code}` | 1 | odjeli: prostor, prihod, zadovoljstvo gostiju, ljudi |
+| `GET /v1/hotels/{hotel_id}/pl?round=&scope=round\|season` | 1 | račun dobiti po USALI-ju s budžetom; upit je `round` (kod kruga kao u putanjama: `jun`…`sep`, `t01`…`t17`), ne `period` (P14) |
+| `GET /v1/hotels/{hotel_id}/departments` · `/{code}` | 1 | odjeli: prostor, prihod, zadovoljstvo gostiju, ljudi, odlasci, potražnja |
+| `GET /v1/games/{game_id}/season` | 1 | kraj sezone: poredak, krivulja, financije i odluke robota (tuđi ljudski hotel samo indekse), sezonski mentor; 409 `season_not_over` dok traje |
 | `GET /v1/hotels/{hotel_id}/staff` · `/{employee_id}` | 2 | ljudi; profil s vještinama, osobinama, jezicima i poviješću |
 | `GET /v1/games/{game_id}/labour-market?period=` | 2 | burza rada (ista za sve hotele) |
 | `GET /v1/hotels/{hotel_id}/agency` · `/housing` | 2 | narudžbe, troškovi i doprinos agencijskih radnika; kreveti |
@@ -521,7 +559,7 @@ Postojeće putanje ostaju i primaju i kod razdoblja. Nove putanje vrijede za vla
 | `GET /v1/hotels/{hotel_id}/rooms` · `/{room_id}` | 3 | tlocrt i kartica sobe |
 | `GET /v1/hotels/{hotel_id}/reviews?period=&topic=` | 4 | recenzije s tekstom, teme, odgovori |
 | `GET /v1/games/{game_id}/listing` | 4 | „Booking" svih hotela u igri (§7.1) |
-| `PUT …/plans/{period}` | 1–4 | postojeći, s `nalozi` |
+| `PUT …/plans/{round}` | 1–4 | postojeći; sloj 1 dodaje `departments` (bez njih se zadržavaju odjeli važećeg plana) i vraća plan kakav je spremljen; granice plana nose cijene odluka (`costs`, `maintenance`, `seasonal_worker_cents`); kasnije `nalozi` |
 | `GET /v1/games/{game_id}/compare` | 0–4 | profesor: hoteli jedan uz drugoga |
 
 ---
@@ -610,6 +648,19 @@ Sati su rad agenata [PROC]: S ≤ 10, M 10–25, L 25–45, XL > 45.
   30–40 % (LRH ≈ 35 % [P]); tjedna i mjesečna igra istih odluka završavaju blizu (nova provjera); §11.1–11.5 prolaze.
 - **Paralelno nakon temelja:** formule odjela · sadržaj · ekrani nad lažnim podacima · profesorov račun dobiti ·
   balans.
+
+**Sloj 1 — izgrađeno** (grana `model-v2/sloj1`; isporuka u [CHANGELOG](../records/CHANGELOG.md), pretpostavke
+[ADR-029](../records/DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md) i ADR-031…036):
+- **Odgođeno** ([BACKLOG](../records/BACKLOG.md) `[sloj1]`): profesorov račun dobiti (P17), „Zašto" po odjelu
+  (P18; detalj pokazuje razlaganje brojkama), tjedan u mjesecu za situacije (P13), zbirni mjesečni mentor u tjednoj
+  igri (P3).
+- **Student radi** u detalju odjela (sezonski radnici, razina cijena, otvoren, održavanje); plan kruga drži odluke
+  hotela i sažetak odjela; svaka odluka pokazuje cijenu ([ADR-035](../records/DECISIONS/ADR-035-sucelje-odjela-odluke-u-detalju-odjela.md)).
+- **Balans:** uz gornje provjere i „C: ostali ≈ 30 % prihoda soba" (pojas 25–35 %); Brižni drži barem 80 %
+  sezonskog plana. Brižni u tjednoj igri planira sezonce unaprijed jer smije ±3 po krugu (ADR-029, dopuna).
+- **Kraj sezone:** poredak po napretku, financije i odluke robota, sezonski mentor
+  ([ADR-036](../records/DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md)).
+- **Zadana igra** je v2 tjedna ([ADR-034](../records/DECISIONS/ADR-034-zadani-model-igre-je-v2-tjedna.md)).
 
 ### Sloj 2 — ljudi (P5, P6) · **XL, 80–110 h, u tri dijela**
 
@@ -777,7 +828,8 @@ odgovorima u §9.1):
 
 **Pretpostavke arhitekta:**
 
-6. v1 se zamrzava, a v2 je novi paket. Model i vrsta razdoblja biraju se u snimku pravila (§6).
+6. v1 se zamrzava, a v2 je novi paket. Model i vrsta razdoblja biraju se u snimku pravila (§6). *Sloj 1:* vrsta
+   razdoblja i kalendar su u postavkama igre, ne u snimku (P15, §6.2).
 7. v2 izvješće uvijek nosi i v1 sažetak (§3.9, §6.3).
 8. Kocka raspoređuje, a ne mijenja zbrojeve (§2, t. 4).
 9. Nalozi su dio plana razdoblja i primjenjuju se pri obračunu. Plan se prenosi u sljedeće razdoblje (§4.3).

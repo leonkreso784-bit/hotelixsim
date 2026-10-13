@@ -50,6 +50,10 @@ usred posla, zaglavljen posao, zakašnjeli AI rezultat i dvostruko preuzimanje. 
 
 Za demo izabrana vlastita tablica `jobs` (ADR-015); probni test s apalis/pgmq ostaje u BACKLOG-u. U koraku 4 izgrađeno: odgoda posla, obračun runde čeka AI presude (do roka `VERDICT_DEADLINE_SECS` = 120 s, potom neutralna presuda s `review: true`), a presuda koja stigne nakon obračuna zapisuje se kao `VerdictLate` bez izmjene obračuna. Provjereno kraj-do-kraja na pravom Postgresu (`crates/api/tests/e2e.rs`).
 
+Model v2 (sloj 1) dodaje posao `season_debrief` (ključ `season_debrief:<igra>:<hotel>`): stavlja ga obračun zadnjeg
+kruga v2 igre, u red iza mentora kruga; bez AI ključa odmah piše rezervu, inače do zadnjeg pokušaja pa rezerva
+([ADR-036](../../records/DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md)).
+
 ### 9.5 Sadržaj
 
 - Danas: JSON datoteke u `content/hotel/`, provjerene JSON Schemom (generirana iz Rust tipova, pa VS Code
@@ -139,5 +143,8 @@ Okvirni resursi:
 - **Što student vidi o drugima (Leon, 04.10.):** ukupnu ocjenu i pet indeksa kroz runde. Tuđe stvarne brojke,
   odluke, tekstovi i tragovi su privatni. Vrijedi dok profesori ne odgovore (pitanje 9, i imena ili anonimno).
   Pravilo se provodi u sloju `app` i ima test po ulozi: API nikad ne vraća tuđe privatne podatke.
+  **Iznimka za robote (Leon, 13.10.):** nakon zadnjeg obračunatog kruga v2 igre `GET /v1/games/{id}/season` daje
+  financije i odluke **robota** s brojkama; tuđi ljudski hotel i dalje samo indekse i krivulju
+  ([ADR-036](../../records/DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md)).
 
 ---

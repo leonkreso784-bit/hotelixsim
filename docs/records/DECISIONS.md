@@ -6,7 +6,14 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-036"></a>[ADR-036](DECISIONS/ADR-036-kraj-sezone-poredak-financije-robota-i.md) | Kraj sezone: poredak, financije robota i sezonski mentor | 🟨 ČEKA LEONOV PREGLED, osim Leonovih odluka ✅ 12. i 13.10. | 2026-10-13 |
+| <a id="adr-035"></a>[ADR-035](DECISIONS/ADR-035-sucelje-odjela-odluke-u-detalju-odjela.md) | Sučelje Odjela: odluke u detalju odjela i ocjena odjela | 🟨 ČEKA LEONOV PREGLED | 2026-10-12 |
+| <a id="adr-034"></a>[ADR-034](DECISIONS/ADR-034-zadani-model-igre-je-v2-tjedna.md) | Zadani model igre je v2, tjedna igra zadana | ✅ Leonova odluka 12.10. | 2026-10-12 |
+| <a id="adr-033"></a>[ADR-033](DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) | Sloj 1: balans i kalibracija sadržaja v2 | 🟨 ČEKA LEONOV PREGLED | 2026-10-11 |
+| <a id="adr-032"></a>[ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) | Sloj 1: odjeli u obračunu i stanju | 🟨 ČEKA LEONOV PREGLED | 2026-10-11 |
+| <a id="adr-031"></a>[ADR-031](DECISIONS/ADR-031-sloj-1-tjedni-krug-u-jezgri.md) | Sloj 1: tjedni krug u jezgri v2 | 🟨 ČEKA LEONOV PREGLED | 2026-10-11 |
 | <a id="adr-030"></a>[ADR-030](DECISIONS/ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) | Raspored dokumentacije: granice veličine, indeks + mapa, ADR po datoteci | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |
+| <a id="adr-029"></a>[ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md) | Sloj 1: pretpostavke plana | 🟨 ČEKA LEONOV PREGLED | 2026-10-11 |
 | <a id="adr-028"></a>[ADR-028](DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) | Leonove odluke za put B: ljudi kao u Simsima, burza rada, tjedni krug, AI razgovori | ✅ Leonova odluka 10.10. | 2026-10-10 |
 | <a id="adr-027"></a>[ADR-027](DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md) | Raspored za računalo prije demoa | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |
 | <a id="adr-026"></a>[ADR-026](DECISIONS/ADR-026-put-b-hotel-od-brojeva-postaje.md) | Put B: hotel od brojeva postaje skup stvari, u slojevima | 🟨 ČEKA LEONOV PREGLED | 2026-10-10 |

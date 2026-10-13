@@ -19,3 +19,8 @@ odabrao lika na Haikuu, mentor ostaje na Sonnetu.
 
 **Cijena ako krivo:** presuda je slabije dosljedna. Provjera: alat `mjerilo` kad Leon ocijeni 40 odgovora
 (`content/hotel/mjerilo/*.json`); ako treba, vratiti presudu na Opus varijablom okoline.
+
+**Dopuna 13.10.** Sezonski mentor (kraj sezone, uputa `prompts/mentor-sezona.v1.md`) koristi isti model kao mentor
+kruga (`models.mentor`, `HOTELIXSIM_AI_MODEL_MENTOR`), jedan poziv po ljudskom hotelu po igri:
+[ADR-036](ADR-036-kraj-sezone-poredak-financije-robota-i.md). Uputa mentora kruga je `mentor.v3`
+([ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md) dopuna).

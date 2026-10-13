@@ -50,3 +50,11 @@ brojeva u stotinkama, retci s `bp`, `cents`, šiframa situacija) i prepisivao ga
 `packages/i18n` i formulama; promjena oblika je jedna datoteka plus nova verzija upute. Ekran „Mjesec završen"
 prikazuje prijelome redaka mentora (`whitespace-pre-line`, web commit `481d696`). Ako se plan proširi novom
 postavkom, `plan_facts` je treba dobiti, inače je mentor ne vidi.
+
+**Dopuna 12.10. (Sloj 1, OT-2 i OT-4; 🟨).** Uputa mentora je sada `prompts/mentor.v3.md` (`crates/ai/src/prompts.rs`):
+nepromijenjene odluke se ne pripisuju studentu. Činjenice uz plaće kažu „takve su od početka, student ih nije
+mijenjao", „student ih je spustio sa 100 % na 95 %" ili, ako ih je mijenjao pa vratio, „kao na početku igre"; uz obuku
+i održavanje „isto kao prošli tjedan/mjesec" ili „promijenjeno u odnosu na …". Mentor za tjedni krug govori o tjednu
+(ZV-6); v1 i mjesečna v2 ostaju bajt-isti, a serde ključevi (`mjesec`, `iduci_mjesec`, …) su ugovor s uputom i nisu
+mijenjani. Odlasci u činjenicama navode odjele („otišle 3 osobe (Smještaj 2, Restoran 1)"). Živi test mentora nije
+pokretan (samo jedinični). Sezonski mentor: [ADR-036](ADR-036-kraj-sezone-poredak-financije-robota-i.md).

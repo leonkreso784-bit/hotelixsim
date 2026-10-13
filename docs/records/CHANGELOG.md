@@ -2,6 +2,55 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [Neobjavljeno] — Sloj 1 puta B: odjeli, račun dobiti, tjedni krug, kraj sezone
+
+Plan: [2026-10-10-v2-sloj1.md](../plan/2026-10-10-v2-sloj1.md); pretpostavke [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md)
+i ADR-031…036. Dokaz kraj-do-kraja: `crates/api/tests/e2e_v2.rs` (17 tjednih krugova kroz API).
+
+### Dodano
+
+- Jezgra v2 `sim-hotel-v2` (`CORE_VERSION` 2.0.0): tjedni (16 × 7 dana + zadnjih 10 dana, 17 krugova) i mjesečni
+  krugovi, razmjerni iznosi do centa, ekvivalentna v1 za mjesečnu igru; v1 zamrznut i pokriven zlatnim testom.
+- Odjeli po USALI-ju (operativni i neraspoređeni Uprava / Prodaja i marketing / Održavanje / Energija), sezonski
+  radnici i razina cijene po odjelu, računi odjela u obračunu; odlasci po odjelu (isti zbroj, razmjerno kroz sezonu);
+  norma osoblja po klasi hotela i broju soba u provjeri sadržaja.
+- Račun dobiti po USALI-ju (GOP, fiksne naknade, EBITDA) s budžetom i odstupanjem po retku.
+- API: `/v1/hotels/{id}/departments`, `/departments/{code}`, `/pl?round=&scope=round|season`,
+  `GET /v1/games/{id}/season` (poredak, krivulja, financije i odluke robota nakon zadnjeg kruga);
+  `POST /v1/demo` s `{ "model": "v2", "round_kind": "week"|"month" }`; cijene odluka u granicama plana
+  (`PlanLimitsBody.costs`, `DeptLimitsBody.maintenance`, `seasonal_worker_cents`, `payroll_round_cents`); novi kodovi
+  `unknown_department`, `no_resolved_round`, `department_plan_invalid`, `game_outdated`, `model_v1`,
+  `season_not_over`; `openapi.json` i `packages/api-client` regenerirani.
+- Web: tjedni i mjesečni krugovi; ekrani Odjeli (popis s ikonom i trakom ocjene, detalj s ocjenom, slabim i jakim
+  stranama i odlukama odjela) i Račun dobiti (krug i sezona do sada); cijena uz svaku odluku plana i blagajna nakon
+  obnove; nespremljene izmjene plana i odjela prežive navigaciju.
+- Sezonski mentor: posao `season_debrief`, događaj `SeasonDebriefRecorded`, uputa `prompts/mentor-sezona.v1.md`,
+  rezerva iz brojki bez AI-ja.
+- Balans v2: `balance --model v2 --round week|month`, tjedno ≈ mjesečno, Brižni drži barem 80 % sezonskog plana;
+  kalibracija sadržaja; CI vrti `--seeds 1000 --check` za v1, v2 tjedno i v2 mjesečno.
+
+### Promijenjeno
+
+- Početni ekran nudi „Tjedna igra" (zadano) ili „Mjesečna igra" u novom modelu; stari model je pod „Za profesora"
+  ([ADR-034](DECISIONS/ADR-034-zadani-model-igre-je-v2-tjedna.md)); „Nova igra" na kraju sezone vodi na isti izbor.
+- Mentor (`mentor.v3`) ne pripisuje studentu odluke koje nije mijenjao i u tjednoj igri govori o tjednu; objašnjenje,
+  mentor i sažetak tjedna navode odlaske po odjelima.
+- Robot Brižni u tjednoj igri planira sezonce unaprijed (zapošljava prije vrhunca, otpušta prije pada).
+- `PUT /v1/hotels/{id}/plans/{round}` vraća plan kakav je spremljen; naslovi grešaka `seasonal_step_too_big` i
+  `no_resolved_round` govore „krug"; v1 poruka „Sezonske radnike možeš mijenjati najviše za 10 mjesečno."
+- Novac i postotak imaju nelomljivi razmak prije jedinice; novi token boje `warn` (jantar, „srednje").
+
+### Gdje se vidi
+
+Lokalno, grana `model-v2/sloj1` (nije u `main`, nije na GitHubu do Leonova OK); igra kao u korijenskom
+[README](../../README.md) → „Igra u pregledniku".
+
+## [Neobjavljeno] — Uvod logotipa (na `main`)
+
+- Uvodna animacija logotipa pri učitavanju (H → zgrada → vrata se otvore, toplo svjetlo), jednom po kartici; `?uvod`
+  je uvijek pokaže; smanjeni pokreti = bez animacije. Kod: `apps/web/index.html` (crtež i animacija),
+  `apps/web/src/splash.ts` (izlaz, test `splash.test.ts`).
+
 ## [0.5.0] — 2026-10-10 — Ekrani igrača, računalo, hotelski pokazatelji (DEMO korak 5 + put B sloj 0)
 
 Verzija bez git taga. Planovi: [archive/2026-10-10-ekrani.md](../archive/2026-10-10-ekrani.md); sloj 0 iz
