@@ -109,7 +109,7 @@ impl Game {
         code: &str,
         draft: VerdictDraft,
     ) -> Result<ValidVerdict, VerdictError> {
-        let free = self.content.ai.get(code).is_some_and(|a| a.free_text);
+        let free = self.ai_entry(code).is_some_and(|a| a.free_text);
         let answers = self
             .situation_round(code)
             .ok()
@@ -162,7 +162,7 @@ impl Game {
     /// Mjesec i je li presuda već upisana za slobodni odgovor hotela.
     fn response_slot(&self, hotel: HotelId, code: &str) -> Result<(RoundKey, bool), GameError> {
         let h = self.hotel(hotel)?;
-        let (m, _) = self.situation_round(code)?;
+        let (m, _) = self.situation_round_for(hotel, code)?;
         let fr = h
             .responses
             .get(&(m, code.to_owned()))
@@ -232,7 +232,7 @@ impl Game {
         let m = m.into();
         let mut out = Vec::new();
         for h in &self.hotels {
-            for t in self.situations_in(m) {
+            for t in self.hotel_situations(h, m) {
                 if h.responses
                     .get(&(m, t.code.clone()))
                     .is_some_and(|fr| fr.verdict.is_none())

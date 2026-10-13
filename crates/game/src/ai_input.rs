@@ -119,12 +119,12 @@ pub struct DebriefInput {
 impl Game {
     pub fn assess_input(&self, hotel: HotelId, code: &str) -> Result<AssessInput, GameError> {
         let h = self.hotel(hotel)?;
-        let (m, t) = self.situation_round(code)?;
+        let (m, t) = self.situation_round_for(hotel, code)?;
         let fr = h
             .responses
             .get(&(m, code.to_owned()))
             .ok_or(GameError::UnknownSituation)?;
-        let ai = self.content.ai.get(code).ok_or(GameError::NotFreeText)?;
+        let ai = self.ai_entry(code).ok_or(GameError::NotFreeText)?;
         let offered = t
             .answers
             .iter()
@@ -151,11 +151,9 @@ impl Game {
     }
 
     pub fn character_input(&self, hotel: HotelId, code: &str) -> Result<CharacterInput, GameError> {
-        let (_, t) = self.situation_round(code)?;
+        let (_, t) = self.situation_round_for(hotel, code)?;
         let c = self
-            .content
-            .ai
-            .get(code)
+            .ai_entry(code)
             .and_then(|a| a.character.as_ref())
             .ok_or(GameError::NotFreeText)?;
         Ok(CharacterInput {
@@ -206,7 +204,7 @@ impl Game {
         let mut situations = Vec::with_capacity(res.situations.len());
         for s in &res.situations {
             let t = self
-                .situations_in(m)
+                .hotel_situations(h, m)
                 .into_iter()
                 .find(|t| t.code == s.code)
                 .ok_or_else(|| corrupt("situacija iz obračuna nije u sadržaju"))?;

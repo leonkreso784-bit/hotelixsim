@@ -108,7 +108,7 @@ pub fn new_game_with(
     };
     let game = Game::fold(std::slice::from_ref(&first))?;
     let mut out = vec![(first.actor, first.event)];
-    out.extend(game.robot_moves(first_round)?);
+    out.extend(game.open_round(first_round)?);
     Ok(out)
 }
 
@@ -147,7 +147,7 @@ impl Game {
                     plan: plan.to_dto(),
                 }),
             ));
-            for t in self.situations_in(r) {
+            for t in self.hotel_situations(h, r) {
                 let mut rng = Rng::derive(
                     self.seed,
                     &[label("game:robot-answer"), pos, slot, label(&t.code)],
@@ -199,7 +199,7 @@ impl Game {
         answer: u8,
     ) -> Result<GameEvent, GameError> {
         let h = self.hotel(hotel)?;
-        let (round, t) = self.situation_round(code)?;
+        let (round, t) = self.situation_round_for(hotel, code)?;
         if self.status(round)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }

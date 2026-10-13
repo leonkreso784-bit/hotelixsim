@@ -28,11 +28,9 @@ fn student_count(lines: &[ChatLine]) -> usize {
 }
 
 fn view_of(g: &Game, hotel: HotelId, code: &str) -> Result<ConversationView, AppError> {
-    let (m, _) = g.situation_round(code)?;
+    let (m, _) = g.situation_round_for(hotel, code)?;
     let c = g
-        .content
-        .ai
-        .get(code)
+        .ai_entry(code)
         .and_then(|a| a.character.as_ref())
         .ok_or(AppError::new(ErrorCode::NotFreeText))?;
     let lines = g.chat(hotel, code)?;

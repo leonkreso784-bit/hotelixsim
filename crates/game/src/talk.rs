@@ -37,17 +37,13 @@ fn clean(text: &str) -> Result<String, GameError> {
 }
 
 impl Game {
-    /// Krug u kojem se situacija igra i njen predložak, kroz `Model::situations_in` za svaki krug igre
-    /// (`UnknownSituation` ako nije ni u jednom krugu ove igre).
+    /// Krug u kojem se situacija igra i njen predložak, tražen po hotelima redom utora
+    /// (`UnknownSituation` ako je nema ni u jednom krugu ni kod jednog hotela). Kad je hotel poznat, treba
+    /// `situation_round_for`: dva hotela mogu u istom krugu dobiti isti predložak.
     pub fn situation_round(&self, code: &str) -> Result<(RoundKey, &SituationTemplate), GameError> {
-        self.rounds
+        self.hotels
             .iter()
-            .find_map(|&r| {
-                self.situations_in(r)
-                    .into_iter()
-                    .find(|t| t.code == code)
-                    .map(|t| (r, t))
-            })
+            .find_map(|h| self.situation_round_for(h.setup.hotel_id, code).ok())
             .ok_or(GameError::UnknownSituation)
     }
 
@@ -58,11 +54,11 @@ impl Game {
         code: &str,
     ) -> Result<(RoundKey, Vec<ChatLine>), GameError> {
         let h = self.hotel(hotel)?;
-        let (m, _) = self.situation_round(code)?;
+        let (m, _) = self.situation_round_for(hotel, code)?;
         if self.status(m)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
-        if !self.content.ai.get(code).is_some_and(|a| a.free_text) {
+        if !self.ai_entry(code).is_some_and(|a| a.free_text) {
             return Err(GameError::NotFreeText);
         }
         let key = (m, code.to_owned());
@@ -119,7 +115,7 @@ impl Game {
         reply: ReplyBody,
     ) -> Result<Option<GameEvent>, GameError> {
         let h = self.hotel(hotel)?;
-        let (m, _) = self.situation_round(code)?;
+        let (m, _) = self.situation_round_for(hotel, code)?;
         if self.status(m)? != RoundStatus::Open {
             return Ok(None);
         }
@@ -196,7 +192,7 @@ impl Game {
     /// Razgovor igrača sa likom u situaciji (prazan ako ga nema).
     pub fn chat(&self, hotel: HotelId, code: &str) -> Result<Vec<ChatLine>, GameError> {
         let h = self.hotel(hotel)?;
-        let (m, _) = self.situation_round(code)?;
+        let (m, _) = self.situation_round_for(hotel, code)?;
         Ok(h.chats
             .get(&(m, code.to_owned()))
             .cloned()

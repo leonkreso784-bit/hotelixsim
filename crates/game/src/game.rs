@@ -1,10 +1,12 @@
-use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 
 use content::Content;
 use sim_hotel::{Category, IndexSet, Profile, SituationTemplate};
+use sim_hotel_v2::situations::DrawnSituation;
 
 use crate::actor::{Actor, strategy_from_code};
+use crate::drawn::DrawnInstance;
 use crate::dto::PlanDto;
 use crate::error::{GameError, corrupt};
 use crate::event::{
@@ -65,6 +67,10 @@ pub struct HotelRecord {
     pub debriefs: BTreeMap<RoundKey, DebriefRecorded>,
     /// Sezonski mentor (samo v2, nakon zadnjeg kruga).
     pub season_debrief: Option<SeasonDebriefRecorded>,
+    /// Primjerci situacija izvučeni za ovaj hotel (i kolektivni) po krugu, iz `SituationsDrawn` (G-1).
+    pub drawn: BTreeMap<RoundKey, Vec<DrawnInstance>>,
+    /// Povijest generatora ovog hotela: njegovi i kolektivni primjerci, redom dnevnika.
+    pub drawn_log: Vec<DrawnSituation>,
 }
 
 /// Projekcija dnevnika: stanje igre dobiveno slijedom događaja (`fold`).
@@ -82,6 +88,8 @@ pub struct Game {
     pub last_seq: i64,
     pub history: Vec<Recorded>,
     model: Model,
+    /// Krugovi za koje dnevnik ima `SituationsDrawn`; ostali v2 krugovi igraju po starom pravilu (S1–S4 po mjesecu).
+    pub(crate) drawn_rounds: BTreeSet<RoundKey>,
     /// Krugovi igre s kalendarom, redom `rounds`.
     rounds_info: Vec<RoundInfo>,
     refs: BTreeMap<Category, CoreRefs>,
@@ -151,6 +159,8 @@ impl Game {
                 responses: BTreeMap::new(),
                 debriefs: BTreeMap::new(),
                 season_debrief: None,
+                drawn: BTreeMap::new(),
+                drawn_log: Vec::new(),
             });
         }
         Ok(Game {
@@ -165,6 +175,7 @@ impl Game {
             last_seq: 1,
             history: vec![r.clone()],
             model,
+            drawn_rounds: BTreeSet::new(),
             rounds_info,
             refs,
         })
@@ -206,7 +217,7 @@ impl Game {
             GameEvent::ChatMessageSent(c) => {
                 let m = c.month;
                 self.expect_open(m)?;
-                self.expect_free_text(m, &c.situation)?;
+                self.expect_free_text(c.hotel_id, m, &c.situation)?;
                 let h = self.hotel_mut(c.hotel_id)?;
                 let key = (m, c.situation.clone());
                 if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
@@ -241,7 +252,7 @@ impl Game {
             GameEvent::ResponseSubmitted(s) => {
                 let m = s.month;
                 self.expect_open(m)?;
-                self.expect_free_text(m, &s.situation)?;
+                self.expect_free_text(s.hotel_id, m, &s.situation)?;
                 let h = self.hotel_mut(s.hotel_id)?;
                 let key = (m, s.situation.clone());
                 if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
@@ -306,6 +317,7 @@ impl Game {
                     return Err(corrupt("dvostruki sezonski mentor"));
                 }
             }
+            GameEvent::SituationsDrawn(d) => self.apply_drawn(d)?,
             GameEvent::RoundClosed(c) => {
                 let m = c.month;
                 self.expect_open(m)?;
@@ -324,16 +336,18 @@ impl Game {
         Ok(())
     }
 
-    fn expect_open(&self, m: RoundKey) -> Result<(), GameError> {
+    pub(crate) fn expect_open(&self, m: RoundKey) -> Result<(), GameError> {
         match self.status(m)? {
             RoundStatus::Open => Ok(()),
             s => Err(corrupt(format!("događaj za rundu u stanju {s:?}"))),
         }
     }
 
-    fn expect_free_text(&self, m: RoundKey, code: &str) -> Result<(), GameError> {
-        let ok = self.situation_round(code).is_ok_and(|(r, _)| r == m)
-            && self.content.ai.get(code).is_some_and(|a| a.free_text);
+    fn expect_free_text(&self, hotel: HotelId, m: RoundKey, code: &str) -> Result<(), GameError> {
+        let ok = self
+            .situation_round_for(hotel, code)
+            .is_ok_and(|(r, _)| r == m)
+            && self.ai_entry(code).is_some_and(|a| a.free_text);
         if ok {
             Ok(())
         } else {
@@ -494,11 +508,12 @@ impl Game {
         self.model.plan_from_dto(d)
     }
 
-    /// Situacije kruga (`Model::situations_in`); krug koji nije u ovoj igri nema situacija.
+    /// Situacije kruga za hotel igrača (prvi utor): sidra S1–S4 po starom pravilu i, kad je krug izvučen,
+    /// njegovi primjerci (`Game::situations_of_hotel` za bilo koji hotel). Krug koji nije u ovoj igri nema situacija.
     pub fn situations_in(&self, r: impl Into<RoundKey>) -> Vec<&SituationTemplate> {
-        match self.round_info(r) {
-            Ok(info) => self.model.situations_in(&info, &self.content.situations),
-            Err(_) => Vec::new(),
+        match self.hotels.first() {
+            Some(h) => self.hotel_situations(h, r.into()),
+            None => Vec::new(),
         }
     }
 
@@ -510,7 +525,7 @@ impl Game {
         let m = m.into();
         let h = self.hotel(hotel)?;
         let n = self
-            .situations_in(m)
+            .hotel_situations(h, m)
             .into_iter()
             .filter(|t| {
                 let key = (m, t.code.clone());

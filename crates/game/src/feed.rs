@@ -97,7 +97,7 @@ impl Game {
                     by: r.actor.clone(),
                 }),
                 GameEvent::AnswerChosen(a) if a.hotel_id == hotel => {
-                    let (title, label) = self.answer_texts(&a.situation, a.answer)?;
+                    let (title, label) = self.answer_texts(hotel, &a.situation, a.answer)?;
                     out.push(FeedItem::AnswerChosen {
                         seq,
                         round: a.month,
@@ -173,8 +173,8 @@ impl Game {
                 | GameEvent::VerdictRecorded(_)
                 | GameEvent::VerdictLate(_)
                 | GameEvent::DebriefRecorded(_) => {}
-                // Sezonski mentor je na ekranu kraja sezone, ne u feedu.
-                GameEvent::SeasonDebriefRecorded(_) => {}
+                // Sezonski mentor je na ekranu kraja sezone, ne u feedu; izvlačenje situacija je tehnički događaj.
+                GameEvent::SeasonDebriefRecorded(_) | GameEvent::SituationsDrawn(_) => {}
             }
         }
         Ok(out)
@@ -206,13 +206,15 @@ impl Game {
             .ok_or_else(|| corrupt(format!("nepoznata situacija {code}")))
     }
 
-    fn answer_texts(&self, code: &str, answer: u8) -> Result<(String, String), GameError> {
-        let t = self
-            .content
-            .situations
-            .iter()
-            .find(|t| t.code == code)
-            .ok_or_else(|| corrupt(format!("nepoznata situacija {code}")))?;
+    fn answer_texts(
+        &self,
+        hotel: HotelId,
+        code: &str,
+        answer: u8,
+    ) -> Result<(String, String), GameError> {
+        let (_, t) = self
+            .situation_round_for(hotel, code)
+            .map_err(|_| corrupt(format!("nepoznata situacija {code}")))?;
         let a = t
             .answers
             .get(usize::from(answer))

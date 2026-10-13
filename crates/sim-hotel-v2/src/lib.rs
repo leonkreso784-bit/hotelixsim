@@ -34,8 +34,8 @@ pub use plan::{PeriodPlan, PlanError, PlanLimits};
 pub use resolve::{PeriodReport, ResolveError, resolve_period};
 pub use robots::robot_plan;
 pub use season::{
-    SeasonResult, SeasonSituations, TemplateDraw, anchor_of, group_month, run_robot_season,
-    run_season, run_season_from, run_season_with, situations_for,
+    SeasonResult, SeasonSituations, TemplateDraw, anchor_of, draw_for_round, group_month,
+    run_robot_season, run_season, run_season_from, run_season_with, situations_for,
 };
 pub use sim_hotel::{
     CatalogError, Category, Cause, Effects, GroupBlock, GuestOutcome, Index, IndexSet, Line,

@@ -150,7 +150,7 @@ async fn finish(deps: &Deps, game: GameId, claim: JobClaim) -> Result<(), AppErr
 /// Presuda je gotova: AI-jeva je već upisana, ili je uz neutralnu već stigla i zakašnjela.
 /// Neutralna presuda sama NE znači gotovo: AI-jeva koja stigne poslije upisuje se kao zakašnjela.
 fn verdict_settled(g: &game::Game, hotel: HotelId, code: &str) -> Result<bool, GameError> {
-    let (m, _) = g.situation_round(code)?;
+    let (m, _) = g.situation_round_for(hotel, code)?;
     let fr = g
         .hotel(hotel)?
         .responses
@@ -235,7 +235,7 @@ async fn run_chat(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let p: ChatPayload = payload(job)?;
     let claim = job.claim();
     let g = load_game(deps, job.game_id).await?;
-    if g.status(g.situation_round(&p.situation)?.0)? != RoundStatus::Open {
+    if g.status(g.situation_round_for(p.hotel_id, &p.situation)?.0)? != RoundStatus::Open {
         return finish(deps, job.game_id, claim).await;
     }
     let input = g.character_input(p.hotel_id, &p.situation)?;

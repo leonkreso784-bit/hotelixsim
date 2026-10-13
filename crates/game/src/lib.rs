@@ -6,6 +6,7 @@ mod ai_input;
 pub mod command;
 pub mod costs;
 mod departments;
+mod drawn;
 pub mod dto;
 pub mod dto_v2;
 pub mod error;
@@ -32,6 +33,7 @@ pub use ai_input::{
 pub use departments::{
     DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,
 };
+pub use drawn::DrawnInstance;
 pub use error::GameError;
 pub use event::*;
 pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};

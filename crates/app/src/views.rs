@@ -308,10 +308,10 @@ async fn situations_in_month(
     };
     let record = g.hotel(hotel)?;
     let items = g
-        .situations_in(month)
+        .situations_of_hotel(hotel, month)?
         .into_iter()
         .map(|t| {
-            let ai = g.content.ai.get(&t.code);
+            let ai = g.ai_entry(&t.code);
             let key = (month, t.code.clone());
             SituationItem {
                 code: t.code.clone(),

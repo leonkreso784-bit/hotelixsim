@@ -174,7 +174,38 @@ pub fn run_season_with(
 }
 
 /// Primjerci generatora za krug `p` i sidra kruga; generator vidi stanje na početku kruga, obračun i pokazatelje
-/// prošlog kruga i sve ranije primjerke ovog hotela.
+/// prošlog kruga i sve ranije primjerke ovog hotela. Isti poziv koristi sezona robota i igra (`game`), pa isto
+/// sjeme i isto stanje daju iste primjerke.
+pub fn draw_for_round<'a>(
+    anchors: &'a [SituationTemplate],
+    templates: &TemplateSet,
+    (seed, slot): (u64, u8),
+    p: &Period,
+    view: &DrawView,
+    history: &[DrawnSituation],
+    cat: &Catalog,
+) -> Result<(Vec<&'a SituationTemplate>, Vec<DrawnSituation>), ResolveError> {
+    let anchors_here = situations_for(p, anchors);
+    let kinds: Vec<Anchor> = anchors_here.iter().map(|t| anchor_of(t)).collect();
+    // Sidra koja nude grupu do ovog kruga uključivo (S3 u prvom krugu lipnja).
+    let anchor_groups: Vec<Month> = anchors
+        .iter()
+        .filter(|t| first_period_of_month(p.kind, t.month).index <= p.index)
+        .filter_map(group_month)
+        .collect();
+    let draw = Draw {
+        period: p,
+        templates,
+        history,
+        seed,
+        slot,
+        anchors: &kinds,
+        anchor_groups: &anchor_groups,
+    };
+    Ok((anchors_here, draw_situations(view, &draw, cat)?))
+}
+
+/// Primjerci generatora za krug `p` (sezona robota, `TemplateDraw`).
 fn draw_round<'a>(
     d: &TemplateDraw<'a>,
     p: &Period,
@@ -182,25 +213,15 @@ fn draw_round<'a>(
     history: &[DrawnSituation],
     cat: &Catalog,
 ) -> Result<(Vec<&'a SituationTemplate>, Vec<DrawnSituation>), ResolveError> {
-    let anchors_here = situations_for(p, d.anchors);
-    let anchors: Vec<Anchor> = anchors_here.iter().map(|t| anchor_of(t)).collect();
-    // Sidra koja nude grupu do ovog kruga uključivo (S3 u prvom krugu lipnja).
-    let anchor_groups: Vec<Month> = d
-        .anchors
-        .iter()
-        .filter(|t| first_period_of_month(p.kind, t.month).index <= p.index)
-        .filter_map(group_month)
-        .collect();
-    let draw = Draw {
-        period: p,
-        templates: d.templates,
+    draw_for_round(
+        d.anchors,
+        d.templates,
+        (d.seed, d.slot),
+        p,
+        view,
         history,
-        seed: d.seed,
-        slot: d.slot,
-        anchors: &anchors,
-        anchor_groups: &anchor_groups,
-    };
-    Ok((anchors_here, draw_situations(view, &draw, cat)?))
+        cat,
+    )
 }
 
 /// Sezona s vlastitim planerom i izborom odgovora; situacije iz `source`.

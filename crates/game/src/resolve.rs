@@ -1,10 +1,11 @@
 use sim_hotel::{SituationOutcome, progress_pts};
+use sim_hotel_v2::PeriodReport;
 
 use crate::actor::Actor;
 use crate::dto::indices_dto;
 use crate::error::{GameError, corrupt};
 use crate::event::{GameEvent, HotelResolution, Recorded, RoundResolved, SituationResult};
-use crate::game::{Game, RoundStatus};
+use crate::game::{Game, HotelRecord, RoundStatus};
 use crate::round::RoundKey;
 use crate::verdict::NEUTRAL_DEADLINE;
 
@@ -17,6 +18,96 @@ pub enum ResolveStep {
 }
 
 impl Game {
+    /// Obračun hotela `h` u krugu `m` iz dnevnika: rezultati situacija za izvještaj i ishodi za jezgru. Isti račun za
+    /// obračun kruga i za izvlačenje idućeg (koje gleda cijeli obračun prošlog kruga).
+    fn hotel_outcomes(
+        &self,
+        h: &HotelRecord,
+        m: RoundKey,
+    ) -> Result<(Vec<SituationResult>, Vec<SituationOutcome>), GameError> {
+        let model = self.model();
+        let mut outcomes = Vec::new();
+        let mut results = Vec::new();
+        for t in self.hotel_situations(h, m) {
+            let key = (m, t.code.clone());
+            let no_penalty = self.no_penalty(h, m, &t.code);
+            if let Some(&i) = h.answers.get(&key) {
+                let a = t
+                    .answers
+                    .get(usize::from(i))
+                    .ok_or_else(|| corrupt("indeks odgovora"))?;
+                results.push(SituationResult {
+                    code: t.code.clone(),
+                    answer: Some(i),
+                    quality: a.quality,
+                    free_text: false,
+                });
+                let o = SituationOutcome::from_answer(&t.code, a);
+                outcomes.push(model.situation_outcome(o, no_penalty));
+            } else if let Some(fr) = h.responses.get(&key) {
+                // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
+                // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
+                // kompenzacije iz `unanswered` je 0 €. Situacija „samo nagrada“ (v2, S-4) ni tada ne snižava
+                // pokazatelje (`Model::situation_outcome`).
+                let v = fr
+                    .verdict
+                    .as_ref()
+                    .ok_or_else(|| corrupt("presuda nedostaje"))?;
+                let mechanics = match v.nearest_answer {
+                    Some(i) => t
+                        .answers
+                        .get(usize::from(i))
+                        .ok_or_else(|| corrupt("indeks odgovora"))?
+                        .mechanics
+                        .clone(),
+                    None => t.unanswered.clone(),
+                };
+                results.push(SituationResult {
+                    code: t.code.clone(),
+                    answer: None,
+                    quality: v.quality,
+                    free_text: true,
+                });
+                let o = SituationOutcome {
+                    code: t.code.clone(),
+                    mechanics,
+                    quality: v.quality,
+                };
+                outcomes.push(model.situation_outcome(o, no_penalty));
+            } else {
+                let o = SituationOutcome::unanswered(t);
+                results.push(SituationResult {
+                    code: t.code.clone(),
+                    answer: None,
+                    quality: o.quality,
+                    free_text: false,
+                });
+                outcomes.push(model.situation_outcome(o, no_penalty));
+            }
+        }
+        Ok((results, outcomes))
+    }
+
+    /// Cijeli obračun (v2) obračunatog kruga `m` za hotel `h`, ponovno izračunat iz dnevnika (stanje, plan i
+    /// ishodi krugu su isti kao pri obračunu): ulaz izvlačenja idućeg kruga (popunjenost i opterećenje odjela).
+    pub(crate) fn period_report(
+        &self,
+        h: &HotelRecord,
+        m: RoundKey,
+    ) -> Result<PeriodReport, GameError> {
+        let id = h.setup.hotel_id;
+        let state = self.state_at(id, m)?;
+        let plan = self.effective_plan(id, m)?;
+        let (_, outcomes) = self.hotel_outcomes(h, m)?;
+        self.model().period_report(
+            &state,
+            &self.round_info(m)?,
+            &plan,
+            &outcomes,
+            &self.content,
+        )
+    }
+
     /// Obračun runde za sve hotele, redom po slotu, iz snimka pravila igre (ARHITEKTURA §7.5; DEMO §1.2).
     pub fn resolve_round(&self, m: impl Into<RoundKey>) -> Result<RoundResolved, GameError> {
         let m = m.into();
@@ -31,64 +122,7 @@ impl Game {
             let id = h.setup.hotel_id;
             let state = self.state_at(id, m)?;
             let plan = self.effective_plan(id, m)?;
-            let mut outcomes = Vec::new();
-            let mut results = Vec::new();
-            for t in self.situations_in(m) {
-                let key = (m, t.code.clone());
-                if let Some(&i) = h.answers.get(&key) {
-                    let a = t
-                        .answers
-                        .get(usize::from(i))
-                        .ok_or_else(|| corrupt("indeks odgovora"))?;
-                    results.push(SituationResult {
-                        code: t.code.clone(),
-                        answer: Some(i),
-                        quality: a.quality,
-                        free_text: false,
-                    });
-                    let o = SituationOutcome::from_answer(&t.code, a);
-                    outcomes.push(model.situation_outcome(o, &self.content));
-                } else if let Some(fr) = h.responses.get(&key) {
-                    // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
-                    // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
-                    // kompenzacije iz `unanswered` je 0 €. Situacija „samo nagrada" (v2, S-4) ni tada ne snižava
-                    // pokazatelje (`Model::situation_outcome`).
-                    let v = fr
-                        .verdict
-                        .as_ref()
-                        .ok_or_else(|| corrupt("presuda nedostaje"))?;
-                    let mechanics = match v.nearest_answer {
-                        Some(i) => t
-                            .answers
-                            .get(usize::from(i))
-                            .ok_or_else(|| corrupt("indeks odgovora"))?
-                            .mechanics
-                            .clone(),
-                        None => t.unanswered.clone(),
-                    };
-                    results.push(SituationResult {
-                        code: t.code.clone(),
-                        answer: None,
-                        quality: v.quality,
-                        free_text: true,
-                    });
-                    let o = SituationOutcome {
-                        code: t.code.clone(),
-                        mechanics,
-                        quality: v.quality,
-                    };
-                    outcomes.push(model.situation_outcome(o, &self.content));
-                } else {
-                    let o = SituationOutcome::unanswered(t);
-                    results.push(SituationResult {
-                        code: t.code.clone(),
-                        answer: None,
-                        quality: o.quality,
-                        free_text: false,
-                    });
-                    outcomes.push(model.situation_outcome(o, &self.content));
-                }
-            }
+            let (results, outcomes) = self.hotel_outcomes(h, m)?;
             let refs = self.refs(state.category())?;
             let res = model.resolve(&state, &info, &plan, &outcomes, &self.content, refs)?;
             let progress = progress_pts(&h.start_indices, &res.indices).map_err(|e| err(&e))?;
@@ -146,7 +180,7 @@ impl Game {
                 })?;
                 out.push((Actor::System, GameEvent::RoundResolved(rr)));
                 if let Some(n) = next.current_round() {
-                    out.extend(next.robot_moves(n)?);
+                    out.extend(next.open_round(n)?);
                 }
                 Ok(ResolveStep::Done(out))
             }
