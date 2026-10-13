@@ -207,8 +207,7 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
   po smislu (predlošci po odjelu/vrsti situacije; shema API-ja po području; testovi i mentor po temi), pa slična brana
   za kod (npr. upozorenje iznad 1000, generirano izuzeto). Nije dirano u sesiji dokumentacije.
 
-- [ci] **Node 20 akcije zastarjele** — podići `actions/checkout@v4` i `actions/setup-node@v4` na novije verzije u nekom tasku CI-ja. (prvi CI 04.10., run 37167540215)
-- [ci] **`ubuntu-latest` prelazi na Ubuntu 26 od 19.10.** — provjeriti da poslovi `rust` i `web` prolaze, po potrebi pinirati sliku. (isto upozorenje CI-ja)
+- [ci] **Prelazak CI-ja na Ubuntu 26 svjesno, ne usput** — 13.10. slika je pribijena na `ubuntu-24.04` (a `checkout`/`setup-node` na v5) jer `ubuntu-latest` od 19.10. postaje Ubuntu 26; prijeći kao zasebnu ciglu kad se provjeri Postgres servis, `sqlx-cli` i Rust 1.98.1 na novoj slici. (cigla K0-1, [ROADMAP/kvaliteta](../plan/ROADMAP/kvaliteta.md))
 - [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)
 - [ci] **`cargo-deny-action@v2` koristi vlastiti Rust, a repo `rust-toolchain` 1.98.1** — provjeriti na prvom CI-u. (Task 8 #3, L88)
 - [alati] **Brana i alati dokumentacije — sitni nalazi (2026-10-10)** (završni pregled; danas ništa ne puca):

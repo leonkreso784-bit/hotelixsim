@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   rust:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -23,9 +23,9 @@ jobs:
       DATABASE_URL: postgres://hotelixsim:hotelixsim_lokalno@localhost:5432/hotelixsim
       SQLX_OFFLINE: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 24 }
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
@@ -43,11 +43,11 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 24 }
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
