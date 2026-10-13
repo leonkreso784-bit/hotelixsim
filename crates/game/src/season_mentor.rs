@@ -333,26 +333,25 @@ fn points_tenths(hundredths: i64) -> String {
     with_sign(t, format!("{},{} boda", thousands(a / 10), a % 10), true)
 }
 
-/// Napredak s `digits` decimala (0–2), bez suvišnih nula: „+8 bodova", „+7,6 boda", „+8,42 boda".
+/// Napredak s točno `digits` decimala (0–2), kao na ekranu (`formatPointsPrecise`, UI_PRAVILA §2.3): „+8 bodova",
+/// „+7,6 boda", „−4,0 boda", „0,0 boda", „+8,42 boda". Uz decimale imenica je uvijek „boda".
 fn points_with(hundredths: i32, digits: u32) -> String {
     let digits = digits.min(2);
     let v = round_div(i64::from(hundredths), 10_i64.pow(2 - digits));
-    let scale = 10_u64.pow(digits);
-    let a = v.unsigned_abs();
-    if a.is_multiple_of(scale) {
-        let w = v / 10_i64.pow(digits);
-        return if w == 0 {
+    if digits == 0 {
+        return if v == 0 {
             "0 bodova".to_owned()
         } else {
-            points(w)
+            points(v)
         };
     }
+    let scale = 10_u64.pow(digits);
+    let a = v.unsigned_abs();
     let frac = format!(
         "{:0width$}",
         a % scale,
         width = usize::try_from(digits).unwrap_or(2)
     );
-    let frac = frac.trim_end_matches('0');
     with_sign(v, format!("{},{frac} boda", thousands(a / scale)), true)
 }
 
@@ -490,7 +489,7 @@ fn wage_text(d: &SeasonDecisions, start: Option<u16>) -> String {
     match start {
         None => level,
         Some(s) if lo == hi && lo == s => {
-            format!("{level} (takve su od početka, student ih nije mijenjao)")
+            format!("{level} (takve su od početka i nisu se mijenjale)")
         }
         Some(s) => format!("{level} (na početku igre bile su {s} %)"),
     }
@@ -636,11 +635,11 @@ fn situations_text(d: &SeasonDecisions) -> Option<String> {
 fn own_plan_text(input: &SeasonDebriefInput) -> String {
     let weekly = is_weekly(input);
     let Some(&first) = input.own_plan_rounds.first() else {
-        return "Student nijednom nije mijenjao plan: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa te odluke nisu njegove promjene.".to_owned();
+        return "Plan se nijednom nije mijenjao: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa nijedna od tih odluka nije promjena napravljena u igri.".to_owned();
     };
     let n = u8::try_from(input.own_plan_rounds.len()).unwrap_or(u8::MAX);
     let mut out = format!(
-        "Student je sam postavio plan {}, prvi put {}; poslije toga njegov se plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
+        "Vlastiti plan postavljen je {}, prvi put {}; poslije toga se taj plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
         in_rounds(n, weekly),
         round_words(input, first).1
     );
@@ -816,15 +815,22 @@ fn robot_comparison(input: &SeasonDebriefInput) -> Option<String> {
     let Some((t, m)) = gap else {
         return Some(format!("{decided}."));
     };
-    let moved = match t.change.signum() {
-        1 => format!("porastao s {} na {}", t.start, t.end),
-        -1 => format!("pao s {} na {}", t.start, t.end),
-        _ => format!("ostao na {}", t.end),
-    };
+    // Svaki hotel dobiva glagol svog smjera (UI KS-3 I-2: „porastao …, a tvom hotelu je pao", ne „… s 35 na 28").
     Some(format!(
-        "{decided}; indeks {} mu je {moved}, a tvom hotelu s {} na {}.",
-        t.name, m.start, m.end
+        "{decided}; indeks {} mu je {}, a tvom hotelu je {}.",
+        t.name,
+        moved_text(t),
+        moved_text(m)
     ))
+}
+
+/// Pomak indeksa riječima, po smjeru: „porastao s 50 na 70", „pao s 35 na 28", „ostao na 35".
+fn moved_text(i: &SeasonIndexFact) -> String {
+    match i.change.signum() {
+        1 => format!("porastao s {} na {}", i.start, i.end),
+        -1 => format!("pao s {} na {}", i.start, i.end),
+        _ => format!("ostao na {}", i.end),
+    }
 }
 
 /// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v2` i rezerva).
@@ -844,9 +850,11 @@ pub fn season_debrief_has_parts(text: &str) -> bool {
 /// Sezonski mentor bez AI-ja (kraj-sezone-spec §7): ista četiri dijela kao uputa, iz istih činjenica.
 pub fn fallback_season_debrief(input: &SeasonDebriefInput) -> String {
     let f = season_debrief_facts(input);
+    // Pravilo poštene usporedbe ostaje u činjenicama za AI; ekran kraja sezone ga piše ispod rezultata, pa ga rezerva
+    // ne ponavlja (UI KS-3 M-4).
     let mut out = format!(
-        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {} {}\n\n",
-        f.progress, f.place, f.winner, f.fairness
+        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {}\n\n",
+        f.progress, f.place, f.winner
     );
 
     let mut risen: Vec<&SeasonIndexFact> = f.indices.iter().filter(|i| i.change > 0).collect();

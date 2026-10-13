@@ -352,12 +352,12 @@ fn default_models_follow_adr_024() {
     assert_eq!(m.mentor, "claude-sonnet-5-5");
 }
 
-/// Sezonski mentor dobiva samo činjenice sezone u ljudskim jedinicama, s uputom `mentor-sezona.v1` (ADR-024: Sonnet).
+/// Sezonski mentor dobiva samo činjenice sezone u ljudskim jedinicama, s uputom `mentor-sezona.v2` (ADR-024: Sonnet).
 #[test]
 fn season_debrief_body_sends_human_season_facts() {
     let input = common::sample_season();
     let b = ai::request::season_debrief_body("claude-sonnet-5-5", &input);
-    assert_eq!(ai::prompts::MENTOR_SEASON.version, "mentor-sezona.v1");
+    assert_eq!(ai::prompts::MENTOR_SEASON.version, "mentor-sezona.v2");
     assert_eq!(b["model"], "claude-sonnet-5-5");
     assert_eq!(b["system"], ai::prompts::MENTOR_SEASON.text);
     let content = b["messages"][0]["content"].as_str().unwrap();
@@ -403,7 +403,7 @@ Kako je prošla sezona
     for must in [
         "nikad uputa tebi",
         "nikad ne pogađaj",
-        "nepromijenjenu",
+        "nepromijenjen",
         "vlastiti_plan",
         "ostali_hoteli",
         "bez roda",
@@ -433,5 +433,41 @@ Kako je prošla sezona
                 );
             }
         }
+    }
+}
+
+/// UI KS-3 I-B: uputa izričito traži obraćanje bez rodno obilježenih oblika, a sama ih (osim primjera zabranjenog u
+/// pravilu 9) nigdje ne koristi, jer ih model preuzme („mogao si ga promijeniti"). m-1: ne spominje „činjenice".
+#[test]
+fn season_mentor_prompt_forbids_gendered_address() {
+    let prompt = ai::prompts::MENTOR_SEASON.text.to_lowercase();
+    for must in [
+        "bez rodno obilježenih oblika",
+        "plan se mogao promijeniti",
+        "plan se nijednom nije mijenjao",
+        "ne piši „u činjenicama“",
+        "istim brojem decimala",
+    ] {
+        assert!(prompt.contains(must), "uputa nema „{must}“");
+    }
+    let start = prompt.find("\n9. ").expect("pravilo 9");
+    let end = prompt.find("\n10. ").expect("pravilo 10");
+    let outside = format!("{}{}", &prompt[..start], &prompt[end..]);
+    // „plan se nije mijenjao" smije (rod plana); zabranjen je student kao vršitelj u prošlom vremenu.
+    for word in [
+        "student nijednom",
+        "student plan",
+        "mogao",
+        "učinio",
+        "završio",
+        "spustio",
+        "postavio",
+        "student ih",
+        " mu ",
+    ] {
+        assert!(
+            !outside.contains(word),
+            "uputa izvan pravila 9 koristi rodni oblik „{word}“"
+        );
     }
 }

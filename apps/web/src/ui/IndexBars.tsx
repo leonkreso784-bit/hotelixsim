@@ -33,8 +33,11 @@ export function IndexBars({
   deltas,
   deltaLabel,
   linked = false,
+  from,
 }: {
   indices: IndexEntry[];
+  /** Početne vrijednosti: broj se tada piše kao „45 → 61“ (kraj sezone). */
+  from?: IndexEntry[];
   deltas: Map<IndexCode, number> | null;
   deltaLabel: string | null;
   /** Cijeli redak vodi na detalj pokazatelja. */
@@ -50,12 +53,16 @@ export function IndexBars({
         {sortIndices(indices).map((e) => {
           const label = indexLabel(e.code);
           const value = formatIndex(e.hundredths);
+          const start = from?.find((f) => f.code === e.code);
+          const shown = start
+            ? t("index.range", { start: formatIndex(start.hundredths), end: value })
+            : value;
           const pct = Math.max(0, Math.min(100, e.hundredths / 100));
           const body = (
             <>
               <span className="text-accent">{INDEX_ICON[e.code]}</span>
               <span className="min-w-0 text-sm">{label}</span>
-              <strong className="text-right tabular-nums">{value}</strong>
+              <strong className="whitespace-nowrap text-right tabular-nums">{shown}</strong>
               <span className="min-w-12 text-right">
                 <Delta value={deltas?.get(e.code) ?? null} />
               </span>
