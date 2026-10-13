@@ -40,4 +40,4 @@ stabla — ne gasi ga. Push samo uz moj OK.
 - **Push** `main` i `sloj1` (repo je javan) — nakon OK-a gledaj CI.
 - ADR-ovi 🟨 029–033, 035, 036 (Sloj 1) i 030 (raspored dokumentacije) — popis u [DECISIONS.md](./records/DECISIONS.md).
 - Iz predaje koda: m7 (stroga granica situacija po odjelu), prag popusta najamnine lokala (profil B), tekst zaključane obnove.
-- [BACKLOG](./records/BACKLOG.md) [alati]: kod preko 1000 redaka (prijedlog) i Sokratis koji mjeri staro pravilo indeksa.
+- [BACKLOG](./records/BACKLOG.md) [alati]: granica veličine koda 600/1000 i popis duga ([ADR-039](records/DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md)) i Sokratis koji mjeri staro pravilo indeksa.

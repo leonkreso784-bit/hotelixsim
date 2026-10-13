@@ -10,7 +10,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { brojRedaka } from "./docs-granice.mjs";
 
 export const UPOZORENJE = 600;
@@ -29,7 +29,15 @@ export const IZUZECI = {
 };
 
 const nastavci = new Set([".rs", ".ts", ".tsx", ".mjs", ".js"]);
-const zanemareneMape = new Set(["node_modules", "target", "dist", ".git", ".superpowers", ".playwright-mcp"]);
+const zanemareneMape = new Set([
+  "node_modules",
+  "target",
+  "dist",
+  ".git",
+  ".superpowers",
+  ".playwright-mcp",
+  ".claude",
+]);
 
 function skupi(korijen, rel, izlaz) {
   const unosi = fs.readdirSync(path.join(korijen, rel), { withFileTypes: true });
@@ -67,7 +75,20 @@ export function provjeri(korijen) {
   return { greske, upozorenja };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Ulazna točka: izvrši se uvijek kad je ovo pokrenuta skripta (ne kad je uvezena u test).
+// Usporedba putanja ne smije šutjeti preko junctiona/poveznice/subst pogona: realpath s obje strane,
+// a ako i to zakaže, prepoznaje se po imenu datoteke.
+function jePokrenuta() {
+  const arg = process.argv[1];
+  if (!arg) return false;
+  const ja = fileURLToPath(import.meta.url);
+  try {
+    if (fs.realpathSync.native(arg) === fs.realpathSync.native(ja)) return true;
+  } catch {}
+  return path.basename(arg) === path.basename(ja);
+}
+
+if (jePokrenuta()) {
   const korijen =
     process.argv[2] ||
     process.env.CHECK_KOD_ROOT ||

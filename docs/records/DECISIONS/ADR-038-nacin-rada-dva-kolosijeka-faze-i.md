@@ -39,8 +39,8 @@ rad s agentima, testove i lagano poliranje koda unutar svake cigle. Cilj je verz
    Najviše **dva agenta istodobno prevode Rust**, zbrojeno preko oba kolosijeka (računalo). Svaki korak dobiva novog
    agenta, a nastavak samo za mali popravak. Izlazi idu u datoteke.
 8. **Područja planova** postaju `igra`, `platforma` i `kvaliteta`, svako s jednim aktivnim planom faze (zaliha kvalitete
-   i Faza 0 su `docs/plan/ROADMAP/kvaliteta.md`). Danas su područja `kod` i
-   `dokumentacija`. Dokumentaciju piše čuvar dokumentacije unutar cigle, pa zasebna sesija dokumentacije otpada.
+   i Faza 0 su `docs/plan/ROADMAP/kvaliteta.md`). Područja su `igra`, `platforma`, `kvaliteta` i
+   `dokumentacija`; `kod` je stari naziv za `igra`. Dokumentaciju piše čuvar dokumentacije unutar cigle, pa zasebna sesija dokumentacije otpada.
 9. **Linije reza** ako tempo zapne, redom: vlastite situacije profesora P3 → P4, razgovori samo tri vrste,
    NATJECANJE ZA LJUDE P3 → P4. **Nikad se ne režu** testovi, provjeravatelj i balans.
 

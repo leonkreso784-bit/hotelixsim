@@ -66,6 +66,16 @@ Svaki korak dobiva **novog** agenta; nastavak samo za mali popravak. Izlazi idu 
 - Najviše **2 agenta istodobno prevode Rust**, zbrojeno preko oba kolosijeka (računalo).
 - **Jedan pisac po datoteci**: svaki agent dobiva popis datoteka koje smije dirati i ništa drugo. Eksperimenti nad
   kodom idu u worktree.
+- **Vlasništvo datoteka među kolosijecima** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 1;
+  izvor: [platforma.md](../plan/ROADMAP/platforma.md)). Tko piše datoteku, odlučuje kolosijek, ne tema:
+
+  | kolosijek | datoteke |
+  |---|---|
+  | **IGRA** | `crates/engine`, `sim-hotel`, `sim-hotel-v2`, `game`, `content`, `balance`; `content/`, `prompts/` |
+  | **PLATFORMA** | `crates/server`, `store` (migracije); `app/src/platform`, `api/src/platform`; nove migracije; web ekrani razreda i profesora |
+  | **KVALITETA** | `scripts/`, `.github/`, alati u `docs/`; čisto premještanje koda (nulta promjena ponašanja) |
+  | **zajedničko, samo uz dogovor** | `api/src/schema.rs` + `openapi.json` + `packages/api-client` (poslije spajanja **uvijek regenerirati** s `gen:api`, nikad ručno; DTO-i platforme ne idu u `schema.rs`); migracije (dogovoreni raspon brojeva: platforma od 0005, igra dogovorom prije pisanja) |
+
 - Tvrdnje agenata nisu dokaz: ključni nalaz provjeri sam ili ga daj drugom agentu da ga neovisno ponovi.
 - Leon prati rad u VS Code dodatku Pixel Agents: imenovani agenti dobiju vlastiti lik i sjedalo, neimenovani su
   „Subtask" likovi uz glavnog. Broj agenata nije ograničen postavkom, nego računalom (vidi gore).

@@ -144,6 +144,7 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 
 - [leon] **Ostali prihod (hrana, piće, usluge) = 30 % prihoda soba** — je li realno? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 2. (SLJEDECA_SESIJA §5.2)
 - [leon] **Trošak zaposlenog 2 200 €/mj i omjer 30 stalnih + 20 sezonaca** (120 soba, 4*) — realno? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 3.
+- [leon] **Brana veličine koda `check:kod`: upozorenje 600, granica 1000, popis duga (3 datoteke)** — potvrda ili druge brojke (za `.md` si rekao 1200). Odgovor: [ADR-039](DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md).
 - [leon] **S3: 25 % popusta agenciji za grupu u kolovozu** — realna ponuda? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 4.
 - [leon] **Kriteriji rubrika u S1–S4** — Leon je mjerilo; blokira sadržaj i AI presude, ne kod jezgre. Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 5.
 - [leon] **Priče profila A i B (§5)** — prepoznaje li takve hotele? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 6.

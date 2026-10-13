@@ -36,7 +36,7 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 4. Sučelje (drugi terminal): `corepack pnpm --filter @hotelixsim/web dev` → <http://localhost:5173>
 5. Provjere prije commita: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,
-   `corepack pnpm typecheck`, `corepack pnpm test`; za dokumentaciju `corepack pnpm check:docs` i `corepack pnpm test:docs`.
+   `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm check:kod` (brana veličine koda, [ADR-039](docs/records/DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md)); za dokumentaciju `corepack pnpm check:docs` i `corepack pnpm test:docs`.
 6. Dokumentacija ([pravila i granice](docs/README.md)): popis ADR-ova
    nakon novog ADR-a `corepack pnpm docs:adr`; razdvajanje plana `corepack pnpm docs:plan <plan.md>`; veličine svih dokumenata
    uz granice `node scripts/check-docs.mjs --popis`.
