@@ -8,7 +8,7 @@ odvojen od korisnika pa se AAI kasnije veže na isti račun. Kako se profesor pr
 
 | način | sigurnost | posao za nas | trošak | iskustvo studenta | GDPR |
 |---|---|---|---|---|---|
-| **A. Korisničko ime + lozinka koje izdaje profesor / sustav** (odabrano za prvi val) | dobra uz argon2, ograničenje pokušaja po IP-u i računu, reset; lozinka se čuva samo kao otisak | srednji: prijava, promjena i reset lozinke, generator računa iz popisa studenata | 0 € | dobro: prva prijava prisiljava na promjenu lozinke | ime i otisak lozinke; bez e-pošte |
+| **A. Korisničko ime + lozinka koje izdaje profesor / sustav** (odluka ADR-037 t. 7 za prvi val) | dobra uz argon2, ograničenje pokušaja po IP-u i računu, reset; lozinka se čuva samo kao otisak | srednji: prijava, promjena i reset lozinke, generator računa iz popisa studenata | 0 € | dobro: prva prijava prisiljava na promjenu lozinke | ime i otisak lozinke; bez e-pošte |
 | **B. Kod igre samo za ulazak** (uz A) | kod je za ulazak u razred, ne identitet; ograničenje pokušaja | mali: `class_players` | 0 € | 10 sekundi, uz prijavu | ništa novo |
 | **C. Jednokratna poveznica koju izdaje admin** (za profesora, preporuka za D4) | dobra: vrijedi 24 h, jednom | mali: CLI `server admin add-professor` | 0 € | profesor klikne i postavi lozinku | e-adresa profesora |
 | **D. AAI@EduHr** (SAML 2.0; OIDC [PROVJERITI]) | najbolja: fakultetski identitet, fakultet gasi račun kad student ode | srednji tehnički, ali **dugo administrativno**: fakultet mora registrirati uslugu kod Srca | 0 € kod Srca [PROVJERITI] | najbolje za fakultet: „prijavi se kao na Merlin" | atribute daje fakultet; traži ugovor/suglasnost |

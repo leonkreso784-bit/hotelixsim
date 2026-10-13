@@ -8,7 +8,7 @@ balans i Leonove ankete o brojkama. Raspored rada je u kolosijeku IGRA ([ROADMAP
 | **Dobavljači** | katalog dobavljača u `content/` (cijena, kvaliteta, pouzdanost, rok); izbor je **nalog u planu** ([MODEL_V2](../MODEL_V2.md) §6.3) | izravni trošak po upotrebi i zadovoljstvo odjela ovise o dobavljaču; kašnjenje ima vlastiti tok kocke i može pokrenuti situaciju iz predloška | odjeli (sloj 1), predlošci situacija | 15–25 h |
 | **Pregled rezervacija** | novi ekran i ruta `GET /v1/hotels/{id}/reservations?period=` | vidi 5.1 | vrste soba, agencije | 25–40 h |
 | **Generator gostiju** (ime, zemlja, izgled) | jezgra v2, kozmetički modul: **izvodi se** iz sjemena + krug + redni broj i **ne sprema se** (MODEL_V2 §2 t. 1) | ništa: brojke računa formula, a kocka bira samo tko je gost (MODEL_V2 §2 t. 4) | rezervacije, recenzije | 10–20 h + banka imena |
-| **Vrste soba** | opis hotela (tlocrt, tipovi), plan (osnovna cijena + doplata po tipu, ADR-028 t. 10) | raspored prodanih noći po tipu (MODEL_V2 sloj 3) | sloj 1 | prema dizajnu u radu |
+| **Vrste soba** | opis hotela (tlocrt, tipovi), plan (osnovna cijena + doplata po tipu, [ADR-028](../../records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) t. 10) | raspored prodanih noći po tipu (MODEL_V2 sloj 3) | sloj 1 | prema dizajnu u radu |
 | **Pošta s agencijama** | „pošta" je **pogled** na situacije vrste „ponuda" iz predložaka + feed | odgovor je izbor (bez AI-ja, ADR-028 t. 8); prihvaćen ugovor (allotment) puni knjigu rezervacija po nižoj cijeni | rezervacije, predlošci | 15–25 h |
 
 U razrednoj igri svaki od ovih slojeva radi **po hotelu**, a studenti vide jedni drugima samo ono što dopušta

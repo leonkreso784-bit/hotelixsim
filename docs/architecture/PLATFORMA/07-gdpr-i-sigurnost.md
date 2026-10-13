@@ -51,7 +51,7 @@ GDPR traži brisanje. Rješenje:
   redakcija**: briše se veza račun ↔ pseudonim (`class_players`), ime i identiteti, a slobodni tekst i AI razgovori tog
   hotela se redigiraju, uz zapis u `audit_log` (cigla G-3). Radi to zasebna **uloga održavanja** kroz jednu proceduru koja
   privremeno zaobilazi okidač samo za taj posao. Točan opseg redakcije traži **pravni odgovor fakulteta**;
-- **cijela igra se briše** za vježbu i demo (jedan igrač): demo gosti nakon 7 dana (ADR-016 t. 1, G-5);
+- **cijela igra se briše** za vježbu i demo (jedan igrač): demo gosti nakon 7 dana ([ADR-016](../../records/DECISIONS/ADR-016-leonove-proizvodne-odluke-za-korak-3.md) t. 1, G-5);
 - **rok čuvanja razreda** (G-2, pitanje F4): npr. kraj akademske godine + rok za prigovor. Nakon toga posao reda briše razred i
   igru, a ostaje samo anonimna statistika (npr. raspodjela napretka) za kalibraciju;
 - **izvoz vlastitih podataka** (pravo pristupa) je JSON izvoz studentova hotela, samo njegovi podaci (G-4).

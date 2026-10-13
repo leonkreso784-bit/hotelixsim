@@ -11,7 +11,7 @@ svaki student ima svoj hotel u istoj igri, pa generator puni slotove 1..N.
 | tri fiksna profila, sva tri sa 120 soba (v1) | `content/hotel/profiles.json:4,19,34`; `crates/sim-hotel/src/state.rs:26` |
 | profil je enum A/B/C | `crates/sim-hotel/src/profile.rs:7-14` |
 | v2 profili s odjelima, ključ je isti enum | `content/hotel/v2/profiles.json`; `crates/sim-hotel-v2/src/catalog.rs:52-62` |
-| igrač dobiva profil iz sjemena, a roboti A, B, C u rasporedu iz sjemena; imena su fiksna | `crates/game/src/command.rs:16-20, 28-34, 69-90` (ADR-015 t. 13) |
+| igrač dobiva profil iz sjemena, a roboti A, B, C u rasporedu iz sjemena; imena su fiksna | `crates/game/src/command.rs:16-20, 28-34, 69-90` ([ADR-015](../../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 13) |
 | u događaju je profil tekst `"A"/"B"/"C"` | `crates/game/src/event.rs:47-53` |
 | referentna tablica (početak skale indeksa) računa se **po kategoriji** (4*) iz referentnog profila | `crates/game/src/game.rs:133-141`; `crates/sim-hotel/src/indices.rs:154-190` |
 
@@ -19,7 +19,7 @@ svaki student ima svoj hotel u istoj igri, pa generator puni slotove 1..N.
 
 1. **Generator je čista Rust funkcija** `generate(sjeme, postavke_razreda, slot) → HotelSpec`. Opis hotela sadrži ime,
    kategoriju, broj soba, vrste soba i tlocrt, odjele s početnim ljudima i stanjem te fiksne troškove. Funkcija živi
-   uz jezgru v2 (vrijede brane determinizma ADR-009/017). Kocka ima **vlastiti tok**
+   uz jezgru v2 (vrijede brane determinizma [ADR-009](../../records/DECISIONS/ADR-009-ojacavanje-brana-determinizma-je-task-1.md)/[ADR-017](../../records/DECISIONS/ADR-017-odluke-voditelja-gradnje-u-koraku-3.md)). Kocka ima **vlastiti tok**
    `Rng::derive(sjeme, [label("gen:hotel"), slot])`, pa ne pomiče postojeće tokove ([MODEL_V2](../MODEL_V2.md) §2 t. 3).
 2. **U `GameCreated` se zapisuje opis, ne samo sjeme.** Ako se generator kasnije promijeni, stara igra se i dalje
    čita iz svog zapisa (isto načelo kao puni snimak pravila). Najmanja promjena koda: `HotelSetup.profile` ostaje tekst,
@@ -42,7 +42,7 @@ Hoteli različite veličine smiju biti različiti, ali **mogućnost napretka mor
 - **Referentna tablica po hotelu, ne po kategoriji.** Referenca postaje „isti taj hotel uz zadani plan", pa napredak
   znači „koliko si bolji od vlastitog nečinjenja". Cijena: po jedan izračun po hotelu, koji treba držati u predmemoriji.
 - **Provjera ljestvica indeksa:** svaki indeks mora biti nezavisan od veličine (po sobi, udio, omjer). Sumnjiva je
-  likvidnost u eurima bez gornje granice (ADR-014): mora ići po sobi ili relativno prema referenci. Provjeriti u
+  likvidnost u eurima bez gornje granice ([ADR-014](../../records/DECISIONS/ADR-014-kolovoz-rasprodan-lekcija-s3-i-blagajna.md)): mora ići po sobi ili relativno prema referenci. Provjeriti u
   `indices.rs` prije generatora [PROC].
 - **Balans preko generatora:** `balance --generate --seeds 1000 --check` uzorkuje hotele. Prolaz: razlika medijana
   napretka po veličini i po arhetipu manja od praga, i nijedan arhetip ne pobjeđuje pod svim strategijama. Uz to

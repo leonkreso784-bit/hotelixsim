@@ -27,7 +27,7 @@ s igrom. Administrativni dio AAI (zahtjev fakultetu) pokreće se **sada**, jer t
 | web i API | dvije zadane domene | kolačići pucaju u Safariju i privatnom prozoru | jedna adresa (6.1) | ~2–4 h |
 | profesorov pregled | fold cijele igre pri svakom osvježavanju | radi za 3 studenta, puca za 30 | projekcija u istoj transakciji | ~1 dan |
 | generirani hoteli | nasumični broj soba u postojećem profilu | indeksi i pravednost tiho krivi | opis u snimku + referenca po hotelu + balans | F3 |
-| rezervacije | brojka „rezervirano" izmišljena za ekran | ekran laže, a „detalj samo uz uzrok" (ADR-026 t. 2) pada | knjiga u jezgri (5.1 A) | ~25–40 h |
+| rezervacije | brojka „rezervirano" izmišljena za ekran | ekran laže, a „detalj samo uz uzrok" ([ADR-026](../../records/DECISIONS/ADR-026-put-b-hotel-od-brojeva-postaje.md) t. 2) pada | knjiga u jezgri (5.1 A) | ~25–40 h |
 | AI trošak | ručno gledanje računa kod Anthropica | prekoračenje se vidi tek na računu | granice u `app` (2.6) | ~1 dan |
 | kopije | „Railway ionako čuva" | snimke diska nisu provjereno vraćanje | vlastiti `pg_dump` + proba vraćanja | ~0,5 dana + 0–5 €/mj [PROC] |
 
@@ -40,13 +40,13 @@ s igrom. Administrativni dio AAI (zahtjev fakultetu) pokreće se **sada**, jer t
 | L1 | razred | **riješeno:** jedna igra s N hotela, studenti jedni protiv drugih (ADR-037 t. 1) |
 | L2 | tko zatvara krug | **riješeno:** profesor otvara, student zatvara svoj hotel (ADR-037 t. 2) |
 | L3 | mijenja li se ADR-004 | **riješeno:** ne; lokalno do profesorova OK, izlazak uz izričit OK (dio 06) |
-| L4 | hosting | **riješeno** dopunom 13.10.: Railway Hobby + Postgres na Railwayu, ~5–10 €/mj; Supabase samo kao IdP kasnije. Čeka ADR |
+| L4 | hosting | **preporuka kontrolora 13.10., čeka Leonovu potvrdu i ADR:** Railway Hobby + Postgres na Railwayu, ~5–10 €/mj; Supabase samo kao IdP kasnije |
 | L5 | domena | preporuka: `hotelixsim.com` na Cloudflareu, tek za stvarne studente; do tada `*.up.railway.app` (D6) |
 | L6 | prijava studenta | **riješeno:** korisničko ime + lozinka, pa AAI (ADR-037 t. 7); D4 (profesor za probu) otvoreno |
 | L7 | generirani hoteli u razredu | otvoreno: koliko različitih hotela (4.2 t. 5) |
 | L8 | rezervacije | preporuka A, knjiga kao zbroj (5.1) |
 | L9 | redoslijed | **riješeno:** dva kolosijeka ([ADR-038](../../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md)) |
-| L10 | sesije umjesto JWT-a | preporuka: da (3.1); treba ADR |
+| L10 | sesije umjesto JWT-a | **preporuka, čeka Leonovu potvrdu i ADR** (3.1); tek tada se ispravlja ARHITEKTURA §12 |
 
 Otvorene odluke (D2 lobby, D3 veličina igre, D4, D6, D7 uklonjeni student, D8 imena ili nadimci, D10–D12 profesorove situacije,
 plaća tuđeg radnika) vode se u [ROADMAP/platforma](../../plan/ROADMAP/platforma.md) → „Odluke".

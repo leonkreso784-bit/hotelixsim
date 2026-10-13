@@ -36,11 +36,13 @@
 - prijava: korisničko ime + lozinka koje izdaje profesor, pa AAI@EduHr; identitet odvojen od korisnika (t. 7);
 - igra kasnije i na engleskom (t. 8).
 
-**Trošak (Leon plaća sam):** do profesorova OK **0 €** (sve lokalno); izlazak na internet samo uz izričit OK, Railway Hobby sa
-servisom i Postgresom ~5–10 €/mj [PROC]; Supabase samo kao posrednik prijave, kasnije. Pri širenju najveći trošak je AI, ne hosting.
+**Trošak (Leon plaća sam):** do profesorova OK **0 €** (sve lokalno, ADR-004); izlazak na internet samo uz izričit OK. **Hosting nije
+odlučen, ovo je preporuka koja čeka Leonovu potvrdu:** Railway Hobby sa servisom i Postgresom ~5–10 €/mj [PROC], Supabase samo kao
+posrednik prijave, kasnije. Isto vrijedi za sesije umjesto JWT-a (L10). Pri širenju najveći trošak je AI, ne hosting.
 
 **Što je još otvoreno:** kako se profesor prijavljuje za prvu probu (D4), veličina igre (D3), imena ili nadimci (D8), uklonjeni
-student (D7), koliko različitih generiranih hotela (L7), a od fakulteta AAI@EduHr, voditelj obrade, rok čuvanja i tko plaća
+student (D7), lobby/čekaonica (D2), brojke preotimanja radnika (limit ponuda, trošak zapošljavanja, vidljivost plaće: anketa kad faza
+krene), koliko različitih generiranih hotela (L7), potvrda hostinga (L4) i sesija (L10), a od fakulteta AAI@EduHr, voditelj obrade, rok čuvanja i tko plaća
 ([08](./PLATFORMA/08-faze-i-pitanja.md)).
 
 **Gdje se vidi:** samo u dokumentaciji (lokalno / GitHub nakon pusha); ništa u kodu ni na poslužiteljima nije mijenjano.

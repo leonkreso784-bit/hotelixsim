@@ -5,7 +5,7 @@ hosting, GDPR). Faze iza prve su **smjer** koji se ponovno slaže nakon što pro
 kad faza krene. Sati su [PROC]. Podjela je po **datotekama** ([ADR-038](../../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md)):
 sve što dira srce igre (N hotela, vrata kruga, obračun po hotelu: F1-7, F1-9, F1-10, F1-18) je u [igra.md](./igra.md), faza RAZRED U JEZGRI.
 Razred = jedna igra s N hotela, studenti igraju jedni protiv drugih ([ADR-037](../../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md)).
-Susjedi: [kvaliteta.md](./kvaliteta.md), [ROADMAP.md](../ROADMAP.md). Izvor nacrta: `platforma-arhitektura.md` (ledger sloj1; prijenos je cigla K0-7).
+Susjedi: [kvaliteta.md](./kvaliteta.md), [ROADMAP.md](../ROADMAP.md). Arhitektura platforme (nacrt za raspravu, odluke u ADR-037): [PLATFORMA.md](../../architecture/PLATFORMA.md).
 
 **Prekretnice (stupac P):** P1 kraj listopada · P2 kraj studenog (profesor na internetu stvori igru, studenti uđu kodom) · P3 sredina siječnja
 (profesori vode razred i dodaju situacije) · P4 ožujak (studentski pilot) · poslije.

@@ -36,7 +36,7 @@ Posljedice za arhitekturu:
 - **Obračun po hotelu i vrata kruga (t. 2).** Hoteli se danas računaju neovisno (svaki iz svog stanja i plana), pa obračun
   po hotelu ne traži zajedničko tržište. Posao reda poslova je zato „obračun hotela H u krugu k", a ne „obračun cijele
   igre". Izvedba je u jezgri: [ROADMAP/igra](../../plan/ROADMAP/igra.md), faza RAZRED U JEZGRI.
-- **Jedna igra, mnogo pisaca.** Naredbe se serijaliziraju po igri (ADR-015 t. 4), pa 30 studenata piše u isti dnevnik.
+- **Jedna igra, mnogo pisaca.** Naredbe se serijaliziraju po igri ([ADR-015](../../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 4), pa 30 studenata piše u isti dnevnik.
   Zato je predmemorija složene igre preduvjet (dio 06, cigla F0-10), a opterećenje se dokazuje probom 30 studenata (G-8).
 - **Utjecaj među hotelima samo na prijelazu kruga (ADR-037, posljedice).** Preotimanje radnika (t. 5) i sve buduće veze
   među hotelima djeluju kad se krug zatvori, nikad usred tuđeg kruga. To čuva determinizam i obračun po hotelu.
@@ -67,7 +67,7 @@ audit_log       actor_user, action, target, at                       ← tko je 
 
 Razlika prema prijašnjem nacrtu: `identities` više ne počinje kodom ni magičnom poveznicom, nego lozinkom (dio 03), a
 `class_players` vezuje račun na **hotel u zajedničkoj igri**, ne na vlastitu igru. Do starta („Pokreni") igra još ne
-postoji: student je u čekaonici, a `classes.game_id` je prazan.
+postoji: student je u čekaonici (preporuka, lobby D2 je otvoren), a `classes.game_id` je prazan.
 
 **Ključni trik: `guest_id` u dnevniku ostaje pseudonim igrača.** Događaji već nose `guest:<uuid>` (`0002:5-6`) i
 `Controller::Human { guest_id }`. Račun se veže na taj pseudonim kroz `class_players`, pa se oblik događaja ne mijenja
@@ -81,12 +81,12 @@ i `SCHEMA_VER` ostaje 1. U dnevniku tako nikad nema imena ni e-adrese (važno za
 | stvori razred | postavke (model, tjedan/mjesec, veličina, sjeme, AI granica, smije li preotimanje), kod igre | postavke se zaključavaju pri „Pokreni", jer ulaze u snimak igre |
 | otvori / zatvori upis | `join_open` | zatvoren upis = kod više ne radi; pridruživanje nakon starta odbijeno |
 | generiraj račune za studente | profesor unese popis, sustav izda korisnička imena i početne lozinke | dio 03 |
-| „Pokreni" | jedna transakcija stvara igru s prijavljenima i hotele 1..N | drugi „Pokreni" ne radi ništa; pad usred ne ostavlja polovicu |
+| „Pokreni" (preporuka, D2 otvoreno) | jedna transakcija stvara igru s prijavljenima i hotele 1..N | drugi „Pokreni" ne radi ništa; pad usred ne ostavlja polovicu |
 | **otvori sljedeći krug** | ručno ili po rasporedu | **Odluka: ADR-037 t. 2, 6.** Posao `open:<igra>:<krug>` s `run_after` (`0004`); 17 tjednih krugova otprilike odgovara semestru |
 | neaktivan student | kad rok prođe, hotel sam prelazi u sljedeći krug s dotadašnjim planom | **Odluka: ADR-037 t. 6**; mentor ga upozorava |
 | isključi preotimanje | postavka razreda | ADR-037 t. 5 |
 | ukloni studenta | hotel se smrzne ili igra na zadanim potezima | otvoreno (D7) |
-| ispravi presudu | postojeći neutralni zapisi s `review: true` (ADR-019 t. 4–5) | ispravak je kompenzacija u sljedećem krugu, po hotelu (F2-7), ne ponovni obračun |
+| ispravi presudu | postojeći neutralni zapisi s `review: true` ([ADR-019](../../records/DECISIONS/ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md) t. 4–5) | ispravak je kompenzacija u sljedećem krugu, po hotelu (F2-7), ne ponovni obračun |
 | izvoz | CSV: napredak, indeksi po krugu, AI trošak | za ocjenjivanje na kolegiju |
 
 **Tko zatvara krug?** Svaki student zatvara svoj hotel kad je spreman; profesor otvara kad se smije dalje. Prijašnja

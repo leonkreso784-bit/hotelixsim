@@ -19,9 +19,9 @@ predlagao je web na Vercelu i API na Railwayu; odbačeno. **Rust poslužitelj se
 Danas Vite u razvoju već radi kao „jedna adresa" (`apps/web/vite.config.ts:10` proxy `/v1`), pa se ponašanje ne mijenja.
 Ako jednom zatreba CDN: Vercel rewrite `/v1` na istoj domeni, ili poddomene iste domene uz kolačić s `Domain=` i CORS s `credentials`.
 
-## 6.2 Odluka o hostingu i trošku (dopune 13.10.)
+## 6.2 Preporuka o hostingu i trošku (dopune 13.10., čeka Leonovu potvrdu)
 
-**Leon plaća sam, bez prihoda** (već ~45–50 €/mj za Supabase Pro s tri projekta; jedan briše). Zato:
+Hosting **još nije odlučen**: sve u ovom odjeljku je preporuka kontrolora, koja čeka Leonovu potvrdu (i zasebni ADR). **Leon plaća sam, bez prihoda** (već ~45–50 €/mj za Supabase Pro s tri projekta; jedan briše). Zato:
 
 - **Do profesorova OK: sve lokalno, 0 € novog troška** ([ADR-004](../../records/DECISIONS/ADR-004-sve-se-gradi-i-pokazuje-lokalno.md)).
 - **Prvi izlazak na internet** (samo uz Leonov izričit OK, [ADR-005](../../records/DECISIONS/ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)):
@@ -57,7 +57,7 @@ cijena, besplatni DNS i TLS) tek za stvarne studente (službeni izgled, adresa p
 
 | postava | trošak [PROC] | prednosti | mane |
 |---|---|---|---|
-| **1. Sve na Railway Hobby (servis + Postgres)** (odabrano) | ~5–10 €/mj | najjeftinije uz jednog dobavljača; baza uz poslužitelj, kašnjenje ispod 1 ms | kopije, proba vraćanja i nadogradnje Postgresa su **naš** posao; ograničenja Hobby plana |
+| **1. Sve na Railway Hobby (servis + Postgres)** (preporuka) | ~5–10 €/mj | najjeftinije uz jednog dobavljača; baza uz poslužitelj, kašnjenje ispod 1 ms | kopije, proba vraćanja i nadogradnje Postgresa su **naš** posao; ograničenja Hobby plana |
 | **2. Isto na Railway Pro** | ~20–30 $/mj | više resursa, radni prostor za staging i production | tek uz financiranje |
 | **3. Railway + Supabase Pro za bazu** | ~45–55 $/mj | upravljana baza, PITR | odbačeno: dva dobavljača, kašnjenje između gradova, ~25 $/mj više; Leon već plaća Supabase bez prihoda |
 | **4. Fly.io (Frankfurt)** | ~35–60 $/mj | poslužitelj i baza u istom gradu | rezervni plan ako F0-S2 pokaže problem |
@@ -79,7 +79,7 @@ vrijede kad postoji financiranje (Pro razine); do tada vrijedi samo prvi redak 6
 | udio AI-ja u ukupnom | ~40–55 % | ~60–70 % | **~80 %** |
 
 **Zaključak:** pri širenju najveći trošak je **AI, ne hosting**. Zato su granica troška po igri (2.6), predlošci bez AI-ja
-(ADR-028 t. 8), jeftiniji model za lika ([ADR-024](../../records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)) i mjerilo
+([ADR-028](../../records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) t. 8), jeftiniji model za lika ([ADR-024](../../records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)) i mjerilo
 prije promjene modela važniji od izbora hostinga. Arhitektura za 3 000 studenata ostaje ista: mijenja se broj instanci i
 veličina baze, a razredi su neovisne igre koje se ne zaključavaju međusobno.
 
@@ -108,7 +108,7 @@ obaveznog odobravatelja Leona u GitHubu (F0-S4), pa je ADR-005 ugrađen u alat, 
 | kolačić | bez `Secure` (`auth.rs:31`) | `Secure` u produkciji, `SameSite=Lax`, provjera `Origin` na POST-u (F0-3) |
 | ograničenja i zaglavlja | nema | ograničenje zahtjeva po IP-u i sesiji (`tower_governor`), najveća veličina tijela, CSP, HSTS, `nosniff` (F0-3) |
 | zdravlje | `COUNT(*)` nad `events` | `SELECT 1` + verzija i otisak pravila (F0-5) |
-| migracije | ručna naredba `migrate` (ADR-015 t. 12) | zasebna, kao korak prije nove verzije; samo unaprijed („proširi pa suzi"); nikad ne prepisuju `events` |
+| migracije | ručna naredba `migrate` ([ADR-015](../../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 12) | zasebna, kao korak prije nove verzije; samo unaprijed („proširi pa suzi"); nikad ne prepisuju `events` |
 | slika | nema Dockerfilea | višefazni Dockerfile (cargo-chef, pinirani Rust 1.98.1, `SQLX_OFFLINE=true`), slika označena git SHA-om i **čuvana** (stara sezona se vrti svojom verzijom, ARHITEKTURA §17) (F0-11) |
 | kopije | nema | `pg_dump` lokalno (F0-13), pa noćni u EU spremnik i proba vraćanja (F0-S5, G-7) |
 | nadzor | `tracing` u konzolu | JSON zapisi, Sentry (EU), upozorenje na posao `failed`, red koji raste i AI trošak blizu granice; vanjski ping na `/v1/health` (F0-14) |
@@ -132,6 +132,6 @@ tag → produkcija uz Leonovo odobrenje (F0-S4); cache za `sqlx-cli` (F0-12).
 |---|---|---|
 | HTTP | ~0,2–0,5 zahtjeva u sekundi po aktivnom studentu → 20–45 u sekundi na vrhu | jedan proces s 1–2 vCPU vjerojatno dovoljan; **izmjeriti** alatom (oha/k6) (F0-15) |
 | fold pri svakom čitanju | tjedna v2 igra ima 17 krugova, a ovdje piše 30 studenata u isti dnevnik | predmemorija složene igre po `(game_id, zadnji stream_seq)` u `app` (F0-10) + projekcija `hotel_progress` za profesora |
-| istodobno zatvaranje krugova | obračun je po hotelu, pa vrhovi su blaži nego kod „svi odjednom", ali na početku sata svi zatvaraju zajedno; svaki može čekati presude do 120 s (ADR-019 t. 5) | paralelni radnici; obračun ne smije čekati iza razgovora |
+| istodobno zatvaranje krugova | obračun je po hotelu, pa vrhovi su blaži nego kod „svi odjednom", ali na početku sata svi zatvaraju zajedno; svaki može čekati presude do 120 s ([ADR-019](../../records/DECISIONS/ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md) t. 5) | paralelni radnici; obračun ne smije čekati iza razgovora |
 | AI | razgovori s likom moraju biti brzi; presude su sporije | traka za razgovore s prioritetom, ograničenje istodobnih poziva po modelu prema razini računa kod Anthropica [PROVJERITI] |
 | baza | malo pisanja; zaključavanje po igri znači da 30 studenata piše redom | sqlx pool 10–20 veza [PROC]; **dokaz je proba 30 studenata u jednoj igri (G-8)**, ne procjena |
