@@ -62,15 +62,15 @@ fn commission_is_a_rooms_expense_and_revenue_stays_gross() {
         m1.summary.money.rooms_revenue_cents,
         zero.summary.money.rooms_revenue_cents
     );
-    // GOP isti kao kad je provizija umanjivala prihod: manji za proviziju i za ostale prihode (degenerirani katalog:
-    // 30 % prihoda soba), koji se i dalje računaju od prihoda soba nakon provizije (30 % × 2.400 € = 720 €).
+    // Od ADR-040 t. 2 ostali prihodi (degenerirani katalog: 30 % prihoda soba) računaju se od bruto prihoda soba,
+    // prije provizije, pa su isti kao bez provizije; GOP je manji samo za proviziju (2.400 €).
     assert_eq!(
         m1.summary.money.other_revenue_cents,
-        zero.summary.money.other_revenue_cents - 72_000
+        zero.summary.money.other_revenue_cents
     );
     assert_eq!(
         m1.summary.money.gop_cents,
-        zero.summary.money.gop_cents - 240_000 - 72_000
+        zero.summary.money.gop_cents - 240_000
     );
     common::assert_lines_explain(&m1.summary);
 }

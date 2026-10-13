@@ -216,9 +216,8 @@ pub fn resolve_period(
         w(mkt.group_revenue_cents),
     )?)?;
     // M1 po USALI-ju (S-4): prihod soba je bruto, provizija je trošak Smještaja. Osnovica odjela s prihodom kao
-    // udjelom prihoda soba ostaje prihod nakon provizije (kao prije S-4), pa je preknjiženje bez učinka na GOP.
+    // udjelom prihoda soba je isto bruto (ADR-040 t. 2): gost u restoranu ne ovisi o tome koliko je agencija uzela.
     let commission = group_commission_cents(mkt.group_revenue_cents, terms.commission_bp)?;
-    let share_basis: i64 = c::narrow(c::sub(w(rooms_revenue), w(commission))?)?;
     let guest_nights: u32 = c::narrow(c::div_round(
         c::mul(w(mkt.sold), w(cat.economy.guests_per_room_hundredths))?,
         100,
@@ -230,7 +229,7 @@ pub fn resolve_period(
             plan,
             cat,
             guest_nights,
-            rooms_revenue_cents: share_basis,
+            rooms_revenue_cents: rooms_revenue,
             experience_pts,
             morale_pts,
             satisfaction_step_bp: coeffs.satisfaction_step_bp,
