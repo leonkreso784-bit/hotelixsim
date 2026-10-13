@@ -12,8 +12,8 @@ use sim_hotel_v2::calendar::{avg_i64, month_period};
 use sim_hotel_v2::department::PeriodAccounts;
 use sim_hotel_v2::situations::{DrawView, DrawnSituation, TemplateSet};
 use sim_hotel_v2::{
-    Period, PeriodKind, PeriodPlan, PeriodReport, ResolveError, period_indices, resolve_period,
-    run_season_with,
+    Period, PeriodKind, PeriodPlan, PeriodReport, ResolveError, RoundHotel, collective_for_round,
+    draw_for_round_with, period_indices, resolve_period, run_season_with,
 };
 
 use crate::command::{DeptLimitsView, PlanLimits, plan_limits};
@@ -66,7 +66,7 @@ pub(crate) struct Resolved {
     pub indices: IndexSet,
 }
 
-/// Ulaz izvlačenja situacija jednog hotela u krugu (`Model::draw_situations`).
+/// Ulaz izvlačenja situacija jednog hotela u krugu (`Model::draw_collective`, `Model::draw_situations`).
 pub(crate) struct DrawInput<'a> {
     /// Stanje hotela na početku kruga.
     pub state: &'a CoreState,
@@ -638,13 +638,48 @@ impl Model {
         self == Model::V2 && c.situation_templates.is_some()
     }
 
-    /// Primjerci jednog hotela u krugu: isti poziv generatora kao sezona robota (`draw_for_round`), sa sidrima
-    /// S1–S4 iz sadržaja. Samo v2.
+    /// Kolektivna situacija kruga, jedna za sve hotele igre: ulaz su svi hoteli (granica grupa, slobodna mjesta,
+    /// povijest), isti kod kao u sezoni robota (`collective_for_round`). Samo v2.
+    pub(crate) fn draw_collective(
+        self,
+        c: &Content,
+        set: &TemplateSet,
+        all: &[DrawInput],
+    ) -> Result<Option<DrawnSituation>, GameError> {
+        let Some(first) = all.first() else {
+            return Ok(None);
+        };
+        let mut hotels = Vec::with_capacity(all.len());
+        for i in all {
+            hotels.push(RoundHotel {
+                view: DrawView {
+                    state: self.v2_state(i.state)?,
+                    previous: i.previous,
+                    indices: i.indices,
+                },
+                history: i.history,
+                slot: i.slot,
+            });
+        }
+        collective_for_round(
+            &c.situations,
+            set,
+            first.seed,
+            &first.round.period,
+            &hotels,
+            v2_catalog(c)?,
+        )
+        .map_err(debug)
+    }
+
+    /// Primjerci jednog hotela u krugu uz zadanu kolektivnu: isti poziv generatora kao sezona robota
+    /// (`draw_for_round_with`), sa sidrima S1–S4 iz sadržaja. Samo v2.
     pub(crate) fn draw_situations(
         self,
         c: &Content,
         set: &TemplateSet,
         i: &DrawInput,
+        shared: Option<&DrawnSituation>,
     ) -> Result<Vec<DrawnSituation>, GameError> {
         let state = self.v2_state(i.state)?;
         let view = DrawView {
@@ -652,14 +687,13 @@ impl Model {
             previous: i.previous,
             indices: i.indices,
         };
-        let (_, found) = sim_hotel_v2::draw_for_round(
+        let (_, found) = draw_for_round_with(
             &c.situations,
             set,
             (i.seed, i.slot),
             &i.round.period,
-            &view,
-            i.history,
-            v2_catalog(c)?,
+            (&view, i.history),
+            (v2_catalog(c)?, shared),
         )
         .map_err(debug)?;
         Ok(found)

@@ -1,7 +1,8 @@
-//! Izvlačenje situacija kruga za jedan hotel (plan situacija §4). Redom: kolektivna (isti primjerak za sve
-//! hotele), veća (samo u krajnostima, najviše jedna mjesečno), pa obične do broja kruga, virtualni tjedan po
-//! virtualni tjedan (tjedni krug je jedan tjedan; mjesečni niz tjedana, `count::virtual_weeks`). Sva slučajnost ide
-//! kroz tok `v2:situacije`; kolektivna koristi utor 0, ostalo utor hotela.
+//! Izvlačenje situacija kruga (plan situacija §4). Kolektivna (isti primjerak za SVE hotele igre) izvlači se jednom
+//! po krugu za sve hotele zajedno (`draw_collective`: ulazi su svi hoteli, ne smije probiti granicu nijednog).
+//! Zatim svaki hotel: veća (samo u krajnostima, najviše jedna mjesečno), pa obične do broja kruga, virtualni tjedan
+//! po virtualni tjedan (tjedni krug je jedan tjedan; mjesečni niz tjedana, `count::virtual_weeks`). Sva slučajnost
+//! ide kroz tok `v2:situacije`; kolektivna koristi utor 0, ostalo utor hotela.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -85,8 +86,9 @@ fn choose(
 }
 
 /// Smije li doći primjerak koji nudi grupu s dolaskom u `month` (`None` = ne nudi grupu, uvijek smije): granica
-/// sezone i granica po mjesecu; broje se sidra, povijest i već izvučeni u ovom krugu.
-fn group_room(d: &Draw, out: &[DrawnSituation], month: Option<Month>) -> bool {
+/// sezone i granica po mjesecu; broje se sidra, povijest i već izvučeni u ovom krugu, a `reserve` su grupe koje
+/// kolektivne još mogu donijeti svim hotelima (mjesta za njih hotel ne smije potrošiti vlastitim primjercima).
+fn group_room(d: &Draw, out: &[DrawnSituation], month: Option<Month>, reserve: &[Month]) -> bool {
     let Some(m) = month else {
         return true;
     };
@@ -110,11 +112,42 @@ fn group_room(d: &Draw, out: &[DrawnSituation], month: Option<Month>) -> bool {
         .collect();
     let season_ok = set
         .group_limit
-        .is_none_or(|l| months.len() < usize::from(l));
-    let month_ok = set
-        .groups_per_month
-        .is_none_or(|l| months.iter().filter(|x| **x == m).count() < usize::from(l));
+        .is_none_or(|l| months.len().saturating_add(reserve.len()) < usize::from(l));
+    let month_ok = set.groups_per_month.is_none_or(|l| {
+        let held = months.iter().chain(reserve).filter(|x| **x == m).count();
+        held < usize::from(l)
+    });
     season_ok && month_ok
+}
+
+/// Najviše grupa koje kolektivne još mogu donijeti NAKON ovog kruga (gornja granica, ista za sve hotele): po
+/// predlošku koji nudi grupu preostalo ponavljanje, ne više od prvih krugova mjeseca (u mjesecima pojave) koji tek
+/// dolaze. Zato vlastiti primjerci hotela ne popune granicu prije kolektivne i svaki hotel ima mjesta za nju.
+fn reserved_groups(d: &Draw, out: &[DrawnSituation]) -> Vec<Month> {
+    let p = d.period;
+    let future: Vec<Period> = season_periods(p.kind)
+        .into_iter()
+        .filter(|q| q.index > p.index && first_round_of_month(q))
+        .collect();
+    let mut reserve = Vec::new();
+    for t in &d.templates.templates {
+        let (Scope::All, None, Some(month)) = (t.scope, t.major, t.group_month) else {
+            continue;
+        };
+        let used = d
+            .history
+            .iter()
+            .chain(out)
+            .filter(|h| h.template == t.code)
+            .count();
+        let left = usize::from(t.repeat.max_per_season).saturating_sub(used);
+        let rounds = future
+            .iter()
+            .filter(|q| t.when.months.is_empty() || t.when.months.contains(&q.start_month()))
+            .count();
+        reserve.extend(std::iter::repeat_n(month, left.min(rounds)));
+    }
+    reserve
 }
 
 /// Povijest smije imati samo primjerke ovog hotela i kolektivne, svaku šifru jednom (ugovor s igrom).
@@ -258,12 +291,93 @@ fn needs_opportunity<'h>(day: u16, mut earlier: impl Iterator<Item = &'h DrawnSi
     day >= window && !earlier.any(|h| h.kind == Kind::Opportunity && h.day >= since && h.day < day)
 }
 
-/// Primjerci kruga, poredani po važnosti (4 prva; jednaki redom izvlačenja). Može ih biti manje od broja kruga
-/// kad dopuštenih predložaka nema dovoljno.
+/// Kolektivna situacija kruga, JEDNOM za sve hotele (`hotels`: pogled i ulaz svakog hotela igre). Izvlači se samo u
+/// prvom krugu mjeseca, kad nijedan hotel u tom mjesecu još nije imao kolektivnu, svaki hotel ima slobodno mjesto
+/// (broj kruga − sidra > 0), a predložak koji nudi grupu ulazi u izbor samo ako svaki hotel ima mjesta za grupu i
+/// ponavljanje ga dopušta svima. Tako je kolektivna ista kod svih i nikome ne probija ni broj kruga ni granicu grupa;
+/// izvlači je isti tok (`svi`, utor 0) bez obzira na broj hotela. Sezona robota zove ovo s jednim hotelom.
+pub fn draw_collective(
+    hotels: &[(DrawView, Draw)],
+    cat: &Catalog,
+) -> Result<Option<DrawnSituation>, ResolveError> {
+    let Some((view, d)) = hotels.first() else {
+        return Ok(None);
+    };
+    let p = d.period;
+    if !first_round_of_month(p) {
+        return Ok(None);
+    }
+    let month = p.start_month();
+    for (v, h) in hotels {
+        check_history(h)?;
+        let n = period_count(p, expected_occupancy_bp(v.state, p, cat)?)?;
+        let this_month = h
+            .history
+            .iter()
+            .any(|x| x.scope == Scope::All && x.period.start_month() == month);
+        if usize::from(n) <= h.anchors.len() || this_month {
+            return Ok(None);
+        }
+    }
+    let facts = Facts::new(view, p, cat)?;
+    let mut pool = collective(d.templates, &facts, d, cat)?;
+    pool.retain(|c| {
+        hotels.iter().all(|(_, h)| {
+            repeat_allows(&c.spec.repeat, &c.spec.code, p.start_day, h.history.iter())
+                && group_room(h, &[], c.spec.group_month, &[])
+        })
+    });
+    let mut rng = stream(
+        d.seed,
+        Purpose::Situations,
+        p.index,
+        COLLECTIVE_SLOT,
+        label("svi"),
+    );
+    let weights: Vec<u64> = pool.iter().map(|c| best(&c.options)).collect();
+    let Some(c) = pick(&mut rng, &weights)?.and_then(|i| pool.get(i)) else {
+        return Ok(None);
+    };
+    let department = choose(&mut rng, &c.options)?;
+    let ctx = FillCtx {
+        p,
+        seed: d.seed,
+        slot: COLLECTIVE_SLOT,
+        names: &d.templates.names,
+    };
+    let at = Place {
+        department,
+        day: p.start_day,
+        occurrence: 1,
+    };
+    let s = fill(
+        c.spec,
+        at,
+        &ctx,
+        &earlier(d, &[], &c.spec.code),
+        &mut BTreeSet::new(),
+    )?;
+    Ok(Some(s))
+}
+
+/// Primjerci kruga jednog hotela, kolektivna samo za taj hotel (`draw_collective` s jednim hotelom).
 pub fn draw_situations(
     view: &DrawView,
     d: &Draw,
     cat: &Catalog,
+) -> Result<Vec<DrawnSituation>, ResolveError> {
+    let shared = draw_collective(&[(*view, *d)], cat)?;
+    draw_situations_with(view, d, cat, shared.as_ref())
+}
+
+/// Primjerci kruga jednog hotela uz zadanu kolektivnu (jedna za cijelu igru, `draw_collective`; `None` = nema je):
+/// ona je u izlazu kao primjerak utora 0, pa veća i obične do broja kruga, poredani po važnosti (4 prva; jednaki
+/// redom izvlačenja). Može ih biti manje od broja kruga kad dopuštenih predložaka nema dovoljno.
+pub fn draw_situations_with(
+    view: &DrawView,
+    d: &Draw,
+    cat: &Catalog,
+    shared: Option<&DrawnSituation>,
 ) -> Result<Vec<DrawnSituation>, ResolveError> {
     check_history(d)?;
     let p = d.period;
@@ -280,6 +394,11 @@ pub fn draw_situations(
     };
     let mut used = BTreeSet::new();
     let mut out: Vec<DrawnSituation> = Vec::new();
+    if let Some(s) = shared {
+        used.extend(s.roles.values().map(|r| r.name.clone()));
+        out.push(s.clone());
+    }
+    let reserve = reserved_groups(d, &out);
     let month = p.start_month();
     let in_month = |pred: &dyn Fn(&DrawnSituation) -> bool| {
         d.history
@@ -287,34 +406,6 @@ pub fn draw_situations(
             .filter(|h| h.period.start_month() == month && pred(h))
             .count()
     };
-
-    // Kolektivna: prvi krug mjeseca, najviše jedna mjesečno (🟨), isti tok i utor za sve hotele.
-    if slots > 0 && first_round_of_month(p) && in_month(&|h| h.scope == Scope::All) == 0 {
-        let mut pool = collective(d.templates, &facts, d, cat)?;
-        pool.retain(|c| group_room(d, &out, c.spec.group_month));
-        let mut rng = stream(
-            d.seed,
-            Purpose::Situations,
-            p.index,
-            COLLECTIVE_SLOT,
-            label("svi"),
-        );
-        let weights: Vec<u64> = pool.iter().map(|c| best(&c.options)).collect();
-        if let Some(c) = pick(&mut rng, &weights)?.and_then(|i| pool.get(i)) {
-            let department = choose(&mut rng, &c.options)?;
-            let ctx = FillCtx {
-                slot: COLLECTIVE_SLOT,
-                ..hotel
-            };
-            let at = Place {
-                department,
-                day: p.start_day,
-                occurrence: 1,
-            };
-            let s = fill(c.spec, at, &ctx, &earlier(d, &[], &c.spec.code), &mut used)?;
-            out.push(s);
-        }
-    }
 
     // Veća: prosjek pokazatelja u krajnosti, najviše `max_per_month` u mjesecu.
     let major_quota = usize::from(d.templates.major.max_per_month);
@@ -328,7 +419,7 @@ pub fn draw_situations(
             .iter()
             .filter(|t| t.scope == Scope::Hotel && t.major == Some(side));
         let mut pool = candidates(specs, view, &facts, (d, &out, p.start_day), cat)?;
-        pool.retain(|c| group_room(d, &out, c.spec.group_month));
+        pool.retain(|c| group_room(d, &out, c.spec.group_month, &reserve));
         let mut rng = stream(d.seed, Purpose::Situations, p.index, d.slot, label("veca"));
         let weights: Vec<u64> = pool.iter().map(|c| best(&c.options)).collect();
         if let Some(c) = pick(&mut rng, &weights)?.and_then(|i| pool.get(i)) {
@@ -385,7 +476,7 @@ pub fn draw_situations(
             let allowed: Vec<(usize, Options)> = pool
                 .iter()
                 .enumerate()
-                .filter(|(_, c)| group_room(d, &out, c.spec.group_month))
+                .filter(|(_, c)| group_room(d, &out, c.spec.group_month, &reserve))
                 .map(|(i, c)| {
                     let opts: Options = c
                         .options

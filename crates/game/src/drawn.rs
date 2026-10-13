@@ -202,8 +202,11 @@ impl Game {
             }
             built.push(own);
         }
-        for (h, own) in self.hotels.iter_mut().zip(built) {
+        for (h, mut own) in self.hotels.iter_mut().zip(built) {
+            // Dnevnik ostaje redom događaja; popis situacija hotela ide po važnosti silazno (stabilno), pa
+            // kolektivna ne stoji ispred važnijih primjeraka samo zato što je u događaju prva.
             h.drawn_log.extend(own.iter().map(|i| i.drawn.clone()));
+            own.sort_by_key(|i| std::cmp::Reverse(i.drawn.weight));
             h.drawn.insert(m, own);
         }
         self.drawn_rounds.insert(m);
@@ -225,8 +228,8 @@ impl Game {
     }
 
     /// Događaj `SituationsDrawn` za krug koji se otvara; `None` kad igra ne izvlači (v1, v2 bez predložaka, v2
-    /// bez izvlačenja od prvog kruga), krug nije otvoren ili je već izvučen. Hoteli idu redom po utoru; kolektivna
-    /// situacija se zapisuje jednom (prvi hotel koji je dobije).
+    /// bez izvlačenja od prvog kruga), krug nije otvoren ili je već izvučen. Kolektivna se izvlači jednom za sve
+    /// hotele i prva je u događaju; zatim primjerci hotela redom po utoru.
     pub fn draw_round(&self, r: impl Into<RoundKey>) -> Result<Option<GameEvent>, GameError> {
         let r = r.into();
         let model = self.model();
@@ -252,39 +255,35 @@ impl Game {
         let info = self.round_info(r)?;
         let pos = self.position(r)?;
         let prev = pos.checked_sub(1).and_then(|p| self.rounds.get(p)).copied();
-        let mut items: Vec<DrawnItem> = Vec::new();
-        let mut collective = false;
+        // Ulazi svih hotela: kolektivna se izvlači jednom za sve (granica nijednog hotela se ne probija).
+        let mut views = Vec::with_capacity(self.hotels.len());
         for h in &self.hotels {
             let id = h.setup.hotel_id;
-            let state = self.state_at(id, r)?;
-            let indices = self.indices_at(id, r)?;
             let previous = match prev {
                 Some(p) => Some(self.period_report(h, p)?),
                 None => None,
             };
-            let found = model.draw_situations(
-                &self.content,
-                &set,
-                &DrawInput {
-                    state: &state,
-                    previous: previous.as_ref(),
-                    indices: &indices,
-                    round: &info,
-                    history: &h.drawn_log,
-                    seed: self.seed,
-                    slot: h.setup.slot,
-                },
-            )?;
-            for s in &found {
-                if s.slot == 0 {
-                    if !collective {
-                        collective = true;
-                        items.push(item_of(s));
-                    }
-                } else {
-                    items.push(item_of(s));
-                }
-            }
+            views.push((self.state_at(id, r)?, self.indices_at(id, r)?, previous));
+        }
+        let inputs: Vec<DrawInput> = self
+            .hotels
+            .iter()
+            .zip(&views)
+            .map(|(h, (state, indices, previous))| DrawInput {
+                state,
+                previous: previous.as_ref(),
+                indices,
+                round: &info,
+                history: &h.drawn_log,
+                seed: self.seed,
+                slot: h.setup.slot,
+            })
+            .collect();
+        let shared = model.draw_collective(&self.content, &set, &inputs)?;
+        let mut items: Vec<DrawnItem> = shared.iter().map(item_of).collect();
+        for i in &inputs {
+            let found = model.draw_situations(&self.content, &set, i, shared.as_ref())?;
+            items.extend(found.iter().filter(|s| s.slot != 0).map(item_of));
         }
         Ok(Some(GameEvent::SituationsDrawn(SituationsDrawn {
             month: r,

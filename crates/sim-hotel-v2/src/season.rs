@@ -17,7 +17,8 @@ use crate::plan::PeriodPlan;
 use crate::resolve::{PeriodReport, ResolveError, resolve_period};
 use crate::robots::robot_plan;
 use crate::situations::{
-    Anchor, Draw, DrawView, DrawnSituation, Kind, TemplateSet, draw_situations, reward_only,
+    Anchor, Draw, DrawView, DrawnSituation, Kind, TemplateSet, draw_collective,
+    draw_situations_with, reward_only,
 };
 use crate::state::HotelState;
 
@@ -173,9 +174,87 @@ pub fn run_season_with(
     )
 }
 
-/// Primjerci generatora za krug `p` i sidra kruga; generator vidi stanje na početku kruga, obračun i pokazatelje
-/// prošlog kruga i sve ranije primjerke ovog hotela. Isti poziv koristi sezona robota i igra (`game`), pa isto
-/// sjeme i isto stanje daju iste primjerke.
+/// Hotel u izvlačenju kruga: pogled na stanje, njegova povijest primjeraka i utor.
+#[derive(Clone, Copy)]
+pub struct RoundHotel<'a> {
+    pub view: DrawView<'a>,
+    pub history: &'a [DrawnSituation],
+    pub slot: u8,
+}
+
+/// Ulazi kruga isti za sve hotele: sidra kruga, njihove vrste i mjeseci grupa koje sidra nude do ovog kruga
+/// uključivo (S3 u prvom krugu lipnja).
+fn round_inputs<'a>(
+    anchors: &'a [SituationTemplate],
+    p: &Period,
+) -> (Vec<&'a SituationTemplate>, Vec<Anchor>, Vec<Month>) {
+    let here = situations_for(p, anchors);
+    let kinds: Vec<Anchor> = here.iter().map(|t| anchor_of(t)).collect();
+    let groups: Vec<Month> = anchors
+        .iter()
+        .filter(|t| first_period_of_month(p.kind, t.month).index <= p.index)
+        .filter_map(group_month)
+        .collect();
+    (here, kinds, groups)
+}
+
+/// Kolektivna situacija kruga, jedna za sve hotele (`situations::draw_collective`): ulaz su svi hoteli igre, pa
+/// ne probija ni broj kruga ni granicu grupa nijednog od njih. Sezona jednog hotela zove ovo s jednim hotelom.
+pub fn collective_for_round(
+    anchors: &[SituationTemplate],
+    templates: &TemplateSet,
+    seed: u64,
+    p: &Period,
+    hotels: &[RoundHotel],
+    cat: &Catalog,
+) -> Result<Option<DrawnSituation>, ResolveError> {
+    let (_, kinds, groups) = round_inputs(anchors, p);
+    let list: Vec<(DrawView, Draw)> = hotels
+        .iter()
+        .map(|h| {
+            let draw = Draw {
+                period: p,
+                templates,
+                history: h.history,
+                seed,
+                slot: h.slot,
+                anchors: &kinds,
+                anchor_groups: &groups,
+            };
+            (h.view, draw)
+        })
+        .collect();
+    draw_collective(&list, cat)
+}
+
+/// Primjerci generatora za krug `p` i sidra kruga uz zadanu kolektivnu (`collective_for_round`, jedna za cijelu
+/// igru); generator vidi stanje na početku kruga, obračun i pokazatelje prošlog kruga i sve ranije primjerke ovog
+/// hotela. Isti poziv koristi sezona robota i igra (`game`), pa isto sjeme i isto stanje daju iste primjerke.
+pub fn draw_for_round_with<'a>(
+    anchors: &'a [SituationTemplate],
+    templates: &TemplateSet,
+    (seed, slot): (u64, u8),
+    p: &Period,
+    (view, history): (&DrawView, &[DrawnSituation]),
+    (cat, shared): (&Catalog, Option<&DrawnSituation>),
+) -> Result<(Vec<&'a SituationTemplate>, Vec<DrawnSituation>), ResolveError> {
+    let (anchors_here, kinds, groups) = round_inputs(anchors, p);
+    let draw = Draw {
+        period: p,
+        templates,
+        history,
+        seed,
+        slot,
+        anchors: &kinds,
+        anchor_groups: &groups,
+    };
+    Ok((
+        anchors_here,
+        draw_situations_with(view, &draw, cat, shared)?,
+    ))
+}
+
+/// Primjerci generatora za krug `p` jednog hotela; kolektivnu izvlači za taj hotel sam (sezona robota).
 pub fn draw_for_round<'a>(
     anchors: &'a [SituationTemplate],
     templates: &TemplateSet,
@@ -185,24 +264,20 @@ pub fn draw_for_round<'a>(
     history: &[DrawnSituation],
     cat: &Catalog,
 ) -> Result<(Vec<&'a SituationTemplate>, Vec<DrawnSituation>), ResolveError> {
-    let anchors_here = situations_for(p, anchors);
-    let kinds: Vec<Anchor> = anchors_here.iter().map(|t| anchor_of(t)).collect();
-    // Sidra koja nude grupu do ovog kruga uključivo (S3 u prvom krugu lipnja).
-    let anchor_groups: Vec<Month> = anchors
-        .iter()
-        .filter(|t| first_period_of_month(p.kind, t.month).index <= p.index)
-        .filter_map(group_month)
-        .collect();
-    let draw = Draw {
-        period: p,
-        templates,
+    let hotel = RoundHotel {
+        view: *view,
         history,
-        seed,
         slot,
-        anchors: &kinds,
-        anchor_groups: &anchor_groups,
     };
-    Ok((anchors_here, draw_situations(view, &draw, cat)?))
+    let shared = collective_for_round(anchors, templates, seed, p, &[hotel], cat)?;
+    draw_for_round_with(
+        anchors,
+        templates,
+        (seed, slot),
+        p,
+        (view, history),
+        (cat, shared.as_ref()),
+    )
 }
 
 /// Primjerci generatora za krug `p` (sezona robota, `TemplateDraw`).

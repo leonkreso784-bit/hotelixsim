@@ -17,7 +17,7 @@ mod template;
 pub use count::{
     VirtualWeek, expected_occupancy_bp, period_count, situation_count, virtual_weeks, weekly_count,
 };
-pub use draw::{Draw, draw_situations};
+pub use draw::{Draw, draw_collective, draw_situations, draw_situations_with};
 pub use eligible::DrawView;
 pub use template::{
     Boost, Bounds, Chance, Conditions, DeptTarget, Gender, Kind, MajorRule, MajorSide, NameList,
