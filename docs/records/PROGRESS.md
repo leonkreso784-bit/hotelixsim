@@ -4,6 +4,26 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-13 (večer) — raspored do pilota, novi način rada, Faza 0 TEMELJ RADA, završetak Sloja 1 u tijeku
+
+- **Analiza prije prijedloga** (Leon: *„nisi analiziro projekt"*): tri paralelna izvidnika našla su ono što predaja nije
+  rekla (O-5 i KS-3 pišu istu uputu mentora; obnova i situacije dijele 14 datoteka jezgre; sloj1 je već bio pushan).
+- **Raspored do pilota** ([ROADMAP](../plan/ROADMAP.md)): dva kolosijeka po datotekama (IGRA, PLATFORMA) + kvaliteta,
+  prekretnice P1 (listopad) – P4 (ožujak, ljetni semestar), do P3 ~525 h [PROC], linije reza. Odluke:
+  [ADR-037](DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) (razred = jedna igra, obračun po hotelu,
+  lista kolega, vidljivi radnici i preotimanje, sat i semestar, računi studenata pa AAI, engleski kasnije),
+  [ADR-038](DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) (faze i cigle; čuvar testova → graditelj →
+  provjeravatelj → čuvar dokumentacije; staje se na kraju faze), [ADR-040](DECISIONS/ADR-040-leonove-odluke-iz-pregleda-situacija-s.md).
+  Tvrda granica `.md` s 1000 na 1200 (Leon).
+- **Faza 0 TEMELJ RADA** ([plan](../plan/2026-10-13-temelj-rada.md)): CI pribijen na ubuntu-24.04 i akcije v5 (K0-1);
+  područja planova igra/platforma/kvaliteta (K0-2); nova brana `check:kod` 600/1000 s popisom duga (K0-3,
+  [ADR-039](DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md) 🟨); arhitektura platforme u
+  [PLATFORMA.md](../architecture/PLATFORMA.md) (K0-7). Svaka cigla: testovi prije koda, provjeravatelj; završni pregled
+  (najjači model) našao 5 nalaza (brana koja šuti, lažna crvena…) — svi popravljeni, ponovni pregled čist; `test:docs` 102/0.
+- **Završetak Sloja 1:** S-4 odobren (686/0, probe-mutacija 14/14); KS-3 spojen u granu obnove; O-5 gotov i odobren
+  (703/0); G-1 kod gotov ali necommitan (jedan kriv test); UI čuvar obnove: SPREMNO NE (redak „Obnova" na Kraju sezone).
+- **Gdje se vidi:** GitHub `model-v2/sloj1` (pushano uz Leonov OK, f5871aa); grane situacija i obnove lokalno.
+
 ## 2026-10-13 — tvrda granica 1000 redaka, raspored dokumentacije spojen, pretinac prenesen
 
 - Leon: *„nijedan dokument (.md) u repou nema više od 1000 redaka … i brana pazi da se to ne vrati"*. Prije: 6 datoteka

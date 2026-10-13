@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-040"></a>[ADR-040](DECISIONS/ADR-040-leonove-odluke-iz-pregleda-situacija-s.md) | Leonove odluke iz pregleda situacija (S-4): granica po odjelu, osnovica ostalih odjela, tjedan ≈ mjesec | ✅ Leonove odluke 13.10. | 2026-10-13 |
 | <a id="adr-039"></a>[ADR-039](DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md) | Brana veličine koda: upozorenje 600, granica 1000, popis duga | 🟨 ČEKA LEONOV PREGLED | 2026-10-13 |
 | <a id="adr-038"></a>[ADR-038](DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) | Način rada: dva kolosijeka, faze i cigle, uloge agenata | ✅ Leonova odluka 13.10. | 2026-10-13 |
 | <a id="adr-037"></a>[ADR-037](DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) | Razred: studenti jedni protiv drugih, obračun po hotelu, natjecanje za ljude, igra kroz semestar | ✅ Leonove odluke 13.10. | 2026-10-13 |

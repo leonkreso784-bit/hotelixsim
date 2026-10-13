@@ -1,43 +1,41 @@
-# Sljedeća sesija — kod: Sloj 1 puta B (S-4, O-5, KS-3) i demo oko 14. 10
+# Sljedeća sesija — završetak Sloja 1 (kolosijek IGRA) i početak SPREMNO ZA INTERNET
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
-Dokumentacija je preuređena i spojena u `main` i `model-v2/sloj1` (13.10.). Od sada **jedna sesija** piše i kod i
-`docs/`, po pravilima iz [docs/README.md](./README.md); nema više paralelne sesije dokumentacije ni zabrane diranja `docs/`.
+Radimo po [ADR-038](./records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md): faze i cigle, čuvar testova prije
+graditelja, provjeravatelj, staje se na kraju faze. Raspored: [ROADMAP](./plan/ROADMAP.md) i
+[ROADMAP/igra.md](./plan/ROADMAP/igra.md).
 
 ## Prompt za početak (Leon zalijepi nakon `/clear`)
 
 ```text
 /newsession
 
-Nastavljamo kod, put B sloj 1 na grani model-v2/sloj1. Predaja koda je u ledgeru
-.superpowers/sdd/2026-10-10-v2-sloj1/progress.md, odjeljak „KRAJ SESIJE 13.10. (4)" — vjeruj njemu i git logu.
-Dokumentaciju pišeš sam po docs/README.md (nijedan .md preko 1200 redaka). Moj demo radi na 8080 i 5173 iz glavnog
-stabla — ne gasi ga. Push samo uz moj OK.
+Nastavljamo po ROADMAP-u: faza ZAVRŠETAK SLOJA 1 (kolosijek IGRA). Predaja je u ledgeru
+.superpowers/sdd/2026-10-10-v2-sloj1/progress.md, odjeljak „KRAJ SESIJE 13.10. (5)" — vjeruj njemu i git logu.
+Najprije analiziraj stanje (stabla, CI), pa radi. Moj demo radi na 8080 i 5173 iz glavnog stabla — ne gasi ga.
+Push samo uz moj OK.
 ```
 
 ## Cilj
 
-1. **S-4** (`../hotelixsim-s1-sit`, e9e349b „dio"): probe-mutacija, pregled, kontrolorove provjere; zatim G-1 → G-2 → A-1 → W-1.
-2. **O-5** (`../hotelixsim-s1-obnova`, e43d99f „dio"): `mentor-sezona.v2.md`, puni popis provjera, pregled; UI čuvar O-4+O-5.
-3. **KS-3** (`../hotelixsim-s1-ks3`, b8c0d83, spremno) → u `sloj1` tek na Leonovo „demo gotov".
-
-**Prvi korak:** `/newsession`, `git worktree list`, ledger (odjeljak gore), `corepack pnpm check:docs`; baza
-`bash scripts/baza.sh start` ako je stroj restartan.
+1. **Provjeri CI** za `f5871aa` (`gh run list`): dokaz da je CI pribijen na Ubuntu 24.04 prije 19.10. (cigla K0-1).
+2. **G-1** (`../hotelixsim-s1-sit`, kod necommitan): čuvar testova ispravi kriv test u `model_v2.rs`, graditelj commita,
+   pregled (najjači model). Zatim osnovica bruto (ADR-040 t. 2), G-2 → A-1 → W-1.
+3. **Obnova** (`../hotelixsim-s1-obnova` @ 07f1a2b): popravak retka „Obnova" na Kraju sezone (UI čuvar: SPREMNO NE), pa
+   ponovni UI čuvar.
+4. Prije spajanja: **dijagnoza tjedan ≈ mjesec** (ADR-040 t. 3) i Leonovo „demo gotov" (KS-3 ulazi s obnovom).
+5. Kolosijek PLATFORMA može krenuti s fazom SPREMNO ZA INTERNET (lokalno, 0 €), ali najviše 2 agenta prevode Rust.
 
 ## Za znati
 
-- **Pretinac** `.superpowers/sdd/2026-10-10-v2-sloj1/za-dokumentaciju.md` drži samo bilješke nespojenih grana (Obnova,
-  Situacije, KS-3). Kad se grana spoji u `sloj1`, njezine bilješke prenesi u `docs/` (ADR datoteke + `corepack pnpm docs:adr`,
-  BACKLOG, CHANGELOG, MODEL_V2) i obriši iz pretinca. Nove bilješke od sada idu ravno u `docs/`.
-- **Plan Sloja 1** je pregled + mapa taskova (`docs/plan/2026-10-10-v2-sloj1/`); taskove uređuj u njihovim datotekama.
-- **MODEL_V2** ima 843 retka; kad bi prešao 1000, razdvaja se po §-ima (raspored u Tasku 11
-  [plana dokumentacije](./plan/2026-10-10-dokumentacija.md)).
-- Lokalno nepushano: `main` (f38755b, raspored dokumentacije) i `sloj1` — push samo uz Leonov OK.
+- Brane: `check:docs` (područja igra/platforma/kvaliteta, `.md` ≤ 1200) i nova `check:kod` (600/1000, popis duga).
+- Faza 0 ostaje otvorena samo zbog K0-1 (CI) i K0-8 (Leonova sjednica ADR-ova 🟨, ~1 h); rez `schema.rs` i mentora
+  (K0-4/5/6) ide tek nakon spajanja grana obnove i situacija.
+- Pretinac `za-dokumentaciju.md` drži bilješke nespojenih grana (Obnova, Situacije) do njihova spajanja.
 
 ## Otvoreno za Leona
 
-- **Push** `main` i `sloj1` (repo je javan) — nakon OK-a gledaj CI.
-- ADR-ovi 🟨 029–033, 035, 036 (Sloj 1) i 030 (raspored dokumentacije) — popis u [DECISIONS.md](./records/DECISIONS.md).
-- Iz predaje koda: m7 (stroga granica situacija po odjelu), prag popusta najamnine lokala (profil B), tekst zaključane obnove.
-- [BACKLOG](./records/BACKLOG.md) [alati]: granica veličine koda 600/1000 i popis duga ([ADR-039](records/DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md)) i Sokratis koji mjeri staro pravilo indeksa.
+- „Demo gotov" (prije spajanja obnove s KS-3 u `sloj1`); push grana kad dođu.
+- ADR-ovi 🟨: 029–033, 035, 036, 039 i 030 — popis u [DECISIONS.md](./records/DECISIONS.md); sjednica ~1 h (K0-8).
+- Iz igre: prag popusta najamnine lokala (profil B), tekst zaključane obnove; hosting i sesije (BACKLOG).

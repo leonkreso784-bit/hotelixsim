@@ -21,18 +21,20 @@ P4 ožujak (studentski pilot) · poslije = iza pilota.
 
 | id | cigla | što se radi | dokaz | ovisi o | h | P | Leon |
 |---|---|---|---|---|---|---|---|
-| L1-1 | S-4 dovršetak | probe-mutacija, pregled S-4, kontrolor u `../hotelixsim-s1-sit` | mutacija pada; 686/0; v1 100 + v2 1000 `--check` | — | 3 | P1 | m7: 4 zatvorena odjela → 1 od 6300 krugova 20/21 situacija; prihod ostalih odjela nakon provizije |
-| L1-2 | G-1 SituationsDrawn | događaj pri otvaranju kruga; `situations_in` čita iz dnevnika (`game.rs:483`, `talk.rs:42`, `verdict.rs:235`, `resolve.rs:36`, `ai_input.rs:209`) | fold dvaput isto; stara v2 igra bez događaja = staro; robot isti odgovor | L1-1 | 3 | P1 | — |
+| L1-1 | ✅ S-4 dovršetak | probe-mutacija, pregled S-4 (e9e349b, Approved 13.10.) | 686/0; probe-mutacija 14/14; v1 100 + v2 1000 `--check` | — | 3 | P1 | odlučeno: [ADR-040](../../records/DECISIONS/ADR-040-leonove-odluke-iz-pregleda-situacija-s.md) |
+| L1-2 | G-1 SituationsDrawn (u radu: kod gotov, necommitan; jedan čuvarov test kriv) | događaj pri otvaranju kruga; `situations_in` po hotelu iz dnevnika | fold dvaput isto; stara v2 igra bez događaja = staro; robot isti odgovor | L1-1 | 3 | P1 | — |
 | L1-3 | G-2 AI ulaz | `CharacterInput`/`AssessInput` iz popunjenog primjerka; `DebriefSituation.odjel` | nijedan AI ulaz s neispunjenim `{…}`; živi test 1 predloška | L1-2 | 2 | P1 | OK za ključ |
 | L1-4 | A-1 API situacije | `SituationsBody` (+department, kind, weight, uloge), `openapi.json` | `check:api`; ruta s 3–5 situacija | L1-3 | 1 | P1 | — |
 | L1-5 | W-1 SituationsScreen | 3–5 kartica po važnosti, „riješeno 2 od 4", upozorenje pri „Zatvori tjedan", „prepusti voditelju" | vitest | L1-4 | 3 | P1 | — |
 | L1-6 | UI čuvar situacije | mjerenja 360 px/laptop (`UI_PRAVILA.md`) | UI čuvar DA | L1-5 | 1,5 | P1 | — |
-| L1-7 | O-5 dovršetak | mentor „Zašto" u `../hotelixsim-s1-obnova`; **sukob s KS-3**: jedan zajednički prompt (`mentor-sezona.v3`) za obnove i amortizaciju | pregled O-5; workspace test, clippy, core-deps, balans 1000, `check:api` | — | 3 | P1 | tekst „Obnova je odlučena…"; lokal B pada ispod početnog: prag ili 100 % pokrivanje |
-| L1-8 | UI čuvar O-4+O-5 | mjerenja iz `obnova-o4-review.txt` | UI čuvar DA | L1-7 | 2 | P1 | — |
+| L1-7 | ✅ O-5 dovršetak | KS-3 spojen u granu obnove (1d982c1); `mentor-sezona.v2` nadograđen (bez v3); 89f8092, 07f1a2b | pregled clean; 703/0, balansi, web | — | 3 | P1 | tekst „Obnova je odlučena…"; lokal B: prag ili 100 % pokrivanje |
+| L1-8 | UI čuvar O-4+O-5 (SPREMNO NE 13.10.: Kraj sezone redak „Obnova" čita samo v1 `renovation_round`, `season/rows.ts:227,242`; `finance_note` bez prikaza) | popravak (vitest prvo) pa ponovni UI čuvar | UI čuvar DA | L1-7 | 2 | P1 | — |
 | L1-9 | KS-3 živi test | sezonski mentor s ključem (stablo spremno, 600/0) | 1 živi poziv, ocjena teksta | — | 1 | P1 | OK za ključ |
-| L1-10 | Spoji OBNOVA → sloj1 | prvo obnova; sukobi u `schema.rs`, `model.rs`, `PlanScreen.tsx`; **jedno** podizanje `CORE_VERSION` | workspace zelen; v2 1000 `--check`; F pomak izmjeren | L1-7, L1-8 | 4 | P1 | potvrda da se probne v2 igre gase |
-| L1-11 | Spoji SITUACIJE → sloj1 | 14 zajedničkih datoteka jezgre; S-4 sadržaj | isto + tj≈mj (296/300, tijesno) | L1-10, L1-6 | 4 | P1 | — |
-| L1-12 | Spoji KS-3 → sloj1 | kraj sezone; mentor-sezona iz L1-7 | isto + KS-3 UI čuvar | L1-11, L1-9 | 2 | P1 | „demo gotov" |
+| L1-10 | Spoji OBNOVA (s KS-3) → sloj1 | prvo obnova; sukobi u `schema.rs`, `model.rs`, `PlanScreen.tsx`; **jedno** podizanje `CORE_VERSION` | workspace zelen; v2 1000 `--check`; F pomak izmjeren | L1-7, L1-8 | 4 | P1 | „demo gotov"; potvrda da se probne v2 igre gase |
+| L1-11a | Osnovica ostalih odjela bruto (ADR-040 t. 2) | `share_basis` = prihod soba prije provizije (`resolve/mod.rs` ~218-233) u `../hotelixsim-s1-sit` | test; balans isti | L1-2 | 1 | P1 | — |
+| L1-11b | Dijagnoza tjedan ≈ mjesec (ADR-040 t. 3) | zašto Brižni u profilu B igra drukčije po tjednima i mjesecima (2,57 od 2,96); popravak uzroka, granica 3,00 ostaje | tj≈mj s zalihom; balansi 1000 `--check` | L1-10 | 3 | P1 | ako uzrok traži pravilo igre |
+| L1-11 | Spoji SITUACIJE → sloj1 | 14 zajedničkih datoteka jezgre; S-4 sadržaj | isto + tj≈mj | L1-10, L1-11b, L1-6 | 4 | P1 | — |
+| L1-12 | ~~Spoji KS-3 → sloj1~~ | KS-3 ulazi sa spajanjem obnove (L1-10) | — | — | 0 | P1 | **„demo gotov" prije L1-10** |
 | L1-13 | Zajednički balans | Brižni ≥ 80 % sezonskog plana, pojasevi marži, F (±2, C ±1), situacije ≈ ⅓ napretka, pravednost profila | tri balansa 1000 `--check`; tablica prije/poslije | L1-12 | 5 | P1 | brojke koje igrač osjeti |
 | L1-14 | Igriva verzija za Leona | adresa + put do novoga; Leon prolazi igru | Leonov popis izmjena | L1-13 | 2 | P1 | što mijenjati |
 | L1-15 | sloj1 → main | spajanje i push | CI zelen (`gh run list`) | L1-14 | 1 | P1 | **izričit OK za push** (repo javan) |
