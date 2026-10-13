@@ -80,9 +80,11 @@ fn caring_need(
 /// krugovima sezone (k ≥ 1). Bez otpuštanja unaprijed tjedni bi u kolovozu sustigao vrhunac, a u rujnu silazio po 3 i
 /// plaćao višak ljudi (B: 46 → 34 sezonaca, F na kraju sezone 7760 prema mjesečnih 8227). Buduće potrebe dolaze samo
 /// iz kataloga (referentna popunjenost po kalendaru): bez slučajnosti i bez ishoda.
-/// Mjesečni krug ostaje v1 pravilo (`potreba_t`): v1 robot je zamrznut, a mjesečna v2 sezona mora dati iste brojke kao
-/// v1 (ekvivalencija); u v1 je skok potrebe srpanj → kolovoz (A: 24 → 43) veći od koraka 10, pa bi gledanje unaprijed
-/// promijenilo v1 lipanj.
+/// Mjesečni krug (ADR-041): samo silazak, `min(potreba_t, min_k(potreba_{t+k} + k·step))`: otpušta prije pada kao tjedni
+/// (B u kolovozu ~38 umjesto 41 sezonca), ali NE zapošljava unaprijed. Uspon ostaje tjedni: mjesečna v2 sezona s osnovnim
+/// katalogom mora dati iste brojke kao v1 (ekvivalencija, MODEL_V2 §2 t. 6), a u v1 je skok potrebe srpanj → kolovoz
+/// (A: 24 → 43) veći od koraka 10, pa bi gledanje unaprijed promijenilo v1 lipanj. Bez silaska mjesečni u kolovozu drži
+/// „potrebu" pa ga korak od 10 u rujnu zaustavi više (41 → 31 prema tjednih 28) i razlika tjedan/mjesec raste (ADR-041).
 fn caring_target(
     s: &HotelState,
     p: &Period,
@@ -91,9 +93,7 @@ fn caring_target(
     step: u16,
 ) -> Result<i128, ResolveError> {
     let need = caring_need(s.rooms, occupancy, p, serving_permanent)?;
-    if p.kind != PeriodKind::Week {
-        return Ok(need);
-    }
+    let weekly = p.kind == PeriodKind::Week;
     // `up`: najmanje koliko treba sada da se do kasnijeg vrhunca stigne korakom; `down`: najviše koliko smije
     // biti sada da se do kasnijeg pada spusti korakom. Zadnji krug nema budućih, pa je cilj njegova potreba.
     let (mut up, mut down) = (need, i128::MAX);
@@ -105,7 +105,8 @@ fn caring_target(
         up = up.max(c::sub(later, reach)?);
         down = down.min(c::add(later, reach)?);
     }
-    Ok(up.min(down))
+    // Mjesečno samo silazak (`down`), bez `up` (ADR-041); tjedno oba smjera.
+    Ok(if weekly { up.min(down) } else { need.min(down) })
 }
 
 /// v1 oblik plana robota (ukupni sezonci, jedna razina održavanja); odjeli se dodaju na kraju.

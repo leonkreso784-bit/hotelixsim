@@ -134,3 +134,122 @@ fn weekly_caring_robot_releases_before_september() {
         );
     }
 }
+
+/// Mjesečna sezona brižnog za svaki profil (RB-1, ADR-041): po krugu (krug, sezonci prije, sezonci poslije, potreba
+/// kruga, gornja granica `down` iz ZP-6, gornji korak i najviše sezonaca). `down = min_k(potreba_{t+k} + k·korak)`
+/// nad preostalim mjesecima sezone.
+type MonthlyRound = (sim_hotel_v2::Period, i64, i64, i64, i64);
+
+fn monthly_caring_rounds() -> (i64, i64, Vec<(Profile, Vec<MonthlyRound>)>) {
+    use sim_hotel_v2::calendar::avg_u16;
+    use sim_hotel_v2::{Category, PeriodKind, RefTable, run_season, season_periods};
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let cat = content.v2.as_ref().unwrap();
+    let spec = cat.base.category(Category::Four).unwrap();
+    let step = i64::from(cat.coeffs(PeriodKind::Month).unwrap().seasonal_step);
+    let max = i64::from(cat.base.actions.seasonal_max);
+    let periods = season_periods(PeriodKind::Month);
+    let refs = RefTable::compute(cat, Category::Four, &periods).unwrap();
+    let mut out = Vec::new();
+    for profile in Profile::ALL {
+        let start = HotelState::from_profile(cat, profile).unwrap();
+        let serving: i64 = start
+            .departments
+            .values()
+            .filter(|d| !matches!(d.class, UsaliClass::Undistributed(_)))
+            .map(|d| i64::from(d.permanent))
+            .sum();
+        let need = |p: &sim_hotel_v2::Period| {
+            let occ = i64::from(avg_u16(&spec.base_occupancy_bp, p).unwrap());
+            ((i64::from(start.rooms) * occ + 17_999) / 18_000 - serving).max(0)
+        };
+        let r = run_season(
+            profile,
+            Strategy::Caring,
+            7,
+            PeriodKind::Month,
+            cat,
+            &content.situations,
+            &refs,
+        )
+        .unwrap();
+        let mut before = i64::from(start.summary().seasonal);
+        let mut rows = Vec::new();
+        for (rep, _) in &r.periods {
+            let p = rep.period;
+            let down = periods
+                .iter()
+                .filter(|q| q.index > p.index)
+                .zip(1_i64..)
+                .map(|(q, k)| need(q) + k * step)
+                .fold(i64::MAX, i64::min);
+            let now = i64::from(rep.summary.after.seasonal);
+            rows.push((p, before, now, need(&p), down));
+            before = now;
+        }
+        out.push((profile, rows));
+    }
+    (step, max, out)
+}
+
+/// RB-1 (ADR-041): mjesečni brižni otpušta sezonce prije pada kao tjedni: cilj kruga je `min(potreba, down)`, a krug
+/// ga slijedi do koraka (±korak, najviše `seasonal_max`). Na kodu prije RB-1 mjesečni drži `potreba` (B u kolovozu
+/// 41 sezonac, a granica prema rujnu je niža), pa ga u rujnu korak zaustavi iznad potrebe.
+#[test]
+fn monthly_caring_robot_releases_before_the_september_drop() {
+    let (step, max, all) = monthly_caring_rounds();
+    // Izravno: u kolovozu mjesečni B brižni ne drži više sezonaca nego što mu dopušta rujan + korak.
+    let (_, rows) = all.iter().find(|(pr, _)| *pr == Profile::B).unwrap();
+    let (p, _, now, need, down) = rows
+        .iter()
+        .find(|(p, ..)| p.start_month() == Month::Aug)
+        .unwrap();
+    assert!(
+        down < need,
+        "kolovoz B: potreba {need} ne smije biti ispod granice {down} (inače test ništa ne mjeri)"
+    );
+    assert!(
+        now <= down,
+        "{profile:?} {}: {now} sezonaca u kolovozu, gornja granica prema rujnu {down} (potreba {need})",
+        p.code(),
+        profile = Profile::B
+    );
+    // Svi profili, svi mjeseci: cilj i korak.
+    for (profile, rows) in &all {
+        for (p, before, now, need, down) in rows {
+            let target = (*need).min(*down);
+            let expected = target.clamp(before - step, before + step).min(max);
+            assert_eq!(
+                *now,
+                expected,
+                "{profile:?} {}: potreba {need}, gornja granica {down}, cilj {target}",
+                p.code()
+            );
+        }
+    }
+}
+
+/// Kontrola RB-1: mjesečni brižni NE zapošljava unaprijed (v1 ekvivalencija, MODEL_V2 §2 t. 6): prije kolovoza
+/// krug je `potreba` stisnuta korakom, nikad iznad nje, i nikad iznad onoga što bi dao zadnji v1 oblik pravila.
+#[test]
+fn monthly_caring_robot_does_not_hire_ahead() {
+    let (step, max, all) = monthly_caring_rounds();
+    for (profile, rows) in &all {
+        for (p, before, now, need, _) in rows {
+            if matches!(p.start_month(), Month::Jun | Month::Jul) {
+                let expected = (*need).clamp(before - step, before + step).min(max);
+                assert_eq!(
+                    *now,
+                    expected,
+                    "{profile:?} {}: mjesečni brižni mora slijediti potrebu {need}",
+                    p.code()
+                );
+                assert!(
+                    now <= &(*need).max(*before),
+                    "{profile:?} {}: zaposlio unaprijed ({now} > potreba {need})",
+                    p.code()
+                );
+            }
+        }
+    }
+}
