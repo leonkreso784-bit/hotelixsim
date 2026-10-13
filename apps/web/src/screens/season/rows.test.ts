@@ -196,6 +196,75 @@ describe("kartica hotela", () => {
     expect(decisionRows({ ...brizni, decisions: null }, body)).toBeNull();
   });
 
+  describe("redak „Obnova“ čita v2 obnove (renewals)", () => {
+    const omitRenewals = ({ renewals: _ignored, ...rest }: NonNullable<typeof mine.decisions>) => rest;
+    const withRenewals = (
+      h: typeof brizni,
+      renewals:
+        | {
+            month: "jun" | "jul" | "aug" | "sep";
+            asset_code: string;
+            asset_name: string;
+            amount_cents: number;
+          }[]
+        | undefined,
+      renovation_round: string | null = null,
+      b = body,
+    ) => {
+      if (!h?.decisions) throw new Error("fixture");
+      const rows = decisionRows(
+        {
+          ...h,
+          decisions: {
+            ...omitRenewals(h.decisions),
+            renovation_round,
+            ...(renewals ? { renewals } : {}),
+          },
+        },
+        b,
+      );
+      return rows?.find((r) => r.key === "renovation")?.value;
+    };
+    const tjedna = [
+      { month: "jun" as const, asset_code: "restaurant", asset_name: "Restoran", amount_cents: 5_000_000 },
+      { month: "jun" as const, asset_code: "building", asset_name: "Zgrada", amount_cents: 3_000_000 },
+      { month: "jul" as const, asset_code: "rooms", asset_name: "Smještaj", amount_cents: 2_000_000 },
+      { month: "jul" as const, asset_code: "building", asset_name: "Zgrada", amount_cents: 2_000_000 },
+    ];
+
+    it("v2 tjedna: dvije stavke u lipnju i dvije u srpnju, zgrada dvaput, grupirano po mjesecu", () => {
+      expect(withRenewals(mine, tjedna)).toBe(
+        "120.000 € · lipanj: Restoran 50.000 €, Zgrada 30.000 € · srpanj: Smještaj 20.000 €, Zgrada 20.000 €",
+      );
+    });
+
+    it("v2 mjesečna: jedna stavka", () => {
+      const monthly = seasonBody({ weekly: false });
+      const h = monthly.hotels[0];
+      if (!h) throw new Error("fixture");
+      expect(
+        withRenewals(
+          h,
+          [{ month: "jun", asset_code: "restaurant", asset_name: "Restoran", amount_cents: 5_000_000 }],
+          null,
+          monthly,
+        ),
+      ).toBe("50.000 € · lipanj: Restoran 50.000 €");
+    });
+
+    it("robot s renewals dobiva isti oblik", () => {
+      expect(withRenewals(brizni, tjedna)).toBe(withRenewals(mine, tjedna));
+      expect(withRenewals(brizni, tjedna)).toContain("lipanj: Restoran 50.000 €");
+    });
+
+    it("bez renewals (prazno ili izostavljeno) ostaje staro ponašanje", () => {
+      expect(withRenewals(mine, [])).toBe("nije bilo");
+      expect(withRenewals(mine, undefined)).toBe("nije bilo");
+      expect(withRenewals(mine, undefined, "t05")).toBe(roundPhrase(weekInfo(5)));
+      expect(withRenewals(mine, [], "t05")).toBe(roundPhrase(weekInfo(5)));
+    });
+  });
+
   it("mjesečna igra broji mjesece", () => {
     const monthly = seasonBody({ weekly: false });
     const h = monthly.hotels[0];

@@ -2,7 +2,7 @@
 // kartice (mobitel) i tablice (računalo); brojke dolaze s poslužitelja (`GET /v1/games/{id}/season`), ovdje se samo
 // slažu i oblikuju kroz format.ts. Bez Reacta.
 import { t } from "@hotelixsim/i18n";
-import type { IndexCode, SeasonBody, SeasonHotelBody } from "../../api/types";
+import type { IndexCode, MonthCode, SeasonBody, SeasonHotelBody } from "../../api/types";
 import {
   formatCount,
   formatEuros,
@@ -199,6 +199,24 @@ export function financeRows(h: SeasonHotelBody): FinanceRow[] | null {
   ];
 }
 
+type Decisions = NonNullable<SeasonHotelBody["decisions"]>;
+
+/**
+ * Obnove v2 u jednom retku: „120.000 € · lipanj: Restoran 50.000 €, Zgrada 30.000 € · srpanj: …“. Ukupno je zbroj
+ * iznosa, mjeseci i dijelova je redom kojim ih šalje poslužitelj, a isti se mjesec piše jednom.
+ */
+function renewalsPhrase(renewals: NonNullable<Decisions["renewals"]>): string {
+  const months: { month: MonthCode; parts: string[] }[] = [];
+  for (const r of renewals) {
+    const part = `${r.asset_name} ${formatEuros(r.amount_cents)}`;
+    const last = months.at(-1);
+    if (last && last.month === r.month) last.parts.push(part);
+    else months.push({ month: r.month, parts: [part] });
+  }
+  const total = formatEuros(renewals.reduce((sum, r) => sum + r.amount_cents, 0));
+  return [total, ...months.map((m) => `${monthName(m.month)}: ${m.parts.join(", ")}`)].join(" · ");
+}
+
 export type DecisionKey =
   | "price"
   | "marketing"
@@ -224,7 +242,13 @@ export function decisionRows(h: SeasonHotelBody, body: SeasonBody): DecisionRow[
     d.wage_pct_min === d.wage_pct_max
       ? formatPercentWhole(d.wage_pct_min)
       : formatRange(d.wage_pct_min, d.wage_pct_max, "percent");
+  // Obnova: v2 šalje stavke po mjesecima (`renewals`), stari v1 samo kod jednog kruga (`renovation_round`).
   const renovation = d.renovation_round ? body.rounds.find((r) => r.code === d.renovation_round) : undefined;
+  const renovationText = d.renewals?.length
+    ? renewalsPhrase(d.renewals)
+    : renovation
+      ? roundPhrase(renovation)
+      : t("season.decision.noRenovation");
   const count = formatCount(d.situations, "situation");
   const row = (key: DecisionKey, value: string): DecisionRow => ({
     key,
@@ -239,7 +263,7 @@ export function decisionRows(h: SeasonHotelBody, body: SeasonBody): DecisionRow[
     row("training", of(d.training_rounds)),
     row("deferred", of(d.maintenance_deferred_rounds)),
     row("reply", of(d.reply_reviews_rounds)),
-    row("renovation", renovation ? roundPhrase(renovation) : t("season.decision.noRenovation")),
+    row("renovation", renovationText),
     row(
       "situations",
       d.avg_quality_hundredths === null
