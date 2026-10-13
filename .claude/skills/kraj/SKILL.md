@@ -19,17 +19,23 @@ odlučeno ili ostalo otvoreno. Necommitane tuđe izmjene ne diraj — javi ih.
 - `docs/records/PROGRESS.md` — novi unos **na vrh**: `## YYYY-MM-DD — naslov`, 3–8 natuknica: što je napravljeno,
   čime je provjereno i gdje se vidi (lokalno / GitHub / preview), što je ostalo otvoreno.
 - Ako je isporučeno nešto što radi → redak u `docs/records/CHANGELOG.md`.
+- **Prelijevanje:** zapisnik (`PROGRESS`, `CHANGELOG`, `BACKLOG`) koji prijeđe granicu živog dokumenta
+  ([tablica](../../../docs/README.md#granice-veličine)) razdvoji: stariji unosi u mapu istog imena po mjesecima
+  (`docs/records/PROGRESS/2026-10.md`), a na vrhu `PROGRESS.md` ostaje indeks mjeseci i najnoviji unosi.
 
 ## 3 · Odluke
 
-Svaka odluka iz sesije → ADR na vrh `docs/records/DECISIONS.md` (`## ADR-00N — naslov`, sljedeći broj; Leonov
-citat doslovno ako postoji; status, razlog, cijena ako je krivo). Pravilo „radi bez pitanja": pretpostavke koje
+Svaka odluka iz sesije → **nova datoteka** `docs/records/DECISIONS/ADR-0NN-<slug>.md` (sljedeći broj = najveći postojeći + 1, ne prva rupa; ADR-029 je rezerviran za Sloj 1; naslov
+`# ADR-0NN — naslov`, pa redak `**Datum:** … · **Status:** … · **Vezano:** …`; Leonov citat doslovno ako postoji; razlog,
+cijena ako je krivo). Zatim `corepack pnpm docs:adr` osvježi popis `DECISIONS.md` — njega nikad ne uređuj ručno. Pravilo „radi bez pitanja": pretpostavke koje
 si donio umjesto Leona → ADR sa statusom `🟨 ČEKA LEONOV PREGLED`.
 
 ## 4 · Plan i backlog
 
-- Ažuriraj aktivni plan u `docs/plan/` (zaglavlje `**Status:** 🟩 AKTIVAN`; najviše jedan).
-- Ispunjen plan → `git mv` u `docs/archive/` s pečatom `✅ ISPUNJEN datum` u zaglavlju, **istog dana**.
+- Ažuriraj aktivni plan u `docs/plan/` (zaglavlje `**Status:** 🟩 AKTIVAN`; najviše jedan po području).
+- Ispunjen plan → `git mv` u `docs/archive/` s pečatom `✅ ISPUNJEN datum` u zaglavlju, **istog dana**. Ako prelazi granicu arhive
+  ([tablica](../../../docs/README.md#granice-veličine)) ili ima taskove, razdvoji ga: `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa `corepack pnpm docs:plan <plan.md>`.
+  Kod razdvojenog plana (pregled + mapa) `git mv` premješta i pregled i mapu.
 - Ledger subagenata iz `.superpowers/sdd/` (gitignoriran) kopiraj u `docs/archive/<datum>-<ime>-ledger.md`.
 - Novo neriješeno → `docs/records/BACKLOG.md`; riješeno iz backloga → **obriši** redak.
 
@@ -44,7 +50,7 @@ za Leona, što pročitati. Bez povijesti i bez odluka — one su u PROGRESS i DE
 
 ## 7 · Indeks
 
-Svaka nova datoteka u `docs/` → redak u `docs/README.md` (jedini indeks).
+Svaka nova datoteka u `docs/` → redak u `docs/README.md` (jedini indeks); dio mape `X/` → redak u `X.md`.
 
 ## 8 · Brana
 

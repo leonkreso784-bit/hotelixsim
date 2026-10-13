@@ -12,7 +12,9 @@ prijašnja sesija znala, bez da Leon išta objašnjava.
 ## 1 · Pročitaj (paralelno, u jednoj poruci)
 
 1. `docs/SLJEDECA_SESIJA.md` — **cijeli**. To je predaja: cilj ove sesije, prvi korak, otvorena pitanja.
-2. **Aktivni plan** u `docs/plan/` (datoteka sa `**Status:** 🟩 AKTIVAN`), ako postoji. `ROADMAP.md` samo ako treba.
+2. **Aktivni plan svog područja** u `docs/plan/` (`**Status:** 🟩 AKTIVAN` i `**Područje:** …`; sesija zna svoje područje,
+   zadano `kod`), ako postoji. Ako je plan pregled + mapa taskova, čitaj pregled i **samo tekući task** iz mape, ne sve
+   taskove. `ROADMAP.md` samo ako treba.
 3. Leonova memorija (samo čitanje), iz `C:\Users\leonk\.claude\projects\c--Users-leonk-Documents-sokratstudy-dev\memory\`:
    `tko-je-leon.md` · `komunikacija-s-leonom.md` · `temelji-prije-brzine.md` · `windows-git-bash-zamke.md`.
 

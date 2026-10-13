@@ -36,7 +36,10 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 4. Sučelje (drugi terminal): `corepack pnpm --filter @hotelixsim/web dev` → <http://localhost:5173>
 5. Provjere prije commita: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,
-   `corepack pnpm typecheck`, `corepack pnpm test`.
+   `corepack pnpm typecheck`, `corepack pnpm test`; za dokumentaciju `corepack pnpm check:docs` i `corepack pnpm test:docs`.
+6. Dokumentacija ([pravila i granice](docs/README.md)): popis ADR-ova
+   nakon novog ADR-a `corepack pnpm docs:adr`; razdvajanje plana `corepack pnpm docs:plan <plan.md>`; veličine svih dokumenata
+   uz granice `node scripts/check-docs.mjs --popis`.
 
 ### Igra u pregledniku
 
@@ -44,7 +47,7 @@ Baza (`bash scripts/baza.sh start`), API i sučelje kao u koracima 3 i 4 gore; z
 
 - **Bez AI-ja** (rezerve, bez troška): prije `cargo run -p server -- serve` upiši `unset ANTHROPIC_API_KEY`.
 - **Na mobitelu u istoj mreži:** `corepack pnpm --filter @hotelixsim/web dev --host`. Pazi: tada svatko u istoj mreži vidi igru.
-- **Modeli:** presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5 ([ADR-024](docs/records/DECISIONS.md#adr-024));
+- **Modeli:** presuda Sonnet 5.5, lik Haiku 5.5, mentor Sonnet 5.5 ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md));
   mijenjaju se varijablama `HOTELIXSIM_AI_MODEL_PRESUDA`, `_LIK` i `_MENTOR` (vidi `.env.example`).
 
 Gradnja koristi spremljene podatke iz `.sqlx/` (`SQLX_OFFLINE=true` u `.env`), pa ne treba živu bazu. Nakon promjene SQL upita (baza mora raditi): `cargo sqlx prepare --workspace` i commitaj `.sqlx/`; alat se instalira jednom: `cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked`.
