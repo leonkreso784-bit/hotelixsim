@@ -119,6 +119,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 |---|---|
 | [ARHITEKTURA.md](./architecture/ARHITEKTURA.md) | Arhitektura v2: Rust (jezgra + backend) + TypeScript (sučelje), granice crateova, determinizam, dnevnik događaja, AI iza porta, redoslijed gradnje (§20) |
 | [RASPRAVA_ARHITEKTURE.md](./architecture/RASPRAVA_ARHITEKTURE.md) | Zapis rasprave o nacrtu: primjedbe, odgovori, otvoreni upiti |
+| [VODITELJ_I_TRZISTE.md](./architecture/VODITELJ_I_TRZISTE.md) | Voditelj odjela koji upravlja odjelom i odgovara za njega, i uvid u tržište (zainteresirani, smješteni, odbijeni gosti); nacrt za raspravu, Leonove ideje 13.10. |
 | [PLATFORMA.md](./architecture/PLATFORMA.md) | **Platforma**: razred = jedna igra s N hotela, računi i uloge, profesorov pregled, generirani hoteli, produkcija (Railway) i trošak, GDPR; nacrt za raspravu, odluke u ADR-037 (dijelovi u `PLATFORMA/`) |
 | [MODEL_V2.md](./architecture/MODEL_V2.md) | **Put B**: kako hotel od brojeva postaje skup stvari (odjeli, zaposlenici, sobe, recenzije) — entiteti, slojevi, determinizam, stare igre |
 
@@ -128,7 +129,6 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u mapi `ROADMAP/` |
 | [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | 🟩 **aktivan** — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
-| [2026-10-13-temelj-rada.md](./plan/2026-10-13-temelj-rada.md) | 🟩 **aktivan** — Faza 0 TEMELJ RADA: pravila rada i područja planova (K0-2), brana veličine koda `check:kod` (K0-3), arhitektura platforme u `docs/` (K0-7) |
 | [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (čeka spajanje Sloja 1; Taskovi 11–13) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 
 ## `workflow/` — kako radimo
@@ -171,4 +171,6 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [2026-10-09-ai-sloj-ledger.md](./archive/2026-10-09-ai-sloj-ledger.md) | ✅ Radni ledger koraka 4: preflight, presude voditelja, odgođeni nalazi, završni pregled |
 | [2026-10-10-ekrani.md](./archive/2026-10-10-ekrani.md) | ✅ Plan „ekrani igrača" (DEMO korak 5; taskovi 1–20, spojen u `main`) |
 | [2026-10-10-ekrani-ledger.md](./archive/2026-10-10-ekrani-ledger.md) | ✅ Radni ledger koraka 5: presude voditelja 1–26, odgođeni nalazi, završni pregled i val popravaka |
+| [2026-10-13-temelj-rada.md](./archive/2026-10-13-temelj-rada.md) | ✅ Plan „Faza 0 TEMELJ RADA" (K0-2 pravila rada i područja, K0-3 brana `check:kod`, K0-7 arhitektura platforme; K0-1 CI dokazan 14.10.), taskovi u mapi istog imena |
+| [2026-10-13-temelj-rada-ledger.md](./archive/2026-10-13-temelj-rada-ledger.md) | ✅ Radni ledger Faze 0: presude, završni pregled i val popravaka, dokaz K0-1 |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |

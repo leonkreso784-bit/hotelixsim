@@ -4,6 +4,25 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-14 — G-1, SB-1, G-2 i RB-1 na grani situacija, redak „Obnova" popravljen, Faza 0 zatvorena
+
+- **K0-1 dokazan:** CI za `b495c8d` zelen (rust + web) na `ubuntu-24.04`; plan Faze 0 ide u
+  [arhivu](../archive/2026-10-13-temelj-rada.md) (K0-4/5/6 nakon spajanja grana, K0-8 Leonova sjednica ostaju u ROADMAP-u).
+- **Grana situacija** (`../hotelixsim-s1-sit`, lokalno 252fe8b), svaka cigla čuvar testova → graditelj → pregled:
+  G-1 situacije iz predložaka u igri (707d524; pregled našao da kolektivna situacija može probiti granicu grupa i broj
+  situacija → popravak 0bbec33: jedna kolektivna za cijelu igru, Approved); SB-1 osnovica ostalih odjela bruto (ca31005,
+  ADR-040 t. 2); G-2 AI razgovor i presuda za situacije s likom (c2ed74e; pregled Needs fixes — razgovor bez AI-ja ostane
+  zaključan, prazna rubrika presude; popravak 1 započet, nedovršen); RB-1 (252fe8b). Zadnje: 736 passed / 0 failed,
+  balansi bajt-isti osim namjerne promjene RB-1.
+- **Tjedan ≈ mjesec** (ADR-040 t. 3): dijagnoza s pokusima našla uzrok — mjesečni Brižni nije otpuštao prije pada kao tjedni
+  (ZP-6). Ocjena po cijelom zadnjem mjesecu isprobana i odbačena (razlika 2,96 → 4,50). Leon anketom:
+  [ADR-041](DECISIONS/ADR-041-mjesecni-brizni-otpusta-prije-pada.md) → B Brižni 2,96 → 0,18. Leon usput: roboti su samo za demo.
+- **Grana obnove** (`../hotelixsim-s1-obnova`, f76905c): redak „Obnova" na Kraju sezone čita v2 obnove (OKS-1), isto za
+  robote; UI čuvar 2: SPREMNO DA (360–1280 px, 0 prekoračenja).
+- **Leonove ideje 13.10.** (voditelj odjela koji upravlja i odgovara za odjel; graf tržišta: zainteresirani, smješteni,
+  odbijeni gosti) → nacrt za raspravu [VODITELJ_I_TRZISTE](../architecture/VODITELJ_I_TRZISTE.md), 5 pitanja Leonu.
+- **Gdje se vidi:** sve lokalno (grane situacija i obnove, dokumentacija u `model-v2/sloj1`); ništa nije pushano.
+
 ## 2026-10-13 (večer) — raspored do pilota, novi način rada, Faza 0 TEMELJ RADA, završetak Sloja 1 u tijeku
 
 - **Analiza prije prijedloga** (Leon: *„nisi analiziro projekt"*): tri paralelna izvidnika našla su ono što predaja nije
@@ -15,7 +34,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
   [ADR-038](DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) (faze i cigle; čuvar testova → graditelj →
   provjeravatelj → čuvar dokumentacije; staje se na kraju faze), [ADR-040](DECISIONS/ADR-040-leonove-odluke-iz-pregleda-situacija-s.md).
   Tvrda granica `.md` s 1000 na 1200 (Leon).
-- **Faza 0 TEMELJ RADA** ([plan](../plan/2026-10-13-temelj-rada.md)): CI pribijen na ubuntu-24.04 i akcije v5 (K0-1);
+- **Faza 0 TEMELJ RADA** ([plan](../archive/2026-10-13-temelj-rada.md)): CI pribijen na ubuntu-24.04 i akcije v5 (K0-1);
   područja planova igra/platforma/kvaliteta (K0-2); nova brana `check:kod` 600/1000 s popisom duga (K0-3,
   [ADR-039](DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md) 🟨); arhitektura platforme u
   [PLATFORMA.md](../architecture/PLATFORMA.md) (K0-7). Svaka cigla: testovi prije koda, provjeravatelj; završni pregled

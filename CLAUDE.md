@@ -30,10 +30,13 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   [ADR-037](docs/records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md), rad po
   [ADR-038](docs/records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) (čuvar testova prije graditelja; staje se na kraju faze).
 - **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): faza **ZAVRŠETAK SLOJA 1** ([plan](docs/plan/2026-10-10-v2-sloj1.md),
-  spec [MODEL_V2.md](docs/architecture/MODEL_V2.md)) po predaji u ledgeru `.superpowers/sdd/2026-10-10-v2-sloj1/progress.md`.
+  spec [MODEL_V2.md](docs/architecture/MODEL_V2.md)) po predaji u ledgeru `.superpowers/sdd/2026-10-10-v2-sloj1/progress.md`
+  („STANJE NA ZAUSTAVLJANJU 14.10."): grana situacija G-2 popravak 1 → A-1 → W-1; grana obnove spremna, čeka „demo gotov".
+  Faza 0 TEMELJ RADA je u arhivi; K0-4/5/6 nakon spajanja grana. Roboti su samo za demo (Leon 13.10.).
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
   kod ≤ 1000 (`check:kod`). Pretinac `za-dokumentaciju.md` samo za nespojene grane (Obnova, Situacije).
-- **Čeka Leona:** opis S3 (BACKLOG), ADR-ovi 🟨, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
+- **Čeka Leona:** 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
+  ADR-ovi 🟨, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
