@@ -32,6 +32,8 @@ dugi se razgranaju u manje dijelove s kazalom, i brana pazi da se to ne vrati."*
 [docs/README.md](../../README.md) (tvrda granica 1000 za svaki `.md`, bez prijelaznih iznimaka; izuzeci samo za
 generirano/vanjsko, izrijekom), arhiva s 1100 na 1000 (ekrani Task 4 podijeljen po smislu na 4 i 4b), a plan Sloja 1
 razdvojen je odmah, dok sloj još traje (prijelazna iznimka sada pokriva i njegovu mapu, ali samo za granicu 300).
+**Dopuna 2 (Leon, isti dan):** *„neke md datoteke mogu prelaziti 1000, samo ne 1200"* — tvrda granica je **1200**
+(`TVRDA_GRANICA`); granice po vrsti (300, arhiva 1000…) ostaju, pa preko 1000 smiju samo dokumenti s prijelaznom iznimkom.
 
 **Pretpostavke izvedbe.** Zajednički alati (slug, prepoznavanje ograda koda, prepisivanje relativnih poveznica) žive u
 jednoj datoteci `scripts/docs-alati.mjs` da se ne razilaze. Slug ADR-a i taskova ima najviše 6 riječi. Razdvajanje

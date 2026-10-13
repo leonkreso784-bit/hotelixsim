@@ -53,7 +53,7 @@
 10. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
     `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
 11. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
-12. **Tvrda granica: nijedan `.md` u repozitoriju nema više od 1000 redaka** — ni izvan `docs/`, ni s prijelaznom
+12. **Tvrda granica: nijedan `.md` u repozitoriju nema više od 1200 redaka** — ni izvan `docs/`, ni s prijelaznom
     iznimkom. Izuzima se samo generirani ili vanjski dokument, izrijekom upisan u `IZUZECI_TVRDE_GRANICE`
     (`scripts/docs-granice.mjs`, danas prazno); gitignorirano (`node_modules`, `target`, `.superpowers`) ne ulazi u branu.
 
@@ -70,7 +70,7 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
 | živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
 | arhiva | `docs/archive/**` | 1000 | zamrznuto; task veći od toga dijeli se po smislu na dijelove (npr. ekrani Task 4 i 4b) |
-| **tvrda granica** | **svaki `.md` u repozitoriju** | **1000** | Leonovo pravilo (13.10.); vrijedi i za prijelazne iznimke |
+| **tvrda granica** | **svaki `.md` u repozitoriju** | **1200** | Leonovo pravilo (13.10.; s 1000 na 1200 isti dan); vrijedi i za prijelazne iznimke |
 | `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
 
 ### Indeks + mapa istog imena

@@ -81,8 +81,8 @@ test("prijelazne iznimke: točno dvije, s razlogom", () => {
   assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1-b.md"), false);
 });
 
-test("tvrda granica: 1000 redaka, izuzeci samo izrijekom (danas nijedan)", () => {
-  assert.equal(TVRDA_GRANICA, 1000);
+test("tvrda granica: 1200 redaka, izuzeci samo izrijekom (danas nijedan)", () => {
+  assert.equal(TVRDA_GRANICA, 1200);
   assert.deepEqual(Object.keys(IZUZECI_TVRDE_GRANICE), []);
   assert.equal(jeIzuzetOdTvrde("docs/plan/2026-10-10-v2-sloj1.md"), false);
 });

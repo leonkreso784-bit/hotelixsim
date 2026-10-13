@@ -26,8 +26,9 @@ prelazi granicu veličine, a Leon je prošao ADR-ove 🟨. Nemaju dodira s pravi
 | K0-7 | Arhitektura platforme u `docs/` | prenijeti `platforma-arhitektura.md` iz ledgera (`.superpowers/sdd/…`, nije u gitu) u `docs/architecture` **uz prepis po ispravku** (razred = jedna igra; sesije; Railway Hobby; račun + lozinka). Zastarjelo: §1 t.5, §2.1–2.6, §4.2 t.5 i L7, §6.2b, §6.4, §6.6, §7.1, §7.4, §8, §9.1 L1/L2/L7; ARHITEKTURA §9.3, §11, §12, §14, §16; MODEL_V2 §7.1; ADR-015 t.14, ADR-016 t.3; granica 300 redaka → indeks + mapa | `check:docs` zeleno; nijedna rečenica o „partiji po studentu" ni „i mod 4" ni „3 robota u razredu" | ADR-037 | 6 | P1 | — |
 | K0-8 | Leonova sjednica ADR-ova 🟨 | ~1 h razgovora, 18 ADR-ova u 4 grupe (jezgra/model: 026, 013, 029, 031–033 · platforma: 003, 015, 017, 008, 036 · AI/sadržaj: 019, 023, 025 · UI i proces: 022, 027, 035, 030); priprema ~1 h; popis: [DECISIONS.md](../../records/DECISIONS.md) | statusi ✅/izmijenjeno; `docs:adr` svjež | — | 2 | P2 | **Leon, ~1 h** |
 
-Raspored: K0-1 i K0-2 odmah; K0-3 prije bilo koje velike faze koda; K0-4 prije F1-11/F1-12 (platforma dira `api`); K0-5/6 prije prve faze koja dira mentora (M-1,
-sezonski mentor, LJUDI); K0-4, K0-5 i F1-10 ne paralelizirati (isti Rust objekti, najviše 2 izvođača). Ostala velika datoteka ispod 1000: `balance/lib.rs` 710,
+Raspored: K0-1, K0-2, K0-3, K0-7 i K0-8 odmah (ne diraju kod igre). **K0-4, K0-5 i K0-6 tek NAKON spajanja grana obnove i situacija u
+`sloj1`** (L1-10…L1-12): obje grane mijenjaju `schema.rs` (obnova ga diže na 1889 redaka) i mentora, pa bi rez prije spajanja stvorio velike
+sukobe. Zatim K0-4 prije F1-11/F1-12 (platforma dira `api`), K0-5/6 prije prve faze koja dira mentora (M-1, LJUDI); K0-4, K0-5 i F1-10 ne paralelizirati (isti Rust objekti, najviše 2 izvođača). Ostala velika datoteka ispod 1000: `balance/lib.rs` 710,
 `department.rs` 685 (uz E), `content/lib.rs` 684, `game/model.rs` 671 — drže se na ratchetu; `situation_templates.json` ~3630 je podatak na grani s1-sit.
 
 ---

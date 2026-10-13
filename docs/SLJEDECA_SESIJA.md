@@ -12,7 +12,7 @@ Dokumentacija je preuređena i spojena u `main` i `model-v2/sloj1` (13.10.). Od 
 
 Nastavljamo kod, put B sloj 1 na grani model-v2/sloj1. Predaja koda je u ledgeru
 .superpowers/sdd/2026-10-10-v2-sloj1/progress.md, odjeljak „KRAJ SESIJE 13.10. (4)" — vjeruj njemu i git logu.
-Dokumentaciju pišeš sam po docs/README.md (nijedan .md preko 1000 redaka). Moj demo radi na 8080 i 5173 iz glavnog
+Dokumentaciju pišeš sam po docs/README.md (nijedan .md preko 1200 redaka). Moj demo radi na 8080 i 5173 iz glavnog
 stabla — ne gasi ga. Push samo uz moj OK.
 ```
 

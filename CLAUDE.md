@@ -29,7 +29,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   grana `model-v2/sloj1`, spec [MODEL_V2.md](docs/architecture/MODEL_V2.md)) po predaji u ledgeru
   `.superpowers/sdd/2026-10-10-v2-sloj1/progress.md`; demo **~14.10.** ([ADR-012](docs/records/DECISIONS/ADR-012-ciljani-rok-demoa-14-10-prvo.md)).
 - **Dokumentacija** je preuređena i spojena (`main` i `sloj1`): sesija koda piše `docs/` sama, po pravilima iz
-  [docs/README.md](docs/README.md); **nijedan `.md` preko 1000 redaka** (brana). Pretinac `za-dokumentaciju.md` drži samo
+  [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka** (brana). Pretinac `za-dokumentaciju.md` drži samo
   bilješke nespojenih grana (Obnova, Situacije, KS-3) — prenose se kad se te grane spoje. Ostatak plana dokumentacije
   (MODEL_V2 po dijelovima, zatvaranje) čeka Sloj 1 u `main` ([plan](docs/plan/2026-10-10-dokumentacija.md)).
 - **Čeka Leona:** opis S3 (BACKLOG), ADR-ovi 🟨, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),

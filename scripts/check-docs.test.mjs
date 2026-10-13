@@ -276,16 +276,16 @@ test("9) granice po vrsti: indeks 200, predaja 60, arhiva 1000", () => {
   assert.equal(r.code, 0, r.out);
 });
 
-test("12) tvrda granica: bilo koji .md preko 1000 pada, i izvan docs/, točno 1000 prolazi", () => {
+test("12) tvrda granica: bilo koji .md preko 1200 pada, i izvan docs/, točno 1200 prolazi", () => {
   assertFails(
-    { "crates/x/README.md": RED(1001) },
-    "PREKO 1000 REDAKA  crates/x/README.md  1001 redaka > tvrda granica 1000",
+    { "crates/x/README.md": RED(1201) },
+    "PREKO 1200 REDAKA  crates/x/README.md  1201 redaka > tvrda granica 1200",
   );
   assertFails(
-    { "docs/archive/STARO.md": RED(1001), "docs/README.md": `${BASE["docs/README.md"]}- STARO.md\n` },
-    "PREKO 1000 REDAKA  docs/archive/STARO.md",
+    { "docs/archive/STARO.md": RED(1201), "docs/README.md": `${BASE["docs/README.md"]}- STARO.md\n` },
+    "PREKO 1200 REDAKA  docs/archive/STARO.md",
   );
-  const r = run({ "crates/x/README.md": RED(1000) });
+  const r = run({ "crates/x/README.md": RED(1200) });
   assert.equal(r.code, 0, r.out);
 });
 
@@ -293,16 +293,16 @@ test("12) prijelazna iznimka ne vrijedi za tvrdu granicu (ni za dio u mapi)", ()
   const indeks = `${BASE["docs/README.md"]}- [S](plan/2026-10-10-v2-sloj1.md)\n`;
   const plan = "# Sloj 1\n\n**Status:** ⏸️ PAUZIRAN\n\n- [T1](2026-10-10-v2-sloj1/task-01-a.md)\n";
   assertFails(
-    { "docs/README.md": indeks, "docs/plan/2026-10-10-v2-sloj1.md": `${plan}${RED(1001)}` },
-    "PREKO 1000 REDAKA  docs/plan/2026-10-10-v2-sloj1.md",
+    { "docs/README.md": indeks, "docs/plan/2026-10-10-v2-sloj1.md": `${plan}${RED(1201)}` },
+    "PREKO 1200 REDAKA  docs/plan/2026-10-10-v2-sloj1.md",
   );
   assertFails(
     {
       "docs/README.md": indeks,
       "docs/plan/2026-10-10-v2-sloj1.md": plan,
-      "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(1001)}`,
+      "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(1201)}`,
     },
-    "PREKO 1000 REDAKA  docs/plan/2026-10-10-v2-sloj1/task-01-a.md",
+    "PREKO 1200 REDAKA  docs/plan/2026-10-10-v2-sloj1/task-01-a.md",
   );
   // isti dio s 400 redaka: preko granice 300, ali iznimka vrijedi i za mapu
   const r = run({

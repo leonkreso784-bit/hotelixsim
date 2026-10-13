@@ -33,8 +33,8 @@ Cigle po fazama (zaliha; kartica se razrađuje u planu faze kad faza krene):
 | PLATFORMA | [ROADMAP/platforma.md](./ROADMAP/platforma.md) |
 
 **Prije oba kolosijeka: TEMELJ RADA** (~26 h). Pravila rada s agentima, popravak CI-ja (Ubuntu 26 od 19.10.), brana
-veličine koda, razdvajanje `api/src/schema.rs` i mentora, prijenos platformskog nacrta iz ledgera u `docs/` i Leonova
-sjednica ADR-ova 🟨. **Gotovo kad:** oba kolosijeka mogu krenuti bez ijedne zajedničke velike datoteke.
+veličine koda, prijenos platformskog nacrta iz ledgera u `docs/` i Leonova sjednica ADR-ova 🟨. Razdvajanje
+`api/src/schema.rs` i mentora ide tek kad se grane obnove i situacija spoje u `sloj1` (obje te datoteke mijenjaju). **Gotovo kad:** oba kolosijeka mogu krenuti bez ijedne zajedničke velike datoteke.
 
 | okvirno | IGRA | PLATFORMA | prekretnica: što čovjek može |
 |---|---|---|---|

@@ -21,8 +21,8 @@
 //   10) ADR: ako postoji docs/records/DECISIONS/ — imena ADR-NNN-slug.md, jedinstveni brojevi i
 //       DECISIONS.md jednak generiranom indeksu (scripts/adr.mjs); DECISIONS.md bez mape pada → ADR po datoteci
 //   11) poveznica koja cilja DECISIONS.md#adr-… (osim u prijelaznim iznimkama)  → stari način navođenja ADR-a
-//   12) BILO KOJI .md u repozitoriju preko 1000 redaka (TVRDA_GRANICA; bez prijelaznih iznimaka,
-//       izuzeti samo IZUZECI_TVRDE_GRANICE)                                  → nijedan dokument preko 1000
+//   12) BILO KOJI .md u repozitoriju preko 1200 redaka (TVRDA_GRANICA; bez prijelaznih iznimaka,
+//       izuzeti samo IZUZECI_TVRDE_GRANICE)                                  → nijedan dokument preko 1200
 //   (brojevi prate plan dokumentacije)
 //
 // Pokreni: pnpm check:docs   |   korijen se može zadati: node scripts/check-docs.mjs <dir>
@@ -282,14 +282,14 @@ for (const r of mdFiles.filter((x) => x.startsWith("docs/"))) {
   }
 }
 
-// ── 12) tvrda granica: nijedan .md preko 1000 redaka ────────────────
+// ── 12) tvrda granica: nijedan .md preko 1200 redaka ────────────────
 // Vrijedi za cijeli repozitorij (ne samo docs/) i ne poznaje prijelazne iznimke; izuzeti su samo
 // generirani/vanjski dokumenti izrijekom popisani u scripts/docs-granice.mjs.
 for (const r of mdFiles) {
   const redaka = brojRedaka(read(r));
   if (redaka > TVRDA_GRANICA && !jeIzuzetOdTvrde(r)) {
     problems.push(
-      `PREKO 1000 REDAKA  ${r}  ${redaka} redaka > tvrda granica ${TVRDA_GRANICA}\n      -> razdvoji po smislu u indeks + mapu istog imena (vidi docs/README.md)`,
+      `PREKO ${TVRDA_GRANICA} REDAKA  ${r}  ${redaka} redaka > tvrda granica ${TVRDA_GRANICA}\n      -> razdvoji po smislu u indeks + mapu istog imena (vidi docs/README.md)`,
     );
   }
 }

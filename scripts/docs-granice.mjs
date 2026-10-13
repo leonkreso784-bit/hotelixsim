@@ -23,10 +23,10 @@ export function jeIznimka(relPath) {
   );
 }
 
-// Tvrda granica (Leon, 2026-10-13): nijedan .md u repozitoriju — ni izvan docs/ — nema više od
-// 1000 redaka. Prijelazne iznimke NE vrijede za nju. Gitignorirano (node_modules, target,
+// Tvrda granica (Leon, 2026-10-13; podignuta s 1000 na 1200 isti dan): nijedan .md u repozitoriju —
+// ni izvan docs/ — nema više od 1200 redaka. Prijelazne iznimke NE vrijede za nju. Gitignorirano (node_modules, target,
 // .superpowers …) ionako ne ulazi u popis brane.
-export const TVRDA_GRANICA = 1000;
+export const TVRDA_GRANICA = 1200;
 
 // Izuzeci od tvrde granice: SAMO generirani ili vanjski .md koje git prati (ključ = putanja,
 // vrijednost = razlog). Danas nema nijednog; dodaje se izrijekom, uz datum i razlog.
