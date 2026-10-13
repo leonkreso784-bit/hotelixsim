@@ -1,6 +1,6 @@
 # Raspored dokumentacije — granice veličine, podindeksi, planovi kao mape, ADR po datoteci — plan
 
-**Status:** ⏸️ PAUZIRAN (čeka paralelnu sesiju dokumentacije) · **Područje:** dokumentacija · **Otvoren:** 2026-10-10 ·
+**Status:** ⏸️ PAUZIRAN (čeka spajanje Sloja 1; Taskovi 11–13) · **Područje:** dokumentacija · **Otvoren:** 2026-10-10 ·
 **Grana:** `dokumentacija/raspored` (od `main`) u radnom stablu `C:/Users/leonk/Documents/hotelixsim-dokumentacija`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development (preporučeno) ili
@@ -44,7 +44,7 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
 | ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 63 (ADR-015) |
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
 | živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; najveći današnji odjeljak (MODEL_V2 §3) ima 194; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
-| arhiva | `docs/archive/**` | 1100 | zamrznuto; najveći task ikad (ekrani T4) ima 1037 — task se ne reže na pola |
+| arhiva | `docs/archive/**` | 1000 | zamrznuto; 13.10. s 1100 na 1000 (Leon, tvrda granica, ADR-030) — ekrani T4 podijeljen na 4 i 4b |
 | `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
 
 3. **Planovi.** Plan ≤300 redaka smije biti jedna datoteka. Veći je **pregled** `docs/plan/<datum>-<ime>.md` (zaglavlje,
@@ -83,7 +83,10 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
   `model-v2/sloj1` **između valova** (nijedno radno stablo taska otvoreno) i prenosi pretinac (postupak na kraju plana);
   (3) od tada sesija koda piše po novim pravilima; (4) nakon spajanja Sloja 1 u `main` slijede Taskovi 11–13.
 - **Sukob pri spajanju:** tekst (činjenice) uzmi s grane koda, mjesto (raspored) s grane dokumentacije; zatim
-  `node scripts/adr.mjs poveznice` i `corepack pnpm check:docs`. Ako je kod ipak prvi u `main`: grana dokumentacije
+  `node scripts/adr.mjs poveznice` i `corepack pnpm check:docs`. **Iznimka — sukob u `docs/records/DECISIONS.md`:**
+  uzmi stranu koda, pa `node scripts/adr.mjs razdvoji` (iznova piše 001–028 identično), `corepack pnpm docs:adr`,
+  `node scripts/adr.mjs poveznice`; pravilo „raspored s grane dokumentacije” ondje bi tiho izgubilo novi ADR sesije
+  koda. Ako je kod ipak prvi u `main`: grana dokumentacije
   spaja `main`, novi `## ADR-…` blok iz staroga `DECISIONS.md` postaje datoteka, pa `corepack pnpm docs:adr`.
 
 ## Global Constraints
@@ -246,7 +249,8 @@ datoteka + `corepack pnpm docs:adr`; §4 arhiviranje plana s `docs:plan`; §2 pr
 
 **Files:** `docs/archive/2026-10-10-v2-sloj1.md` (ako ga `/kraj` sesije koda još nije premjestio: `git mv` iz `docs/plan/`
 uz pečat `✅ ISPUNJEN datum`) + mapa; ledger kao `docs/archive/2026-10-10-v2-sloj1-ledger.md` ako ga nema.
-- [ ] `node scripts/razdvoji-plan.mjs …` i `--provjeri` → 0; `node scripts/adr.mjs poveznice` na nove datoteke. Commit.
+- [ ] Plan je već razdvojen 13.10. (pregled + mapa `2026-10-10-v2-sloj1/`, tvrda granica 1000): `git mv` pregleda **i mape**,
+  ponovo izračunaj relativne poveznice (jedna razina se ne mijenja: obje ostaju u istoj mapi uloge); `node scripts/adr.mjs poveznice`. Commit.
 
 ### Task 13: Zatvaranje (val 7)
 
@@ -257,6 +261,8 @@ uz pečat `✅ ISPUNJEN datum`) + mapa; ledger kao `docs/archive/2026-10-10-v2-s
 
 1. Između valova (nijedno radno stablo taska otvoreno): `git -C C:/Users/leonk/Documents/hotelixsim merge main`.
 2. Sukobi: tekst s grane koda, raspored s grane dokumentacije (pravilo iz Protokola); `node scripts/adr.mjs poveznice`.
+   Sukob u `docs/records/DECISIONS.md`: uzmi stranu koda, pa `node scripts/adr.mjs razdvoji` (iznova piše 001–028
+   identično), `corepack pnpm docs:adr`, `node scripts/adr.mjs poveznice`.
 3. Pretinac `za-dokumentaciju.md`: ADR-ovi → `docs/records/DECISIONS/ADR-0NN-<slug>.md` (029 je Slojev, ostali dobivaju
    sljedeće slobodne brojeve) + `corepack pnpm docs:adr`; BACKLOG, CHANGELOG i PROGRESS unosi u svoje datoteke; pretinac se briše.
 4. `corepack pnpm check:docs` i `corepack pnpm test:docs`, svaki `echo EXIT=$?` → 0; commit „Spoji raspored dokumentacije".

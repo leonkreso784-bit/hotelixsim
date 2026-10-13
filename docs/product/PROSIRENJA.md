@@ -2,7 +2,7 @@
 
 > **Što je ovo:** popis svih dodataka koje igra dobiva nakon demoa — za svaki: što student vidi, što time uči (koji
 > kolegij FMTU-a), koje brojke mijenja i u kojem je sloju. **Kako** se gradi piše u
-> [MODEL_V2.md](../architecture/MODEL_V2.md); **zašto** ovim redom u [ADR-026](../records/DECISIONS.md#adr-026).
+> [MODEL_V2.md](../architecture/MODEL_V2.md); **zašto** ovim redom u [ADR-026](../records/DECISIONS/ADR-026-put-b-hotel-od-brojeva-postaje.md).
 > Otvorena pitanja su u [BACKLOG.md](../records/BACKLOG.md), ne ovdje.
 
 ## Leonova zamisao
@@ -36,7 +36,7 @@ Oznake: **sloj** = redoslijed gradnje (svaki se gradi, dokaže i pregleda zasebn
 
 | # | Dodatak | Što student vidi i radi | Što uči | Koje brojke mijenja | Sloj | Status |
 |---|---|---|---|---|---|---|
-| P1 | **Raspored za računalo** | Na laptopu bočni izbornik i dva stupca; mobitel ostaje isti | — (profesor gleda na projektoru) | nijedne | prije demoa ([ADR-027](../records/DECISIONS.md#adr-027)) | 🟦 |
+| P1 | **Raspored za računalo** | Na laptopu bočni izbornik i dva stupca; mobitel ostaje isti | — (profesor gleda na projektoru) | nijedne | prije demoa ([ADR-027](../records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)) | 🟦 |
 | P2 | **Hotelski pokazatelji** | ADR, RevPAR, popunjenost, GOPPAR po mjesecima, s objašnjenjem riječima | Economics in Hospitality, Accounting | nijedne nove — prikaz onoga što jezgra već računa ili lako izvede | 0 | ⬜ |
 | P3 | **Dijelovi hotela (odjeli)** | Sobe, restoran, kafić, spa, rooftop — samo oni koje hotel ima; u svakom: zaposlenici, prihod, troškovi, stanje održavanja, rezultat odjela | Accounting (USALI), Economics (troškovi, investicije) | „ostali prihod" (danas ravnih 30 % prihoda od soba) postaje zbroj stvarnih odjela; održavanje po odjelu | 1 | ⬜ |
 | P4 | **Račun dobiti po USALI-ju** | Izvještaj mjeseca: prihod i trošak po odjelima, neraspoređeni troškovi, GOP i GOPPAR | Accounting | nijedne nove — prikaz sloja 1 | 1 | ⬜ |
@@ -54,9 +54,9 @@ Oznake: **sloj** = redoslijed gradnje (svaki se gradi, dokaže i pregleda zasebn
 
 ## Odluke i pretpostavke
 
-Leonove odluke su u [ADR-028](../records/DECISIONS.md#adr-028) (ljudi kao u Simsima, burza rada, agencija i smještaj,
+Leonove odluke su u [ADR-028](../records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) (ljudi kao u Simsima, burza rada, agencija i smještaj,
 tjedni ili mjesečni krug, AI razgovori, „Booking" drugih hotela, voditelj odjela). Pretpostavke koje čekaju pregled
-(🟨) su u [ADR-026](../records/DECISIONS.md#adr-026) i [ADR-028](../records/DECISIONS.md#adr-028) — među njima
+(🟨) su u [ADR-026](../records/DECISIONS/ADR-026-put-b-hotel-od-brojeva-postaje.md) i [ADR-028](../records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md) — među njima
 **pravilo: nacionalnost određuje samo činjenice (jezici, trošak agencije, smještaj, dozvola), nikad vještinu ni
 osobnost**.
 
