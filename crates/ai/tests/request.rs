@@ -379,6 +379,24 @@ fn season_debrief_body_sends_human_season_facts() {
     assert!(content.contains("takve su od početka"), "{content}");
 }
 
+/// Uputa mentora kruga (mentor.v4): pet točaka znanja o obnovi i zabrana pripisivanja zaključane obnove novoj odluci.
+#[test]
+fn mentor_prompt_has_renewal_points_and_locked_renewal_ban() {
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v4");
+    let text = ai::prompts::MENTOR.text;
+    for must in [
+        "Obnova po fazama",
+        "Ulaganje nije trošak kruga",
+        "dobit iz poslovanja nakon ulaganja",
+        "Održavanje usporava, obnova vraća",
+        "Zgrada se troši sporo",
+        "Isto vrijedi za zaključanu obnovu",
+        "nikad ne opisuj kao novu odluku",
+    ] {
+        assert!(text.contains(must), "mentor.v4 nema „{must}“");
+    }
+}
+
 /// Uputa sezonskog mentora tumači polja obnove v2: ulaganja nisu trošak sezone, amortizacija je dio cijene, indeks
 /// Financije gleda dobit nakon ulaganja; obnova se ne pripisuje novoj odluci i brojke su samo iz činjenica.
 #[test]

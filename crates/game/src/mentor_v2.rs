@@ -365,7 +365,8 @@ pub(crate) fn fallback_notes(input: &DebriefInput) -> Vec<String> {
                     depreciation_text(r)
                 ));
             }
-            if let Some(split) = split_text(r) {
+            // Savjet o podjeli samo za obnovu koja je nova odluka; zaključanu više nitko ne može podijeliti.
+            if let Some(split) = split_text(r).filter(|_| r.decided_this_round) {
                 s.push_str(&format!(" {}: {split}.", r.name));
             }
         }

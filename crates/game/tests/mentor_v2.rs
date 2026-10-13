@@ -151,6 +151,8 @@ fn locked_renewal_from_an_earlier_week_is_not_a_new_decision() {
     assert!(decision.contains("nije nova odluka"), "{decision}");
     // Rezerva ne ponavlja „blagajna plaća cijeli iznos" kao da je odluka nova.
     assert!(!fallback_debrief(&input).contains("blagajna plaća cijeli iznos"));
+    // Ni savjet o podjeli na dva mjeseca: obnova je već odlučena i zaključana, savjet bi je prikazao kao otvorenu.
+    assert!(!fallback_debrief(&input).contains("raspoređen na dva mjeseca"));
 }
 
 #[test]
