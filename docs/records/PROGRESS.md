@@ -4,6 +4,24 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-13 — tvrda granica 1000 redaka, raspored dokumentacije spojen, pretinac prenesen
+
+- Leon: *„nijedan dokument (.md) u repou nema više od 1000 redaka … i brana pazi da se to ne vrati"*. Prije: 6 datoteka
+  preko 1000 na sloj1 (najveća 4733), 2 na grani dokumentacije (plan v2-sloj1 4104, ekrani task-04 1037). **Poslije: 0**;
+  najveći `.md` je MODEL_V2 s 843 retka.
+- **Brana:** `check:docs` pravilo 12 — svaki `.md` u repou ≤ 1000 redaka, bez prijelaznih iznimaka (izuzeci samo
+  izrijekom, danas nijedan); arhiva 1100 → 1000. Dokaz: dokument produljen na 1001 redak → EXIT=1, vraćen → EXIT=0; isto
+  za `prompts/` izvan `docs/`. `test:docs` 93/93.
+- **Razdvojeno po smislu:** plan v2-sloj1 → pregled + 22 taska (alat, spoj = izvornik bajt po bajt); ekrani Task 4 →
+  4 (Step 1–7) i 4b (Step 8–15). Jednokratna provjera sidara (`#…`): 0 slomljenih (prije spajanja 148, sve
+  `DECISIONS.md#adr-…`).
+- **Spajanje (Leonov OK):** `dokumentacija/raspored` → `main` (f38755b); `main` → `sloj1` (66b2ef4) u zasebnom stablu —
+  jedini sukob u planu Sloja 1: tekst sa sloj1, plan ponovno razdvojen. Leonov demo (8080/5173) nije diran.
+- **Pretinac** `za-dokumentaciju.md` prenesen za spojeni kod: ADR-029, 031–036 (🟨 osim 034 ✅), dopune ADR-002/023/024,
+  BACKLOG, CHANGELOG, MODEL_V2, UI_PRAVILA, ARHITEKTURA, nova [IDEJE.md](../product/IDEJE.md). Ostaju Obnova, Situacije, KS-3.
+- **Sokratis** `docs`: 0/100 — mjeri staro pravilo indeksa (BACKLOG [alati]); `check:docs` zelen.
+- **Gdje se vidi:** lokalno (`main` f38755b, `sloj1`); **ništa nije pushano**. Kod > 1000 redaka samo zapisan (BACKLOG).
+
 ## 2026-10-10 (večer) — raspored dokumentacije (paralelna sesija)
 
 - Leon: *„md datoteke imaju previše informacija … preko 3000 linija je JAKO JAKO loše"* → preuređenje na grani

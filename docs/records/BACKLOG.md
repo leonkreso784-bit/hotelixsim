@@ -197,6 +197,10 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
 
 ## CI i alati
 
+- [alati] **Sokratis `docs` mjeri staro pravilo (2026-10-13)** — 0/100, 124 nalaza: 122 „not-indexed" (traži svaki dio u
+  `docs/README.md`; naše pravilo 2 dopušta podindeks `X.md`), 1 „multiple-active-plans" (taskove u mapi plana broji kao
+  planove), 1 „docs-lag" (točno). Uz to mjeri tekuće stablo i kad mu se zada druga mapa. Prijedlog: Sokratis za
+  HotelixSim pokreće `corepack pnpm check:docs` repoa (jedan izvor pravila) — posao u repou Sokratisa, Leon odlučuje.
 - [alati] **Kod preko 1000 redaka — prijedlog, Leon odlučuje (2026-10-13)** — brana dokumentacije sad drži svaki `.md` ≤ 1000
   redaka; kod nema takvu granicu. Najveći danas: `content/hotel/v2/situation_templates.json` ~3630 (grana `model-v2/sloj1-situacije`),
   a na sloj1 @ e1dfa1c `crates/api/src/schema.rs` 1687, `crates/game/tests/mentor.rs` 1670, `crates/game/src/mentor.rs` 1367. Prijedlog: razdvojiti

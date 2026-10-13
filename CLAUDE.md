@@ -20,18 +20,21 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025, 026, 027 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md).
+  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
+  (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
 - **AI ključ** je u `.env` (`ANTHROPIC_API_KEY`), nikad u `.env.example` ni u gitu; živi test:
   `cargo test -p ai --test live -- --ignored` (uz `set -a; source .env; set +a`).
-- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): (1) **UI val 1** za demo na grani `gradnja/ui-popravci`
-  (UI čuvar: `docs/product/UI_PRAVILA.md` na toj grani) → `main` prije demoa **~14.10.** ([ADR-012](docs/records/DECISIONS/ADR-012-ciljani-rok-demoa-14-10-prvo.md));
-  (2) **put B, sloj 1** ([plan](docs/plan/2026-10-10-v2-sloj1.md), grana `model-v2/sloj1`, spec
-  [MODEL_V2.md](docs/architecture/MODEL_V2.md)); (3) **paralelna sesija dokumentacije** ([plan](docs/plan/2026-10-10-dokumentacija.md)) —
-  dok radi, sesija koda ne dira `docs/` (bilješke u `.superpowers/sdd/2026-10-10-v2-sloj1/za-dokumentaciju.md`).
+- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **put B, sloj 1** ([plan](docs/plan/2026-10-10-v2-sloj1.md),
+  grana `model-v2/sloj1`, spec [MODEL_V2.md](docs/architecture/MODEL_V2.md)) po predaji u ledgeru
+  `.superpowers/sdd/2026-10-10-v2-sloj1/progress.md`; demo **~14.10.** ([ADR-012](docs/records/DECISIONS/ADR-012-ciljani-rok-demoa-14-10-prvo.md)).
+- **Dokumentacija** je preuređena i spojena (`main` i `sloj1`): sesija koda piše `docs/` sama, po pravilima iz
+  [docs/README.md](docs/README.md); **nijedan `.md` preko 1000 redaka** (brana). Pretinac `za-dokumentaciju.md` drži samo
+  bilješke nespojenih grana (Obnova, Situacije, KS-3) — prenose se kad se te grane spoje. Ostatak plana dokumentacije
+  (MODEL_V2 po dijelovima, zatvaranje) čeka Sloj 1 u `main` ([plan](docs/plan/2026-10-10-dokumentacija.md)).
 - **Čeka Leona:** opis S3 (BACKLOG), ADR-ovi 🟨, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".
-- **Git:** GitHub `leonkreso784-bit/hotelixsim` (privatni) kao `origin`. Neobjavljeno: `git log origin/main..main` (demo, računalo i sloj 0 su na GitHubu).
+- **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
   (`gh` je prijavljen, nije na PATH-u).
 - **Okolina:** VS Code panel ([ADR-010](docs/records/DECISIONS/ADR-010-rad-u-claude-code-dodatku-za.md)), Windows, Git Bash + PowerShell.

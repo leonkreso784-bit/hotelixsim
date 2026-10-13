@@ -1,41 +1,43 @@
-# Sljedeća sesija — UI popravci za demo, put B sloj 1; paralelno preuređenje dokumentacije
+# Sljedeća sesija — kod: Sloj 1 puta B (S-4, O-5, KS-3) i demo oko 14. 10
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
-Dvije sesije mogu raditi istodobno: **A — kod** (ova predaja) i **B — dokumentacija** (prompt je u planu
-`docs/plan/2026-10-10-dokumentacija.md`, odjeljak „Prompt za početak"). Sesija A ne dira `docs/` dok B radi; stavke za
-dokumente piše u `.superpowers/sdd/2026-10-10-v2-sloj1/za-dokumentaciju.md`.
+Dokumentacija je preuređena i spojena u `main` i `model-v2/sloj1` (13.10.). Od sada **jedna sesija** piše i kod i
+`docs/`, po pravilima iz [docs/README.md](./README.md); nema više paralelne sesije dokumentacije ni zabrane diranja `docs/`.
 
-## Prompt za početak sesije A (Leon zalijepi nakon `/clear`)
+## Prompt za početak (Leon zalijepi nakon `/clear`)
 
 ```text
 /newsession
 
-Nastavljamo kod: (1) UI val 1 za demo na grani gradnja/ui-popravci (../hotelixsim-ui) — pregled UI čuvara u
-pregledniku, popravci, spajanje u main prije demoa 14.10.; (2) put B, sloj 1 po planu docs/plan/2026-10-10-v2-sloj1.md
-na grani model-v2/sloj1. Ledger je .superpowers/sdd/2026-10-10-v2-sloj1/progress.md — vjeruj ledgeru i git logu.
-Ne diraj docs/ (paralelna sesija dokumentacije). Push samo uz moj OK. Testovi i preglednik bez ključa.
+Nastavljamo kod, put B sloj 1 na grani model-v2/sloj1. Predaja koda je u ledgeru
+.superpowers/sdd/2026-10-10-v2-sloj1/progress.md, odjeljak „KRAJ SESIJE 13.10. (4)" — vjeruj njemu i git logu.
+Dokumentaciju pišeš sam po docs/README.md (nijedan .md preko 1000 redaka). Moj demo radi na 8080 i 5173 iz glavnog
+stabla — ne gasi ga. Push samo uz moj OK.
 ```
 
 ## Cilj
 
-1. **Demo (~14.10.) čist:** UI val 1 (2 blokera + 12 važnih iz `.superpowers/sdd/2026-10-10-v2-sloj1/ui-audit.md`)
-   pregledan od UI čuvara u pregledniku (360–1920 px) i spojen u `main`.
-2. **Sloj 1 puta B:** Taskovi 1–6 (temelj: zlatni test v1, `sim-hotel-v2`, snimak s modelom, ključ kruga, jedno mjesto
-   grananja) pa faza B po grafu iz plana; web taskovi 18–22 prolaze kroz UI čuvara.
+1. **S-4** (`../hotelixsim-s1-sit`, e9e349b „dio"): probe-mutacija, pregled, kontrolorove provjere; zatim G-1 → G-2 → A-1 → W-1.
+2. **O-5** (`../hotelixsim-s1-obnova`, e43d99f „dio"): `mentor-sezona.v2.md`, puni popis provjera, pregled; UI čuvar O-4+O-5.
+3. **KS-3** (`../hotelixsim-s1-ks3`, b8c0d83, spremno) → u `sloj1` tek na Leonovo „demo gotov".
 
-**Prvi korak:** `/newsession`, `git worktree list`, ledger — koje su grane i commitovi Taskova 1–2 i UI vala već gotovi;
-`corepack pnpm check:docs`; CI (`gh run list`); baza `bash scripts/baza.sh start`.
+**Prvi korak:** `/newsession`, `git worktree list`, ledger (odjeljak gore), `corepack pnpm check:docs`; baza
+`bash scripts/baza.sh start` ako je stroj restartan.
 
 ## Za znati
 
-- **Radna stabla:** `../hotelixsim-s1-t1`, `../hotelixsim-s1-t2` (Taskovi 1–2), `../hotelixsim-ui` (UI val). Glavno stablo je
-  na `model-v2/sloj1`. Poslužitelj za preglednik pokretati BEZ ključa (`unset ANTHROPIC_API_KEY`).
-- **Presude preflighta (24 nalaza)** su u ledgeru i unesene u plan (Taskovi 3–22).
-- **Kalibracija procjena:** agenti rade ~10× brže od procjena u planu; usko grlo su pregledi i preglednik.
+- **Pretinac** `.superpowers/sdd/2026-10-10-v2-sloj1/za-dokumentaciju.md` drži samo bilješke nespojenih grana (Obnova,
+  Situacije, KS-3). Kad se grana spoji u `sloj1`, njezine bilješke prenesi u `docs/` (ADR datoteke + `corepack pnpm docs:adr`,
+  BACKLOG, CHANGELOG, MODEL_V2) i obriši iz pretinca. Nove bilješke od sada idu ravno u `docs/`.
+- **Plan Sloja 1** je pregled + mapa taskova (`docs/plan/2026-10-10-v2-sloj1/`); taskove uređuj u njihovim datotekama.
+- **MODEL_V2** ima 843 retka; kad bi prešao 1000, razdvaja se po §-ima (raspored u Tasku 11
+  [plana dokumentacije](./plan/2026-10-10-dokumentacija.md)).
+- Lokalno nepushano: `main` (f38755b, raspored dokumentacije) i `sloj1` — push samo uz Leonov OK.
 
 ## Otvoreno za Leona
 
-- **S3 nema opisa ponude** — UI val stavlja uvjete u naslov; pravi opis traži tvoj tekst (BACKLOG).
-- ADR-ovi 🟨: 025 (brana presude), 026 i 028 (pretpostavke puta B, pravilo o nacionalnosti), 027 (raspored za računalo).
-- Kalibracija profila C (udio rada ~27 %, GOP marža ~21 % prema ~35 % i ~44 % u istraživanju) — rješava sloj 1.
+- **Push** `main` i `sloj1` (repo je javan) — nakon OK-a gledaj CI.
+- ADR-ovi 🟨 029–033, 035, 036 (Sloj 1) i 030 (raspored dokumentacije) — popis u [DECISIONS.md](./records/DECISIONS.md).
+- Iz predaje koda: m7 (stroga granica situacija po odjelu), prag popusta najamnine lokala (profil B), tekst zaključane obnove.
+- [BACKLOG](./records/BACKLOG.md) [alati]: kod preko 1000 redaka (prijedlog) i Sokratis koji mjeri staro pravilo indeksa.
