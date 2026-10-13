@@ -21,15 +21,15 @@
 | 7 | **Pregled rezervacija** — koliko ih je | ideja; preporuka: knjiga rezervacija kao zbroj + kartice-uzorci | isto §5.1 |
 | 8 | **Generator gostiju** — nasumična imena i likovi po izgledu koji se sami stvaraju | ideja | isto §5.2 |
 | 9 | **Novine** — ne pišu o hotelu, nego objavljuju **stanje u državi (makroekonomski uvjeti)**: gospodarstvo, inflacija, cijene energije, turistička potražnja, tečaj; student reagira na te uvjete | ideja | — |
-| 10 | **Generirani hoteli** — različit broj soba, imena hotela | ideja | `platforma-arhitektura.md` §4 |
+| 10 | **Generirani hoteli** — različit broj soba, imena hotela | ideja | [PLATFORMA.md](../architecture/PLATFORMA.md) §4 |
 
 ## Platforma
 
 | # | Ideja | Stanje | Gdje |
 |---|---|---|---|
-| 11 | **Prijava** (različiti načini; kod igre; kasnije AAI@EduHr) | arhitektura napisana, čeka Leonove odluke L1–L10 | `platforma-arhitektura.md` |
-| 12 | **Profesor** se prijavi, cijeli CRUD, prati sve studente | isto | isto §2 |
-| 13 | **Produkcija** — server na internetu, vlastita domena (`hotelixsim.com`, Leon kupuje), Supabase (postojeća organizacija) + Railway | isto; trošak ~5–10 €/mj do financiranja | isto §6, dopune na kraju |
+| 11 | **Prijava** (različiti načini; kod igre; kasnije AAI@EduHr) | arhitektura napisana, čeka Leonove odluke L1–L10 | [PLATFORMA.md](../architecture/PLATFORMA.md) §3 |
+| 12 | **Profesor** se prijavi, cijeli CRUD, prati sve studente | isto | [PLATFORMA.md](../architecture/PLATFORMA.md) §2 |
+| 13 | **Produkcija** — server na internetu, vlastita domena (`hotelixsim.com`, Leon kupuje), Supabase (postojeća organizacija) + Railway | isto; trošak ~5–10 €/mj do financiranja | [PLATFORMA.md](../architecture/PLATFORMA.md) §6 |
 
 ## Prezentacija za profesora
 
