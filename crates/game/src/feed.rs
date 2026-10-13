@@ -128,7 +128,7 @@ impl Game {
                             seq,
                             round: rr.month,
                             situation: s.code.clone(),
-                            title: self.situation_title(&s.code)?,
+                            title: self.situation_title(hotel, &s.code)?,
                         });
                     }
                     out.push(FeedItem::MonthResolved {
@@ -148,7 +148,7 @@ impl Game {
                         seq,
                         round: e.month,
                         situation: e.situation.clone(),
-                        title: self.situation_title(&e.situation)?,
+                        title: self.situation_title(hotel, &e.situation)?,
                     });
                 }
                 GameEvent::VerdictRecorded(v) if v.hotel_id == hotel => {
@@ -190,20 +190,18 @@ impl Game {
             seq,
             round: v.month,
             situation: v.situation.clone(),
-            title: self.situation_title(&v.situation)?,
+            title: self.situation_title(v.hotel_id, &v.situation)?,
             quality: v.quality,
             neutral: v.source == AiSource::Fallback,
             late,
         })
     }
 
-    fn situation_title(&self, code: &str) -> Result<String, GameError> {
-        self.content
-            .situations
-            .iter()
-            .find(|t| t.code == code)
-            .map(|t| t.title.clone())
-            .ok_or_else(|| corrupt(format!("nepoznata situacija {code}")))
+    /// Naslov situacije hotela: sidro iz sadržaja ili primjerak izvučen za taj hotel (kao `answer_texts`).
+    fn situation_title(&self, hotel: HotelId, code: &str) -> Result<String, GameError> {
+        self.situation_round_for(hotel, code)
+            .map(|(_, t)| t.title.clone())
+            .map_err(|_| corrupt(format!("nepoznata situacija {code}")))
     }
 
     fn answer_texts(

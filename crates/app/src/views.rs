@@ -311,7 +311,7 @@ async fn situations_in_month(
         .situations_of_hotel(hotel, month)?
         .into_iter()
         .map(|t| {
-            let ai = g.ai_entry(&t.code);
+            let ai = g.ai_entry_for(hotel, &t.code);
             let key = (month, t.code.clone());
             SituationItem {
                 code: t.code.clone(),

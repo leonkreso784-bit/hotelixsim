@@ -15,6 +15,7 @@ pub mod templates;
 mod templates_check;
 mod templates_core;
 mod templates_instance;
+pub use templates_instance::Instance;
 mod v2;
 mod v2_dept;
 

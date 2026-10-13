@@ -24,6 +24,8 @@ use crate::round::RoundKey;
 pub struct DrawnInstance {
     pub drawn: DrawnSituation,
     pub situation: SituationTemplate,
+    /// Podaci za AI sloj iz popunjenog primjerka (lik, rubrika, kriteriji); lik ima samo predložak s likom.
+    pub ai: content::SituationAi,
     pub no_penalty: bool,
 }
 
@@ -183,6 +185,7 @@ impl Game {
             .as_ref()
             .ok_or_else(|| corrupt("predlošci situacija"))?;
         let base = self.model().catalog(&self.content)?;
+        let dept_names = self.content.v2.as_ref().map(|c| &c.departments);
         let mut built: Vec<Vec<DrawnInstance>> = Vec::with_capacity(self.hotels.len());
         for h in &self.hotels {
             let category = h.start_state.category();
@@ -191,12 +194,18 @@ impl Game {
                 .iter()
                 .filter(|i| i.slot == 0 || i.slot == h.setup.slot)
             {
-                let situation = tpl
-                    .instance(i, base, category)
+                let name = |c: &DeptCode| {
+                    dept_names
+                        .and_then(|d| d.get(c))
+                        .map_or_else(|| c.as_str().to_owned(), |d| d.name.clone())
+                };
+                let filled = tpl
+                    .instance_with(i, base, category, &name)
                     .map_err(|e| corrupt(format!("{e:?}")))?;
                 own.push(DrawnInstance {
                     drawn: i.clone(),
-                    situation,
+                    situation: filled.situation,
+                    ai: filled.ai,
                     no_penalty: tpl.no_penalty(&i.template),
                 });
             }
@@ -378,18 +387,30 @@ impl Game {
         }
     }
 
-    /// AI podaci situacije: za šifru iz sadržaja (S1–S4) njezini; za izvučeni primjerak podaci njegova predloška
-    /// (G-2 ih dodaje u sadržaj; do tada primjerak nema razgovor ni slobodni odgovor, pa pokušaj daje
-    /// `NotFreeText`, ne grešku sustava).
+    /// AI podaci situacije s tom šifrom: za šifru iz sadržaja (S1–S4) njezini; za izvučeni primjerak podaci
+    /// njegova popunjenog predloška (lik, rubrika, kriteriji; slobodan odgovor ima samo predložak s likom). Šifra
+    /// primjerka može postojati kod više hotela s različitim imenima likova, pa je za razgovor i presudu
+    /// mjerodavan `ai_entry_for`; ovdje se uzima prvi primjerak (dovoljno za „ima li slobodan odgovor").
     pub fn ai_entry(&self, code: &str) -> Option<&content::SituationAi> {
         self.content.ai.get(code).or_else(|| {
-            let template = self
-                .hotels
+            self.hotels
                 .iter()
                 .flat_map(|h| h.drawn.values().flatten())
                 .find(|i| i.situation.code == code)
-                .map(|i| i.drawn.template.as_str())?;
-            self.content.ai.get(template)
+                .map(|i| &i.ai)
+        })
+    }
+
+    /// AI podaci situacije za primjerak hotela `hotel` (njegova imena likova i brojevi).
+    pub fn ai_entry_for(&self, hotel: HotelId, code: &str) -> Option<&content::SituationAi> {
+        self.content.ai.get(code).or_else(|| {
+            self.hotel(hotel)
+                .ok()?
+                .drawn
+                .values()
+                .flatten()
+                .find(|i| i.situation.code == code)
+                .map(|i| &i.ai)
         })
     }
 

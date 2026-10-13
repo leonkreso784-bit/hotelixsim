@@ -180,34 +180,64 @@ fn v1_game_has_no_leader() {
     assert_eq!(g.situation_leader(h, &code).unwrap(), None);
 }
 
-/// Slobodan odgovor na izvučeni primjerak ne pada (G-2 dodaje razgovor): odbijen je kao „bez slobodnog
-/// odgovora“, ne kao greška sustava.
+/// G-2: primjerak čiji predložak ima lika ima razgovor, slobodan odgovor i presudu (ne `NotFreeText`); primjerak
+/// predloška bez lika i sidro bez slobodnog odgovora (S3) i dalje daju „bez slobodnog odgovora“, ne grešku sustava.
+/// Opsežnije provjere (ulazi bez `{…}`, feed, odjel): `situations_ai_input.rs`.
 #[test]
-fn free_answer_on_a_drawn_instance_is_refused_not_a_crash() {
-    let g = Game::fold(&v2_events(42, PeriodKind::Week)).unwrap();
+fn free_answer_on_a_drawn_instance_follows_its_template_character() {
     let h = common::hotel_ids()[0];
-    let r = g.current_round().unwrap();
-    let hr = g.hotel(h).unwrap();
-    let inst = &hr.drawn[&r][0];
-    let code = inst.situation.code.clone();
-    assert_eq!(
-        g.submit_response(h, &code, "Odgovor."),
-        Err(GameError::NotFreeText)
-    );
-    assert_eq!(
-        g.send_message(h, &code, "Poruka."),
-        Err(GameError::NotFreeText)
-    );
-    assert!(matches!(
-        g.validate_verdict(&code, common::draft_with(3, 0)),
-        Err(VerdictError::NotFreeText)
-    ));
-    assert!(matches!(
-        g.character_input(h, &code),
-        Err(GameError::NotFreeText)
-    ));
-    // Ponuđeni odgovor radi.
-    g.choose_answer(h, &code, 0).unwrap();
+    let (mut with_char, mut without) = (false, false);
+    for seed in 1..=60_u64 {
+        let g = Game::fold(&v2_events(seed, PeriodKind::Month)).unwrap();
+        let r = g.current_round().unwrap();
+        for inst in &g.hotel(h).unwrap().drawn[&r] {
+            let code = inst.situation.code.clone();
+            let has_char = g
+                .content
+                .situation_templates
+                .as_ref()
+                .unwrap()
+                .templates
+                .iter()
+                .any(|t| t.code == inst.drawn.template && t.character.is_some());
+            if has_char && !with_char {
+                with_char = true;
+                g.send_message(h, &code, "Poruka.").unwrap();
+                g.submit_response(h, &code, "Odgovor.").unwrap();
+                g.validate_verdict(&code, common::draft_with(3, 0)).unwrap();
+                g.character_input(h, &code).unwrap();
+            } else if !has_char && !without {
+                without = true;
+                assert_eq!(
+                    g.submit_response(h, &code, "Odgovor."),
+                    Err(GameError::NotFreeText)
+                );
+                assert_eq!(
+                    g.send_message(h, &code, "Poruka."),
+                    Err(GameError::NotFreeText)
+                );
+                assert!(matches!(
+                    g.validate_verdict(&code, common::draft_with(3, 0)),
+                    Err(VerdictError::NotFreeText)
+                ));
+                assert!(matches!(
+                    g.character_input(h, &code),
+                    Err(GameError::NotFreeText)
+                ));
+            }
+            // Ponuđeni odgovor radi uvijek.
+            g.choose_answer(h, &code, 0).unwrap();
+        }
+        if with_char && without {
+            // Sidro S3 nema slobodan odgovor ni u v2 igri.
+            assert_eq!(
+                g.send_message(h, "S3", "Poruka."),
+                Err(GameError::NotFreeText)
+            );
+            return;
+        }
+    }
+    panic!("nije viđen primjerak s likom i bez njega: {with_char} {without}");
 }
 
 /// Oznaka „samo nagrada“ dolazi iz predloška primjerka u dnevniku, ne iz rastavljanja šifre.

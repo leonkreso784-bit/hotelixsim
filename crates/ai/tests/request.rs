@@ -147,6 +147,7 @@ fn sample_debrief() -> game::DebriefInput {
             neutral: false,
             unanswered: false,
             chosen_label: Some("Bonus na kraju sezone ako ostane, bez razgovora".into()),
+            department: None,
         }],
         indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
         indices_after: [5_390, 4_849, 4_269, 4_990, 6_120],

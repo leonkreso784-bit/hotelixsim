@@ -118,3 +118,116 @@ async fn season_mentor_writes_four_parts() {
         assert!(!low.contains(bad), "pripisana promjena plaća: {t}");
     }
 }
+
+/// G-2: situacija iz predloška (primjerak). Lik odgovori na poruku, presuda na slobodni odgovor vrati valjan
+/// `presuda.v3`, a nijedan ulaz za AI nema neispunjeno mjesto `{…}`. Mjesečna v2 igra, prvi krug, prvi primjerak
+/// hotela igrača čiji predložak ima lika.
+#[tokio::test]
+#[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
+async fn drawn_instance_character_replies_and_verdict_passes_validation() {
+    let key = std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY nije postavljen");
+    let snap = Snapshot::read_v2(&repo_dir()).unwrap();
+    let hotels = [11, 12, 13, 14].map(|n| HotelId(Uuid::from_u128(n)));
+    let guest = GuestId(Uuid::from_u128(99));
+    let events: Vec<Recorded> = new_game(GameId(Uuid::from_u128(1)), 42, &snap, guest, hotels)
+        .unwrap()
+        .into_iter()
+        .zip(1..)
+        .map(|((actor, event), seq)| Recorded { seq, actor, event })
+        .collect();
+    let mut g = Game::fold(&events).unwrap();
+    let round = g.current_round().unwrap();
+    let code = g.hotel(hotels[0]).unwrap().drawn[&round]
+        .iter()
+        .find(|i| {
+            g.content
+                .situation_templates
+                .as_ref()
+                .unwrap()
+                .templates
+                .iter()
+                .any(|t| t.code == i.drawn.template && t.character.is_some())
+        })
+        .expect("primjerak s likom u prvom krugu")
+        .situation
+        .code
+        .clone();
+    let ai = ai::Anthropic::new(key, ai::Models::default());
+    let ev = g
+        .send_message(hotels[0], &code, "Dobar dan, recite mi što se dogodilo.")
+        .unwrap();
+    let seq = g.last_seq + 1;
+    g.apply(Recorded {
+        seq,
+        actor: Actor::Guest(guest),
+        event: ev,
+    })
+    .unwrap();
+    let input = g.character_input(hotels[0], &code).unwrap();
+    assert!(!input.character.role.trim().is_empty());
+    for s in [
+        &input.title,
+        &input.character.name,
+        &input.character.role,
+        &input.character.brief,
+        &input.character.opening,
+    ] {
+        assert!(
+            !s.contains('{') && !s.contains('}'),
+            "neispunjeno mjesto: {s}"
+        );
+    }
+    let out = ai.character(input.clone()).await.expect("odgovor lika");
+    assert_eq!(out.meta.prompt, "lik.v2");
+    let reply = out.value.trim().to_owned();
+    assert!(!reply.is_empty());
+    assert!(!reply.contains('*'), "opis radnje: {reply}");
+    let ev = g
+        .record_reply(
+            hotels[0],
+            &code,
+            1,
+            ReplyBody {
+                text: reply,
+                source: event::AiSource::Ai,
+                meta: Some(out.meta),
+            },
+        )
+        .unwrap()
+        .expect("odgovor lika se upisuje");
+    let seq = g.last_seq + 1;
+    g.apply(Recorded {
+        seq,
+        actor: Actor::System,
+        event: ev,
+    })
+    .unwrap();
+
+    let ev = g
+        .submit_response(
+            hotels[0],
+            &code,
+            "Ispričavam se, odmah ću riješiti problem i javiti vam se kasnije da provjerim je li sve u redu.",
+        )
+        .unwrap();
+    let seq = g.last_seq + 1;
+    g.apply(Recorded {
+        seq,
+        actor: Actor::Guest(guest),
+        event: ev,
+    })
+    .unwrap();
+    let assess = g.assess_input(hotels[0], &code).unwrap();
+    for s in [&assess.title, &assess.response]
+        .into_iter()
+        .chain(assess.rubric.iter())
+    {
+        assert!(
+            !s.contains('{') && !s.contains('}'),
+            "neispunjeno mjesto: {s}"
+        );
+    }
+    let out = ai.assess(assess).await.expect("presuda");
+    assert_eq!(out.meta.prompt, "presuda.v3");
+    assert!(g.validate_verdict(&code, out.value).is_ok());
+}

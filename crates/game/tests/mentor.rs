@@ -25,6 +25,7 @@ fn sit(code: &str, title: &str, quality: u8) -> DebriefSituation {
         neutral: false,
         unanswered: false,
         chosen_label: None,
+        department: None,
     }
 }
 
@@ -57,6 +58,7 @@ fn sample() -> DebriefInput {
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![DebriefSituation {
             chosen_label: Some(CHEF_ANSWER.into()),
+            department: None,
             ..sit("S2", CHEF, 2)
         }],
         indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],

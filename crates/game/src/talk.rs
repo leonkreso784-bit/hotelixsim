@@ -58,7 +58,7 @@ impl Game {
         if self.status(m)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
-        if !self.ai_entry(code).is_some_and(|a| a.free_text) {
+        if !self.ai_entry_for(hotel, code).is_some_and(|a| a.free_text) {
             return Err(GameError::NotFreeText);
         }
         let key = (m, code.to_owned());

@@ -347,7 +347,7 @@ impl Game {
         let ok = self
             .situation_round_for(hotel, code)
             .is_ok_and(|(r, _)| r == m)
-            && self.ai_entry(code).is_some_and(|a| a.free_text);
+            && self.ai_entry_for(hotel, code).is_some_and(|a| a.free_text);
         if ok {
             Ok(())
         } else {
