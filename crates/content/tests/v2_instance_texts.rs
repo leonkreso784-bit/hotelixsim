@@ -266,3 +266,41 @@ fn role_title_is_optional_and_empty_title_is_rejected() {
         }
     }
 }
+
+/// Naziv uloge `title` u predlošku `code`, uloga `role` (bilo koja uloga, ne samo P-INSPEKCIJA).
+fn with_role_title(code: &str, role: &str, title: Value) -> Result<Content, ContentError> {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    let ts = v["v2"]["situation_templates"]["templates"]
+        .as_array_mut()
+        .unwrap();
+    let t = ts.iter_mut().find(|t| t["code"] == code).unwrap();
+    assert!(t["roles"][role].is_object(), "{code} nema ulogu {role}");
+    t["roles"][role]["title"] = title;
+    Snapshot::from_value(&v)?.build()
+}
+
+/// A-1 Dodatak (pregled G-2 p1, N1): naziv uloge s `{`/`}` se odbija (ne bi se popunio), a `title` uz `types` je
+/// proturječan (rečenica uloge uzima tip, naziv bi se tiho zanemario) pa se također odbija. Pretpostavka 🟨: poruka
+/// sadrži "naziv", kao kod praznog naziva.
+#[test]
+fn role_title_with_braces_or_beside_types_is_rejected() {
+    let cases = [
+        ("P-INSPEKCIJA", "inspektor", json!("sanitarni {inspektor}")),
+        ("P-INSPEKCIJA", "inspektor", json!("inspektor }")),
+        ("P-KLIMA", "gost", json!("gost hotela")),
+    ];
+    for (code, role, title) in cases {
+        match with_role_title(code, role, title.clone()) {
+            Err(ContentError::Invalid(m)) => {
+                assert!(
+                    m.contains("naziv"),
+                    "{code}.{role} {title}: poruka bez 'naziv': {m}"
+                );
+            }
+            Ok(_) => {
+                panic!("{code}.{role} naziv {title} mora pasti na provjeri sadržaja, prošao je")
+            }
+            Err(e) => panic!("{code}.{role} naziv {title}: očekivano Invalid, dobiveno {e:?}"),
+        }
+    }
+}

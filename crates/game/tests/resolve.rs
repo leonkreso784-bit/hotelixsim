@@ -54,7 +54,8 @@ fn june_resolution_covers_four_hotels_and_unanswered_is_quality_one() {
             code: "S1".into(),
             answer: Some(0),
             quality: 5,
-            free_text: false
+            free_text: false,
+            delegated: false
         }
     );
     assert_eq!(
@@ -63,7 +64,8 @@ fn june_resolution_covers_four_hotels_and_unanswered_is_quality_one() {
             code: "S3".into(),
             answer: None,
             quality: 1,
-            free_text: false
+            free_text: false,
+            delegated: false
         }
     );
     assert!(

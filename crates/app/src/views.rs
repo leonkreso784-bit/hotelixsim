@@ -2,8 +2,8 @@
 use game::feed::FeedItem;
 use game::view::{PrivateHotel, PublicHotel};
 use game::{
-    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, Model,
-    RoundInfo, RoundKey, RoundStatus, SeasonView, debrief_facts,
+    AiSource, Controller, DebriefFacts, FreeResponse, Game, GameId, GuestId, HotelId, InstanceRole,
+    Model, RoundInfo, RoundKey, RoundStatus, SeasonView, SituationKind, debrief_facts,
 };
 
 use crate::demo::load_game;
@@ -53,6 +53,21 @@ pub struct SituationItem {
     pub free_text: bool,
     pub character: Option<CharacterCardView>,
     pub response: Option<ResponseView>,
+    /// Kod odjela izvučenog primjerka; `None` za situaciju cijelog hotela, sidra S1–S4 i v1.
+    pub department: Option<String>,
+    /// Vrsta i važnost primjerka; sidra i v1 ih nemaju 🟨.
+    pub kind: Option<SituationKind>,
+    pub weight: Option<u8>,
+    /// Opis s popunjenim mjestima; sidra i v1 ga nemaju.
+    pub description: Option<String>,
+    /// Uloge primjerka (ključ, ime, rečenica uloge); lik je među njima.
+    pub roles: Vec<InstanceRole>,
+    /// Student je mora riješiti sam (prve tri u krugu, Leon P4).
+    pub mandatory: bool,
+    /// Prepuštena voditelju odjela.
+    pub delegated: bool,
+    /// Kod odjela voditelja kojem se smije prepustiti; `None` kad voditelja nema (v1).
+    pub leader: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -311,7 +326,8 @@ async fn situations_in_month(
         .map(|t| {
             let ai = g.ai_entry_for(hotel, &t.code);
             let key = (month, t.code.clone());
-            SituationItem {
+            let card = g.situation_card(hotel, month, &t.code)?;
+            Ok(SituationItem {
                 code: t.code.clone(),
                 title: t.title.clone(),
                 answers: t.answers.iter().map(|a| a.label.clone()).collect(),
@@ -327,9 +343,17 @@ async fn situations_in_month(
                     .responses
                     .get(&key)
                     .map(|fr| response_view(&g, hotel, &t.code, fr)),
-            }
+                department: card.department,
+                kind: card.kind,
+                weight: card.weight,
+                description: card.description,
+                roles: card.roles,
+                mandatory: g.situation_mandatory(hotel, &t.code)?,
+                delegated: record.delegated.contains(&key),
+                leader: g.situation_leader(hotel, &t.code)?,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, AppError>>()?;
     // Jedno pravilo: isti `Game::unanswered_count` kao `current.unanswered` (broji i ponuđene i slobodne odgovore).
     let open = g.status(month)? == RoundStatus::Open;
     let unanswered = if open {

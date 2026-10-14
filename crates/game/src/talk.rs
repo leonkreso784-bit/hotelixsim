@@ -62,7 +62,7 @@ impl Game {
             return Err(GameError::NotFreeText);
         }
         let key = (m, code.to_owned());
-        if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
+        if h.decided(&key) {
             return Err(GameError::AlreadyAnswered);
         }
         Ok((m, h.chats.get(&key).cloned().unwrap_or_default()))

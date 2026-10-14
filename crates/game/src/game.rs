@@ -71,6 +71,17 @@ pub struct HotelRecord {
     pub drawn: BTreeMap<RoundKey, Vec<DrawnInstance>>,
     /// Povijest generatora ovog hotela: njegovi i kolektivni primjerci, redom dnevnika.
     pub drawn_log: Vec<DrawnSituation>,
+    /// Situacije prepuštene voditelju odjela, po (krug, šifra) (A-1, Leon P4).
+    pub delegated: BTreeSet<(RoundKey, String)>,
+}
+
+impl HotelRecord {
+    /// Je li o situaciji već odlučeno: ponuđeni ili slobodni odgovor, ili prepuštanje voditelju.
+    pub fn decided(&self, key: &(RoundKey, String)) -> bool {
+        self.answers.contains_key(key)
+            || self.responses.contains_key(key)
+            || self.delegated.contains(key)
+    }
 }
 
 /// Projekcija dnevnika: stanje igre dobiveno slijedom događaja (`fold`).
@@ -161,6 +172,7 @@ impl Game {
                 season_debrief: None,
                 drawn: BTreeMap::new(),
                 drawn_log: Vec::new(),
+                delegated: BTreeSet::new(),
             });
         }
         Ok(Game {
@@ -201,9 +213,10 @@ impl Game {
                 let m = a.month;
                 self.expect_open(m)?;
                 let h = self.hotel_mut(a.hotel_id)?;
-                if h.responses.contains_key(&(m, a.situation.clone())) {
+                let key = (m, a.situation.clone());
+                if h.responses.contains_key(&key) || h.delegated.contains(&key) {
                     return Err(corrupt(format!(
-                        "ponuđeni odgovor uz slobodni na {}",
+                        "ponuđeni odgovor uz slobodni ili prepuštenu na {}",
                         a.situation
                     )));
                 }
@@ -220,7 +233,7 @@ impl Game {
                 self.expect_free_text(c.hotel_id, m, &c.situation)?;
                 let h = self.hotel_mut(c.hotel_id)?;
                 let key = (m, c.situation.clone());
-                if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
+                if h.decided(&key) {
                     return Err(corrupt("poruka nakon odgovora"));
                 }
                 let lines = h.chats.entry(key).or_default();
@@ -255,7 +268,7 @@ impl Game {
                 self.expect_free_text(s.hotel_id, m, &s.situation)?;
                 let h = self.hotel_mut(s.hotel_id)?;
                 let key = (m, s.situation.clone());
-                if h.answers.contains_key(&key) || h.responses.contains_key(&key) {
+                if h.decided(&key) {
                     return Err(corrupt(format!("dvostruki odgovor na {}", s.situation)));
                 }
                 h.responses.insert(
@@ -318,6 +331,28 @@ impl Game {
                 }
             }
             GameEvent::SituationsDrawn(d) => self.apply_drawn(d)?,
+            GameEvent::SituationDelegated(d) => {
+                let m = d.month;
+                self.expect_open(m)?;
+                if !self
+                    .situation_round_for(d.hotel_id, &d.situation)
+                    .is_ok_and(|(r, _)| r == m)
+                {
+                    return Err(corrupt(format!(
+                        "prepuštena situacija {} nije u krugu",
+                        d.situation
+                    )));
+                }
+                let h = self.hotel_mut(d.hotel_id)?;
+                let key = (m, d.situation.clone());
+                if h.decided(&key) {
+                    return Err(corrupt(format!(
+                        "prepuštanje već riješene situacije {}",
+                        d.situation
+                    )));
+                }
+                h.delegated.insert(key);
+            }
             GameEvent::RoundClosed(c) => {
                 let m = c.month;
                 self.expect_open(m)?;
@@ -527,10 +562,7 @@ impl Game {
         let n = self
             .hotel_situations(h, m)
             .into_iter()
-            .filter(|t| {
-                let key = (m, t.code.clone());
-                !h.answers.contains_key(&key) && !h.responses.contains_key(&key)
-            })
+            .filter(|t| !h.decided(&(m, t.code.clone())))
             .count();
         u8::try_from(n).map_err(|_| corrupt("broj neodgovorenih situacija"))
     }

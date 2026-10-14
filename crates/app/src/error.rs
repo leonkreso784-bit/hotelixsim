@@ -18,6 +18,8 @@ pub enum ErrorCode {
     UnknownDepartment,
     RoundNotOpen,
     AlreadyAnswered,
+    /// Situacija je obvezna (prve tri u krugu) ili nema voditelja: ne smije se prepustiti.
+    SituationMandatory,
     NotFreeText,
     ChatLimit,
     AwaitingReply,
@@ -52,7 +54,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 32] = [
+    pub const ALL: [ErrorCode; 33] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -65,6 +67,7 @@ impl ErrorCode {
         ErrorCode::UnknownDepartment,
         ErrorCode::RoundNotOpen,
         ErrorCode::AlreadyAnswered,
+        ErrorCode::SituationMandatory,
         ErrorCode::NotFreeText,
         ErrorCode::ChatLimit,
         ErrorCode::AwaitingReply,
@@ -94,8 +97,8 @@ impl ErrorCode {
             NotInGame | NotYourHotel => ErrorKind::Forbidden,
             UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile
             | UnknownDepartment => ErrorKind::NotFound,
-            RoundNotOpen | AlreadyAnswered | ChatLimit | AwaitingReply | GameOutdated
-            | WrongModel | NoResolvedRound | SeasonNotOver => ErrorKind::Conflict,
+            RoundNotOpen | AlreadyAnswered | SituationMandatory | ChatLimit | AwaitingReply
+            | GameOutdated | WrongModel | NoResolvedRound | SeasonNotOver => ErrorKind::Conflict,
             UnknownAnswer
             | NotFreeText
             | BadText
@@ -130,6 +133,7 @@ impl ErrorCode {
             UnknownDepartment => "unknown_department",
             RoundNotOpen => "round_not_open",
             AlreadyAnswered => "already_answered",
+            SituationMandatory => "situation_mandatory",
             NotFreeText => "not_free_text",
             ChatLimit => "chat_limit",
             AwaitingReply => "awaiting_reply",
@@ -188,6 +192,7 @@ impl From<GameError> for AppError {
             GameError::UnknownAnswer => C::UnknownAnswer,
             GameError::RoundNotOpen => C::RoundNotOpen,
             GameError::AlreadyAnswered => C::AlreadyAnswered,
+            GameError::SituationMandatory => C::SituationMandatory,
             GameError::NotFreeText => C::NotFreeText,
             GameError::ChatLimit => C::ChatLimit,
             GameError::AwaitingReply => C::AwaitingReply,

@@ -83,6 +83,15 @@ pub struct AnswerChosen {
     pub answer: u8,
 }
 
+/// Student je situaciju prepustio voditelju odjela (Leon P4, 13.10.): smije samo iza prve tri situacije kruga.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SituationDelegated {
+    pub hotel_id: HotelId,
+    pub month: RoundKey,
+    pub situation: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RoundClosed {
@@ -122,6 +131,10 @@ pub struct SituationResult {
     /// Slobodan odgovor (kvaliteta iz presude, `answer` je tada `None`); stari događaji ga nemaju.
     #[serde(default, skip_serializing_if = "is_false")]
     pub free_text: bool,
+    /// Prepuštena voditelju odjela (Leon P4: kvaliteta 2, mehanike `unanswered`, `answer` je `None`); stari
+    /// događaji i obračun bez prepuštanja ga nemaju, pa je njihov JSON bajt-isti.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub delegated: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -290,6 +303,8 @@ pub enum GameEvent {
     SeasonDebriefRecorded(SeasonDebriefRecorded),
     /// Primjerci situacija iz predložaka pri otvaranju kruga (samo v2 igre s predlošcima).
     SituationsDrawn(SituationsDrawn),
+    /// Situacija prepuštena voditelju odjela (A-1).
+    SituationDelegated(SituationDelegated),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -330,6 +345,7 @@ impl GameEvent {
             GameEvent::DebriefRecorded(_) => "DebriefRecorded",
             GameEvent::SeasonDebriefRecorded(_) => "SeasonDebriefRecorded",
             GameEvent::SituationsDrawn(_) => "SituationsDrawn",
+            GameEvent::SituationDelegated(_) => "SituationDelegated",
         }
     }
 
@@ -347,6 +363,7 @@ impl GameEvent {
             GameEvent::DebriefRecorded(e) => serde_json::to_value(e),
             GameEvent::SeasonDebriefRecorded(e) => serde_json::to_value(e),
             GameEvent::SituationsDrawn(e) => serde_json::to_value(e),
+            GameEvent::SituationDelegated(e) => serde_json::to_value(e),
         };
         v.expect("događaj nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
     }
@@ -376,6 +393,7 @@ impl GameEvent {
             "DebriefRecorded" => GameEvent::DebriefRecorded(body(kind, payload)?),
             "SeasonDebriefRecorded" => GameEvent::SeasonDebriefRecorded(body(kind, payload)?),
             "SituationsDrawn" => GameEvent::SituationsDrawn(body(kind, payload)?),
+            "SituationDelegated" => GameEvent::SituationDelegated(body(kind, payload)?),
             other => return Err(EventError::UnknownKind(other.to_owned())),
         })
     }

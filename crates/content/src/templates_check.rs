@@ -362,6 +362,18 @@ fn check_roles_and_params(
         if role.title.as_ref().is_some_and(|x| x.trim().is_empty()) {
             return invalid(format!("{ctx}: uloga '{key}' ima prazan naziv uloge"));
         }
+        // Naziv uloge se ne popunjava (mjesto `{…}` bi ostalo u tekstu), a uz `types` bi se tiho zanemario
+        // (rečenica uloge uzima tip): oboje je greška sadržaja (A-1, pregled G-2 p1 N1).
+        if role.title.as_ref().is_some_and(|x| x.contains(['{', '}'])) {
+            return invalid(format!(
+                "{ctx}: uloga '{key}': naziv uloge ne smije imati '{{' ni '}}'"
+            ));
+        }
+        if role.title.is_some() && !role.types.is_empty() {
+            return invalid(format!(
+                "{ctx}: uloga '{key}': naziv uloge ide samo uz ulogu bez tipova (types)"
+            ));
+        }
         allowed.insert(format!("{key}.ime"));
         if !role.types.is_empty() {
             allowed.insert(format!("{key}.tip"));

@@ -164,6 +164,32 @@ pub async fn answer(
     Ok(Json(SituationsBody::try_from(&v)?))
 }
 
+/// Prepusti situaciju voditelju odjela (ocjena 2, bez AI-ja); prve tri situacije kruga su obvezne.
+#[utoipa::path(
+    post,
+    path = "/v1/hotels/{hotel_id}/situations/{code}/delegate",
+    params(
+        ("hotel_id" = String, Path, description = "Hotel (uuid)"),
+        ("code" = String, Path, description = "Šifra situacije (primjerak ima točku, npr. `P-KLIMA.t03`)")
+    ),
+    responses(
+        (status = 200, description = "Situacije nakon prepuštanja", body = SituationsBody),
+        (status = 401, body = Problem, content_type = "application/problem+json"),
+        (status = 403, body = Problem, content_type = "application/problem+json"),
+        (status = 404, body = Problem, content_type = "application/problem+json"),
+        (status = 409, description = "Obvezna situacija, već odgovoreno ili runda nije otvorena", body = Problem, content_type = "application/problem+json")
+    )
+)]
+pub async fn delegate(
+    State(s): State<AppState>,
+    Token(t): Token,
+    Path((id, code)): Path<(String, String)>,
+) -> Result<Json<SituationsBody>, Problem> {
+    let caller = app::caller(&s.deps, t.as_deref()).await?;
+    let v = app::delegate_situation(&s.deps, &caller, parse_hotel(&id)?, &code).await?;
+    Ok(Json(SituationsBody::try_from(&v)?))
+}
+
 /// Poruka liku u razgovoru; odgovor lika stiže kasnije (radnik), pa je odgovor 202.
 #[utoipa::path(
     post,

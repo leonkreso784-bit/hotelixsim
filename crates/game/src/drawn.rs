@@ -27,6 +27,28 @@ pub struct DrawnInstance {
     /// Podaci za AI sloj iz popunjenog primjerka (lik, rubrika, kriteriji); lik ima samo predložak s likom.
     pub ai: content::SituationAi,
     pub no_penalty: bool,
+    /// Opis situacije s popunjenim mjestima (`content::Instance::description`).
+    pub description: String,
+}
+
+/// Uloga primjerka za pogled: ključ iz predloška, ime i rečenica uloge — samo ono što je primjerak već popunio
+/// (lik: rečenica kao u liku; ostale uloge: vrsta iz izvlačenja ili naziv iz predloška, inače `None`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstanceRole {
+    pub key: String,
+    pub name: String,
+    pub role: Option<String>,
+}
+
+/// Što pogled situacije zna o izvučenom primjerku. Sidra S1–S4 i v1 to nemaju (sve `None`, uloge prazne) 🟨.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SituationCard {
+    /// Kod odjela primjerka; `None` za situaciju cijelog hotela.
+    pub department: Option<String>,
+    pub kind: Option<Kind>,
+    pub weight: Option<u8>,
+    pub description: Option<String>,
+    pub roles: Vec<InstanceRole>,
 }
 
 const KINDS: [(Kind, &str); 6] = [
@@ -207,6 +229,7 @@ impl Game {
                     situation: filled.situation,
                     ai: filled.ai,
                     no_penalty: tpl.no_penalty(&i.template),
+                    description: filled.description,
                 });
             }
             built.push(own);
@@ -411,6 +434,58 @@ impl Game {
                 .flatten()
                 .find(|i| i.situation.code == code)
                 .map(|i| &i.ai)
+        })
+    }
+
+    /// Kartica situacije hotela u krugu `r` (odjel, vrsta, važnost, opis, uloge); prazna za sidra i v1.
+    pub fn situation_card(
+        &self,
+        hotel: HotelId,
+        r: RoundKey,
+        code: &str,
+    ) -> Result<SituationCard, GameError> {
+        let h = self.hotel(hotel)?;
+        let Some(i) = h
+            .drawn
+            .get(&r)
+            .and_then(|l| l.iter().find(|i| i.situation.code == code))
+        else {
+            return Ok(SituationCard::default());
+        };
+        let template = self
+            .content
+            .situation_templates
+            .as_ref()
+            .and_then(|t| t.templates.iter().find(|t| t.code == i.drawn.template));
+        let character_key = template
+            .and_then(|t| t.character.as_ref())
+            .map(|c| c.role.as_str());
+        let roles = i
+            .drawn
+            .roles
+            .iter()
+            .map(|(key, fill)| {
+                let role = match (&i.ai.character, character_key == Some(key.as_str())) {
+                    (Some(c), true) => Some(c.role.clone()),
+                    _ => fill.role_type.clone().or_else(|| {
+                        template
+                            .and_then(|t| t.roles.get(key))
+                            .and_then(|r| r.title.clone())
+                    }),
+                };
+                InstanceRole {
+                    key: key.clone(),
+                    name: fill.name.clone(),
+                    role,
+                }
+            })
+            .collect();
+        Ok(SituationCard {
+            department: i.drawn.department.as_ref().map(|d| d.as_str().to_owned()),
+            kind: Some(i.drawn.kind),
+            weight: Some(i.drawn.weight),
+            description: Some(i.description.clone()),
+            roles,
         })
     }
 

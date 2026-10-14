@@ -122,7 +122,7 @@ impl Game {
                     for s in res
                         .situations
                         .iter()
-                        .filter(|s| s.answer.is_none() && !s.free_text)
+                        .filter(|s| s.answer.is_none() && !s.free_text && !s.delegated)
                     {
                         out.push(FeedItem::SituationIgnored {
                             seq,
@@ -173,8 +173,11 @@ impl Game {
                 | GameEvent::VerdictRecorded(_)
                 | GameEvent::VerdictLate(_)
                 | GameEvent::DebriefRecorded(_) => {}
-                // Sezonski mentor je na ekranu kraja sezone, ne u feedu; izvlačenje situacija je tehnički događaj.
-                GameEvent::SeasonDebriefRecorded(_) | GameEvent::SituationsDrawn(_) => {}
+                // Sezonski mentor je na ekranu kraja sezone, ne u feedu; izvlačenje situacija je tehnički događaj;
+                // prepuštena situacija se vidi na ekranu situacija i nije „ignorirana" u obračunu.
+                GameEvent::SeasonDebriefRecorded(_)
+                | GameEvent::SituationsDrawn(_)
+                | GameEvent::SituationDelegated(_) => {}
             }
         }
         Ok(out)

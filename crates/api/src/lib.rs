@@ -10,6 +10,7 @@ mod hotels;
 mod kpi;
 pub mod problem;
 pub mod schema;
+mod schema_situations;
 
 use axum::Router;
 use axum::http::StatusCode;
@@ -42,6 +43,7 @@ fn parts() -> OpenApiRouter<AppState> {
         .routes(routes!(hotels::put_plan))
         .routes(routes!(hotels::situations))
         .routes(routes!(hotels::answer))
+        .routes(routes!(hotels::delegate))
         .routes(routes!(hotels::send_message))
         .routes(routes!(hotels::conversation))
         .routes(routes!(hotels::submit_response))

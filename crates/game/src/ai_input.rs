@@ -57,8 +57,10 @@ pub struct DebriefSituation {
     pub rationale: Option<String>,
     /// Neutralna presuda (AI nije stigao): ocjena 3 po pravilu.
     pub neutral: bool,
-    /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2).
+    /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2); prepuštena voditelju nije „bez odgovora".
     pub unanswered: bool,
+    /// Student je situaciju prepustio voditelju odjela (ocjena 2, Leon P4).
+    pub delegated: bool,
     /// Oznaka ponuđenog odgovora koji je student izabrao; `None` za slobodan odgovor i bez odgovora.
     pub chosen_label: Option<String>,
     /// Ime odjela izvučenog primjerka (npr. „Smještaj"); `None` za situaciju cijelog hotela, sidra S1–S4 i v1.
@@ -248,7 +250,8 @@ impl Game {
                 free_text: s.free_text,
                 rationale: verdict.map(|v| v.rationale.clone()),
                 neutral: verdict.is_some_and(|v| v.nearest_answer.is_none()),
-                unanswered: s.answer.is_none() && !s.free_text,
+                unanswered: s.answer.is_none() && !s.free_text && !s.delegated,
+                delegated: s.delegated,
                 chosen_label,
                 department,
             });

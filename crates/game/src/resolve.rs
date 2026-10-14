@@ -9,6 +9,9 @@ use crate::game::{Game, HotelRecord, RoundStatus};
 use crate::round::RoundKey;
 use crate::verdict::NEUTRAL_DEADLINE;
 
+/// Kvaliteta situacije prepuštene voditelju odjela (Leon P4): bolja od šutnje (1), slabija od srednje (3).
+pub const DELEGATED_QUALITY: u8 = 2;
+
 /// Ishod odluke posla obračuna.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ResolveStep {
@@ -41,6 +44,7 @@ impl Game {
                     answer: Some(i),
                     quality: a.quality,
                     free_text: false,
+                    delegated: false,
                 });
                 let o = SituationOutcome::from_answer(&t.code, a);
                 outcomes.push(model.situation_outcome(o, no_penalty));
@@ -67,12 +71,28 @@ impl Game {
                     answer: None,
                     quality: v.quality,
                     free_text: true,
+                    delegated: false,
                 });
                 let o = SituationOutcome {
                     code: t.code.clone(),
                     mechanics,
                     quality: v.quality,
                 };
+                outcomes.push(model.situation_outcome(o, no_penalty));
+            } else if h.delegated.contains(&key) {
+                // Prepuštena voditelju: mehanike `unanswered` (isti trošak i smjer) uz kvalitetu 2, bez AI-ja.
+                let o = SituationOutcome {
+                    code: t.code.clone(),
+                    mechanics: t.unanswered.clone(),
+                    quality: DELEGATED_QUALITY,
+                };
+                results.push(SituationResult {
+                    code: t.code.clone(),
+                    answer: None,
+                    quality: o.quality,
+                    free_text: false,
+                    delegated: true,
+                });
                 outcomes.push(model.situation_outcome(o, no_penalty));
             } else {
                 let o = SituationOutcome::unanswered(t);
@@ -81,6 +101,7 @@ impl Game {
                     answer: None,
                     quality: o.quality,
                     free_text: false,
+                    delegated: false,
                 });
                 outcomes.push(model.situation_outcome(o, no_penalty));
             }

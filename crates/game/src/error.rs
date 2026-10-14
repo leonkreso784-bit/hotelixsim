@@ -10,6 +10,8 @@ pub enum GameError {
     UnknownAnswer,
     RoundNotOpen,
     AlreadyAnswered,
+    /// Situacija je među prve tri u krugu (obvezne, Leon P4) ili igra nema voditelja kojem bi se prepustila.
+    SituationMandatory,
     /// Situacija nema razgovor ni slobodni odgovor (`free_text` je isključen).
     NotFreeText,
     /// Svih šest studentovih poruka je iskorišteno.

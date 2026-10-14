@@ -313,6 +313,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hotels/{hotel_id}/situations/{code}/delegate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepusti situaciju voditelju odjela (ocjena 2, bez AI-ja); prve tri situacije kruga su obvezne. */
+        post: operations["delegate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hotels/{hotel_id}/situations/{code}/messages": {
         parameters: {
             query?: never;
@@ -1048,7 +1065,7 @@ export interface components {
          * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
          * @enum {string}
          */
-        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "situation_mandatory" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
         /** @enum {string} */
         ProfileCode: "A" | "B" | "C";
         /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
@@ -1096,6 +1113,12 @@ export interface components {
         };
         /** @enum {string} */
         ResponseStatusBody: "pending" | "judged" | "neutral";
+        /** @description Uloga u situaciji: ključ iz predloška, ime osobe i rečenica tko je (ako je poznata). */
+        RoleBody: {
+            key: string;
+            name: string;
+            role: string | null;
+        };
         RoundBody: {
             month: components["schemas"]["MonthCode"];
             /** @description Krug i njegov kalendar. */
@@ -1281,11 +1304,34 @@ export interface components {
             /** Format: int32 */
             chosen: number | null;
             code: string;
+            /** @description Prepuštena voditelju odjela. */
+            delegated: boolean;
+            /** @description Kod odjela izvučenog primjerka (`restaurant`); `null` za situaciju cijelog hotela i sidra S1–S4. */
+            department: string | null;
+            /** @description Opis situacije; `null` za sidra. */
+            description: string | null;
             /** @description Student smije odgovoriti svojim riječima i razgovarati s likom. */
             free_text: boolean;
+            kind: components["schemas"]["SituationKindBody"] | null;
+            /** @description Kod odjela voditelja kojem se situacija smije prepustiti; `null` kad ga nema (stari model). */
+            leader: string | null;
+            /** @description Student je mora riješiti sam (prve tri situacije kruga). */
+            mandatory: boolean;
             response: components["schemas"]["ResponseBody"] | null;
+            /** @description Uloge primjerka; lik je među njima. */
+            roles: components["schemas"]["RoleBody"][];
             title: string;
+            /**
+             * Format: int32
+             * @description Važnost primjerka 1–5 (popis je po važnosti silazno, sidra prva); `null` za sidra.
+             */
+            weight: number | null;
         };
+        /**
+         * @description Vrsta situacije iz predloška.
+         * @enum {string}
+         */
+        SituationKindBody: "complaint" | "staff" | "opportunity" | "breakdown" | "crisis" | "request";
         SituationsBody: {
             items: components["schemas"]["SituationBody"][];
             month: components["schemas"]["MonthCode"] | null;
@@ -2272,6 +2318,64 @@ export interface operations {
             };
             /** @description Situacija nema lika */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delegate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Hotel (uuid) */
+                hotel_id: string;
+                /** @description Šifra situacije (primjerak ima točku, npr. `P-KLIMA.t03`) */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Situacije nakon prepuštanja */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationsBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Obvezna situacija, već odgovoreno ili runda nije otvorena */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
