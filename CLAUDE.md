@@ -22,7 +22,9 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
   Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
   (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
-  Balans: `cargo run -p balance --release -- --seeds 1000 --check`.
+  Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check` (i `--round month`; v1:
+  `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
+  ([ADR-033](docs/records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) Dopuna 14.10.).
 - **AI ključ** je u `.env` (`ANTHROPIC_API_KEY`), nikad u `.env.example` ni u gitu; živi test:
   `cargo test -p ai --test live -- --ignored` (uz `set -a; source .env; set +a`).
 - **Raspored i način rada:** [ROADMAP](docs/plan/ROADMAP.md) — dva kolosijeka (IGRA, PLATFORMA) + kvaliteta, faze i

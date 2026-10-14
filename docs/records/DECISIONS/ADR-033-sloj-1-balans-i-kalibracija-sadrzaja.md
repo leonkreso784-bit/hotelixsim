@@ -46,3 +46,11 @@ osoblja 4\* je u [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 9.
 
 **Cijena ako krivo:** brojke su podaci u `content/hotel/v2/` (`departments.json`, `profiles.json`, `periods.json`);
 svaka promjena traži ponovni balans na 1000 sjemena za obje vrste kruga.
+
+**Dopuna 14.10. (Leon: popravak temelja, faza A1; [REVIZIJA_TEMELJA](../../architecture/REVIZIJA_TEMELJA.md) §6).**
+`balance --check` ruši samo **brane modela**: početak (§11.1), GOP/EBITDA, marže odjela, udio rada, ostali prihodi
+C, dominantna proba (§11.4), granica grupa, broj situacija po krugu, raznolikost i ponovljivost. Šest **mjera robota**
+računa se i ispisuje u odjeljku „Mjere robota", ali ne ruši provjeru: pravednost (§11.3), tjedno ≈ mjesečno, Brižni
+sezonci ≥ 80 %, udio situacija Brižnog, Brižni Δ > 0 te Štediša Δ < 0 i najviše 6 bodova. „Brižni sezonci ≥ 80 %" je
+i test robota (`crates/balance/tests/robots_v2.rs`). v1 provjere su nepromijenjene. **Ispravak t. 8:** CI vrti v1 sa
+100 sjemena (`ci.yml`), a v2 tjedno i mjesečno s 1000 (v1 je zamrznut i čuvan zlatnim SHA testom).
