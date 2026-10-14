@@ -478,7 +478,9 @@
       "when": { "months": ["jun", "jul"] },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 2, "gap_rounds": 4 },
-      "roles": { "organizatorica": { "from": "partner", "gender": "f", "title": "organizatorica vjenčanja" } },
+      "roles": {
+        "organizatorica": { "from": "partner", "gender": "f", "title": "organizatorica vjenčanja" }
+      },
       "params": {
         "sobe": { "pick": [15, 18, 20] },
         "noci": { "pick": [2, 3] },
