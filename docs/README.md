@@ -120,6 +120,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [ARHITEKTURA.md](./architecture/ARHITEKTURA.md) | Arhitektura v2: Rust (jezgra + backend) + TypeScript (sučelje), granice crateova, determinizam, dnevnik događaja, AI iza porta, redoslijed gradnje (§20) |
 | [RASPRAVA_ARHITEKTURE.md](./architecture/RASPRAVA_ARHITEKTURE.md) | Zapis rasprave o nacrtu: primjedbe, odgovori, otvoreni upiti |
 | [VODITELJ_I_TRZISTE.md](./architecture/VODITELJ_I_TRZISTE.md) | Voditelj odjela koji upravlja odjelom i odgovara za njega, i uvid u tržište (zainteresirani, smješteni, odbijeni gosti); nacrt za raspravu, Leonove ideje 13.10. |
+| [BANKA_LJUDI.md](./architecture/BANKA_LJUDI.md) | Banka ljudi: format i pravila za tisuće radnika i gostiju (sadržaj u repou), ciljni brojevi, deterministički izbor po sjemenu, punjenje u serijama s dva agenta; nacrt za raspravu, ADR-042 t. 5 |
 | [PLATFORMA.md](./architecture/PLATFORMA.md) | **Platforma**: razred = jedna igra s N hotela, računi i uloge, profesorov pregled, generirani hoteli, produkcija (Railway) i trošak, GDPR; nacrt za raspravu, odluke u ADR-037 (dijelovi u `PLATFORMA/`) |
 | [MODEL_V2.md](./architecture/MODEL_V2.md) | **Put B**: kako hotel od brojeva postaje skup stvari (odjeli, zaposlenici, sobe, recenzije) — entiteti, slojevi, determinizam, stare igre |
 
