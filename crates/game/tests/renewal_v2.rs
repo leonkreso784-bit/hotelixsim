@@ -664,7 +664,6 @@ fn new_v2_json_with_renewal_round_trips() {
 
 #[test]
 fn game_created_with_core_2_0_0_is_outdated() {
-    assert_eq!(sim_hotel_v2::CORE_VERSION, "2.1.0");
     let snap = Snapshot::read_v2(&repo_dir()).unwrap();
     let log: Vec<Recorded> = game::command::new_game_with(
         GameId(uuid::Uuid::from_u128(1)),
@@ -690,7 +689,7 @@ fn game_created_with_core_2_0_0_is_outdated() {
         Game::fold(&log).unwrap_err(),
         GameError::Outdated {
             created: "2.0.0".into(),
-            current: "2.1.0".into(),
+            current: sim_hotel_v2::CORE_VERSION.into(),
         }
     );
 }

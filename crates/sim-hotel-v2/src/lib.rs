@@ -48,5 +48,6 @@ pub use sim_hotel::{
 };
 pub use state::{Building, HotelState};
 
-/// Verzija jezgre v2 u `GameCreated` (MODEL_V2 §6.2 t. 3); raste po sloju, ne unutar sloja 1.
+/// Verzija jezgre v2 u `GameCreated` (MODEL_V2 §6.2 t. 3); raste sa svakom promjenom koja igri u tijeku mijenja brojke;
+/// čuva je pečat `crates/game/tests/v2_sealed.rs`.
 pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
