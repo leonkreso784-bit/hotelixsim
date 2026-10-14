@@ -11,5 +11,9 @@ sim-hotel-v2.workspace = true
 content.workspace = true
 engine.workspace = true
 
+[dev-dependencies]
+game.workspace = true
+uuid.workspace = true
+
 [lints]
 workspace = true
