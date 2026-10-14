@@ -211,7 +211,7 @@ async fn resolve_enqueues_debrief_for_human_only_and_mentor_appears() {
     run_all_jobs(&deps).await;
     let h = app::hotel_view(&deps, &caller, hotel).await.unwrap();
     let last = h.private.unwrap().last_month.unwrap();
-    assert_eq!(last.mentor.as_deref(), Some("Mentor: dobar mjesec."));
+    assert_eq!(last.mentor.as_deref(), Some(app::memory::FAKE_DEBRIEF));
     assert_eq!(ai.calls().2, 1, "mentor samo za hotel s čovjekom");
 }
 
