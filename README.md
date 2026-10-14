@@ -1,14 +1,55 @@
 # HotelixSim
 
-Simulacija vođenja hotela za učenje — student dobije hotel, rješava situacije uz AI, a ocjenjuje se koliko je
-hotel unaprijedio u odnosu na početak.
+**Simulacija vođenja hotela za studente hotelijerstva.** Student dobije hotel i vodi ga kroz sezonu: rješava situacije
+s gostima i zaposlenicima, razgovara s likovima koje glumi AI i donosi poslovne odluke. Ocjenjuje se **koliko je hotel
+unaprijedio u odnosu na početak, a ne koliko je zaradio.**
 
-- Vizija: [docs/product/VIZIJA.md](docs/product/VIZIJA.md)
-- Plan: [docs/plan/ROADMAP.md](docs/plan/ROADMAP.md)
-- Arhitektura: [docs/architecture/ARHITEKTURA.md](docs/architecture/ARHITEKTURA.md)
-- Demo (specifikacija): [docs/product/DEMO.md](docs/product/DEMO.md)
+Projekt nastaje za nastavu na studiju Hospitality Managementa (FMTU Opatija). Autor: **Leon Kreso**.
 
-Privatno · autor: Leon Kreso.
+## Ideja
+
+- **Hotel se dobije, ne bira.** Svi hoteli kreću s istom ukupnom početnom ocjenom, ali s drukčije raspoređenim snagama:
+  jedan ima odlične recenzije i slabe financije, drugi dobre financije i lošiju operativu, treći je prosječan u svemu.
+  Tako je natjecanje fer.
+- **Sezona u krugovima.** Igra prati sezonu od lipnja do rujna, po tjednima ili po mjesecima. U svakom krugu stižu
+  situacije: gost se žali na sobu, radnik traži povišicu, pokvari se pumpa na bazenu, javi se agencija s grupom.
+- **Odgovor je pravi posao.** Student bira ponuđeni odgovor, piše svoj ili prvo razgovara s gostom ili zaposlenikom kojeg
+  glumi AI. Uz situacije vodi hotel po odjelima (smještaj, hrana i piće, wellness…): cijene, sezonski radnici, održavanje,
+  obnova, a vidi i račun dobiti po hotelskom standardu USALI.
+- **AI ne odlučuje o brojkama.** AI glumi likove, procjenjuje slobodan odgovor po unaprijed zadanim kriterijima i na kraju
+  kruga, kao mentor, objasni što je bilo dobro, a što ne. Sve brojke računaju pravila igre, uvijek jednako: ista igra s
+  istim početkom daje isti ishod.
+- **Ocjena je napredak.** Pet pokazatelja (zadovoljstvo gostiju, recenzije, zaposlenici, operativa, financije) uspoređuje
+  se s početnim stanjem vlastitog hotela.
+- **Razred u jednoj igri** (u izradi). Studenti jednog kolegija vode svoje hotele u istoj igri i natječu se jedni s
+  drugima, a profesor otvara krugove i prati razred.
+
+## Stanje (listopad 2026.)
+
+- **Igriv demo** radi u pregledniku, na mobitelu i na računalu: hotel, situacije, razgovor s likom, AI ocjena, mentor i
+  usporedba s tri računalna igrača.
+- **Novi model igre** (odjeli, račun dobiti, tjedni ili mjesečni krug, situacije iz predložaka, obnova, kraj sezone)
+  je u grani [`model-v2/sloj1`](https://github.com/leonkreso784-bit/hotelixsim/tree/model-v2/sloj1). Ondje je i
+  [revizija temelja](https://github.com/leonkreso784-bit/hotelixsim/blob/model-v2/sloj1/docs/architecture/REVIZIJA_TEMELJA.md)
+  s [planom popravka](https://github.com/leonkreso784-bit/hotelixsim/blob/model-v2/sloj1/docs/plan/2026-10-14-popravak-temelja.md),
+  koji je trenutno u tijeku.
+- **Sljedeće:** razred u jednoj igri, likovi s vlastitim osobinama, profesorov pregled; studentski pilot planiran je za
+  ljetni semestar 2027.
+
+## Kako je građeno
+
+Jezgra igre je u **Rustu**: čista knjižnica bez baze, ekrana i AI-ja, s cjelobrojnim računom i dnevnikom događaja iz
+kojeg se stanje hotela uvijek može ponovno izračunati. Oko nje su API (Axum), baza (PostgreSQL) i sučelje (React,
+TypeScript). AI (Claude) je iza jednog sučelja; ključ je samo na poslužitelju.
+
+Više: [vizija](docs/product/VIZIJA.md) · [plan i faze](docs/plan/ROADMAP.md) ·
+[arhitektura](docs/architecture/ARHITEKTURA.md) · [model v2](docs/architecture/MODEL_V2.md) ·
+[sva dokumentacija](docs/README.md).
+
+## Licenca
+
+© 2026. Leon Kreso. **Sva prava pridržana.** Kod je javno vidljiv radi pregleda i suradnje, ali se ne smije koristiti,
+kopirati, mijenjati ni distribuirati bez autorove pisane dozvole. Vidi [LICENSE](LICENSE).
 
 ## Lokalni razvoj
 
