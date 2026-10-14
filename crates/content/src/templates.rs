@@ -89,6 +89,10 @@ pub struct Template {
     /// (zadovoljstvo, moral, ocjena, oprema); trošak nagrade ostaje. Bez polja = obična situacija.
     #[serde(default, skip_serializing_if = "crate::is_false")]
     pub no_penalty: bool,
+    /// Kvar ili popravak čiji uzrok nije stanje prostora hotela — vanjski događaj, dobavljač, oprema partnera
+    /// (ADR-042 t. 7); izuzet od načela „kvar samo kad je stanje loše'.
+    #[serde(default, skip_serializing_if = "crate::is_false")]
+    pub external_cause: bool,
 }
 
 /// Vrsta situacije (raznolikost u krugu).

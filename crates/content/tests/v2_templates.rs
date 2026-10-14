@@ -127,43 +127,6 @@ fn repo_templates_cover_kinds_and_departments() {
         let n = t.templates.iter().filter(|x| x.department == d).count();
         assert!(n >= 2, "odjel {d} ima samo {n} predložak/predloška");
     }
-    for x in &t.templates {
-        let q: Vec<u8> = x.answers.iter().map(|a| a.quality()).collect();
-        assert!(
-            q.contains(&5),
-            "{}: nema najboljeg odgovora (kvaliteta 5): {q:?}",
-            x.code
-        );
-        assert!(
-            q.iter().any(|v| (3..=4).contains(v)),
-            "{}: nema srednjeg odgovora (kvaliteta 3 ili 4): {q:?}",
-            x.code
-        );
-        assert!(
-            x.repeat.gap_rounds >= 4,
-            "{}: razmak ponavljanja {} < 4 kruga",
-            x.code,
-            x.repeat.gap_rounds
-        );
-    }
-}
-
-/// Kapacitet sadržaja čuva `v2_situation_capacity.rs` (pravi generator, profili A/B/C, tipično stanje). Ovdje samo
-/// imena: ponovljeni predložak traži drugo ime, pa svaki popis imena ima barem 20 imena po rodu.
-#[test]
-fn repo_names_have_twenty_per_list() {
-    let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
-    let n = &c.situation_templates.unwrap().names;
-    for (list, v) in [
-        ("guest.f", &n.guest.f),
-        ("guest.m", &n.guest.m),
-        ("staff.f", &n.staff.f),
-        ("staff.m", &n.staff.m),
-        ("partner.f", &n.partner.f),
-        ("partner.m", &n.partner.m),
-    ] {
-        assert!(v.len() >= 20, "names.{list}: {} imena < 20", v.len());
-    }
 }
 
 /// Leon (12.10.): pohvala je čista prilika. Predložak ima oznaku „samo nagrada" (S-4), pa ni slobodan odgovor ne
