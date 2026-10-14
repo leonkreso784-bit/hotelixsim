@@ -1,6 +1,6 @@
 import { t } from "@hotelixsim/i18n";
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSituations } from "../api/queries";
 import type { HotelBody } from "../api/types";
@@ -14,7 +14,7 @@ import { Delegate, DelegatedNote } from "./situation/Delegate";
 import { useDeptNames } from "./situation/deptNames";
 import { FreeResponse } from "./situation/FreeResponse";
 import { ChosenAnswer, OfferedAnswers } from "./situation/OfferedAnswers";
-import { canDelegate, isSettled } from "./situation/rules";
+import { canDelegate, isSettled, showMandatory } from "./situation/rules";
 import { Verdict } from "./situation/Verdict";
 
 export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
@@ -25,6 +25,8 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const weekly = gameData ? isWeekly(gameData) : false;
   // Je li forma za odgovor bila prikazana: tek tada novi sadržaj (izbor, presuda, prepušteno) prima fokus.
   const answeredHere = useRef(false);
+  // Otvorena potvrda (izbor odgovora ili prepuštanje): dok je jedna otvorena, druga se ne može otvoriti.
+  const [confirming, setConfirming] = useState<"answer" | "delegate" | null>(null);
   const current = sits.data?.items.find((i) => i.code === code);
   const formShown = sits.data !== undefined && current !== undefined && sits.data.open && !isSettled(current);
   // Ime odjela voditelja (za „Prepusti voditelju“) stiže iz odjela; stara igra bez voditelja ih ne traži.
@@ -64,9 +66,19 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
           s={s}
           weekly={weekly}
           heading={s.free_text ? t("answers.orTitle") : t("answers.title")}
+          locked={confirming === "delegate"}
+          onConfirmChange={(o) => setConfirming(o ? "answer" : null)}
         />
       )}
-      {canDelegate(s, open) && <Delegate hotelId={hotelId} s={s} dept={leaderName} weekly={weekly} />}
+      {canDelegate(s, open) && confirming !== "answer" && (
+        <Delegate
+          hotelId={hotelId}
+          s={s}
+          dept={leaderName}
+          weekly={weekly}
+          onAskChange={(o) => setConfirming(o ? "delegate" : null)}
+        />
+      )}
       {!open && !decided && <p className="font-semibold">{tw(weekly, "answers.missed")}</p>}
     </div>
   );
@@ -74,7 +86,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const title = (
     <>
       <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{s.title}</h1>
-      {s.mandatory && (
+      {showMandatory(s) && (
         <div className="space-y-1">
           <Badge>{t("situation.mandatory")}</Badge>
           {open && !decided && <p className="text-sm text-muted">{t("situation.mandatoryNote")}</p>}

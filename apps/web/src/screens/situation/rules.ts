@@ -13,3 +13,21 @@ export function isSettled(s: SituationBody): boolean {
 export function canDelegate(s: SituationBody, open: boolean): boolean {
   return open && !s.mandatory && s.leader !== null && !isSettled(s);
 }
+
+/**
+ * Prikazuje li se „Obvezna“ (značka i rečenica o prve tri). Poslužitelj šalje `mandatory: true` i kad voditelja
+ * nema (v1 igra, v2 bez otvorenog odjela), a tada „obvezna“ ne znači ništa — student ionako rješava sve sam.
+ */
+export function showMandatory(s: SituationBody): boolean {
+  return s.mandatory && s.leader !== null;
+}
+
+/**
+ * Redak odjela na kartici: odjel situacije (ikona i ime), ili „Cijeli hotel“ za predložak razine hotela
+ * (`department: null`, vrsta postoji). Sidra i v1 nemaju ni odjel ni vrstu — bez retka (voditelj sidra je
+ * odjel s najviše ljudi, ne odjel situacije).
+ */
+export function deptLine(s: SituationBody): "dept" | "hotel" | null {
+  if (s.department !== null) return "dept";
+  return s.kind !== null ? "hotel" : null;
+}

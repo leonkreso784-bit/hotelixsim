@@ -198,7 +198,8 @@ export function s1(over: Partial<SituationBody> = {}): SituationBody {
     weight: null,
     description: null,
     roles: [],
-    mandatory: false,
+    // Kao poslužitelj u v1 igri: bez voditelja je svaka situacija „obvezna“ (`command.rs:234`, W-1 popravak 1).
+    mandatory: true,
     delegated: false,
     leader: null,
     ...over,
@@ -234,7 +235,8 @@ export function s3(over: Partial<SituationBody> = {}): SituationBody {
     weight: null,
     description: null,
     roles: [],
-    mandatory: false,
+    // Kao poslužitelj u v1 igri: bez voditelja je svaka situacija „obvezna“ (`command.rs:234`, W-1 popravak 1).
+    mandatory: true,
     delegated: false,
     leader: null,
     ...over,

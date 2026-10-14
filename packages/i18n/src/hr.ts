@@ -198,7 +198,7 @@ export const hr = {
   "situations.seasonOver": "Sezona je završena. Sve odluke su u Tijeku.",
   "situations.toFeed": "Otvori Tijek",
   "situations.talk": "Razgovor s likom",
-  "situations.solved": "Riješeno {n} od {total}",
+  "situations.solved": "Riješene situacije: {n} od {total}",
   "situations.wholeHotel": "Cijeli hotel",
   "situation.status.open": "Bez odgovora",
   "situation.status.answered": "Odgovoreno",
@@ -213,11 +213,11 @@ export const hr = {
   "situation.delegate.button": "Prepusti voditelju",
   "situation.delegate.confirmTitle": "Prepuštanje voditelju",
   "situation.delegate.confirmText":
-    "Voditelj odjela {dept} rješava situaciju sam. Ishod: ocjena 2 od 5, bez razgovora i bez AI ocjene.",
+    "Odjel {dept}: voditelj rješava situaciju sam. Ishod: ocjena 2 od 5, bez razgovora i bez AI ocjene.",
   "situation.delegate.confirmTextNoName":
     "Voditelj odjela rješava situaciju sam. Ishod: ocjena 2 od 5, bez razgovora i bez AI ocjene.",
   "situation.delegate.cancel": "Odustani",
-  "situation.delegated": "Prepušteno voditelju odjela {dept}.",
+  "situation.delegated": "Prepušteno voditelju (odjel {dept}).",
   "situation.delegatedNoName": "Prepušteno voditelju odjela.",
   "chat.progress": "Razgovor · {used}/{total}",
   "chat.you": "Ti",

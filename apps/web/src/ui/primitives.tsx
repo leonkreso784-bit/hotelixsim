@@ -1,4 +1,4 @@
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 
 // Boja, obrub i unutarnji razmak kartice biraju se propom: iste klase u `className` gube od zadanih (UI_PRAVILA §1.3).
 const CARD_TONE = {
@@ -88,9 +88,15 @@ export function StatusText({ children }: { children: ReactNode }) {
   );
 }
 
-export function ErrorText({ children }: { children: ReactNode }) {
+/** `ref`: greška koju treba fokusirati (§6.5) — tada prima i `tabIndex={-1}`. */
+export function ErrorText({ children, ref }: { children: ReactNode; ref?: Ref<HTMLParagraphElement> }) {
   return (
-    <p role="alert" className="rounded-xl bg-sand px-3 py-2 text-sm text-down">
+    <p
+      ref={ref}
+      tabIndex={ref ? -1 : undefined}
+      role="alert"
+      className="rounded-xl bg-sand px-3 py-2 text-sm text-down"
+    >
       {children}
     </p>
   );

@@ -8,24 +8,29 @@ import { Button, Card, ErrorText } from "../../ui/primitives";
 /**
  * „Prepusti voditelju“ (Leon P4) u dva koraka, obrazac `CloseMonth`: gumb otvara potvrdu (fokus na njezin naslov),
  * „Odustani“ vraća fokus na gumb, a potvrda šalje točno jedan zahtjev i na dvostruki klik. Odgovor (sve situacije)
- * ide u cache, pa ekran odmah pokaže „Prepušteno voditelju odjela …“. `dept` = ime odjela voditelja ili `null`.
+ * ide u cache, pa ekran odmah pokaže „Prepušteno voditelju (odjel …)“. `dept` = ime odjela voditelja ili `null`.
+ * Greška (409) prima fokus, a situacije se dohvate ponovno (`useDelegate`). `onAskChange` javlja ekranu je li potvrda
+ * otvorena, da potvrda izbora odgovora ne bude otvorena istodobno.
  */
 export function Delegate({
   hotelId,
   s,
   dept,
   weekly,
+  onAskChange,
 }: {
   hotelId: string;
   s: SituationBody;
   dept: string | null;
   weekly: boolean;
+  onAskChange: (asking: boolean) => void;
 }) {
   const [asking, setAsking] = useState(false);
   const delegate = useDelegate(hotelId, s.code);
   const inFlight = useRef(false);
   const title = useRef<HTMLHeadingElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
+  const error = useRef<HTMLParagraphElement>(null);
   // Fokus se seli tek nakon korisnikove radnje, ne pri prvom prikazu ekrana.
   const moved = useRef(false);
 
@@ -39,10 +44,16 @@ export function Delegate({
     }
   }, [asking]);
 
+  // Greška (npr. 409) je novi sadržaj potvrde: fokus ide na nju, ne ostaje na naslovu ni na <body> (§6.5).
+  useEffect(() => {
+    if (delegate.isError) error.current?.focus();
+  }, [delegate.isError]);
+
   function ask(next: boolean) {
     moved.current = true;
     if (!next) delegate.reset();
     setAsking(next);
+    onAskChange(next);
   }
 
   function confirm() {
@@ -69,7 +80,7 @@ export function Delegate({
       <p>
         {dept ? t("situation.delegate.confirmText", { dept }) : t("situation.delegate.confirmTextNoName")}
       </p>
-      {delegate.isError && <ErrorText>{problemMessage(delegate.error, weekly)}</ErrorText>}
+      {delegate.isError && <ErrorText ref={error}>{problemMessage(delegate.error, weekly)}</ErrorText>}
       <Button disabled={delegate.isPending} onClick={confirm}>
         {t("situation.delegate.button")}
       </Button>

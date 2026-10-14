@@ -11,7 +11,7 @@ import { Link } from "../router";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
 import { deptIcon } from "./departments/icons";
 import { useDeptNames } from "./situation/deptNames";
-import { isSettled } from "./situation/rules";
+import { deptLine, isSettled, showMandatory } from "./situation/rules";
 
 export function situationStatus(s: SituationBody): { text: string; tone: "accent" | "muted" | "up" } {
   if (s.delegated) return { text: t("situation.status.delegated"), tone: "muted" };
@@ -25,8 +25,8 @@ export function situationStatus(s: SituationBody): { text: string; tone: "accent
 export function SituationsScreen({ me }: { me: HotelBody }) {
   const sits = useSituations(me.hotel.hotel_id);
   const game = useGame(me.game_id);
-  // Odjel i voditelj postoje samo u v2; stara igra ne traži odjele (i nema ikonu ni ime odjela na kartici).
-  const hasDepts = sits.data?.items.some(withDept) ?? false;
+  // Imena odjela trebaju samo situacije s odjelom (v2); stara igra i sama sidra ne traže odjele.
+  const hasDepts = sits.data?.items.some((s) => deptLine(s) === "dept") ?? false;
   const deptName = useDeptNames(me.hotel.hotel_id, hasDepts);
   if (sits.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
@@ -64,7 +64,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
                     {s.character && <Avatar look={lookFor(s.character.name)} size={40} />}
                     <span className="min-w-0 flex-1 space-y-1">
                       <span className="block font-bold">{s.title}</span>
-                      {withDept(s) && <DeptLine code={s.department} name={deptName(s.department)} />}
+                      {deptLine(s) && <DeptLine code={s.department} name={deptName(s.department)} />}
                       {s.character && (
                         <span className="flex items-center gap-1 text-sm text-muted">
                           <MessageCircle size={14} aria-hidden="true" />
@@ -72,7 +72,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
                         </span>
                       )}
                       <span className="flex flex-wrap gap-2">
-                        {s.mandatory && <Badge>{t("situation.mandatory")}</Badge>}
+                        {showMandatory(s) && <Badge>{t("situation.mandatory")}</Badge>}
                         <Badge tone={st.tone}>{st.text}</Badge>
                       </span>
                     </span>
@@ -88,12 +88,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
   );
 }
 
-/** Situacija v2 (ima odjel ili voditelja); sidra stare igre nemaju ni jedno ni drugo. */
-function withDept(s: SituationBody): boolean {
-  return s.department !== null || s.leader !== null;
-}
-
-/** Odjel situacije: ikona i ime (iz `/departments`); bez odjela je situacija cijelog hotela. Kod se ne prikazuje. */
+/** Odjel situacije: ikona i ime (iz `/departments`); `code: null` = predložak razine hotela. Kod se ne prikazuje. */
 function DeptLine({ code, name }: { code: string | null; name: string | null }) {
   const Icon = code === null ? Hotel : deptIcon(code);
   const label = code === null ? t("situations.wholeHotel") : name;

@@ -3,9 +3,11 @@ import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SituationBody } from "../api/types";
 import { json, problem } from "../test/fakeApi";
+import { standardApi } from "../test/fixtures";
 import { fastPolling, renderApp } from "../test/renderApp";
 import {
   afterDelegate,
+  anchor,
   instance,
   LIFT,
   LIFT_DESCRIPTION,
@@ -24,7 +26,7 @@ afterEach(() => {
 
 const DELEGATE_PATH = `/v1/hotels/h1/situations/${LIFT}/delegate`;
 const CONFIRM_TEXT =
-  "Voditelj odjela Održavanje rješava situaciju sam. Ishod: ocjena 2 od 5, bez razgovora i bez AI ocjene.";
+  "Odjel Održavanje: voditelj rješava situaciju sam. Ishod: ocjena 2 od 5, bez razgovora i bez AI ocjene.";
 
 /** Kartice popisa (svaka je jedan Link), redom kako su na ekranu. */
 function cards(): HTMLElement[] {
@@ -86,9 +88,9 @@ describe("W-1 popis: po važnosti, odjel, obvezne, brojač", () => {
     expect(screen.getAllByText("Bez odgovora")).toHaveLength(2);
   });
 
-  it("brojač „Riješeno 3 od 5“: odgovoreno + predano + prepušteno", async () => {
+  it("brojač „Riješene situacije: 3 od 5“: odgovoreno + predano + prepušteno", async () => {
     renderApp(v2SituationsApi(), "/situacije");
-    expect(await screen.findByText("Riješeno 3 od 5")).toBeTruthy();
+    expect(await screen.findByText("Riješene situacije: 3 od 5")).toBeTruthy();
   });
 
   it("brojač broji i odgovor koji AI još ocjenjuje (predano)", async () => {
@@ -100,19 +102,19 @@ describe("W-1 popis: po važnosti, odjel, obvezne, brojač", () => {
       }),
     ];
     renderApp(v2SituationsApi(items), "/situacije");
-    expect(await screen.findByText("Riješeno 1 od 2")).toBeTruthy();
+    expect(await screen.findByText("Riješene situacije: 1 od 2")).toBeTruthy();
   });
 
   it("zatvoren tjedan: bez brojača, samo rečenica „samo za čitanje“", async () => {
     renderApp(v2SituationsApi(undefined, { open: false, unanswered: 0 }), "/situacije");
     expect(await screen.findByText("Tjedan je zatvoren — situacije su samo za čitanje.")).toBeTruthy();
-    expect(screen.queryByText(/Riješeno/)).toBeNull();
+    expect(screen.queryByText(/Riješen/)).toBeNull();
   });
 
   it("prazno stanje (izravno na putanji): jedna rečenica, bez brojača i praznog popisa", async () => {
     renderApp(v2SituationsApi([]), "/situacije");
     expect(await screen.findByText("Ovaj tjedan nema situacija.")).toBeTruthy();
-    expect(screen.queryByText(/Riješeno/)).toBeNull();
+    expect(screen.queryByText(/Riješen/)).toBeNull();
     expect(document.querySelector("main ul")).toBeNull();
   });
 
@@ -155,7 +157,7 @@ describe("W-1 detalj: opis, obvezna, prepuštena", () => {
 
   it("prepuštena: jedna rečenica s imenom odjela, ništa za uređivanje", async () => {
     renderApp(v2SituationsApi(), "/situacije/P-BAR.t01");
-    expect(await screen.findByText("Prepušteno voditelju odjela Lobby bar.")).toBeTruthy();
+    expect(await screen.findByText("Prepušteno voditelju (odjel Lobby bar).")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Izaberi ovaj odgovor" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Prepusti/ })).toBeNull();
     expect(screen.queryByText("Tjedan je zatvoren bez odgovora.")).toBeNull();
@@ -200,7 +202,7 @@ describe("W-1 prepuštanje: potvrda, jedan zahtjev, 409", () => {
     const confirm = within(card).getByRole("button", { name: /Prepusti/ });
     fireEvent.click(confirm);
     fireEvent.click(confirm);
-    expect(await screen.findByText("Prepušteno voditelju odjela Održavanje.")).toBeTruthy();
+    expect(await screen.findByText("Prepušteno voditelju (odjel Održavanje).")).toBeTruthy();
     expect(api.posts(DELEGATE_PATH)).toHaveLength(1);
     expect(api.posts(DELEGATE_PATH)[0]?.body).toBeUndefined();
     expect(screen.queryByRole("button", { name: /Prepusti/ })).toBeNull();
@@ -223,9 +225,9 @@ describe("W-1 prepuštanje: potvrda, jedan zahtjev, 409", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Prepusti voditelju" }));
     const card = (document.activeElement as HTMLElement).parentElement as HTMLElement;
     fireEvent.click(within(card).getByRole("button", { name: /Prepusti/ }));
-    await screen.findByText("Prepušteno voditelju odjela Održavanje.");
+    await screen.findByText("Prepušteno voditelju (odjel Održavanje).");
     fireEvent.click(screen.getByRole("link", { name: "Sve situacije" }));
-    expect(await screen.findByText("Riješeno 4 od 5")).toBeTruthy();
+    expect(await screen.findByText("Riješene situacije: 4 od 5")).toBeTruthy();
     const lift = cards()[4] as HTMLElement;
     expect(within(lift).getByText("Prepušteno voditelju")).toBeTruthy();
   });
@@ -241,5 +243,155 @@ describe("W-1 prepuštanje: potvrda, jedan zahtjev, 409", () => {
     const msg = await screen.findByText("Na ovu situaciju je već odgovoreno.");
     expect(msg.closest("[role='alert']")).not.toBeNull();
     expect(api.posts(DELEGATE_PATH)).toHaveLength(1);
+  });
+});
+
+// W-1 popravak 1 (sit-w1-p1-brief.md): obvezne samo uz voditelja, sidra bez „Cijeli hotel“, 409, jedna potvrda.
+const SITS_PATH = "/v1/hotels/h1/situations";
+const ALREADY = "Na ovu situaciju je već odgovoreno.";
+
+/** Otvorene potvrde na ekranu (izbor odgovora i prepuštanje) — smije biti najviše jedna. */
+function openConfirms(): number {
+  return screen.queryAllByRole("heading", { name: /^(Izabrani odgovor|Prepuštanje voditelju)$/ }).length;
+}
+
+describe("W-1 popravak 1: „Obvezna“ samo uz voditelja (I1)", () => {
+  it("v1 igra (poslužitelj šalje mandatory: true, leader: null): popis bez značke „Obvezna“", async () => {
+    renderApp(standardApi(), "/situacije");
+    await screen.findByRole("heading", { level: 1, name: "Situacije mjeseca" });
+    expect(screen.getAllByText("Bez odgovora")).toHaveLength(2);
+    expect(screen.queryByText("Obvezna")).toBeNull();
+  });
+
+  it("v1 igra: detalj otvorene situacije bez značke i bez rečenice o prve tri", async () => {
+    renderApp(standardApi(), "/situacije/S3");
+    expect(await screen.findByRole("heading", { level: 1, name: /Agencija nudi grupu/ })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Izaberi ovaj odgovor" }).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Obvezna")).toBeNull();
+    expect(screen.queryByText(/Prve tri situacije/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Prepusti/ })).toBeNull();
+  });
+
+  // v2 kad nijedan odjel nije otvoren: poslužitelj i 4.+ situaciju šalje kao obveznu, bez voditelja.
+  const noLeader = () => itemsWith(LIFT, { mandatory: true, leader: null });
+
+  it("v2 bez voditelja (mandatory: true, leader: null): popis bez značke; prave obvezne je zadrže", async () => {
+    renderApp(v2SituationsApi(noLeader()), "/situacije");
+    await screen.findByRole("heading", { level: 1, name: "Situacije tjedna" });
+    expect(cards().map((c) => within(c).queryByText("Obvezna") !== null)).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+    ]);
+  });
+
+  it("v2 bez voditelja: detalj bez značke i bez rečenice o prve tri", async () => {
+    renderApp(v2SituationsApi(noLeader()), `/situacije/${LIFT}`);
+    expect(await screen.findByRole("heading", { level: 1, name: "Dizalo stane između katova" })).toBeTruthy();
+    expect(screen.queryByText("Obvezna")).toBeNull();
+    expect(screen.queryByText(/Prve tri situacije/)).toBeNull();
+  });
+});
+
+describe("W-1 popravak 1: sidra nisu „Cijeli hotel“ (I2)", () => {
+  it("sidro (department: null, kind: null) bez retka odjela; predložak razine hotela i dalje „Cijeli hotel“", async () => {
+    renderApp(v2SituationsApi([anchor(), ...v2Items()]), "/situacije");
+    await waitFor(() => expect(showsDept(cards()[5] as HTMLElement, "Održavanje")).toBe(true));
+    const [s2, hotel] = cards() as [HTMLElement, HTMLElement];
+    expect(s2.textContent).not.toContain("Cijeli hotel");
+    // Voditelj sidra (odjel s najviše ljudi) nije odjel situacije: ni njegovo ime ni ikona.
+    expect(showsDept(s2, "Smještaj")).toBe(false);
+    expect(s2.querySelectorAll("svg.lucide:not(.lucide-chevron-right)")).toHaveLength(0);
+    expect(hotel.textContent).toContain("Cijeli hotel");
+    expect(hotel.querySelectorAll("svg.lucide:not(.lucide-chevron-right)").length).toBeGreaterThan(0);
+  });
+});
+
+describe("W-1 popravak 1: 409 pri prepuštanju", () => {
+  /** Otvori potvrdu na LIFT-u i potvrdi; vraća broj GET-ova situacija prije potvrde. */
+  async function confirmDelegate(api: ReturnType<typeof v2SituationsApi>): Promise<number> {
+    fireEvent.click(await screen.findByRole("button", { name: "Prepusti voditelju" }));
+    const card = (document.activeElement as HTMLElement).parentElement as HTMLElement;
+    const before = situationGets(api);
+    fireEvent.click(within(card).getByRole("button", { name: /Prepusti/ }));
+    return before;
+  }
+  const situationGets = (api: ReturnType<typeof v2SituationsApi>) =>
+    api.calls.filter((c) => c.method === "GET" && c.path === SITS_PATH).length;
+
+  const conflictApi = () =>
+    v2SituationsApi().on("POST", "/v1/hotels/:hotel/situations/:code/delegate", () =>
+      problem(409, "already_answered"),
+    );
+
+  it("situacije se ponovno dohvate (invalidacija upita situacija)", async () => {
+    const api = conflictApi();
+    renderApp(api, `/situacije/${LIFT}`);
+    const before = await confirmDelegate(api);
+    expect(await screen.findByText(ALREADY)).toBeTruthy();
+    await waitFor(() => expect(situationGets(api)).toBeGreaterThan(before));
+  });
+
+  it("fokus je na rečenici greške (ne na <body> ni na naslovu potvrde)", async () => {
+    const api = conflictApi();
+    renderApp(api, `/situacije/${LIFT}`);
+    await confirmDelegate(api);
+    expect(await screen.findByText(ALREADY)).toBeTruthy();
+    await waitFor(() => {
+      const alert = screen.getByText(ALREADY).closest("[role='alert']") as HTMLElement;
+      expect(alert.contains(document.activeElement)).toBe(true);
+    });
+  });
+
+  it("odgovoreno drugdje: osvježen ekran više ne nudi ni prepuštanje ni odgovore", async () => {
+    let answered = false;
+    const api = v2SituationsApi()
+      .on("GET", "/v1/hotels/:hotel/situations", () =>
+        json(200, v2Situations(answered ? itemsWith(LIFT, { chosen: 0 }) : v2Items())),
+      )
+      .on("POST", "/v1/hotels/:hotel/situations/:code/delegate", () => {
+        answered = true;
+        return problem(409, "already_answered");
+      });
+    renderApp(api, `/situacije/${LIFT}`);
+    await confirmDelegate(api);
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Izaberi ovaj odgovor" })).toBeNull());
+    expect(screen.queryByRole("button", { name: /Prepusti/ })).toBeNull();
+    expect(screen.getByText("Tvoj izbor")).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).not.toBe(document.body));
+  });
+});
+
+describe("W-1 popravak 1: nikad dvije potvrde istodobno", () => {
+  it("izbor odgovora, pa „Prepusti voditelju“: najviše jedna potvrda i jedan „Odustani“", async () => {
+    renderApp(v2SituationsApi(), `/situacije/${LIFT}`);
+    await screen.findByRole("button", { name: "Prepusti voditelju" });
+    fireEvent.click(screen.getAllByRole("button", { name: "Izaberi ovaj odgovor" })[0] as HTMLElement);
+    expect(screen.getByRole("heading", { name: "Izabrani odgovor" })).toBeTruthy();
+    // Graditelj bira: gumb druge potvrde se sakrije, ili njezino otvaranje zatvori prvu.
+    const delegate = screen.queryByRole("button", { name: "Prepusti voditelju" });
+    if (delegate) {
+      fireEvent.click(delegate);
+      expect(screen.getByRole("heading", { name: "Prepuštanje voditelju" })).toBeTruthy();
+    }
+    expect(openConfirms()).toBe(1);
+    expect(screen.getAllByRole("button", { name: "Odustani" })).toHaveLength(1);
+  });
+
+  it("„Prepusti voditelju“, pa izbor odgovora: najviše jedna potvrda i jedan „Odustani“", async () => {
+    renderApp(v2SituationsApi(), `/situacije/${LIFT}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Prepusti voditelju" }));
+    expect(screen.getByRole("heading", { name: "Prepuštanje voditelju" })).toBeTruthy();
+    const pick = screen.queryAllByRole("button", { name: "Izaberi ovaj odgovor" })[0] as
+      | HTMLButtonElement
+      | undefined;
+    if (pick && !pick.disabled) {
+      fireEvent.click(pick);
+      expect(screen.getByRole("heading", { name: "Izabrani odgovor" })).toBeTruthy();
+    }
+    expect(openConfirms()).toBe(1);
+    expect(screen.getAllByRole("button", { name: "Odustani" })).toHaveLength(1);
   });
 });

@@ -98,3 +98,17 @@ export function v2SituationsApi(items: SituationBody[] = v2Items(), over: Partia
 export function afterDelegate(code: string, items: SituationBody[] = v2Items()): SituationsBody {
   return v2Situations(items.map((i) => (i.code === code ? { ...i, delegated: true } : i)));
 }
+
+/**
+ * Sidro v2 igre kakvo šalje poslužitelj: bez odjela i bez vrste (`department: null, kind: null`), obvezno, a voditelj je
+ * odjel s najviše zaposlenih (`drawn.rs` `situation_leader`). Nije situacija cijelog hotela (W-1 popravak 1, I2).
+ */
+export function anchor(over: Partial<SituationBody> = {}): SituationBody {
+  return instance("S2", null, "Šef kuhinje traži povišicu ili odlazi", {
+    kind: null,
+    weight: null,
+    mandatory: true,
+    leader: "rooms",
+    ...over,
+  });
+}

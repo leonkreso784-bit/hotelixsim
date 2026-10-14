@@ -181,7 +181,10 @@ export function useAnswer(hotelId: string, code: string) {
   });
 }
 
-/** „Prepusti voditelju“ (P4): zahtjev bez tijela; odgovor su sve situacije kruga, kao kod izbora odgovora. */
+/**
+ * „Prepusti voditelju“ (P4): zahtjev bez tijela; odgovor su sve situacije kruga, kao kod izbora odgovora.
+ * 409 (odgovoreno ili prepušteno drugdje, krug zatvoren): ekran je star, pa se situacije dohvate ponovno.
+ */
 export function useDelegate(hotelId: string, code: string) {
   const api = useApi();
   const qc = useQueryClient();
@@ -195,6 +198,10 @@ export function useDelegate(hotelId: string, code: string) {
     onSuccess: (body) => {
       qc.setQueryData(keys.situations(hotelId), body);
       void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409)
+        void qc.invalidateQueries({ queryKey: keys.situations(hotelId) });
     },
   });
 }
