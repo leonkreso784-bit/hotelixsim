@@ -1,10 +1,9 @@
+mod common;
+
 use balance::v2::{OptionsV2, failures_v2, render_v2, run_v2};
+use common::content_v2;
 use content::{Snapshot, repo_dir};
 use sim_hotel_v2::PeriodKind;
-
-fn content_v2() -> content::Content {
-    Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap()
-}
 
 #[test]
 fn v2_balance_runs_for_both_kinds_and_is_reproducible() {
@@ -57,9 +56,9 @@ fn degenerate_v2_monthly_balance_matches_v1_numbers() {
     );
 }
 
-/// Pregled J-3 (minor 1): udio situacija u pojasu nije dovoljan — situacije Brižnom moraju pomagati (Δ > 0).
+/// A1: mjere robota ne ruše `--check`, ni kad su sve izvan pojasa.
 #[test]
-fn caring_share_in_band_with_negative_delta_fails() {
+fn robot_measures_do_not_fail_check() {
     let mut r = run_v2(
         &content_v2(),
         &OptionsV2 {
@@ -68,22 +67,15 @@ fn caring_share_in_band_with_negative_delta_fails() {
         },
     )
     .unwrap();
-    let sr = r.situations.as_mut().expect("repo ima predloške");
-    let s = sr
-        .shares
-        .iter_mut()
-        .find(|s| s.strategy == sim_hotel_v2::Strategy::Caring)
-        .unwrap();
-    // Δ = −2,00, bez situacija 6,00 → udio 25 % (u pojasu), ali situacije smanjuju napredak.
-    s.delta = -200;
-    s.without = 600;
-    s.with = 400;
-    s.share_bp = 2_500;
-    let code = s.profile.code();
+    common::spoil_robot_measures(&mut r);
     let f = failures_v2(&r);
-    assert!(
-        f.iter()
-            .any(|x| x.contains("Brižnom smanjuju napredak") && x.contains(code)),
-        "{f:?}"
-    );
+    for robot in [
+        "pravednost",
+        "tjedno ≈ mjesečno",
+        "brižni robot",
+        "udio situacija",
+        "štediša",
+    ] {
+        assert!(!f.iter().any(|x| x.contains(robot)), "{robot}: {f:?}");
+    }
 }

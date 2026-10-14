@@ -309,3 +309,23 @@ fn monthly_caring_robot_does_not_hire_ahead() {
         }
     }
 }
+
+/// ZP-4 (A1: test robota, ne brana igre): brižni robot drži najmanje 80 % sezonskog plana hotela, za svaki profil,
+/// tjedno i mjesečno (sjeme ponovljivosti 7, situacije iz predložaka; isto što balans ispisuje).
+#[test]
+fn caring_robot_holds_most_of_the_seasonal_plan() {
+    use balance::v2::{CARING_MIN_SEASONAL_VS_PLAN_BP, OptionsV2, run_v2};
+    use sim_hotel_v2::PeriodKind;
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let r = run_v2(&content, &OptionsV2 { seeds: 1, kind }).unwrap();
+        assert_eq!(r.caring_seasonal_vs_plan_bp.len(), 3);
+        for (p, bp) in &r.caring_seasonal_vs_plan_bp {
+            assert!(
+                *bp >= CARING_MIN_SEASONAL_VS_PLAN_BP,
+                "{kind:?} {}: {bp} bp",
+                p.code()
+            );
+        }
+    }
+}
