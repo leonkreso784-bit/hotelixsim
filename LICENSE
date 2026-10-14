@@ -1,0 +1,39 @@
+HotelixSim
+Copyright (c) 2026 Leon Kreso. Sva prava pridržana. All rights reserved.
+
+HRVATSKI
+
+Ovaj repozitorij i sav njegov sadržaj (izvorni kod, sadržaj igre, upute za AI, dokumentacija, slike i ostale datoteke)
+autorsko su djelo Leona Kresa.
+
+Kod je javno objavljen samo da bi se mogao pregledati. Bez prethodne pisane dozvole autora nije dopušteno:
+- koristiti softver ili njegove dijelove, u bilo koju svrhu;
+- kopirati, umnožavati ili mijenjati kod i sadržaj;
+- distribuirati, objavljivati, podlicencirati ili prodavati softver ili njegove dijelove;
+- nuditi softver drugima kao uslugu, uključujući preko interneta.
+
+Pregledavanje koda na GitHubu i jedna kopija za takav pregled (fork koji GitHub stvara po svojim uvjetima korištenja)
+nisu zabranjeni, ali ne daju nikakvo od gore navedenih prava.
+
+Softver se daje „kakav jest", bez ikakvih jamstava. Autor ne odgovara ni za kakvu štetu nastalu njegovom upotrebom.
+
+Za dozvolu se obratite autoru preko GitHub profila: https://github.com/leonkreso784-bit
+
+ENGLISH
+
+This repository and all of its contents (source code, game content, AI prompts, documentation, images and other files)
+are the copyrighted work of Leon Kreso.
+
+The code is published only so that it can be viewed. Without the author's prior written permission you may not:
+- use the software or any part of it, for any purpose;
+- copy, reproduce or modify the code or content;
+- distribute, publish, sublicense or sell the software or any part of it;
+- offer the software to others as a service, including over the internet.
+
+Viewing the code on GitHub and making a copy for such viewing (a fork created under GitHub's Terms of Service) are not
+prohibited, but grant none of the rights listed above.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+To request permission, contact the author through the GitHub profile: https://github.com/leonkreso784-bit
