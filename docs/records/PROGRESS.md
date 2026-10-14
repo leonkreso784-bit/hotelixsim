@@ -4,6 +4,23 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-14 (2) — situacije do kraja (G-2, A-1, W-1), Leonov pregled igre, obnova spojena u sloj1
+
+- **Grana situacija** (`../hotelixsim-s1-sit` ea19d54), svaka cigla čuvar → graditelj → pregled: G-2 popravak 1 (e95393b, Approved);
+  A-1 API situacija + naredba „prepusti voditelju" po P4 (6f44e25, Approved; balansi bajt-isti); W-1 ekran situacija (33353fb) i
+  popravak 1 (ea19d54: obvezne samo uz voditelja, sidra bez „Cijeli hotel"); UI čuvar 2 SPREMNO DA. Živi testovi s ključem (G-2, KS-3) ok.
+- **Leon igrao** obje grane (pregled na 5182/5183, zasebne baze) i našao: najbolji odgovor uvijek prvi (55/55), kvarovi se vraćaju
+  (popravak ne diže stanje, 11/15 kvarova bez uvjeta), ista situacija dvaput u mjesecu, lik ne završi u 6 poruka, izgled lika
+  ne prati rod/podrijetlo, previše situacija u mjesecu, nema plaća po radniku, „Spremi" po odjelu. Sve odluke:
+  [ADR-042](DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 1–15 (među njima mjesečno 4/5/6, profesor bira broj, situacije ~20 % napretka).
+- **Banka ljudi:** nacrt [BANKA_LJUDI](../architecture/BANKA_LJUDI.md) (~3000 radnika + 1500 gostiju u tri koraka), Leonovi odgovori u ADR-042 t. 8.
+- **L1-10** obnova (s KS-3) spojena u sloj1 (24b4e2a): bez sukoba, 703/0, balansi prolaze. **L1-11** situacije: sukobi riješeni
+  na grani `model-v2/sloj1-l111` (b1bf446, 879/0), ali brana „udio situacija" pada (B Brižni 10,2 % tjedno) jer obnova diže napredak
+  bez situacija — ne ulazi u sloj1 dok se ne kalibrira.
+- **Nova datoteka** [BUGS.md](BUGS.md): pogreške i pouke (B1–B10). Leonova zabrinutost „gradimo ciglenu nadogradnju na bungalov" →
+  sljedeća sesija je **revizija temelja** (samo čitanje).
+- **Gdje se vidi:** sve lokalno; ništa nije pushano (sloj1 ahead 24 + docs).
+
 ## 2026-10-14 — G-1, SB-1, G-2 i RB-1 na grani situacija, redak „Obnova" popravljen, Faza 0 zatvorena
 
 - **K0-1 dokazan:** CI za `b495c8d` zelen (rust + web) na `ubuntu-24.04`; plan Faze 0 ide u

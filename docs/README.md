@@ -30,6 +30,7 @@
 | **zašto je tako** | `records/DECISIONS/` (jedan ADR = jedna datoteka) | ostali linkaju ADR; `records/DECISIONS.md` je samo popis |
 | **što se kad dogodilo** | `records/PROGRESS.md` (sesija) · `records/CHANGELOG.md` (isporuka) | `CLAUDE.md` ih ne ponavlja |
 | **što nije riješeno** | `records/BACKLOG.md` (i pitanja za Leona) | plan uzima stavke po oznaci, ne prepisuje ih |
+| **koje su se pogreške dogodile i što smo naučili** | `records/BUGS.md` | uzrok i pouka; popravak ostaje u BACKLOG-u ili ADR-u |
 | **kako pokrenuti** | korijenski `README.md` | ostali linkaju |
 | **što radi sljedeća sesija** | `SLJEDECA_SESIJA.md` | prepisuje se na svakom `/kraj` |
 

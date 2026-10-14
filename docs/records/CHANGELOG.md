@@ -9,6 +9,9 @@ i ADR-031…036. Dokaz kraj-do-kraja: `crates/api/tests/e2e_v2.rs` (17 tjednih k
 
 ### Dodano
 
+- Obnova v2 (spojeno u sloj1, L1-10): iznos po odjelu i za zgradu u planu, plaćanje u ratama, amortizacija i EBIT u računu
+  dobiti, indeks F iz GOP-a nakon ulaganja, cijena parkinga, najmovi; ekran „Kraj sezone" (pobjednik, poredak, krivulja napretka,
+  kako je igrao svaki hotel, sezonski mentor `mentor-sezona.v2`); `CORE_VERSION` 2.1.0.
 - Jezgra v2 `sim-hotel-v2` (`CORE_VERSION` 2.0.0): tjedni (16 × 7 dana + zadnjih 10 dana, 17 krugova) i mjesečni
   krugovi, razmjerni iznosi do centa, ekvivalentna v1 za mjesečnu igru; v1 zamrznut i pokriven zlatnim testom.
 - Odjeli po USALI-ju (operativni i neraspoređeni Uprava / Prodaja i marketing / Održavanje / Energija), sezonski
