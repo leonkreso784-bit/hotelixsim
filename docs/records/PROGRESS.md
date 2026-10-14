@@ -4,6 +4,25 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-14 (3) i 15.10. — revizija temelja, odluka „popravak", faza A (A1–A3, A7), GitHub za kolegu, disk
+
+- **Revizija temelja** (šest revizora, samo čitanje, nad `sloj1-l111`): temelj stoji (dnevnik, determinizam, snimak pravila,
+  baza, red poslova, AI iza sučelja); puca na v1 kalupu ispod v2, branama koje mjere robota i dugim granama →
+  [REVIZIJA_TEMELJA.md](../architecture/REVIZIJA_TEMELJA.md). Leon: **popravak, ne ispočetka**, samo to dok nije gotovo
+  ([ADR-043](DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md)); plan Sloja 1 pauziran, novi
+  [plan popravka](../plan/2026-10-14-popravak-temelja.md) (7 kartica faze A, obris B i C).
+- **Spojeno u sloj1** (čuvar → graditelj → pregled, svaka cigla): A1 brane modela ruše `--check`, mjere robota se ispisuju,
+  situacije ušle bez kalibracije (L1-11 ✅); A2 načela igre kao provjere sadržaja pri startu servera (dug 55/6/16 smije
+  samo padati); A3 pečat sezone v2 uz `CORE_VERSION` 2.2.0 (grize: 840→841 pada); A7 `corepack pnpm grane` i pravila kratkih
+  grana. Nakon svakog spajanja balans v2 tjedno/mjesečno i v1 bajt-isti, pečat zelen. A4 (igra = balans) čeka pregled, A5 graditelja.
+- **GitHub** (Leonov OK, kolega pregledava 16.10.): `sloj1` pushan; `main` dobio README s cijelom idejom i `LICENSE` sva prava
+  pridržana ([ADR-044](DECISIONS/ADR-044-licenca-sva-prava-pridrzana.md)) i popravak `rustls`. CI zelen na obje (nakon B12).
+- **Disk** pao na 12 GB (B11): ugašeni stari pregledi grana, obrisana stabla spojenih grana, napuštene mape i stari `target/`
+  → >120 GB; pravilo: jedan zajednički `CARGO_TARGET_DIR`, stablo se briše isti dan nakon spajanja.
+- **Sljedeće:** [SLJEDECA_SESIJA.md](../SLJEDECA_SESIJA.md) — pregled A4, A5, A6, kraj faze A.
+
+---
+
 ## 2026-10-14 (2) — situacije do kraja (G-2, A-1, W-1), Leonov pregled igre, obnova spojena u sloj1
 
 - **Grana situacija** (`../hotelixsim-s1-sit` ea19d54), svaka cigla čuvar → graditelj → pregled: G-2 popravak 1 (e95393b, Approved);

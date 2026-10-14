@@ -2,6 +2,19 @@
 
 Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/).
 
+## [Neobjavljeno] — Popravak temelja, faza A ([ADR-043](DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md))
+
+### Dodano
+- `balance --check` ruši samo brane modela; šest mjera robota ispisuje se u odjeljku „Mjere robota" (A1).
+- Situacije (predlošci, razgovor, prepuštanje voditelju) spojene u `model-v2/sloj1` (L1-11, A1).
+- Načela igre kao provjere sadržaja pri startu servera, s popisom duga koji smije samo padati (A2).
+- Zapečaćeni otisak sezone v2 vezan uz `CORE_VERSION` 2.2.0 (A3); stare v2 igre daju 409 i traže novu igru.
+- Alat `corepack pnpm grane` (koliko je koja grana iza integracijske, `STARA` nakon 24 h) (A7).
+- `LICENSE` (sva prava pridržana) i README s cijelom idejom igre ([ADR-044](DECISIONS/ADR-044-licenca-sva-prava-pridrzana.md)).
+
+### Popravljeno
+- `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.
+
 ## [Neobjavljeno] — Sloj 1 puta B: odjeli, račun dobiti, tjedni krug, kraj sezone
 
 Plan: [2026-10-10-v2-sloj1.md](../plan/2026-10-10-v2-sloj1.md); pretpostavke [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md)

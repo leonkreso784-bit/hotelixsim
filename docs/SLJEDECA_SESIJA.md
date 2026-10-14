@@ -5,7 +5,8 @@
 Leon 14.10. odlučio: **popravak, ne gradnja ispočetka** ([ADR-043](./records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md),
 [revizija](./architecture/REVIZIJA_TEMELJA.md)), i samo popravak dok nije gotov. Plan:
 [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md). Ledger (vjeruj mu i git logu):
-`.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` → tablica „STANJE".
+`.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` → tablica „STANJE". **Kako se šalju agenti** (ispravci starih
+zajedničkih pravila, pregled, spajanje, gdje smo stali): `.superpowers/sdd/2026-10-14-popravak-temelja/upute-izvodacima.md`.
 
 ## Prompt za početak (Leon zalijepi nakon `/clear`)
 
@@ -13,7 +14,8 @@ Leon 14.10. odlučio: **popravak, ne gradnja ispočetka** ([ADR-043](./records/D
 /newsession
 
 Nastavljamo POPRAVAK TEMELJA, faza A. Ledger .superpowers/sdd/2026-10-14-popravak-temelja/progress.md (tablica STANJE).
-Redom: pregled A4, graditelj A5, pa A6, pa kraj faze A. Prvo `df -h /c` (mora biti > 100 GB). Push samo uz moj OK.
+Prvo pročitaj upute-izvodacima.md u istom direktoriju. Redom: pregled A4, graditelj A5, pa A6, pa kraj faze A.
+Prvo `df -h /c` (mora biti > 100 GB). Push samo uz moj OK.
 ```
 
 ## Stanje (15.10.)
