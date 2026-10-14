@@ -12,6 +12,7 @@
     "check:docs": "node scripts/check-docs.mjs",
     "check:kod": "node scripts/check-kod.mjs",
     "test:docs": "node --test \"scripts/*.test.mjs\"",
+    "grane": "node scripts/grane.mjs",
     "docs:plan": "node scripts/razdvoji-plan.mjs",
     "docs:adr": "node scripts/adr.mjs indeks",
     "lint": "biome check .",
