@@ -8,7 +8,8 @@
       "!**/target",
       "!openapi.json",
       "!.sqlx",
-      "!**/tests/fixtures"
+      "!**/tests/fixtures",
+      "!**/tests/fixtures_v2"
     ]
   },
   "css": { "parser": { "tailwindDirectives": true } },

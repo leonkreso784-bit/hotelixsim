@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-044"></a>[ADR-044](DECISIONS/ADR-044-licenca-sva-prava-pridrzana.md) | Licenca: sva prava pridržana (kod javno vidljiv radi pregleda) | ✅ Leonova odluka 15.10. | 2026-10-15 |
 | <a id="adr-043"></a>[ADR-043](DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md) | Popravak temelja po fazama A–C, ne gradnja ispočetka | ✅ Leonova odluka 14.10. | 2026-10-14 |
 | <a id="adr-042"></a>[ADR-042](DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) | Leonove odluke iz pregleda igre 14.10. (kvarovi, održavanje, osoblje, spremanje, banka ljudi) | ✅ Leonova odluka 14.10. | 2026-10-14 |
 | <a id="adr-041"></a>[ADR-041](DECISIONS/ADR-041-mjesecni-brizni-otpusta-prije-pada.md) | Mjesečni Brižni otpušta sezonce prije pada (tjedan ≈ mjesec) | ✅ Leonova odluka 13.10. | 2026-10-13 |

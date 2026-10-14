@@ -5,6 +5,18 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-15 — popravak temelja
+
+**B11. Disk pao na 12 GB slobodnog.** *Uzrok:* svako radno stablo (do 11 istodobno, plus 6 napuštenih mapa) prevodilo je
+Rust u svoj `target/` od više GB, a stabla spojenih grana nisu brisana. *Pouka:* jedan zajednički `CARGO_TARGET_DIR`,
+stablo se briše isti dan kad se spoji, `df -h /c` prije otvaranja stabla; Leon želi uvijek više od 100 GB slobodno.
+*Stanje:* pravilo u [AGENTI.md](../workflow/AGENTI.md) §1 t. 6; spojena stabla i stari `target/` obrisani 15.10.
+
+**B12. CI pao na `lint` nakon A3.** *Uzrok:* generirani pečat `fixtures_v2/v2-snapshot.json` nije bio izuzet iz
+`biome` kao v1 pečati, a ni čuvar, ni graditelj, ni provjeravatelj nisu vrtjeli `corepack pnpm lint` (kartica ga nije
+tražila). *Pouka:* svaka cigla vrti cijeli popis provjera iz CI-ja, ne samo onaj u kartici. *Stanje:* `biome.json`
+izuzima `**/tests/fixtures_v2`; Global Constraints plana popravka.
+
 ## 2026-10-14 — iz Leonova igranja i spajanja grana
 
 **B1. Najbolji ponuđeni odgovor je uvijek prvi.** Sva 55 predloška i sidra S1–S4 imaju odgovor ocjene 5 na prvom mjestu

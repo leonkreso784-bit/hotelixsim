@@ -43,9 +43,12 @@ Vrijede `.superpowers/sdd/2026-10-10-v2-sloj1/global-constraints.md` i `implemen
   prema osnovici, zlatni testovi v1 (`crates/game/tests/v1_frozen.rs`) zeleni.
 - **Svaka promjena koja mijenja brojke v2 igre diže `CORE_VERSION`** (`crates/sim-hotel-v2/Cargo.toml`) i obnavlja otisak
   iz A3. Vrijedi i za `content::instance`, `game::drawn` i robote u `game`, ne samo za `sim-hotel-v2`.
+- **Svaka cigla prije predaje vrti cijeli popis provjera iz CI-ja** (`.github/workflows/ci.yml`: fmt, clippy, core-deps,
+  testovi, balansi, check:docs, test:docs, check:kod, check:api, lint, typecheck, test, web build), ne samo kartične (B12).
 - **Tekstovi poruka brana balansa ostaju doslovno isti** (usporedba s ~40 povijesnih izvještaja).
-- **Najviše 2 agenta istodobno prevode Rust.** Svako radno stablo koje pokreće poslužitelj ili mjeri osnovicu ima svoju
-  bazu i svoj `CARGO_TARGET_DIR` (B8, B9).
+- **Najviše 2 agenta istodobno prevode Rust.** Sva stabla dijele `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target`;
+  samo osnovica (B8) ima privremeni target koji se briše odmah. Stablo koje pokreće poslužitelj ima svoju bazu (B9).
+  Disk ostaje iznad 100 GB slobodno; stablo cigle se briše isti dan kad se spoji (B11).
 - **Grana cigle živi najviše ~1 dan**; nakon svakog spajanja balans v2 tjedno i mjesečno s 1000 sjemena i `--check`.
 - **Brojke i pravila koje student osjeti** idu Leonu kroz anketu prije gradnje (memorija „odluke o igri pitaj Leona").
 - **Živi AI test i push** samo uz Leonov izričit OK za tu radnju.
