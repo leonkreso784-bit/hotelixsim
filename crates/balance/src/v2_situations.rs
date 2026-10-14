@@ -14,7 +14,7 @@ use sim_hotel_v2::{
 use crate::median;
 
 /// Utor hotela robota u balansu (0 je kolektivni).
-pub(crate) const HOTEL_SLOT: u8 = 1;
+pub const HOTEL_SLOT: u8 = 1;
 
 /// Leon (plan situacija §6, P8): situacije zajedno ~⅓ napretka; pojas provjere 20–40 %.
 pub(crate) const SHARE_BAND_BP: (i32, i32) = (2_000, 4_000);

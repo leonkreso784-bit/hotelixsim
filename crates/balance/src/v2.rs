@@ -22,6 +22,8 @@ use crate::{
     ratio_bp, reference_profile, season_medians,
 };
 
+pub use crate::v2_situations::HOTEL_SLOT;
+
 pub struct OptionsV2 {
     pub seeds: u64,
     pub kind: PeriodKind,
@@ -446,6 +448,28 @@ fn kind_medians(
         .map(|((p, s), mut v)| (p, s, median(&mut v)))
         .collect();
     Ok((medians, profile_medians, end_finance))
+}
+
+/// Sezona jednog robota točno kako je vrti balans v2: situacije iz predložaka kad ih sadržaj ima (`Situations::robot`),
+/// utor `HOTEL_SLOT`, referentna tablica kategorije profila za `kind`. Ulaz testa jednakosti s igrom (A4).
+pub fn robot_season_v2(
+    content: &content::Content,
+    profile: Profile,
+    strategy: Strategy,
+    seed: u64,
+    kind: PeriodKind,
+) -> Result<SeasonResult, ResolveError> {
+    let cat = content
+        .v2
+        .as_ref()
+        .ok_or_else(|| ResolveError::Catalog(CatalogError::Missing("v2".to_string())))?;
+    let refs = category_refs(cat, kind)?;
+    Situations::new(content).robot(
+        (profile, strategy, seed),
+        kind,
+        cat,
+        refs_for(cat, &refs, profile)?,
+    )
 }
 
 pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, ResolveError> {
