@@ -123,6 +123,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [VODITELJ_I_TRZISTE.md](./architecture/VODITELJ_I_TRZISTE.md) | Voditelj odjela koji upravlja odjelom i odgovara za njega, i uvid u tržište (zainteresirani, smješteni, odbijeni gosti); nacrt za raspravu, Leonove ideje 13.10. |
 | [BANKA_LJUDI.md](./architecture/BANKA_LJUDI.md) | Banka ljudi: format i pravila za tisuće radnika i gostiju (sadržaj u repou), ciljni brojevi, deterministički izbor po sjemenu, punjenje u serijama s dva agenta; nacrt za raspravu, ADR-042 t. 5 |
 | [PLATFORMA.md](./architecture/PLATFORMA.md) | **Platforma**: razred = jedna igra s N hotela, računi i uloge, profesorov pregled, generirani hoteli, produkcija (Railway) i trošak, GDPR; nacrt za raspravu, odluke u ADR-037 (dijelovi u `PLATFORMA/`) |
+| [REVIZIJA_TEMELJA.md](./architecture/REVIZIJA_TEMELJA.md) | **Revizija temelja 14.10.**: što je temelj, što je nadogradnja, gdje puca (s dokazima), cijena popravka prema gradnji ispočetka, preporuka u fazama A–C; čeka Leonovu odluku |
 | [MODEL_V2.md](./architecture/MODEL_V2.md) | **Put B**: kako hotel od brojeva postaje skup stvari (odjeli, zaposlenici, sobe, recenzije) — entiteti, slojevi, determinizam, stare igre |
 
 ## `plan/` — što sada
@@ -130,7 +131,8 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | Dokument | Svrha |
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u mapi `ROADMAP/` |
-| [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | 🟩 **aktivan** — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
+| [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md) | 🟩 **aktivan** — popravak temelja po [reviziji](./architecture/REVIZIJA_TEMELJA.md): faza A (brane koje mjere pravu stvar, kratke grane; 7 kartica), B (v2 mehanike po odjelu, jedna kalibracija, L1-13…L1-15), C (igra za semestar) |
+| [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | ⏸️ **pauziran** (14.10., ADR-043; ostatak u planu popravka) — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
 | [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (čeka spajanje Sloja 1; Taskovi 11–13) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 
 ## `workflow/` — kako radimo

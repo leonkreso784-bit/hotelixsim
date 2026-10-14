@@ -52,6 +52,7 @@ NATJECANJE ZA LJUDE P3 → P4. **Nikad se ne režu** testovi, provjeravatelj i b
 
 ## Gdje smo
 
-Aktivan plan: [Sloj 1](./2026-10-10-v2-sloj1.md) (T1–T23 spojeni; situacije, obnova i kraj sezone na granama,
-predaja u ledgeru). Sljedeće: faza **TEMELJ RADA**, pa usporedno ZAVRŠETAK SLOJA 1 i SPREMNO ZA INTERNET.
+Aktivan plan: [Popravak temelja](./2026-10-14-popravak-temelja.md) (14.10., [ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md):
+faze A → B → C, samo popravak dok nije gotov; preuzima ostatak ZAVRŠETKA SLOJA 1). [Sloj 1](./2026-10-10-v2-sloj1.md) je pauziran.
+Nakon popravka: TEMELJ RADA i SPREMNO ZA INTERNET, pa RAZRED.
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".
