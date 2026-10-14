@@ -40,6 +40,7 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 6. Dokumentacija ([pravila i granice](docs/README.md)): popis ADR-ova
    nakon novog ADR-a `corepack pnpm docs:adr`; razdvajanje plana `corepack pnpm docs:plan <plan.md>`; veličine svih dokumenata
    uz granice `node scripts/check-docs.mjs --popis`.
+7. Grane: `corepack pnpm grane` pokazuje koliko je koja lokalna grana iza integracijske i je li `STARA` (nespojen rad stariji od 24 h).
 
 ### Igra u pregledniku
 

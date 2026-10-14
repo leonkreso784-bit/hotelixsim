@@ -14,7 +14,8 @@
    velik plan treba pisati tako da pregled stane, inače se ne može aktivirati.
 3. **Cigla** (komad od ~2–8 h) u planu faze ima **karticu**: što se radi, koje datoteke smije dirati, dokaz, veličina.
    Svaki korak radi **svjež agent** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 3):
-   1. **voditelj** (glavna sesija) otvara granu, daje karticu, vodi ledger i spaja;
+   1. **voditelj** (glavna sesija) otvara granu s integracijske grane, daje karticu, vodi ledger i spaja isti dan kad
+      provjeravatelj kaže „da" (pravila grana: t. 6);
    2. **čuvar testova** piše testove iz kartice **prije koda** i dokazuje da padaju iz pravog razloga;
    3. **graditelj** piše kod dok testovi ne prođu i polira što dira. **Testove ne mijenja**: ako misli da je test kriv,
       vraća ga voditelju;
@@ -25,10 +26,17 @@
 4. **Cigla je gotova** kad su testovi čuvara i sve stalne provjere zeleni (fmt, clippy, testovi, balans, `check:api`,
    web), provjeravatelj kaže „da", dokumentacija je upisana i nijedna dirana datoteka nije prešla granicu veličine (t. 4).
 5. **Ritam.** Cigle unutar faze idu jedna za drugom bez čekanja; voditelj se javlja Leonu **na kraju faze**, kad treba
-   odluka o igri ili brojkama, ili kad nešto pukne (t. 6). **Kraj faze:** UI čuvar pregleda ekrane, završni pregled
+   odluka o igri ili brojkama, ili kad nešto pukne (t. 7). **Kraj faze:** UI čuvar pregleda ekrane, završni pregled
    radi najjači model, Leon igra u pregledniku (jedna adresa i put do novoga); odgođeni nalazi idu u
    [BACKLOG](../records/BACKLOG.md) (t. 5).
-6. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
+6. **Grane i integracija.** Integracijska grana je `model-v2/sloj1` (do L1-15), poslije `main`. Grana cigle ne živi dulje
+   od ~1 dana; ako cigla ne stane u dan, dijeli se. `corepack pnpm grane` pokazuje stare i spojene grane.
+   **Nakon svakog spajanja** na integracijsku granu balans mora proći: `cargo run -q -p balance --release -- --model v2
+   --round week --seeds 1000 --check` i isto s `--round month` (v1: `--seeds 100 --check`). Pad brane = spajanje se vraća.
+   **Dvije cigle koje diraju napredak** (jezgra, sadržaj s učinkom, balans) ne rade usporedno u dva stabla; usporedno
+   smiju samo cigle s odvojenim datotekama i bez utjecaja na napredak (npr. web i AI uputa). **Svako radno stablo ima
+   svoju bazu i svoj `CARGO_TARGET_DIR`** kad pokreće poslužitelj ili mjeri osnovicu.
+7. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
 
 ## 2 · Radni ledger, brief i pretinac
 
@@ -38,6 +46,10 @@ proizvodi, što drugi troši, nalaz) i stanje po tasku. Primjer oblika: [ledger 
 Na kraju plana ga `/kraj` kopira u `docs/archive/<datum>-<ime>-ledger.md`, jer git ledger ne vidi. Ledger se zove po
 pregledu plana (`<datum>-<ime>`), i kad je plan razdvojen.
 
+- **Ledger je stanje, ne dnevnik:** na vrhu `progress.md` je jedna tablica „cigla | stanje | grana | commit | sljedeći
+  korak" koju voditelj prepisuje; povijest ide ispod jednog naslova „Povijest" i ne čita se na početku sesije.
+- **Kopija na kraju faze:** `git bundle create ../hotelixsim-kopije/<datum>/hotelixsim-sve-grane.bundle --all` i
+  `tar -czf …/superpowers.tar.gz .superpowers` ([ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md) t. 6).
 - **Brief = task datoteka.** Izvođač dobiva putanju task datoteke (`docs/plan/<datum>-<ime>/task-NN-….md`) i pregleda.
   Ako je potreban `task-brief`, uvijek s trećim argumentom, inače radni prostor dobije ime taska:
   `task-brief <mapa>/task-NN-x.md N "$(sdd-workspace <pregled>.md)/task-N-brief.md"`
