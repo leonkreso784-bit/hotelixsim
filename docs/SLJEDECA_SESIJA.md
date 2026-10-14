@@ -1,44 +1,44 @@
-# Sljedeća sesija — završetak Sloja 1 (kolosijek IGRA): spajanje grana, živi testovi, zajednički balans
+# Sljedeća sesija — REVIZIJA TEMELJA (samo čitanje), pa završetak Sloja 1
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
-Radimo po [ADR-038](./records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md): faze i cigle, čuvar testova prije
-graditelja, provjeravatelj, staje se na kraju faze. Raspored: [ROADMAP](./plan/ROADMAP.md) i
-[ROADMAP/igra.md](./plan/ROADMAP/igra.md).
+Leon (14.10.): *„sve više mi se čini da ćemo morati krenuti ispočetka jer ne gradimo od baze nego od sagrađenog bungalova
+radimo ciglenu nadogradnju koja se može samo srušit u jednom trenutku"*. Dogovor: sljedeća sesija najprije **provjerava
+temelj** i ništa ne gradi; Leon odlučuje na temelju dokumenta.
 
 ## Prompt za početak (Leon zalijepi nakon `/clear`)
 
 ```text
 /newsession
 
-Nastavljamo po ROADMAP-u: faza ZAVRŠETAK SLOJA 1 (kolosijek IGRA). Predaja je u ledgeru
-.superpowers/sdd/2026-10-10-v2-sloj1/progress.md, zadnji odjeljak „STANJE NA ZAUSTAVLJANJU 14.10. (noć)" — vjeruj njemu
-i git logu. Grana situacija je gotova (L1-3 … L1-6). Najprije analiziraj stanje, pa radi: <moji odgovori na pitanja iz
-predaje>. Moj demo radi na 8080 i 5173 iz glavnog stabla — ne gasi ga. Push samo uz moj OK.
+Radimo REVIZIJU TEMELJA (samo čitanje, ništa se ne gradi). Predaja: docs/SLJEDECA_SESIJA.md i ledger
+.superpowers/sdd/2026-10-10-v2-sloj1/progress.md („STANJE NA ZAUSTAVLJANJU 14.10. (večer)" + dopuna). Pokreni paralelne
+read-only agente po slojevima, pa mi daj dokument s preporukom. Push samo uz moj OK.
 ```
 
 ## Cilj
 
-1. **Grana situacija je spremna** (`../hotelixsim-s1-sit` @ ea19d54, lokalno): G-2 popravak 1, A-1 (API + naredba „prepusti
-   voditelju" po P4), W-1 (ekran situacija) i popravak; svi pregledi Approved, UI čuvar 2 SPREMNO DA.
-2. **Spajanje** (L1-10 obnova, pa L1-11 situacije) čeka Leonovo „demo gotov". U commitu spajanja situacija dug
-   `scripts/check-kod.mjs`: `game/tests/mentor.rs` 1672 i `game/src/mentor.rs` 1375 (podići), `api/src/schema.rs` 1568 (spustiti).
-3. **Živi testovi s ključem** (Leonov OK): G-2 jedan predložak, L1-9 KS-3 sezonski mentor.
-4. Zatim L1-13 zajednički balans i L1-14 igriva verzija za Leona.
+1. **Revizija temelja** — paralelni agenti koji samo čitaju, svaki svoj sloj, izlaz u datoteke:
+   jezgra i model (`engine`, `sim-hotel`, `sim-hotel-v2`, `game`: dnevnik događaja, determinizam, granice v1/v2);
+   sadržaj i njegove provjere (`content`, predlošci, što načela igre NISU zapisana kao provjera — vidi [BUGS.md](./records/BUGS.md) B1–B3);
+   balans i roboti kao mjerilo (što brane stvarno mjere — B6); AI sloj (granice u ulazu — B4); web i API; način rada s granama.
+2. Iz toga **jedan dokument** u `docs/architecture/` (≤300 redaka): što je pravi temelj, što je nadogradnja, gdje puca (s
+   `datoteka:redak`), cijena popravka dijela prema početku ispočetka (sati, rizik), **jasna preporuka**. Prije prijedloga
+   vlastita provjera nalaza (memorija „analiziraj prije prijedloga").
+3. Tek nakon Leonove odluke: L1-13 kalibracija na grani `model-v2/sloj1-l111` (situacije ~20 % napretka,
+   [ADR-042](./records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 15), `--ff-only` u sloj1, `check:api`;
+   zatim L1-13b (ADR-042 t. 1–14).
 
-## Za znati
+## Stanje (lokalno, ništa nije pushano)
 
-- Roboti su **samo za demo** (Leon 13.10.): nalazi o njima idu u BACKLOG, osim ako kao mjerač obore branu modela.
-- Pretinac `za-dokumentaciju.md` (ledger) drži bilješke nespojenih grana (G-1 … W-1 i otvorene Minore); prenosi se pri spajanju.
-- Grane obnove i situacija dijele bazu `hotelixsim_agenti`: UI čuvari dviju grana ne rade istodobno.
-- U glavnom stablu je 5 necommitanih web datoteka iz 14.10. 01:17 koje su **duplikati** (dvostruki import i funkcija; web se ne
-  prevodi). Kopija je u scratchpadu sesije a229bc3f. Ne dirati bez Leonova odgovora.
+- `model-v2/sloj1` @ docs-commit ove sesije (iznad 24b4e2a): obnova + KS-3 spojeni (L1-10), sve provjere zelene.
+- `model-v2/sloj1-l111` @ b1bf446: situacije spojene, 879/0, pada samo brana „udio situacija" (B Brižni 10,2 % tjedno).
+- Pregled grana za Leona radi: 5182 (situacije, API 8095) i 5183 (obnova, API 8096), zasebne baze, s AI ključem.
+- Probne v2 igre stvorene prije L1-10 na demu iz sloj1 daju 409 `game_outdated` (podaci ostaju; v1 radi).
 
 ## Otvoreno za Leona
 
-- Smije li se vratiti 5 dupliciranih datoteka u glavnom stablu (bez toga demo na 5173 ne radi).
-- „Demo gotov" (L1-10); OK za ključ (živi testovi); push grana kad dođu.
-- 🟨 tekstovi u pretincu: nazivi uloga (P-INSPEKCIJA, P-VJENCANJE), rečenica mentora „prepuštena je voditelju (2/5)",
-  tekstovi W-1 (potvrda, obvezne, brojač); rezervacija grupa za kolektivnu situaciju.
-- **5 pitanja o voditelju odjela i grafu tržišta** — [VODITELJ_I_TRZISTE.md](./architecture/VODITELJ_I_TRZISTE.md) §3.
-- ADR-ovi 🟨 — sjednica ~1 h (K0-8, [DECISIONS.md](./records/DECISIONS.md)).
+- Odluka nakon revizije: popravak dijela ili ispočetka.
+- 🟨 tekstovi iz grane situacija (popis u ledgeru `za-leona-pretpostavke.md`); 5 pitanja [VODITELJ_I_TRZISTE](./architecture/VODITELJ_I_TRZISTE.md) §3.
+- Banka ljudi: znak za korak K1 ([BANKA_LJUDI](./architecture/BANKA_LJUDI.md)).
+- Push grana na GitHub (repo je javan).

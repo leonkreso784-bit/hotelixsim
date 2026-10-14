@@ -82,3 +82,8 @@ nacionalnosti iz ADR-028.
     profesora (kolosijek PLATFORMA, razred ADR-037) samo ih postavlja. ✅ (Leon potvrdio) Granice: najmanje 3 (obvezne), najviše 8 po krugu;
     učinak jedne situacije se preračuna tako da situacije ostanu ~⅓ napretka (P8) bez obzira na broj — tako profesorov izbor
     mijenja koliko vježbe student dobije, a ne pravednost ocjene.
+15. **Situacije nose ~20 % napretka sezone (Leon 14.10.) — mijenja P8 od 13.10. („~⅓").** Povod: spajanje situacija s obnovom
+    (L1-11) srušilo je branu „udio situacija 20–40 %" (B Brižni 10,2 % tjedno, 19,3 % mjesečno) jer obnova diže napredak bez
+    situacija. Leon: „neka budu 20 posto … gradimo igraću platformu koja mora biti ista za sve". Cilj kalibracije (L1-13) je
+    **~20 %**; 🟨 brana 15–25 %. Vrijedi i za t. 14 (profesorov broj situacija mijenja učinak jedne situacije tako da udio
+    ostane ~20 %). Kalibracija se radi na grani `model-v2/sloj1-l111` prije nego uđe u sloj1.

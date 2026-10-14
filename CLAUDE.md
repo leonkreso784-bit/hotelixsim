@@ -29,15 +29,17 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   cigle, prekretnice P1–P4 (verzija za profesore ~siječanj, studentski pilot ljetni semestar); razred po
   [ADR-037](docs/records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md), rad po
   [ADR-038](docs/records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) (čuvar testova prije graditelja; staje se na kraju faze).
-- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): faza **ZAVRŠETAK SLOJA 1** ([plan](docs/plan/2026-10-10-v2-sloj1.md),
-  spec [MODEL_V2.md](docs/architecture/MODEL_V2.md)) po predaji u ledgeru `.superpowers/sdd/2026-10-10-v2-sloj1/progress.md`
-  („STANJE NA ZAUSTAVLJANJU 14.10."): grana situacija G-2 popravak 1 → A-1 → W-1; grana obnove spremna, čeka „demo gotov".
-  Faza 0 TEMELJ RADA je u arhivi; K0-4/5/6 nakon spajanja grana. Roboti su samo za demo (Leon 13.10.).
+- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **POPRAVAK TEMELJA** — samo to dok nije gotovo
+  ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
+  [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
+  Faza A (brane koje mjere pravu stvar, kratke grane) → B (v2 mehanike po odjelu, jedna kalibracija L1-13, ADR-042) → C
+  (igra za semestar). Situacije čekaju na `model-v2/sloj1-l111` i ulaze s A1. Roboti su samo za demo (Leon 13.10.).
+  Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
-  kod ≤ 1000 (`check:kod`). Pretinac `za-dokumentaciju.md` samo za nespojene grane (Obnova, Situacije).
+  kod ≤ 1000 (`check:kod`). Pretinac `za-dokumentaciju.md` samo za nespojene grane (Situacije).
 - **Čeka Leona:** 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
-  ADR-ovi 🟨, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
-  [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".
+  ADR-ovi 🟨, 🟨 tekstovi iz grane situacija, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
+  [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona". Banka ljudi ([nacrt](docs/architecture/BANKA_LJUDI.md)) čeka znak za K1.
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
   (`gh` je prijavljen, nije na PATH-u).

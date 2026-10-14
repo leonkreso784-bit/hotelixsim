@@ -127,6 +127,9 @@ nalazi pregleda koji nisu popravljeni.
 - [sloj1] **Mentor kruga sprema nepotpun AI tekst kao `ai`:** prazan ili odrezan tekst (`run_debrief`) ostaje zauvijek zapisan kao `source: ai`; ista provjera kao sezonski mentor (četiri dijela iz `mentor.v3`) pa rezerva `fallback_debrief`. (KS-2)
 - [sloj1] **Razmak prije „%" u tekstovima iz Rusta** (objašnjenje kruga, `crates/game/src/mentor.rs` „{pct} % potražnje") je običan, a web ga ima nelomljivog. Ne dirati dok v1 mora ostati bajt-ist (ili samo u v2 grani teksta). (OD-7)
 - [sloj1] **Mentor i sezonski ugovori:** mentor krajem kolovoza upozori „rujan pada, planiraj kraj sezonskih ugovora"; u v2 redak troškova „fiksni troškovi" (stalni dio zajedničkih službi) treba drugo ime, blizu Računa dobiti — tekst je zajednički s v1, pa objašnjenje mora nositi model (ili `LineDto` drugi uzrok); redak blagajne već se zove „fiksni troškovi zgrade (najam, osiguranje, porez)". (ZP)
+- [sloj1] **Tijek nema stavku za prepuštenu situaciju** (odgovorena „izabrano…", neodgovorena „bez odgovora (1/5)"; prepuštena se vidi samo kod mentora) → „prepušteno voditelju (ocjena 2/5)" u `feed.rs`. (W-1 UI čuvar)
+- [sloj1] **Uputa AI mentora ne zna ključ `prepustena_voditelju`** — uz 2/5 može prepuštenu nazvati loše riješenom; pri sljedećoj verziji `mentor.*`. (A-1 pregled)
+- [sloj1] **Situacije nakon 409:** poruka greške nestane čim se ekran osvježi; dok je potvrda prepuštanja otvorena, slobodni odgovor i razgovor s likom ostaju aktivni; 409 pri izboru ponuđenog odgovora ne osvježava situacije. (W-1 pregledi)
 
 ## Za plan sloja 2 — [sloj2]
 
