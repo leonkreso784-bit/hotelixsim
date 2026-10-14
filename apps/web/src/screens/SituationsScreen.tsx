@@ -1,5 +1,5 @@
 import { t } from "@hotelixsim/i18n";
-import { ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronRight, Hotel, MessageCircle } from "lucide-react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSituations } from "../api/queries";
 import type { HotelBody, SituationBody } from "../api/types";
@@ -9,8 +9,12 @@ import { tw } from "../format";
 import { isWeekly } from "../game";
 import { Link } from "../router";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
+import { deptIcon } from "./departments/icons";
+import { useDeptNames } from "./situation/deptNames";
+import { isSettled } from "./situation/rules";
 
 export function situationStatus(s: SituationBody): { text: string; tone: "accent" | "muted" | "up" } {
+  if (s.delegated) return { text: t("situation.status.delegated"), tone: "muted" };
   if (s.response?.status === "pending") return { text: t("situation.status.pending"), tone: "accent" };
   if (s.response?.quality != null)
     return { text: t("situation.status.quality", { q: s.response.quality }), tone: "up" };
@@ -21,10 +25,15 @@ export function situationStatus(s: SituationBody): { text: string; tone: "accent
 export function SituationsScreen({ me }: { me: HotelBody }) {
   const sits = useSituations(me.hotel.hotel_id);
   const game = useGame(me.game_id);
+  // Odjel i voditelj postoje samo u v2; stara igra ne traži odjele (i nema ikonu ni ime odjela na kartici).
+  const hasDepts = sits.data?.items.some(withDept) ?? false;
+  const deptName = useDeptNames(me.hotel.hotel_id, hasDepts);
   if (sits.isPending) return <StatusText>{t("status.loading")}</StatusText>;
   if (sits.isError && !sits.data) return <ErrorText>{problemMessage(sits.error)}</ErrorText>;
   const seasonOver = game.data?.current === null;
   const weekly = game.data ? isWeekly(game.data) : false;
+  const items = sits.data.items;
+  const solved = items.filter(isSettled).length;
   return (
     <>
       <h1 className="text-3xl font-extrabold tracking-tight">{tw(weekly, "situations.title")}</h1>
@@ -41,6 +50,9 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
       ) : (
         !sits.data.open && <p className="text-muted">{tw(weekly, "situations.closed")}</p>
       )}
+      {!seasonOver && sits.data.open && items.length > 0 && (
+        <p className="font-semibold">{t("situations.solved", { n: solved, total: items.length })}</p>
+      )}
       {sits.data.items.length > 0 && (
         <ul className="space-y-3">
           {sits.data.items.map((s) => {
@@ -52,13 +64,17 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
                     {s.character && <Avatar look={lookFor(s.character.name)} size={40} />}
                     <span className="min-w-0 flex-1 space-y-1">
                       <span className="block font-bold">{s.title}</span>
+                      {withDept(s) && <DeptLine code={s.department} name={deptName(s.department)} />}
                       {s.character && (
                         <span className="flex items-center gap-1 text-sm text-muted">
                           <MessageCircle size={14} aria-hidden="true" />
                           {t("situations.talk")}
                         </span>
                       )}
-                      <Badge tone={st.tone}>{st.text}</Badge>
+                      <span className="flex flex-wrap gap-2">
+                        {s.mandatory && <Badge>{t("situation.mandatory")}</Badge>}
+                        <Badge tone={st.tone}>{st.text}</Badge>
+                      </span>
                     </span>
                     <ChevronRight size={18} aria-hidden="true" className="text-muted" />
                   </Card>
@@ -69,5 +85,22 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
         </ul>
       )}
     </>
+  );
+}
+
+/** Situacija v2 (ima odjel ili voditelja); sidra stare igre nemaju ni jedno ni drugo. */
+function withDept(s: SituationBody): boolean {
+  return s.department !== null || s.leader !== null;
+}
+
+/** Odjel situacije: ikona i ime (iz `/departments`); bez odjela je situacija cijelog hotela. Kod se ne prikazuje. */
+function DeptLine({ code, name }: { code: string | null; name: string | null }) {
+  const Icon = code === null ? Hotel : deptIcon(code);
+  const label = code === null ? t("situations.wholeHotel") : name;
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-muted">
+      <Icon size={18} aria-hidden="true" className="shrink-0" />
+      {label && <span className="min-w-0">{label}</span>}
+    </span>
   );
 }

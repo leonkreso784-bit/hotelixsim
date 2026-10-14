@@ -1,3 +1,4 @@
+import { isMessageKey } from "@hotelixsim/i18n";
 import { describe, expect, it } from "vitest";
 import { ApiError, isNoGame, problemMessage, shouldRetry, unwrap } from "./errors";
 
@@ -51,6 +52,12 @@ describe("problemMessage i isNoGame", () => {
       "Poslužitelj trenutno ne odgovara. Pokušaj ponovno za koju sekundu.",
     );
     expect(problemMessage(new ApiError(400, null))).toBe("Nešto nije u redu. Pokušaj ponovno.");
+  });
+  it("W-1: 409 situation_mandatory (obvezna se ne prepušta) ima svoju hrvatsku rečenicu", () => {
+    expect(isMessageKey("problem.situation_mandatory")).toBe(true);
+    const text = problemMessage(new ApiError(409, "situation_mandatory"));
+    expect(text).not.toBe("Nešto nije u redu. Pokušaj ponovno.");
+    expect(text).not.toMatch(/situation_mandatory/);
   });
   it("401 i 404 na /me/hotel znače: gost još nema igru", () => {
     expect(isNoGame(new ApiError(401, "guest_required"))).toBe(true);
