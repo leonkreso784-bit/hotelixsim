@@ -114,6 +114,6 @@ pub(crate) fn build_v2(dto: &V2Dto, base: &Catalog) -> Result<sim_hotel_v2::Cata
     c.periods = periods;
     c.departments = departments;
     c.profiles = profiles;
-    c.economy = build_economy(&dto.economy);
+    c.economy = build_economy(&dto.economy)?;
     Ok(c)
 }

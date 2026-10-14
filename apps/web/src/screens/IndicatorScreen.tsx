@@ -6,7 +6,7 @@ import { problemMessage } from "../api/errors";
 import { useExplanation, useGame } from "../api/queries";
 import type { DriverCode, GameBody, HotelBody, IndexCode, IndexEntry } from "../api/types";
 import { capitalize, formatIndex, roundPhrase, roundTitle, roundWithoutGame, tw } from "../format";
-import { indexDeltas, isWeekly, roundInfo } from "../game";
+import { indexDeltas, isV2, isWeekly, roundInfo } from "../game";
 import { Link } from "../router";
 import { Delta, INDEX_ICON } from "../ui/IndexBars";
 import { Card, ErrorText, StatusText } from "../ui/primitives";
@@ -141,7 +141,12 @@ export function IndicatorScreen({
           <span className="text-accent">{INDEX_ICON[code]}</span>
           {indexLabel(code)}
         </h1>
-        <p>{t(`indicator.mean.${code}` as const)}</p>
+        {/* v2: Financije mjere dobit iz poslovanja nakon ulaganja (GOP umanjen za amortizaciju obnova). */}
+        <p>
+          {t(
+            code === "F" && game && isV2(game) ? "indicator.mean.F.v2" : (`indicator.mean.${code}` as const),
+          )}
+        </p>
         <p className="text-xs text-muted">{t("index.scale")}</p>
       </div>
       <History rows={historyRows(hotel, code, game)} code={code} weekly={weekly} />

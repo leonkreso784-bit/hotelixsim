@@ -10,7 +10,7 @@
     "wear_pts_per_month": 400,
     "maintenance": {
       "deferred": { "cost_cents": 300000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 1500000, "equipment_pts": 400 },
+      "regular": { "cost_cents": 1500000, "equipment_pts": 300 },
       "intensive": { "cost_cents": 3000000, "equipment_pts": 800 }
     },
     "fixed_monthly_cents": 0,
@@ -18,7 +18,14 @@
     "seasonal_max": 30,
     "seasonal_plan": { "jun": 14, "jul": 17, "aug": 22, "sep": 17 },
     "can_close": false,
-    "staffing_tenths_per_100_rooms": { "4": [170, 250] }
+    "staffing_tenths_per_100_rooms": { "4": [170, 250] },
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 15000000,
+      "max_monthly_cents": 15000000,
+      "step_cents": 500000,
+      "life_months": 84
+    }
   },
   "restaurant": {
     "name": "Restoran",
@@ -37,14 +44,21 @@
     "wear_pts_per_month": 300,
     "maintenance": {
       "deferred": { "cost_cents": 50000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 400000, "equipment_pts": 300 },
+      "regular": { "cost_cents": 400000, "equipment_pts": 225 },
       "intensive": { "cost_cents": 800000, "equipment_pts": 600 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 20,
     "seasonal_plan": { "jun": 10, "jul": 12, "aug": 15, "sep": 12 },
-    "can_close": false
+    "can_close": false,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 5500000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 84
+    }
   },
   "lobby_bar": {
     "name": "Lobby bar",
@@ -63,14 +77,21 @@
     "wear_pts_per_month": 250,
     "maintenance": {
       "deferred": { "cost_cents": 20000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 150000, "equipment_pts": 250 },
+      "regular": { "cost_cents": 150000, "equipment_pts": 188 },
       "intensive": { "cost_cents": 300000, "equipment_pts": 500 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 8,
     "seasonal_plan": { "jun": 3, "jul": 4, "aug": 5, "sep": 4 },
-    "can_close": true
+    "can_close": true,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 2500000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 84
+    }
   },
   "rooftop_bar": {
     "name": "Rooftop bar",
@@ -89,14 +110,21 @@
     "wear_pts_per_month": 350,
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 200000, "equipment_pts": 350 },
+      "regular": { "cost_cents": 200000, "equipment_pts": 263 },
       "intensive": { "cost_cents": 400000, "equipment_pts": 700 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 2, "jul": 3, "aug": 4, "sep": 2 },
-    "can_close": true
+    "can_close": true,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 2500000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 84
+    }
   },
   "pool_bar": {
     "name": "Bar uz bazen",
@@ -115,14 +143,21 @@
     "wear_pts_per_month": 450,
     "maintenance": {
       "deferred": { "cost_cents": 20000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 150000, "equipment_pts": 300 },
+      "regular": { "cost_cents": 150000, "equipment_pts": 338 },
       "intensive": { "cost_cents": 300000, "equipment_pts": 600 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 3, "jul": 4, "aug": 5, "sep": 3 },
-    "can_close": true
+    "can_close": true,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 2000000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 84
+    }
   },
   "spa": {
     "name": "Wellness i spa",
@@ -141,34 +176,55 @@
     "wear_pts_per_month": 250,
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },
-      "regular": { "cost_cents": 250000, "equipment_pts": 250 },
+      "regular": { "cost_cents": 250000, "equipment_pts": 188 },
       "intensive": { "cost_cents": 500000, "equipment_pts": 500 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 6,
     "seasonal_plan": { "jun": 1, "jul": 2, "aug": 2, "sep": 1 },
-    "can_close": true
+    "can_close": true,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 4000000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 120
+    }
   },
   "parking": {
     "name": "Parking",
     "class": "rentals",
-    "revenue": { "type": "fixed", "monthly_cents": 0, "per_guest_night_cents": 150 },
+    "revenue": {
+      "type": "per_guest",
+      "usage_bp": { "jun": 1200, "jul": 1200, "aug": 1200, "sep": 1200 },
+      "check_cents": 1200,
+      "price_elasticity_bp": -10000,
+      "satisfaction_elasticity_bp": 0
+    },
     "cost_of_sales_bp": 0,
     "direct_per_use_cents": 0,
     "wage_cents": 0,
     "capacity_tenths_per_staff_day": 0,
-    "wear_pts_per_month": 100,
+    "wear_pts_per_month": 50,
     "maintenance": {
       "deferred": { "cost_cents": 0, "equipment_pts": 0 },
-      "regular": { "cost_cents": 50000, "equipment_pts": 100 },
-      "intensive": { "cost_cents": 100000, "equipment_pts": 200 }
+      "regular": { "cost_cents": 50000, "equipment_pts": 38 },
+      "intensive": { "cost_cents": 150000, "equipment_pts": 300 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "guest_share_bp": 500,
+    "renewal": {
+      "gain_pts": 5000,
+      "half_cents": 6000000,
+      "max_monthly_cents": 5000000,
+      "step_cents": 500000,
+      "life_months": 180
+    }
   },
   "retail_lease": {
     "name": "Najam lokala",
@@ -178,17 +234,18 @@
     "direct_per_use_cents": 0,
     "wage_cents": 0,
     "capacity_tenths_per_staff_day": 0,
-    "wear_pts_per_month": 0,
+    "wear_pts_per_month": 50,
     "maintenance": {
       "deferred": { "cost_cents": 0, "equipment_pts": 0 },
-      "regular": { "cost_cents": 0, "equipment_pts": 0 },
-      "intensive": { "cost_cents": 0, "equipment_pts": 0 }
+      "regular": { "cost_cents": 30000, "equipment_pts": 38 },
+      "intensive": { "cost_cents": 80000, "equipment_pts": 200 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
     "seasonal_max": 0,
     "seasonal_plan": { "jun": 0, "jul": 0, "aug": 0, "sep": 0 },
-    "can_close": false
+    "can_close": false,
+    "rent_condition": { "cut_bp_per_pt": 200, "max_cut_bp": 3000 }
   },
   "admin": {
     "name": "Uprava",

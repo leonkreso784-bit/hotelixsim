@@ -16,6 +16,7 @@ import { MonthScreen } from "./screens/MonthScreen";
 import { NotFound } from "./screens/NotFound";
 import { PlanScreen } from "./screens/PlanScreen";
 import { PlScreen } from "./screens/PlScreen";
+import { SeasonScreen } from "./screens/SeasonScreen";
 import { SituationScreen } from "./screens/SituationScreen";
 import { SituationsScreen } from "./screens/SituationsScreen";
 import { StartScreen } from "./screens/StartScreen";
@@ -72,6 +73,8 @@ function Screen({ route, me }: { route: Route; me: HotelBody }) {
       return <AvatarGallery />;
     case "new":
       return <StartScreen inGame />;
+    case "season":
+      return <SeasonScreen me={me} />;
     default:
       return (
         <Reading>

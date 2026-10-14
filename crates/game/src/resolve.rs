@@ -30,7 +30,12 @@ impl Game {
         for h in &self.hotels {
             let id = h.setup.hotel_id;
             let state = self.state_at(id, m)?;
-            let plan = self.effective_plan(id, m)?;
+            let plan = model.plan_for_resolve(
+                self.effective_plan(id, m)?,
+                &state,
+                &info,
+                &self.content,
+            )?;
             let mut outcomes = Vec::new();
             let mut results = Vec::new();
             for t in self.situations_in(m) {

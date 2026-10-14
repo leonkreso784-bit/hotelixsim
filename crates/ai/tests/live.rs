@@ -83,8 +83,8 @@ async fn character_speaks_only_its_own_words() {
     }
 }
 
-/// Sezonski mentor (kraj-sezone-spec §6.3): četiri dijela, uputa `mentor-sezona.v1`, bez oznaka oblikovanja i bez
-/// pripisivanja nepromijenjenih plaća studentu.
+/// Sezonski mentor (kraj-sezone-spec §6.3): četiri dijela, uputa `mentor-sezona.v2`, bez oznaka oblikovanja, bez
+/// pripisivanja nepromijenjenih plaća studentu i bez roda prema studentu (UI KS-3 I-B).
 #[tokio::test]
 #[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
 async fn season_mentor_writes_four_parts() {
@@ -94,7 +94,7 @@ async fn season_mentor_writes_four_parts() {
         .season_debrief(common::sample_season())
         .await
         .expect("sezonski mentor");
-    assert_eq!(out.meta.prompt, "mentor-sezona.v1");
+    assert_eq!(out.meta.prompt, "mentor-sezona.v2");
     let t = out.value;
     for part in [
         "Kako je prošla sezona",
@@ -116,5 +116,23 @@ async fn season_mentor_writes_four_parts() {
         "podigla plaće",
     ] {
         assert!(!low.contains(bad), "pripisana promjena plaća: {t}");
+    }
+    for bad in [
+        "si mijenjao",
+        "si mijenjala",
+        "mijenjao si",
+        "mijenjala si",
+        "si mogao",
+        "si mogla",
+        "mogao si",
+        "mogla si",
+        "bio si",
+        "bila si",
+        "u činjenicama",
+    ] {
+        assert!(
+            !low.contains(bad),
+            "rod prema studentu ili riječ iz upute „{bad}“: {t}"
+        );
     }
 }

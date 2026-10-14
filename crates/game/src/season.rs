@@ -12,6 +12,7 @@ use crate::event::{Controller, HotelResolution};
 use crate::game::{Game, HotelRecord};
 use crate::ids::HotelId;
 use crate::model::RoundInfo;
+use crate::renewal::SeasonRenewal;
 use crate::round::RoundKey;
 use crate::view::Seat;
 
@@ -31,6 +32,9 @@ pub struct SeasonFinances {
     pub gop_margin_bp: Option<i64>,
     pub cash_start_cents: i64,
     pub cash_end_cents: i64,
+    /// Amortizacija sezone (obnova v2) i EBIT = EBITDA − amortizacija, isti brojevi kao račun dobiti za sezonu.
+    pub depreciation_cents: i64,
+    pub ebit_cents: i64,
 }
 
 /// Odluke hotela kroz sezonu, iz obračunatih planova i situacija.
@@ -47,8 +51,10 @@ pub struct SeasonDecisions {
     pub training_rounds: u8,
     /// Krugovi u kojima je održavanje bar jednog odjela odgođeno.
     pub maintenance_deferred_rounds: u8,
-    /// Krug obnove, ako je bila.
+    /// Krug obnove, ako je bila (stari oblik: jedna kvačica).
     pub renovation_round: Option<RoundKey>,
+    /// Obnove v2 po mjesecu i dijelu (odjel ili zgrada), redom mjeseca.
+    pub renewals: Vec<SeasonRenewal>,
     pub reply_reviews_rounds: u8,
     /// Sve situacije sezone i koliko ih je ostalo bez odgovora.
     pub situations: u16,
@@ -151,10 +157,9 @@ impl Game {
             (None, None)
         } else {
             let res = self.season_resolutions(id)?;
-            (
-                Some(self.season_finances(id, &res)?),
-                Some(decisions(&res)?),
-            )
+            let mut d = decisions(&res)?;
+            d.renewals = self.season_renewals(id)?;
+            (Some(self.season_finances(id, &res)?), Some(d))
         };
         Ok(SeasonHotel {
             hotel_id: id,
@@ -205,6 +210,8 @@ impl Game {
             gop_margin_bp: st.gop_margin_bp,
             cash_start_cents: first.report.before.cash_cents,
             cash_end_cents: last.report.after.cash_cents,
+            depreciation_cents: st.depreciation_cents,
+            ebit_cents: st.ebit_cents,
         })
     }
 
@@ -286,6 +293,7 @@ fn decisions(res: &[(RoundKey, &HotelResolution)]) -> Result<SeasonDecisions, Ga
         training_rounds: count(training)?,
         maintenance_deferred_rounds: count(deferred)?,
         renovation_round,
+        renewals: Vec::new(),
         reply_reviews_rounds: count(replies)?,
         situations: small(situations)?,
         unanswered: small(unanswered)?,

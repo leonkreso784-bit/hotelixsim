@@ -3,7 +3,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { provjeri } from "./check-kod.mjs";
+import { DUG, provjeri } from "./check-kod.mjs";
+
+const SCHEMA_DUG = DUG["crates/api/src/schema.rs"];
 
 const RED = (n, eol = "\n") => "x".concat(eol).repeat(n);
 function uMapi(datoteke) {
@@ -46,8 +48,8 @@ test("ignorirane mape i generirani schema.d.ts ne ruše", () =>
     },
   ));
 test("dug: do granice upozorava, preko pada, manji traži spuštanje, nestao je zastario unos", () => {
-  sMapom({ "crates/api/src/schema.rs": RED(1688) }, (r) =>
-    assert.ok(r.greske.includes("DUG NARASTAO  crates/api/src/schema.rs  1688 > 1687")),
+  sMapom({ "crates/api/src/schema.rs": RED(SCHEMA_DUG + 1) }, (r) =>
+    assert.ok(r.greske.includes(`DUG NARASTAO  crates/api/src/schema.rs  ${SCHEMA_DUG + 1} > ${SCHEMA_DUG}`)),
   );
   sMapom({ "crates/api/src/schema.rs": RED(1600) }, (r) => {
     assert.deepEqual(r.greske, []);

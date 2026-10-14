@@ -18,6 +18,7 @@ import {
   indexDeltas,
   indicesAt,
   indicesBefore,
+  isV2,
   isWeekRound,
   leaderboard,
   nextRound,
@@ -133,6 +134,14 @@ function MonthResult({
       ) : (
         <>
           <p className="font-semibold">{t(weekly ? "round.seasonOver.week" : "month.seasonOver")}</p>
+          {isV2(game) && (
+            <Link
+              to="/kraj-sezone"
+              className="flex min-h-12 items-center justify-center rounded-2xl bg-accent font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {t("season.open")}
+            </Link>
+          )}
           <Link
             to="/"
             className="flex min-h-12 items-center justify-center rounded-2xl bg-accent-soft font-bold text-accent-ink"

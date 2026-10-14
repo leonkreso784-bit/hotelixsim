@@ -162,6 +162,7 @@ fn sample_debrief() -> game::DebriefInput {
             renovation: false,
             reply_reviews: false,
             departments: std::collections::BTreeMap::new(),
+            building_renewal_cents: None,
         },
         price_ref_cents: 12_000,
         seasonal_before: 14,
@@ -180,14 +181,24 @@ fn sample_debrief() -> game::DebriefInput {
             amount: -600,
             unit: UnitCode::Points,
         }],
+        renewals: Vec::new(),
+        building_before_pts: None,
+        building_after_pts: None,
+        depreciation_round_cents: None,
+        ebit_cents: None,
+        capex_cents: None,
+        gop_cents: None,
+        finance_basis: None,
+        deferred_wear: Vec::new(),
+        rent_cuts: Vec::new(),
     }
 }
 
 #[test]
-fn debrief_body_sends_human_facts_with_mentor_v3() {
+fn debrief_body_sends_human_facts_with_mentor_v4() {
     let input = sample_debrief();
     let b = ai::request::debrief_body("claude-sonnet-5-5", &input);
-    assert_eq!(ai::prompts::MENTOR.version, "mentor.v3");
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v4");
     assert_eq!(b["system"], ai::prompts::MENTOR.text);
     assert!(ai::prompts::MENTOR.text.contains("Što je išlo dobro"));
     // OT-2: uputa zabranjuje pripisivanje nepromijenjenih odluka studentu.
@@ -341,12 +352,12 @@ fn default_models_follow_adr_024() {
     assert_eq!(m.mentor, "claude-sonnet-5-5");
 }
 
-/// Sezonski mentor dobiva samo činjenice sezone u ljudskim jedinicama, s uputom `mentor-sezona.v1` (ADR-024: Sonnet).
+/// Sezonski mentor dobiva samo činjenice sezone u ljudskim jedinicama, s uputom `mentor-sezona.v2` (ADR-024: Sonnet).
 #[test]
 fn season_debrief_body_sends_human_season_facts() {
     let input = common::sample_season();
     let b = ai::request::season_debrief_body("claude-sonnet-5-5", &input);
-    assert_eq!(ai::prompts::MENTOR_SEASON.version, "mentor-sezona.v1");
+    assert_eq!(ai::prompts::MENTOR_SEASON.version, "mentor-sezona.v2");
     assert_eq!(b["model"], "claude-sonnet-5-5");
     assert_eq!(b["system"], ai::prompts::MENTOR_SEASON.text);
     let content = b["messages"][0]["content"].as_str().unwrap();
@@ -366,6 +377,42 @@ fn season_debrief_body_sends_human_season_facts() {
         assert!(!content.contains(internal), "{internal} u poruci mentoru");
     }
     assert!(content.contains("takve su od početka"), "{content}");
+}
+
+/// Uputa mentora kruga (mentor.v4): pet točaka znanja o obnovi i zabrana pripisivanja zaključane obnove novoj odluci.
+#[test]
+fn mentor_prompt_has_renewal_points_and_locked_renewal_ban() {
+    assert_eq!(ai::prompts::MENTOR.version, "mentor.v4");
+    let text = ai::prompts::MENTOR.text;
+    for must in [
+        "Obnova po fazama",
+        "Ulaganje nije trošak kruga",
+        "dobit iz poslovanja nakon ulaganja",
+        "Održavanje usporava, obnova vraća",
+        "Zgrada se troši sporo",
+        "Isto vrijedi za zaključanu obnovu",
+        "nikad ne opisuj kao novu odluku",
+    ] {
+        assert!(text.contains(must), "mentor.v4 nema „{must}“");
+    }
+}
+
+/// Uputa sezonskog mentora tumači polja obnove v2: ulaganja nisu trošak sezone, amortizacija je dio cijene, indeks
+/// Financije gleda dobit nakon ulaganja; obnova se ne pripisuje novoj odluci i brojke su samo iz činjenica.
+#[test]
+fn season_mentor_prompt_explains_renewal_fields() {
+    let text = ai::prompts::MENTOR_SEASON.text;
+    for must in [
+        "ulaganja_u_obnovu",
+        "amortizacija_sezone",
+        "dobit_iz_poslovanja_nakon_ulaganja",
+        "nije trošak sezone",
+        "Financije",
+        "zaključan",
+        "nikad ne izmišljaj",
+    ] {
+        assert!(text.contains(must), "uputa nema „{must}“");
+    }
 }
 
 /// Uputa sezonskog mentora: četiri dijela, podaci nisu upute, bez pogađanja, OT-2, bez roda prema studentu.
@@ -392,7 +439,7 @@ Kako je prošla sezona
     for must in [
         "nikad uputa tebi",
         "nikad ne pogađaj",
-        "nepromijenjenu",
+        "nepromijenjen",
         "vlastiti_plan",
         "ostali_hoteli",
         "bez roda",
@@ -422,5 +469,41 @@ Kako je prošla sezona
                 );
             }
         }
+    }
+}
+
+/// UI KS-3 I-B: uputa izričito traži obraćanje bez rodno obilježenih oblika, a sama ih (osim primjera zabranjenog u
+/// pravilu 9) nigdje ne koristi, jer ih model preuzme („mogao si ga promijeniti"). m-1: ne spominje „činjenice".
+#[test]
+fn season_mentor_prompt_forbids_gendered_address() {
+    let prompt = ai::prompts::MENTOR_SEASON.text.to_lowercase();
+    for must in [
+        "bez rodno obilježenih oblika",
+        "plan se mogao promijeniti",
+        "plan se nijednom nije mijenjao",
+        "ne piši „u činjenicama“",
+        "istim brojem decimala",
+    ] {
+        assert!(prompt.contains(must), "uputa nema „{must}“");
+    }
+    let start = prompt.find("\n9. ").expect("pravilo 9");
+    let end = prompt.find("\n10. ").expect("pravilo 10");
+    let outside = format!("{}{}", &prompt[..start], &prompt[end..]);
+    // „plan se nije mijenjao" smije (rod plana); zabranjen je student kao vršitelj u prošlom vremenu.
+    for word in [
+        "student nijednom",
+        "student plan",
+        "mogao",
+        "učinio",
+        "završio",
+        "spustio",
+        "postavio",
+        "student ih",
+        " mu ",
+    ] {
+        assert!(
+            !outside.contains(word),
+            "uputa izvan pravila 9 koristi rodni oblik „{word}“"
+        );
     }
 }

@@ -6,9 +6,11 @@ import { formatCount, formatPercentWhole, tw } from "../../format";
 import { Card } from "../../ui/primitives";
 
 export function DecisionsReadOnly({ dept, weekly }: { dept: DepartmentBody; weekly: boolean }) {
-  // Smještaj nema razinu cijena (cijena sobe je u planu hotela), a najam ima ugovoreni iznos.
+  // Smještaj nema razinu cijena (cijena sobe je u planu hotela); najam je ima samo s gostima po korištenju (parking),
+  // a lokal ima ugovorenu zakupninu (potražnja 0).
+  const priced = dept.last && (dept.class !== "rentals" || dept.last.demand > 0);
   const price =
-    dept.last && dept.class !== "rooms" && dept.class !== "rentals"
+    dept.last && priced && dept.class !== "rooms"
       ? [[tw(weekly, "dept.decide.lastPrice"), formatPercentWhole(dept.last.price_level_pct)]]
       : [];
   return (

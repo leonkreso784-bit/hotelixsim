@@ -282,6 +282,9 @@ fn operated(
         seasonal_plan: MonthTable(seasonal_plan),
         can_close,
         staffing: BTreeMap::new(),
+        renewal: sim_hotel_v2::RenewalSpec::default(),
+        guest_share_bp: 0,
+        rent_condition: None,
     }
 }
 
@@ -493,6 +496,7 @@ pub fn catalog_with_departments() -> sim_hotel_v2::Catalog {
             (dept_code("energy"), undistributed_start(0, 2_500_000)),
         ]),
         fixed_charges_cents: charges(800_000, 4_000_000, 700_000),
+        building_pts: 10_000,
     };
     let profile_a = sim_hotel_v2::ProfileV2 {
         departments: BTreeMap::from([
@@ -508,6 +512,7 @@ pub fn catalog_with_departments() -> sim_hotel_v2::Catalog {
             (dept_code("energy"), undistributed_start(0, 2_800_000)),
         ]),
         fixed_charges_cents: charges(900_000, 4_500_000, 800_000),
+        building_pts: 10_000,
     };
     let profile_b = sim_hotel_v2::ProfileV2 {
         departments: BTreeMap::from([
@@ -518,6 +523,7 @@ pub fn catalog_with_departments() -> sim_hotel_v2::Catalog {
             (dept_code("energy"), undistributed_start(0, 2_400_000)),
         ]),
         fixed_charges_cents: charges(800_000, 4_000_000, 700_000),
+        building_pts: 10_000,
     };
     c.profiles = BTreeMap::from([
         (Profile::A, profile_a),
@@ -541,6 +547,7 @@ pub fn catalog_with_departments() -> sim_hotel_v2::Catalog {
             )
         })
         .collect(),
+        ..c.economy.clone()
     };
     c
 }
@@ -556,4 +563,50 @@ pub fn hold_plan(
         d.seasonal_target = s.departments[k].seasonal;
     }
     plan
+}
+
+// ---- Obnova v2 (O-1): testni katalog s obnovom po odjelu i zgradom (brojke iz specifikacije, §0 O1, O2, O4, O5, O9).
+
+/// Krivulja i granice obnove u eurima: G = 50 bodova, K, najviše u mjesecu, korak, vijek u mjesecima.
+pub fn renewal_eur(half: i64, max: i64, step: i64, life: u16) -> sim_hotel_v2::RenewalSpec {
+    sim_hotel_v2::RenewalSpec {
+        gain_pts: 5_000,
+        half_cents: half * 100,
+        max_monthly_cents: max * 100,
+        step_cents: step * 100,
+        life_months: life,
+    }
+}
+
+/// `catalog_with_departments` s obnovom: Smještaj K 150.000 € (najviše 150.000 €), restoran K 55.000 €, barovi
+/// K 25.000 €, wellness K 40.000 € (vijek 10 g.), parking K 60.000 € (15 g.), ostali najviše 50.000 € u koraku
+/// 5.000 €; zgrada K 150.000 €, najviše 200.000 € u koraku 10.000 €, vijek 40 g., trošenje 0,5/mj, udio 20 %;
+/// zgrada A 80, B 45, C 65; pričuva 4 %.
+pub fn catalog_with_renewal() -> sim_hotel_v2::Catalog {
+    let mut c = catalog_with_departments();
+    for (code, spec) in [
+        ("rooms", renewal_eur(150_000, 150_000, 5_000, 84)),
+        ("restaurant", renewal_eur(55_000, 50_000, 5_000, 84)),
+        ("lobby_bar", renewal_eur(25_000, 50_000, 5_000, 84)),
+        ("rooftop_bar", renewal_eur(25_000, 50_000, 5_000, 84)),
+        ("spa", renewal_eur(40_000, 50_000, 5_000, 120)),
+        ("parking", renewal_eur(60_000, 50_000, 5_000, 180)),
+    ] {
+        c.departments.get_mut(&dept_code(code)).unwrap().renewal = spec;
+    }
+    c.economy.building = sim_hotel_v2::BuildingSpec {
+        name: "Zgrada".into(),
+        wear_pts_per_month: 50,
+        satisfaction_share_bp: 2_000,
+        renewal: renewal_eur(150_000, 200_000, 10_000, 480),
+    };
+    c.economy.ffe_reserve_bp = 400;
+    for (p, pts) in [
+        (Profile::A, 8_000),
+        (Profile::B, 4_500),
+        (Profile::C, 6_500),
+    ] {
+        c.profiles.get_mut(&p).unwrap().building_pts = pts;
+    }
+    c
 }

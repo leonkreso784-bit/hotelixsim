@@ -377,6 +377,24 @@ export interface components {
              */
             answer: number;
         };
+        /** @description Zgrada hotela (v2). */
+        BuildingBody: {
+            /**
+             * Format: int32
+             * @description Stanje zgrade 0–10 000 (na ekranu 0–100).
+             */
+            condition_pts: number;
+            /** Format: int64 */
+            invested_cents: number;
+            locked: components["schemas"]["RenewalStateBody"] | null;
+            /** Format: int32 */
+            start_pts: number;
+            /**
+             * Format: int32
+             * @description Trošenje u bodovima mjesečno (50 = 0,5 boda).
+             */
+            wear_pts_per_month: number;
+        };
         /**
          * @description Uzrok promjene; šifra situacije ide u zasebno polje stavke, ne ovdje.
          * @enum {string}
@@ -443,14 +461,25 @@ export interface components {
              * @description Zadovoljstvo gostiju odjelom 0–10 000; `null` za odjele bez gostiju.
              */
             guest_satisfaction_pts: number | null;
+            /**
+             * Format: int64
+             * @description Uloženo u obnovu odjela do sada, u centima.
+             */
+            invested_cents?: number | null;
             last: components["schemas"]["DeptRoundBody"] | null;
             name: string;
             open: boolean;
             /** Format: int32 */
             permanent: number;
+            renewal?: components["schemas"]["RenewalStateBody"] | null;
             /** Format: int32 */
             seasonal: number;
             service_last: components["schemas"]["ServiceRoundBody"] | null;
+            /**
+             * Format: int32
+             * @description Početno stanje prostora iz profila (0–10 000).
+             */
+            start_condition_pts?: number | null;
         };
         DepartmentDetailBody: {
             department: components["schemas"]["DepartmentBody"];
@@ -473,6 +502,7 @@ export interface components {
             price_level_max_pct: number;
             /** Format: int32 */
             price_level_min_pct: number;
+            renewal?: components["schemas"]["RenewalLimitsBody"] | null;
             /** Format: int32 */
             seasonal_max: number;
             /** Format: int32 */
@@ -489,6 +519,12 @@ export interface components {
             open: boolean;
             /** Format: int32 */
             price_level_pct: number;
+            /**
+             * Format: int64
+             * @description Iznos obnove odjela za mjesec kruga, u centima. Bez njega se zadržava iznos važećeg plana (zaključana obnova
+             *     ostaje); u odgovoru uvijek postoji.
+             */
+            renewal_cents?: number | null;
             /** Format: int32 */
             seasonal_target: number;
         };
@@ -517,6 +553,11 @@ export interface components {
             departures: number;
             /**
              * Format: int32
+             * @description Stanje koje gost osjeća: stanje odjela pomiješano sa stanjem zgrade (0–10 000).
+             */
+            felt_condition_pts?: number | null;
+            /**
+             * Format: int32
              * @description Gostiju po zaposlenom na dan, u stotinkama.
              */
             load_hundredths: number;
@@ -538,6 +579,16 @@ export interface components {
             profit_cents: number;
             /** Format: int32 */
             quality_pts: number;
+            /**
+             * Format: int64
+             * @description Obnova plaćena u krugu (obnova v2; ulaganje iz blagajne, nije trošak odjela).
+             */
+            renewal_cents?: number | null;
+            /**
+             * Format: int32
+             * @description Bodovi stanja koje je obnova u krugu stvarno donijela (nakon granice 100).
+             */
+            renewal_pts?: number | null;
             /** Format: int64 */
             revenue_cents: number;
             round: string;
@@ -569,6 +620,7 @@ export interface components {
         EffectCode: "up" | "down" | "neutral";
         /** @description Objašnjenje obračunatog mjeseca po indeksima, redom G, R, Z, O, F. */
         ExplanationBody: {
+            finance_note?: components["schemas"]["FinanceNoteBody"] | null;
             indices: components["schemas"]["ExplanationIndexBody"][];
             month: components["schemas"]["MonthCode"];
             /** @description Napredak od početka igre riječima („−2 boda"). */
@@ -712,6 +764,34 @@ export interface components {
             round: string;
             /** Format: int64 */
             seq: number;
+            text: string;
+        };
+        /**
+         * @description Što miče indeks Financije u v2 igri (prikaz uz indeks F): amortizacija obnova nema retka u objašnjenju, pa
+         *     ovdje stoje brojke kruga i rečenica za studenta.
+         */
+        FinanceNoteBody: {
+            /**
+             * Format: int64
+             * @description Ulaganja kruga (obnove plaćene iz blagajne; nisu trošak kruga).
+             */
+            capex_cents: number;
+            /**
+             * Format: int64
+             * @description Amortizacija obnova u krugu.
+             */
+            depreciation_cents: number;
+            /**
+             * Format: int64
+             * @description EBIT kruga (GOP − fiksne naknade − amortizacija), kao u računu dobiti.
+             */
+            ebit_cents: number;
+            /**
+             * Format: int64
+             * @description Dobit iz poslovanja nakon ulaganja: GOP − amortizacija obnova.
+             */
+            gop_after_investment_cents: number;
+            /** @description Rečenica za studenta, već ljudska („Indeks Financije gleda dobit iz poslovanja nakon ulaganja: …"). */
             text: string;
         };
         GameBody: {
@@ -892,8 +972,10 @@ export interface components {
             round_kind?: components["schemas"]["RoundKindCode"] | null;
         };
         PlBody: {
+            capex_cents?: components["schemas"]["PlRatioBody"] | null;
             /** Format: int32 */
             days: number;
+            ebit_margin_bp?: components["schemas"]["PlRatioBody"] | null;
             ebitda_margin_bp: components["schemas"]["PlRatioBody"];
             gop_margin_bp: components["schemas"]["PlRatioBody"];
             goppar_cents: components["schemas"]["PlRatioBody"];
@@ -938,9 +1020,15 @@ export interface components {
             total: components["schemas"]["PlLineBody"] | null;
         };
         /** @enum {string} */
-        PlSectionCode: "revenue" | "departmental_expenses" | "departmental_profit" | "undistributed" | "gop" | "fixed_charges" | "ebitda";
+        PlSectionCode: "revenue" | "departmental_expenses" | "departmental_profit" | "undistributed" | "gop" | "fixed_charges" | "ebitda" | "depreciation" | "ebit";
         /** @description Plan mjeseca: tijelo zahtjeva i dio odgovora. */
         PlanBody: {
+            /**
+             * Format: int64
+             * @description Iznos obnove zgrade za mjesec kruga, u centima (samo v2). Bez njega se zadržava iznos važećeg plana; u odgovoru
+             *     v2 plana uvijek postoji.
+             */
+            building_renewal_cents?: number | null;
             /** @description Postavke po odjelu (samo v2, ključ je kod odjela). Bez njih se zadržavaju odjeli važećeg plana. */
             departments?: {
                 [key: string]: components["schemas"]["DeptPlanBody"];
@@ -960,6 +1048,7 @@ export interface components {
         };
         /** @description Cijene odluka plana hotela u krugu. */
         PlanCostsBody: {
+            building_renewal?: components["schemas"]["RenewalLimitsBody"] | null;
             /** @description Održavanje hotela (v1) odnosno Smještaja (v2) u krugu. */
             maintenance: components["schemas"]["LevelCostsBody"];
             /**
@@ -972,6 +1061,7 @@ export interface components {
              * @description Plaće cijelog hotela za 7 dana pri sadašnjem broju ljudi (procjena za upozorenje).
              */
             payroll_week_cents: number;
+            renewal_guide?: components["schemas"]["RenewalGuideBody"] | null;
             /**
              * Format: int64
              * @description Obnova: jednokratno, puni iznos.
@@ -1032,6 +1122,7 @@ export interface components {
         };
         /** @description Samo za vlasnika hotela. */
         PrivateHotelBody: {
+            building?: components["schemas"]["BuildingBody"] | null;
             last_month: components["schemas"]["LastMonthBody"] | null;
             now: components["schemas"]["RealNumbersBody"];
             plan: components["schemas"]["PlanStateBody"] | null;
@@ -1048,7 +1139,7 @@ export interface components {
          * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
          * @enum {string}
          */
-        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "renewal_unavailable" | "renewal_locked" | "renewal_out_of_range" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
         /** @enum {string} */
         ProfileCode: "A" | "B" | "C";
         /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
@@ -1084,6 +1175,108 @@ export interface components {
             seasonal: number;
             /** Format: int32 */
             wage_pct: number;
+        };
+        /** @description Smjernica ulaganja u sezoni: pričuva za obnovu (FF&E) kao udio prihoda sezone iz budžeta. */
+        RenewalGuideBody: {
+            /** Format: int64 */
+            guide_cents: number;
+            /**
+             * Format: int64
+             * @description Uloženo do sada (svi odjeli i zgrada).
+             */
+            invested_cents: number;
+            /**
+             * Format: int32
+             * @description Udio prihoda u baznim bodovima (400 = 4 %).
+             */
+            reserve_bp: number;
+            /** Format: int64 */
+            season_revenue_budget_cents: number;
+        };
+        /** @description Obnova jednog dijela (odjel ili zgrada) u krugu: izbor iznosa i, ako je već odlučena, zaključana obnova. */
+        RenewalLimitsBody: {
+            /**
+             * Format: int32
+             * @description Stanje sada (bodovi 0–10 000; na ekranu 0–100).
+             */
+            condition_pts: number;
+            /**
+             * Format: int32
+             * @description Vijek za amortizaciju u mjesecima.
+             */
+            life_months: number;
+            locked: components["schemas"]["RenewalStateBody"] | null;
+            /** Format: int64 */
+            max_monthly_cents: number;
+            /** @description Mjesec kruga: odluka vrijedi taj mjesec. */
+            month: components["schemas"]["MonthCode"];
+            /** @description 0, korak, 2·korak … najviše. */
+            options: components["schemas"]["RenewalOptionBody"][];
+            /**
+             * Format: int32
+             * @description Krugova mjeseca od ovoga (uključivo); na toliko rata se dijeli iznos odlučen sada.
+             */
+            rounds_left: number;
+            /** Format: int64 */
+            step_cents: number;
+        };
+        /** @description Jedan iznos obnove s ratama, učinkom i amortizacijom. */
+        RenewalOptionBody: {
+            /** Format: int64 */
+            amount_cents: number;
+            /**
+             * Format: int64
+             * @description Mjesečna amortizacija, od idućeg mjeseca.
+             */
+            depreciation_monthly_cents: number;
+            /**
+             * Format: int32
+             * @description Učinak do granice 100 iz sadašnjeg stanja (približno: stanje se do kraja mjeseca još troši i održava).
+             */
+            gain_capped_pts: number;
+            /**
+             * Format: int32
+             * @description Učinak cijelog iznosa za mjesec (bodovi 0–10 000).
+             */
+            gain_pts: number;
+            /**
+             * Format: int64
+             * @description Plaća se ovaj i svaki idući krug mjeseca osim zadnjeg.
+             */
+            installment_cents: number;
+            /**
+             * Format: int64
+             * @description Zadnji krug mjeseca (ostatak); u mjesečnoj igri cijeli iznos.
+             */
+            last_installment_cents: number;
+        };
+        /** @description Obnova odlučena u mjesecu (zaključana do kraja mjeseca). */
+        RenewalStateBody: {
+            /**
+             * Format: int32
+             * @description Učinak cijelog iznosa (bodovi 0–10 000).
+             */
+            gain_pts: number;
+            /**
+             * Format: int32
+             * @description Učinak plaćenog do sada (prije granice 100).
+             */
+            gained_pts: number;
+            /**
+             * Format: int64
+             * @description Rata svakog kruga mjeseca osim zadnjeg (zadnji nosi ostatak).
+             */
+            installment_cents: number;
+            month: components["schemas"]["MonthCode"];
+            /** Format: int64 */
+            paid_cents: number;
+            /**
+             * Format: int32
+             * @description Koliko krugova mjeseca još plaća; 0 = plaćeno.
+             */
+            rounds_left: number;
+            /** Format: int64 */
+            total_cents: number;
         };
         /** @description Slobodan odgovor studenta i njegova presuda (ponuđeni odgovori nemaju ovo). */
         ResponseBody: {
@@ -1162,7 +1355,9 @@ export interface components {
             maintenance_deferred_rounds: number;
             /** Format: int64 */
             marketing_total_cents: number;
-            /** @description Kod kruga obnove; prazno ako obnove nije bilo. */
+            /** @description Obnove po iznosu (v2) po mjesecu i dijelu, redom mjeseca; izostavljeno kad ih nije bilo. */
+            renewals?: components["schemas"]["SeasonRenewalBody"][];
+            /** @description Kod kruga obnove (stari oblik: jedna kvačica); prazno ako obnove nije bilo. */
             renovation_round: string | null;
             /** Format: int32 */
             reply_reviews_rounds: number;
@@ -1197,6 +1392,16 @@ export interface components {
             cash_end_cents: number;
             /** Format: int64 */
             cash_start_cents: number;
+            /**
+             * Format: int64
+             * @description Amortizacija sezone iz obnove (ispod EBITDA), isti broj kao račun dobiti za sezonu.
+             */
+            depreciation_cents?: number | null;
+            /**
+             * Format: int64
+             * @description EBIT sezone = EBITDA − amortizacija.
+             */
+            ebit_cents?: number | null;
             /** Format: int64 */
             gop_cents: number;
             /**
@@ -1237,6 +1442,15 @@ export interface components {
         };
         SeasonMentorBody: {
             text: string;
+        };
+        /** @description Obnova jednog dijela u jednom mjesecu sezone. */
+        SeasonRenewalBody: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** @description Kod odjela ili `building` (zgrada). */
+            asset_code: string;
+            asset_name: string;
+            month: components["schemas"]["MonthCode"];
         };
         SeatBody: {
             kind: components["schemas"]["SeatKind"];

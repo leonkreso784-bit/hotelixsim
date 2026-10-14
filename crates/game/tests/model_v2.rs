@@ -7,11 +7,14 @@ use sim_hotel_v2::PeriodKind;
 use uuid::Uuid;
 
 fn v2_events(kind: PeriodKind) -> Vec<Recorded> {
-    let snap = Snapshot::read_v2(&repo_dir()).unwrap();
+    v2_events_from(&Snapshot::read_v2(&repo_dir()).unwrap(), kind)
+}
+
+fn v2_events_from(snap: &Snapshot, kind: PeriodKind) -> Vec<Recorded> {
     new_game_with(
         GameId(Uuid::from_u128(1)),
         42,
-        &snap,
+        snap,
         common::GUEST,
         common::hotel_ids(),
         GameSettings { kind },
@@ -73,7 +76,9 @@ fn v1_with_weeks_is_invalid_settings() {
 
 #[test]
 fn v2_plan_carries_over_without_renovation() {
-    let mut g = Game::fold(&v2_events(PeriodKind::Week)).unwrap();
+    // Stara kvačica obnove postoji samo u sadržaju bez obnove v2.
+    let snap = common::no_renewal_snapshot();
+    let mut g = Game::fold(&v2_events_from(&snap, PeriodKind::Week)).unwrap();
     let h = common::hotel_ids()[0];
     let r1 = g.current_round().unwrap();
     let CorePlan::V2(mut p) = g.effective_plan(h, r1).unwrap() else {

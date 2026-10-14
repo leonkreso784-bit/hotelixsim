@@ -39,6 +39,7 @@ fn july_plan() -> PlanDto {
         renovation: false,
         reply_reviews: false,
         departments: std::collections::BTreeMap::new(),
+        building_renewal_cents: None,
     }
 }
 
@@ -152,6 +153,16 @@ fn sample() -> DebriefInput {
                 UnitCode::Points,
             ),
         ],
+        renewals: Vec::new(),
+        building_before_pts: None,
+        building_after_pts: None,
+        depreciation_round_cents: None,
+        ebit_cents: None,
+        capex_cents: None,
+        gop_cents: None,
+        finance_basis: None,
+        deferred_wear: Vec::new(),
+        rent_cuts: Vec::new(),
     }
 }
 
@@ -744,6 +755,7 @@ fn plan_decisions_in_words() {
         renovation: true,
         reply_reviews: true,
         departments: std::collections::BTreeMap::new(),
+        building_renewal_cents: None,
     };
     input.seasonal_before = 1;
     let p = &facts_json(&input)["odluke_u_planu"];

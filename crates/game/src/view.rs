@@ -6,6 +6,7 @@ use crate::error::{GameError, corrupt};
 use crate::event::Controller;
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
+use crate::renewal::BuildingView;
 use crate::round::RoundKey;
 
 /// Tko vodi hotel; namjerno bez `guest_id`, tuđi gost se ne otkriva.
@@ -77,6 +78,8 @@ pub struct PrivateHotel {
     pub last_month: Option<LastMonth>,
     /// `Some` samo dok je trenutni mjesec otvoren.
     pub plan: Option<PlanState>,
+    /// Zgrada (obnova v2); `None` u v1 igri.
+    pub building: Option<BuildingView>,
 }
 
 impl Game {
@@ -157,10 +160,12 @@ impl Game {
         {
             let state = self.state_at(id, m)?;
             let info = self.round_info(m)?;
+            let mut limits = self.model().plan_limits(&state, &info, &self.content)?;
+            limits.costs.renewal_guide = self.renewal_guide(id)?;
             plan = Some(PlanState {
                 round: m,
                 plan: self.effective_plan(id, m)?.to_dto(),
-                limits: self.model().plan_limits(&state, &info, &self.content)?,
+                limits,
             });
         }
         Ok(PrivateHotel {
@@ -168,6 +173,7 @@ impl Game {
             now,
             last_month,
             plan,
+            building: self.building_view(id)?,
         })
     }
 }

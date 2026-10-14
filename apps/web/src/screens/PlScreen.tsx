@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ApiError, problemMessage } from "../api/errors";
 import { useGame, usePl } from "../api/queries";
 import type { GameBody, HotelBody, PlBody, PlScopeCode } from "../api/types";
-import { keepRoundTogether, roundDates, roundTitle, tw } from "../format";
+import { formatEuros, keepRoundTogether, roundDates, roundTitle, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { navigate } from "../router";
 import { GameError } from "../ui/GameError";
@@ -137,6 +137,10 @@ export function PlScreen({ me, code }: { me: HotelBody; code: string | null }) {
       )}
       <PlTable sections={pl.sections} />
       <PlCards sections={pl.sections} />
+      {/* Obnova je ulaganje (v2): plaća se iz blagajne, a u račun ulazi samo kroz amortizaciju. */}
+      {pl.capex_cents && pl.capex_cents.actual !== null && (
+        <p className="text-sm">{t("pl.capex", { amount: formatEuros(pl.capex_cents.actual) })}</p>
+      )}
       <PlRatios pl={pl} />
     </div>
   );

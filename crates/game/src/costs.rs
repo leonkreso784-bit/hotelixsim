@@ -1,6 +1,7 @@
 //! Cijene odluka plana za ekran (Leon 12.10.: obnova je koštala 150.000 € a kvačica to nije govorila). Brojke su iz
 //! kataloga, za krug kako ih obračun knjiži: v1 mjesečni iznosi; v2 razmjerno krugu (`prorate`), obnova u punom
 //! iznosu. Uz to procjena tjednih plaća hotela (upozorenje uz obnovu). Ništa se ne računa drugačije nego u obračunu.
+//! Obnova v2 (izbor iznosa, smjernica) se slaže u `renewal.rs`.
 
 use std::collections::BTreeMap;
 
@@ -10,6 +11,7 @@ use sim_hotel_v2::calendar::prorate;
 use sim_hotel_v2::department::DeptCode;
 
 use crate::error::{GameError, corrupt};
+use crate::renewal::{RenewalChoice, RenewalGuide};
 
 /// Trošak tri razine održavanja u krugu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,6 +46,10 @@ pub struct PlanCosts {
     pub payroll_week_cents: i64,
     /// Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće (v1 mjesec, v2 `prorate`).
     pub payroll_round_cents: i64,
+    /// Obnova v2 zgrade: izbor iznosa; `None` u v1 i kad obnova zgrade nije ponuđena.
+    pub building_renewal: Option<RenewalChoice>,
+    /// Smjernica ulaganja u sezoni (FF&E pričuva); `None` u v1 i u sadržaju bez obnove v2.
+    pub renewal_guide: Option<RenewalGuide>,
 }
 
 /// Cijene odluka jednog odjela u krugu (v2).
@@ -129,6 +135,8 @@ fn hotel_costs(
         )?,
         payroll_week_cents,
         payroll_round_cents,
+        building_renewal: None,
+        renewal_guide: None,
     })
 }
 
@@ -151,8 +159,8 @@ pub fn v1_costs(
     )
 }
 
-/// v2: iznosi razmjerno krugu `p`; uz to po odjelu održavanje (Smještaj iz kataloga radnji, kao obračun) i plaća
-/// jednog sezonskog radnika.
+/// v2: iznosi razmjerno krugu `p`; uz to po odjelu održavanje (svaki odjel, i Smještaj, iz svog `DeptSpec`, kao
+/// obračun) i plaća jednog sezonskog radnika. Održavanje hotela je održavanje Smještaja.
 pub fn v2_costs(
     s: &sim_hotel_v2::HotelState,
     p: &Period,
@@ -170,19 +178,7 @@ pub fn v2_costs(
             .checked_add(monthly_payroll(staff, spec.wage_cents, s.wage_pct)?)
             .ok_or_else(|| corrupt("mjesečne plaće"))?;
         let m = &spec.maintenance;
-        let own = if *code == DeptCode::rooms() {
-            let a = &cat.base.actions;
-            levels(
-                [
-                    &a.maintenance_deferred,
-                    &a.maintenance_regular,
-                    &a.maintenance_intensive,
-                ],
-                scale,
-            )?
-        } else {
-            levels([&m[0], &m[1], &m[2]], scale)?
-        };
+        let own = levels([&m[0], &m[1], &m[2]], scale)?;
         let one = monthly_payroll(1, spec.wage_cents, s.wage_pct)?;
         depts.insert(
             code.as_str().to_owned(),
@@ -192,11 +188,15 @@ pub fn v2_costs(
             },
         );
     }
-    let costs = hotel_costs(
+    let mut costs = hotel_costs(
         &cat.base.actions,
         scale,
         per_week(monthly, p.month_days_at_start())?,
         scale(narrow(monthly, "plaće kruga")?)?,
     )?;
+    costs.maintenance = depts
+        .get(DeptCode::rooms().as_str())
+        .map(|d| d.maintenance)
+        .ok_or_else(|| corrupt("hotel bez Smještaja"))?;
     Ok((costs, depts))
 }

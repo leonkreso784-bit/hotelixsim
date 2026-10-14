@@ -1,24 +1,23 @@
-// Uređivanje odluka odjela u otvorenom krugu: otvoren/zatvoren, sezonski radnici, razina cijena i održavanje, svaka s
-// cijenom i učinkom. Nespremljene izmjene čuva nacrt (`useDraft`, preživi odlazak u plan i natrag) i to su samo dirana
-// polja: „Spremi odluke odjela“ šalje svježe dohvaćen plan kruga s izmjenama preko odjela (`useSavePlan`), pa polja koja
-// student nije dirao ostaju kakva su na poslužitelju.
+// Uređivanje odluka odjela u otvorenom krugu: otvoren/zatvoren, sezonski radnici, razina cijena, održavanje i obnova
+// opreme, svaka s cijenom i učinkom. Nespremljene izmjene čuva nacrt (`useDraft`, preživi odlazak u plan i natrag) i to
+// su samo dirana polja: „Spremi odluke odjela“ šalje svježe dohvaćen plan kruga s izmjenama preko odjela
+// (`useSavePlan`), pa polja koja student nije dirao ostaju kakva su na poslužitelju.
 import { t } from "@hotelixsim/i18n";
 import { useRef, useState } from "react";
 import { ApiError, problemMessage } from "../../api/errors";
 import { useDepartments, useSavePlan } from "../../api/queries";
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
 import { differs, draftKey, useDraft } from "../../drafts";
-import { formatCount, formatEuros, formatPercentWhole, formatRange, tw } from "../../format";
+import { formatCount, formatEuros, tw } from "../../format";
 import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
-import { Choice } from "../plan/Choice";
-import { maintenanceOptions } from "../plan/costs";
+import { RenewalLocked, RenewalPicker } from "../renewal/RenewalPicker";
+import { planPayNow } from "../renewal/renewal";
 import { anyDecision, decisionsIntro } from "./decisionsIntro";
 import { isLease } from "./helpers";
+import { PriceLevel, Upkeep } from "./Levers";
 import { OpenToggle } from "./OpenToggle";
 import { Stepper } from "./Stepper";
 import { type DeptPlans, stepLeftForOthers } from "./step";
-
-const PRICE_STEP = 5;
 
 /** Ukupno sezonskih radnika u planu (poslužitelj ga drži unutar `seasonal_max` hotela). */
 function seasonalTotal(plans: DeptPlans): number {
@@ -38,6 +37,9 @@ export function DecisionsEditor(props: {
   stepTotal: number;
   seasonalMax: number;
   weekly: boolean;
+  /** Plan otvorenog kruga: rate obnove ostalih odjela i zgrade za blagajnu nakon plaćanja. */
+  state: PlanStateBody;
+  cashCents: number;
 }) {
   const { dept, plans, entry, limits: l, weekly } = props;
   const code = dept.code;
@@ -58,10 +60,11 @@ export function DecisionsEditor(props: {
   const cost = (target: number) => Math.abs(target - base) - Math.abs(draft.seasonal_target - base);
   const canMove = (target: number) =>
     draft.open && target >= l.seasonal_min && target <= l.seasonal_max && cost(target) <= left;
-  // Najam (parking, lokal) ima ugovoreni prihod: razina cijena na njega ne djeluje, pa je nema (N-I1). Brojač
-  // sezonskih radnika je samo za odjel koji ih smije imati (najam i odjel bez sezonskih imaju 0–0).
+  // Razina cijena samo gdje poslužitelj nudi raspon: odjel bez prihoda po gostu (lokal s ugovorenom zakupninom) ima
+  // 100–100, a parking cijenu ima kao restoran (O-P). Brojač sezonskih radnika je samo za odjel koji ih smije imati
+  // (najam i odjel bez sezonskih imaju 0–0).
   const lease = isLease(dept.class);
-  const fixedPrice = lease || l.price_level_min_pct === l.price_level_max_pct;
+  const fixedPrice = l.price_level_min_pct === l.price_level_max_pct;
   const fixedSeasonal = l.seasonal_min === l.seasonal_max;
   // Održavanje koje ništa ne stoji (lokal u najmu: brine zakupac) nije izbor.
   const m = l.maintenance;
@@ -71,8 +74,10 @@ export function DecisionsEditor(props: {
     seasonal: !fixedSeasonal,
     price: !fixedPrice,
     upkeep: !freeUpkeep,
+    renewal: !!l.renewal && !l.renewal.locked,
     lease,
   };
+  const renewalAmount = draft.renewal_cents ?? 0;
   const legendId = `dept-name-${code}`;
 
   const set = (patch: Partial<Entry>) => {
@@ -119,6 +124,7 @@ export function DecisionsEditor(props: {
       <Card className="space-y-2">
         <h2 className="text-lg font-bold">{tw(weekly, "dept.decide")}</h2>
         <p className="text-muted">{t("dept.decide.none")}</p>
+        {l.renewal?.locked && <RenewalLocked state={l.renewal.locked} weekly={weekly} />}
       </Card>
     );
   return (
@@ -169,43 +175,41 @@ export function DecisionsEditor(props: {
           </div>
         )}
         {!fixedPrice && (
-          <div className="space-y-1">
-            <Stepper
-              label={t("plan.dept.price")}
-              value={formatPercentWhole(draft.price_level_pct)}
-              moreLabel={t("plan.dept.morePrice")}
-              lessLabel={t("plan.dept.lessPrice")}
-              describedBy={legendId}
-              moreDisabled={!draft.open || draft.price_level_pct + PRICE_STEP > l.price_level_max_pct}
-              lessDisabled={!draft.open || draft.price_level_pct - PRICE_STEP < l.price_level_min_pct}
-              onMore={() => set({ price_level_pct: draft.price_level_pct + PRICE_STEP })}
-              onLess={() => set({ price_level_pct: draft.price_level_pct - PRICE_STEP })}
-            />
-            <p className="text-xs text-muted">
-              {t("plan.range", {
-                range: formatRange(l.price_level_min_pct, l.price_level_max_pct, "percent"),
-              })}
-            </p>
-            <p className="text-sm text-muted">{t("plan.dept.priceNote")}</p>
-          </div>
+          <PriceLevel
+            pct={draft.price_level_pct}
+            min={l.price_level_min_pct}
+            max={l.price_level_max_pct}
+            open={draft.open}
+            lease={lease}
+            describedBy={legendId}
+            onChange={(price_level_pct) => set({ price_level_pct })}
+          />
         )}
         {freeUpkeep ? (
           <p className="text-sm text-muted">{t("plan.dept.noUpkeep")}</p>
         ) : (
-          <div className="space-y-1">
-            <Choice
-              legend={t("plan.dept.maintenance")}
-              name={`dept-maintenance-${code}`}
-              value={draft.maintenance}
-              disabled={!draft.open}
-              describedBy={legendId}
-              options={maintenanceOptions(l.maintenance)}
-              onChange={(v) => set({ maintenance: v })}
-            />
-            <p className="text-sm text-muted">
-              {tw(weekly, "plan.cost.levels")} {t("plan.maintenance.note")}
-            </p>
-          </div>
+          <Upkeep
+            code={code}
+            value={draft.maintenance}
+            levels={l.maintenance}
+            open={draft.open}
+            weekly={weekly}
+            describedBy={legendId}
+            onChange={(maintenance) => set({ maintenance })}
+          />
+        )}
+        {l.renewal && (
+          <RenewalPicker
+            limits={l.renewal}
+            amount={renewalAmount}
+            subject="dept"
+            cashCents={props.cashCents}
+            payNowTotal={planPayNow(props.state, { code, amount: renewalAmount })}
+            payrollWeekCents={props.state.limits.costs.payroll_week_cents}
+            weekly={weekly}
+            describedBy={legendId}
+            onChange={(v) => set({ renewal_cents: v })}
+          />
         )}
       </fieldset>
       {list.isError && (

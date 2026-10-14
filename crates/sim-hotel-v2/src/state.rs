@@ -9,6 +9,7 @@ use sim_hotel::{CatalogError, Category, GroupBlock, Pending, Profile, turnover_b
 
 use crate::catalog::Catalog;
 use crate::department::{DeptCode, DeptState, UsaliClass};
+use crate::renewal::AssetBook;
 use crate::resolve::ResolveError;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -31,6 +32,16 @@ pub struct HotelState {
     /// Mjesečni stalni dio neraspoređenih odjela (iz profila) i mjesečne fiksne naknade.
     pub undistributed_fixed_cents: BTreeMap<DeptCode, i64>,
     pub fixed_charges_cents: BTreeMap<String, i64>,
+    /// Stanje zgrade i njena knjiga imovine (obnova v2, model B).
+    pub building: Building,
+}
+
+/// Zgrada hotela: stanje (0–10 000), početno stanje profila (ne mijenja se) i knjiga imovine.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Building {
+    pub condition_pts: i32,
+    pub start_pts: i32,
+    pub book: AssetBook,
 }
 
 /// Operativni odjeli osim Smještaja (hrana i piće, ostali operativni) ulaze u v1 „opremu" sažetka.
@@ -57,6 +68,8 @@ impl HotelState {
                     condition_pts: start.condition_pts,
                     satisfaction_pts: start.satisfaction_pts,
                     season_departures: 0,
+                    start_condition_pts: start.condition_pts,
+                    book: AssetBook::default(),
                 },
             );
             if d.class.is_undistributed() {
@@ -84,6 +97,11 @@ impl HotelState {
             departments,
             undistributed_fixed_cents,
             fixed_charges_cents: pv2.fixed_charges_cents.clone(),
+            building: Building {
+                condition_pts: pv2.building_pts,
+                start_pts: pv2.building_pts,
+                book: AssetBook::default(),
+            },
         })
     }
 
@@ -135,7 +153,8 @@ impl HotelState {
 
     /// v1 oblik stanja, polje po polje (novo polje v2 mora ovdje svjesno odlučiti gdje ide): stalni i sezonci su
     /// zbrojevi odjela, oprema je stanje prostora (`equipment_summary`), stalni trošak je Σ neraspoređeni + Σ
-    /// fiksne naknade (mjesečno).
+    /// fiksne naknade (mjesečno). Zgrada i knjige imovine svjesno ne ulaze: zgrada se osjeća samo u zadovoljstvu
+    /// (stanje koje gost osjeća u odjelima), ne u indeksu O.
     pub fn summary(&self) -> sim_hotel::HotelState {
         let (permanent, seasonal) = self.departments.values().fold((0_u16, 0_u16), |(p, s), d| {
             (p.saturating_add(d.permanent), s.saturating_add(d.seasonal))

@@ -53,8 +53,23 @@ pub struct UsaliStatement {
     pub total_fixed_charges_cents: i64,
     pub ebitda_cents: i64,
     pub ebitda_margin_bp: Option<i64>,
+    /// Amortizacija opreme (odjeli) i zgrade iz obnove v2, ispod EBITDA; EBIT = EBITDA − amortizacija.
+    pub depreciation_equipment_cents: i64,
+    pub depreciation_building_cents: i64,
+    pub depreciation_cents: i64,
+    pub ebit_cents: i64,
+    pub ebit_margin_bp: Option<i64>,
     pub interest_cents: i64,
+    /// Ulaganja (stara obnova i obnova v2) plaćena iz blagajne; nisu trošak, u račun ulazi samo amortizacija.
     pub capex_cents: i64,
+}
+
+/// Iznosi ispod EBITDA koje račun nosi uz retke: kamata, ulaganja, amortizacija opreme i zgrade.
+struct BelowEbitda {
+    interest: i64,
+    capex: i64,
+    depreciation_equipment: i64,
+    depreciation_building: i64,
 }
 
 /// `div_round(part·10 000, whole)`; `None` kad je `whole` 0 (marža bez prihoda nije definirana).
@@ -127,13 +142,13 @@ fn undistributed_account(u: &UndistributedOutcome) -> Calc<UndistributedAccount>
     })
 }
 
-/// Zajednički završetak: zbrojevi, GOP, EBITDA i marže iz već složenih redaka.
+/// Zajednički završetak: zbrojevi, GOP, EBITDA, EBIT i marže iz već složenih redaka.
 fn assemble(
     (days, room_nights): (u32, u32),
     mut departments: Vec<DeptAccount>,
     mut undistributed: Vec<UndistributedAccount>,
     fixed_charges: Vec<(String, i64)>,
-    (interest_cents, capex_cents): (i64, i64),
+    below: BelowEbitda,
 ) -> Calc<UsaliStatement> {
     departments.sort_by(|a, b| (a.class.rank(), &a.code).cmp(&(b.class.rank(), &b.code)));
     undistributed.sort_by(|a, b| {
@@ -147,6 +162,8 @@ fn assemble(
     let gop = sub64(dept_profit, total_undist)?;
     let total_fixed = total(fixed_charges.iter().map(|(_, v)| *v))?;
     let ebitda = sub64(gop, total_fixed)?;
+    let depreciation = add64(below.depreciation_equipment, below.depreciation_building)?;
+    let ebit = sub64(ebitda, depreciation)?;
     let goppar = if room_nights == 0 {
         None
     } else {
@@ -168,13 +185,20 @@ fn assemble(
         total_fixed_charges_cents: total_fixed,
         ebitda_cents: ebitda,
         ebitda_margin_bp: margin_bp(ebitda, total_revenue)?,
-        interest_cents,
-        capex_cents,
+        depreciation_equipment_cents: below.depreciation_equipment,
+        depreciation_building_cents: below.depreciation_building,
+        depreciation_cents: depreciation,
+        ebit_cents: ebit,
+        ebit_margin_bp: margin_bp(ebit, total_revenue)?,
+        interest_cents: below.interest,
+        capex_cents: below.capex,
     })
 }
 
 /// Račun dobiti jednog razdoblja. Rashodi odjela = plaće + nabavna vrijednost + ostali izravni (održavanje je u
-/// „Održavanju"); `room_nights = sobe · dani`; kamata i obnova su ispod EBITDA, samo za prikaz.
+/// „Održavanju"); `room_nights = sobe · dani`; ispod EBITDA amortizacija (daje EBIT, koji ulazi u indeks F kad
+/// sadržaj tako kaže). Kamata i ulaganja (capex) nisu retci računa: ulaganja su plaćena iz blagajne (ispod EBITDA,
+/// kao promjena blagajne), a u račun dobiti ulaze samo kroz amortizaciju.
 pub fn statement(a: &PeriodAccounts) -> Calc<UsaliStatement> {
     let departments = a
         .departments
@@ -198,7 +222,12 @@ pub fn statement(a: &PeriodAccounts) -> Calc<UsaliStatement> {
         departments,
         undistributed,
         fixed,
-        (a.interest_cents, a.capex_cents),
+        BelowEbitda {
+            interest: a.interest_cents,
+            capex: a.capex_cents,
+            depreciation_equipment: a.depreciation_equipment_cents,
+            depreciation_building: a.depreciation_building_cents,
+        },
     )
 }
 
@@ -207,12 +236,22 @@ pub fn sum_statements(xs: &[UsaliStatement]) -> Calc<UsaliStatement> {
     let mut depts: BTreeMap<DeptCode, DeptAccount> = BTreeMap::new();
     let mut undist: BTreeMap<DeptCode, UndistributedAccount> = BTreeMap::new();
     let mut fixed: BTreeMap<String, i64> = BTreeMap::new();
-    let (mut days, mut nights, mut interest, mut capex) = (0_i128, 0_i128, 0_i64, 0_i64);
+    let (mut days, mut nights) = (0_i128, 0_i128);
+    let mut below = BelowEbitda {
+        interest: 0,
+        capex: 0,
+        depreciation_equipment: 0,
+        depreciation_building: 0,
+    };
     for x in xs {
         days = c::add(days, w(x.days))?;
         nights = c::add(nights, w(x.room_nights))?;
-        interest = add64(interest, x.interest_cents)?;
-        capex = add64(capex, x.capex_cents)?;
+        below.interest = add64(below.interest, x.interest_cents)?;
+        below.capex = add64(below.capex, x.capex_cents)?;
+        below.depreciation_equipment =
+            add64(below.depreciation_equipment, x.depreciation_equipment_cents)?;
+        below.depreciation_building =
+            add64(below.depreciation_building, x.depreciation_building_cents)?;
         for d in &x.departments {
             let e = depts.entry(d.code.clone()).or_insert_with(|| DeptAccount {
                 revenue_cents: 0,
@@ -253,7 +292,7 @@ pub fn sum_statements(xs: &[UsaliStatement]) -> Calc<UsaliStatement> {
         departments,
         undist.into_values().collect(),
         fixed.into_iter().collect(),
-        (interest, capex),
+        below,
     )
 }
 
@@ -266,6 +305,10 @@ pub enum Section {
     Gop,
     FixedCharges,
     Ebitda,
+    /// Amortizacija iz obnove v2 (oprema odjela, zgrada, ukupno), ispod EBITDA.
+    Depreciation,
+    /// EBIT = EBITDA − amortizacija.
+    Ebit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -275,8 +318,8 @@ pub enum LineKind {
     Result,
 }
 
-/// `is_total` označava samo retke "total" sekcija s više redaka; GOP i EBITDA su pojedinačni retci vrste `Result` s
-/// `is_total = false` — sučelje ih mora isticati po sekciji/vrsti, ne po `is_total`.
+/// `is_total` označava samo retke "total" sekcija s više redaka; GOP, EBITDA i EBIT su pojedinačni retci vrste `Result`
+/// s `is_total = false` — sučelje ih mora isticati po sekciji/vrsti, ne po `is_total`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VarianceLine {
     pub section: Section,
@@ -330,8 +373,9 @@ fn section_lines(
 }
 
 /// Retci oba izvješća (unija kodova; kojeg nema → 0), redom sekcija; `variance = actual − budget`. Svaka sekcija s
-/// više redaka ima i redak `is_total` (kod "total"); Gop i Ebitda imaju po jedan redak ("gop", "ebitda", `is_total`
-/// false). Odjeli su poredani kao u računu dobiti: rang razreda, pa kod.
+/// više redaka ima i redak `is_total` (kod "total"); Gop, Ebitda i Ebit imaju po jedan redak ("gop", "ebitda",
+/// "ebit", `is_total` false). Amortizacija ima retke "equipment" i "building" pa "total" (obnova v2; budžet je zadani
+/// plan bez obnove, pa 0). Odjeli su poredani kao u računu dobiti: rang razreda, pa kod.
 pub fn budget_variance(actual: &UsaliStatement, budget: &UsaliStatement) -> Vec<VarianceLine> {
     let dept_rows = |pick: fn(&DeptAccount) -> i64| {
         let mut m: BTreeMap<(u8, String), (i64, i64)> = BTreeMap::new();
@@ -435,6 +479,36 @@ pub fn budget_variance(actual: &UsaliStatement, budget: &UsaliStatement) -> Vec<
         LineKind::Result,
         false,
         (actual.ebitda_cents, budget.ebitda_cents),
+    ));
+    let depreciation = BTreeMap::from([
+        (
+            (0, "equipment".to_string()),
+            (
+                actual.depreciation_equipment_cents,
+                budget.depreciation_equipment_cents,
+            ),
+        ),
+        (
+            (1, "building".to_string()),
+            (
+                actual.depreciation_building_cents,
+                budget.depreciation_building_cents,
+            ),
+        ),
+    ]);
+    section_lines(
+        &mut out,
+        Section::Depreciation,
+        LineKind::Expense,
+        &depreciation,
+        (actual.depreciation_cents, budget.depreciation_cents),
+    );
+    out.push(line(
+        Section::Ebit,
+        "ebit",
+        LineKind::Result,
+        false,
+        (actual.ebit_cents, budget.ebit_cents),
     ));
     out
 }

@@ -159,6 +159,10 @@ pub struct PlanBody {
     /// Postavke po odjelu (samo v2, ključ je kod odjela). Bez njih se zadržavaju odjeli važećeg plana.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub departments: Option<std::collections::BTreeMap<String, DeptPlanBody>>,
+    /// Iznos obnove zgrade za mjesec kruga, u centima (samo v2). Bez njega se zadržava iznos važećeg plana; u odgovoru
+    /// v2 plana uvijek postoji.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_renewal_cents: Option<i64>,
 }
 
 /// Postavke jednog odjela u planu kruga.
@@ -169,6 +173,10 @@ pub struct DeptPlanBody {
     pub seasonal_target: u16,
     pub price_level_pct: u16,
     pub maintenance: MaintenanceCode,
+    /// Iznos obnove odjela za mjesec kruga, u centima. Bez njega se zadržava iznos važećeg plana (zaključana obnova
+    /// ostaje); u odgovoru uvijek postoji.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal_cents: Option<i64>,
 }
 
 impl From<&PlanDto> for PlanBody {
@@ -193,11 +201,15 @@ impl From<&PlanDto> for PlanBody {
                                 seasonal_target: d.seasonal_target,
                                 price_level_pct: d.price_level_pct,
                                 maintenance: d.maintenance.into(),
+                                renewal_cents: Some(d.renewal_cents.unwrap_or(0)),
                             },
                         )
                     })
                     .collect()
             }),
+            // v2 plan (ima odjele) uvijek pokazuje iznos obnove zgrade; v1 ga nema.
+            building_renewal_cents: (!p.departments.is_empty())
+                .then(|| p.building_renewal_cents.unwrap_or(0)),
         }
     }
 }
@@ -225,10 +237,12 @@ impl From<&PlanBody> for PlanDto {
                             seasonal_target: d.seasonal_target,
                             price_level_pct: d.price_level_pct,
                             maintenance: d.maintenance.into(),
+                            renewal_cents: d.renewal_cents,
                         },
                     )
                 })
                 .collect(),
+            building_renewal_cents: p.building_renewal_cents,
         }
     }
 }
@@ -266,6 +280,149 @@ pub struct DeptLimitsBody {
     pub maintenance: LevelCostsBody,
     /// Plaća jednog sezonskog radnika odjela za ovaj krug, pri sadašnjem postotku plaće.
     pub seasonal_worker_cents: i64,
+    /// Obnova odjela (v2): izbor iznosa; izostavljeno kad je odjel ne nudi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal: Option<RenewalLimitsBody>,
+}
+
+/// Obnova jednog dijela (odjel ili zgrada) u krugu: izbor iznosa i, ako je već odlučena, zaključana obnova.
+#[derive(Serialize, ToSchema)]
+pub struct RenewalLimitsBody {
+    /// Mjesec kruga: odluka vrijedi taj mjesec.
+    pub month: MonthCode,
+    /// Krugova mjeseca od ovoga (uključivo); na toliko rata se dijeli iznos odlučen sada.
+    pub rounds_left: u8,
+    pub max_monthly_cents: i64,
+    pub step_cents: i64,
+    /// Vijek za amortizaciju u mjesecima.
+    pub life_months: u16,
+    /// Stanje sada (bodovi 0–10 000; na ekranu 0–100).
+    pub condition_pts: i32,
+    /// Obnova već odlučena u ovom mjesecu; ne mijenja se do kraja mjeseca.
+    #[schema(required = true)]
+    pub locked: Option<RenewalStateBody>,
+    /// 0, korak, 2·korak … najviše.
+    pub options: Vec<RenewalOptionBody>,
+}
+
+/// Jedan iznos obnove s ratama, učinkom i amortizacijom.
+#[derive(Serialize, ToSchema)]
+pub struct RenewalOptionBody {
+    pub amount_cents: i64,
+    /// Plaća se ovaj i svaki idući krug mjeseca osim zadnjeg.
+    pub installment_cents: i64,
+    /// Zadnji krug mjeseca (ostatak); u mjesečnoj igri cijeli iznos.
+    pub last_installment_cents: i64,
+    /// Učinak cijelog iznosa za mjesec (bodovi 0–10 000).
+    pub gain_pts: i32,
+    /// Učinak do granice 100 iz sadašnjeg stanja (približno: stanje se do kraja mjeseca još troši i održava).
+    pub gain_capped_pts: i32,
+    /// Mjesečna amortizacija, od idućeg mjeseca.
+    pub depreciation_monthly_cents: i64,
+}
+
+/// Obnova odlučena u mjesecu (zaključana do kraja mjeseca).
+#[derive(Serialize, ToSchema)]
+pub struct RenewalStateBody {
+    pub month: MonthCode,
+    pub total_cents: i64,
+    /// Rata svakog kruga mjeseca osim zadnjeg (zadnji nosi ostatak).
+    pub installment_cents: i64,
+    pub paid_cents: i64,
+    /// Koliko krugova mjeseca još plaća; 0 = plaćeno.
+    pub rounds_left: u8,
+    /// Učinak cijelog iznosa (bodovi 0–10 000).
+    pub gain_pts: i32,
+    /// Učinak plaćenog do sada (prije granice 100).
+    pub gained_pts: i32,
+}
+
+/// Smjernica ulaganja u sezoni: pričuva za obnovu (FF&E) kao udio prihoda sezone iz budžeta.
+#[derive(Serialize, ToSchema)]
+pub struct RenewalGuideBody {
+    /// Udio prihoda u baznim bodovima (400 = 4 %).
+    pub reserve_bp: u16,
+    pub season_revenue_budget_cents: i64,
+    pub guide_cents: i64,
+    /// Uloženo do sada (svi odjeli i zgrada).
+    pub invested_cents: i64,
+}
+
+/// Zgrada hotela (v2).
+#[derive(Serialize, ToSchema)]
+pub struct BuildingBody {
+    /// Stanje zgrade 0–10 000 (na ekranu 0–100).
+    pub condition_pts: i32,
+    pub start_pts: i32,
+    /// Trošenje u bodovima mjesečno (50 = 0,5 boda).
+    pub wear_pts_per_month: i32,
+    /// Obnova zgrade odlučena u mjesecu trenutnog kruga.
+    #[schema(required = true)]
+    pub locked: Option<RenewalStateBody>,
+    pub invested_cents: i64,
+}
+
+impl From<&game::renewal::RenewalStatus> for RenewalStateBody {
+    fn from(r: &game::renewal::RenewalStatus) -> Self {
+        RenewalStateBody {
+            month: game::dto::MonthCode::from(r.month).into(),
+            total_cents: r.total_cents,
+            installment_cents: r.installment_cents,
+            paid_cents: r.paid_cents,
+            rounds_left: r.rounds_left,
+            gain_pts: r.gain_pts,
+            gained_pts: r.gained_pts,
+        }
+    }
+}
+
+impl From<&game::renewal::RenewalChoice> for RenewalLimitsBody {
+    fn from(c: &game::renewal::RenewalChoice) -> Self {
+        RenewalLimitsBody {
+            month: game::dto::MonthCode::from(c.month).into(),
+            rounds_left: c.rounds_left,
+            max_monthly_cents: c.max_monthly_cents,
+            step_cents: c.step_cents,
+            life_months: c.life_months,
+            condition_pts: c.condition_pts,
+            locked: c.locked.as_ref().map(RenewalStateBody::from),
+            options: c
+                .options
+                .iter()
+                .map(|o| RenewalOptionBody {
+                    amount_cents: o.amount_cents,
+                    installment_cents: o.installment_cents,
+                    last_installment_cents: o.last_installment_cents,
+                    gain_pts: o.gain_pts,
+                    gain_capped_pts: o.gain_capped_pts,
+                    depreciation_monthly_cents: o.depreciation_monthly_cents,
+                })
+                .collect(),
+        }
+    }
+}
+
+impl From<&game::renewal::RenewalGuide> for RenewalGuideBody {
+    fn from(g: &game::renewal::RenewalGuide) -> Self {
+        RenewalGuideBody {
+            reserve_bp: g.reserve_bp,
+            season_revenue_budget_cents: g.season_revenue_budget_cents,
+            guide_cents: g.guide_cents,
+            invested_cents: g.invested_cents,
+        }
+    }
+}
+
+impl From<&game::renewal::BuildingView> for BuildingBody {
+    fn from(b: &game::renewal::BuildingView) -> Self {
+        BuildingBody {
+            condition_pts: b.condition_pts,
+            start_pts: b.start_pts,
+            wear_pts_per_month: b.wear_pts_per_month,
+            locked: b.locked.as_ref().map(RenewalStateBody::from),
+            invested_cents: b.invested_cents,
+        }
+    }
 }
 
 /// Trošak triju razina održavanja u krugu (centi).
@@ -303,6 +460,12 @@ pub struct PlanCostsBody {
     pub payroll_week_cents: i64,
     /// Plaće cijelog hotela za ovaj krug pri sadašnjem broju ljudi i postotku plaće.
     pub payroll_round_cents: i64,
+    /// Obnova zgrade (v2): izbor iznosa; izostavljeno u v1 i kad obnova zgrade nije ponuđena.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_renewal: Option<RenewalLimitsBody>,
+    /// Smjernica ulaganja u sezoni (v2 s obnovom); izostavljeno u v1 i u igri bez obnove po iznosu.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renewal_guide: Option<RenewalGuideBody>,
 }
 
 impl From<&game::costs::LevelCosts> for LevelCostsBody {
@@ -337,6 +500,8 @@ impl From<&game::costs::PlanCosts> for PlanCostsBody {
             maintenance: (&c.maintenance).into(),
             payroll_week_cents: c.payroll_week_cents,
             payroll_round_cents: c.payroll_round_cents,
+            building_renewal: c.building_renewal.as_ref().map(RenewalLimitsBody::from),
+            renewal_guide: c.renewal_guide.as_ref().map(RenewalGuideBody::from),
         }
     }
 }
@@ -367,6 +532,7 @@ impl From<&PlanLimits> for PlanLimitsBody {
                                 can_close: d.can_close,
                                 maintenance: (&d.maintenance).into(),
                                 seasonal_worker_cents: d.seasonal_worker_cents,
+                                renewal: d.renewal.as_ref().map(RenewalLimitsBody::from),
                             },
                         )
                     })
@@ -609,6 +775,9 @@ pub struct PrivateHotelBody {
     /// Dok je trenutni mjesec otvoren.
     #[schema(required = true)]
     pub plan: Option<PlanStateBody>,
+    /// Zgrada (v2); izostavljeno u v1 igri.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building: Option<BuildingBody>,
 }
 
 impl TryFrom<&PrivateHotel> for PrivateHotelBody {
@@ -625,6 +794,7 @@ impl TryFrom<&PrivateHotel> for PrivateHotelBody {
                 .map(LastMonthBody::try_from)
                 .transpose()?,
             plan: p.plan.as_ref().map(PlanStateBody::try_from).transpose()?,
+            building: p.building.as_ref().map(BuildingBody::from),
         })
     }
 }
@@ -771,6 +941,22 @@ pub struct SeasonFinancesBody {
     pub gop_margin_bp: Option<i64>,
     pub cash_start_cents: i64,
     pub cash_end_cents: i64,
+    /// Amortizacija sezone iz obnove (ispod EBITDA), isti broj kao račun dobiti za sezonu.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub depreciation_cents: Option<i64>,
+    /// EBIT sezone = EBITDA − amortizacija.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebit_cents: Option<i64>,
+}
+
+/// Obnova jednog dijela u jednom mjesecu sezone.
+#[derive(Serialize, ToSchema)]
+pub struct SeasonRenewalBody {
+    /// Kod odjela ili `building` (zgrada).
+    pub asset_code: String,
+    pub asset_name: String,
+    pub month: MonthCode,
+    pub amount_cents: i64,
 }
 
 /// Odluke hotela kroz sezonu (iz obračunatih planova i situacija).
@@ -787,9 +973,12 @@ pub struct SeasonDecisionsBody {
     pub training_rounds: u8,
     /// Krugovi u kojima je održavanje bar jednog odjela odgođeno.
     pub maintenance_deferred_rounds: u8,
-    /// Kod kruga obnove; prazno ako obnove nije bilo.
+    /// Kod kruga obnove (stari oblik: jedna kvačica); prazno ako obnove nije bilo.
     #[schema(required = true)]
     pub renovation_round: Option<String>,
+    /// Obnove po iznosu (v2) po mjesecu i dijelu, redom mjeseca; izostavljeno kad ih nije bilo.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub renewals: Vec<SeasonRenewalBody>,
     pub reply_reviews_rounds: u8,
     /// Broj situacija u sezoni.
     pub situations: u16,
@@ -855,6 +1044,8 @@ impl From<&game::SeasonFinances> for SeasonFinancesBody {
             gop_margin_bp: f.gop_margin_bp,
             cash_start_cents: f.cash_start_cents,
             cash_end_cents: f.cash_end_cents,
+            depreciation_cents: Some(f.depreciation_cents),
+            ebit_cents: Some(f.ebit_cents),
         }
     }
 }
@@ -870,6 +1061,16 @@ impl From<&game::SeasonDecisions> for SeasonDecisionsBody {
             training_rounds: d.training_rounds,
             maintenance_deferred_rounds: d.maintenance_deferred_rounds,
             renovation_round: d.renovation_round.map(|r| r.code()),
+            renewals: d
+                .renewals
+                .iter()
+                .map(|r| SeasonRenewalBody {
+                    asset_code: r.asset_code.clone(),
+                    asset_name: r.asset_name.clone(),
+                    month: game::dto::MonthCode::from(r.month).into(),
+                    amount_cents: r.amount_cents,
+                })
+                .collect(),
             reply_reviews_rounds: d.reply_reviews_rounds,
             situations: d.situations,
             unanswered: d.unanswered,
@@ -1654,6 +1855,7 @@ mod tests {
             },
             last_month: None,
             plan: None,
+            building: None,
         };
         let e = PrivateHotelBody::try_from(&p).err().expect("greška");
         assert_eq!((e.status, e.code), (500, ProblemCode::Internal));

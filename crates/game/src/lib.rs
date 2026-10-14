@@ -5,6 +5,7 @@ pub mod actor;
 mod ai_input;
 pub mod command;
 pub mod costs;
+mod debrief_v2;
 mod departments;
 pub mod dto;
 pub mod dto_v2;
@@ -15,7 +16,9 @@ mod game;
 pub mod ids;
 pub mod kpi;
 mod mentor;
+mod mentor_v2;
 mod model;
+pub mod renewal;
 mod resolve;
 mod round;
 pub mod season;
@@ -26,8 +29,8 @@ pub mod view;
 
 pub use actor::{Actor, strategy_from_code};
 pub use ai_input::{
-    AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation,
-    DepartmentDepartures, OfferedForJudge,
+    AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, DeferredWearFact,
+    DepartmentDepartures, OfferedForJudge, RenewalFact, RentCutFact,
 };
 pub use departments::{
     DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,
@@ -40,6 +43,7 @@ pub use mentor::{
     ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact, SituationFact,
     debrief_facts, fallback_debrief, wants_ai_mentor, weekly_summary,
 };
+pub use mentor_v2::{FinanceNote, InvestmentFacts, RenewalText};
 pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;
 pub use round::{MAX_WEEK, RoundKey};

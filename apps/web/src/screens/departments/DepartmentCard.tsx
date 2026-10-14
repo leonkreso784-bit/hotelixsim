@@ -1,10 +1,12 @@
 // Kartica odjela na popisu: ikona i ime (poveznica na cijelu karticu), ocjena odjela kao jedna traka (zatvoren odjel
-// je nema, uz njega stoji značka „Zatvoren“), rezultat zadnjeg kruga i broj ljudi (najam bez ljudi ga nema).
+// je nema, uz njega stoji značka „Zatvoren“), rezultat zadnjeg kruga, broj ljudi (najam bez ljudi ga nema) i obnova
+// odlučena za ovaj mjesec.
 import { t } from "@hotelixsim/i18n";
 import type { DepartmentBody } from "../../api/types";
 import { tw } from "../../format";
 import { Link } from "../../router";
 import { Badge } from "../../ui/primitives";
+import { lockedPhrase } from "../renewal/renewal";
 import { FOCUS, leaseWithoutPeople, peopleText, resultText } from "./helpers";
 import { DeptIcon } from "./icons";
 import { Meter } from "./Meter";
@@ -53,6 +55,9 @@ export function DepartmentCard({
       )}
       {!leaseWithoutPeople(dept) && (
         <p className="text-sm text-muted">{peopleText(dept.permanent, dept.seasonal)}</p>
+      )}
+      {dept.renewal && (
+        <p className="text-sm">{t("dept.card.renewal", { phrase: lockedPhrase(dept.renewal, weekly) })}</p>
       )}
     </article>
   );

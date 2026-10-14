@@ -1,5 +1,16 @@
 import { t } from "@hotelixsim/i18n";
-import { BedDouble, CalendarDays, ChartColumn, FileText, Gauge, Star, Users, Wallet } from "lucide-react";
+import {
+  BedDouble,
+  Building2,
+  CalendarDays,
+  ChartColumn,
+  FileText,
+  Gauge,
+  Star,
+  Trophy,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { problemMessage } from "../api/errors";
 import { useGame, useSituations } from "../api/queries";
 import type { HotelBody } from "../api/types";
@@ -9,13 +20,14 @@ import {
   formatCount,
   formatEuros,
   formatEurosCents,
+  formatIndex,
   formatPercentBp,
   formatRating,
   monthName,
   roundPhrase,
   tw,
 } from "../format";
-import { indexDeltas, isWeekly, latestIndices, roundInfo } from "../game";
+import { indexDeltas, isV2, isWeekly, latestIndices, roundInfo } from "../game";
 import { Link, roundPath } from "../router";
 import { IndexBars } from "../ui/IndexBars";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
@@ -37,6 +49,9 @@ export function HotelScreen({ me }: { me: HotelBody }) {
   const deltas = lastScored ? indexDeltas(h.start, lastScored.indices) : null;
   const lm = priv.last_month;
   const lastInfo = lastScored ? roundInfo(game.data, lastScored.round) : null;
+  // Zgrada (v2) samo kad se troši ili je u nju uloženo: zgrada koja je uvijek 100/100 ne govori ništa.
+  const b = priv.building;
+  const building = b && (b.wear_pts_per_month > 0 || b.invested_cents > 0 || b.locked) ? b : null;
   const lastNote = lm
     ? weekly
       ? t("hotel.lastWeek", { week: roundPhrase(lm.round) })
@@ -101,6 +116,18 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               label={t("hotel.rating")}
               end={<strong className="text-lg tabular-nums">{formatRating(priv.now.rating)}</strong>}
             />
+            {building && (
+              <Row
+                to="/plan"
+                icon={<Building2 size={20} aria-hidden="true" />}
+                label={t("hotel.building")}
+                end={
+                  <strong className="text-lg tabular-nums">
+                    {t("dept.outOf", { n: formatIndex(building.condition_pts) })}
+                  </strong>
+                }
+              />
+            )}
             <Row
               to="/pokazatelji"
               icon={<Gauge size={20} aria-hidden="true" />}
@@ -173,6 +200,15 @@ export function HotelScreen({ me }: { me: HotelBody }) {
           {!current && (
             <Card className="space-y-3">
               <p className="text-lg font-bold">{t("hotel.seasonOver")}</p>
+              {isV2(game.data) && (
+                <div className="border-y border-line">
+                  <Row
+                    to="/kraj-sezone"
+                    icon={<Trophy size={20} aria-hidden="true" />}
+                    label={t("season.results")}
+                  />
+                </div>
+              )}
               <Link
                 to="/nova"
                 className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent px-4 py-3 text-base font-bold text-white"

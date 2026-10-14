@@ -70,7 +70,8 @@
         "fixed_monthly_cents": 3800000
       }
     },
-    "fixed_charges_cents": { "insurance": 900000, "lease": 4500000, "property_tax": 800000 }
+    "fixed_charges_cents": { "insurance": 900000, "lease": 4500000, "property_tax": 800000 },
+    "building_pts": 8000
   },
   "B": {
     "departments": {
@@ -142,7 +143,8 @@
         "fixed_monthly_cents": 2400000
       }
     },
-    "fixed_charges_cents": { "insurance": 800000, "lease": 4000000, "property_tax": 700000 }
+    "fixed_charges_cents": { "insurance": 800000, "lease": 4000000, "property_tax": 700000 },
+    "building_pts": 4500
   },
   "C": {
     "departments": {
@@ -215,6 +217,7 @@
         "fixed_monthly_cents": 2500000
       }
     },
-    "fixed_charges_cents": { "insurance": 800000, "lease": 4000000, "property_tax": 700000 }
+    "fixed_charges_cents": { "insurance": 800000, "lease": 4000000, "property_tax": 700000 },
+    "building_pts": 6500
   }
 }

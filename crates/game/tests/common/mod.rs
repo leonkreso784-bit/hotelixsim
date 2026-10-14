@@ -219,12 +219,17 @@ pub fn v2_monthly_game_resolved_through(code: &str) -> Game {
 }
 
 fn v2_game_resolved_through(kind: sim_hotel_v2::PeriodKind, code: &str) -> Game {
-    use game::command::{GameSettings, new_game_with};
     let snap = Snapshot::read_v2(&repo_dir()).unwrap();
+    play_through(v2_game_from(&snap, 42, kind), code)
+}
+
+/// Nova v2 igra iz zadanog snimka i sjemena (bez obračuna).
+pub fn v2_game_from(snap: &Snapshot, seed: u64, kind: sim_hotel_v2::PeriodKind) -> Game {
+    use game::command::{GameSettings, new_game_with};
     let log: Vec<Recorded> = new_game_with(
         GameId(Uuid::from_u128(1)),
-        42,
-        &snap,
+        seed,
+        snap,
         GUEST,
         hotel_ids(),
         GameSettings { kind },
@@ -234,11 +239,67 @@ fn v2_game_resolved_through(kind: sim_hotel_v2::PeriodKind, code: &str) -> Game 
     .zip(1..)
     .map(|((actor, event), seq)| Recorded { seq, actor, event })
     .collect();
-    let mut g = Game::fold(&log).unwrap();
+    Game::fold(&log).unwrap()
+}
+
+/// Snimak v2 sadržaja s obnovom (brojke O1, O2, O4, O5, O9 iz obnova-v2-spec §0): krivulja za svaki odjel s gostima
+/// i parking, zgrada, pričuva 4 %, indeks F iz EBIT-a i početno stanje zgrade po profilu. Lokal i neraspoređeni su
+/// bez obnove.
+pub fn renewal_snapshot() -> Snapshot {
+    use serde_json::json;
+    let renewal = |half: i64, max: i64, step: i64, life: u16| {
+        json!({ "gain_pts": 5000, "half_cents": half * 100, "max_monthly_cents": max * 100,
+                "step_cents": step * 100, "life_months": life })
+    };
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    for (code, spec) in [
+        ("rooms", renewal(150_000, 150_000, 5_000, 84)),
+        ("restaurant", renewal(55_000, 50_000, 5_000, 84)),
+        ("lobby_bar", renewal(25_000, 50_000, 5_000, 84)),
+        ("rooftop_bar", renewal(25_000, 50_000, 5_000, 84)),
+        ("pool_bar", renewal(20_000, 50_000, 5_000, 84)),
+        ("spa", renewal(40_000, 50_000, 5_000, 120)),
+        ("parking", renewal(60_000, 50_000, 5_000, 180)),
+    ] {
+        v["v2"]["departments"][code]["renewal"] = spec;
+    }
+    v["v2"]["economy"]["building"] = json!({
+        "name": "Zgrada",
+        "wear_pts_per_month": 50,
+        "satisfaction_share_bp": 2000,
+        "renewal": renewal(150_000, 200_000, 10_000, 480),
+    });
+    v["v2"]["economy"]["ffe_reserve_bp"] = json!(400);
+    v["v2"]["economy"]["finance_index"] = json!("ebit");
+    for (p, pts) in [("A", 8000), ("B", 4500), ("C", 6500)] {
+        v["v2"]["profiles"][p]["building_pts"] = json!(pts);
+    }
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// Snimak v2 sadržaja bez obnove v2 (sadržaj je ima od O-2): odjeli bez krivulje obnove, zgrada bez učinka, bez
+/// pričuve, indeksa F iz EBIT-a i stanja zgrade profila — za staru kvačicu obnove i igru bez izbora obnove.
+pub fn no_renewal_snapshot() -> Snapshot {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    for d in v["v2"]["departments"].as_object_mut().unwrap().values_mut() {
+        d.as_object_mut().unwrap().remove("renewal");
+    }
+    for p in v["v2"]["profiles"].as_object_mut().unwrap().values_mut() {
+        p.as_object_mut().unwrap().remove("building_pts");
+    }
+    let e = v["v2"]["economy"].as_object_mut().unwrap();
+    for key in ["building", "ffe_reserve_bp", "finance_index"] {
+        e.remove(key);
+    }
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// Zatvori i obračunaj krugove redom do uključivo `code`; `"none"` = nijedan, `"all"` = cijela sezona.
+pub fn play_through(mut g: Game, code: &str) -> Game {
     if code == "none" {
         return g;
     }
-    let last = RoundKey::parse(code).unwrap();
+    let last = RoundKey::parse(code);
     while let Some(r) = g.current_round() {
         let ev = g.close_round(r).unwrap().unwrap();
         apply_ev(&mut g, Actor::Guest(GUEST), ev);
@@ -248,7 +309,7 @@ fn v2_game_resolved_through(kind: sim_hotel_v2::PeriodKind, code: &str) -> Game 
         for (a, e) in evs {
             apply_ev(&mut g, a, e);
         }
-        if r == last {
+        if Some(r) == last {
             break;
         }
     }

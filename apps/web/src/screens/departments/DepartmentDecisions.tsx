@@ -11,12 +11,15 @@ export function DepartmentDecisions({
   dept,
   planState,
   weekly,
+  cashCents,
 }: {
   hotelId: string;
   dept: DepartmentBody;
   /** Plan otvorenog kruga (moj hotel); `null` kad krug nije otvoren. */
   planState: PlanStateBody | null;
   weekly: boolean;
+  /** Blagajna sada (moj hotel), za blagajnu nakon plaćanja obnove. */
+  cashCents: number;
 }) {
   const newRound = useRoundChanged(planState?.round ?? null);
   const stale = useStaleDrafts("dept", hotelId, planState?.round ?? null);
@@ -41,6 +44,8 @@ export function DepartmentDecisions({
         stepTotal={planState.limits.seasonal_step_total ?? 0}
         seasonalMax={planState.limits.seasonal_max}
         weekly={weekly}
+        state={planState}
+        cashCents={cashCents}
       />
     </>
   );

@@ -25,6 +25,7 @@ fn plan() -> PlanDto {
         renovation: false,
         reply_reviews: true,
         departments: std::collections::BTreeMap::new(),
+        building_renewal_cents: None,
     }
 }
 

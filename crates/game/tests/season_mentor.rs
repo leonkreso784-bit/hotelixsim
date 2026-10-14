@@ -178,6 +178,21 @@ fn facts_are_human_for_weekly_and_monthly_season() {
     }
 }
 
+/// Sezona bez obnove ne šalje polja obnove (mentor ih ne smije dobiti da ne izmišlja ulaganja).
+#[test]
+fn season_without_renewal_has_no_renewal_fields() {
+    for g in [weekly_done(), monthly_done()] {
+        let text = facts_json(&g).to_string();
+        for key in [
+            "ulaganja_u_obnovu",
+            "amortizacija_sezone",
+            "dobit_iz_poslovanja_nakon_ulaganja",
+        ] {
+            assert!(!text.contains(key), "{key} u sezoni bez obnove");
+        }
+    }
+}
+
 #[test]
 fn season_length_and_dates_in_words() {
     let w = facts_json(&weekly_done());
@@ -199,9 +214,12 @@ fn place_progress_and_winner_match_season_view() {
                 50
             })
             / 100;
+        // Napredak je u cijelim bodovima ili, kad se bodovi hotela poklapaju, s decimalama („−3,91 boda").
         let words = f["napredak_od_pocetka"].as_str().unwrap();
+        let whole = mine.progress_hundredths.unsigned_abs() / 100;
         assert!(
-            words.contains(&p.unsigned_abs().to_string()),
+            words.contains(&format!("{} bod", p.unsigned_abs()))
+                || words.contains(&format!("{whole},")),
             "{words} / {p}"
         );
         let place = f["mjesto"].as_str().unwrap();
@@ -241,11 +259,42 @@ fn untouched_wages_and_plan_are_not_attributed_to_student() {
     let f = facts_json(&weekly_done());
     let wages = f["odluke"]["place"].as_str().unwrap();
     assert!(
-        wages.contains("takve su od početka, student ih nije mijenjao"),
+        wages.contains("takve su od početka i nisu se mijenjale"),
         "{wages}"
     );
     let own = f["vlastiti_plan"].as_str().unwrap();
-    assert!(own.contains("nijednom nije mijenjao plan"), "{own}");
+    assert!(own.contains("Plan se nijednom nije mijenjao"), "{own}");
+}
+
+/// Oblici koji bi otkrili rod studenta: student kao vršitelj u prošlom vremenu („Student nijednom nije mijenjao
+/// plan", „student ih nije mijenjao", „mogao ga je promijeniti") i „njegov". „Plan se nije mijenjao" je rod plana.
+const GENDERED: [&str; 12] = [
+    "Student",
+    "student ih",
+    "nije mijenjao plan",
+    "mijenjala",
+    "mogao",
+    "mogla",
+    "postavio",
+    "postavila",
+    "odlučio",
+    "odlučila",
+    "njegov",
+    "njezin",
+];
+
+/// UI KS-3 I-B: činjenice o studentovu hotelu ne nose rod prema studentu, jer ga AI preuzme u obraćanje („nisi
+/// mijenjao… mogao si"). Provjerava se sve osim opisa ostalih hotela (robot „je birao" govori o robotu).
+#[test]
+fn student_facts_have_no_gendered_forms() {
+    for g in [weekly_done(), monthly_done(), weekly_with_raised_wages()] {
+        let mut f = facts_json(&g);
+        f.as_object_mut().unwrap().remove("ostali_hoteli");
+        let text = f.to_string();
+        for word in GENDERED {
+            assert!(!text.contains(word), "„{word}“ u činjenicama: {text}");
+        }
+    }
 }
 
 #[test]
@@ -560,7 +609,7 @@ fn close_progress_is_shown_with_tenths() {
         f["pobjednik"].as_str().unwrap().contains("+8,4 boda"),
         "{f}"
     );
-    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "−3 boda");
+    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "−3,0 boda");
     // Kad se cijeli bodovi razlikuju, ostaju cijeli (kao na ekranu).
     input.me.hotel.progress_hundredths = 520;
     let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
@@ -602,4 +651,92 @@ fn season_debrief_text_needs_all_four_parts() {
     assert!(season_debrief_has_parts(
         "Kako je prošla sezona\nDobro.\n\n  Što je išlo dobro \nSve.\nŠto nije valjalo\nNišta.\nŠto ponijeti u sljedeću igru\nObuku."
     ));
+}
+
+// ---------------------------------------------------------------- popravak 1 (UI čuvar KS-3, I-2)
+
+/// Usporedba s robotom: glagol za studentov hotel prati njegov smjer, ne robotov („porastao …, a tvom hotelu je pao").
+#[test]
+fn robot_comparison_verb_follows_each_hotels_direction() {
+    let tip = |robot: (u16, u16), mine: (u16, u16)| {
+        let g = weekly_done();
+        let mut input = g.season_debrief_input(me()).unwrap();
+        input.me.hotel.progress_hundredths = -5_000;
+        input.me.hotel.start = [mine.0; 5];
+        input.me.hotel.end = [mine.1; 5];
+        for o in &mut input.others {
+            o.hotel.start = [robot.0; 5];
+            o.hotel.end = [robot.1; 5];
+        }
+        let text = fallback_season_debrief(&input);
+        text.split("Što ponijeti u sljedeću igru\n")
+            .nth(1)
+            .unwrap()
+            .to_owned()
+    };
+    let up_down = tip((5_000, 7_000), (3_500, 2_800));
+    assert!(
+        up_down.contains("mu je porastao s 50 na 70, a tvom hotelu je pao s 35 na 28."),
+        "{up_down}"
+    );
+    let up_up = tip((5_000, 7_000), (3_500, 3_800));
+    assert!(
+        up_up.contains("mu je porastao s 50 na 70, a tvom hotelu je porastao s 35 na 38."),
+        "{up_up}"
+    );
+    let down_down = tip((5_000, 4_500), (3_500, 2_800));
+    assert!(
+        down_down.contains("mu je pao s 50 na 45, a tvom hotelu je pao s 35 na 28."),
+        "{down_down}"
+    );
+    let up_flat = tip((5_000, 7_000), (3_500, 3_500));
+    assert!(
+        up_flat.contains("mu je porastao s 50 na 70, a tvom hotelu je ostao na 35."),
+        "{up_flat}"
+    );
+}
+
+// ---------------------------------------------------------------- popravak 2 (ponovni pregled KS-3, N-1 i N-5)
+
+/// Kad ekran piše desetinke, mentor piše isti broj decimala i za cijeli broj („−4,0 boda", ne „−4 boda"), jer kartica
+/// rezultata i mentor stoje na istom ekranu (UI_PRAVILA §2.3).
+#[test]
+fn whole_progress_keeps_the_screen_decimals() {
+    let g = weekly_done();
+    let mut input = g.season_debrief_input(me()).unwrap();
+    input.me.hotel.progress_hundredths = -400;
+    input.me.hotel.rank = 4;
+    input.me.hotel.winner = false;
+    for (i, o) in input.others.iter_mut().enumerate() {
+        // +8,0 i +7,6 se zaokruženo poklapaju („+8"), pa cijeli ekran ide s desetinkama.
+        let (rank, p) = [(1, 800), (2, 760), (3, 0)][i];
+        o.hotel.rank = rank;
+        o.hotel.winner = rank == 1;
+        o.hotel.progress_hundredths = p;
+    }
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert_eq!(f["napredak_od_pocetka"], "−4,0 boda");
+    assert_eq!(f["ostali_hoteli"][0]["napredak_od_pocetka"], "+8,0 boda");
+    assert_eq!(f["ostali_hoteli"][1]["napredak_od_pocetka"], "+7,6 boda");
+    assert_eq!(f["ostali_hoteli"][2]["napredak_od_pocetka"], "0,0 boda");
+    let text = fallback_season_debrief(&input);
+    assert!(
+        text.contains("Napredak tvog hotela od početka sezone je −4,0 boda,"),
+        "{text}"
+    );
+    assert!(text.contains("s napretkom od +8,0 boda."), "{text}");
+}
+
+/// Rečenicu o poštenoj usporedbi ekran piše ispod rezultata; rezerva je ne ponavlja, a AI je i dalje dobiva u činjenicama.
+#[test]
+fn fallback_leaves_the_fairness_sentence_to_the_screen() {
+    let input = weekly_done().season_debrief_input(me()).unwrap();
+    let fairness = "uspoređuje napredak od vlastitog početka";
+    let f = serde_json::to_value(season_debrief_facts(&input)).unwrap();
+    assert!(
+        f["kako_se_usporeduje"].as_str().unwrap().contains(fairness),
+        "{f}"
+    );
+    let text = fallback_season_debrief(&input);
+    assert!(!text.contains(fairness), "{text}");
 }

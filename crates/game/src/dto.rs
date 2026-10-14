@@ -148,6 +148,10 @@ pub struct PlanDto {
     /// Postavke po odjelu (samo v2, ključ je kod odjela); v1 plan ga nema, pa se njegov JSON ne mijenja.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub departments: BTreeMap<String, DeptPlanDto>,
+    /// Iznos obnove zgrade za mjesec kruga (samo v2, obnova v2). U dnevniku: iznos, a 0 se ne zapisuje (čita se kao
+    /// 0). U tijelu zahtjeva: `None` = zadrži iznos važećeg plana (`Game::plan_from_dto`). v1 plan ga nema.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_renewal_cents: Option<i64>,
 }
 
 impl From<&MonthPlan> for PlanDto {
@@ -162,6 +166,7 @@ impl From<&MonthPlan> for PlanDto {
             renovation: p.renovation,
             reply_reviews: p.reply_reviews,
             departments: BTreeMap::new(),
+            building_renewal_cents: None,
         }
     }
 }

@@ -12,12 +12,18 @@ import {
   formatPercentBpFixed,
   formatPercentWhole,
   formatPointsCount,
+  formatPointsPrecise,
+  formatQuality,
   formatRange,
   formatRating,
+  formatRoundsOf,
   formatWhole,
   formatWholeSigned,
   keepRoundTogether,
   monthName,
+  pointsAt,
+  progressDigits,
+  progressTone,
   roundDates,
   roundPhrase,
   roundTitle,
@@ -139,6 +145,16 @@ describe("formatCount", () => {
       "32 osobe",
     ]);
   });
+  it("tjedan, mjesec i godina (obnova: „još 2 tjedna“, „kroz 7 godina“)", () => {
+    expect([1, 2, 5].map((n) => formatCount(n, "week"))).toEqual(["1 tjedan", "2 tjedna", "5 tjedana"]);
+    expect([1, 3, 6].map((n) => formatCount(n, "month"))).toEqual(["1 mjesec", "3 mjeseca", "6 mjeseci"]);
+    expect([1, 2, 7, 15].map((n) => formatCount(n, "yearAcc"))).toEqual([
+      "1 godinu",
+      "2 godine",
+      "7 godina",
+      "15 godina",
+    ]);
+  });
 });
 
 describe("oznaka kruga", () => {
@@ -237,5 +253,55 @@ describe("keepRoundTogether", () => {
   });
   it("mjesečni naslov ostaje kakav je", () => {
     expect(keepRoundTogether("Račun dobiti — Lipanj")).toBe("Račun dobiti — Lipanj");
+  });
+});
+
+describe("bodovi napretka s preciznošću kraja sezone", () => {
+  it("pointsAt zaokružuje pola od nule na zadani broj decimala (isto kao mentor)", () => {
+    expect(pointsAt(845, 0)).toBe(8);
+    expect(pointsAt(845, 1)).toBe(8.5);
+    expect(pointsAt(-845, 1)).toBe(-8.5);
+    expect(pointsAt(-844, 1)).toBe(-8.4);
+    expect(pointsAt(842, 2)).toBe(8.42);
+  });
+  it("formatPointsPrecise: cijeli bodovi kao prije; uz decimale uvijek isti broj decimala i „boda“", () => {
+    expect(formatPointsPrecise(800, 0)).toBe("+8 bodova");
+    expect(formatPointsPrecise(840, 1)).toBe("+8,4 boda");
+    // Ista preciznost u istoj usporedbi: „−4,0“ uz „−3,7“, ne „−4“ (UI KS-3 M-1).
+    expect(formatPointsPrecise(800, 1)).toBe("+8,0 boda");
+    expect(formatPointsPrecise(-401, 1)).toBe("−4,0 boda");
+    expect(formatPointsPrecise(-760, 1)).toBe("−7,6 boda");
+    expect(formatPointsPrecise(842, 2)).toBe("+8,42 boda");
+    expect(formatPointsPrecise(840, 2)).toBe("+8,40 boda");
+    expect(formatPointsPrecise(4, 1)).toBe("0,0 boda");
+    expect(formatPointsPrecise(4, 0)).toBe("0 bodova");
+    expect(formatPointsPrecise(100, 0)).toBe("+1 bod");
+  });
+  it("progressDigits: najmanje decimala uz koje se različiti napretci i dalje razlikuju", () => {
+    expect(progressDigits([1210, 800, -300, -700])).toBe(0);
+    // +8,4 i +7,6 su oba „+8“: treba desetinka
+    expect(progressDigits([840, 760, -300])).toBe(1);
+    // +8,42 i +8,38 su oba „+8,4“: trebaju stotinke
+    expect(progressDigits([842, 838])).toBe(2);
+    // jednaki napredak ne traži decimale
+    expect(progressDigits([800, 800, 500])).toBe(0);
+    expect(progressDigits([])).toBe(0);
+  });
+  it("progressTone prati prikazani broj: −0,3 uz desetinke je pad, uz cijele bodove nula", () => {
+    expect(progressTone(-30)).toBe("text-muted");
+    expect(progressTone(-30, 1)).toBe("text-down");
+  });
+});
+
+describe("kraj sezone: ocjena situacija i broj krugova", () => {
+  it("formatQuality je prosjek ocjena 1–5 s jednom decimalom", () => {
+    expect(formatQuality(360)).toBe("3,6/5");
+    expect(formatQuality(400)).toBe("4,0/5");
+  });
+  it("formatRoundsOf: „6 od 17 tjedana“, „1 od 4 mjeseca“", () => {
+    expect(formatRoundsOf(6, 17, true)).toBe("6 od 17 tjedana");
+    expect(formatRoundsOf(17, 17, true)).toBe("17 od 17 tjedana");
+    expect(formatRoundsOf(1, 4, false)).toBe("1 od 4 mjeseca");
+    expect(formatRoundsOf(0, 4, false)).toBe("0 od 4 mjeseca");
   });
 });

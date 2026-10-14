@@ -1,5 +1,5 @@
 //! Sezonski mentor (kraj-sezone-spec §6.3, §7): ulaz iz kraja sezone, činjenice cijele sezone u ljudskim jedinicama
-//! (obrazac `mentor.rs`, ADR-023) i rezerva bez AI-ja s istim četiri dijela kao uputa `mentor-sezona.v1`.
+//! (obrazac `mentor.rs`, ADR-023) i rezerva bez AI-ja s istim četiri dijela kao uputa `mentor-sezona.v2`.
 //! I AI i rezerva pišu samo iz ovih činjenica, pa nijedna interna jedinica (stotinke, centi, kodovi krugova) ne izlazi
 //! studentu. Pravilo OT-2: što je student preuzeo i nije mijenjao (plaće, cijeli plan) tako se i kaže.
 
@@ -15,6 +15,7 @@ use crate::mentor::{
     advice, decimal_hundredths, direction, euros, index_name, month_genitive, plural, points,
     round_div, round_locative, thousands, with_sign,
 };
+use crate::renewal::SeasonRenewal;
 use crate::round::RoundKey;
 use crate::season::{SeasonDecisions, SeasonFinances, SeasonHotel};
 use crate::view::Seat;
@@ -205,6 +206,20 @@ pub struct FinanceFacts {
     pub cash_start: String,
     #[serde(rename = "blagajna_na_kraju")]
     pub cash_end: String,
+    /// Obnova v2: uloženo u sezoni (blagajna), amortizacija sezone i dobit iz poslovanja nakon ulaganja; samo kad je
+    /// hotel išta obnovio ili ima amortizaciju, pa sezona bez obnove ostaje kakva je bila.
+    #[serde(rename = "ulaganja_u_obnovu", skip_serializing_if = "Option::is_none")]
+    pub investments: Option<String>,
+    #[serde(
+        rename = "amortizacija_sezone",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub depreciation: Option<String>,
+    #[serde(
+        rename = "dobit_iz_poslovanja_nakon_ulaganja",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub gop_after_investment: Option<String>,
 }
 
 /// Odluke sezone riječima (prosjeci i brojevi krugova iz obračunatih planova).
@@ -318,26 +333,25 @@ fn points_tenths(hundredths: i64) -> String {
     with_sign(t, format!("{},{} boda", thousands(a / 10), a % 10), true)
 }
 
-/// Napredak s `digits` decimala (0–2), bez suvišnih nula: „+8 bodova", „+7,6 boda", „+8,42 boda".
+/// Napredak s točno `digits` decimala (0–2), kao na ekranu (`formatPointsPrecise`, UI_PRAVILA §2.3): „+8 bodova",
+/// „+7,6 boda", „−4,0 boda", „0,0 boda", „+8,42 boda". Uz decimale imenica je uvijek „boda".
 fn points_with(hundredths: i32, digits: u32) -> String {
     let digits = digits.min(2);
     let v = round_div(i64::from(hundredths), 10_i64.pow(2 - digits));
-    let scale = 10_u64.pow(digits);
-    let a = v.unsigned_abs();
-    if a.is_multiple_of(scale) {
-        let w = v / 10_i64.pow(digits);
-        return if w == 0 {
+    if digits == 0 {
+        return if v == 0 {
             "0 bodova".to_owned()
         } else {
-            points(w)
+            points(v)
         };
     }
+    let scale = 10_u64.pow(digits);
+    let a = v.unsigned_abs();
     let frac = format!(
         "{:0width$}",
         a % scale,
         width = usize::try_from(digits).unwrap_or(2)
     );
-    let frac = frac.trim_end_matches('0');
     with_sign(v, format!("{},{frac} boda", thousands(a / scale)), true)
 }
 
@@ -475,7 +489,7 @@ fn wage_text(d: &SeasonDecisions, start: Option<u16>) -> String {
     match start {
         None => level,
         Some(s) if lo == hi && lo == s => {
-            format!("{level} (takve su od početka, student ih nije mijenjao)")
+            format!("{level} (takve su od početka i nisu se mijenjale)")
         }
         Some(s) => format!("{level} (na početku igre bile su {s} %)"),
     }
@@ -533,16 +547,58 @@ fn decision_facts(
             "nijednom odgođeno",
             "odgođeno ",
         ),
-        renovation: match d.renovation_round {
-            Some(r) => format!("pokrenuta {}", round_words(input, r).1),
-            None => "ne".to_owned(),
+        renovation: match (renewals_text(&d.renewals), d.renovation_round) {
+            (Some(text), _) => text,
+            (None, Some(r)) => format!("pokrenuta {}", round_words(input, r).1),
+            (None, None) => "ne".to_owned(),
         },
         reply_reviews: rounds_text(d.reply_reviews_rounds, total, weekly, "nikad", ""),
     }
 }
 
-fn finance_facts(f: &SeasonFinances) -> FinanceFacts {
+/// Obnove v2 sezone po dijelu i mjesecu: „Restoran 40.000 € u srpnju, Zgrada 100.000 € u lipnju"; `None` bez obnova.
+fn renewals_text(renewals: &[SeasonRenewal]) -> Option<String> {
+    if renewals.is_empty() {
+        return None;
+    }
+    let parts: Vec<String> = renewals
+        .iter()
+        .map(|r| {
+            format!(
+                "{} {} {}",
+                r.asset_name,
+                euros(r.amount_cents, false),
+                round_locative(RoundKey::Month(r.month))
+            )
+        })
+        .collect();
+    Some(parts.join(", "))
+}
+
+fn finance_facts(f: &SeasonFinances, renewals: &[SeasonRenewal]) -> FinanceFacts {
+    let invested: i64 = renewals
+        .iter()
+        .fold(0_i64, |s, r| s.saturating_add(r.amount_cents));
+    let with_renewal = invested != 0 || f.depreciation_cents != 0;
     FinanceFacts {
+        investments: with_renewal.then(|| {
+            format!(
+                "ukupno {} (plaćeno iz blagajne; to nije trošak sezone, nego se kroz amortizaciju raspoređuje na godine trajanja obnove)",
+                euros(invested, false)
+            )
+        }),
+        depreciation: with_renewal.then(|| {
+            format!(
+                "{} (dio cijene obnova koji pada na ovu sezonu, od mjeseca nakon obnove)",
+                euros(f.depreciation_cents, false)
+            )
+        }),
+        gop_after_investment: with_renewal.then(|| {
+            format!(
+                "{} (bruto operativna dobit umanjena za amortizaciju obnova; to gleda indeks Financije, a najam zgrade, osiguranje i porez ne ulaze)",
+                euros(f.gop_cents.saturating_sub(f.depreciation_cents), false)
+            )
+        }),
         revenue: euros(f.total_revenue_cents, false),
         gop: format!(
             "{} (GOP: ono što od prihoda ostane kad se plate troškovi poslovanja hotela)",
@@ -579,11 +635,11 @@ fn situations_text(d: &SeasonDecisions) -> Option<String> {
 fn own_plan_text(input: &SeasonDebriefInput) -> String {
     let weekly = is_weekly(input);
     let Some(&first) = input.own_plan_rounds.first() else {
-        return "Student nijednom nije mijenjao plan: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa te odluke nisu njegove promjene.".to_owned();
+        return "Plan se nijednom nije mijenjao: cijelu sezonu vrijedio je zadani plan s kojim je hotel preuzet, pa nijedna od tih odluka nije promjena napravljena u igri.".to_owned();
     };
     let n = u8::try_from(input.own_plan_rounds.len()).unwrap_or(u8::MAX);
     let mut out = format!(
-        "Student je sam postavio plan {}, prvi put {}; poslije toga njegov se plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
+        "Vlastiti plan postavljen je {}, prvi put {}; poslije toga se taj plan prenosio iz kruga u krug, prilagođen granicama svakog kruga (obnova se ne ponavlja).",
         in_rounds(n, weekly),
         round_words(input, first).1
     );
@@ -690,7 +746,12 @@ pub fn season_debrief_facts(input: &SeasonDebriefInput) -> SeasonFacts {
         indices: index_facts(me),
         best_round: extreme_round(input, true),
         worst_round: extreme_round(input, false),
-        finances: me.finances.as_ref().map(finance_facts),
+        finances: me.finances.as_ref().map(|f| {
+            finance_facts(
+                f,
+                me.decisions.as_ref().map_or(&[][..], |d| &d.renewals[..]),
+            )
+        }),
         decisions: me.decisions.as_ref().map(|d| {
             decision_facts(
                 d,
@@ -754,18 +815,25 @@ fn robot_comparison(input: &SeasonDebriefInput) -> Option<String> {
     let Some((t, m)) = gap else {
         return Some(format!("{decided}."));
     };
-    let moved = match t.change.signum() {
-        1 => format!("porastao s {} na {}", t.start, t.end),
-        -1 => format!("pao s {} na {}", t.start, t.end),
-        _ => format!("ostao na {}", t.end),
-    };
+    // Svaki hotel dobiva glagol svog smjera (UI KS-3 I-2: „porastao …, a tvom hotelu je pao", ne „… s 35 na 28").
     Some(format!(
-        "{decided}; indeks {} mu je {moved}, a tvom hotelu s {} na {}.",
-        t.name, m.start, m.end
+        "{decided}; indeks {} mu je {}, a tvom hotelu je {}.",
+        t.name,
+        moved_text(t),
+        moved_text(m)
     ))
 }
 
-/// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v1` i rezerva).
+/// Pomak indeksa riječima, po smjeru: „porastao s 50 na 70", „pao s 35 na 28", „ostao na 35".
+fn moved_text(i: &SeasonIndexFact) -> String {
+    match i.change.signum() {
+        1 => format!("porastao s {} na {}", i.start, i.end),
+        -1 => format!("pao s {} na {}", i.start, i.end),
+        _ => format!("ostao na {}", i.end),
+    }
+}
+
+/// Četiri podnaslova sezonskog mentora (uputa `mentor-sezona.v2` i rezerva).
 const PARTS: [&str; 4] = [
     "Kako je prošla sezona",
     "Što je išlo dobro",
@@ -782,9 +850,11 @@ pub fn season_debrief_has_parts(text: &str) -> bool {
 /// Sezonski mentor bez AI-ja (kraj-sezone-spec §7): ista četiri dijela kao uputa, iz istih činjenica.
 pub fn fallback_season_debrief(input: &SeasonDebriefInput) -> String {
     let f = season_debrief_facts(input);
+    // Pravilo poštene usporedbe ostaje u činjenicama za AI; ekran kraja sezone ga piše ispod rezultata, pa ga rezerva
+    // ne ponavlja (UI KS-3 M-4).
     let mut out = format!(
-        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {} {}\n\n",
-        f.progress, f.place, f.winner, f.fairness
+        "Kako je prošla sezona\nNapredak tvog hotela od početka sezone je {}, a to je {}. {}\n\n",
+        f.progress, f.place, f.winner
     );
 
     let mut risen: Vec<&SeasonIndexFact> = f.indices.iter().filter(|i| i.change > 0).collect();

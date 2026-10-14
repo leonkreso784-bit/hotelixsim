@@ -6,7 +6,7 @@
 
 use sha2::{Digest, Sha256};
 
-const SEALED: [(&str, &str); 3] = [
+const SEALED: [(&str, &str); 4] = [
     (
         "v1-game-log.json",
         "499aaa9852bd37ac5643075a39361dc90f22de4fe1613304d96e27edd1c3ec2f",
@@ -14,6 +14,11 @@ const SEALED: [(&str, &str); 3] = [
     (
         "v1-golden.json",
         "46bb08091529f45a55554b18e962e5d593323c831484795d36044c4a939ad70d",
+    ),
+    // Obnova v2, O-5: mentor stare v1 igre (ulaz, činjenice, rezerva), napisan kodom prije obnove.
+    (
+        "v1-mentor.json",
+        "abb4e467555a325c101d9a098938a643a8c93171a8f778146a35f5fdac2c1e69",
     ),
     (
         "v1-snapshot.json",

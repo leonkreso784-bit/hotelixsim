@@ -20,6 +20,7 @@ use crate::dto::{MonthReportDto, PlanDto};
 use crate::dto_v2::DetailDto;
 use crate::error::{GameError, corrupt};
 use crate::event::{HotelResolution, RoundDefDto};
+use crate::renewal::renewal_choices;
 use crate::round::RoundKey;
 
 /// Kojim se modelom igra računa (iz snimka pravila u `GameCreated`).
@@ -306,6 +307,34 @@ impl Model {
         }
     }
 
+    /// Plan za obračun: v2 razinu cijene svakog odjela stisne u granice kruga (istim izrazom kao `carry_into`), da plan
+    /// poslan prije promjene granica (O-P: odjeli bez prihoda po gostu 100–100) ne zaglavi obračun runde. Valjan plan
+    /// ostaje isti; provjera pri predaji ostaje. v1 plan se ne mijenja.
+    pub(crate) fn plan_for_resolve(
+        self,
+        p: CorePlan,
+        s: &CoreState,
+        r: &RoundInfo,
+        c: &Content,
+    ) -> Result<CorePlan, GameError> {
+        match (self, p, s) {
+            (Model::V1, p @ CorePlan::V1(_), CoreState::V1(_)) => Ok(p),
+            (Model::V2, CorePlan::V2(mut p), CoreState::V2(s)) => {
+                let limits = PeriodPlan::limits(s, &r.period, v2_catalog(c)?).map_err(debug)?;
+                for (code, d) in p.departments.iter_mut() {
+                    if let Some(dl) = limits.departments.get(code) {
+                        d.price_level_pct = d
+                            .price_level_pct
+                            .max(dl.price_level_min_pct)
+                            .min(dl.price_level_max_pct);
+                    }
+                }
+                Ok(CorePlan::V2(p))
+            }
+            _ => Err(mismatch()),
+        }
+    }
+
     /// Plan drugog modela je `WrongModel`; pravila plana daju `Plan` (v1) ili `PlanV2` (v2).
     pub(crate) fn validate_plan(
         self,
@@ -404,11 +433,13 @@ impl Model {
         }
     }
 
-    /// Tijelo zahtjeva plana (`Game::plan_from_dto`): v1 plan nema odjela, pa je tijelo s `departments`
-    /// neispravno (`GameError::PlanBody` → 422), ne tiho zanemareno.
+    /// Tijelo zahtjeva plana (`Game::plan_from_dto`): v1 plan nema odjela ni obnove zgrade, pa je tijelo s
+    /// `departments` ili `building_renewal_cents` neispravno (`GameError::PlanBody` → 422), ne tiho zanemareno.
     pub(crate) fn check_plan_body(self, d: &PlanDto) -> Result<(), GameError> {
         match self {
-            Model::V1 if !d.departments.is_empty() => Err(GameError::PlanBody),
+            Model::V1 if !d.departments.is_empty() || d.building_renewal_cents.is_some() => {
+                Err(GameError::PlanBody)
+            }
             Model::V1 | Model::V2 => Ok(()),
         }
     }
@@ -422,10 +453,12 @@ impl Model {
         }
     }
 
-    /// v2 tijelo plana bez odjela (API do Taska 15): odjeli iz važećeg plana `eff`, pa ukupni sezonci i razina
-    /// održavanja iz tijela (`PeriodPlan::with_totals`), da se studentova promjena ne izgubi. v1 tijelo je cijeli
-    /// plan. Granice provjerava `validate_plan` pri spremanju.
-    pub(crate) fn plan_from_dto_without_departments(
+    /// v2 tijelo zahtjeva dopunjeno važećim planom `eff`: bez `departments` (API do Taska 15) odjeli dolaze iz `eff`,
+    /// a ukupni sezonci i razina održavanja iz tijela (`PeriodPlan::with_totals`), da se studentova promjena ne
+    /// izgubi; iznos obnove odjela ili zgrade koji tijelo ne navodi (`None`) je iznos iz `eff` (obnova-v2-spec §4.4:
+    /// zaključana obnova ostaje bez da je klijent ponovno šalje). v1 tijelo je cijeli plan. Granice provjerava
+    /// `validate_plan` pri spremanju.
+    pub(crate) fn plan_from_request(
         self,
         d: &PlanDto,
         eff: &CorePlan,
@@ -436,30 +469,46 @@ impl Model {
         match (self, eff, s) {
             (Model::V1, _, _) => self.plan_from_dto(d),
             (Model::V2, CorePlan::V2(eff), CoreState::V2(s)) => {
+                let kept = PlanDto::from(eff);
                 let mut full = d.clone();
-                full.departments = PlanDto::from(eff).departments;
-                let plan = PeriodPlan::try_from(&full)?;
-                Ok(CorePlan::V2(
-                    plan.with_totals(
-                        s,
-                        &r.period,
-                        v2_catalog(c)?,
-                        d.seasonal_target,
-                        d.maintenance.into(),
-                    )
-                    .map_err(debug)?,
-                ))
+                full.building_renewal_cents =
+                    d.building_renewal_cents.or(kept.building_renewal_cents);
+                if d.departments.is_empty() {
+                    full.departments = kept.departments;
+                    let plan = PeriodPlan::try_from(&full)?;
+                    return Ok(CorePlan::V2(
+                        plan.with_totals(
+                            s,
+                            &r.period,
+                            v2_catalog(c)?,
+                            d.seasonal_target,
+                            d.maintenance.into(),
+                        )
+                        .map_err(debug)?,
+                    ));
+                }
+                for (code, dept) in &mut full.departments {
+                    if dept.renewal_cents.is_none() {
+                        dept.renewal_cents =
+                            kept.departments.get(code).and_then(|k| k.renewal_cents);
+                    }
+                }
+                Ok(CorePlan::V2(PeriodPlan::try_from(&full)?))
             }
             _ => Err(mismatch()),
         }
     }
 
-    /// Treba li tijelu plana dopuniti postavke odjela iz važećeg plana (v2 zahtjev bez `departments`; do Taska 15
-    /// `PlanBody` ih nema). v1 plan nema odjela.
-    pub(crate) fn needs_departments(self, d: &PlanDto) -> bool {
+    /// Treba li tijelu plana važeći plan: v2 tijelo bez `departments` (do Taska 15 `PlanBody` ih nema) ili bez
+    /// iznosa obnove odjela ili zgrade (`None` = zadrži). v1 plan nema ni odjela ni obnove v2.
+    pub(crate) fn needs_effective_plan(self, d: &PlanDto) -> bool {
         match self {
             Model::V1 => false,
-            Model::V2 => d.departments.is_empty(),
+            Model::V2 => {
+                d.departments.is_empty()
+                    || d.building_renewal_cents.is_none()
+                    || d.departments.values().any(|x| x.renewal_cents.is_none())
+            }
         }
     }
 
@@ -475,7 +524,9 @@ impl Model {
             (Model::V2, CoreState::V2(s)) => {
                 let cat = v2_catalog(c)?;
                 let l = PeriodPlan::limits(s, &r.period, cat).map_err(debug)?;
-                let (costs, dept_costs) = v2_costs(s, &r.period, cat)?;
+                let (mut costs, dept_costs) = v2_costs(s, &r.period, cat)?;
+                let (building, mut dept_renewals) = renewal_choices(s, &l, cat)?;
+                costs.building_renewal = building;
                 Ok(PlanLimits {
                     price_min_cents: l.price_min_cents,
                     price_max_cents: l.price_max_cents,
@@ -504,6 +555,7 @@ impl Model {
                                     can_close: d.can_close,
                                     maintenance: own.maintenance,
                                     seasonal_worker_cents: own.seasonal_worker_cents,
+                                    renewal: dept_renewals.remove(code.as_str()),
                                 },
                             ))
                         })

@@ -43,6 +43,9 @@ fn dept(
         satisfaction_after_pts: 0,
         guest_weight: 0,
         departures: 0,
+        renewal_cents: 0,
+        renewal_pts: 0,
+        felt_condition_pts: 0,
     };
     (code, outcome)
 }
@@ -150,5 +153,8 @@ pub fn june_accounts() -> PeriodAccounts {
         .collect(),
         interest_cents: 300_000,
         capex_cents: 1_000_000,
+        building: BuildingOutcome::default(),
+        depreciation_equipment_cents: 0,
+        depreciation_building_cents: 0,
     }
 }

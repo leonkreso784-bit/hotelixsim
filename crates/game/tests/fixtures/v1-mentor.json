@@ -1,0 +1,3818 @@
+[
+  {
+    "round": "jun",
+    "hotel": "Tvoj hotel",
+    "input": {
+      "cash_end_cents": 13684500,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jun"
+      ],
+      "hotel_name": "Tvoj hotel",
+      "indices_after": [
+        5932,
+        7179,
+        3580,
+        5936,
+        3455
+      ],
+      "indices_before": [
+        6000,
+        7500,
+        2975,
+        4975,
+        3498
+      ],
+      "last_date": [
+        30,
+        "jun"
+      ],
+      "lines": [
+        {
+          "amount": 2592,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": 378,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 36315000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 10894500,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 12320000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 450000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 5918000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1500000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 17000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 9984500,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 3,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 450,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -268,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": 400,
+          "cause": "maintenance",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -392,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -10,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 37000,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 200,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "points",
+          "var": "satisfaction"
+        }
+      ],
+      "load_after_hundredths": 160,
+      "load_before_hundredths": 220,
+      "next_round": "jul",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 0,
+        "price_cents": 13500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      },
+      "plan_before": null,
+      "prev_round": null,
+      "price_ref_cents": 13500,
+      "progress_hundredths": 422,
+      "round": "jun",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": null,
+          "code": "S1",
+          "free_text": true,
+          "neutral": false,
+          "quality": 4,
+          "rationale": "obrazloženje",
+          "title": "Klima u sobi obitelji s djecom",
+          "unanswered": false
+        },
+        {
+          "chosen_label": "Prihvatiti uz 15 % popusta i depozit",
+          "code": "S3",
+          "free_text": false,
+          "neutral": false,
+          "quality": 3,
+          "rationale": null,
+          "title": "Agencija nudi grupu od 25 soba za 7 noći",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 533,
+      "turnover_before_bp": 600,
+      "wage_before_pct": 100,
+      "wage_ever_changed": false,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "136.845 €",
+      "hotel": "Tvoj hotel",
+      "iduci_mjesec": "u srpnju",
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 59,
+          "prije": 60,
+          "promjena": -1,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                },
+                {
+                  "iznos": "+2 boda",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 72,
+          "prije": 75,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,10 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 36,
+          "prije": 30,
+          "promjena": 6,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "+5 bodova",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "5,33 %, manje nego na početku igre",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "6 %",
+                  "uzrok": "udio osoblja koje daje otkaz na početku igre"
+                },
+                {
+                  "iznos": "otišle 3 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 59,
+          "prije": 50,
+          "promjena": 9,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "održavanje"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "1,6 noćenja po zaposlenom na dan, u redu",
+                  "uzrok": "opterećenje u ovom mjesecu"
+                },
+                {
+                  "iznos": "2,2 noćenja po zaposlenom na dan",
+                  "uzrok": "opterećenje na početku igre"
+                }
+              ],
+              "sto": "Opterećenje osoblja",
+              "znacenje": "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 35,
+          "prije": 35,
+          "promjena": 0,
+          "smjer": "isti",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.592 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "+3,8 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "363.150 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "108.945 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "123.200 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "4.500 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "59.180 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "15.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "170.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "370 €",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+99.845 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u lipnju",
+      "napredak_od_pocetka": "+4 boda",
+      "odluke_u_planu": {
+        "cijena_sobe": "135 € po noći, kao uobičajena cijena za ovaj mjesec",
+        "marketing": "bez marketinga",
+        "obnova": "ne",
+        "obuka": "bez obuke",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "redovno",
+        "place": "100 % uobičajene plaće",
+        "sezonski_radnici": "28 sezonskih radnika, isto kao na početku igre"
+      },
+      "situacije": [
+        {
+          "naslov": "Klima u sobi obitelji s djecom",
+          "obrazlozenje": "obrazloženje",
+          "ocjena": "4/5",
+          "ocjena_rijecima": "dobro",
+          "odabrani_odgovor": "vlastiti odgovor, napisan svojim riječima",
+          "slobodan_odgovor": true
+        },
+        {
+          "naslov": "Agencija nudi grupu od 25 soba za 7 noći",
+          "ocjena": "3/5",
+          "ocjena_rijecima": "srednje",
+          "odabrani_odgovor": "Prihvatiti uz 15 % popusta i depozit",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U lipnju je napredak tvog hotela od početka igre +4 boda.\n\nŠto je išlo dobro\nIndeks Operativa porastao je s 50 na 59. Indeks Zaposlenici porastao je s 30 na 36. Situacija „Klima u sobi obitelji s djecom“ riješena je dobro (4/5).\n\nŠto nije valjalo\nIndeks Recenzije pao je s 75 na 72. Indeks Zadovoljstvo gostiju pao je s 60 na 59.\n\nZašto\nIndeks Recenzije pao je ponajviše zbog nižeg zadovoljstva gostiju: nezadovoljni gosti pišu slabije recenzije. Indeks Zadovoljstvo gostiju pao je ponajviše zbog slabije usluge, opreme ili cijene: gost to osjeti kad je tim umoran ili neiskusan, sobe istrošene ili cijena previsoka za ono što dobije.\n\nŠto probati u srpnju\nOcjena na portalima prati zadovoljstvo gostiju; odgovori na recenzije pomažu, ali najviše pomaže gost koji ode zadovoljan.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jun",
+    "hotel": "Štediša",
+    "input": {
+      "cash_end_cents": 43102200,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jun"
+      ],
+      "hotel_name": "Štediša",
+      "indices_after": [
+        4497,
+        4822,
+        4471,
+        4771,
+        6285
+      ],
+      "indices_before": [
+        5000,
+        5000,
+        5000,
+        5000,
+        5000
+      ],
+      "last_date": [
+        30,
+        "jun"
+      ],
+      "lines": [
+        {
+          "amount": 2592,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": 34992000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 10497600,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 11077000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 5702400,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 15000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 13102200,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": -5,
+          "cause": "release",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 2,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": -390,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -1000,
+          "cause": "wage",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -300,
+          "cause": "release",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -151,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -227,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -6,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 8000,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": -100,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -400,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "points",
+          "var": "satisfaction"
+        }
+      ],
+      "load_after_hundredths": 163,
+      "load_before_hundredths": 173,
+      "next_round": "jul",
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 13500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 23,
+        "training": "none",
+        "wage_pct": 95
+      },
+      "plan_before": null,
+      "prev_round": null,
+      "price_ref_cents": 13500,
+      "progress_hundredths": -62,
+      "round": "jun",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+          "code": "S1",
+          "free_text": false,
+          "neutral": false,
+          "quality": 1,
+          "rationale": null,
+          "title": "Klima u sobi obitelji s djecom",
+          "unanswered": false
+        },
+        {
+          "chosen_label": "Prihvatiti ponudu kako je",
+          "code": "S3",
+          "free_text": false,
+          "neutral": false,
+          "quality": 1,
+          "rationale": null,
+          "title": "Agencija nudi grupu od 25 soba za 7 noći",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 434,
+      "turnover_before_bp": 375,
+      "wage_before_pct": 100,
+      "wage_ever_changed": false,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "431.022 €",
+      "hotel": "Štediša",
+      "iduci_mjesec": "u srpnju",
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 45,
+          "prije": 50,
+          "promjena": -5,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−2 boda",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                },
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 48,
+          "prije": 50,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,06 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 45,
+          "prije": 50,
+          "promjena": -5,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "−10 bodova",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "otpuštanje"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "4,34 %, više nego na početku igre",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "3,75 %",
+                  "uzrok": "udio osoblja koje daje otkaz na početku igre"
+                },
+                {
+                  "iznos": "otpušteno 5 osoba",
+                  "uzrok": "otpuštanje"
+                },
+                {
+                  "iznos": "otišle 2 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 48,
+          "prije": 50,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−2 boda",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 63,
+          "prije": 50,
+          "promjena": 13,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.592 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "349.920 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "104.976 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "110.770 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "57.024 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "150.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "80 €",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+131.022 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u lipnju",
+      "napredak_od_pocetka": "−1 bod",
+      "odluke_u_planu": {
+        "cijena_sobe": "135 € po noći, kao uobičajena cijena za ovaj mjesec",
+        "marketing": "bez marketinga",
+        "obnova": "ne",
+        "obuka": "bez obuke",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "odgođeno (oprema se ovaj mjesec nije popravljala)",
+        "place": "95 % uobičajene plaće (niže od uobičajenih; student ih je spustio sa 100 % na 95 %)",
+        "sezonski_radnici": "23 sezonska radnika, manje nego na početku igre"
+      },
+      "situacije": [
+        {
+          "naslov": "Klima u sobi obitelji s djecom",
+          "ocjena": "1/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+          "slobodan_odgovor": false
+        },
+        {
+          "naslov": "Agencija nudi grupu od 25 soba za 7 noći",
+          "ocjena": "1/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Prihvatiti ponudu kako je",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U lipnju je napredak tvog hotela od početka igre −1 bod.\n\nŠto je išlo dobro\nIndeks Financije porastao je s 50 na 63.\n\nŠto nije valjalo\nIndeks Zadovoljstvo gostiju pao je s 50 na 45. Indeks Zaposlenici pao je s 50 na 45. Situacija „Klima u sobi obitelji s djecom“ riješena je loše (1/5): izabran je odgovor „Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne“. Situacija „Agencija nudi grupu od 25 soba za 7 noći“ riješena je loše (1/5): izabran je odgovor „Prihvatiti ponudu kako je“.\n\nZašto\nIndeks Zadovoljstvo gostiju pao je ponajviše zbog rješenja situacije „Klima u sobi obitelji s djecom“. Indeks Zaposlenici pao je ponajviše zbog nižih plaća, pa je tim slabije raspoložen i lakše odlazi.\n\nŠto probati u srpnju\nGledaj boravak očima gosta: cijena treba odgovarati onome što dobije, a uredne sobe i odmoran tim najbrže podižu zadovoljstvo.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jun",
+    "hotel": "Brižni",
+    "input": {
+      "cash_end_cents": 16331700,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jun"
+      ],
+      "hotel_name": "Brižni",
+      "indices_after": [
+        6008,
+        7215,
+        3580,
+        5727,
+        4523
+      ],
+      "indices_before": [
+        6000,
+        7500,
+        2975,
+        4975,
+        3498
+      ],
+      "last_date": [
+        30,
+        "jun"
+      ],
+      "lines": [
+        {
+          "amount": 2592,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": -415,
+          "cause": "price",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 378,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 375,
+          "cause": "marketing",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 37985000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 11395500,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 10876800,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 450000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 500000,
+          "cause": "training",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 5885000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1500000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 500000,
+          "cause": "marketing",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 17000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 12631700,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": -8,
+          "cause": "release",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 3,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 450,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 600,
+          "cause": "wage",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -300,
+          "cause": "load",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -300,
+          "cause": "release",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -312,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -100,
+          "cause": "load",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": 400,
+          "cause": "maintenance",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -516,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -9,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 37000,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 400,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "points",
+          "var": "satisfaction"
+        }
+      ],
+      "load_after_hundredths": 186,
+      "load_before_hundredths": 220,
+      "next_round": "jul",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 500000,
+        "price_cents": 14200,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 20,
+        "training": "basic",
+        "wage_pct": 103
+      },
+      "plan_before": null,
+      "prev_round": null,
+      "price_ref_cents": 13500,
+      "progress_hundredths": 715,
+      "round": "jun",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+          "code": "S1",
+          "free_text": false,
+          "neutral": false,
+          "quality": 5,
+          "rationale": null,
+          "title": "Klima u sobi obitelji s djecom",
+          "unanswered": false
+        },
+        {
+          "chosen_label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+          "code": "S3",
+          "free_text": false,
+          "neutral": false,
+          "quality": 5,
+          "rationale": null,
+          "title": "Agencija nudi grupu od 25 soba za 7 noći",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 533,
+      "turnover_before_bp": 600,
+      "wage_before_pct": 100,
+      "wage_ever_changed": false,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "163.317 €",
+      "hotel": "Brižni",
+      "iduci_mjesec": "u srpnju",
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 60,
+          "prije": 60,
+          "promjena": 0,
+          "smjer": "isti",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−5 bodova",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 72,
+          "prije": 75,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,09 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 36,
+          "prije": 30,
+          "promjena": 6,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "+5 bodova",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "+6 bodova",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "otpuštanje"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "5,33 %, manje nego na početku igre",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "6 %",
+                  "uzrok": "udio osoblja koje daje otkaz na početku igre"
+                },
+                {
+                  "iznos": "otpušteno 8 osoba",
+                  "uzrok": "otpuštanje"
+                },
+                {
+                  "iznos": "otišle 3 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 57,
+          "prije": 50,
+          "promjena": 7,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "održavanje"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "1,86 noćenja po zaposlenom na dan, osoblje je preopterećeno",
+                  "uzrok": "opterećenje u ovom mjesecu"
+                },
+                {
+                  "iznos": "2,2 noćenja po zaposlenom na dan",
+                  "uzrok": "opterećenje na početku igre"
+                }
+              ],
+              "sto": "Opterećenje osoblja",
+              "znacenje": "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 45,
+          "prije": 35,
+          "promjena": 10,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.592 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "−4,2 % potražnje",
+                  "uzrok": "cijena"
+                },
+                {
+                  "iznos": "+3,8 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                },
+                {
+                  "iznos": "+3,8 % potražnje",
+                  "uzrok": "marketing"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "379.850 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "113.955 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "108.768 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "4.500 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "5.000 €",
+                  "uzrok": "obuka"
+                },
+                {
+                  "iznos": "58.850 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "15.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "5.000 €",
+                  "uzrok": "marketing"
+                },
+                {
+                  "iznos": "170.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "370 €",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+126.317 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u lipnju",
+      "napredak_od_pocetka": "+7 bodova",
+      "odluke_u_planu": {
+        "cijena_sobe": "142 € po noći, 5 % iznad uobičajene cijene za ovaj mjesec",
+        "marketing": "5.000 €",
+        "obnova": "ne",
+        "obuka": "osnovna obuka (učinak stiže idući mjesec)",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "redovno",
+        "place": "103 % uobičajene plaće (više od uobičajenih; student ih je podigao sa 100 % na 103 %)",
+        "sezonski_radnici": "20 sezonskih radnika, manje nego na početku igre"
+      },
+      "situacije": [
+        {
+          "naslov": "Klima u sobi obitelji s djecom",
+          "ocjena": "5/5",
+          "ocjena_rijecima": "dobro",
+          "odabrani_odgovor": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+          "slobodan_odgovor": false
+        },
+        {
+          "naslov": "Agencija nudi grupu od 25 soba za 7 noći",
+          "ocjena": "5/5",
+          "ocjena_rijecima": "dobro",
+          "odabrani_odgovor": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U lipnju je napredak tvog hotela od početka igre +7 bodova.\n\nŠto je išlo dobro\nIndeks Financije porastao je s 35 na 45. Indeks Operativa porastao je s 50 na 57. Situacija „Klima u sobi obitelji s djecom“ riješena je dobro (5/5). Situacija „Agencija nudi grupu od 25 soba za 7 noći“ riješena je dobro (5/5).\n\nŠto nije valjalo\nIndeks Recenzije pao je s 75 na 72.\n\nZašto\nIndeks Recenzije pao je ponajviše zbog nižeg zadovoljstva gostiju: nezadovoljni gosti pišu slabije recenzije.\n\nŠto probati u srpnju\nOcjena na portalima prati zadovoljstvo gostiju; odgovori na recenzije pomažu, ali najviše pomaže gost koji ode zadovoljan.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jun",
+    "hotel": "Lovac na popunjenost",
+    "input": {
+      "cash_end_cents": 76218250,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jun"
+      ],
+      "hotel_name": "Lovac na popunjenost",
+      "indices_after": [
+        4551,
+        3750,
+        5181,
+        3784,
+        6446
+      ],
+      "indices_before": [
+        4500,
+        3571,
+        5405,
+        3950,
+        7498
+      ],
+      "last_date": [
+        30,
+        "jun"
+      ],
+      "lines": [
+        {
+          "amount": 2592,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": 1185,
+          "cause": "price",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": -216,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 938,
+          "cause": "marketing",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 35684500,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 10705350,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 12320000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 6826600,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1500000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 2500000,
+          "cause": "marketing",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 14500000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 8418250,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 2,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": -165,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -250,
+          "cause": "load",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -125,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -100,
+          "cause": "load",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": 400,
+          "cause": "maintenance",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -73,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": 4,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 25000,
+          "cause": {
+            "situation": "S1"
+          },
+          "unit": "cents",
+          "var": "costs"
+        }
+      ],
+      "load_after_hundredths": 185,
+      "load_before_hundredths": 173,
+      "next_round": "jul",
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 2500000,
+        "price_cents": 11500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      },
+      "plan_before": null,
+      "prev_round": null,
+      "price_ref_cents": 13500,
+      "progress_hundredths": -373,
+      "round": "jun",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": "Ispričati se, premjestiti obitelj i poslati tehničara",
+          "code": "S1",
+          "free_text": false,
+          "neutral": false,
+          "quality": 3,
+          "rationale": null,
+          "title": "Klima u sobi obitelji s djecom",
+          "unanswered": false
+        },
+        {
+          "chosen_label": "Prihvatiti ponudu kako je",
+          "code": "S3",
+          "free_text": false,
+          "neutral": false,
+          "quality": 1,
+          "rationale": null,
+          "title": "Agencija nudi grupu od 25 soba za 7 noći",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 355,
+      "turnover_before_bp": 330,
+      "wage_before_pct": 95,
+      "wage_ever_changed": false,
+      "wage_start_pct": 95
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "762.183 €",
+      "hotel": "Lovac na popunjenost",
+      "iduci_mjesec": "u srpnju",
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 46,
+          "prije": 45,
+          "promjena": 1,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 38,
+          "prije": 36,
+          "promjena": 2,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "+0,04 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 52,
+          "prije": 54,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−2 boda",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "opterećenje osoblja"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "3,55 %, više nego na početku igre",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "3,3 %",
+                  "uzrok": "udio osoblja koje daje otkaz na početku igre"
+                },
+                {
+                  "iznos": "otišle 2 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 38,
+          "prije": 40,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "održavanje"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "1,85 noćenja po zaposlenom na dan, osoblje je preopterećeno",
+                  "uzrok": "opterećenje u ovom mjesecu"
+                },
+                {
+                  "iznos": "1,73 noćenja po zaposlenom na dan",
+                  "uzrok": "opterećenje na početku igre"
+                }
+              ],
+              "sto": "Opterećenje osoblja",
+              "znacenje": "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 64,
+          "prije": 75,
+          "promjena": -11,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.592 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "+11,9 % potražnje",
+                  "uzrok": "cijena"
+                },
+                {
+                  "iznos": "−2,2 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                },
+                {
+                  "iznos": "+9,4 % potražnje",
+                  "uzrok": "marketing"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "356.845 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "107.054 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "123.200 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "68.266 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "15.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "25.000 €",
+                  "uzrok": "marketing"
+                },
+                {
+                  "iznos": "145.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "250 €",
+                  "uzrok": "situacija „Klima u sobi obitelji s djecom“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+84.183 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u lipnju",
+      "napredak_od_pocetka": "−4 boda",
+      "odluke_u_planu": {
+        "cijena_sobe": "115 € po noći, 15 % ispod uobičajene cijene za ovaj mjesec",
+        "marketing": "25.000 €",
+        "obnova": "ne",
+        "obuka": "bez obuke",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "redovno",
+        "place": "100 % uobičajene plaće (student ih je podigao sa 95 % na 100 %)",
+        "sezonski_radnici": "28 sezonskih radnika, isto kao na početku igre"
+      },
+      "situacije": [
+        {
+          "naslov": "Klima u sobi obitelji s djecom",
+          "ocjena": "3/5",
+          "ocjena_rijecima": "srednje",
+          "odabrani_odgovor": "Ispričati se, premjestiti obitelj i poslati tehničara",
+          "slobodan_odgovor": false
+        },
+        {
+          "naslov": "Agencija nudi grupu od 25 soba za 7 noći",
+          "ocjena": "1/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Prihvatiti ponudu kako je",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U lipnju je napredak tvog hotela od početka igre −4 boda.\n\nŠto je išlo dobro\nIndeks Recenzije porastao je s 36 na 38. Indeks Zadovoljstvo gostiju porastao je s 45 na 46.\n\nŠto nije valjalo\nIndeks Financije pao je s 75 na 64. Indeks Zaposlenici pao je s 54 na 52. Situacija „Agencija nudi grupu od 25 soba za 7 noći“ riješena je loše (1/5): izabran je odgovor „Prihvatiti ponudu kako je“.\n\nZašto\nIndeks Financije pao je ponajviše zbog slabijeg ugleda na portalima, pa je prodano manje noćenja. Indeks Zaposlenici pao je ponajviše zbog prevelikog opterećenja osoblja, pa je tim slabije raspoložen i lakše odlazi.\n\nŠto probati u srpnju\nPrije svakog troška pitaj se što će vratiti i provjeri odgovara li cijena sobe onome što gosti dobivaju.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jul",
+    "hotel": "Tvoj hotel",
+    "input": {
+      "cash_end_cents": 39449500,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jul"
+      ],
+      "hotel_name": "Tvoj hotel",
+      "indices_after": [
+        5614,
+        6857,
+        3480,
+        5693,
+        3956
+      ],
+      "indices_before": [
+        5932,
+        7179,
+        3580,
+        5936,
+        3455
+      ],
+      "last_date": [
+        31,
+        "jul"
+      ],
+      "lines": [
+        {
+          "amount": 2902,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": 324,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 49434000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 14830200,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 12958000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1350000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 6591200,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 17000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 25765000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 6,
+          "cause": "hires",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 3,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": -75,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -1000,
+          "cause": "wage",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -730,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -11,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 300000,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": -300,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "points",
+          "var": "morale"
+        }
+      ],
+      "load_after_hundredths": 156,
+      "load_before_hundredths": 160,
+      "next_round": null,
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 16500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 34,
+        "training": "none",
+        "wage_pct": 95
+      },
+      "plan_before": {
+        "maintenance": "regular",
+        "marketing_cents": 0,
+        "price_cents": 13500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      },
+      "prev_round": "jun",
+      "price_ref_cents": 16500,
+      "progress_hundredths": 270,
+      "round": "jul",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": "Bonus na kraju sezone ako ostane, bez razgovora",
+          "code": "S2",
+          "free_text": false,
+          "neutral": false,
+          "quality": 2,
+          "rationale": null,
+          "title": "Šef kuhinje traži povišicu ili odlazi",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 544,
+      "turnover_before_bp": 533,
+      "wage_before_pct": 100,
+      "wage_ever_changed": false,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "394.495 €",
+      "hotel": "Tvoj hotel",
+      "iduci_mjesec": null,
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 56,
+          "prije": 59,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 69,
+          "prije": 72,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,11 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 35,
+          "prije": 36,
+          "promjena": -1,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "−10 bodova",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "5,44 %, više nego prošli mjesec",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "5,33 %",
+                  "uzrok": "udio osoblja koje je dalo otkaz prošli mjesec"
+                },
+                {
+                  "iznos": "zaposleno 6 osoba",
+                  "uzrok": "zapošljavanje"
+                },
+                {
+                  "iznos": "otišle 3 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 57,
+          "prije": 59,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−7 bodova",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 40,
+          "prije": 35,
+          "promjena": 5,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.902 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "+3,2 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "494.340 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "148.302 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "129.580 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "13.500 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "65.912 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "170.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+257.650 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u srpnju",
+      "napredak_od_pocetka": "+3 boda",
+      "odluke_u_planu": {
+        "cijena_sobe": "165 € po noći, kao uobičajena cijena za ovaj mjesec",
+        "marketing": "bez marketinga",
+        "obnova": "ne",
+        "obuka": "bez obuke, isto kao prošli mjesec",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "odgođeno (oprema se ovaj mjesec nije popravljala), promijenjeno u odnosu na prošli mjesec",
+        "place": "95 % uobičajene plaće (niže od uobičajenih; student ih je spustio sa 100 % na 95 %)",
+        "sezonski_radnici": "34 sezonska radnika, više nego prošli mjesec"
+      },
+      "situacije": [
+        {
+          "naslov": "Šef kuhinje traži povišicu ili odlazi",
+          "ocjena": "2/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Bonus na kraju sezone ako ostane, bez razgovora",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U srpnju je napredak tvog hotela od početka igre +3 boda.\n\nŠto je išlo dobro\nIndeks Financije porastao je s 35 na 40.\n\nŠto nije valjalo\nIndeks Zadovoljstvo gostiju pao je s 59 na 56. Indeks Recenzije pao je s 72 na 69. Situacija „Šef kuhinje traži povišicu ili odlazi“ riješena je loše (2/5): izabran je odgovor „Bonus na kraju sezone ako ostane, bez razgovora“.\n\nZašto\nIndeks Zadovoljstvo gostiju pao je ponajviše zbog slabije usluge, opreme ili cijene: gost to osjeti kad je tim umoran ili neiskusan, sobe istrošene ili cijena previsoka za ono što dobije. Indeks Recenzije pao je ponajviše zbog nižeg zadovoljstva gostiju: nezadovoljni gosti pišu slabije recenzije.\n\nŠto probati sljedeći put\nGledaj boravak očima gosta: cijena treba odgovarati onome što dobije, a uredne sobe i odmoran tim najbrže podižu zadovoljstvo.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jul",
+    "hotel": "Štediša",
+    "input": {
+      "cash_end_cents": 69792200,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jul"
+      ],
+      "hotel_name": "Štediša",
+      "indices_after": [
+        4551,
+        4714,
+        3983,
+        4557,
+        5851
+      ],
+      "indices_before": [
+        4497,
+        4822,
+        4471,
+        4771,
+        6285
+      ],
+      "last_date": [
+        31,
+        "jul"
+      ],
+      "lines": [
+        {
+          "amount": 2902,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": -32,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 47718000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 14315400,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 12331000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1350000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 6362400,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 15000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 26690000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 6,
+          "cause": "hires",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 3,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": -363,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -1000,
+          "cause": "wage",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -633,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -28,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -5,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": -600,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "points",
+          "var": "morale"
+        }
+      ],
+      "load_after_hundredths": 158,
+      "load_before_hundredths": 163,
+      "next_round": null,
+      "plan": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 16500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 29,
+        "training": "none",
+        "wage_pct": 95
+      },
+      "plan_before": {
+        "maintenance": "deferred",
+        "marketing_cents": 0,
+        "price_cents": 13500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 23,
+        "training": "none",
+        "wage_pct": 95
+      },
+      "prev_round": "jun",
+      "price_ref_cents": 16500,
+      "progress_hundredths": -538,
+      "round": "jul",
+      "round_kind": "month",
+      "seasonal_before": 23,
+      "situations": [
+        {
+          "chosen_label": "Odbiti: „nitko nije nezamjenjiv\"",
+          "code": "S2",
+          "free_text": false,
+          "neutral": false,
+          "quality": 1,
+          "rationale": null,
+          "title": "Šef kuhinje traži povišicu ili odlazi",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 488,
+      "turnover_before_bp": 434,
+      "wage_before_pct": 95,
+      "wage_ever_changed": true,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "697.922 €",
+      "hotel": "Štediša",
+      "iduci_mjesec": null,
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 46,
+          "prije": 45,
+          "promjena": 1,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": []
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 47,
+          "prije": 48,
+          "promjena": -1,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,05 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 40,
+          "prije": 45,
+          "promjena": -5,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "−10 bodova",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "−6 bodova",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "4,88 %, više nego prošli mjesec",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "4,34 %",
+                  "uzrok": "udio osoblja koje je dalo otkaz prošli mjesec"
+                },
+                {
+                  "iznos": "zaposleno 6 osoba",
+                  "uzrok": "zapošljavanje"
+                },
+                {
+                  "iznos": "otišle 3 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 46,
+          "prije": 48,
+          "promjena": -2,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−6 bodova",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 59,
+          "prije": 63,
+          "promjena": -4,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.902 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "−0,3 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "477.180 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "143.154 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "123.310 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "13.500 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "63.624 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "150.000 €",
+                  "uzrok": "fiksni troškovi"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+266.900 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u srpnju",
+      "napredak_od_pocetka": "−5 bodova",
+      "odluke_u_planu": {
+        "cijena_sobe": "165 € po noći, kao uobičajena cijena za ovaj mjesec",
+        "marketing": "bez marketinga",
+        "obnova": "ne",
+        "obuka": "bez obuke, isto kao prošli mjesec",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "odgođeno (oprema se ovaj mjesec nije popravljala), isto kao prošli mjesec",
+        "place": "95 % uobičajene plaće (niže od uobičajenih; student ih je ranije promijenio sa 100 % na 95 %, a prošli mjesec ih nije mijenjao)",
+        "sezonski_radnici": "29 sezonskih radnika, više nego prošli mjesec"
+      },
+      "situacije": [
+        {
+          "naslov": "Šef kuhinje traži povišicu ili odlazi",
+          "ocjena": "1/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Odbiti: „nitko nije nezamjenjiv\"",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U srpnju je napredak tvog hotela od početka igre −5 bodova.\n\nŠto je išlo dobro\nIndeks Zadovoljstvo gostiju porastao je s 45 na 46.\n\nŠto nije valjalo\nIndeks Zaposlenici pao je s 45 na 40. Indeks Financije pao je s 63 na 59. Situacija „Šef kuhinje traži povišicu ili odlazi“ riješena je loše (1/5): izabran je odgovor „Odbiti: „nitko nije nezamjenjiv\"“.\n\nZašto\nIndeks Zaposlenici pao je ponajviše zbog nižih plaća, pa je tim slabije raspoložen i lakše odlazi. Indeks Financije pao je ponajviše zbog slabijeg ugleda na portalima, pa je prodano manje noćenja.\n\nŠto probati sljedeći put\nRazgovaraj s ljudima prije nego problem naraste: poštena plaća, razumno opterećenje i obuka drže tim na okupu.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jul",
+    "hotel": "Brižni",
+    "input": {
+      "cash_end_cents": 44577710,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jul"
+      ],
+      "hotel_name": "Brižni",
+      "indices_after": [
+        5683,
+        6893,
+        4471,
+        5811,
+        4641
+      ],
+      "indices_before": [
+        6008,
+        7215,
+        3580,
+        5727,
+        4523
+      ],
+      "last_date": [
+        31,
+        "jul"
+      ],
+      "lines": [
+        {
+          "amount": 2902,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": -388,
+          "cause": "price",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 329,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 375,
+          "cause": "marketing",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 51709700,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 15512910,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 11783200,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 900000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 500000,
+          "cause": "training",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 6575800,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1500000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 500000,
+          "cause": "marketing",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 17000000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 28246010,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 4,
+          "cause": "hires",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 2,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": 660,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 600,
+          "cause": "wage",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -250,
+          "cause": "load",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 200,
+          "cause": "training",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -576,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": 400,
+          "cause": "training",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -100,
+          "cause": "load",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": 400,
+          "cause": "maintenance",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -407,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": -11,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 200000,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 17600,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 600,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "points",
+          "var": "morale"
+        }
+      ],
+      "load_after_hundredths": 185,
+      "load_before_hundredths": 186,
+      "next_round": null,
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 500000,
+        "price_cents": 17300,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 24,
+        "training": "basic",
+        "wage_pct": 103
+      },
+      "plan_before": {
+        "maintenance": "regular",
+        "marketing_cents": 500000,
+        "price_cents": 14200,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 20,
+        "training": "basic",
+        "wage_pct": 103
+      },
+      "prev_round": "jun",
+      "price_ref_cents": 16500,
+      "progress_hundredths": 843,
+      "round": "jul",
+      "round_kind": "month",
+      "seasonal_before": 20,
+      "situations": [
+        {
+          "chosen_label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+          "code": "S2",
+          "free_text": false,
+          "neutral": false,
+          "quality": 5,
+          "rationale": null,
+          "title": "Šef kuhinje traži povišicu ili odlazi",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 434,
+      "turnover_before_bp": 533,
+      "wage_before_pct": 103,
+      "wage_ever_changed": true,
+      "wage_start_pct": 100
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "445.777 €",
+      "hotel": "Brižni",
+      "iduci_mjesec": null,
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 57,
+          "prije": 60,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 69,
+          "prije": 72,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−0,11 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 45,
+          "prije": 36,
+          "promjena": 9,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "+7 bodova",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "+6 bodova",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "+2 boda",
+                  "uzrok": "obuka"
+                },
+                {
+                  "iznos": "+6 bodova",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "4,34 %, manje nego prošli mjesec",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "5,33 %",
+                  "uzrok": "udio osoblja koje je dalo otkaz prošli mjesec"
+                },
+                {
+                  "iznos": "zaposlene 4 osobe",
+                  "uzrok": "zapošljavanje"
+                },
+                {
+                  "iznos": "otišle 2 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 58,
+          "prije": 57,
+          "promjena": 1,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "održavanje"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−6 bodova",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "obuka"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "1,85 noćenja po zaposlenom na dan, osoblje je preopterećeno",
+                  "uzrok": "opterećenje u ovom mjesecu"
+                },
+                {
+                  "iznos": "1,86 noćenja po zaposlenom na dan",
+                  "uzrok": "opterećenje prošli mjesec"
+                }
+              ],
+              "sto": "Opterećenje osoblja",
+              "znacenje": "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 46,
+          "prije": 45,
+          "promjena": 1,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.902 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "−3,9 % potražnje",
+                  "uzrok": "cijena"
+                },
+                {
+                  "iznos": "+3,3 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                },
+                {
+                  "iznos": "+3,8 % potražnje",
+                  "uzrok": "marketing"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "517.097 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "155.129 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "117.832 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "9.000 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "5.000 €",
+                  "uzrok": "obuka"
+                },
+                {
+                  "iznos": "65.758 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "15.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "5.000 €",
+                  "uzrok": "marketing"
+                },
+                {
+                  "iznos": "170.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "2.176 €",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+282.460 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u srpnju",
+      "napredak_od_pocetka": "+8 bodova",
+      "odluke_u_planu": {
+        "cijena_sobe": "173 € po noći, 5 % iznad uobičajene cijene za ovaj mjesec",
+        "marketing": "5.000 €",
+        "obnova": "ne",
+        "obuka": "osnovna obuka (učinak stiže idući mjesec), isto kao prošli mjesec",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "redovno, isto kao prošli mjesec",
+        "place": "103 % uobičajene plaće (više od uobičajenih; student ih je ranije promijenio sa 100 % na 103 %, a prošli mjesec ih nije mijenjao)",
+        "sezonski_radnici": "24 sezonska radnika, više nego prošli mjesec"
+      },
+      "situacije": [
+        {
+          "naslov": "Šef kuhinje traži povišicu ili odlazi",
+          "ocjena": "5/5",
+          "ocjena_rijecima": "dobro",
+          "odabrani_odgovor": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U srpnju je napredak tvog hotela od početka igre +8 bodova.\n\nŠto je išlo dobro\nIndeks Zaposlenici porastao je s 36 na 45. Indeks Operativa porastao je s 57 na 58. Situacija „Šef kuhinje traži povišicu ili odlazi“ riješena je dobro (5/5).\n\nŠto nije valjalo\nIndeks Zadovoljstvo gostiju pao je s 60 na 57. Indeks Recenzije pao je s 72 na 69.\n\nZašto\nIndeks Zadovoljstvo gostiju pao je ponajviše zbog slabije usluge, opreme ili cijene: gost to osjeti kad je tim umoran ili neiskusan, sobe istrošene ili cijena previsoka za ono što dobije. Indeks Recenzije pao je ponajviše zbog nižeg zadovoljstva gostiju: nezadovoljni gosti pišu slabije recenzije.\n\nŠto probati sljedeći put\nGledaj boravak očima gosta: cijena treba odgovarati onome što dobije, a uredne sobe i odmoran tim najbrže podižu zadovoljstvo.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  },
+  {
+    "round": "jul",
+    "hotel": "Lovac na popunjenost",
+    "input": {
+      "cash_end_cents": 100622250,
+      "department_departures": [],
+      "first_date": [
+        1,
+        "jul"
+      ],
+      "hotel_name": "Lovac na popunjenost",
+      "indices_after": [
+        4463,
+        3893,
+        4578,
+        3455,
+        7433
+      ],
+      "indices_before": [
+        4551,
+        3750,
+        5181,
+        3784,
+        6446
+      ],
+      "last_date": [
+        31,
+        "jul"
+      ],
+      "lines": [
+        {
+          "amount": 2902,
+          "cause": "baseline",
+          "unit": "room_nights",
+          "var": "sold"
+        },
+        {
+          "amount": 1212,
+          "cause": "price",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": -194,
+          "cause": "reputation",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 938,
+          "cause": "marketing",
+          "unit": "bp",
+          "var": "sold"
+        },
+        {
+          "amount": 48846000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 14653800,
+          "cause": "other_revenue",
+          "unit": "cents",
+          "var": "revenue"
+        },
+        {
+          "amount": 12320000,
+          "cause": "wage",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 300000,
+          "cause": "hires",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 7675800,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 1500000,
+          "cause": "maintenance",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 2500000,
+          "cause": "marketing",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 14500000,
+          "cause": "fixed_costs",
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": 24404000,
+          "cause": "baseline",
+          "unit": "cents",
+          "var": "cash"
+        },
+        {
+          "amount": 2,
+          "cause": "turnover",
+          "unit": "people",
+          "var": "staff"
+        },
+        {
+          "amount": -446,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": -1050,
+          "cause": "load",
+          "unit": "points",
+          "var": "morale"
+        },
+        {
+          "amount": 300,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -131,
+          "cause": "turnover",
+          "unit": "points",
+          "var": "experience"
+        },
+        {
+          "amount": -400,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -100,
+          "cause": "load",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": 400,
+          "cause": "maintenance",
+          "unit": "points",
+          "var": "equipment"
+        },
+        {
+          "amount": -170,
+          "cause": "baseline",
+          "unit": "points",
+          "var": "satisfaction"
+        },
+        {
+          "amount": 2,
+          "cause": "baseline",
+          "unit": "rating_hundredths",
+          "var": "rating"
+        },
+        {
+          "amount": 300000,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "cents",
+          "var": "costs"
+        },
+        {
+          "amount": -300,
+          "cause": {
+            "situation": "S2"
+          },
+          "unit": "points",
+          "var": "morale"
+        }
+      ],
+      "load_after_hundredths": 201,
+      "load_before_hundredths": 185,
+      "next_round": null,
+      "plan": {
+        "maintenance": "regular",
+        "marketing_cents": 2500000,
+        "price_cents": 14000,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      },
+      "plan_before": {
+        "maintenance": "regular",
+        "marketing_cents": 2500000,
+        "price_cents": 11500,
+        "renovation": false,
+        "reply_reviews": false,
+        "seasonal_target": 28,
+        "training": "none",
+        "wage_pct": 100
+      },
+      "prev_round": "jun",
+      "price_ref_cents": 16500,
+      "progress_hundredths": -490,
+      "round": "jul",
+      "round_kind": "month",
+      "seasonal_before": 28,
+      "situations": [
+        {
+          "chosen_label": "Bonus na kraju sezone ako ostane, bez razgovora",
+          "code": "S2",
+          "free_text": false,
+          "neutral": false,
+          "quality": 2,
+          "rationale": null,
+          "title": "Šef kuhinje traži povišicu ili odlazi",
+          "unanswered": false
+        }
+      ],
+      "turnover_after_bp": 422,
+      "turnover_before_bp": 355,
+      "wage_before_pct": 100,
+      "wage_ever_changed": true,
+      "wage_start_pct": 95
+    },
+    "facts": {
+      "blagajna_na_kraju_mjeseca": "1.006.223 €",
+      "hotel": "Lovac na popunjenost",
+      "iduci_mjesec": null,
+      "indeksi": [
+        {
+          "naziv": "Zadovoljstvo gostiju",
+          "poslije": 45,
+          "prije": 46,
+          "promjena": -1,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−2 boda",
+                  "uzrok": "usluga, oprema i cijena zajedno"
+                }
+              ],
+              "sto": "Zadovoljstvo gostiju",
+              "znacenje": "Koliko su gosti zadovoljni boravkom, na ljestvici do 100 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Recenzije",
+          "poslije": 39,
+          "prije": 38,
+          "promjena": 1,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "+0,02 ocjene",
+                  "uzrok": "ocjene gostiju prema njihovu zadovoljstvu"
+                }
+              ],
+              "sto": "Ocjena na portalima",
+              "znacenje": "Prosječna ocjena hotela na portalima za rezervacije, na ljestvici do deset."
+            }
+          ]
+        },
+        {
+          "naziv": "Zaposlenici",
+          "poslije": 46,
+          "prije": 52,
+          "promjena": -6,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "ukupna promjena morala u mjesecu"
+                },
+                {
+                  "iznos": "−11 bodova",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "−3 boda",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Moral",
+              "znacenje": "Raspoloženje i volja tima, na ljestvici do 100 bodova. Moral se svaki mjesec pomakne samo dio puta prema razini koju guraju plaće, opterećenje, obuka i situacije; zato je ukupna promjena manja od zbroja tih pritisaka."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "4,22 %, više nego prošli mjesec",
+                  "uzrok": "udio osoblja koje je dalo otkaz ovaj mjesec"
+                },
+                {
+                  "iznos": "3,55 %",
+                  "uzrok": "udio osoblja koje je dalo otkaz prošli mjesec"
+                },
+                {
+                  "iznos": "otišle 2 osobe",
+                  "uzrok": "odlasci zaposlenih (zamijenjeni novima)"
+                }
+              ],
+              "sto": "Zaposleni",
+              "znacenje": "Tko je došao i tko je otišao; oni koji su dali otkaz zamijenjeni su novima, pa broj ljudi ostaje isti. Indeks Zaposlenici ne prati broj otišlih nego udio osoblja koje u mjesecu da otkaz: veći udio nego prije ruši indeks, a manji ga diže; od 8 % naviše taj je dio indeksa već na najnižem i više se ne miče. Udio raste kad moral padne ispod 60 bodova."
+            }
+          ]
+        },
+        {
+          "naziv": "Operativa",
+          "poslije": 35,
+          "prije": 38,
+          "promjena": -3,
+          "smjer": "pao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "−4 boda",
+                  "uzrok": "redovito trošenje opreme"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "opterećenje osoblja"
+                },
+                {
+                  "iznos": "+4 boda",
+                  "uzrok": "održavanje"
+                }
+              ],
+              "sto": "Oprema",
+              "znacenje": "Stanje soba i opreme, na ljestvici do 100 bodova. Svaki mjesec se troši; održavanje i obnova je vraćaju."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+3 boda",
+                  "uzrok": "iskustvo stečeno radom"
+                },
+                {
+                  "iznos": "−1 bod",
+                  "uzrok": "novi ljudi umjesto iskusnih koji su otišli"
+                }
+              ],
+              "sto": "Iskustvo",
+              "znacenje": "Koliko tim zna i može, na ljestvici do 100 bodova. Raste radom i obukom, pada kad iskusni ljudi odu."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "2,01 noćenja po zaposlenom na dan, osoblje je preopterećeno",
+                  "uzrok": "opterećenje u ovom mjesecu"
+                },
+                {
+                  "iznos": "1,85 noćenja po zaposlenom na dan",
+                  "uzrok": "opterećenje prošli mjesec"
+                }
+              ],
+              "sto": "Opterećenje osoblja",
+              "znacenje": "Koliko posla pada na jednog zaposlenog: prodana noćenja po zaposlenom na dan. Do 1,8 noćenja je u redu; iznad toga osoblje je preopterećeno, pa trpe usluga, oprema i moral."
+            }
+          ]
+        },
+        {
+          "naziv": "Financije",
+          "poslije": 74,
+          "prije": 64,
+          "promjena": 10,
+          "smjer": "porastao",
+          "sto_je_pokrenulo": [
+            {
+              "promjene": [
+                {
+                  "iznos": "2.902 noćenja",
+                  "uzrok": "osnovna potražnja za ovaj mjesec"
+                },
+                {
+                  "iznos": "+12,1 % potražnje",
+                  "uzrok": "cijena"
+                },
+                {
+                  "iznos": "−1,9 % potražnje",
+                  "uzrok": "ugled (ocjena na portalima)"
+                },
+                {
+                  "iznos": "+9,4 % potražnje",
+                  "uzrok": "marketing"
+                }
+              ],
+              "sto": "Prodane noći",
+              "znacenje": "Koliko je noćenja hotel prodao. Postoci kažu koliko je zbog nečega potražnja bila veća ili manja."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "488.460 €",
+                  "uzrok": "noćenja pojedinačnih gostiju"
+                },
+                {
+                  "iznos": "146.538 €",
+                  "uzrok": "ostali prihodi"
+                }
+              ],
+              "sto": "Prihod",
+              "znacenje": "Novac koji je hotel dobio od gostiju ovaj mjesec, po izvoru."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "123.200 €",
+                  "uzrok": "plaće"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "zapošljavanje i zamjena onih koji su otišli"
+                },
+                {
+                  "iznos": "76.758 €",
+                  "uzrok": "troškovi po prodanom noćenju"
+                },
+                {
+                  "iznos": "15.000 €",
+                  "uzrok": "održavanje"
+                },
+                {
+                  "iznos": "25.000 €",
+                  "uzrok": "marketing"
+                },
+                {
+                  "iznos": "145.000 €",
+                  "uzrok": "fiksni troškovi"
+                },
+                {
+                  "iznos": "3.000 €",
+                  "uzrok": "situacija „Šef kuhinje traži povišicu ili odlazi“"
+                }
+              ],
+              "sto": "Troškovi",
+              "znacenje": "Što je hotel platio ovaj mjesec, po vrsti troška."
+            },
+            {
+              "promjene": [
+                {
+                  "iznos": "+244.040 €",
+                  "uzrok": "zarada iz poslovanja (prihod minus troškovi)"
+                }
+              ],
+              "sto": "Blagajna",
+              "znacenje": "Kako se mijenjao novac na računu hotela."
+            }
+          ]
+        }
+      ],
+      "ljestvica_indeksa": "Indeksi idu do 100 bodova; 50 bodova je prosjek usporedivog hotela u istom mjesecu. Indeks pokazuje kako stojiš u odnosu na njega, pa može pasti i kad on napreduje brže od tebe.",
+      "mjesec": "u srpnju",
+      "napredak_od_pocetka": "−5 bodova",
+      "odluke_u_planu": {
+        "cijena_sobe": "140 € po noći, 15 % ispod uobičajene cijene za ovaj mjesec",
+        "marketing": "25.000 €",
+        "obnova": "ne",
+        "obuka": "bez obuke, isto kao prošli mjesec",
+        "odgovori_na_recenzije": "ne",
+        "odrzavanje": "redovno, isto kao prošli mjesec",
+        "place": "100 % uobičajene plaće (student ih je ranije promijenio sa 95 % na 100 %, a prošli mjesec ih nije mijenjao)",
+        "sezonski_radnici": "28 sezonskih radnika, isto kao prošli mjesec"
+      },
+      "situacije": [
+        {
+          "naslov": "Šef kuhinje traži povišicu ili odlazi",
+          "ocjena": "2/5",
+          "ocjena_rijecima": "loše",
+          "odabrani_odgovor": "Bonus na kraju sezone ako ostane, bez razgovora",
+          "slobodan_odgovor": false
+        }
+      ]
+    },
+    "fallback": "U srpnju je napredak tvog hotela od početka igre −5 bodova.\n\nŠto je išlo dobro\nIndeks Financije porastao je s 64 na 74. Indeks Recenzije porastao je s 38 na 39.\n\nŠto nije valjalo\nIndeks Zaposlenici pao je s 52 na 46. Indeks Operativa pao je s 38 na 35. Situacija „Šef kuhinje traži povišicu ili odlazi“ riješena je loše (2/5): izabran je odgovor „Bonus na kraju sezone ako ostane, bez razgovora“.\n\nZašto\nIndeks Zaposlenici pao je ponajviše zbog prevelikog opterećenja osoblja, pa je tim slabije raspoložen i lakše odlazi. Indeks Operativa pao je ponajviše zbog preopterećenog osoblja (premalo ljudi za broj gostiju), pa osoblje ne stiže sve napraviti kako treba.\n\nŠto probati sljedeći put\nRazgovaraj s ljudima prije nego problem naraste: poštena plaća, razumno opterećenje i obuka drže tim na okupu.\n\nAI objašnjenje danas nije bilo dostupno, ovo je sažetak iz brojki."
+  }
+]

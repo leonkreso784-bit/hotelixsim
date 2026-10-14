@@ -208,6 +208,21 @@ fn part_ends_month(part: &MonthPart) -> bool {
     part.from_day.saturating_add(part.days) == part.month.days()
 }
 
+/// Krugovi iste vrste od ovog (uključivo) do kraja mjeseca u kojem krug počinje (tjedan koji prelazi mjesec pripada
+/// mjesecu u kojem počinje): lipanj t01 → 5, srpanj t06 → 4; mjesečni krug → 1.
+pub fn rounds_left_in_month(p: &Period) -> u8 {
+    let n = season_periods(p.kind)
+        .iter()
+        .filter(|q| q.index >= p.index && q.start_month() == p.start_month())
+        .count();
+    u8::try_from(n).unwrap_or(u8::MAX)
+}
+
+/// Krug je zadnji krug svog mjeseca (plaća ostatak obnove).
+pub fn is_last_round_of_month(p: &Period) -> bool {
+    rounds_left_in_month(p) == 1
+}
+
 pub fn period_by_code(kind: PeriodKind, code: &str) -> Option<Period> {
     season_periods(kind).into_iter().find(|p| p.code() == code)
 }

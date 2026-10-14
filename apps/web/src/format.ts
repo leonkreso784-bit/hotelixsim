@@ -28,9 +28,35 @@ export function wholePoints(hundredths: number): number {
   return hundredths < 0 && rounded > 0 ? -rounded : rounded;
 }
 
-/** Boja broja napretka po predznaku prikazanog (cijelog) broja: −0,3 se prikaže kao 0 i ostaje neutralno. */
-export function progressTone(hundredths: number): string {
-  const n = wholePoints(hundredths);
+/** Broj decimala bodova napretka: 0 (zadano, cijeli bodovi), 1 ili 2. */
+export type PointDigits = 0 | 1 | 2;
+
+/**
+ * Bodovi (stotinke) zaokruženi na `digits` decimala, pola od nule (845 → 8 / 8,5): isto pravilo kao sezonski mentor
+ * na poslužitelju (`season_mentor.rs` `points_with`), pa se brojke ekrana i mentora slažu.
+ */
+export function pointsAt(hundredths: number, digits: PointDigits): number {
+  const scale = 10 ** (2 - digits);
+  const v = Math.round(Math.abs(hundredths) / scale);
+  const signed = hundredths < 0 && v > 0 ? -v : v;
+  return signed / 10 ** digits;
+}
+
+/**
+ * Najmanje decimala (0, 1 ili 2) uz koje hoteli s različitim napretkom i dalje imaju različit prikazani broj: +8,4 i
+ * +7,6 nisu oba „+8“. Isto pravilo kao `progress_digits` sezonskog mentora; jednak napredak ne traži decimale.
+ */
+export function progressDigits(values: number[]): PointDigits {
+  for (const d of [0, 1] as const) {
+    const ok = values.every((a) => values.every((b) => a === b || pointsAt(a, d) !== pointsAt(b, d)));
+    if (ok) return d;
+  }
+  return 2;
+}
+
+/** Boja broja napretka po predznaku prikazanog broja: −0,3 se uz cijele bodove prikaže kao 0 i ostaje neutralno. */
+export function progressTone(hundredths: number, digits: PointDigits = 0): string {
+  const n = pointsAt(hundredths, digits);
   return n > 0 ? "text-up" : n < 0 ? "text-down" : "text-muted";
 }
 
@@ -111,6 +137,35 @@ export function formatRange(min: number, max: number, unit: "euro" | "percent" |
   if (unit === "percent") return `${span}${NBSP}%`;
   // Imenica se slaže s gornjom granicom: „18–38 osoba“, „1–2 osobe“.
   return formatCount(max, "person", span);
+}
+
+/**
+ * Napredak s točno `digits` decimala i množinom: (840, 1) → "+8,4 boda", (800, 1) → "+8,0 boda", (800, 0) → "+8 bodova".
+ * Isti broj decimala za sve brojke jedne usporedbe (UI_PRAVILA §2.3), pa „−4,0“ stoji uz „−3,7“, ne „−4“.
+ */
+export function formatPointsPrecise(hundredths: number, digits: PointDigits): string {
+  const n = pointsAt(hundredths, digits);
+  const abs = new Intl.NumberFormat("hr-HR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: "always",
+  }).format(Math.abs(n));
+  // Uz decimale („8,0“) imenica je uvijek „boda“, kao uz svaki necijeli broj.
+  return digits > 0 ? `${signed(n, abs)} ${t("plural.point.few")}` : formatCount(n, "point", signed(n, abs));
+}
+
+/** Prosjek ocjena situacija 1–5 (stotinke), jedna decimala: 360 → "3,6/5". */
+export function formatQuality(hundredths: number): string {
+  return `${nfRating.format(hundredths / 100)}/5`;
+}
+
+/** Koliko krugova od svih: (6, 17, tjedni) → "6 od 17 tjedana", (1, 4, mjesečni) → "1 od 4 mjeseca". */
+export function formatRoundsOf(n: number, total: number, weekly: boolean): string {
+  return formatCount(
+    total,
+    weekly ? "week" : "month",
+    t("count.of", { n: formatWhole(n), total: formatWhole(total) }),
+  );
 }
 
 /** Promjena u bodovima s množinom: 450 → "+5 bodova", −100 → "−1 bod". */
@@ -217,7 +272,11 @@ export function formatCount(
     | "permanent"
     | "seasonal"
     | "seasonalWorker"
-    | "seasonalWorkerAcc",
+    | "seasonalWorkerAcc"
+    | "week"
+    | "month"
+    | "yearAcc"
+    | "situation",
   shown: string = nf2.format(n),
 ): string {
   return `${shown} ${t(`plural.${noun}.${pluralForm(n)}` as const)}`;

@@ -213,17 +213,18 @@ describe("Odjeli", () => {
     expect(detail.queryByRole("img", { name: /Stanje prostora|Zadovoljstvo|Usklađenost/ })).toBeNull();
     expect(detail.queryByText(/Zadovoljstvo gostiju|zadovoljstvo/)).toBeNull();
     expect(detail.queryByRole("columnheader", { name: "Zadovoljstvo gostiju" })).toBeNull();
-    // Odluke najma: bez sezonskih radnika i bez razine cijena (ugovoreni prihod), samo održavanje (N-I1).
+    // Odluke parkinga: bez sezonskih radnika; cijena kao u restoranu (O-P, granice 90–120 %) i održavanje.
     const decisions = await screen.findByRole("group", { name: "Parking" });
     expect(within(decisions).queryByText("Sezonski radnici u odjelu")).toBeNull();
-    expect(within(decisions).queryByText("Cijene u odjelu")).toBeNull();
-    expect(within(decisions).getByRole("radio", { name: "redovno" })).toBeTruthy();
-    expect(screen.queryByText(/Jedan sezonski radnik|možeš još promijeniti/)).toBeNull();
+    expect(within(decisions).getByText("Cijene u odjelu")).toBeTruthy();
     expect(
-      screen.getByText(
-        "Najam ima ugovoreni prihod i nema svojih gostiju ni sezonskih radnika: ovdje se odlučuje o održavanju prostora.",
+      within(decisions).getByText(
+        "Viša cijena donosi više novca od svakog korištenja, ali prostor koristi manje gostiju.",
       ),
     ).toBeTruthy();
+    expect(within(decisions).getByRole("radio", { name: "redovno" })).toBeTruthy();
+    expect(screen.queryByText(/Jedan sezonski radnik|možeš još promijeniti/)).toBeNull();
+    expect(screen.getByText("Odredi razinu cijena i održavanje.")).toBeTruthy();
     for (const h of ["Gosti", "Ljudi"])
       expect(detail.queryByRole("heading", { level: 2, name: h })).toBeNull();
     const card = screen.getAllByRole("link", { name: "Parking" })[0]?.closest("article") as HTMLElement;
@@ -384,9 +385,12 @@ describe("Odjeli", () => {
       price_level_pct: 100,
       maintenance: "regular",
     };
+    // Lokal nema cijenu: poslužitelj šalje granice razine 100–100 (O-P).
     Object.assign(plan.limits.departments.parking, {
       seasonal_max: 0,
       can_close: false,
+      price_level_min_pct: 100,
+      price_level_max_pct: 100,
       maintenance: { deferred_cents: 0, regular_cents: 0, intensive_cents: 0 },
     });
     renderApp(v2Api().on("GET", "/v1/me/hotel", hotel), "/odjeli/parking");

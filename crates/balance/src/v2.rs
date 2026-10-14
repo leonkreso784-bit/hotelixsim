@@ -7,15 +7,15 @@ use sim_hotel_v2::calendar::{avg_i64, avg_u16, first_period_of_month, prorate};
 use sim_hotel_v2::department::{DeptCode, UsaliClass};
 use sim_hotel_v2::usali::{self, UsaliStatement};
 use sim_hotel_v2::{
-    Catalog, CatalogError, Category, HotelState, IndexSet, Maintenance, Month, Period, PeriodKind,
-    PeriodPlan, PlanLimits, Profile, RefTable, ResolveError, SeasonResult, Strategy, Training,
-    run_season, run_season_with, season_periods, start_indices,
+    Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Month, Period,
+    PeriodKind, PeriodPlan, PlanLimits, Profile, RefTable, RenewalLimits, ResolveError,
+    SeasonResult, Strategy, Training, run_season, run_season_with, season_periods, start_indices,
 };
 
 use crate::{
     Probe, REPRO_SEED, all_reproducible, check_dominant, check_fairness, check_repro, check_start,
-    hundredths, middle_index, profile_row, push_medians, push_probes, push_starts, ratio_bp,
-    reference_profile, season_medians,
+    hundredths, median, middle_index, profile_row, push_medians, push_probes, push_starts,
+    ratio_bp, reference_profile, season_medians,
 };
 
 pub struct OptionsV2 {
@@ -34,6 +34,8 @@ pub struct ReportV2 {
     pub reference_other_revenue_share_bp: i32,
     pub medians: Vec<(Profile, Strategy, i32)>,
     pub profile_medians: Vec<(Profile, i32)>,
+    /// Medijan financijskog indeksa F na kraju sezone (stotinke) po profilu i strategiji, za `OptionsV2::kind`.
+    pub end_finance: Vec<(Profile, Strategy, i32)>,
     pub probes: Vec<(String, Vec<(Profile, i32)>)>,
     /// Medijan napretka tjedno, mjesečno (obje vrste krugova, bez obzira na `OptionsV2::kind`).
     pub week_vs_month: Vec<(Profile, Strategy, i32, i32)>,
@@ -150,7 +152,8 @@ fn other_revenue_share_bp(st: &UsaliStatement) -> Result<i32, ResolveError> {
     Ok(ratio_bp(other, rooms)?)
 }
 
-/// Probe v2: sve probe v1 prenesene na `PeriodPlan` plus odjelne.
+/// Probe v2: sve probe v1 prenesene na `PeriodPlan` plus odjelne i, kad katalog nudi obnovu v2, probe obnove
+/// (obnova-v2-spec §5.2).
 #[derive(Clone, Copy)]
 enum ProbeV2 {
     Base(Probe),
@@ -158,10 +161,46 @@ enum ProbeV2 {
     PriceLevel(u16),
     MaintenanceAll(Maintenance),
     SeasonalRoomsOnly,
+    /// Prvi krug lipnja: svaki odjel s obnovom i zgrada najvećim iznosom.
+    RenewalAllMax,
+    /// Smještaj 75.000 € u prvom krugu lipnja i 75.000 € u prvom krugu srpnja.
+    RenewalRoomsSplit,
+    /// Zgrada najvećim iznosom u prvom krugu lipnja.
+    RenewalBuildingMax,
+    /// Smještaj najvećim iznosom u zadnjem krugu sezone (iskorištavanje, §9 R2).
+    RenewalLastRound,
+}
+
+/// Obnova Smještaja u probi „obnova u lipnju" kad katalog nudi obnovu v2 (usporedivo s v1 obnovom).
+const ROOMS_RENEWAL_JUNE_CENTS: i64 = 15_000_000;
+/// Pola obnove Smještaja u probi „lipanj + srpanj".
+const ROOMS_RENEWAL_HALF_CENTS: i64 = 7_500_000;
+
+/// Iznos obnove u granicama dijela: najviše najveći mjesečni, dolje na korak; nije ponuđena → 0.
+fn renewal_amount(l: &RenewalLimits, want: i64) -> i64 {
+    if l.max_monthly_cents <= 0 || l.step_cents <= 0 {
+        return 0;
+    }
+    want.min(l.max_monthly_cents) / l.step_cents * l.step_cents
+}
+
+/// Postavi iznos obnove odjela ako mjesec još nema zaključanu obnovu (zaključanu zadani plan već nosi).
+fn set_dept_renewal(plan: &mut PeriodPlan, l: &PlanLimits, code: &DeptCode, want: i64) {
+    if let (Some(d), Some(x)) = (plan.departments.get_mut(code), l.departments.get(code))
+        && x.renewal.locked.is_none()
+    {
+        d.renewal_cents = renewal_amount(&x.renewal, want);
+    }
+}
+
+fn set_building_renewal(plan: &mut PeriodPlan, l: &PlanLimits, want: i64) {
+    if l.building_renewal.locked.is_none() {
+        plan.building_renewal_cents = renewal_amount(&l.building_renewal, want);
+    }
 }
 
 impl ProbeV2 {
-    fn all() -> Vec<ProbeV2> {
+    fn all(cat: &Catalog) -> Vec<ProbeV2> {
         let mut out: Vec<ProbeV2> = Probe::ALL.iter().map(|&p| ProbeV2::Base(p)).collect();
         out.extend([
             ProbeV2::CloseAll,
@@ -171,6 +210,14 @@ impl ProbeV2 {
             ProbeV2::MaintenanceAll(Maintenance::Intensive),
             ProbeV2::SeasonalRoomsOnly,
         ]);
+        if cat.renewal_enabled() {
+            out.extend([
+                ProbeV2::RenewalAllMax,
+                ProbeV2::RenewalRoomsSplit,
+                ProbeV2::RenewalBuildingMax,
+                ProbeV2::RenewalLastRound,
+            ]);
+        }
         out
     }
 
@@ -185,6 +232,12 @@ impl ProbeV2 {
             }
             ProbeV2::MaintenanceAll(_) => "održavanje pojačano svugdje".to_string(),
             ProbeV2::SeasonalRoomsOnly => "sezonci samo u Smještaju".to_string(),
+            ProbeV2::RenewalAllMax => "obnova svega najvećim iznosom u lipnju".to_string(),
+            ProbeV2::RenewalRoomsSplit => {
+                "obnova Smještaja pola u lipnju, pola u srpnju".to_string()
+            }
+            ProbeV2::RenewalBuildingMax => "obnova zgrade najvećim iznosom u lipnju".to_string(),
+            ProbeV2::RenewalLastRound => "obnova Smještaja u zadnjem krugu".to_string(),
         }
     }
 
@@ -226,6 +279,33 @@ impl ProbeV2 {
                     d.seasonal_target = if *code == DeptCode::rooms() { total } else { 0 };
                 }
                 plan = plan.carry_into(s, p, cat)?;
+            }
+            ProbeV2::RenewalAllMax => {
+                if first_period_of_month(p.kind, Month::Jun) == *p {
+                    let codes: Vec<DeptCode> = plan.departments.keys().cloned().collect();
+                    for code in &codes {
+                        set_dept_renewal(&mut plan, &l, code, i64::MAX);
+                    }
+                    set_building_renewal(&mut plan, &l, i64::MAX);
+                }
+            }
+            ProbeV2::RenewalRoomsSplit => {
+                if [Month::Jun, Month::Jul]
+                    .iter()
+                    .any(|m| first_period_of_month(p.kind, *m) == *p)
+                {
+                    set_dept_renewal(&mut plan, &l, &DeptCode::rooms(), ROOMS_RENEWAL_HALF_CENTS);
+                }
+            }
+            ProbeV2::RenewalBuildingMax => {
+                if first_period_of_month(p.kind, Month::Jun) == *p {
+                    set_building_renewal(&mut plan, &l, i64::MAX);
+                }
+            }
+            ProbeV2::RenewalLastRound => {
+                if season_periods(p.kind).last() == Some(p) {
+                    set_dept_renewal(&mut plan, &l, &DeptCode::rooms(), i64::MAX);
+                }
             }
         }
         Ok(plan)
@@ -278,9 +358,16 @@ fn base_probe(
             }
         }
         Probe::Reply => plan.reply_reviews = true,
+        // Katalog s obnovom v2 nema staru kvačicu: proba je obnova Smještaja 150.000 € u prvom krugu lipnja.
         Probe::RenovationJune => {
-            plan.renovation =
-                first_period_of_month(p.kind, Month::Jun) == *p && l.renovation_available;
+            let june = first_period_of_month(p.kind, Month::Jun) == *p;
+            if cat.renewal_enabled() {
+                if june {
+                    set_dept_renewal(plan, l, &DeptCode::rooms(), ROOMS_RENEWAL_JUNE_CENTS);
+                }
+            } else {
+                plan.renovation = june && l.renovation_available;
+            }
         }
     }
     Ok(())
@@ -306,7 +393,12 @@ fn run_probe(
     Ok(r.progress_pts)
 }
 
-type Medians = (Vec<(Profile, Strategy, i32)>, Vec<(Profile, i32)>);
+/// Medijani napretka (profil × strategija, profil) i medijan F na kraju sezone (profil × strategija).
+type Medians = (
+    Vec<(Profile, Strategy, i32)>,
+    Vec<(Profile, i32)>,
+    Vec<(Profile, Strategy, i32)>,
+);
 
 fn kind_medians(
     content: &content::Content,
@@ -315,8 +407,9 @@ fn kind_medians(
     refs: &RefTables,
     seeds: u64,
 ) -> Result<Medians, ResolveError> {
-    season_medians::<ResolveError>(seeds, &mut |p, s, seed| {
-        Ok(run_season(
+    let mut finance: Vec<((Profile, Strategy), Vec<i32>)> = Vec::new();
+    let (medians, profile_medians) = season_medians::<ResolveError>(seeds, &mut |p, s, seed| {
+        let r = run_season(
             p,
             s,
             seed,
@@ -324,9 +417,20 @@ fn kind_medians(
             cat,
             &content.situations,
             refs_for(cat, refs, p)?,
-        )?
-        .progress_pts)
-    })
+        )?;
+        let end = r.periods.last().map_or(&r.start, |(_, i)| i);
+        let f = i32::from(end.get(Index::Finance).hundredths());
+        match finance.iter_mut().find(|(k, _)| *k == (p, s)) {
+            Some((_, v)) => v.push(f),
+            None => finance.push(((p, s), vec![f])),
+        }
+        Ok(r.progress_pts)
+    })?;
+    let end_finance = finance
+        .into_iter()
+        .map(|((p, s), mut v)| (p, s, median(&mut v)))
+        .collect();
+    Ok((medians, profile_medians, end_finance))
 }
 
 pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, ResolveError> {
@@ -360,13 +464,14 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         })
         .collect::<Result<Vec<_>, ResolveError>>()?;
 
-    let (medians, profile_medians) = kind_medians(content, cat, kind, &refs, opts.seeds)?;
+    let (medians, profile_medians, end_finance) =
+        kind_medians(content, cat, kind, &refs, opts.seeds)?;
     let other_kind = match kind {
         PeriodKind::Week => PeriodKind::Month,
         PeriodKind::Month => PeriodKind::Week,
     };
     let other_refs = category_refs(cat, other_kind)?;
-    let (other_medians, _) = kind_medians(content, cat, other_kind, &other_refs, opts.seeds)?;
+    let (other_medians, _, _) = kind_medians(content, cat, other_kind, &other_refs, opts.seeds)?;
     let (week, month) = match kind {
         PeriodKind::Week => (&medians, &other_medians),
         PeriodKind::Month => (&other_medians, &medians),
@@ -399,7 +504,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
     }
 
     let mut probes = Vec::new();
-    for probe in ProbeV2::all() {
+    for probe in ProbeV2::all(cat) {
         let row = profile_row::<ResolveError>(&mut |p| {
             run_probe(probe, p, kind, cat, situations, refs_for(cat, &refs, p)?)
         })?;
@@ -415,6 +520,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         reference_other_revenue_share_bp: other_revenue_share_bp(&c_statement)?,
         medians,
         profile_medians,
+        end_finance,
         probes,
         week_vs_month,
         reproducible,
@@ -542,6 +648,15 @@ pub fn render_v2(r: &ReportV2) -> String {
     ));
     push_medians(&mut s, &r.medians, &r.profile_medians);
     push_probes(&mut s, &r.probes);
+    s.push_str("== F na kraju sezone, medijan po profilu i strategiji ==\n");
+    for (p, st, v) in &r.end_finance {
+        s.push_str(&format!(
+            "  {} {:<10} {}\n",
+            p.code(),
+            st.code(),
+            hundredths(*v)
+        ));
+    }
     s.push_str("== Tjedno prema mjesečnom, medijan napretka (tjedno / mjesečno) ==\n");
     for (p, st, week, month) in &r.week_vs_month {
         s.push_str(&format!(

@@ -15,9 +15,15 @@ use crate::department::{
     UsaliClass, dept_step, undistributed_step,
 };
 use crate::plan::PeriodPlan;
+use crate::renewal::RoundRenewal;
 use crate::state::HotelState;
 
 pub(super) struct OperatedIn<'a> {
+    /// Obnova v2 po odjelu u krugu (plaćeno, bodovi); odjel bez zapisa nema obnovu.
+    pub(super) renewals: &'a BTreeMap<DeptCode, RoundRenewal>,
+    /// Stanje zgrade nakon kruga i njen udio u stanju koje gost osjeća.
+    pub(super) building_pts: i32,
+    pub(super) building_share_bp: u16,
     /// Stanje nakon faze osoblja (sezonci na cilju, otvorenost iz plana).
     pub(super) state: &'a HotelState,
     pub(super) period: &'a Period,
@@ -57,6 +63,10 @@ pub(super) fn operated(i: &OperatedIn) -> Result<BTreeMap<DeptCode, DeptOutcome>
             morale_pts: i.morale_pts,
             wage_pct: i.plan.wage_pct,
             satisfaction_step_bp: i.satisfaction_step_bp,
+            renewal: i.renewals.get(code).copied().unwrap_or_default(),
+            building_pts: i.building_pts,
+            building_share_bp: i.building_share_bp,
+            deferred_wear_bp: i.cat.economy.deferred_wear_bp,
         })?;
         out.insert(code.clone(), o);
     }
@@ -99,6 +109,8 @@ pub(super) struct RoomsIn<'a> {
     pub(super) satisfaction_before_pts: i32,
     pub(super) maintenance_cents: i64,
     pub(super) guest_nights: u32,
+    /// Obnova v2 Smještaja plaćena u krugu.
+    pub(super) renewal_cents: i64,
 }
 
 /// Račun Smještaja iz tržišta i faze gostiju: kapacitet je manji od kapaciteta osoblja i raspoloživih soba-noći,
@@ -147,6 +159,9 @@ pub(super) fn rooms_outcome(i: &RoomsIn) -> Calc<DeptOutcome> {
         satisfaction_after_pts: c::narrow(g.rooms_satisfaction)?,
         guest_weight: i.guest_nights,
         departures: 0,
+        renewal_cents: i.renewal_cents,
+        renewal_pts: c::narrow(g.renewal_pts)?,
+        felt_condition_pts: g.felt,
     })
 }
 
