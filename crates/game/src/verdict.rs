@@ -104,6 +104,8 @@ fn names_internal_number(text: &str) -> bool {
 }
 
 impl Game {
+    /// Provjera presude po šifri situacije, bez hotela (sadržaj S1–S4, mjerilo, živi test): za šifru primjerka
+    /// uzima prvi hotel koji ga ima. Kad je hotel poznat, treba `validate_verdict_for`.
     pub fn validate_verdict(
         &self,
         code: &str,
@@ -114,51 +116,77 @@ impl Game {
             .situation_round(code)
             .ok()
             .map(|(_, t)| t.answers.len());
-        let (true, Some(answers)) = (free, answers) else {
-            return Err(VerdictError::NotFreeText);
-        };
-        if draft.criteria.len() != 5 {
-            return Err(VerdictError::CriteriaCount(draft.criteria.len()));
-        }
-        let mut seen = [false; 5];
-        for c in &draft.criteria {
-            if !(1..=5).contains(&c.n) {
-                return Err(VerdictError::CriterionNumber(c.n));
-            }
-            let slot = &mut seen[usize::from(c.n) - 1];
-            if *slot {
-                return Err(VerdictError::DuplicateCriterion(c.n));
-            }
-            *slot = true;
-            if c.reason.trim().is_empty() {
-                return Err(VerdictError::EmptyReason(c.n));
-            }
-        }
-        if usize::from(draft.nearest_answer) >= answers {
-            return Err(VerdictError::NearestAnswer(draft.nearest_answer));
-        }
-        if draft.rationale.trim().is_empty() {
-            return Err(VerdictError::EmptyRationale);
-        }
-        if names_internal_number(&draft.rationale)
-            || draft
-                .criteria
-                .iter()
-                .any(|c| names_internal_number(&c.reason))
-        {
-            return Err(VerdictError::InternalNumber);
-        }
-        let mut criteria = draft.criteria;
-        criteria.sort_by_key(|c| c.n);
-        let quality = quality_from(&criteria);
-        Ok(ValidVerdict {
-            criteria,
-            nearest_answer: draft.nearest_answer,
-            quality,
-            rationale: draft.rationale,
-        })
+        check_draft(free, answers, draft)
     }
 
+    /// Provjera presude na slobodni odgovor hotela `hotel` (njegov primjerak situacije).
+    pub fn validate_verdict_for(
+        &self,
+        hotel: HotelId,
+        code: &str,
+        draft: VerdictDraft,
+    ) -> Result<ValidVerdict, VerdictError> {
+        let free = self.ai_entry_for(hotel, code).is_some_and(|a| a.free_text);
+        let answers = self
+            .situation_round_for(hotel, code)
+            .ok()
+            .map(|(_, t)| t.answers.len());
+        check_draft(free, answers, draft)
+    }
+}
+
+/// Oblik presude: slobodan odgovor (`free`), broj ponuđenih odgovora situacije (`answers`), pet kriterija, obrazloženje.
+fn check_draft(
+    free: bool,
+    answers: Option<usize>,
+    draft: VerdictDraft,
+) -> Result<ValidVerdict, VerdictError> {
+    let (true, Some(answers)) = (free, answers) else {
+        return Err(VerdictError::NotFreeText);
+    };
+    if draft.criteria.len() != 5 {
+        return Err(VerdictError::CriteriaCount(draft.criteria.len()));
+    }
+    let mut seen = [false; 5];
+    for c in &draft.criteria {
+        if !(1..=5).contains(&c.n) {
+            return Err(VerdictError::CriterionNumber(c.n));
+        }
+        let slot = &mut seen[usize::from(c.n) - 1];
+        if *slot {
+            return Err(VerdictError::DuplicateCriterion(c.n));
+        }
+        *slot = true;
+        if c.reason.trim().is_empty() {
+            return Err(VerdictError::EmptyReason(c.n));
+        }
+    }
+    if usize::from(draft.nearest_answer) >= answers {
+        return Err(VerdictError::NearestAnswer(draft.nearest_answer));
+    }
+    if draft.rationale.trim().is_empty() {
+        return Err(VerdictError::EmptyRationale);
+    }
+    if names_internal_number(&draft.rationale)
+        || draft
+            .criteria
+            .iter()
+            .any(|c| names_internal_number(&c.reason))
+    {
+        return Err(VerdictError::InternalNumber);
+    }
+    let mut criteria = draft.criteria;
+    criteria.sort_by_key(|c| c.n);
+    let quality = quality_from(&criteria);
+    Ok(ValidVerdict {
+        criteria,
+        nearest_answer: draft.nearest_answer,
+        quality,
+        rationale: draft.rationale,
+    })
+}
+
+impl Game {
     /// Mjesec i je li presuda već upisana za slobodni odgovor hotela.
     fn response_slot(&self, hotel: HotelId, code: &str) -> Result<(RoundKey, bool), GameError> {
         let h = self.hotel(hotel)?;

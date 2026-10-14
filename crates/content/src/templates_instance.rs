@@ -15,6 +15,8 @@ use crate::{Character, ContentError, SituationAi};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Instance {
     pub situation: SituationTemplate,
+    /// Opis situacije s popunjenim mjestima.
+    pub description: String,
     pub ai: SituationAi,
 }
 
@@ -51,11 +53,14 @@ fn euros(cents: i64) -> String {
     }
 }
 
-/// Rečenica „tko je lik" za studenta: opis uloge primjerka, a bez njega vrsta uloge (gost, zaposlenik odjela,
-/// vanjski suradnik) u rodu uloge.
+/// Rečenica „tko je lik" za studenta: opis uloge primjerka, bez njega naziv uloge iz predloška (`title`), a bez
+/// oba vrsta uloge (gost, zaposlenik odjela, vanjski suradnik) u rodu uloge.
 fn role_sentence(role: &Role, role_type: Option<&str>, dept: Option<&str>) -> String {
     if let Some(ty) = role_type {
         return ty.to_owned();
+    }
+    if let Some(title) = &role.title {
+        return title.clone();
     }
     let f = role.gender == Gender::F;
     match role.from {
@@ -325,6 +330,7 @@ impl SituationTemplates {
             })
             .collect();
         Ok(Instance {
+            description: a.text(dept, &t.description)?,
             situation: SituationTemplate {
                 code: d.code.clone(),
                 month,

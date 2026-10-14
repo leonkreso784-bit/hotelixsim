@@ -246,11 +246,9 @@ pub async fn situations_for_month(
     situations_in_month(deps, caller, hotel, Some(month)).await
 }
 
-fn response_view(g: &Game, code: &str, fr: &FreeResponse) -> ResponseView {
+fn response_view(g: &Game, hotel: HotelId, code: &str, fr: &FreeResponse) -> ResponseView {
     let rubric = g
-        .content
-        .ai
-        .get(code)
+        .ai_entry_for(hotel, code)
         .map(|a| a.rubric.as_slice())
         .unwrap_or_default();
     let Some(v) = &fr.verdict else {
@@ -328,7 +326,7 @@ async fn situations_in_month(
                 response: record
                     .responses
                     .get(&key)
-                    .map(|fr| response_view(&g, &t.code, fr)),
+                    .map(|fr| response_view(&g, hotel, &t.code, fr)),
             }
         })
         .collect();

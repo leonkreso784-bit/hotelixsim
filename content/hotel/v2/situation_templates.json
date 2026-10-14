@@ -478,7 +478,7 @@
       "when": { "months": ["jun", "jul"] },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 2, "gap_rounds": 4 },
-      "roles": { "organizatorica": { "from": "partner", "gender": "f" } },
+      "roles": { "organizatorica": { "from": "partner", "gender": "f", "title": "organizatorica vjenčanja" } },
       "params": {
         "sobe": { "pick": [15, 18, 20] },
         "noci": { "pick": [2, 3] },
@@ -1151,7 +1151,7 @@
       "major": "low",
       "chance": { "base": 3, "boost": [{ "when": { "dept_condition_pts": { "below": 5000 } }, "times": 2 }] },
       "repeat": { "max_per_season": 1, "gap_rounds": 4 },
-      "roles": { "inspektor": { "from": "partner", "gender": "m" } },
+      "roles": { "inspektor": { "from": "partner", "gender": "m", "title": "sanitarni inspektor" } },
       "params": {
         "temp": { "pick": [8, 9, 10] },
         "mjere": { "price_pct": 800 },

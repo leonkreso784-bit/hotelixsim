@@ -248,9 +248,7 @@ async fn run_chat(deps: &Deps, job: &Job) -> Result<(), AppError> {
         Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
         Err(_) => {
             let text = g
-                .content
-                .ai
-                .get(&p.situation)
+                .ai_entry_for(p.hotel_id, &p.situation)
                 .and_then(|a| a.character.as_ref())
                 .map(|c| c.fallback_reply.clone())
                 .ok_or_else(|| AppError::internal("situacija bez lika"))?;
@@ -289,7 +287,7 @@ async fn run_assess(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let input = g.assess_input(p.hotel_id, &p.situation)?;
     let judged = match deps.ai.assess(input).await {
         Ok(out) => g
-            .validate_verdict(&p.situation, out.value)
+            .validate_verdict_for(p.hotel_id, &p.situation, out.value)
             .map(|v| (v, out.meta))
             .map_err(|e| {
                 (

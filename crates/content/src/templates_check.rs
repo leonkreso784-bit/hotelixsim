@@ -359,6 +359,9 @@ fn check_roles_and_params(
         if role.types.iter().any(|x| x.trim().is_empty()) {
             return invalid(format!("{ctx}: uloga '{key}' ima prazan tip"));
         }
+        if role.title.as_ref().is_some_and(|x| x.trim().is_empty()) {
+            return invalid(format!("{ctx}: uloga '{key}' ima prazan naziv uloge"));
+        }
         allowed.insert(format!("{key}.ime"));
         if !role.types.is_empty() {
             allowed.insert(format!("{key}.tip"));

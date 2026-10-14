@@ -217,6 +217,9 @@ pub struct Role {
     pub gender: Gender,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub types: Vec<String>,
+    /// Neobvezan naziv uloge za studenta i AI („sanitarni inspektor"), kad uloga nema `types`. Ne ulazi u izvlačenje.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
