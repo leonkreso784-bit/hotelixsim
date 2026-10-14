@@ -565,10 +565,10 @@ fn dept_band(class: UsaliClass) -> Option<(i32, i32)> {
     }
 }
 
-/// Najmanji udio sezonskog plana hotela koji brižni robot drži kroz sezonu (ZP-4).
-const CARING_MIN_SEASONAL_VS_PLAN_BP: i32 = 8_000;
+/// Najmanji udio sezonskog plana hotela koji brižni robot drži kroz sezonu (ZP-4); mjera robota i test robota.
+pub const CARING_MIN_SEASONAL_VS_PLAN_BP: i32 = 8_000;
 
-/// Prazno = sve provjere prolaze.
+/// Brane modela (ne ovise o robotima): ruše `--check`. Prazno = sve prolaze.
 pub fn failures_v2(r: &ReportV2) -> Vec<String> {
     let mut f = Vec::new();
     check_start(&mut f, &r.starts);
@@ -616,9 +616,20 @@ pub fn failures_v2(r: &ReportV2) -> Vec<String> {
         ));
     }
 
-    check_fairness(&mut f, &r.profile_medians, &r.medians);
     check_dominant(&mut f, &r.probes);
 
+    if let Some(sr) = &r.situations {
+        situation_model_failures(&mut f, sr);
+    }
+    check_repro(&mut f, r.reproducible);
+    f
+}
+
+/// Mjere robota (A1): pravednost, tjedno ≈ mjesečno, Brižni sezonci, udio situacija Brižnog, Brižni Δ > 0,
+/// Štediša Δ. Ispisuje ih `render_v2`; ne ruše `--check`. Prazno = sve u pojasu.
+pub fn robot_measures_v2(r: &ReportV2) -> Vec<String> {
+    let mut f = Vec::new();
+    check_fairness(&mut f, &r.profile_medians, &r.medians);
     for (p, s, week, month) in &r.week_vs_month {
         if (week - month).abs() > 300 {
             f.push(format!(
@@ -639,14 +650,13 @@ pub fn failures_v2(r: &ReportV2) -> Vec<String> {
         }
     }
     if let Some(sr) = &r.situations {
-        situation_failures(&mut f, sr);
+        situation_robot_measures(&mut f, sr);
     }
-    check_repro(&mut f, r.reproducible);
     f
 }
 
-/// Provjere situacija iz predložaka (plan situacija §6): udio u napretku, broj po krugu, raznolikost.
-fn situation_failures(f: &mut Vec<String>, sr: &SituationReport) {
+/// Mjere robota iz situacija: udio u napretku Brižnog, Brižni Δ, Štediša Δ.
+fn situation_robot_measures(f: &mut Vec<String>, sr: &SituationReport) {
     let (lo, hi) = SHARE_BAND_BP;
     for s in &sr.shares {
         match s.strategy {
@@ -673,6 +683,10 @@ fn situation_failures(f: &mut Vec<String>, sr: &SituationReport) {
             _ => {}
         }
     }
+}
+
+/// Brane modela iz situacija (plan situacija §6): grupe, broj po krugu, raznolikost.
+fn situation_model_failures(f: &mut Vec<String>, sr: &SituationReport) {
     if sr.draws.groups_max > u64::from(sr.group_limit.unwrap_or(u8::MAX)) {
         f.push(format!(
             "J-3 grupe: sezona ima {} ponuda grupe (najviše {})",
@@ -828,5 +842,17 @@ pub fn render_v2(r: &ReportV2) -> String {
         "== Ponovljivost (§11.5): {} ==\n",
         if r.reproducible { "da" } else { "ne" }
     ));
+    push_robot_measures(&mut s, &robot_measures_v2(r));
     s
+}
+
+/// Odjeljak „Mjere robota": samo ispis, ne ruši `--check`.
+fn push_robot_measures(s: &mut String, m: &[String]) {
+    s.push_str("== Mjere robota (ispis, ne ruše --check) ==\n");
+    if m.is_empty() {
+        s.push_str("  sve mjere robota u pojasu\n");
+    }
+    for line in m {
+        s.push_str(&format!("  - {line}\n"));
+    }
 }
