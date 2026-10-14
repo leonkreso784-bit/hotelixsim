@@ -15,7 +15,11 @@ pub mod templates;
 mod templates_check;
 mod templates_core;
 mod templates_instance;
+mod templates_principles;
+mod templates_principles_debt;
 pub use templates_instance::Instance;
+pub use templates_principles::{Principle, Violation, check_principles_with, principle_violations};
+pub use templates_principles_debt::KNOWN_VIOLATIONS;
 mod v2;
 mod v2_dept;
 
@@ -608,6 +612,14 @@ impl Snapshot {
         let mut s = Snapshot::read(dir)?;
         s.model = Model::V2;
         s.v2 = Some(v2::read_v2_dir(dir)?);
+        Ok(s)
+    }
+
+    /// `read_v2` + `build` + načela igre (`check_principles_with` uz `KNOWN_VIOLATIONS`). Samo za sadržaj s diska;
+    /// snimak iz dnevnika (`from_value`) se ne provjerava — stara igra se uvijek čita.
+    pub fn read_v2_checked(dir: &Path) -> Result<Snapshot, ContentError> {
+        let s = Snapshot::read_v2(dir)?;
+        check_principles_with(&s.build()?, KNOWN_VIOLATIONS)?;
         Ok(s)
     }
 

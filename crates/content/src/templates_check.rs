@@ -132,6 +132,11 @@ fn check_template(
              hotel može zatvoriti ('{code}')"
         ));
     }
+    if t.external_cause && !crate::templates_principles::is_breakdown(t) {
+        return invalid(format!(
+            "{ctx}: external_cause ide samo uz kvar ili popravak"
+        ));
+    }
     let months = check_conditions(ctx, "when", &t.when, depts.is_some())?;
     if t.chance.base == 0 {
         return invalid(format!("{ctx}: chance.base mora biti barem 1"));

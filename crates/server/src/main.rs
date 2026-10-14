@@ -44,7 +44,7 @@ fn content_snapshots() -> anyhow::Result<(content::Snapshot, content::Snapshot)>
     };
     Ok((
         read(content::Snapshot::read)?,
-        read(content::Snapshot::read_v2)?,
+        read(content::Snapshot::read_v2_checked)?,
     ))
 }
 

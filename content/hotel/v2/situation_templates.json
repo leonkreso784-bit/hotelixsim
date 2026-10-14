@@ -1414,7 +1414,8 @@
         { "type": "CrisisCommunication", "backup": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
-      "effect_band": { "cost_night_pct": [0, 800] }
+      "effect_band": { "cost_night_pct": [0, 800] },
+      "external_cause": true
     },
     {
       "code": "P-OLUJA",
@@ -1473,7 +1474,8 @@
         { "type": "CrisisCommunication", "backup": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
-      "effect_band": { "cost_night_pct": [0, 200] }
+      "effect_band": { "cost_night_pct": [0, 200] },
+      "external_cause": true
     },
     {
       "code": "P-REGATA",
@@ -2061,7 +2063,8 @@
             "glavni dobavljač voća i povrća"
           ]
         }
-      }
+      },
+      "external_cause": true
     },
     {
       "code": "P-BUCNA-SOBA",
@@ -2446,7 +2449,8 @@
         { "type": "CrisisCommunication", "backup": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
-      "effect_band": { "cost_night_pct": [0, 300] }
+      "effect_band": { "cost_night_pct": [0, 300] },
+      "external_cause": true
     },
     {
       "code": "P-SUSJEDI-BAZEN",
@@ -3623,7 +3627,8 @@
         }
       ],
       "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
-      "effect_band": { "cost_night_pct": [0, 0] }
+      "effect_band": { "cost_night_pct": [0, 0] },
+      "external_cause": true
     }
   ]
 }
