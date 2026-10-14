@@ -162,13 +162,13 @@ async fn renewal_out_of_range_and_unavailable_are_422() {
 }
 
 #[tokio::test]
-async fn error_codes_have_35_entries_and_the_three_renewal_codes() {
+async fn error_codes_have_36_entries_and_the_three_renewal_codes() {
     let all = app::ErrorCode::ALL;
-    assert_eq!(all.len(), 35);
+    assert_eq!(all.len(), 36);
     let mut codes: Vec<&str> = all.iter().map(|c| c.as_str()).collect();
     codes.sort_unstable();
     codes.dedup();
-    assert_eq!(codes.len(), 35, "šifre su jedinstvene");
+    assert_eq!(codes.len(), 36, "šifre su jedinstvene");
     for c in all {
         let p = api::problem::ProblemCode::from(c);
         assert_eq!(serde_json::to_value(p).unwrap(), json!(c.as_str()));

@@ -59,10 +59,18 @@ pub struct DebriefSituation {
     pub rationale: Option<String>,
     /// Neutralna presuda (AI nije stigao): ocjena 3 po pravilu.
     pub neutral: bool,
-    /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2).
+    /// Nitko nije odgovorio do zatvaranja (ocjena 1, DEMO §1.2); prepuštena voditelju nije „bez odgovora".
     pub unanswered: bool,
+    /// Student je situaciju prepustio voditelju odjela (ocjena 2, Leon P4). Izostavljeno kad je `false`, da ulaz
+    /// mentora stare v1 igre ostane bajt-isti (`mentor_v1_frozen.rs`).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub delegated: bool,
     /// Oznaka ponuđenog odgovora koji je student izabrao; `None` za slobodan odgovor i bez odgovora.
     pub chosen_label: Option<String>,
+    /// Ime odjela izvučenog primjerka (npr. „Smještaj"); `None` za situaciju cijelog hotela, sidra S1–S4 i v1
+    /// (tada izostavljeno, kao `delegated`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub department: Option<String>,
 }
 
 /// Odlasci zaposlenih jednog odjela u krugu (samo v2); ime je iz sadržaja, ne šifra.
@@ -148,12 +156,14 @@ pub struct DebriefInput {
 impl Game {
     pub fn assess_input(&self, hotel: HotelId, code: &str) -> Result<AssessInput, GameError> {
         let h = self.hotel(hotel)?;
-        let (m, t) = self.situation_round(code)?;
+        let (m, t) = self.situation_round_for(hotel, code)?;
         let fr = h
             .responses
             .get(&(m, code.to_owned()))
             .ok_or(GameError::UnknownSituation)?;
-        let ai = self.content.ai.get(code).ok_or(GameError::NotFreeText)?;
+        let ai = self
+            .ai_entry_for(hotel, code)
+            .ok_or(GameError::NotFreeText)?;
         let offered = t
             .answers
             .iter()
@@ -180,11 +190,9 @@ impl Game {
     }
 
     pub fn character_input(&self, hotel: HotelId, code: &str) -> Result<CharacterInput, GameError> {
-        let (_, t) = self.situation_round(code)?;
+        let (_, t) = self.situation_round_for(hotel, code)?;
         let c = self
-            .content
-            .ai
-            .get(code)
+            .ai_entry_for(hotel, code)
             .and_then(|a| a.character.as_ref())
             .ok_or(GameError::NotFreeText)?;
         Ok(CharacterInput {
@@ -235,7 +243,7 @@ impl Game {
         let mut situations = Vec::with_capacity(res.situations.len());
         for s in &res.situations {
             let t = self
-                .situations_in(m)
+                .hotel_situations(h, m)
                 .into_iter()
                 .find(|t| t.code == s.code)
                 .ok_or_else(|| corrupt("situacija iz obračuna nije u sadržaju"))?;
@@ -256,6 +264,18 @@ impl Game {
             } else {
                 None
             };
+            let department = h
+                .drawn
+                .get(&m)
+                .and_then(|l| l.iter().find(|i| i.situation.code == s.code))
+                .and_then(|i| i.drawn.department.as_ref())
+                .map(|c| {
+                    self.content
+                        .v2
+                        .as_ref()
+                        .and_then(|v| v.departments.get(c))
+                        .map_or_else(|| c.as_str().to_owned(), |d| d.name.clone())
+                });
             situations.push(DebriefSituation {
                 code: s.code.clone(),
                 title: t.title.clone(),
@@ -263,8 +283,10 @@ impl Game {
                 free_text: s.free_text,
                 rationale: verdict.map(|v| v.rationale.clone()),
                 neutral: verdict.is_some_and(|v| v.nearest_answer.is_none()),
-                unanswered: s.answer.is_none() && !s.free_text,
+                unanswered: s.answer.is_none() && !s.free_text && !s.delegated,
+                delegated: s.delegated,
                 chosen_label,
+                department,
             });
         }
         let category = self.state_at(hotel, m)?.category();

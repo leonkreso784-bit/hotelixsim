@@ -33,6 +33,7 @@ import { IndexBars } from "../ui/IndexBars";
 import { Badge, Card, ErrorText, StatusText } from "../ui/primitives";
 import { CloseMonth } from "./CloseMonth";
 import { Row, Stat } from "./hotel/links";
+import { canDelegate } from "./situation/rules";
 
 export function HotelScreen({ me }: { me: HotelBody }) {
   const game = useGame(me.game_id);
@@ -180,6 +181,7 @@ export function HotelScreen({ me }: { me: HotelBody }) {
               hotelId={me.hotel.hotel_id}
               round={current.round}
               unanswered={sits.data?.unanswered ?? current.unanswered}
+              delegable={sits.data?.items.some((i) => canDelegate(i, sits.data.open)) ?? false}
             />
           )}
           {current?.status === "closing" && (

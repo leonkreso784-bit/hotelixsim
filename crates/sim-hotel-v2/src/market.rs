@@ -5,6 +5,7 @@ use engine::calc::{self as c, Calc};
 use sim_hotel::{GroupBlock, MarketOutcome};
 
 use crate::calendar::{Period, avg_i64, avg_u16, prorate, prorate_part};
+use crate::catalog::GroupTerms;
 use crate::plan::PeriodPlan;
 use crate::state::HotelState;
 
@@ -17,7 +18,8 @@ fn f_price_bp(price: i64, reference: i64, elasticity_bp: i32) -> Calc<i32> {
     c::narrow(c::add(10_000, shift)?.clamp(3_000, 16_000))
 }
 
-fn f_reputation_bp(rating: u16) -> Calc<i32> {
+/// Faktor ugleda u potražnji (bp); dijeli ga i očekivana popunjenost za broj situacija (`situations::count`).
+pub(crate) fn f_reputation_bp(rating: u16) -> Calc<i32> {
     let gap = c::sub(i128::from(rating), 840)?;
     let shift = c::div_round(c::mul(54, gap)?, 10)?;
     c::narrow(c::add(10_000, shift)?.max(0))
@@ -42,6 +44,17 @@ pub(crate) fn block_nights(g: &GroupBlock, p: &Period) -> Calc<i128> {
     Ok(total)
 }
 
+/// M1 (J-3, po USALI-ju S-4): provizija posrednika na bruto prihod grupe; prihod soba ostaje bruto, a provizija je
+/// trošak odjela Smještaj. Zaokruženje je isto kao kad je provizija umanjivala prihod, pa je GOP isti do centa.
+pub(crate) fn group_commission_cents(gross_cents: i64, commission_bp: u16) -> Calc<i64> {
+    let gross = i128::from(gross_cents);
+    let net = c::div_round(
+        c::mul(gross, c::sub(10_000, i128::from(commission_bp))?)?,
+        10_000,
+    )?;
+    c::narrow(c::sub(gross, net)?)
+}
+
 /// Tržište kruga. Kapacitet osoblja daje Smještaj: `staff` su zaposleni Smještaja, `capacity_tenths` njegova
 /// korištenja po zaposlenom na dan u desetinkama (v1: 24); sobe izvan prodaje ovise o stanju prostora Smještaja.
 pub fn market(
@@ -51,6 +64,7 @@ pub fn market(
     staff: u16,
     capacity_tenths: u16,
     cat: &sim_hotel::Catalog,
+    terms: &GroupTerms,
 ) -> Calc<MarketOutcome> {
     let spec = cat
         .category(state.category)
@@ -100,17 +114,29 @@ pub fn market(
     for g in &state.groups {
         group_nights = c::add(group_nights, block_nights(g, p)?)?;
     }
+    // Uvjeti grupe (J-3): grupa iskoristi dio bloka (M2), neiskorištene blokirane sobe se ne prodaju, a držanje
+    // bloka odbije dio pojedinačne potražnje (M5). Sve 0 = v1.
+    let keep = |n: i128, bp: u16| -> Calc<i128> {
+        c::div_round(c::mul(n, c::sub(10_000, i128::from(bp))?)?, 10_000)
+    };
+    let used = keep(group_nights, terms.attrition_bp)?;
+    let held = c::sub(group_nights, used)?;
+    let displaced = c::div_round(
+        c::mul(group_nights, i128::from(terms.displacement_bp))?,
+        10_000,
+    )?;
+    let demand_left = c::sub(demand, displaced)?.max(0);
 
-    let sold = c::add(group_nights, demand)?
-        .min(available)
+    let sold = c::add(used, demand_left)?
+        .min(c::sub(available, held)?.max(0))
         .min(staff_capacity);
-    let group_sold = group_nights.min(sold);
+    let group_sold = used.min(sold);
     let individual = c::sub(sold, group_sold)?;
 
     let mut remaining = group_sold;
     let mut revenue: i128 = 0;
     for g in &state.groups {
-        let take = block_nights(g, p)?.min(remaining);
+        let take = keep(block_nights(g, p)?, terms.attrition_bp)?.min(remaining);
         revenue = c::add(revenue, c::mul(take, i128::from(g.price_cents))?)?;
         remaining = c::sub(remaining, take)?;
     }

@@ -39,7 +39,7 @@ use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
 use crate::department::{BuildingOutcome, DeptCode, PeriodAccounts, after_renewal};
 use crate::explain::{Explain, Lines, explain};
-use crate::market::market;
+use crate::market::{group_commission_cents, market};
 use crate::plan::{PeriodPlan, PlanError};
 use crate::renewal::{RoundRenewal, depreciation, renew_round};
 use crate::state::HotelState;
@@ -210,7 +210,7 @@ pub fn resolve_period(
     let pend = state.pending.clone();
     let spec = base.category(state.category)?;
 
-    let sit = situation_effects(situations, p, base, state.category)?;
+    let mut sit = situation_effects(situations, p, base, state.category, coeffs)?;
 
     // 1. osoblje, tržište i Smještaj
     let rooms_capacity = cat.dept(&DeptCode::rooms())?.capacity_tenths_per_staff_day;
@@ -227,12 +227,37 @@ pub fn resolve_period(
         .unwrap_or_default();
     s.groups.extend(sit.groups);
     s.extra_wage_cents = c::narrow(c::add(w(s.extra_wage_cents), sit.extra_wage)?)?;
-    let mkt = market(&s, p, plan, st.rooms_staff, rooms_capacity, base)?;
+    let mkt = market(
+        &s,
+        p,
+        plan,
+        st.rooms_staff,
+        rooms_capacity,
+        base,
+        &cat.economy.groups,
+    )?;
+    // M3 (J-3): grupna noćenja opterećuju goste i osoblje razmjerno udjelu u prodanim noćenjima kruga; učinak je
+    // na ciljevima (zadovoljstvo, moral), pa ne ovisi o duljini kruga.
+    let terms = &cat.economy.groups;
+    let group_share = |pts: u16| -> Result<i128, ResolveError> {
+        if mkt.sold == 0 {
+            return Ok(0);
+        }
+        Ok(c::div_round(
+            c::mul(w(pts), w(mkt.group_sold))?,
+            w(mkt.sold),
+        )?)
+    };
+    let group_load_satisfaction = group_share(terms.load_satisfaction_pts)?;
+    sit.morale = c::sub(sit.morale, group_share(terms.load_morale_pts)?)?;
     s.groups.retain(|g| !group_done(g.month, p));
     let rooms_revenue: i64 = c::narrow(c::add(
         c::mul(w(mkt.individual_sold), w(plan.price_cents))?,
         w(mkt.group_revenue_cents),
     )?)?;
+    // M1 po USALI-ju (S-4): prihod soba je bruto, provizija je trošak Smještaja. Osnovica odjela s prihodom kao
+    // udjelom prihoda soba je isto bruto (ADR-040 t. 2): gost u restoranu ne ovisi o tome koliko je agencija uzela.
+    let commission = group_commission_cents(mkt.group_revenue_cents, terms.commission_bp)?;
     let guest_nights: u32 = c::narrow(c::div_round(
         c::mul(w(mkt.sold), w(cat.economy.guests_per_room_hundredths))?,
         100,
@@ -330,6 +355,7 @@ pub fn resolve_period(
             building_share_bp: share_bp,
             felt_parts: &felt_parts,
             deferred_wear_bp: cat.economy.deferred_wear_bp,
+            group_load_pts: group_load_satisfaction,
         },
         base,
     )?;
@@ -344,6 +370,7 @@ pub fn resolve_period(
         staff: st.rooms_staff,
         price_level_pct: rooms_plan.price_level_pct,
         revenue_cents: rooms_revenue,
+        commission_cents: commission,
         payroll_cents: rooms_payroll(
             st.rooms_staff,
             rooms_spec.wage_cents,

@@ -15,17 +15,20 @@ import { FOCUS } from "./departments/helpers";
  * i na nespremljene izmjene plana ili odluka odjela (N-I2): krug se obračunava sa spremljenim planom, pa potvrda to kaže
  * i vodi u plan (sažetak ondje pokazuje i odjele s nespremljenim izmjenama). Potvrda ne sprema sama: odluke odjela imaju
  * svoja pravila (korak sezonskih radnika, najveći broj), pa bi skupno spremanje moglo pasti napola.
+ * `delegable`: među neodgovorenima je bar jedna koja se smije prepustiti voditelju (W-1), pa upozorenje to nudi.
  */
 export function CloseMonth({
   gameId,
   hotelId,
   round,
   unanswered,
+  delegable = false,
 }: {
   gameId: string;
   hotelId: string;
   round: RoundInfoBody;
   unanswered: number;
+  delegable?: boolean;
 }) {
   const [asking, setAsking] = useState(false);
   const close = useCloseRound(gameId);
@@ -78,7 +81,13 @@ export function CloseMonth({
         {t("close.confirmTitle", { month: name })}
       </h2>
       <p className="text-sm text-muted">{tw(weekly, "close.confirmText")}</p>
-      {unanswered > 0 && <ErrorText>{t("close.unanswered", { n: unanswered })}</ErrorText>}
+      {unanswered > 0 && (
+        <ErrorText>
+          {delegable
+            ? `${t("close.unanswered", { n: unanswered })} ${t("close.delegateHint")}`
+            : t("close.unanswered", { n: unanswered })}
+        </ErrorText>
+      )}
       {unsaved && (
         <div className="space-y-1">
           <ErrorText>{tw(weekly, "close.unsaved")}</ErrorText>

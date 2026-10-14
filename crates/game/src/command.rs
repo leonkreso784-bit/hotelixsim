@@ -20,6 +20,10 @@ const ROBOTS: [(&str, &str); 3] = [
     ("lovac", "Lovac na popunjenost"),
 ];
 
+/// Koliko prvih situacija kruga (u poretku `Game::situations_of_hotel`) student mora riješiti sam (Leon P4, 13.10.);
+/// ostale smije prepustiti voditelju odjela.
+pub const MANDATORY_SITUATIONS: usize = 3;
+
 /// Postavke nove igre: vrsta kruga (tjedan ili mjesec).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GameSettings {
@@ -109,7 +113,7 @@ pub fn new_game_with(
     };
     let game = Game::fold(std::slice::from_ref(&first))?;
     let mut out = vec![(first.actor, first.event)];
-    out.extend(game.robot_moves(first_round)?);
+    out.extend(game.open_round(first_round)?);
     Ok(out)
 }
 
@@ -148,7 +152,7 @@ impl Game {
                     plan: plan.to_dto(),
                 }),
             ));
-            for t in self.situations_in(r) {
+            for t in self.hotel_situations(h, r) {
                 let mut rng = Rng::derive(
                     self.seed,
                     &[label("game:robot-answer"), pos, slot, label(&t.code)],
@@ -200,15 +204,14 @@ impl Game {
         answer: u8,
     ) -> Result<GameEvent, GameError> {
         let h = self.hotel(hotel)?;
-        let (round, t) = self.situation_round(code)?;
+        let (round, t) = self.situation_round_for(hotel, code)?;
         if self.status(round)? != RoundStatus::Open {
             return Err(GameError::RoundNotOpen);
         }
         if usize::from(answer) >= t.answers.len() {
             return Err(GameError::UnknownAnswer);
         }
-        let key = (round, t.code.clone());
-        if h.responses.contains_key(&key) || h.answers.contains_key(&key) {
+        if h.decided(&(round, t.code.clone())) {
             return Err(GameError::AlreadyAnswered);
         }
         Ok(GameEvent::AnswerChosen(AnswerChosen {
@@ -216,6 +219,40 @@ impl Game {
             month: round,
             situation: t.code.clone(),
             answer,
+        }))
+    }
+
+    /// Mora li student situaciju riješiti sam: među prve tri je u poretku kruga hotela (sidra i jednaka važnost po
+    /// redu generatora 🟨) ili nema voditelja kojem bi je prepustio (v1, nijedan odjel otvoren).
+    pub fn situation_mandatory(&self, hotel: HotelId, code: &str) -> Result<bool, GameError> {
+        let h = self.hotel(hotel)?;
+        let (round, _) = self.situation_round_for(hotel, code)?;
+        let first = self
+            .hotel_situations(h, round)
+            .iter()
+            .take(MANDATORY_SITUATIONS)
+            .any(|t| t.code == code);
+        Ok(first || self.situation_leader(hotel, code)?.is_none())
+    }
+
+    /// „Prepusti voditelju" (Leon P4): situacija iza prve tri u otvorenom krugu, o kojoj još nije odlučeno, ide
+    /// voditelju odjela; obračun joj daje kvalitetu 2 s mehanikama `unanswered`, bez AI-ja.
+    pub fn delegate_situation(&self, hotel: HotelId, code: &str) -> Result<GameEvent, GameError> {
+        let h = self.hotel(hotel)?;
+        let (round, t) = self.situation_round_for(hotel, code)?;
+        if self.status(round)? != RoundStatus::Open {
+            return Err(GameError::RoundNotOpen);
+        }
+        if h.decided(&(round, t.code.clone())) {
+            return Err(GameError::AlreadyAnswered);
+        }
+        if self.situation_mandatory(hotel, code)? {
+            return Err(GameError::SituationMandatory);
+        }
+        Ok(GameEvent::SituationDelegated(SituationDelegated {
+            hotel_id: hotel,
+            month: round,
+            situation: t.code.clone(),
         }))
     }
 

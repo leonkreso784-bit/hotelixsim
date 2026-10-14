@@ -74,6 +74,33 @@ pub async fn answer(
     situations(deps, caller, hotel).await
 }
 
+/// „Prepusti voditelju" (Leon P4): zapiše `SituationDelegated` i vrati pogled situacija, kao odgovor na ponuđeni.
+pub async fn delegate_situation(
+    deps: &Deps,
+    caller: &Caller,
+    hotel: HotelId,
+    code: &str,
+) -> Result<SituationsView, AppError> {
+    let guest = caller.require()?;
+    let game_id = game_of_hotel(deps, hotel).await?;
+    let code = code.to_owned();
+    deps.log
+        .decide(
+            game_id,
+            Box::new(move |raw: &[RawEvent]| {
+                let g = fold_raw(raw)?;
+                require_owner(&g, guest, hotel)?;
+                let ev = g.delegate_situation(hotel, &code)?;
+                Ok(Decision {
+                    events: vec![new_event(&Actor::Guest(guest), &ev)],
+                    ..Decision::default()
+                })
+            }),
+        )
+        .await?;
+    situations(deps, caller, hotel).await
+}
+
 pub async fn round_status(
     deps: &Deps,
     caller: &Caller,

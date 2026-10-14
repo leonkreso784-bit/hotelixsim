@@ -18,9 +18,9 @@ export const TVRDA = 1000;
 
 // Putanja → najviše redaka. Spajanje grane koja legitimno podiže dug diže unos u istom commitu.
 export const DUG = {
-  "crates/api/src/schema.rs": 1889,
-  "crates/game/tests/mentor.rs": 1682,
-  "crates/game/src/mentor.rs": 1391,
+  "crates/api/src/schema.rs": 1770,
+  "crates/game/tests/mentor.rs": 1684,
+  "crates/game/src/mentor.rs": 1399,
 };
 
 // Putanja → razlog. Ne broji se uopće.

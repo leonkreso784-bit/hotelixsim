@@ -165,6 +165,9 @@ pub struct SituationFact {
     pub chosen: Option<String>,
     #[serde(rename = "bez_odgovora", skip_serializing_if = "is_false")]
     pub unanswered: bool,
+    /// Student je situaciju prepustio voditelju odjela (Leon P4); nije „bez odgovora".
+    #[serde(rename = "prepustena_voditelju", skip_serializing_if = "is_false")]
+    pub delegated: bool,
     #[serde(rename = "obrazlozenje", skip_serializing_if = "Option::is_none")]
     pub rationale: Option<String>,
     #[serde(rename = "neutralna_ocjena", skip_serializing_if = "Option::is_none")]
@@ -1068,6 +1071,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
                 (None, false) => None,
             },
             unanswered: s.unanswered,
+            delegated: s.delegated,
             rationale: s.rationale.clone(),
             neutral: s.neutral.then_some(
                 "AI nije stigao ocijeniti odgovor, pa je dobio srednju ocjenu 3/5; odgovor čeka pregled.",
@@ -1253,6 +1257,10 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
         .collect();
     bad.extend(f.situations.iter().filter(|s| s.quality <= 2).map(|s| {
         match (s.unanswered, &s.chosen_label) {
+            _ if s.delegated => format!(
+                "Situacija „{}“ prepuštena je voditelju ({}).",
+                s.title, s.grade
+            ),
             (true, _) => format!(
                 "Na situaciju „{}“ nije bilo odgovora, pa je dobila najnižu ocjenu ({}).",
                 s.title, s.grade

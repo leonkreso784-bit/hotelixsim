@@ -21,6 +21,7 @@ import {
 } from "../test/fixtures";
 import { joined } from "../test/joined";
 import { fastPolling, renderApp } from "../test/renderApp";
+import { LIFT, v2Items, v2SituationsApi } from "../test/situationsV2";
 
 beforeEach(fastPolling);
 afterEach(() => {
@@ -413,5 +414,31 @@ describe("Hotel nakon v2 sezone", () => {
     expect(results.getAttribute("href")).toBe("/kraj-sezone");
     const links = screen.getAllByRole("link").map((l) => l.textContent);
     expect(links.indexOf("Rezultati sezone")).toBeLessThan(links.indexOf("Nova igra"));
+  });
+});
+
+describe("Moj hotel: zatvaranje kruga i prepuštanje voditelju (W-1)", () => {
+  it("među neodgovorenima ima neobveznih: upozorenje dodaje „ili ih prepusti voditelju“", async () => {
+    renderApp(v2SituationsApi());
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(await screen.findByText(/Bez odgovora: 2\./)).toBeTruthy();
+    expect(await screen.findByText(/ili ih prepusti voditelju/)).toBeTruthy();
+  });
+
+  it("neodgovorene su samo obvezne: upozorenje bez „prepusti“", async () => {
+    const items = v2Items().map((i) => (i.code === LIFT ? { ...i, chosen: 0 } : i));
+    renderApp(v2SituationsApi(items));
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(await screen.findByText(/Bez odgovora: 1\./)).toBeTruthy();
+    expect(screen.queryByText(/prepusti/i)).toBeNull();
+  });
+
+  it("stara igra bez voditelja (leader: null): upozorenje kao prije, bez „prepusti“", async () => {
+    renderApp(standardApi());
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori mjesec" }));
+    expect(
+      await screen.findByText("Bez odgovora: 2. Takve situacije dobivaju najnižu ocjenu (1)."),
+    ).toBeTruthy();
+    expect(screen.queryByText(/prepusti/i)).toBeNull();
   });
 });

@@ -56,7 +56,7 @@ pub struct SeasonDecisions {
     /// Obnove v2 po mjesecu i dijelu (odjel ili zgrada), redom mjeseca.
     pub renewals: Vec<SeasonRenewal>,
     pub reply_reviews_rounds: u8,
-    /// Sve situacije sezone i koliko ih je ostalo bez odgovora.
+    /// Sve situacije sezone i koliko ih je ostalo bez odgovora (prepuštene voditelju nisu bez odgovora).
     pub situations: u16,
     pub unanswered: u16,
     /// Prosjek ocjena 1–5 ×100; `None` bez situacija.
@@ -267,7 +267,7 @@ fn decisions(res: &[(RoundKey, &HotelResolution)]) -> Result<SeasonDecisions, Ga
         }
         for s in &r.situations {
             situations = situations.saturating_add(1);
-            if s.answer.is_none() && !s.free_text {
+            if s.answer.is_none() && !s.free_text && !s.delegated {
                 unanswered = unanswered.saturating_add(1);
             }
             quality = c::add(quality, i128::from(s.quality)).map_err(calc)?;

@@ -1,0 +1,212 @@
+[
+  {
+    "code": "S1",
+    "month": "jun",
+    "title": "Klima u sobi obitelji s djecom",
+    "unanswered": [
+      { "type": "ServiceRecovery", "compensation_cents": 0 },
+      { "type": "EquipmentRepair", "urgent": false }
+    ],
+    "answers": [
+      {
+        "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+        "quality": 5,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 12000 },
+          { "type": "EquipmentRepair", "urgent": true }
+        ],
+        "criteria": [1, 2, 3, 4, 5]
+      },
+      {
+        "label": "Ispričati se, premjestiti obitelj i poslati tehničara",
+        "quality": 3,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 0 },
+          { "type": "EquipmentRepair", "urgent": true }
+        ],
+        "criteria": [1, 2, 4]
+      },
+      {
+        "label": "Vratiti novac za cijeli boravak",
+        "quality": 1,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 94500 },
+          { "type": "EquipmentRepair", "urgent": false }
+        ],
+        "criteria": [1]
+      },
+      {
+        "label": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+        "quality": 1,
+        "mechanics": [
+          { "type": "ServiceRecovery", "compensation_cents": 0 },
+          { "type": "EquipmentRepair", "urgent": false }
+        ],
+        "criteria": [4]
+      }
+    ],
+    "free_text": true,
+    "rubric": [
+      "Brza isprika i preuzimanje odgovornosti, bez prebacivanja krivnje (vrućina, tehničar)",
+      "Trenutno rješenje: druga soba ili prijenosni uređaj, odmah",
+      "Razmjerna kompenzacija (večera, popust na noćenje), ne povrat cijelog boravka",
+      "Uzrok se popravlja i prijavljuje održavanju",
+      "Provjera kasnije (follow-up)"
+    ],
+    "character": {
+      "name": "Petra Horvat",
+      "role": "gošća u sobi 214, s dvoje male djece",
+      "brief": "Umorna si i ljuta: klima ne radi od jutra, vani je 34 °C, djeca ne mogu spavati, a ovo je tvoj treći poziv recepciji. Najviše ti treba hladna soba za djecu ODMAH; novac ti je sporedan. Smiriš se ako se netko iskreno ispriča i odmah ponudi rješenje. Ako ti kažu da je kriva vrućina ili da tehničar dolazi 'kad stigne', postaješ ljuća i spominješ lošu recenziju. Ne nudiš sama rješenja; čekaš da ih ponudi hotel.",
+      "opening": "Treći put zovem! Klima u sobi 214 ne radi od jutra, djeca su mokra od znoja. Što ćete poduzeti?",
+      "fallback_reply": "Gošća je previše ljuta da bi nastavila razgovor. Odluči što ćeš poduzeti."
+    }
+  },
+  {
+    "code": "S2",
+    "month": "jul",
+    "title": "Šef kuhinje traži povišicu ili odlazi",
+    "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }],
+    "answers": [
+      {
+        "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+        "quality": 5,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus_cents": 200000 }],
+        "criteria": [1, 2, 3, 4, 5]
+      },
+      {
+        "label": "Bonus na kraju sezone ako ostane, bez razgovora",
+        "quality": 2,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 300000 }],
+        "criteria": [2, 5]
+      },
+      {
+        "label": "Odmah dati 20 %",
+        "quality": 1,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 20, "bonus_cents": 0 }],
+        "criteria": [1]
+      },
+      {
+        "label": "Odbiti: „nitko nije nezamjenjiv\"",
+        "quality": 1,
+        "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }],
+        "criteria": []
+      }
+    ],
+    "free_text": true,
+    "rubric": [
+      "Saslušati ga i otkriti pravi razlog (plaća, opterećenje, priznanje)",
+      "Odluka u okviru budžeta, s obrazloženjem",
+      "Pravednost prema ostatku tima: bez presedana koji ruši moral drugih",
+      "Nenovčani elementi: raspored, odgovornost, priznanje, razvoj",
+      "Plan B: zamjenik ili nasljednik iz tima"
+    ],
+    "character": {
+      "name": "Marko Babić",
+      "role": "šef kuhinje, u hotelu sedam sezona",
+      "brief": "Konkurentski hotel nudi ti 20 % veću plaću. Novac je važan, ali pravi razlog je da radiš 12 sati dnevno bez slobodnog dana i da te nitko nije pitao za mišljenje o jelovniku tri sezone. Ne kažeš to odmah: prvo tražiš povišicu. Otkriješ pravi razlog tek ako te netko pita kako ti je i sasluša. Ne prihvaćaš prijetnje ni 'nitko nije nezamjenjiv'. Rado bi obučio zamjenika ako dobiš više odgovornosti.",
+      "opening": "Šefe, imam ponudu iz hotela preko puta, 20 % više. Ili mi dignete plaću ili odlazim na kraju mjeseca.",
+      "fallback_reply": "Marko je otišao u kuhinju; razgovor se nastavlja drugi put. Odluči što ćeš učiniti."
+    }
+  },
+  {
+    "code": "S3",
+    "month": "jun",
+    "title": "Agencija nudi grupu: 25 soba, 7 noći u kolovozu, uz 25 % popusta",
+    "unanswered": [
+      {
+        "type": "GroupBooking",
+        "accept": false,
+        "rooms": 25,
+        "nights": 7,
+        "discount_bp": 2500,
+        "month": "aug"
+      }
+    ],
+    "answers": [
+      {
+        "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+        "quality": 5,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2000,
+            "month": "sep"
+          }
+        ]
+      },
+      {
+        "label": "Prihvatiti uz 15 % popusta i depozit",
+        "quality": 3,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 1500,
+            "month": "aug"
+          }
+        ]
+      },
+      {
+        "label": "Prihvatiti ponudu kako je",
+        "quality": 1,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": true,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2500,
+            "month": "aug"
+          }
+        ]
+      },
+      {
+        "label": "Odbiti",
+        "quality": 2,
+        "mechanics": [
+          {
+            "type": "GroupBooking",
+            "accept": false,
+            "rooms": 25,
+            "nights": 7,
+            "discount_bp": 2500,
+            "month": "aug"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "S4",
+    "month": "aug",
+    "title": "Najava restrikcija vode zbog suše",
+    "unanswered": [{ "type": "CrisisCommunication", "backup_cents": 0 }],
+    "answers": [
+      {
+        "label": "Voda i hlađenje za goste i osoblje, iskrena obavijest unaprijed, štednja u praonici i bazenu, cisterna kao rezerva, kraće smjene",
+        "quality": 5,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 300000 }]
+      },
+      {
+        "label": "Obavijest gostima i štednja u praonici",
+        "quality": 3,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      },
+      {
+        "label": "Noću zatvoriti tuševe i bazen bez objašnjenja",
+        "quality": 1,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      },
+      {
+        "label": "Ne poduzimati ništa dok ograničenja ne počnu",
+        "quality": 1,
+        "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
+      }
+    ]
+  }
+]

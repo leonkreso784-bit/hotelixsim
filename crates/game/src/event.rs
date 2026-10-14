@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
@@ -81,6 +83,15 @@ pub struct AnswerChosen {
     pub answer: u8,
 }
 
+/// Student je situaciju prepustio voditelju odjela (Leon P4, 13.10.): smije samo iza prve tri situacije kruga.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SituationDelegated {
+    pub hotel_id: HotelId,
+    pub month: RoundKey,
+    pub situation: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RoundClosed {
@@ -120,6 +131,10 @@ pub struct SituationResult {
     /// Slobodan odgovor (kvaliteta iz presude, `answer` je tada `None`); stari događaji ga nemaju.
     #[serde(default, skip_serializing_if = "is_false")]
     pub free_text: bool,
+    /// Prepuštena voditelju odjela (Leon P4: kvaliteta 2, mehanike `unanswered`, `answer` je `None`); stari
+    /// događaji i obračun bez prepuštanja ga nemaju, pa je njihov JSON bajt-isti.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub delegated: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -225,6 +240,52 @@ pub struct SeasonDebriefRecorded {
     pub meta: Option<AiMeta>,
 }
 
+/// Primjerak situacije iz predloška, kako ga je izvukao generator za jedan hotel (ili kolektivno, utor 0). `day`,
+/// `slot` i `occurrence` su povijest generatora (razmak ponavljanja): pune se iz konteksta pri zapisu, nikad
+/// zadanim vrijednostima. Tekstovi i odgovori se slažu iz predloška (`code` je šifra primjerka).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DrawnItem {
+    pub code: String,
+    pub template: String,
+    /// Dan sezone (0 = 1. lipnja).
+    pub day: u16,
+    /// Utor hotela; 0 = kolektivna (ista za sve hotele).
+    pub slot: u8,
+    pub occurrence: u8,
+    /// `Kind` generatora: complaint | staff | opportunity | breakdown | crisis | request.
+    pub kind: String,
+    pub weight: u8,
+    /// "hotel" | "all".
+    pub scope: String,
+    /// "high" | "low" kod veće situacije.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub major: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub department: Option<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub roles: BTreeMap<String, DrawnRole>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub numbers: BTreeMap<String, i64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DrawnRole {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role_type: Option<String>,
+}
+
+/// Situacije kruga izvučene pri njegovu otvaranju: svaki primjerak jednom; kolektivni (utor 0) vrijede za sve
+/// hotele, ostali za hotel s tim utorom. Poredak: po važnosti unutar hotela, hoteli po utoru.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SituationsDrawn {
+    pub month: RoundKey,
+    pub situations: Vec<DrawnItem>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GameEvent {
     GameCreated(GameCreated),
@@ -240,6 +301,10 @@ pub enum GameEvent {
     VerdictLate(VerdictRecorded),
     DebriefRecorded(DebriefRecorded),
     SeasonDebriefRecorded(SeasonDebriefRecorded),
+    /// Primjerci situacija iz predložaka pri otvaranju kruga (samo v2 igre s predlošcima).
+    SituationsDrawn(SituationsDrawn),
+    /// Situacija prepuštena voditelju odjela (A-1).
+    SituationDelegated(SituationDelegated),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -279,6 +344,8 @@ impl GameEvent {
             GameEvent::VerdictLate(_) => "VerdictLate",
             GameEvent::DebriefRecorded(_) => "DebriefRecorded",
             GameEvent::SeasonDebriefRecorded(_) => "SeasonDebriefRecorded",
+            GameEvent::SituationsDrawn(_) => "SituationsDrawn",
+            GameEvent::SituationDelegated(_) => "SituationDelegated",
         }
     }
 
@@ -295,6 +362,8 @@ impl GameEvent {
             GameEvent::VerdictRecorded(e) | GameEvent::VerdictLate(e) => serde_json::to_value(e),
             GameEvent::DebriefRecorded(e) => serde_json::to_value(e),
             GameEvent::SeasonDebriefRecorded(e) => serde_json::to_value(e),
+            GameEvent::SituationsDrawn(e) => serde_json::to_value(e),
+            GameEvent::SituationDelegated(e) => serde_json::to_value(e),
         };
         v.expect("događaj nema mapu s ne-tekstualnim ključem pa se uvijek serijalizira")
     }
@@ -323,6 +392,8 @@ impl GameEvent {
             "VerdictLate" => GameEvent::VerdictLate(body(kind, payload)?),
             "DebriefRecorded" => GameEvent::DebriefRecorded(body(kind, payload)?),
             "SeasonDebriefRecorded" => GameEvent::SeasonDebriefRecorded(body(kind, payload)?),
+            "SituationsDrawn" => GameEvent::SituationsDrawn(body(kind, payload)?),
+            "SituationDelegated" => GameEvent::SituationDelegated(body(kind, payload)?),
             other => return Err(EventError::UnknownKind(other.to_owned())),
         })
     }

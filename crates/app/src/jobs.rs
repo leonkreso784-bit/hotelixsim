@@ -150,7 +150,7 @@ async fn finish(deps: &Deps, game: GameId, claim: JobClaim) -> Result<(), AppErr
 /// Presuda je gotova: AI-jeva je već upisana, ili je uz neutralnu već stigla i zakašnjela.
 /// Neutralna presuda sama NE znači gotovo: AI-jeva koja stigne poslije upisuje se kao zakašnjela.
 fn verdict_settled(g: &game::Game, hotel: HotelId, code: &str) -> Result<bool, GameError> {
-    let (m, _) = g.situation_round(code)?;
+    let (m, _) = g.situation_round_for(hotel, code)?;
     let fr = g
         .hotel(hotel)?
         .responses
@@ -235,7 +235,7 @@ async fn run_chat(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let p: ChatPayload = payload(job)?;
     let claim = job.claim();
     let g = load_game(deps, job.game_id).await?;
-    if g.status(g.situation_round(&p.situation)?.0)? != RoundStatus::Open {
+    if g.status(g.situation_round_for(p.hotel_id, &p.situation)?.0)? != RoundStatus::Open {
         return finish(deps, job.game_id, claim).await;
     }
     let input = g.character_input(p.hotel_id, &p.situation)?;
@@ -248,9 +248,7 @@ async fn run_chat(deps: &Deps, job: &Job) -> Result<(), AppError> {
         Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
         Err(_) => {
             let text = g
-                .content
-                .ai
-                .get(&p.situation)
+                .ai_entry_for(p.hotel_id, &p.situation)
                 .and_then(|a| a.character.as_ref())
                 .map(|c| c.fallback_reply.clone())
                 .ok_or_else(|| AppError::internal("situacija bez lika"))?;
@@ -289,7 +287,7 @@ async fn run_assess(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let input = g.assess_input(p.hotel_id, &p.situation)?;
     let judged = match deps.ai.assess(input).await {
         Ok(out) => g
-            .validate_verdict(&p.situation, out.value)
+            .validate_verdict_for(p.hotel_id, &p.situation, out.value)
             .map(|v| (v, out.meta))
             .map_err(|e| {
                 (

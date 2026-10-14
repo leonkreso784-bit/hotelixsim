@@ -195,6 +195,15 @@ export function s1(over: Partial<SituationBody> = {}): SituationBody {
     free_text: true,
     character: { name: "Petra Horvat", role: "gošća u sobi 214, s dvoje male djece" },
     response: null,
+    department: null,
+    kind: null,
+    weight: null,
+    description: null,
+    roles: [],
+    // Kao poslužitelj u v1 igri: bez voditelja je svaka situacija „obvezna“ (`command.rs:234`, W-1 popravak 1).
+    mandatory: true,
+    delegated: false,
+    leader: null,
     ...over,
   };
 }
@@ -223,6 +232,15 @@ export function s3(over: Partial<SituationBody> = {}): SituationBody {
     free_text: false,
     character: null,
     response: null,
+    department: null,
+    kind: null,
+    weight: null,
+    description: null,
+    roles: [],
+    // Kao poslužitelj u v1 igri: bez voditelja je svaka situacija „obvezna“ (`command.rs:234`, W-1 popravak 1).
+    mandatory: true,
+    delegated: false,
+    leader: null,
     ...over,
   };
 }

@@ -191,6 +191,31 @@ export function useAnswer(hotelId: string, code: string) {
   });
 }
 
+/**
+ * „Prepusti voditelju“ (P4): zahtjev bez tijela; odgovor su sve situacije kruga, kao kod izbora odgovora.
+ * 409 (odgovoreno ili prepušteno drugdje, krug zatvoren): ekran je star, pa se situacije dohvate ponovno.
+ */
+export function useDelegate(hotelId: string, code: string) {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      unwrap(
+        await api.POST("/v1/hotels/{hotel_id}/situations/{code}/delegate", {
+          params: { path: { hotel_id: hotelId, code } },
+        }),
+      ),
+    onSuccess: (body) => {
+      qc.setQueryData(keys.situations(hotelId), body);
+      void qc.invalidateQueries({ queryKey: keys.feed(hotelId) });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409)
+        void qc.invalidateQueries({ queryKey: keys.situations(hotelId) });
+    },
+  });
+}
+
 export function useSubmitResponse(hotelId: string, code: string) {
   const api = useApi();
   const qc = useQueryClient();
@@ -310,11 +335,15 @@ export function useKpi(hotelId: string) {
   });
 }
 
-/** Odjeli hotela (v2): stanje, zadovoljstvo i rezultat zadnjeg obračunatog kruga. U v1 igri poslužitelj vraća 409 `model_v1`. */
-export function useDepartments(hotelId: string) {
+/**
+ * Odjeli hotela (v2): stanje, zadovoljstvo i rezultat zadnjeg obračunatog kruga. U v1 igri poslužitelj vraća 409 `model_v1`;
+ * `enabled: false` kad ekran zna da odjele ne treba (npr. situacije stare igre bez odjela).
+ */
+export function useDepartments(hotelId: string, enabled = true) {
   const api = useApi();
   return useQuery<DepartmentsBody>({
     queryKey: keys.departments(hotelId),
+    enabled,
     queryFn: async () =>
       unwrap(await api.GET("/v1/hotels/{hotel_id}/departments", { params: { path: { hotel_id: hotelId } } })),
   });

@@ -21,5 +21,12 @@
   },
   "ffe_reserve_bp": 400,
   "finance_index": "gop_after_investment",
-  "deferred_wear_bp": 12500
+  "deferred_wear_bp": 12500,
+  "groups": {
+    "commission_bp": 1500,
+    "attrition_bp": 1500,
+    "displacement_bp": 3000,
+    "load_satisfaction_pts": 4000,
+    "load_morale_pts": 4000
+  }
 }

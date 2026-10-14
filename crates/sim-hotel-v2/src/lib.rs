@@ -19,14 +19,15 @@ pub mod renewal;
 pub mod resolve;
 pub mod robots;
 pub mod season;
+pub mod situations;
 pub mod state;
 pub mod streams;
 pub mod usali;
 
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
-    BuildingSpec, Catalog, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, PeriodCoefficients,
-    ProfileV2, degenerate,
+    BuildingSpec, Catalog, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, GroupTerms,
+    PeriodCoefficients, ProfileV2, degenerate,
 };
 pub use department::{BuildingOutcome, StaffingNorm};
 pub use indices::{RefTable, period_indices, start_indices};
@@ -34,7 +35,11 @@ pub use plan::{PeriodPlan, PlanError, PlanLimits, RenewalLimits};
 pub use renewal::{AssetBook, Renewal, RenewalSpec};
 pub use resolve::{FinanceOutcome, PeriodReport, ResolveError, resolve_period};
 pub use robots::robot_plan;
-pub use season::{SeasonResult, run_season, run_season_with, situations_for};
+pub use season::{
+    RoundHotel, SeasonResult, SeasonSituations, TemplateDraw, anchor_of, collective_for_round,
+    draw_for_round, draw_for_round_with, group_month, run_robot_season, run_season,
+    run_season_from, run_season_with, situations_for,
+};
 pub use sim_hotel::{
     CatalogError, Category, Cause, Effects, GroupBlock, GuestOutcome, Index, IndexSet, Line,
     Maintenance, MarketOutcome, Mechanic, MechanicError, MoneyOutcome, Month, MonthReport,

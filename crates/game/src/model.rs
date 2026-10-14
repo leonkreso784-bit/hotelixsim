@@ -10,8 +10,10 @@ use sim_hotel::{
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
 use sim_hotel_v2::department::PeriodAccounts;
+use sim_hotel_v2::situations::{DrawView, DrawnSituation, TemplateSet};
 use sim_hotel_v2::{
-    Period, PeriodKind, PeriodPlan, ResolveError, period_indices, resolve_period, run_season_with,
+    Period, PeriodKind, PeriodPlan, PeriodReport, ResolveError, RoundHotel, collective_for_round,
+    draw_for_round_with, period_indices, resolve_period, run_season_with,
 };
 
 use crate::command::{DeptLimitsView, PlanLimits, plan_limits};
@@ -63,6 +65,21 @@ pub(crate) struct Resolved {
     pub report: MonthReportDto,
     pub detail: Option<DetailDto>,
     pub indices: IndexSet,
+}
+
+/// Ulaz izvlačenja situacija jednog hotela u krugu (`Model::draw_collective`, `Model::draw_situations`).
+pub(crate) struct DrawInput<'a> {
+    /// Stanje hotela na početku kruga.
+    pub state: &'a CoreState,
+    /// Cijeli obračun prošlog kruga; `None` u prvom krugu.
+    pub previous: Option<&'a PeriodReport>,
+    /// Pet pokazatelja na početku kruga.
+    pub indices: &'a IndexSet,
+    pub round: &'a RoundInfo,
+    /// Primjerci ovog hotela iz prijašnjih krugova i kolektivni, svaki jednom.
+    pub history: &'a [DrawnSituation],
+    pub seed: u64,
+    pub slot: u8,
 }
 
 /// v1 igra od sloja 1 dalje: lipanj i srpanj (kao prije).
@@ -650,6 +667,106 @@ impl Model {
             Model::V2 => &v2_catalog(c)?.base,
         };
         Ok(base.category(category).map_err(debug)?.cpor_cents)
+    }
+
+    /// Ishod situacije za obračun: v1 kakav jest; v2 uz oznaku „samo nagrada“ (S-4) bez štete
+    /// (`sim_hotel_v2::situations::reward_only`), za ponuđen, slobodan i neodgovoren odgovor. Oznaku određuje
+    /// pozivatelj (`Game::no_penalty`): predložak primjerka iz dnevnika, ne rastavljanje šifre.
+    pub(crate) fn situation_outcome(
+        self,
+        o: SituationOutcome,
+        no_penalty: bool,
+    ) -> SituationOutcome {
+        match self {
+            Model::V1 => o,
+            Model::V2 if no_penalty => sim_hotel_v2::situations::reward_only(o),
+            Model::V2 => o,
+        }
+    }
+
+    /// Izvlači li igra situacije iz predložaka: samo v2 igra čiji snimak ima predloške. Je li to uistinu tako i za
+    /// ovu igru, odlučuje dnevnik (`SituationsDrawn` u prvom krugu), ne snimak.
+    pub(crate) fn can_draw(self, c: &Content) -> bool {
+        self == Model::V2 && c.situation_templates.is_some()
+    }
+
+    /// Kolektivna situacija kruga, jedna za sve hotele igre: ulaz su svi hoteli (granica grupa, slobodna mjesta,
+    /// povijest), isti kod kao u sezoni robota (`collective_for_round`). Samo v2.
+    pub(crate) fn draw_collective(
+        self,
+        c: &Content,
+        set: &TemplateSet,
+        all: &[DrawInput],
+    ) -> Result<Option<DrawnSituation>, GameError> {
+        let Some(first) = all.first() else {
+            return Ok(None);
+        };
+        let mut hotels = Vec::with_capacity(all.len());
+        for i in all {
+            hotels.push(RoundHotel {
+                view: DrawView {
+                    state: self.v2_state(i.state)?,
+                    previous: i.previous,
+                    indices: i.indices,
+                },
+                history: i.history,
+                slot: i.slot,
+            });
+        }
+        collective_for_round(
+            &c.situations,
+            set,
+            first.seed,
+            &first.round.period,
+            &hotels,
+            v2_catalog(c)?,
+        )
+        .map_err(debug)
+    }
+
+    /// Primjerci jednog hotela u krugu uz zadanu kolektivnu: isti poziv generatora kao sezona robota
+    /// (`draw_for_round_with`), sa sidrima S1–S4 iz sadržaja. Samo v2.
+    pub(crate) fn draw_situations(
+        self,
+        c: &Content,
+        set: &TemplateSet,
+        i: &DrawInput,
+        shared: Option<&DrawnSituation>,
+    ) -> Result<Vec<DrawnSituation>, GameError> {
+        let state = self.v2_state(i.state)?;
+        let view = DrawView {
+            state,
+            previous: i.previous,
+            indices: i.indices,
+        };
+        let (_, found) = draw_for_round_with(
+            &c.situations,
+            set,
+            (i.seed, i.slot),
+            &i.round.period,
+            (&view, i.history),
+            (v2_catalog(c)?, shared),
+        )
+        .map_err(debug)?;
+        Ok(found)
+    }
+
+    /// Cijeli obračun jednog hotela u krugu (v2) — za izvlačenje idućeg kruga, koje gleda obračun prošlog.
+    pub(crate) fn period_report(
+        self,
+        s: &CoreState,
+        r: &RoundInfo,
+        p: &CorePlan,
+        o: &[SituationOutcome],
+        c: &Content,
+    ) -> Result<PeriodReport, GameError> {
+        match (self, s, p) {
+            (Model::V2, CoreState::V2(s), CorePlan::V2(p)) => {
+                resolve_period(s, &r.period, p, o, v2_catalog(c)?).map_err(debug)
+            }
+            (Model::V1, _, _) => Err(GameError::WrongModel),
+            _ => Err(mismatch()),
+        }
     }
 
     /// Situacije kruga: v1 po mjesecu, v2 u krugu koji sadrži 1. dan mjeseca situacije (🟨 P13).

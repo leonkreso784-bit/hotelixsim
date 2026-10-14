@@ -97,7 +97,7 @@ impl Game {
                     by: r.actor.clone(),
                 }),
                 GameEvent::AnswerChosen(a) if a.hotel_id == hotel => {
-                    let (title, label) = self.answer_texts(&a.situation, a.answer)?;
+                    let (title, label) = self.answer_texts(hotel, &a.situation, a.answer)?;
                     out.push(FeedItem::AnswerChosen {
                         seq,
                         round: a.month,
@@ -122,13 +122,13 @@ impl Game {
                     for s in res
                         .situations
                         .iter()
-                        .filter(|s| s.answer.is_none() && !s.free_text)
+                        .filter(|s| s.answer.is_none() && !s.free_text && !s.delegated)
                     {
                         out.push(FeedItem::SituationIgnored {
                             seq,
                             round: rr.month,
                             situation: s.code.clone(),
-                            title: self.situation_title(&s.code)?,
+                            title: self.situation_title(hotel, &s.code)?,
                         });
                     }
                     out.push(FeedItem::MonthResolved {
@@ -148,7 +148,7 @@ impl Game {
                         seq,
                         round: e.month,
                         situation: e.situation.clone(),
-                        title: self.situation_title(&e.situation)?,
+                        title: self.situation_title(hotel, &e.situation)?,
                     });
                 }
                 GameEvent::VerdictRecorded(v) if v.hotel_id == hotel => {
@@ -173,8 +173,11 @@ impl Game {
                 | GameEvent::VerdictRecorded(_)
                 | GameEvent::VerdictLate(_)
                 | GameEvent::DebriefRecorded(_) => {}
-                // Sezonski mentor je na ekranu kraja sezone, ne u feedu.
-                GameEvent::SeasonDebriefRecorded(_) => {}
+                // Sezonski mentor je na ekranu kraja sezone, ne u feedu; izvlačenje situacija je tehnički događaj;
+                // prepuštena situacija se vidi na ekranu situacija i nije „ignorirana" u obračunu.
+                GameEvent::SeasonDebriefRecorded(_)
+                | GameEvent::SituationsDrawn(_)
+                | GameEvent::SituationDelegated(_) => {}
             }
         }
         Ok(out)
@@ -190,29 +193,29 @@ impl Game {
             seq,
             round: v.month,
             situation: v.situation.clone(),
-            title: self.situation_title(&v.situation)?,
+            title: self.situation_title(v.hotel_id, &v.situation)?,
             quality: v.quality,
             neutral: v.source == AiSource::Fallback,
             late,
         })
     }
 
-    fn situation_title(&self, code: &str) -> Result<String, GameError> {
-        self.content
-            .situations
-            .iter()
-            .find(|t| t.code == code)
-            .map(|t| t.title.clone())
-            .ok_or_else(|| corrupt(format!("nepoznata situacija {code}")))
+    /// Naslov situacije hotela: sidro iz sadržaja ili primjerak izvučen za taj hotel (kao `answer_texts`).
+    fn situation_title(&self, hotel: HotelId, code: &str) -> Result<String, GameError> {
+        self.situation_round_for(hotel, code)
+            .map(|(_, t)| t.title.clone())
+            .map_err(|_| corrupt(format!("nepoznata situacija {code}")))
     }
 
-    fn answer_texts(&self, code: &str, answer: u8) -> Result<(String, String), GameError> {
-        let t = self
-            .content
-            .situations
-            .iter()
-            .find(|t| t.code == code)
-            .ok_or_else(|| corrupt(format!("nepoznata situacija {code}")))?;
+    fn answer_texts(
+        &self,
+        hotel: HotelId,
+        code: &str,
+        answer: u8,
+    ) -> Result<(String, String), GameError> {
+        let (_, t) = self
+            .situation_round_for(hotel, code)
+            .map_err(|_| corrupt(format!("nepoznata situacija {code}")))?;
         let a = t
             .answers
             .get(usize::from(answer))

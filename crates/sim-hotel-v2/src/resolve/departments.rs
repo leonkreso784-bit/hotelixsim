@@ -100,6 +100,8 @@ pub(super) struct RoomsIn<'a> {
     pub(super) staff: u16,
     pub(super) price_level_pct: u16,
     pub(super) revenue_cents: i64,
+    /// Provizija posrednika na prihod grupe (M1): po USALI-ju trošak Smještaja, prihod ostaje bruto.
+    pub(super) commission_cents: i64,
     pub(super) payroll_cents: i64,
     /// Trošak po prodanoj sobi (rublje, potrošni materijal) kategorije hotela.
     pub(super) cpor_cents: i64,
@@ -114,12 +116,13 @@ pub(super) struct RoomsIn<'a> {
 }
 
 /// Račun Smještaja iz tržišta i faze gostiju: kapacitet je manji od kapaciteta osoblja i raspoloživih soba-noći,
-/// korištenje je popunjenost raspoloživih soba, ostali izravni trošak je trošak po prodanoj sobi. Stanje prostora
-/// nakon kruga uključuje i obnovu i situacije (v1 „oprema").
+/// korištenje je popunjenost raspoloživih soba, ostali izravni trošak je trošak po prodanoj sobi i provizija
+/// posrednika (USALI: ostali troškovi Smještaja). Stanje prostora nakon kruga uključuje i obnovu i situacije (v1
+/// „oprema").
 pub(super) fn rooms_outcome(i: &RoomsIn) -> Calc<DeptOutcome> {
     let m = i.market;
     let g = i.guests;
-    let other_direct = c::mul(w(i.cpor_cents), w(m.sold))?;
+    let other_direct = c::add(c::mul(w(i.cpor_cents), w(m.sold))?, w(i.commission_cents))?;
     let profit = c::sub(
         c::sub(w(i.revenue_cents), w(i.payroll_cents))?,
         other_direct,

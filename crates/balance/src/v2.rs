@@ -9,9 +9,13 @@ use sim_hotel_v2::usali::{self, UsaliStatement};
 use sim_hotel_v2::{
     Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Month, Period,
     PeriodKind, PeriodPlan, PlanLimits, Profile, RefTable, RenewalLimits, ResolveError,
-    SeasonResult, Strategy, Training, run_season, run_season_with, season_periods, start_indices,
+    SeasonResult, Strategy, Training, run_season_with, season_periods, start_indices,
 };
 
+use crate::v2_situations::{
+    DOMINANT_MAX_BP, DrawStats, SAVER_MAX_LOSS, SHARE_BAND_BP, Share, Situations, count_band,
+    rounds_per_season, shares,
+};
 use crate::{
     Probe, REPRO_SEED, all_reproducible, check_dominant, check_fairness, check_repro, check_start,
     hundredths, median, middle_index, profile_row, push_medians, push_probes, push_starts,
@@ -42,6 +46,20 @@ pub struct ReportV2 {
     pub reproducible: bool,
     /// Robot „brižni" (sjeme ponovljivosti): Σ sezonaca·dani / Σ sezonskog plana kategorije·dani, u bp, po profilu.
     pub caring_seasonal_vs_plan_bp: Vec<(Profile, i32)>,
+    /// Situacije iz predložaka (J-3); `None` kad sadržaj nema predložaka.
+    pub situations: Option<SituationReport>,
+}
+
+/// Situacije iz predložaka u krugovima `OptionsV2::kind`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SituationReport {
+    pub kind: PeriodKind,
+    /// Sve strategije, svi profili, sva sjemena.
+    pub draws: DrawStats,
+    /// Štediša i Brižni po profilu.
+    pub shares: Vec<Share>,
+    /// Granica ponuda grupe po sezoni iz sadržaja.
+    pub group_limit: Option<u8>,
 }
 
 type RefTables = Vec<(Category, RefTable)>;
@@ -373,19 +391,19 @@ fn base_probe(
     Ok(())
 }
 
+/// Proba: primjerke situacija izvlači sjeme ponovljivosti.
 fn run_probe(
     probe: ProbeV2,
     profile: Profile,
     kind: PeriodKind,
     cat: &Catalog,
-    situations: &[sim_hotel_v2::SituationTemplate],
+    sits: &Situations,
     refs: &RefTable,
 ) -> Result<i32, ResolveError> {
-    let r = run_season_with(
-        profile,
+    let r = sits.with(
+        (profile, REPRO_SEED),
         kind,
         cat,
-        situations,
         refs,
         &mut |s, p| probe.plan(s, p, cat),
         &mut |t| middle_index(t).ok_or(ResolveError::BadChoice),
@@ -400,24 +418,21 @@ type Medians = (
     Vec<(Profile, Strategy, i32)>,
 );
 
+/// Medijani napretka; uz `draws` skuplja i statistiku izvučenih situacija.
 fn kind_medians(
-    content: &content::Content,
+    sits: &Situations,
     cat: &Catalog,
     kind: PeriodKind,
     refs: &RefTables,
     seeds: u64,
+    mut draws: Option<&mut DrawStats>,
 ) -> Result<Medians, ResolveError> {
     let mut finance: Vec<((Profile, Strategy), Vec<i32>)> = Vec::new();
     let (medians, profile_medians) = season_medians::<ResolveError>(seeds, &mut |p, s, seed| {
-        let r = run_season(
-            p,
-            s,
-            seed,
-            kind,
-            cat,
-            &content.situations,
-            refs_for(cat, refs, p)?,
-        )?;
+        let r = sits.robot((p, s, seed), kind, cat, refs_for(cat, refs, p)?)?;
+        if let Some(d) = draws.as_deref_mut() {
+            d.add(&r, sits);
+        }
         let end = r.periods.last().map_or(&r.start, |(_, i)| i);
         let f = i32::from(end.get(Index::Finance).hundredths());
         match finance.iter_mut().find(|(k, _)| *k == (p, s)) {
@@ -438,7 +453,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         .v2
         .as_ref()
         .ok_or_else(|| ResolveError::Catalog(CatalogError::Missing("v2".to_string())))?;
-    let situations = &content.situations;
+    let sits = Situations::new(content);
     let kind = opts.kind;
     let refs = category_refs(cat, kind)?;
 
@@ -464,14 +479,16 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         })
         .collect::<Result<Vec<_>, ResolveError>>()?;
 
+    let mut draws = DrawStats::default();
     let (medians, profile_medians, end_finance) =
-        kind_medians(content, cat, kind, &refs, opts.seeds)?;
+        kind_medians(&sits, cat, kind, &refs, opts.seeds, Some(&mut draws))?;
     let other_kind = match kind {
         PeriodKind::Week => PeriodKind::Month,
         PeriodKind::Month => PeriodKind::Week,
     };
     let other_refs = category_refs(cat, other_kind)?;
-    let (other_medians, _, _) = kind_medians(content, cat, other_kind, &other_refs, opts.seeds)?;
+    let (other_medians, _, _) =
+        kind_medians(&sits, cat, other_kind, &other_refs, opts.seeds, None)?;
     let (week, month) = match kind {
         PeriodKind::Week => (&medians, &other_medians),
         PeriodKind::Month => (&other_medians, &medians),
@@ -484,20 +501,17 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
 
     let reproducible = all_reproducible::<ResolveError>(&mut |p, s| {
         let r = refs_for(cat, &refs, p)?;
-        let a = run_season(p, s, REPRO_SEED, kind, cat, situations, r)?;
-        let b = run_season(p, s, REPRO_SEED, kind, cat, situations, r)?;
+        let a = sits.robot((p, s, REPRO_SEED), kind, cat, r)?;
+        let b = sits.robot((p, s, REPRO_SEED), kind, cat, r)?;
         Ok(a == b)
     })?;
 
     let mut caring_seasonal_vs_plan_bp = Vec::new();
     for p in Profile::ALL {
-        let r = run_season(
-            p,
-            Strategy::Caring,
-            REPRO_SEED,
+        let r = sits.robot(
+            (p, Strategy::Caring, REPRO_SEED),
             kind,
             cat,
-            situations,
             refs_for(cat, &refs, p)?,
         )?;
         caring_seasonal_vs_plan_bp.push((p, seasonal_vs_plan_bp(&r, p, cat)?));
@@ -506,10 +520,22 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
     let mut probes = Vec::new();
     for probe in ProbeV2::all(cat) {
         let row = profile_row::<ResolveError>(&mut |p| {
-            run_probe(probe, p, kind, cat, situations, refs_for(cat, &refs, p)?)
+            run_probe(probe, p, kind, cat, &sits, refs_for(cat, &refs, p)?)
         })?;
         probes.push((probe.name(), row));
     }
+
+    let situations = if sits.has_templates() {
+        let owned = |p: Profile| refs_for(cat, &refs, p).cloned();
+        Some(SituationReport {
+            kind,
+            draws,
+            group_limit: sits.group_limit(),
+            shares: shares(&sits, kind, cat, &owned, opts.seeds)?,
+        })
+    } else {
+        None
+    };
 
     Ok(ReportV2 {
         starts,
@@ -525,6 +551,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         week_vs_month,
         reproducible,
         caring_seasonal_vs_plan_bp,
+        situations,
     })
 }
 
@@ -611,8 +638,131 @@ pub fn failures_v2(r: &ReportV2) -> Vec<String> {
             ));
         }
     }
+    if let Some(sr) = &r.situations {
+        situation_failures(&mut f, sr);
+    }
     check_repro(&mut f, r.reproducible);
     f
+}
+
+/// Provjere situacija iz predložaka (plan situacija §6): udio u napretku, broj po krugu, raznolikost.
+fn situation_failures(f: &mut Vec<String>, sr: &SituationReport) {
+    let (lo, hi) = SHARE_BAND_BP;
+    for s in &sr.shares {
+        match s.strategy {
+            Strategy::Caring if !(lo..=hi).contains(&s.share_bp) => f.push(format!(
+                "J-3 udio situacija: {} {} {} (cilj {}–{})",
+                s.profile.code(),
+                s.strategy.code(),
+                pct(s.share_bp),
+                pct(lo),
+                pct(hi)
+            )),
+            // Udio gleda samo veličinu pomaka; situacije Brižnom moraju i pomagati (pregled J-3, minor 1).
+            Strategy::Caring if s.delta <= 0 => f.push(format!(
+                "J-3 brižni: {} situacije Brižnom smanjuju napredak ili ga ne mijenjaju (Δ {}, cilj više od 0)",
+                s.profile.code(),
+                hundredths(s.delta)
+            )),
+            Strategy::Saver if s.delta >= 0 || s.delta < -SAVER_MAX_LOSS => f.push(format!(
+                "J-3 štediša: {} situacije mijenjaju napredak za {} (cilj manje od 0, najviše {} niže)",
+                s.profile.code(),
+                hundredths(s.delta),
+                hundredths(SAVER_MAX_LOSS)
+            )),
+            _ => {}
+        }
+    }
+    if sr.draws.groups_max > u64::from(sr.group_limit.unwrap_or(u8::MAX)) {
+        f.push(format!(
+            "J-3 grupe: sezona ima {} ponuda grupe (najviše {})",
+            sr.draws.groups_max,
+            sr.group_limit.unwrap_or(u8::MAX)
+        ));
+    }
+    let (min, max) = count_band(sr.kind);
+    if sr.draws.rounds > 0 && (sr.draws.min < min || sr.draws.max > max) {
+        f.push(format!(
+            "J-3 broj situacija: krug ima {}–{} situacija (dopušteno {min}–{max})",
+            sr.draws.min, sr.draws.max
+        ));
+    }
+    if let Some((code, bp)) = sr.draws.top()
+        && bp > DOMINANT_MAX_BP
+    {
+        f.push(format!(
+            "J-3 raznolikost: predložak {code} je {} svih pojava (najviše {})",
+            pct(bp),
+            pct(DOMINANT_MAX_BP)
+        ));
+    }
+}
+
+/// Ispis situacija iz predložaka.
+fn push_situations(s: &mut String, sr: &SituationReport) {
+    let d = &sr.draws;
+    s.push_str("== Situacije iz predložaka (J-3) ==\n");
+    let per_round = d
+        .total
+        .saturating_mul(100)
+        .checked_div(d.rounds)
+        .unwrap_or(0);
+    let per_season = d
+        .total
+        .saturating_mul(100)
+        .checked_div(
+            d.rounds
+                .checked_div(rounds_per_season(sr.kind))
+                .unwrap_or(0),
+        )
+        .unwrap_or(0);
+    s.push_str(&format!(
+        "  situacija u krugu: najmanje {} najviše {} prosjek {}.{:02}; po sezoni prosjek {}.{:02}\n",
+        d.min,
+        d.max,
+        per_round / 100,
+        per_round % 100,
+        per_season / 100,
+        per_season % 100
+    ));
+    s.push_str(&format!(
+        "  krugova u granici kruga (|zbroj| >= 800): zadovoljstvo {} moral {} od {}\n",
+        d.bound_satisfaction, d.bound_morale, d.rounds
+    ));
+    s.push_str(&format!(
+        "  ponuda grupe po sezoni (sidra uključena): najviše {}; sezona po broju ponuda:",
+        d.groups_max
+    ));
+    for (n, seasons) in &d.groups_seasons {
+        s.push_str(&format!(" {n} → {seasons}"));
+    }
+    s.push('\n');
+    let mut top: Vec<(&String, &u64)> = d.templates.iter().collect();
+    top.sort_by(|a, b| b.1.cmp(a.1).then(a.0.cmp(b.0)));
+    let all: u64 = d.templates.values().sum();
+    s.push_str(&format!(
+        "  predložaka: {}; pojava: {all}; najčešći:\n",
+        d.templates.len()
+    ));
+    for (code, n) in top.into_iter().take(3) {
+        let bp = n.saturating_mul(10_000).checked_div(all).unwrap_or(0);
+        s.push_str(&format!(
+            "    {code} {n} ({})\n",
+            pct(i32::try_from(bp).unwrap_or(i32::MAX))
+        ));
+    }
+    s.push_str("  udio situacija u napretku (medijan sa / bez / razlika; |razlika| / (|razlika| + |bez|)):\n");
+    for x in &sr.shares {
+        s.push_str(&format!(
+            "    {} {:<10} {} / {} / {} -> {}\n",
+            x.profile.code(),
+            x.strategy.code(),
+            hundredths(x.with),
+            hundredths(x.without),
+            hundredths(x.delta),
+            pct(x.share_bp)
+        ));
+    }
 }
 
 /// Postotak s jednom decimalom i zarezom: 2940 → „29,4 %".
@@ -670,6 +820,9 @@ pub fn render_v2(r: &ReportV2) -> String {
     s.push_str("== Brižni robot: sezonci prema sezonskom planu hotela ==\n");
     for (p, bp) in &r.caring_seasonal_vs_plan_bp {
         s.push_str(&format!("  {}: {}\n", p.code(), pct(*bp)));
+    }
+    if let Some(sr) = &r.situations {
+        push_situations(&mut s, sr);
     }
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",

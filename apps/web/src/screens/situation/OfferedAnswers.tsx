@@ -5,17 +5,25 @@ import { useAnswer } from "../../api/queries";
 import type { SituationBody } from "../../api/types";
 import { Button, Card, ErrorText } from "../../ui/primitives";
 
-/** Izbor u dva koraka (UI_PRAVILA §6.9): klik označi odgovor, tek „Potvrdi izbor“ ga šalje — izbor je nepovratan. */
+/**
+ * Izbor u dva koraka (UI_PRAVILA §6.9): klik označi odgovor, tek „Potvrdi izbor“ ga šalje — izbor je nepovratan.
+ * `locked`: druga potvrda (prepuštanje) je otvorena, pa se odgovor ne može označiti; `onConfirmChange` javlja ekranu
+ * je li ova potvrda otvorena (nikad dvije istodobno).
+ */
 export function OfferedAnswers({
   hotelId,
   s,
   heading,
   weekly,
+  locked = false,
+  onConfirmChange,
 }: {
   hotelId: string;
   s: SituationBody;
   heading: string;
   weekly: boolean;
+  locked?: boolean;
+  onConfirmChange?: (open: boolean) => void;
 }) {
   const answer = useAnswer(hotelId, s.code);
   const inFlight = useRef(false);
@@ -34,6 +42,7 @@ export function OfferedAnswers({
   function cancel() {
     const back = picked;
     setPicked(null);
+    onConfirmChange?.(false);
     answer.reset();
     if (back !== null) pickButtons.current[back]?.focus();
   }
@@ -63,8 +72,11 @@ export function OfferedAnswers({
                 variant="secondary"
                 aria-describedby={textId(i)}
                 aria-pressed={picked === i}
-                disabled={answer.isPending}
-                onClick={() => setPicked(i)}
+                disabled={answer.isPending || locked}
+                onClick={() => {
+                  setPicked(i);
+                  onConfirmChange?.(true);
+                }}
               >
                 {picked === i ? t("answers.picked") : t("answers.choose")}
               </Button>

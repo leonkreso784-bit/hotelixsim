@@ -6,13 +6,18 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-mod v2;
-mod v2_dept;
-
 use sim_hotel::{
     ActionSpec, Catalog, Category, CategorySpec, Economy, LevelEffect, Mechanic, MechanicSpec,
     Month, MonthTable, OfferedAnswer, Profile, ProfileSpec, SituationTemplate, TrainingEffect,
 };
+
+pub mod templates;
+mod templates_check;
+mod templates_core;
+mod templates_instance;
+pub use templates_instance::Instance;
+mod v2;
+mod v2_dept;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ContentError {
@@ -29,6 +34,8 @@ pub struct Content {
     pub ai: BTreeMap<String, SituationAi>,
     /// Katalog v2 (`Some` samo za snimak s `model = v2`); `base` je isti `catalog`.
     pub v2: Option<sim_hotel_v2::Catalog>,
+    /// Predlošci situacija v2 (`Some` samo za v2 snimak koji ih nosi).
+    pub situation_templates: Option<templates::SituationTemplates>,
 }
 
 /// Kojim se modelom igra računa. Snimak bez ključa `model` je `v1`.
@@ -229,7 +236,7 @@ struct AnswerDto {
     criteria: Vec<u8>,
 }
 
-fn is_false(b: &bool) -> bool {
+pub(crate) fn is_false(b: &bool) -> bool {
     !*b
 }
 
@@ -629,14 +636,15 @@ impl Snapshot {
         catalog
             .validate()
             .map_err(|e| ContentError::Invalid(format!("katalog: {e:?}")))?;
-        let v2 = match (s.model, &s.v2) {
+        let (v2, situation_templates) = match (s.model, &s.v2) {
             (Model::V2, Some(dto)) => {
                 let c = v2::build_v2(dto, &catalog)?;
                 c.validate()
                     .map_err(|e| ContentError::Invalid(format!("katalog v2: {e:?}")))?;
-                Some(c)
+                let t = v2::build_templates(dto, &c)?;
+                (Some(c), t)
             }
-            (Model::V1, None) => None,
+            (Model::V1, None) => (None, None),
             _ => return invalid("model i odjeljak v2 se ne slažu".to_string()),
         };
         Ok(Content {
@@ -644,6 +652,7 @@ impl Snapshot {
             situations,
             ai,
             v2,
+            situation_templates,
         })
     }
 

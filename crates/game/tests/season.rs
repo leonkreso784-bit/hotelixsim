@@ -111,7 +111,12 @@ fn check_full_season(g: &Game) {
                 .cash_cents
         );
         let d = h.decisions.as_ref().expect("odluke");
-        let n: usize = g.rounds.iter().map(|r| g.situations_in(*r).len()).sum();
+        // Situacije su po hotelu (primjerci iz predložaka razlikuju se među hotelima), pa se broje za taj hotel.
+        let n: usize = g
+            .rounds
+            .iter()
+            .map(|r| g.situations_of_hotel(h.hotel_id, *r).unwrap().len())
+            .sum();
         assert_eq!(usize::from(d.situations), n);
         assert!(d.unanswered <= d.situations);
         assert!(

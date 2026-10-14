@@ -7,6 +7,7 @@ pub mod command;
 pub mod costs;
 mod debrief_v2;
 mod departments;
+mod drawn;
 pub mod dto;
 pub mod dto_v2;
 pub mod error;
@@ -32,9 +33,11 @@ pub use ai_input::{
     AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, DeferredWearFact,
     DepartmentDepartures, OfferedForJudge, RenewalFact, RentCutFact,
 };
+pub use command::MANDATORY_SITUATIONS;
 pub use departments::{
     DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,
 };
+pub use drawn::{DrawnInstance, InstanceRole, SituationCard};
 pub use error::GameError;
 pub use event::*;
 pub use game::{ChatLine, FreeResponse, Game, HotelRecord, RoundStatus, Speaker};
@@ -53,6 +56,7 @@ pub use season_mentor::{
     SeasonIndexFact, SeasonMentorHotel, SeasonRound, fallback_season_debrief, season_debrief_facts,
     season_debrief_has_parts, wants_season_mentor,
 };
+pub use sim_hotel_v2::situations::Kind as SituationKind;
 pub use talk::{MAX_CHAT_MESSAGES, MAX_TEXT_CHARS, ReplyBody};
 pub use verdict::{
     NEUTRAL_DEADLINE, NEUTRAL_FAILED, ValidVerdict, VerdictDraft, VerdictError, quality_from,

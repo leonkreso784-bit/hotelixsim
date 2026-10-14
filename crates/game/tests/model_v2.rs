@@ -150,11 +150,40 @@ fn v1_game_is_never_outdated_by_v2_version() {
 
 #[test]
 fn v2_situations_appear_in_the_round_containing_the_first_of_the_month() {
-    let g = Game::fold(&v2_events(PeriodKind::Week)).unwrap();
+    // Staro pravilo (G-1): igra bez `SituationsDrawn` u dnevniku. Sidra S1–S4 samo u krugu s 1. danom mjeseca.
+    let log: Vec<Recorded> = v2_events(PeriodKind::Week)
+        .into_iter()
+        .filter(|r| r.event.kind() != "SituationsDrawn")
+        .filter(|r| match &r.event {
+            GameEvent::AnswerChosen(a) => a.situation.len() == 2 && a.situation.starts_with('S'),
+            _ => true,
+        })
+        .enumerate()
+        .map(|(i, r)| Recorded {
+            seq: i64::try_from(i).unwrap() + 1,
+            ..r
+        })
+        .collect();
+    let g = Game::fold(&log).unwrap();
     let in_round = |code: &str| g.situations_in(RoundKey::parse(code).unwrap()).len();
     assert!(in_round("t01") > 0); // lipanj
     assert_eq!(in_round("t02"), 0);
     assert!(in_round("t05") > 0); // srpanj
+}
+
+/// G-1: odigrana v2 igra s predlošcima ima 3–5 situacija u SVAKOM tjednom krugu (sidra + primjerci).
+/// Situacije kruga izvlače se pri otvaranju kruga, a izvlačenje ovisi o obračunu prošlog kruga, pa
+/// ih u tek stvorenoj igri još nema; zato se igra prvo odigra do kraja.
+#[test]
+fn v2_game_with_templates_has_three_to_five_situations_in_every_weekly_round() {
+    let g = play_all(Game::fold(&v2_events(PeriodKind::Week)).unwrap());
+    let mut checked = 0;
+    for r in &g.rounds {
+        let n = g.situations_in(*r).len();
+        assert!((3..=5).contains(&n), "krug {}: {n} situacija", r.code());
+        checked += 1;
+    }
+    assert_eq!(checked, 17, "test ne smije postati prazan");
 }
 
 #[test]

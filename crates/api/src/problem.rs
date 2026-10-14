@@ -21,6 +21,7 @@ pub enum ProblemCode {
     UnknownDepartment,
     RoundNotOpen,
     AlreadyAnswered,
+    SituationMandatory,
     NotFreeText,
     ChatLimit,
     AwaitingReply,
@@ -65,6 +66,7 @@ impl From<app::ErrorCode> for ProblemCode {
             E::UnknownDepartment => Self::UnknownDepartment,
             E::RoundNotOpen => Self::RoundNotOpen,
             E::AlreadyAnswered => Self::AlreadyAnswered,
+            E::SituationMandatory => Self::SituationMandatory,
             E::NotFreeText => Self::NotFreeText,
             E::ChatLimit => Self::ChatLimit,
             E::AwaitingReply => Self::AwaitingReply,
@@ -108,6 +110,9 @@ impl ProblemCode {
             Self::UnknownDepartment => "Taj odjel ne postoji u ovom hotelu.",
             Self::RoundNotOpen => "Runda nije otvorena",
             Self::AlreadyAnswered => "Na situaciju je već odgovoreno",
+            Self::SituationMandatory => {
+                "Ova situacija je obvezna i ne može se prepustiti voditelju (prve tri situacije kruga su obvezne)."
+            }
             Self::NotFreeText => "Situacija nema slobodni odgovor",
             Self::ChatLimit => "Iskorištene su sve poruke u razgovoru",
             Self::AwaitingReply => "Lik još nije odgovorio",
