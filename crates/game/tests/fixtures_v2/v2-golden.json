@@ -1,0 +1,13 @@
+{
+  "digests": {
+    "2.2.0": {
+      "m2026-sutnja": "a4f89448d2c88d6a9869bcd4a3098267c088eee8ca9f2db379688fe1d528de99",
+      "m42-sutnja": "8fe6119ea4975f8616b660ccec8005a140433e3f6d9329ec1685a7a7e8e34eaa",
+      "m7-odgovara": "4494eef13dd3696c98cc54b537c69d49ed23a43209e2f1736fd22e807c79671b",
+      "t2026-odgovara": "784bfecd094a3c96a02b83f5a4f1f3c4a2b1fd26c5600138c7aa025ef3af3cd7",
+      "t42-sutnja": "e8930005ac7cb3e5e0b9a399fd44bfb3ff46581b7ebbe2702b3a3d6c95f90e44",
+      "t7-odgovara": "b8a5ad25ee8c9513807db45fc5ecc039613d8a978e6875d8d6d106f5a631ecc7"
+    }
+  },
+  "snapshot": "sha256:946935d55693dcec5aee438c723515f48d8dd5f5a0b6e74606178e9bea3ba504"
+}
