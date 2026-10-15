@@ -5,6 +5,7 @@
 use engine::calc;
 use sim_hotel_v2::calendar::{avg_i64, avg_u16, first_period_of_month, prorate};
 use sim_hotel_v2::department::{DeptCode, UsaliClass};
+use sim_hotel_v2::situations::SituationCounts;
 use sim_hotel_v2::usali::{self, UsaliStatement};
 use sim_hotel_v2::{
     Catalog, CatalogError, Category, HotelState, Index, IndexSet, Maintenance, Month, Period,
@@ -27,6 +28,19 @@ pub use crate::v2_situations::HOTEL_SLOT;
 pub struct OptionsV2 {
     pub seeds: u64,
     pub kind: PeriodKind,
+    /// Broj situacija po krugu za vrstu `kind` (kao postavka igre); `None` = zadano za vrstu. Druga vrsta kruga u
+    /// usporedbi „tjedno prema mjesečnom" ostaje na zadanom broju.
+    pub situations: Option<SituationCounts>,
+}
+
+/// `--situations L,M,H`: tri broja u `SituationCounts::MIN..=MAX`, uzlazno; inače `None`.
+pub fn parse_situations(s: &str) -> Option<SituationCounts> {
+    let mut it = s.split(',').map(|p| p.trim().parse::<u8>().ok());
+    let (low, mid, high) = (it.next()??, it.next()??, it.next()??);
+    if it.next().is_some() {
+        return None;
+    }
+    SituationCounts::new(low, mid, high)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +70,8 @@ pub struct ReportV2 {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SituationReport {
     pub kind: PeriodKind,
+    /// Broj situacija po krugu koji je sezona vrtjela (postavka ili zadano za vrstu).
+    pub counts: SituationCounts,
     /// Sve strategije, svi profili, sva sjemena.
     pub draws: DrawStats,
     /// Štediša i Brižni po profilu.
@@ -458,13 +474,14 @@ pub fn robot_season_v2(
     strategy: Strategy,
     seed: u64,
     kind: PeriodKind,
+    situations: Option<SituationCounts>,
 ) -> Result<SeasonResult, ResolveError> {
     let cat = content
         .v2
         .as_ref()
         .ok_or_else(|| ResolveError::Catalog(CatalogError::Missing("v2".to_string())))?;
     let refs = category_refs(cat, kind)?;
-    Situations::new(content).robot(
+    Situations::new(content, situations).robot(
         (profile, strategy, seed),
         kind,
         cat,
@@ -477,7 +494,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         .v2
         .as_ref()
         .ok_or_else(|| ResolveError::Catalog(CatalogError::Missing("v2".to_string())))?;
-    let sits = Situations::new(content);
+    let sits = Situations::new(content, opts.situations);
     let kind = opts.kind;
     let refs = category_refs(cat, kind)?;
 
@@ -511,8 +528,9 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         PeriodKind::Month => PeriodKind::Week,
     };
     let other_refs = category_refs(cat, other_kind)?;
+    let other_sits = Situations::new(content, None);
     let (other_medians, _, _) =
-        kind_medians(&sits, cat, other_kind, &other_refs, opts.seeds, None)?;
+        kind_medians(&other_sits, cat, other_kind, &other_refs, opts.seeds, None)?;
     let (week, month) = match kind {
         PeriodKind::Week => (&medians, &other_medians),
         PeriodKind::Month => (&other_medians, &medians),
@@ -553,6 +571,9 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
         let owned = |p: Profile| refs_for(cat, &refs, p).cloned();
         Some(SituationReport {
             kind,
+            counts: opts
+                .situations
+                .unwrap_or_else(|| SituationCounts::default_for(kind)),
             draws,
             group_limit: sits.group_limit(),
             shares: shares(&sits, kind, cat, &owned, opts.seeds)?,
@@ -718,7 +739,7 @@ fn situation_model_failures(f: &mut Vec<String>, sr: &SituationReport) {
             sr.group_limit.unwrap_or(u8::MAX)
         ));
     }
-    let (min, max) = count_band(sr.kind);
+    let (min, max) = count_band(sr.counts);
     if sr.draws.rounds > 0 && (sr.draws.min < min || sr.draws.max > max) {
         f.push(format!(
             "J-3 broj situacija: krug ima {}–{} situacija (dopušteno {min}–{max})",

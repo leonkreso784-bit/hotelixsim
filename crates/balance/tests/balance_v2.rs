@@ -8,7 +8,15 @@ use sim_hotel_v2::PeriodKind;
 #[test]
 fn v2_balance_runs_for_both_kinds_and_is_reproducible() {
     for kind in [PeriodKind::Week, PeriodKind::Month] {
-        let r = run_v2(&content_v2(), &OptionsV2 { seeds: 3, kind }).unwrap();
+        let r = run_v2(
+            &content_v2(),
+            &OptionsV2 {
+                seeds: 3,
+                kind,
+                situations: None,
+            },
+        )
+        .unwrap();
         assert!(r.reproducible);
         assert_eq!(r.starts.len(), 3);
         assert!(render_v2(&r).contains("Marže odjela"));
@@ -39,6 +47,7 @@ fn degenerate_v2_monthly_balance_matches_v1_numbers() {
         &OptionsV2 {
             seeds: 5,
             kind: PeriodKind::Month,
+            situations: None,
         },
     )
     .unwrap();
@@ -64,6 +73,7 @@ fn robot_measures_do_not_fail_check() {
         &OptionsV2 {
             seeds: 3,
             kind: PeriodKind::Week,
+            situations: None,
         },
     )
     .unwrap();

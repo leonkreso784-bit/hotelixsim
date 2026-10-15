@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use balance::v2::parse_situations;
 use sim_hotel_v2::PeriodKind;
+use sim_hotel_v2::situations::SituationCounts;
 
 fn main() -> ExitCode {
     let mut seeds: u64 = 1000;
@@ -9,6 +11,7 @@ fn main() -> ExitCode {
     let mut check = false;
     let mut v2 = false;
     let mut kind = PeriodKind::Week;
+    let mut situations = None;
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
         match a.as_str() {
@@ -31,11 +34,19 @@ fn main() -> ExitCode {
                 Some(k) => kind = k,
                 None => return usage("--round traži month ili week"),
             },
+            "--situations" => match args.next().as_deref().and_then(parse_situations) {
+                Some(c) => situations = Some(c),
+                None => {
+                    return usage(
+                        "--situations traži tri broja L,M,H od 3 do 8, uzlazno (npr. 3,4,8)",
+                    );
+                }
+            },
             _ => return usage(&format!("nepoznati argument {a}")),
         }
     }
     if v2 {
-        return run_v2(&dir, seeds, kind, check);
+        return run_v2(&dir, (seeds, kind, situations), check);
     }
     let content = match content::load(&dir) {
         Ok(c) => c,
@@ -56,7 +67,11 @@ fn main() -> ExitCode {
 }
 
 /// Balans v2 (`--model v2`): sadržaj iz DIR i DIR/v2, krugovi tjedni ili mjeseci.
-fn run_v2(dir: &Path, seeds: u64, kind: PeriodKind, check: bool) -> ExitCode {
+fn run_v2(
+    dir: &Path,
+    (seeds, kind, situations): (u64, PeriodKind, Option<SituationCounts>),
+    check: bool,
+) -> ExitCode {
     let content = match content::Snapshot::read_v2(dir).and_then(|s| s.build()) {
         Ok(c) => c,
         Err(e) => {
@@ -64,7 +79,14 @@ fn run_v2(dir: &Path, seeds: u64, kind: PeriodKind, check: bool) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let report = match balance::v2::run_v2(&content, &balance::v2::OptionsV2 { seeds, kind }) {
+    let report = match balance::v2::run_v2(
+        &content,
+        &balance::v2::OptionsV2 {
+            seeds,
+            kind,
+            situations,
+        },
+    ) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("simulacija v2 nije uspjela: {e:?}");
@@ -72,6 +94,10 @@ fn run_v2(dir: &Path, seeds: u64, kind: PeriodKind, check: bool) -> ExitCode {
         }
     };
     println!("Model v2, krugovi: {}", kind.code());
+    if let Some(c) = situations {
+        let (l, m, h) = c.levels();
+        println!("Broj situacija (postavka): {l}/{m}/{h}");
+    }
     print!("{}", balance::v2::render_v2(&report));
     finish(&balance::v2::failures_v2(&report), check)
 }
@@ -94,7 +120,7 @@ fn finish(failures: &[String], check: bool) -> ExitCode {
 
 fn usage(msg: &str) -> ExitCode {
     eprintln!(
-        "{msg}\nuporaba: balance [--seeds N] [--content DIR] [--check] [--model v1|v2] [--round month|week]"
+        "{msg}\nuporaba: balance [--seeds N] [--content DIR] [--check] [--model v1|v2] [--round month|week] [--situations L,M,H]"
     );
     ExitCode::from(2)
 }
