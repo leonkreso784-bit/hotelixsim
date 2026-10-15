@@ -17,6 +17,7 @@ mod game;
 pub mod ids;
 pub mod kpi;
 mod mentor;
+mod mentor_check;
 mod mentor_v2;
 mod model;
 pub mod renewal;
@@ -46,6 +47,7 @@ pub use mentor::{
     ChangeFact, DebriefFacts, DriverFact, DriverSource, Effect, IndexFact, SituationFact,
     debrief_facts, fallback_debrief, wants_ai_mentor, weekly_summary,
 };
+pub use mentor_check::debrief_has_parts;
 pub use mentor_v2::{FinanceNote, InvestmentFacts, RenewalText};
 pub use model::{CorePlan, CoreState, Model, RoundInfo};
 pub use resolve::ResolveStep;

@@ -427,7 +427,8 @@ async fn ai_layer_end_to_end_on_real_database(pool: PgPool) {
     run_worker(&good).await;
     let me = call(&app, "GET", "/v1/me/hotel", Some(&tok), None).await;
     assert_eq!(
-        me.body["private"]["last_month"]["mentor"], "Mentor: dobar mjesec.",
+        me.body["private"]["last_month"]["mentor"],
+        app::memory::FAKE_DEBRIEF,
         "{:?}",
         me.body["private"]
     );

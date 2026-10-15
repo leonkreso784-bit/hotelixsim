@@ -339,7 +339,11 @@ async fn run_debrief(deps: &Deps, job: &Job) -> Result<(), AppError> {
     let input = g.debrief_input(p.hotel_id, m)?;
     let (text, source, meta) = if game::wants_ai_mentor(&g, m)? {
         match deps.ai.debrief(input.clone()).await {
-            Ok(out) => (out.value, AiSource::Ai, Some(out.meta)),
+            Ok(out) if game::debrief_has_parts(&out.value) => {
+                (out.value, AiSource::Ai, Some(out.meta))
+            }
+            // Nepotpun tekst ne ostaje zauvijek zapisan kao AI-jev; bez ponavljanja poziva, odmah rezerva.
+            Ok(_) => (game::fallback_debrief(&input), AiSource::Fallback, None),
             Err(e) if retry(job, &e) => return Err(AppError::internal(e.to_string())),
             Err(_) => (game::fallback_debrief(&input), AiSource::Fallback, None),
         }

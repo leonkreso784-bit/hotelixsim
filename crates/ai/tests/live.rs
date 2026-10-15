@@ -69,10 +69,12 @@ async fn character_speaks_only_its_own_words() {
             from: Speaker::Student,
             text: "Žao mi je to čuti, koje su vaše želje i preporuke.".into(),
         }],
+        message_no: 1,
+        message_max: 6,
     };
     for _ in 0..3 {
         let out = ai.character(input.clone()).await.expect("odgovor lika");
-        assert_eq!(out.meta.prompt, "lik.v2");
+        assert_eq!(out.meta.prompt, "lik.v3");
         let t = out.value.trim().to_lowercase();
         assert!(!t.contains('*'), "opis radnje: {t}");
         assert!(!t.starts_with("marko"), "ime na početku: {t}");
@@ -196,7 +198,7 @@ async fn drawn_instance_character_replies_and_verdict_passes_validation() {
         );
     }
     let out = ai.character(input.clone()).await.expect("odgovor lika");
-    assert_eq!(out.meta.prompt, "lik.v2");
+    assert_eq!(out.meta.prompt, "lik.v3");
     let reply = out.value.trim().to_owned();
     assert!(!reply.is_empty());
     assert!(!reply.contains('*'), "opis radnje: {reply}");
@@ -248,4 +250,76 @@ async fn drawn_instance_character_replies_and_verdict_passes_validation() {
     let out = ai.assess(assess).await.expect("presuda");
     assert_eq!(out.meta.prompt, "presuda.v3");
     assert!(g.validate_verdict(&code, out.value).is_ok());
+}
+
+/// Na zadnjoj (6.) poruci lik zaključuje bez pitanja i bez opisa radnji (ADR-042 t. 6).
+#[tokio::test]
+#[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
+async fn character_closes_on_the_last_message() {
+    let key = std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY nije postavljen");
+    let ai = ai::Anthropic::new(key, ai::Models::default());
+    let student = [
+        "Žao mi je to čuti, koje su vaše želje i preporuke.",
+        "Razumijem da radite puno. Što biste promijenili u jelovniku?",
+        "Mogu vam dati slobodan dan tjedno.",
+        "Možemo li se dogovoriti o jelovniku zajedno?",
+        "Predlažem plaću veću 10 % i jedan slobodan dan.",
+        "Hoće li vam to odgovarati?",
+    ];
+    let character = [
+        "Imam ponudu iz hotela preko puta.",
+        "Nitko me nikad nije pitao za jelovnik.",
+        "To bi mi puno značilo.",
+        "Volio bih to, ali plaća je i dalje manja.",
+        "Hm, to već zvuči bolje.",
+    ];
+    let mut transcript = Vec::new();
+    for i in 0..6 {
+        transcript.push(ChatLine {
+            from: Speaker::Student,
+            text: student[i].into(),
+        });
+        if i < 5 {
+            transcript.push(ChatLine {
+                from: Speaker::Character,
+                text: character[i].into(),
+            });
+        }
+    }
+    let input = CharacterInput {
+        situation: "S1".into(),
+        title: "Šef kuhinje traži povišicu".into(),
+        character: CharacterCard {
+            name: "Marko Babić".into(),
+            role: "šef kuhinje, u hotelu sedam sezona".into(),
+            brief: "Konkurentski hotel nudi ti 20 % veću plaću. Pravi razlog je da radiš 12 sati dnevno bez                     slobodnog dana i da te nitko nije pitao za mišljenje o jelovniku."
+                .into(),
+            opening: "Šefe, imam ponudu iz hotela preko puta, 20 % više. Ili mi dignete plaću ili odlazim na kraju                       mjeseca."
+                .into(),
+        },
+        transcript,
+        message_no: 6,
+        message_max: 6,
+    };
+    for _ in 0..3 {
+        let out = ai.character(input.clone()).await.expect("odgovor lika");
+        assert_eq!(out.meta.prompt, "lik.v3");
+        let t = out.value.trim().to_owned();
+        assert!(!t.contains('?'), "pitanje na zadnjoj poruci: {t}");
+        assert!(!t.contains('*'), "opis radnje: {t}");
+    }
+}
+
+/// Mentor kruga (`mentor.v4`) piše četiri dijela, pa prolazi provjeru koju radnik radi prije zapisa.
+#[tokio::test]
+#[ignore = "zove pravi Claude API; treba ANTHROPIC_API_KEY"]
+async fn round_mentor_writes_four_parts() {
+    let key = std::env::var("ANTHROPIC_API_KEY").expect("ANTHROPIC_API_KEY nije postavljen");
+    let ai = ai::Anthropic::new(key, ai::Models::default());
+    let out = ai
+        .debrief(common::sample_debrief())
+        .await
+        .expect("mentor kruga");
+    assert_eq!(out.meta.prompt, "mentor.v4");
+    assert!(game::debrief_has_parts(&out.value), "{}", out.value);
 }
