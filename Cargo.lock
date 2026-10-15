@@ -1703,7 +1703,7 @@ dependencies = [
 
 [[package]]
 name = "sim-hotel-v2"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "engine",
  "sim-hotel",

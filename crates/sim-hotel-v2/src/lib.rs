@@ -33,7 +33,9 @@ pub use department::{BuildingOutcome, StaffingNorm};
 pub use indices::{RefTable, period_indices, start_indices};
 pub use plan::{PeriodPlan, PlanError, PlanLimits, RenewalLimits};
 pub use renewal::{AssetBook, Renewal, RenewalSpec};
-pub use resolve::{FinanceOutcome, PeriodReport, ResolveError, resolve_period};
+pub use resolve::{
+    FinanceOutcome, PeriodReport, ResolveError, SituationEffect, resolve_period, situation_effect,
+};
 pub use robots::robot_plan;
 pub use season::{
     Responder, RoundHotel, RoundItem, SeasonResult, SeasonSituations, TemplateDraw, anchor_of,
@@ -46,6 +48,7 @@ pub use sim_hotel::{
     MonthTable, OfferedAnswer, Pending, PeopleOutcome, Profile, ProfileSpec, SituationOutcome,
     SituationTemplate, Strategy, Training, Unit, Var, gain_bp, progress_pts,
 };
+pub use situations::RoundSituation;
 pub use state::{Building, HotelState};
 
 /// Verzija jezgre v2 u `GameCreated` (MODEL_V2 §6.2 t. 3); raste sa svakom promjenom koja igri u tijeku mijenja brojke;

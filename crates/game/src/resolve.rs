@@ -1,5 +1,6 @@
 use sim_hotel::{SituationOutcome, progress_pts};
 use sim_hotel_v2::PeriodReport;
+use sim_hotel_v2::situations::RoundSituation;
 
 use crate::actor::Actor;
 use crate::dto::indices_dto;
@@ -21,19 +22,27 @@ pub enum ResolveStep {
 }
 
 impl Game {
-    /// Obračun hotela `h` u krugu `m` iz dnevnika: rezultati situacija za izvještaj i ishodi za jezgru. Isti račun za
-    /// obračun kruga i za izvlačenje idućeg (koje gleda cijeli obračun prošlog kruga).
+    /// Obračun hotela `h` u krugu `m` iz dnevnika: rezultati situacija za izvještaj i ishodi za jezgru (uz prostor
+    /// situacije, `Game::space`). Isti račun za obračun kruga i za izvlačenje idućeg (koje gleda cijeli obračun
+    /// prošlog kruga).
     fn hotel_outcomes(
         &self,
         h: &HotelRecord,
         m: RoundKey,
-    ) -> Result<(Vec<SituationResult>, Vec<SituationOutcome>), GameError> {
+    ) -> Result<(Vec<SituationResult>, Vec<RoundSituation>), GameError> {
         let model = self.model();
         let mut outcomes = Vec::new();
         let mut results = Vec::new();
         for t in self.hotel_situations(h, m) {
             let key = (m, t.code.clone());
             let no_penalty = self.no_penalty(h, m, &t.code);
+            let space = self.space(h, m, &t.code);
+            let mut push = |o: SituationOutcome| {
+                outcomes.push(RoundSituation {
+                    outcome: model.situation_outcome(o, no_penalty),
+                    space: space.clone(),
+                })
+            };
             if let Some(&i) = h.answers.get(&key) {
                 let a = t
                     .answers
@@ -46,8 +55,7 @@ impl Game {
                     free_text: false,
                     delegated: false,
                 });
-                let o = SituationOutcome::from_answer(&t.code, a);
-                outcomes.push(model.situation_outcome(o, no_penalty));
+                push(SituationOutcome::from_answer(&t.code, a));
             } else if let Some(fr) = h.responses.get(&key) {
                 // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
                 // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
@@ -78,7 +86,7 @@ impl Game {
                     mechanics,
                     quality: v.quality,
                 };
-                outcomes.push(model.situation_outcome(o, no_penalty));
+                push(o);
             } else if h.delegated.contains(&key) {
                 // Prepuštena voditelju: mehanike `unanswered` (isti trošak i smjer) uz kvalitetu 2, bez AI-ja.
                 let o = SituationOutcome {
@@ -93,7 +101,7 @@ impl Game {
                     free_text: false,
                     delegated: true,
                 });
-                outcomes.push(model.situation_outcome(o, no_penalty));
+                push(o);
             } else {
                 let o = SituationOutcome::unanswered(t);
                 results.push(SituationResult {
@@ -103,7 +111,7 @@ impl Game {
                     free_text: false,
                     delegated: false,
                 });
-                outcomes.push(model.situation_outcome(o, no_penalty));
+                push(o);
             }
         }
         Ok((results, outcomes))

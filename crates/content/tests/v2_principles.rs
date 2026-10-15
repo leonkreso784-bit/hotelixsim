@@ -219,6 +219,31 @@ fn silence_is_not_better_than_the_worst_answer() {
         "loš odgovor plaća boravak, šutnja ništa (dug)"
     );
 }
+#[test] // 12 (B1a, I2): načelo šutnje računa v2 situacije, obje vrste kruga
+fn silence_principle_uses_v2_situation_mechanics() {
+    let week_off = |v: &mut Value| v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(1);
+    let no_bonus = |v: &mut Value| v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(0);
+    assert!(!hit(|_| {}, SilenceNotBetter, "P-DOTRAJALO"));
+    assert!(
+        !hit(week_off, SilenceNotBetter, "P-DOTRAJALO"),
+        "+10 odvaja hitni odgovor od šutnje"
+    );
+    assert!(
+        !hit(no_bonus, SilenceNotBetter, "P-DOTRAJALO"),
+        "šutnja i dalje gubi opremu (privremeni popravak)"
+    );
+    assert!(
+        hit(
+            |v| {
+                week_off(v);
+                no_bonus(v)
+            },
+            SilenceNotBetter,
+            "P-DOTRAJALO"
+        ),
+        "tjedni krug bez bonusa: bodovi 0 = 0, šutnja jeftinija (80 € prema 250 €)"
+    );
+}
 #[test] // 9: dug smije samo padati
 fn debt_list_only_shrinks() {
     let (c, mut v) = (built(&v2_value()), v2_value());

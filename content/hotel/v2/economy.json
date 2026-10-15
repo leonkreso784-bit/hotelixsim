@@ -22,6 +22,7 @@
   "ffe_reserve_bp": 400,
   "finance_index": "gop_after_investment",
   "deferred_wear_bp": 12500,
+  "repair_urgent_condition_pts": 100,
   "groups": {
     "commission_bp": 1500,
     "attrition_bp": 1500,

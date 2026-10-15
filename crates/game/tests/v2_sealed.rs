@@ -12,6 +12,7 @@ use game::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+use sim_hotel::Maintenance;
 use sim_hotel_v2::situations::SituationCounts;
 use sim_hotel_v2::{CORE_VERSION, PeriodKind};
 
@@ -19,6 +20,11 @@ use sim_hotel_v2::{CORE_VERSION, PeriodKind};
 enum Human {
     Silent,
     Answers,
+    /// Slobodni odgovor s presudom (I3): na svaku situaciju s likom šalje slobodan tekst, presuda se zapiše kao u igri
+    /// (`submit_response` + `validate_verdict_for` + `record_verdict`); ostale situacije šute.
+    FreeAnswer,
+    /// Plan čovjeka (I3): prije zatvaranja svakog kruga postavi svoj plan (`set_plan`) umjesto zadanog.
+    Plans,
 }
 struct Case {
     name: &'static str,
@@ -28,7 +34,7 @@ struct Case {
     /// Broj situacija iz postavki igre (niski/srednji/visoki); `None` = zadani za vrstu kruga.
     situations: Option<(u8, u8, u8)>,
 }
-const CASES: [Case; 8] = [
+const CASES: [Case; 10] = [
     Case {
         name: "t7-odgovara",
         seed: 7,
@@ -85,6 +91,20 @@ const CASES: [Case; 8] = [
         human: Human::Silent,
         situations: Some((3, 3, 3)),
     },
+    Case {
+        name: "t42-slobodni",
+        seed: 42,
+        kind: PeriodKind::Week,
+        human: Human::FreeAnswer,
+        situations: None,
+    },
+    Case {
+        name: "m42-plan",
+        seed: 42,
+        kind: PeriodKind::Month,
+        human: Human::Plans,
+        situations: None,
+    },
 ];
 #[derive(Serialize, Deserialize)]
 struct Golden {
@@ -106,6 +126,43 @@ fn frozen_value() -> Value {
     serde_json::from_str(&read("v2-snapshot.json")).unwrap()
 }
 
+/// Slobodni odgovor na svaku situaciju moga hotela koja ima lika, s presudom (3 od 5 kriterija, najbliži odgovor 0).
+fn free_answers(g: &mut Game, r: RoundKey) {
+    let (me, guest) = (common::hotel_ids()[0], Actor::Guest(common::GUEST));
+    let codes: Vec<String> = g
+        .situations_of_hotel(me, r)
+        .unwrap()
+        .iter()
+        .filter(|t| g.ai_entry_for(me, &t.code).is_some_and(|a| a.free_text))
+        .map(|t| t.code.clone())
+        .collect();
+    for code in codes {
+        let ev = g
+            .submit_response(me, &code, "Ispričat ću se i ponuditi zamjenu sobe.")
+            .unwrap();
+        common::apply_ev(g, guest.clone(), ev);
+        let v = g
+            .validate_verdict_for(me, &code, common::draft_with(3, 0))
+            .unwrap();
+        let ev = g.record_verdict(me, &code, v, common::meta()).unwrap();
+        common::apply_ev(g, Actor::System, ev);
+    }
+}
+
+/// Vlastiti plan čovjeka: intenzivno održavanje u svakom odjelu i odgovaranje na recenzije (ostalo zadano).
+fn own_plan(g: &mut Game, r: RoundKey) {
+    let (me, guest) = (common::hotel_ids()[0], Actor::Guest(common::GUEST));
+    let CorePlan::V2(mut p) = g.effective_plan(me, r).unwrap() else {
+        panic!("v2 plan")
+    };
+    p.reply_reviews = true;
+    for d in p.departments.values_mut() {
+        d.maintenance = Maintenance::Intensive;
+    }
+    let ev = g.set_plan(me, r, CorePlan::V2(p)).unwrap();
+    common::apply_ev(g, guest, ev);
+}
+
 /// Cijela sezona: roboti igraju sami; igrač šuti ili odgovara redom (n-ta situacija sezone dobiva odgovor n mod broj
 /// odgovora), a svaku drugu situaciju koju smije prepušta voditelju.
 fn play(snap: &Snapshot, c: &Case) -> Game {
@@ -122,6 +179,12 @@ fn play(snap: &Snapshot, c: &Case) -> Game {
     );
     let mut n: usize = 0;
     while let Some(r) = g.current_round() {
+        if c.human == Human::FreeAnswer {
+            free_answers(&mut g, r);
+        }
+        if c.human == Human::Plans {
+            own_plan(&mut g, r);
+        }
         if c.human == Human::Answers {
             let list: Vec<(String, usize)> = g
                 .situations_of_hotel(me, r)
@@ -263,6 +326,34 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
             "nema slučaja sa svojim brojem situacija za jednu vrstu kruga"
         );
     }
+}
+
+#[test] // 3a: pečat pokriva slobodni odgovor s presudom i vlastiti plan čovjeka (I3)
+fn digest_cases_cover_free_answer_with_verdict_and_own_plan() {
+    let snap = Snapshot::from_value(&frozen_value()).unwrap();
+    let me = common::hotel_ids()[0];
+    let count = |name: &str, f: &dyn Fn(&GameEvent) -> bool| {
+        let c = CASES.iter().find(|c| c.name == name).unwrap();
+        play(&snap, c)
+            .history
+            .iter()
+            .filter(|r| f(&r.event))
+            .count()
+    };
+    assert!(
+        count(
+            "t42-slobodni",
+            &|e| matches!(e, GameEvent::VerdictRecorded(v) if v.hotel_id == me)
+        ) > 0,
+        "t42-slobodni: nijedna presuda na slobodni odgovor"
+    );
+    assert!(
+        count(
+            "m42-plan",
+            &|e| matches!(e, GameEvent::PlanSet(p) if p.hotel_id == me)
+        ) > 0,
+        "m42-plan: nijedan plan čovjeka"
+    );
 }
 
 #[test] // 3b: u svakom slučaju svaki krug ima izvučenu situaciju (šifra s točkom) i najviše `high` situacija

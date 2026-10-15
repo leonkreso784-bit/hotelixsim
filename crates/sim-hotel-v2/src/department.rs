@@ -209,6 +209,8 @@ pub struct DeptInput<'a> {
     pub building_share_bp: u16,
     /// Faktor trošenja dok je održavanje odgođeno (gospodarstvo v2, bp; 10 000 = kao redovno).
     pub deferred_wear_bp: u16,
+    /// Promjena stanja prostora iz situacija kruga (popravak, ADR-042 t. 1); 0 = bez.
+    pub situation_pts: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -440,6 +442,7 @@ pub fn dept_step(i: &DeptInput) -> Calc<DeptOutcome> {
         w(wear_pts),
         w(load_wear_pts),
         w(maintenance_pts),
+        w(i.situation_pts),
     ])?
     .clamp(0, 10_000);
     // F6: obnova na osnovu stisnutu u 0–10 000, pa granica 100; bez obnove točno današnji račun.

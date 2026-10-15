@@ -43,6 +43,9 @@ pub struct EconomyV2 {
     pub deferred_wear_bp: u16,
     /// Uvjeti grupnih rezervacija (J-3, mehanike grupe); sve 0 = grupa kao u v1.
     pub groups: GroupTerms,
+    /// Bodovi stanja prostora odjela situacije po hitnom popravku (ADR-042 t. 1; 1000 = +10), bez faktora kruga;
+    /// 0 = hitan popravak je samo trošak (v1).
+    pub repair_urgent_condition_pts: i32,
 }
 
 /// Uvjeti grupnih rezervacija (J-3): grupa je odluka s cijenom, ne čisti dobitak. Sve 0 = v1 ponašanje.
@@ -386,6 +389,11 @@ impl Catalog {
                 "v2.economy.deferred_wear_bp".to_string(),
             ));
         }
+        if !(0_i32..=10_000_i32).contains(&self.economy.repair_urgent_condition_pts) {
+            return Err(CatalogError::OutOfRange(
+                "v2.economy.repair_urgent_condition_pts".to_string(),
+            ));
+        }
         self.validate_leases()
     }
 
@@ -675,6 +683,7 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             finance_index: FinanceBasis::Gop,
             deferred_wear_bp: 10_000,
             groups: GroupTerms::default(),
+            repair_urgent_condition_pts: 0,
         },
     }
 }

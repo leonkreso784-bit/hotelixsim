@@ -46,7 +46,9 @@ fn retention(code: &str, q: u8) -> SituationOutcome {
 fn run(c: &Catalog, p: &Period, outcomes: &[SituationOutcome]) -> PeriodReport {
     let s = HotelState::from_profile(c, Profile::C).unwrap();
     let plan = PeriodPlan::default_for(&s, p, c).unwrap();
-    resolve_period(&s, p, &plan, outcomes, c).unwrap()
+    let outcomes: Vec<RoundSituation> =
+        outcomes.iter().cloned().map(RoundSituation::from).collect();
+    resolve_period(&s, p, &plan, &outcomes, c).unwrap()
 }
 
 /// Zbroj redaka situacije `code` za varijablu `var`.

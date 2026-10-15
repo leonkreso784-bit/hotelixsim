@@ -101,6 +101,7 @@ fn lease_june(spec: &DeptSpec, st: &DeptState, m: Maintenance) -> DeptOutcome {
         building_pts: 0,
         building_share_bp: 0,
         deferred_wear_bp: 10_000,
+        situation_pts: 0,
     })
     .unwrap()
 }

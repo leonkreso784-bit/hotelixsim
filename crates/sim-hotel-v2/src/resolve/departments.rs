@@ -34,6 +34,8 @@ pub(super) struct OperatedIn<'a> {
     pub(super) experience_pts: i32,
     pub(super) morale_pts: i32,
     pub(super) satisfaction_step_bp: u16,
+    /// Promjena stanja prostora iz situacija kruga po odjelu (ADR-042 t. 1); odjel bez zapisa 0.
+    pub(super) situation_pts: &'a BTreeMap<DeptCode, i128>,
 }
 
 /// `dept_step` za svaki odjel osim Smještaja i neraspoređenih, redom koda. Opterećenje odjela ne ovisi o iskustvu i
@@ -67,6 +69,7 @@ pub(super) fn operated(i: &OperatedIn) -> Result<BTreeMap<DeptCode, DeptOutcome>
             building_pts: i.building_pts,
             building_share_bp: i.building_share_bp,
             deferred_wear_bp: i.cat.economy.deferred_wear_bp,
+            situation_pts: c::narrow(i.situation_pts.get(code).copied().unwrap_or(0))?,
         })?;
         out.insert(code.clone(), o);
     }

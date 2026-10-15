@@ -88,6 +88,7 @@ fn june(spec: &DeptSpec, st: &DeptState, pl: &DeptPlan) -> DeptOutcome {
         building_pts: 0,
         building_share_bp: 0,
         deferred_wear_bp: 10_000,
+        situation_pts: 0,
     })
     .unwrap()
 }
@@ -179,6 +180,7 @@ fn week_two_pays_seven_thirtieths_of_june_payroll() {
         building_pts: 0,
         building_share_bp: 0,
         deferred_wear_bp: 10_000,
+        situation_pts: 0,
     })
     .unwrap();
     assert_eq!(o.payroll_cents, 3_780_000 * 14 / 30 - 3_780_000 * 7 / 30);

@@ -18,6 +18,7 @@ pub(crate) use guests::GuestStep;
 pub use money::FinanceOutcome;
 pub(crate) use money::MoneyStep;
 pub(crate) use people::PeopleStep;
+pub use situations::{SituationEffect, situation_effect};
 
 use departments::{
     OperatedIn, RoomsIn, fixed_charges, operated, rooms_outcome, rooms_payroll, undistributed,
@@ -31,9 +32,7 @@ use std::collections::BTreeMap;
 
 use engine::calc::{self as c, Calc, CalcError};
 use sim_hotel::Training;
-use sim_hotel::{
-    CatalogError, MechanicError, MonthReport, Pending, SituationOutcome, TrainingEffect,
-};
+use sim_hotel::{CatalogError, Effects, MechanicError, MonthReport, Pending, TrainingEffect};
 
 use crate::calendar::{Period, avg_i64, prorate};
 use crate::catalog::Catalog;
@@ -42,6 +41,7 @@ use crate::explain::{Explain, Lines, explain};
 use crate::market::{group_commission_cents, market};
 use crate::plan::{PeriodPlan, PlanError};
 use crate::renewal::{RoundRenewal, depreciation, renew_round};
+use crate::situations::RoundSituation;
 use crate::state::HotelState;
 
 /// Izvješće kruga: v2 stanje prije i poslije, v1 sažetak (isti oblik kao v1 `MonthReport`, složen iz odjela) i
@@ -196,12 +196,12 @@ fn renewals(
 /// noćenja gostiju) → ljudi (opterećenje hotela ponderirano osobljem odjela) → računi operativnih odjela (sa
 /// zgradom u cilju zadovoljstva) → oprema i gosti (kvaliteta i zadovoljstvo hotela ponderirani gostima) → račun
 /// Smještaja → neraspoređeni odjeli s troškovima odluka → fiksne naknade → v1 sažetak novca iz računa (capex) →
-/// amortizacija i EBIT → objašnjenje.
+/// amortizacija i EBIT → objašnjenje. Učinak situacije na prostor ide odjelu situacije (`situation_effect`).
 pub fn resolve_period(
     state: &HotelState,
     p: &Period,
     plan: &PeriodPlan,
-    situations: &[SituationOutcome],
+    situations: &[RoundSituation],
     cat: &Catalog,
 ) -> Result<PeriodReport, ResolveError> {
     plan.validate(state, p, cat)?;
@@ -210,7 +210,16 @@ pub fn resolve_period(
     let pend = state.pending.clone();
     let spec = base.category(state.category)?;
 
-    let mut sit = situation_effects(situations, p, base, state.category, coeffs)?;
+    let mut sit = situation_effects(situations, p, cat, state.category)?;
+    // Prostor situacije je odjel ovog hotela (izvlačenje bira među odjelima stanja).
+    for code in sit.equipment.keys() {
+        if !state.departments.contains_key(code) {
+            return Err(
+                CatalogError::Missing(format!("state.departments.{}", code.as_str())).into(),
+            );
+        }
+    }
+    let sit_rooms = sit.equipment.get(&DeptCode::rooms()).copied().unwrap_or(0);
 
     // 1. osoblje, tržište i Smještaj
     let rooms_capacity = cat.dept(&DeptCode::rooms())?.capacity_tenths_per_staff_day;
@@ -276,6 +285,7 @@ pub fn resolve_period(
             renewals: &round_renewals,
             building_pts: building.after_pts,
             building_share_bp: share_bp,
+            situation_pts: &sit.equipment,
         })
     };
 
@@ -346,7 +356,7 @@ pub fn resolve_period(
             others: &others,
             morale: pe.morale,
             experience: pe.experience,
-            sit_equipment: sit.equipment,
+            sit_equipment: sit_rooms,
             sit_satisfaction: sit.satisfaction,
             sit_rating: sit.rating,
             rooms_spec,
@@ -492,6 +502,7 @@ pub fn resolve_period(
     // 9. objašnjenje: „oprema" sažetka je 70/30 (Smještaj i ostali operativni); promjenu Smještaja objašnjavaju v1
     // uzroci i obnova v2 Smještaja, ostatak ide u redak održavanja, osim dijela koji donosi obnova ostalih odjela
     // (`renewal_others`: sažetak nakon kruga prema sažetku s ostalim odjelima umanjenim za njihove bodove obnove)
+    // i dijela koji donose situacije u ostalim odjelima (`situation_others`, retci tih situacija)
     let (summary_before, summary_after) = (state.summary(), after.summary());
     let equipment_others = c::sub(
         c::sub(
@@ -512,6 +523,26 @@ pub fn resolve_period(
         w(summary_after.equipment_pts),
         w(without.summary().equipment_pts),
     )?;
+    // Situacija u drugom odjelu: njezin dio sažetka je sažetak nakon kruga prema sažetku sa stanjem tog odjela
+    // umanjenim za njezine bodove; zbroj tih dijelova (`situation_others`) se oduzima od retka održavanja.
+    let mut shown: Vec<(String, Effects)> = Vec::with_capacity(sit.shown.len());
+    let mut situation_others: i128 = 0;
+    for (code, space, fx) in &sit.shown {
+        let mut fx = fx.clone();
+        if *space != DeptCode::rooms() && fx.equipment_pts != 0_i32 {
+            let mut without = after.clone();
+            if let Some(d) = without.departments.get_mut(space) {
+                d.condition_pts = c::narrow(c::sub(w(d.condition_pts), w(fx.equipment_pts))?)?;
+            }
+            let part = c::sub(
+                w(summary_after.equipment_pts),
+                w(without.summary().equipment_pts),
+            )?;
+            situation_others = c::add(situation_others, part)?;
+            fx.equipment_pts = c::narrow(part)?;
+        }
+        shown.push((code.clone(), fx));
+    }
     let mut lines = Lines::default();
     explain(
         &mut lines,
@@ -523,10 +554,11 @@ pub fn resolve_period(
             people: &pe,
             money: &mo,
             guests: &gu,
-            situations: &sit.shown,
+            situations: &shown,
             sit_extra_wage: sit.shown_extra_wage,
             equipment_others,
             renewal_others,
+            situation_others,
         },
     )?;
 

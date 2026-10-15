@@ -6,9 +6,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_hotel::{Month, SituationOutcome, effects};
+use sim_hotel::{Effects, Month, SituationOutcome};
 use sim_hotel_v2::calendar::month_period;
-use sim_hotel_v2::situations::{DrawnSituation, NumberParam, Scope, reward_only};
+use sim_hotel_v2::situations::{
+    DrawnSituation, NumberParam, RoundSituation, Scope, TemplateSet as CoreSet, reward_only,
+};
+use sim_hotel_v2::{Period, PeriodKind, season_periods, situation_effect};
 
 use crate::templates::{Kind, NameList, Template, TemplateMechanic};
 use crate::{Content, ContentError};
@@ -93,8 +96,9 @@ pub fn principle_violations(c: &Content) -> Result<Vec<Violation>, ContentError>
         }
     }
     names_unique(&[&n.guest, &n.staff, &n.partner], &mut out);
+    let core = tpl.to_core();
     for t in &tpl.templates {
-        template_violations(c, t, &mut out)?;
+        template_violations(c, &core, t, &mut out)?;
     }
     out.sort();
     Ok(out)
@@ -129,6 +133,7 @@ fn names_unique(lists: &[&NameList; 3], out: &mut Vec<Violation>) {
 
 fn template_violations(
     c: &Content,
+    core: &CoreSet,
     t: &Template,
     out: &mut Vec<Violation>,
 ) -> Result<(), ContentError> {
@@ -177,7 +182,7 @@ fn template_violations(
             format!("{field}: {{odjel}} nije u zagradi ni iza riječi „odjel”"),
         );
     }
-    if let Some(detail) = silence_dominates(c, t)? {
+    if let Some(detail) = silence_dominates(c, core, t)? {
         push(Principle::SilenceNotBetter, detail);
     }
     Ok(())
@@ -220,12 +225,27 @@ fn dept_placeholder_misuse(t: &Template) -> Option<String> {
     None
 }
 
-/// Opis prve kombinacije kategorije i mjeseca u kojoj šutnja nije lošija od najlošijeg odgovora.
-fn silence_dominates(c: &Content, t: &Template) -> Result<Option<String>, ContentError> {
+/// Krugovi u kojima se situacija mjeseca `m` obračunava: mjesečni krug i prvi tjedni krug s tim mjesecom situacija.
+fn rounds_of(m: Month) -> Vec<Period> {
+    let mut out = vec![month_period(m)];
+    out.extend(
+        season_periods(PeriodKind::Week)
+            .into_iter()
+            .find(|p| p.situation_month() == m),
+    );
+    out
+}
+
+/// Opis prve kombinacije kategorije, mjeseca i vrste kruga u kojoj šutnja nije lošija od najlošijeg odgovora.
+/// Učinak je obračun v2 (`sim_hotel_v2::situation_effect`: faktor kruga, popravak u prostoru odjela predloška).
+fn silence_dominates(
+    c: &Content,
+    core: &CoreSet,
+    t: &Template,
+) -> Result<Option<String>, ContentError> {
     let (Some(tpl), Some(v2)) = (&c.situation_templates, &c.v2) else {
         return Ok(None);
     };
-    let core = tpl.to_core();
     let Some(spec) = core.templates.iter().find(|s| s.code == t.code) else {
         return Ok(None);
     };
@@ -272,31 +292,40 @@ fn silence_dominates(c: &Content, t: &Template) -> Result<Option<String>, Conten
                 numbers: numbers.clone(),
             };
             let inst = tpl.instance(&d, &v2.base, category)?;
-            let fx = |o: SituationOutcome| {
-                let o = if t.no_penalty { reward_only(o) } else { o };
-                effects(&o, inst.month, &v2.base, category).map_err(|e| bad(format!("{e:?}")))
-            };
-            let silent = fx(SituationOutcome::unanswered(&inst))?;
-            for (a, ta) in inst.answers.iter().zip(&t.answers) {
-                if ta.quality() != min_q {
-                    continue;
-                }
-                let w = fx(SituationOutcome::from_answer(&inst.code, a))?;
-                let dominates = silent.groups == w.groups
-                    && silent.satisfaction_pts >= w.satisfaction_pts
-                    && silent.morale_pts >= w.morale_pts
-                    && silent.rating >= w.rating
-                    && silent.equipment_pts >= w.equipment_pts
-                    && silent.cost_cents <= w.cost_cents
-                    && silent.extra_wage_cents <= w.extra_wage_cents
-                    && silent != w;
-                if dominates {
-                    return Ok(Some(format!(
-                        "šutnja ({}, {}) nije lošija od odgovora '{}'",
-                        category.code(),
-                        m.code(),
-                        ta.label
-                    )));
+            for p in rounds_of(m) {
+                let fx = |o: SituationOutcome| -> Result<Effects, ContentError> {
+                    let o = if t.no_penalty { reward_only(o) } else { o };
+                    let s = RoundSituation {
+                        outcome: o,
+                        space: department.clone(),
+                    };
+                    Ok(situation_effect(&s, &p, v2, category)
+                        .map_err(|e| bad(format!("{e:?}")))?
+                        .effects)
+                };
+                let silent = fx(SituationOutcome::unanswered(&inst))?;
+                for (a, ta) in inst.answers.iter().zip(&t.answers) {
+                    if ta.quality() != min_q {
+                        continue;
+                    }
+                    let w = fx(SituationOutcome::from_answer(&inst.code, a))?;
+                    let dominates = silent.groups == w.groups
+                        && silent.satisfaction_pts >= w.satisfaction_pts
+                        && silent.morale_pts >= w.morale_pts
+                        && silent.rating >= w.rating
+                        && silent.equipment_pts >= w.equipment_pts
+                        && silent.cost_cents <= w.cost_cents
+                        && silent.extra_wage_cents <= w.extra_wage_cents
+                        && silent != w;
+                    if dominates {
+                        return Ok(Some(format!(
+                            "šutnja ({}, {}, {}) nije lošija od odgovora '{}'",
+                            category.code(),
+                            m.code(),
+                            p.kind.code(),
+                            ta.label
+                        )));
+                    }
                 }
             }
         }
