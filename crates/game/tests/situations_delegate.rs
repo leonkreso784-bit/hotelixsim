@@ -57,6 +57,26 @@ fn monthly_june() -> (Game, RoundKey) {
     (g, r)
 }
 
+/// Mjesečna igra, sjeme 42 (bez odgovora igrača): prvi krug jun→sep u kojem `ok` vrijedi. Od B2a mjesečni krug ima
+/// 4/5/6 situacija, pa testovi koji trebaju 5. ili 6. mjesto ne mogu u lipnju (4); tvrdnje testova ostaju iste, mijenja
+/// se samo krug koji se gleda.
+fn monthly_round_where(ok: impl Fn(&Game, RoundKey) -> bool) -> (Game, RoundKey) {
+    for prev in ["none", "jun", "jul", "aug"] {
+        let g = common::v2_monthly_game_resolved_through(prev);
+        if let Some(r) = g.current_round()
+            && ok(&g, r)
+        {
+            return (g, r);
+        }
+    }
+    panic!("nijedan mjesečni krug jun-sep sjemena 42 nema tražene situacije");
+}
+
+/// Mjesečni krug sjemena 42 sa barem šest situacija (6. mjesto postoji).
+fn monthly_with_six() -> (Game, RoundKey) {
+    monthly_round_where(|g, r| codes(g, r).len() >= 6)
+}
+
 /// Tjedna igra, sjeme 42: obračunati krugovi do uključivo `prev` (bez ijednog odgovora igrača; `"none"` = nijedan),
 /// pa je otvoren krug `code`.
 fn weekly_open(prev: &str, code: &str) -> (Game, RoundKey) {
@@ -169,7 +189,13 @@ fn the_first_three_are_mandatory() {
 
 #[test]
 fn delegating_twice_or_after_an_answer_is_already_answered() {
-    let (mut g, r) = monthly_june();
+    // treba 6. mjesto (ili dalje) s likom i slobodnim odgovorom, kao nekad u lipnju
+    let (mut g, r) = monthly_round_where(|g, r| {
+        codes(g, r)
+            .iter()
+            .skip(5)
+            .any(|c| g.ai_entry_for(me(), c).is_some_and(|a| a.free_text))
+    });
     let list = codes(&g, r);
     delegate(&mut g, &list[3]);
     assert_eq!(
@@ -203,7 +229,7 @@ fn delegating_twice_or_after_an_answer_is_already_answered() {
         .iter()
         .skip(5)
         .find(|c| g.ai_entry_for(me(), c).is_some_and(|a| a.free_text))
-        .expect("jun sjemena 42 ima primjerak s likom iza petog mjesta")
+        .expect("krug ima primjerak s likom iza petog mjesta")
         .clone();
     let ev = g
         .submit_response(me(), &free, "Ispričat ću se i ponuditi rješenje.")
@@ -298,7 +324,7 @@ fn recomputed(g: &Game, r: RoundKey, delegated: &BTreeSet<String>) -> game::dto:
 
 #[test]
 fn delegated_situation_resolves_with_quality_two_and_unanswered_mechanics() {
-    let (mut g, r) = monthly_june();
+    let (mut g, r) = monthly_with_six();
     let list = codes(&g, r);
     // četvrta (s likom) i peta (kolektivna, bez odjela) prepuštene; šesta ostaje bez odgovora
     delegate(&mut g, &list[3]);
@@ -372,7 +398,7 @@ fn folding_a_game_with_delegations_twice_gives_the_same_game() {
 
 #[test]
 fn debrief_input_tells_delegated_from_unanswered() {
-    let (mut g, r) = monthly_june();
+    let (mut g, r) = monthly_with_six();
     let list = codes(&g, r);
     delegate(&mut g, &list[3]);
     close_and_resolve(&mut g, r);
@@ -427,7 +453,7 @@ fn season_decisions_do_not_count_delegated_as_unanswered() {
 
 #[test]
 fn feed_does_not_show_delegated_as_ignored() {
-    let (mut g, r) = monthly_june();
+    let (mut g, r) = monthly_with_six();
     let list = codes(&g, r);
     delegate(&mut g, &list[3]);
     close_and_resolve(&mut g, r);

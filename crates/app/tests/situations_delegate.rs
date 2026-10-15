@@ -8,8 +8,8 @@
 //! - `app::delegate_situation(&Deps, &Caller, HotelId, &str) -> Result<SituationsView, AppError>` (kao `app::answer`).
 //! - `ErrorCode::SituationMandatory`.
 //!
-//! Krugovi (sjeme 42 iz `SeqIds`): mjesečna igra `jun` ima 13 situacija (S1, S3, P-DIJETE-IZGUBLJENO.jun |
-//! P-ALERGIJA.jun, P-OLUJA.jun kolektivna bez odjela, …); tjedna `t05` (nakon t01–t04) ima 4 (S2 + tri primjerka).
+//! Krugovi (sjeme 42 iz `SeqIds`): mjesečna igra ima od B2a 4/5/6 situacija po krugu (prije 13–22), pa testovi koji
+//! trebaju 5. mjesto ili kolektivnu iza trećeg uzimaju prvi krug jun→sep koji to ima (`monthly_view_where`); tjedna `t05` (nakon t01–t04) ima 4 (S2 + tri primjerka).
 
 use std::sync::Arc;
 
@@ -42,6 +42,25 @@ async fn run_all_jobs(deps: &Deps) {
     panic!("red se nije ispraznio u 200 koraka");
 }
 
+/// Mjesečna igra: pogled prvog kruga jun→sep (prethodni zatvoreni bez odgovora igrača) za koji `ok` vrijedi.
+async fn monthly_view_where(
+    ok: impl Fn(&SituationsView) -> bool,
+) -> (Deps, Caller, HotelId, SituationsView) {
+    let (deps, caller, hotel, game) = start(PeriodKind::Month).await;
+    for next in ["jun", "jul", "aug", "sep"] {
+        let s = app::situations(&deps, &caller, hotel).await.unwrap();
+        assert_eq!(s.round, Some(RoundKey::parse(next).unwrap()));
+        if ok(&s) {
+            return (deps, caller, hotel, s);
+        }
+        app::close_round(&deps, &caller, game, RoundKey::parse(next).unwrap())
+            .await
+            .unwrap();
+        run_all_jobs(&deps).await;
+    }
+    panic!("nijedan mjesečni krug jun-sep sjemena 42 nema tražene situacije");
+}
+
 /// Tjedna igra s otvorenim `t05` (t01–t04 zatvoreni i obračunati bez odgovora igrača).
 async fn weekly_t05() -> (Deps, Caller, HotelId, GameId, SituationsView) {
     let (deps, caller, hotel, game) = start(PeriodKind::Week).await;
@@ -59,9 +78,12 @@ async fn weekly_t05() -> (Deps, Caller, HotelId, GameId, SituationsView) {
 
 #[tokio::test]
 async fn view_marks_exactly_the_first_three_as_mandatory_and_names_the_leader() {
-    let (deps, caller, hotel, _) = start(PeriodKind::Month).await;
-    let s = app::situations(&deps, &caller, hotel).await.unwrap();
-    assert!(s.items.len() >= 5, "jun sjemena 42: {}", s.items.len());
+    let (_deps, _caller, _hotel, s) = monthly_view_where(|s| s.items.len() >= 5).await;
+    assert!(
+        s.items.len() >= 5,
+        "mjesečni krug sjemena 42: {}",
+        s.items.len()
+    );
     for (i, it) in s.items.iter().enumerate() {
         assert_eq!(it.mandatory, i < 3, "{} (mjesto {i})", it.code);
         assert!(!it.delegated, "{}", it.code);
@@ -79,7 +101,7 @@ async fn view_marks_exactly_the_first_three_as_mandatory_and_names_the_leader() 
     }
     assert!(
         s.items.iter().any(|i| i.department.is_some()),
-        "jun sjemena 42 ima primjerke s odjelom"
+        "mjesečni krug sjemena 42 ima primjerke s odjelom"
     );
 }
 
@@ -141,15 +163,20 @@ async fn mandatory_is_refused_and_delegated_cannot_be_answered_or_delegated_agai
 
 #[tokio::test]
 async fn collective_situation_beyond_the_first_three_can_be_delegated() {
-    let (deps, caller, hotel, _) = start(PeriodKind::Month).await;
-    let s = app::situations(&deps, &caller, hotel).await.unwrap();
-    // kolektivna bez odjela iza trećeg mjesta (jun sjemena 42: P-OLUJA.jun)
+    // kolektivna bez odjela iza trećeg mjesta (u lipnju sjemena 42 je to bila P-OLUJA.jun, dok je lipanj imao 13)
+    let (deps, caller, hotel, s) = monthly_view_where(|s| {
+        s.items
+            .iter()
+            .skip(3)
+            .any(|i| i.code.contains('.') && i.department.is_none())
+    })
+    .await;
     let it = s
         .items
         .iter()
         .skip(3)
         .find(|i| i.code.contains('.') && i.department.is_none())
-        .expect("jun sjemena 42 ima primjerak bez odjela iza trećeg mjesta")
+        .expect("krug ima primjerak bez odjela iza trećeg mjesta")
         .clone();
     assert!(
         it.leader.is_some(),

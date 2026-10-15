@@ -140,7 +140,7 @@ fn opening_the_first_round_records_situations_drawn_before_robot_answers() {
 
 #[test]
 fn every_round_of_a_v2_game_is_opened_with_drawn_situations() {
-    for (kind, lo, hi) in [(PeriodKind::Week, 3, 5), (PeriodKind::Month, 13, 22)] {
+    for (kind, lo, hi) in [(PeriodKind::Week, 3, 5), (PeriodKind::Month, 4, 6)] {
         let g = play_all(Game::fold(&v2_events(42, kind)).unwrap());
         let rounds = g.rounds.len();
         assert!(
