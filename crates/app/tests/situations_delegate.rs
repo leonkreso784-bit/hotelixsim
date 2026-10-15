@@ -12,18 +12,39 @@
 //! trebaju 5. mjesto ili kolektivnu iza trećeg uzimaju prvi krug jun→sep koji to ima (`monthly_view_where`); tjedna `t05` (nakon t01–t04) ima 4 (S2 + tri primjerka).
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use app::memory::FakeAi;
+use app::ports::Ids;
 use app::{Caller, Deps, ErrorCode, GameId, HotelId, SituationsView};
 use content::{Model, Snapshot, repo_dir};
 use game::RoundKey;
 use sim_hotel_v2::PeriodKind;
 
+/// Kao `memory::SeqIds`, ali sa zadanim sjemenom igre.
+struct SeededIds(AtomicU64, u64);
+
+impl Ids for SeededIds {
+    fn uuid(&self) -> uuid::Uuid {
+        uuid::Uuid::from_u128(u128::from(self.0.fetch_add(1, Ordering::SeqCst) + 1))
+    }
+    fn seed(&self) -> u64 {
+        self.1
+    }
+}
+
 async fn start(kind: PeriodKind) -> (Deps, Caller, HotelId, GameId) {
-    let (deps, _mem) = app::memory::deps_with_ai(
+    start_seeded(kind, 42).await
+}
+
+async fn start_seeded(kind: PeriodKind, seed: u64) -> (Deps, Caller, HotelId, GameId) {
+    let (mut deps, _mem) = app::memory::deps_with_ai(
         Snapshot::read(&repo_dir()).unwrap(),
         Arc::new(FakeAi::good()),
     );
+    if seed != 42 {
+        deps.ids = Arc::new(SeededIds(AtomicU64::new(0), seed));
+    }
     let settings = app::NewGameSettings {
         model: Model::V2,
         kind: Some(kind),
@@ -46,19 +67,29 @@ async fn run_all_jobs(deps: &Deps) {
 async fn monthly_view_where(
     ok: impl Fn(&SituationsView) -> bool,
 ) -> (Deps, Caller, HotelId, SituationsView) {
-    let (deps, caller, hotel, game) = start(PeriodKind::Month).await;
+    monthly_view_seeded(42, ok)
+        .await
+        .expect("nijedan mjesečni krug jun-sep sjemena 42 nema tražene situacije")
+}
+
+/// Kao `monthly_view_where`, za zadano sjeme igre; `None` ako ga nijedan krug jun→sep ne zadovoljava.
+async fn monthly_view_seeded(
+    seed: u64,
+    ok: impl Fn(&SituationsView) -> bool,
+) -> Option<(Deps, Caller, HotelId, SituationsView)> {
+    let (deps, caller, hotel, game) = start_seeded(PeriodKind::Month, seed).await;
     for next in ["jun", "jul", "aug", "sep"] {
         let s = app::situations(&deps, &caller, hotel).await.unwrap();
         assert_eq!(s.round, Some(RoundKey::parse(next).unwrap()));
         if ok(&s) {
-            return (deps, caller, hotel, s);
+            return Some((deps, caller, hotel, s));
         }
         app::close_round(&deps, &caller, game, RoundKey::parse(next).unwrap())
             .await
             .unwrap();
         run_all_jobs(&deps).await;
     }
-    panic!("nijedan mjesečni krug jun-sep sjemena 42 nema tražene situacije");
+    None
 }
 
 /// Tjedna igra s otvorenim `t05` (t01–t04 zatvoreni i obračunati bez odgovora igrača).
@@ -163,14 +194,17 @@ async fn mandatory_is_refused_and_delegated_cannot_be_answered_or_delegated_agai
 
 #[tokio::test]
 async fn collective_situation_beyond_the_first_three_can_be_delegated() {
-    // kolektivna bez odjela iza trećeg mjesta (u lipnju sjemena 42 je to bila P-OLUJA.jun, dok je lipanj imao 13)
-    let (deps, caller, hotel, s) = monthly_view_where(|s| {
+    // kolektivna bez odjela iza trećeg mjesta. Od B2a mjesečni krug ima 4/5/6 situacija, a u sjemenu 42 kolektivna je
+    // u svakom mjesečnom krugu na 1.-3. mjestu (u lipnju je to bio P-OLUJA.jun uz 13 situacija), i ni jedan tjedni
+    // krug sjemena 42 je nema iza trećeg. Zato prvo sjeme iznad 42 koje je ima u nekom krugu jun-sep: 43.
+    let (deps, caller, hotel, s) = monthly_view_seeded(43, |s| {
         s.items
             .iter()
             .skip(3)
             .any(|i| i.code.contains('.') && i.department.is_none())
     })
-    .await;
+    .await
+    .expect("sjeme 43 ima kolektivnu iza trećeg mjesta");
     let it = s
         .items
         .iter()
