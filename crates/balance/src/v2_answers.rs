@@ -171,6 +171,12 @@ pub struct PathReport {
     pub rows: Vec<PathRow>,
 }
 
+/// Medijan razlike po sjemenu: `a[i] − b[i]` za isto sjeme `i`, tek onda medijan (ulazi se ne sortiraju).
+fn median_of_diffs(a: &[i32], b: &[i32]) -> i32 {
+    let mut d: Vec<i32> = a.iter().zip(b).map(|(p, q)| p.saturating_sub(*q)).collect();
+    median(&mut d)
+}
+
 /// Napredak od početka nakon `rounds` krugova (najviše koliko sezona ima).
 fn progress_after(r: &SeasonResult, rounds: usize) -> Result<i32, ResolveError> {
     let k = rounds.min(r.periods.len()).saturating_sub(1);
@@ -210,18 +216,14 @@ pub(crate) fn path_report(
             }
         }
         let diff = |a: &[Vec<i32>; 5], x: usize, y: usize| -> i32 {
-            let mut d: Vec<i32> = a
-                .get(x)
-                .into_iter()
-                .flatten()
-                .zip(a.get(y).into_iter().flatten())
-                .map(|(p, q)| p.saturating_sub(*q))
-                .collect();
-            median(&mut d)
+            median_of_diffs(
+                a.get(x).map_or(&[][..], Vec::as_slice),
+                a.get(y).map_or(&[][..], Vec::as_slice),
+            )
         };
         let mut medians = [0_i32; 5];
-        for (m, v) in medians.iter_mut().zip(end.iter_mut()) {
-            *m = median(v);
+        for (m, v) in medians.iter_mut().zip(end.iter()) {
+            *m = median(&mut v.clone());
         }
         rows.push(PathRow {
             profile,
@@ -280,5 +282,16 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport, shares: &[Sh
             pct(share_bp(r.best_vs_silent[2], range)),
             pct(share_bp(r.end[0].saturating_sub(r.end[4]), r.end[4]))
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::median_of_diffs;
+
+    /// Razlika po sjemenu, ne razlika medijana: [1,2,3] − [3,1,2] = [−2,1,1], medijan 1; sortirano bi bilo 0.
+    #[test]
+    fn median_of_diffs_pairs_by_seed() {
+        assert_eq!(median_of_diffs(&[1, 2, 3], &[3, 1, 2]), 1);
     }
 }
