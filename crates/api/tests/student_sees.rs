@@ -371,3 +371,69 @@ async fn delegated_situation_shows_grade_two_in_the_report() {
         .any(|f| f["kind"] == "situation_ignored" && f["situation"] == code);
     assert!(!ignored, "{code}: prepuštena situacija nije bez odgovora");
 }
+
+/// Tjedan preko granice mjeseca (t05, 29. 6.-5. 7.): tjedni sažetak, mjesečni mentor i rata obnove u istom krugu.
+#[tokio::test]
+async fn week_over_the_month_boundary_shows_summary_mentor_and_renewal_payment() {
+    let s = Student::v2("week").await;
+    let p = s.get("/v1/me/hotel").await;
+    let mut plan = p["private"]["plan"]["plan"].clone();
+    let option =
+        &p["private"]["plan"]["limits"]["departments"]["restaurant"]["renewal"]["options"][2];
+    let (amount, rate) = (
+        option["amount_cents"].as_i64().unwrap(),
+        option["installment_cents"].as_i64().unwrap(),
+    );
+    plan["departments"]["restaurant"]["renewal_cents"] = json!(amount);
+    let r = call(
+        &s.app,
+        "PUT",
+        &format!("/v1/hotels/{}/plans/t01", s.hotel),
+        Some(&s.c),
+        Some(plan),
+    )
+    .await;
+    assert_eq!(r.status, 200, "{:?}", r.body);
+    let mut capex = 0;
+    for round in ["t01", "t02", "t03", "t04", "t05", "t06"] {
+        s.close(round).await;
+        let ex = s
+            .get(&format!(
+                "/v1/hotels/{}/months/{round}/explanation",
+                s.hotel
+            ))
+            .await;
+        let note = &ex["finance_note"];
+        let last = s.get("/v1/me/hotel").await["private"]["last_month"].clone();
+        assert_eq!(last["round"]["code"], round, "izvješće kruga {round}");
+        let mentor = last["mentor"].as_str().unwrap();
+        // Tjedni sažetak: svaki tjedan ima napredak i mentora iz brojki; mjesečni mentor (AI) samo u t05.
+        assert!(
+            !ex["progress_text"].as_str().unwrap().is_empty(),
+            "{round}: nema napretka"
+        );
+        assert_eq!(
+            mentor == app::memory::FAKE_DEBRIEF,
+            round == "t05",
+            "{round}: mentor {mentor}"
+        );
+        assert!(
+            round == "t05" || mentor.contains("U tjednu od"),
+            "{round}: nema tjednog sažetka: {mentor}"
+        );
+        // Obnova: rata pada svaki tjedan lipnja (t01-t05) i nikad poslije; amortizacija počinje tek u t05.
+        let paid = note["capex_cents"].as_i64().unwrap();
+        assert_eq!(
+            paid,
+            if round == "t06" { 0 } else { rate },
+            "{round}: rata obnove"
+        );
+        assert_eq!(
+            note["depreciation_cents"].as_i64().unwrap() > 0,
+            round >= "t05",
+            "{round}: amortizacija"
+        );
+        capex += paid;
+    }
+    assert_eq!(capex, amount, "sve rate zajedno daju iznos obnove");
+}
