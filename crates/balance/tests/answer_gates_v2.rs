@@ -13,6 +13,9 @@ use balance::v2::{
 use common::content_v2;
 use sim_hotel_v2::PeriodKind;
 
+/// Strop duga nije besmislen (u (-100, 0)); provjera pri prevođenju.
+const _: () = assert!(ORDER_DEBT_FLOOR > -100 && ORDER_DEBT_FLOOR < 0);
+
 fn report(kind: PeriodKind) -> ReportV2 {
     run_v2(
         &content_v2(),
@@ -164,10 +167,6 @@ fn monthly_debt_forgives_only_middle_minus_delegated() {
         assert!(has(&f, &["B3 redoslijed"]), "korak {i}: {f:?}");
     }
     // Dug je današnji negativan korak (do strop-a): -5 je oprošteno, ispod stropa pada.
-    assert!(
-        ORDER_DEBT_FLOOR > -100 && ORDER_DEBT_FLOOR < 0,
-        "{ORDER_DEBT_FLOOR}"
-    );
     let mut r = clean(PeriodKind::Month);
     paths_mut(&mut r).rows[0].steps[1] = -5;
     assert!(!has(&b3(&r), &["B3 redoslijed"]), "{:?}", b3(&r));
