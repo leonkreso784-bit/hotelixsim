@@ -71,7 +71,8 @@ pub(crate) fn is_breakdown(t: &Template) -> bool {
 }
 
 /// Troši li se prostor predloška: `condition_of`, inače odjel predloška ili svi članovi skupine; nijedan ne smije biti
-/// neraspoređen, a predložak cijelog hotela bez `condition_of` nema prostor.
+/// neraspoređen, a predložak cijelog hotela bez `condition_of` nema prostor. Vraća `true` (staro ponašanje) kad nema v2
+/// ili predloška u jezgri; to je danas nedostižno jer se jezgra gradi iz istih predložaka.
 fn wears(c: &Content, core: &CoreSet, t: &Template) -> bool {
     let Some(v2) = &c.v2 else {
         return true;
@@ -197,7 +198,7 @@ fn template_violations(
     {
         push(
             Principle::BreakdownCondition,
-            "kvar bez uvjeta lošeg stanja odjela (dept_condition_pts.below) i bez external_cause"
+            "kvar bez uvjeta lošeg stanja odjela (dept_condition_pts.below) i bez external_cause, ili s uvjetom na prostoru koji se ne troši (condition_of)"
                 .into(),
         );
     }

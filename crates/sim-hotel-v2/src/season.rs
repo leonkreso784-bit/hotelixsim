@@ -404,7 +404,7 @@ pub fn run_season_responding(
         if answers.len() != items.len() {
             return Err(ResolveError::BadChoice);
         }
-        // Prostor ishoda je odjel primjerka (ADR-042 t. 1); sidra su cijeli hotel.
+        // Prostor ishoda je `condition_of` predloška, inače odjel primjerka (ADR-042 t. 1); sidra su cijeli hotel.
         let outcomes: Vec<RoundSituation> = answers
             .into_iter()
             .zip(&items)

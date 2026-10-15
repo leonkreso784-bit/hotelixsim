@@ -257,7 +257,6 @@ fn mechanic_params(m: &TemplateMechanic) -> Vec<&str> {
         .collect()
 }
 
-/// Odjeli koje predložak može dobiti; `None` za cijeli hotel.
 /// `condition_of` smije imenovati samo poznati odjel koji se troši (nije neraspoređen).
 fn check_condition_of(
     ctx: &str,
@@ -281,6 +280,7 @@ fn check_condition_of(
     Ok(())
 }
 
+/// Odjeli koje predložak može dobiti; `None` za cijeli hotel.
 fn departments(
     ctx: &str,
     dept: &str,
