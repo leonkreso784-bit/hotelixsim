@@ -249,8 +249,9 @@ pub const ORDER_DEBT_FLOOR: i32 = -25;
 /// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni
 /// do `ORDER_DEBT_FLOOR` u danoj vrsti kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno,
 /// 2 = prepušteno − šutnja. Popis smije samo padati; kad korak postane pozitivan na svim profilima, brana
-/// „B3 dug" traži da ga se makne. Briše se u L1-13.
-pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[(PeriodKind::Month, 1)];
+/// „B3 dug" traži da ga se makne. Prazan od B1a (15.10.2026): uz bonus hitnog popravka mjesečni korak srednji −
+/// prepušteno je pozitivan na svim profilima (odluka voditelja).
+pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[];
 
 /// Ravnalo težine, stotinke boda: Brižni − Štediša bez situacija (planovi robota; medijan
 /// `Situations.shares.without` Caring − Saver po profilu), 1000 sjemena, 15.10.2026, commit 76271d1.
