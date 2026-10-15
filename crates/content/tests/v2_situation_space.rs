@@ -4,8 +4,13 @@ mod situations_common;
 use content::{ContentError, Snapshot, fingerprint_value, repo_dir};
 use serde_json::{Value, json};
 use sim_hotel_v2::department::DeptCode;
-use sim_hotel_v2::situations::{Anchor, Bounds, Conditions, Kind, Repeat};
-use sim_hotel_v2::{HotelState, PeriodKind, Profile, season_periods};
+use sim_hotel_v2::situations::{
+    Anchor, Bounds, Conditions, DeptTarget, DrawnSituation, Kind, Repeat,
+};
+use sim_hotel_v2::{
+    CatalogError, HotelState, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError,
+    SeasonSituations, TemplateDraw, run_season_from, season_periods,
+};
 use situations_common::{Hotel, frozen, general, indices, round, start};
 
 #[test]
@@ -180,5 +185,130 @@ fn condition_of_must_name_a_space_that_wears() {
     assert!(
         !v.to_string().contains("condition_of"),
         "repo snimak ne smije imati ključ (B4 ga upisuje)"
+    );
+}
+
+/// B1b, Minor 1: predložak s vlastitim odjelom (grana `Some(depts)` izvlačenja) i `condition_of` čita stanje
+/// `condition_of`, ne stanje svog odjela.
+#[test]
+fn condition_of_beats_own_department_in_the_draw() {
+    let (cat, mut set) = frozen();
+    let maintenance = DeptCode("maintenance".to_string());
+    let mut t = general("P-BRAVA", Kind::Breakdown, OFTEN);
+    t.department = DeptTarget::One(maintenance.clone());
+    t.condition_of = Some(DeptCode::rooms());
+    t.when = Conditions {
+        dept_condition_pts: Some(Bounds {
+            at_least: None,
+            below: Some(4_000),
+        }),
+        ..Conditions::default()
+    };
+    set.templates = vec![t];
+    let t06 = season_periods(PeriodKind::Week)[5];
+    let drawn = |rooms: i32, upkeep: i32, seed: u64| {
+        let mut state: HotelState = start(&cat, Profile::C);
+        for (code, pts) in [(DeptCode::rooms(), rooms), (maintenance.clone(), upkeep)] {
+            state.departments.get_mut(&code).unwrap().condition_pts = pts;
+        }
+        let n = sim_hotel_v2::situations::situation_count(&state, &t06, &cat).unwrap();
+        let anchors: Vec<Anchor> = [Kind::Staff, Kind::Complaint, Kind::Crisis]
+            .into_iter()
+            .cycle()
+            .take(usize::from(n - 1))
+            .map(|kind| Anchor {
+                kind,
+                department: None,
+            })
+            .collect();
+        let h = Hotel {
+            state: &state,
+            indices: indices(5_000),
+            slot: 1,
+        };
+        round(&cat, &set, &h, &t06, &[], seed, &anchors)
+    };
+    for seed in 0..50 {
+        let d = drawn(3_500, 9_000, seed);
+        assert_eq!(d.len(), 1, "sjeme {seed}: Smještaj loš, Održavanje dobro");
+        assert_eq!(d[0].department, Some(maintenance.clone()));
+        assert!(
+            drawn(6_000, 3_000, seed).is_empty(),
+            "sjeme {seed}: Smještaj dobar, Održavanje loše: vlastiti odjel se ne gleda"
+        );
+    }
+}
+
+/// B1b, Minor 2: put prostora u sezoni robota (`season.rs`). Dvije sezone nad istim snimkom (P-INSPEKCIJA bez `major`),
+/// uz i bez `condition_of: rooms`, svugdje prvi odgovor (hitan popravak). Do prvog kruga s P-INSPEKCIJA sezone su iste;
+/// u tom krugu popravak ide u Smještaj (uz polje) odnosno u Restoran (bez njega).
+#[test]
+fn season_repair_goes_to_condition_of_space() {
+    let season = |with_field: bool| {
+        let mut v = v2_value();
+        let t = tpl(&mut v, "P-INSPEKCIJA").as_object_mut().unwrap();
+        t.remove("major");
+        if with_field {
+            t.insert("condition_of".into(), json!("rooms"));
+        }
+        let c = Snapshot::from_value(&v).unwrap().build().unwrap();
+        let cat = c.v2.as_ref().unwrap();
+        let tpls = c.situation_templates.as_ref().unwrap();
+        let set = tpls.to_core();
+        let category = cat.base.profile(Profile::C).unwrap().category;
+        let periods = season_periods(PeriodKind::Week);
+        let refs = RefTable::compute(cat, category, &periods).unwrap();
+        let instance = |d: &DrawnSituation| {
+            tpls.instance(d, &cat.base, category)
+                .map_err(|e| ResolveError::Catalog(CatalogError::OutOfRange(format!("{e:?}"))))
+        };
+        let draw = TemplateDraw {
+            anchors: &c.situations,
+            templates: &set,
+            seed: 11,
+            slot: 1,
+            instance: &instance,
+        };
+        let r = run_season_from(
+            Profile::C,
+            PeriodKind::Week,
+            cat,
+            SeasonSituations::Drawn(&draw),
+            &refs,
+            &mut |s, p| PeriodPlan::default_for(s, p, cat).map_err(ResolveError::from),
+            &mut |_| Ok(0),
+        )
+        .unwrap();
+        let bonus = cat.economy.repair_urgent_condition_pts;
+        (r, bonus)
+    };
+    let (with, bonus) = season(true);
+    let (without, _) = season(false);
+    let k = with
+        .drawn
+        .iter()
+        .position(|round| round.iter().any(|d| d.template == "P-INSPEKCIJA"))
+        .expect("sezona sa sjemenom 11 nema P-INSPEKCIJA: promijeni sjeme");
+    assert!(
+        without.drawn[k]
+            .iter()
+            .any(|d| d.template == "P-INSPEKCIJA"),
+        "do tog kruga sezone su iste"
+    );
+    let after = |r: &sim_hotel_v2::SeasonResult, d: &DeptCode| {
+        r.periods[k].0.after.departments[d].condition_pts
+    };
+    let (rooms, restaurant) = (DeptCode::rooms(), DeptCode("restaurant".to_string()));
+    assert!(
+        after(&with, &rooms) - after(&without, &rooms) >= bonus,
+        "Smještaj: {} / {}",
+        after(&with, &rooms),
+        after(&without, &rooms)
+    );
+    assert!(
+        after(&without, &restaurant) - after(&with, &restaurant) >= bonus,
+        "Restoran: {} / {}",
+        after(&with, &restaurant),
+        after(&without, &restaurant)
     );
 }
