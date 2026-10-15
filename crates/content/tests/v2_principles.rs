@@ -50,8 +50,8 @@ fn known_debt_names_existing_templates_and_never_grows() {
         .map(|t| t["code"].as_str().unwrap())
         .collect();
     let ceiling = [
-        (LabelLengths, 55),
-        (BreakdownCondition, 6),
+        (LabelLengths, 40),
+        (BreakdownCondition, 4),
         (SilenceNotBetter, 16),
     ];
     for (p, list) in KNOWN_VIOLATIONS {
