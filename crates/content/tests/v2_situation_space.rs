@@ -12,8 +12,8 @@ fn repair_bonus_round_trips_and_old_snapshot_reads_zero() {
         .v2
         .unwrap();
     assert_eq!(
-        repo.economy.repair_urgent_condition_pts, 1_000,
-        "repo gradi 1000"
+        repo.economy.repair_urgent_condition_pts, 100,
+        "repo gradi 100 (privremeno, Leon 15.10.; pravi iznos u L1-13)"
     );
 
     v["v2"]["economy"]

@@ -35,18 +35,14 @@ fn paths_mut(r: &mut ReportV2) -> &mut PathReport {
 }
 
 /// Izvještaj čiji su putovi svugdje zdravi: trošak u istom krugu, dobit nakon horizonta i na kraju, svi koraci lanca
-/// pozitivni, težina oko 25 % (Δ = ravnalo / 3). U mjesečnom krugu je korak „srednji − prepušteno" 0 jer je to
-/// zapisani dug (ORDER_DEBT); tjedno je pozitivan.
+/// pozitivni, težina oko 25 % (Δ = ravnalo / 3). Dug je otplaćen u B1a (15.10., bonus +1), pa je i mjesečni korak
+/// „srednji − prepušteno" pozitivan.
 fn clean(kind: PeriodKind) -> ReportV2 {
     let mut r = report(kind);
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(kind, row.profile);
         row.best_vs_silent = [-50, 100, ruler / 3];
-        row.steps = if kind == PeriodKind::Month {
-            [100, 0, 100]
-        } else {
-            [100, 100, 100]
-        };
+        row.steps = [100, 100, 100];
     }
     r
 }
@@ -167,54 +163,41 @@ fn order_gate_fails() {
 }
 
 #[test]
-fn monthly_debt_forgives_only_middle_minus_delegated() {
-    // Dug: srednji − prepušteno u mjesečnom krugu smije biti 0 (clean mjesečni već to ima, nema B3 poruke).
-    assert!(!has(&b3(&clean(PeriodKind::Month)), &["B3 redoslijed"]));
-    // Ostali koraci mjesečno nemaju dug.
+fn monthly_middle_minus_delegated_is_a_real_gate() {
+    // Dug je otplaćen (B1a, 15.10.): mjesečno srednji − prepušteno ≤ 0 pada kao i tjedno, bez oprosta.
+    for v in [0, -5, ORDER_DEBT_FLOOR] {
+        let mut r = clean(PeriodKind::Month);
+        paths_mut(&mut r).rows[0].steps[1] = v;
+        let f = b3(&r);
+        assert!(
+            has(&f, &["B3 redoslijed", "srednji prema prepušteno"]),
+            "korak {v}: {f:?}"
+        );
+    }
     for i in [0, 2] {
         let mut r = clean(PeriodKind::Month);
         paths_mut(&mut r).rows[0].steps[i] = 0;
-        let f = b3(&r);
-        assert!(has(&f, &["B3 redoslijed"]), "korak {i}: {f:?}");
+        assert!(has(&b3(&r), &["B3 redoslijed"]), "korak {i}");
     }
-    // Dug je današnji negativan korak (do strop-a): -5 je oprošteno, ispod stropa pada.
-    let mut r = clean(PeriodKind::Month);
-    paths_mut(&mut r).rows[0].steps[1] = -5;
-    assert!(!has(&b3(&r), &["B3 redoslijed"]), "{:?}", b3(&r));
-    paths_mut(&mut r).rows[0].steps[1] = ORDER_DEBT_FLOOR;
-    assert!(!has(&b3(&r), &["B3 redoslijed"]), "{:?}", b3(&r));
-    paths_mut(&mut r).rows[0].steps[1] = -30;
-    let f = b3(&r);
-    assert!(
-        has(&f, &["B3 redoslijed", "srednji prema prepušteno"]),
-        "{f:?}"
-    );
 }
 
 #[test]
-fn paid_off_debt_must_leave_the_list() {
-    // Mjesečno srednji − prepušteno > 0 na svim profilima: dug je otplaćen i mora se maknuti.
-    let mut r = clean(PeriodKind::Month);
-    for row in &mut paths_mut(&mut r).rows {
-        row.steps = [100, 100, 100];
+fn empty_debt_list_has_no_debt_message() {
+    // ORDER_DEBT je const u src-u, pa se mehanizam duga ne može ovdje isprobati; uz prazan popis nema ni poruke ni oprosta.
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let mut r = clean(kind);
+        assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
+        for row in &mut paths_mut(&mut r).rows {
+            row.steps = [100, 100, 100];
+        }
+        assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
     }
-    let f = b3(&r);
-    assert!(has(&f, &["B3 dug:", "L1-13"]), "{f:?}");
-    // Dok ijedan profil još duguje, dug stoji.
-    paths_mut(&mut r).rows[2].steps[1] = 0;
-    assert!(!has(&b3(&r), &["B3 dug:"]), "{:?}", b3(&r));
-    // Tjedno nema duga, pa ni poruke.
-    assert!(!has(&b3(&clean(PeriodKind::Week)), &["B3 dug:"]));
 }
 
-/// Brisanje duga u L1-13 mijenja i ovaj test i `clean(Month)` (korak 1 tamo postaje pozitivan).
+/// Otplaćen u B1a 15.10. uz bonus +1; dug smije samo padati, pa ostaje prazan.
 #[test]
-fn order_debt_is_exactly_the_month_middle_step() {
-    assert_eq!(
-        ORDER_DEBT,
-        &[(PeriodKind::Month, 1)],
-        "jedini zapisani dug: (mjesečni krug, korak srednji − prepušteno)"
-    );
+fn order_debt_is_empty() {
+    assert!(ORDER_DEBT.is_empty());
 }
 
 #[test]

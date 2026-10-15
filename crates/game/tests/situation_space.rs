@@ -100,8 +100,19 @@ fn drawn_department_gets_the_urgent_repair() {
     for g in [&mut a, &mut b] {
         close_and_resolve(g, f.round);
     }
+    let bonus = a
+        .content
+        .v2
+        .as_ref()
+        .unwrap()
+        .economy
+        .repair_urgent_condition_pts;
     assert!(
-        condition(&a, &f.dept) - condition(&b, &f.dept) >= 1_000,
+        bonus > 0,
+        "bonus hitnog popravka iz sadržaja mora biti pozitivan"
+    );
+    assert!(
+        condition(&a, &f.dept) - condition(&b, &f.dept) >= bonus,
         "sjeme {seed}, krug {:?}: hitan popravak diže stanje odjela {:?}: A {} / B {}",
         f.round,
         f.dept,
