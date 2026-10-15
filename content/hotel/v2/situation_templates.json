@@ -47,7 +47,7 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, odmah premjestiti gošću u drugu sobu, ponuditi večeru, poslati tehničara i sutra je nazvati",
+          "label": "Ispričati se, premjestiti gošću uz večeru na račun hotela, hitno popraviti klimu i sutra je nazvati",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "vecera" },
@@ -55,7 +55,7 @@
           ]
         },
         {
-          "label": "Ispričati se, premjestiti gošću i poslati tehničara",
+          "label": "Ispričati se, odmah premjestiti gošću u drugu sobu, a tehničara poslati da hitno popravi klimu",
           "criteria": [1, 2, 4],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -63,7 +63,7 @@
           ]
         },
         {
-          "label": "Vratiti novac za cijeli boravak",
+          "label": "Ispričati se, vratiti gošći novac za cijeli boravak, a tehničara poslati kad dođe na red",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "boravak" },
@@ -189,7 +189,7 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, dati popust od pola noćenja, hitno popraviti, odgovoriti na recenziju i pojačati održavanje",
+          "label": "Ispričati se uz popust od pola noćenja, hitno popraviti, a na recenziju odgovoriti što je popravljeno",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "noc_pola" },
@@ -197,7 +197,7 @@
           ]
         },
         {
-          "label": "Ispričati se, dati popust od pola noćenja i hitno popraviti",
+          "label": "Ispričati se, dati gostu popust od pola noćenja i odmah poslati ljude iz održavanja da to hitno poprave",
           "criteria": [1, 2, 3],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "noc_pola" },
@@ -205,7 +205,7 @@
           ]
         },
         {
-          "label": "Hitno popraviti, bez isprike i popusta",
+          "label": "Odmah poslati održavanje da to hitno popravi, a gostu zahvaliti što je upozorio na problem",
           "criteria": [3],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -213,7 +213,7 @@
           ]
         },
         {
-          "label": "Ispričati se i obećati popravak „nakon sezone“",
+          "label": "Ispričati se gostu, a popravak staviti u plan radova nakon sezone, kad je hotel prazniji",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -330,7 +330,7 @@
       ],
       "answers": [
         {
-          "label": "Obavijestiti goste krila B prije nego nazovu, preseliti koga se može, ostalima otvoriti tuševe u wellnessu, dati nadoknadu po sobi, hitno zamijeniti bojler, provjeriti ostale bojlere i temperaturu tople vode",
+          "label": "Javiti gostima prije nego nazovu, dati nadoknadu po sobi, hitno zamijeniti bojler i provjeriti ostale",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "nadoknada" },
@@ -338,7 +338,7 @@
           ]
         },
         {
-          "label": "Obavijestiti goste, preseliti koga se može, dati manju nadoknadu i privremeno zakrpati bojler",
+          "label": "Obavijestiti goste, preseliti koga se može i dati manju nadoknadu, a bojler za sada zakrpati",
           "criteria": [1, 2, 3],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "nadoknada_mala" },
@@ -346,7 +346,7 @@
           ]
         },
         {
-          "label": "Ostaviti goste u sobama, dati 20 % popusta na noćenje u krilu B tjedan dana i čekati redovni servis",
+          "label": "Ostaviti goste u sobama uz 20 % popusta na noćenje u krilu B tjedan dana, a bojler prepustiti redovnom servisu",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "popust" },
@@ -354,7 +354,7 @@
           ]
         },
         {
-          "label": "Reći recepciji da gostima objašnjava kako je kvar i da se na njemu radi",
+          "label": "Reći recepciji da gostima koji nazovu objasni kvar, a bojler popraviti u redovnom servisu",
           "criteria": [],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -1316,7 +1316,7 @@
       ],
       "answers": [
         {
-          "label": "Saslušati je i sastati se s timom, odmah isplatiti prekovremene sate, smanjiti broj soba po sobarici uz pomoć agencije dok ne stignu novi sezonci, vratiti slobodni dan i za dva tjedna ponovno razgovarati",
+          "label": "Sastati se sa sobaricama, isplatiti prekovremene, uz agenciju smanjiti normu i za dva tjedna opet razgovarati",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "StaffRetention", "raise_one_pct": 0, "bonus": "prekovremeni" },
@@ -1324,7 +1324,7 @@
           ]
         },
         {
-          "label": "Odmah isplatiti prekovremene sate, uzeti agenciju dok ne stignu novi sezonci i vratiti slobodni dan",
+          "label": "Odmah isplatiti prekovremene sate, uzeti sobarice iz agencije dok ne stignu novi sezonci i vratiti slobodni dan",
           "criteria": [2, 3, 4],
           "mechanics": [
             { "type": "StaffRetention", "raise_one_pct": 0, "bonus": "prekovremeni" },
@@ -1332,7 +1332,7 @@
           ]
         },
         {
-          "label": "Glavnoj domaćici dati 8 % povišice da smiri tim, ostalo ne mijenjati",
+          "label": "Glavnoj domaćici dati 8 % povišice da smiri sobarice, a raspored i broj soba ostaviti kakvi jesu",
           "criteria": [],
           "mechanics": [
             { "type": "StaffRetention", "raise_one_pct": 8, "bonus": 0 },
@@ -1340,7 +1340,7 @@
           ]
         },
         {
-          "label": "Reći da tko neće raditi, može otići, i za zamjenu uzeti agenciju",
+          "label": "Reći da tko ne želi raditi, može otići, a za zamjenu odmah uzeti sobarice iz agencije",
           "criteria": [4],
           "mechanics": [
             { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
@@ -1664,22 +1664,22 @@
       ],
       "answers": [
         {
-          "label": "Dočekati ih ljubazno, spremiti prtljagu, ponuditi doručak i mjesto za osvježenje dok čekaju, njihovu sobu staviti na vrh popisa domaćinstva i javiti im čim bude spremna; ubuduće raniji ulazak nuditi uz doplatu već pri rezervaciji",
+          "label": "Ponuditi im doručak, njihovu sobu staviti prvu na popis domaćinstva i ubuduće prodavati raniji ulazak",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Spremiti prtljagu, ponuditi doručak dok čekaju i javiti im čim soba bude spremna",
+          "label": "Spremiti prtljagu, ponuditi doručak dok čekaju i javiti im se na mobitel čim soba bude spremna",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Spremiti prtljagu i reći im da se vrate u 14 sati",
+          "label": "Spremiti prtljagu, objasniti da je ulazak u 14 sati i preporučiti im kafić u blizini",
           "criteria": [3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Dati im prvu slobodnu sobu, iako domaćinstvo u njoj još nije završilo čišćenje",
+          "label": "Odmah im dati prvu slobodnu sobu, iako domaćinstvo u njoj još nije završilo čišćenje",
           "criteria": [1],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -1723,22 +1723,22 @@
       ],
       "answers": [
         {
-          "label": "Mirno saslušati gosta, s njim pregledati sobu, provjeriti evidenciju ulazaka u sobu i izgubljeno-nađeno, sa sobaricom razgovarati bez optužbe, pomoći mu prijaviti nestanak policiji i javiti mu što je hotel utvrdio",
+          "label": "S gostom pregledati sobu i zapis brave, sa sobaricom mirno razgovarati i pomoći mu oko prijave policiji",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Saslušati gosta, provjeriti evidenciju ulazaka u sobu i pomoći mu prijaviti nestanak policiji",
+          "label": "Saslušati gosta, provjeriti tko je ulazio u sobu prema zapisu brave i pomoći mu prijaviti nestanak policiji",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Odmah pred gostom pozvati sobaricu i pitati je je li uzela stvar",
+          "label": "Odmah pozvati sobaricu na recepciju, pa je pred gostom pitati je li ona uzela stvar",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Reći gostu da hotel ne odgovara za stvari koje nisu bile u sefu",
+          "label": "Objasniti gostu da hotel prema kućnom redu ne odgovara za stvari koje nisu bile zaključane u sefu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -1942,22 +1942,22 @@
       ],
       "answers": [
         {
-          "label": "Ljubazno objasniti zašto hotel ne prima pse, nazvati pansion za pse u blizini i platiti prvu noć, gošći zadržati sobu bez naplate otkaza i pravilo o ljubimcima istaknuti u potvrdi rezervacije",
+          "label": "Objasniti zašto hotel ne prima pse, platiti prvu noć u pansionu za pse i pravilo istaknuti u potvrdi",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
         },
         {
-          "label": "Ljubazno objasniti pravilo i nazvati pansion za pse u blizini da večeras primi psa",
+          "label": "Ljubazno objasniti pravilo, nazvati pansion za pse u blizini i dogovoriti da večeras primi psa",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Iznimno pustiti psa u sobu, bez uvjeta i bez dodatnog čišćenja sobe",
+          "label": "Iznimno pustiti psa u sobu jer je kasno i gošća nema kamo, a nju zamoliti da pazi da pas ne smeta drugima",
           "criteria": [1],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Reći da su pravila na webu i da hotel ne može pomoći",
+          "label": "Pokazati gošći uvjete rezervacije na webu i reći da joj hotel večeras ne može pomoći",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2105,7 +2105,7 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, odmah poslati zaposlenika da mirno i odlučno zatraži tišinu prema kućnom redu, gošći ponuditi drugu sobu ako buka ne prestane, susjedima ujutro ponoviti pravilo noćnog mira i gošću ujutro pitati kako je spavala uz doručak na račun hotela",
+          "label": "Ispričati se, poslati zaposlenika da zatraži tišinu prema kućnom redu, a ujutro gošću počastiti doručkom",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
@@ -2115,12 +2115,12 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Premjestiti gošću u drugu sobu, a susjedima ništa ne reći",
+          "label": "Gošću odmah premjestiti u mirniju sobu na drugom katu, a sa susjedima ne ulaziti u raspravu",
           "criteria": [3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Reći da noćni recepcioner ne smije ostaviti recepciju i da će se ujutro razgovarati sa susjedima",
+          "label": "Objasniti da noćni recepcioner ne smije ostaviti recepciju, a sa susjedima razgovarati ujutro",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2166,17 +2166,17 @@
       ],
       "answers": [
         {
-          "label": "Osobno joj zahvaliti, pohvalu pročitati na sastanku tima uz zahvalu i kolegama koji su je pokrili, dati joj nagradu prema pravilu koje vrijedi za sve, pitati je što bi hotel mogao bolje i zahvaliti gostu na pismu i recenziji",
+          "label": "Zahvaliti joj osobno i pred timom, dati nagradu prema pravilu za sve i odgovoriti gostu na recenziju",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
         },
         {
-          "label": "Osobno joj zahvaliti, pohvalu pročitati pred timom uz zahvalu kolegama koji su je pokrili, pitati je što bi hotel mogao bolje i odgovoriti gostu na recenziju",
+          "label": "Zahvaliti joj osobno i pred timom, pitati je što bi hotel mogao bolje i odgovoriti gostu",
           "criteria": [1, 2, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Odgovoriti gostu na recenziju, a njoj ništa posebno ne reći",
+          "label": "Zahvaliti gostu na pismu, odgovoriti mu na recenziju i pismo proslijediti njezinoj voditeljici",
           "criteria": [5],
           "mechanics": [
             {
@@ -2302,22 +2302,22 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se i preuzeti odgovornost, smjestiti gosta u obližnji hotel iste razine s prijevozom i plaćenom noći, sutra ga dočekati u boljoj sobi, ujutro ga nazvati i prodaju iznad kapaciteta uskladiti s brojem otkazivanja i dogovorom s partnerskim hotelom",
+          "label": "Ispričati se i platiti gostu noć i prijevoz u obližnjem hotelu, a sutra ga dočekati u boljoj sobi",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "preseljenje" }]
         },
         {
-          "label": "Ispričati se, smjestiti gosta u obližnji hotel s prijevozom i plaćenom noći i sutra ga vratiti",
+          "label": "Ispričati se, smjestiti gosta u obližnji hotel s plaćenim prijevozom i noći te ga sutra vratiti u njegovu sobu",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "preseljenje" }]
         },
         {
-          "label": "Smjestiti ga u drugi hotel, ali noć i prijevoz neka plati sam, uz popust na ostatak boravka",
+          "label": "Naći gostu sobu u drugom hotelu koju plaća sam, a za ostatak boravka dati mu popust",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "popust" }]
         },
         {
-          "label": "Ponuditi popust i zamoliti ga da pričeka u predvorju, možda se netko odjavi",
+          "label": "Ponuditi gostu popust na boravak i zamoliti ga da pričeka u predvorju dok se netko ne odjavi",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "popust" }]
         }
@@ -2751,22 +2751,22 @@
       ],
       "answers": [
         {
-          "label": "Odmah izaći pred red, ispričati se i reći koliko će trajati, ponuditi hladno piće i preuzeti prtljagu, pozvati pomoć iz drugih odjela, ubuduće subotom imati treću osobu na recepciji i podatke gostiju prikupiti e-mailom prije dolaska, a gostima koji su najduže čekali poslati malu pažnju u sobu",
+          "label": "Izaći pred red i reći koliko će se čekati, ponuditi hladno piće i subotom ubuduće dodati treću osobu",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Izaći pred red, ispričati se, ponuditi hladno piće i pozvati pomoć iz drugih odjela",
+          "label": "Izaći pred red i ispričati se gostima, ponuditi im hladno piće i pozvati u pomoć kolege iz drugih odjela",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Pozvati pomoć iz drugih odjela, a gostima u redu ništa ne reći",
+          "label": "Pozvati pomoć iz drugih odjela da prijava ide brže, a gostima se obratiti kad dođu na red",
           "criteria": [3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ostaviti kako jest: subotom se uvijek čeka",
+          "label": "Gostima objasniti da je subota dan smjene i da se tada na prijavu uvijek malo čeka",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2869,22 +2869,22 @@
       ],
       "answers": [
         {
-          "label": "Odmah poslati kombi po pola posteljine, domaćinstvu reći koje sobe prve, gostima prije dolaska poslati poruku i ponuditi piće dok čekaju, s praonicom dogovoriti popust prema ugovoru i ubuduće držati rezervnu garnituru posteljine u skladištu",
+          "label": "Poslati kombi po pola posteljine, gostima unaprijed javiti kašnjenje i ubuduće držati rezervnu garnituru",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Poslati kombi po pola posteljine, prvo pripremiti sobe gostiju koji dolaze najranije i gostima koji čekaju ponuditi piće",
+          "label": "Poslati kombi po pola posteljine, prvo pripremiti sobe ranih dolazaka i gostima ponuditi piće",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Kupiti novu posteljinu u trgovini za sve sobe",
+          "label": "Kupiti u trgovini novu posteljinu za sve sobe, pa domaćinstvu reći da odmah počne",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "kupnja" }]
         },
         {
-          "label": "Čekati kamion, a gostima pri dolasku reći da sobe nisu gotove",
+          "label": "Pričekati kamion iz praonice, a gostima koji stignu prije njega reći da sobe još nisu gotove",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2988,22 +2988,22 @@
       ],
       "answers": [
         {
-          "label": "Saslušati gosta i ispričati se za tuš i ručnike, dati provjeriti i popraviti tuš, ponuditi mali bon za idući boravak, ali ne besplatnu noć, na moguću recenziju odgovoriti mirno i činjenicama i ubuduće gostima nuditi da kvar prijave porukom",
+          "label": "Ispričati se za tuš i ručnike, dati popraviti tuš i umjesto besplatne noći ponuditi mali bon",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "bon" }]
         },
         {
-          "label": "Ispričati se za tuš i ručnike, ponuditi mali bon za idući boravak i mirno objasniti da besplatne noći nema",
+          "label": "Ispričati se za tuš i ručnike, ponuditi mali bon za idući boravak i mirno reći da besplatne noći nema",
           "criteria": [1, 3, 4],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "bon" }]
         },
         {
-          "label": "Ne naplatiti noć, da ne napiše recenziju",
+          "label": "Ispričati se za tuš i ručnike, a jednu noć mu ne naplatiti kako bi otišao zadovoljan",
           "criteria": [1],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "noc" }]
         },
         {
-          "label": "Reći mu da izmišlja jer ništa nije prijavio",
+          "label": "Odbiti prigovor uz napomenu da gost kvar za boravka nije prijavio, pa ga hotel ne priznaje",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -3507,17 +3507,17 @@
       ],
       "answers": [
         {
-          "label": "Pitati gosta što mu točno treba, odmah ponuditi rješenje za ovaj boravak, iskreno reći što hotel može, u plan ulaganja staviti rampu i rukohvate i na webu točno opisati pristupačnost hotela",
+          "label": "Pitati gosta što mu treba, ponuditi rješenje za ovaj boravak i u plan ulaganja staviti rampu i rukohvate",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Pitati gosta što mu treba i odmah ponuditi rješenje za ovaj boravak, uz iskrenu informaciju što hotel može",
+          "label": "Pitati gosta što mu točno treba, odmah ponuditi rješenje za ovaj boravak i iskreno reći što hotel može, a što ne",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Reći da je zgrada stara i da se tu ne može ništa promijeniti",
+          "label": "Ispričati se gostu, pa iskreno objasniti da je zgrada stara i da se prostor ne može prilagoditi",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -3555,22 +3555,22 @@
       ],
       "answers": [
         {
-          "label": "S odjelom provjeriti što se dogodilo, javno odgovoriti brzo i mirno uz zahvalu, priznati sporu uslugu i reći što se mijenja, netočne tvrdnje pristojno ispraviti činjenicama, gošći ponuditi razgovor izvan portala i recenziju proći s timom",
+          "label": "Provjeriti s odjelom što se dogodilo, priznati sporu uslugu i javno pristojno ispraviti netočne tvrdnje",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "S odjelom provjeriti što se dogodilo i javno se mirno ispričati za sporu uslugu",
+          "label": "Provjeriti s odjelom što se dogodilo, pa se u javnom odgovoru mirno ispričati za sporu i neljubaznu uslugu",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Javno odgovoriti da gošća laže i da hotel ima dokaze",
+          "label": "Javno odgovoriti da gošća iznosi neistine i da hotel ima račune koji to dokazuju",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ne odgovarati, recenzija će s vremenom potonuti",
+          "label": "Ne odgovarati javno, nego pričekati da recenziju s vremenom potisnu nove i bolje ocjene",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }

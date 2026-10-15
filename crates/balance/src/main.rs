@@ -72,7 +72,7 @@ fn run_v2(
     (seeds, kind, situations): (u64, PeriodKind, Option<SituationCounts>),
     check: bool,
 ) -> ExitCode {
-    let content = match content::Snapshot::read_v2(dir).and_then(|s| s.build()) {
+    let content = match content::Snapshot::read_v2_checked(dir).and_then(|s| s.build()) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("sadržaj v2 se ne može učitati: {e:?}");

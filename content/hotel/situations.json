@@ -9,7 +9,7 @@
     ],
     "answers": [
       {
-        "label": "Ispričati se, odmah premjestiti obitelj, ponuditi večeru, poslati tehničara, sutra nazvati gošću",
+        "label": "Ispričati se, premjestiti obitelj uz večeru na račun hotela, poslati tehničara i sutra ih nazvati",
         "quality": 5,
         "mechanics": [
           { "type": "ServiceRecovery", "compensation_cents": 12000 },
@@ -18,7 +18,7 @@
         "criteria": [1, 2, 3, 4, 5]
       },
       {
-        "label": "Ispričati se, premjestiti obitelj i poslati tehničara",
+        "label": "Ispričati se, odmah premjestiti obitelj u drugu sobu, a tehničara poslati da hitno popravi klimu",
         "quality": 3,
         "mechanics": [
           { "type": "ServiceRecovery", "compensation_cents": 0 },
@@ -27,7 +27,7 @@
         "criteria": [1, 2, 4]
       },
       {
-        "label": "Vratiti novac za cijeli boravak",
+        "label": "Ispričati se, vratiti obitelji novac za cijeli boravak, a tehničara poslati kad dođe na red",
         "quality": 1,
         "mechanics": [
           { "type": "ServiceRecovery", "compensation_cents": 94500 },
@@ -36,7 +36,7 @@
         "criteria": [1]
       },
       {
-        "label": "Objasniti da su zbog toplinskog vala svi uređaji opterećeni i poslati tehničara kad stigne",
+        "label": "Objasniti da su zbog vrućine svi uređaji opterećeni, a tehničara poslati čim stigne s drugog posla",
         "quality": 1,
         "mechanics": [
           { "type": "ServiceRecovery", "compensation_cents": 0 },
@@ -68,25 +68,25 @@
     "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }],
     "answers": [
       {
-        "label": "Razgovor; 8 % povišice i bonus na kraju sezone; on bira i obučava zamjenika",
+        "label": "Razgovarati s njim, dati 8 % povišice i bonus na kraju sezone te mu povjeriti obuku zamjenika",
         "quality": 5,
         "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 8, "bonus_cents": 200000 }],
         "criteria": [1, 2, 3, 4, 5]
       },
       {
-        "label": "Bonus na kraju sezone ako ostane, bez razgovora",
+        "label": "Ponuditi mu veći bonus na kraju sezone ako ostane, a u međuvremenu potražiti novog šefa kuhinje",
         "quality": 2,
         "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 300000 }],
         "criteria": [2, 5]
       },
       {
-        "label": "Odmah dati 20 %",
+        "label": "Saslušati ga i odmah mu dati 20 % povišice, koliko mu nudi hotel preko puta",
         "quality": 1,
         "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 20, "bonus_cents": 0 }],
         "criteria": [1]
       },
       {
-        "label": "Odbiti: „nitko nije nezamjenjiv\"",
+        "label": "Odbiti povišicu i reći mu da je kuhinja radila i prije njega, pa neka sam odluči",
         "quality": 1,
         "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus_cents": 0 }],
         "criteria": []
@@ -124,7 +124,7 @@
     ],
     "answers": [
       {
-        "label": "Protuponuda: grupa u rujnu, 20 % popusta, depozit i rok otkaza",
+        "label": "Predložiti agenciji istu grupu u rujnu uz 20 % popusta, depozit i jasan rok otkaza",
         "quality": 5,
         "mechanics": [
           {
@@ -138,7 +138,7 @@
         ]
       },
       {
-        "label": "Prihvatiti uz 15 % popusta i depozit",
+        "label": "Prihvatiti grupu u kolovozu uz 15 % popusta, a od agencije tražiti depozit unaprijed",
         "quality": 3,
         "mechanics": [
           {
@@ -152,7 +152,7 @@
         ]
       },
       {
-        "label": "Prihvatiti ponudu kako je",
+        "label": "Prihvatiti grupu u kolovozu uz traženih 25 % popusta, a s agencijom potpisati ugovor",
         "quality": 1,
         "mechanics": [
           {
@@ -166,7 +166,7 @@
         ]
       },
       {
-        "label": "Odbiti",
+        "label": "Odbiti ponudu: u kolovozu se sobe ionako prodaju po punoj cijeni bez agencije",
         "quality": 2,
         "mechanics": [
           {
@@ -188,22 +188,22 @@
     "unanswered": [{ "type": "CrisisCommunication", "backup_cents": 0 }],
     "answers": [
       {
-        "label": "Voda i hlađenje za goste i osoblje, iskrena obavijest unaprijed, štednja u praonici i bazenu, cisterna kao rezerva, kraće smjene",
+        "label": "Unaprijed obavijestiti goste, štedjeti u praonici i bazenu, a cisternu naručiti kao rezervu",
         "quality": 5,
         "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 300000 }]
       },
       {
-        "label": "Obavijest gostima i štednja u praonici",
+        "label": "Obavijestiti goste o ograničenjima, uvesti štednju u praonici i zamoliti ih za kraće tuširanje",
         "quality": 3,
         "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
       },
       {
-        "label": "Noću zatvoriti tuševe i bazen bez objašnjenja",
+        "label": "Noću zatvoriti tuševe i bazen, a goste o tome ne obavještavati da se ne bi uznemirili",
         "quality": 1,
         "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
       },
       {
-        "label": "Ne poduzimati ništa dok ograničenja ne počnu",
+        "label": "Pričekati da ograničenja službeno počnu, a do tada raditi kao i dosad i ne plašiti goste",
         "quality": 1,
         "mechanics": [{ "type": "CrisisCommunication", "backup_cents": 0 }]
       }
