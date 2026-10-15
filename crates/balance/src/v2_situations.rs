@@ -38,10 +38,17 @@ type Planner<'p> =
 type Chooser<'c> = dyn FnMut(&SituationTemplate) -> Result<usize, ResolveError> + 'c;
 
 impl<'a> Situations<'a> {
-    pub(crate) fn new(content: &'a content::Content) -> Situations<'a> {
+    pub(crate) fn new(
+        content: &'a content::Content,
+        situations: Option<SituationCounts>,
+    ) -> Situations<'a> {
         Situations {
             content,
-            set: content.situation_templates.as_ref().map(|t| t.to_core()),
+            set: content.situation_templates.as_ref().map(|t| {
+                let mut set = t.to_core();
+                set.counts = situations;
+                set
+            }),
         }
     }
 
@@ -263,9 +270,9 @@ pub(crate) fn shares(
     Ok(out)
 }
 
-/// Najmanje i najviše situacija koje krug smije imati uz zadani broj: tjedno 3–5, mjesečno 4–6.
-pub(crate) fn count_band(kind: PeriodKind) -> (u64, u64) {
-    let (low, _, high) = SituationCounts::default_for(kind).levels();
+/// Najmanje i najviše situacija koje krug smije imati uz zadani broj (zadano: tjedno 3–5, mjesečno 4–6).
+pub(crate) fn count_band(c: SituationCounts) -> (u64, u64) {
+    let (low, _, high) = c.levels();
     (u64::from(low), u64::from(high))
 }
 

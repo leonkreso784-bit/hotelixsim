@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use engine::{Rng, label};
-use sim_hotel::{Catalog, HotelState, Month, Profile, euro_bounds, seasonal_range};
+use sim_hotel::{Catalog, HotelState, Month, Profile, Strategy, euro_bounds, seasonal_range};
 use sim_hotel_v2::PeriodKind;
 use sim_hotel_v2::situations::SituationCounts;
 
@@ -15,10 +15,11 @@ use crate::model::{CorePlan, Model};
 use crate::renewal::RenewalChoice;
 use crate::round::RoundKey;
 
-const ROBOTS: [(&str, &str); 3] = [
-    ("stedisa", "Štediša"),
-    ("brizni", "Brižni"),
-    ("lovac", "Lovac na popunjenost"),
+/// Robotski hoteli igre (utori 2–4): strategija i ime. Jedini izvor popisa; balans ga koristi u paritetu s igrom.
+pub const ROBOTS: [(Strategy, &str); 3] = [
+    (Strategy::Saver, "Štediša"),
+    (Strategy::Caring, "Brižni"),
+    (Strategy::OccupancyHunter, "Lovac na popunjenost"),
 ];
 
 /// Koliko prvih situacija kruga (u poretku `Game::situations_of_hotel`) student mora riješiti sam (Leon P4, 13.10.);
@@ -88,14 +89,14 @@ pub fn new_game_with(
         profile: profile.code().into(),
         controller: Controller::Human { guest_id: guest },
     }];
-    for ((id, slot), (code, name)) in [h2, h3, h4].into_iter().zip(2_u8..).zip(ROBOTS) {
+    for ((id, slot), (strategy, name)) in [h2, h3, h4].into_iter().zip(2_u8..).zip(ROBOTS) {
         hotels.push(HotelSetup {
             hotel_id: id,
             slot,
             name: name.into(),
             profile: profile_at(rot + u64::from(slot)).code().into(),
             controller: Controller::Robot {
-                strategy: code.into(),
+                strategy: strategy.code().into(),
             },
         });
     }
