@@ -246,14 +246,17 @@ pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
 /// najgore −14 (mjesečno srednji − prepušteno −14/−11/−10), Leonova odluka. Smije samo rasti prema 0; L1-13 briše dug.
 pub const ORDER_DEBT_FLOOR: i32 = -25;
 
-/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni do `ORDER_DEBT_FLOOR` u danoj vrsti
-/// kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno, 2 = prepušteno − šutnja. Popis smije samo padati;
-/// kad korak postane pozitivan na svim profilima, brana „B3 dug" traži da ga se makne. Briše se u L1-13.
+/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni
+/// do `ORDER_DEBT_FLOOR` u danoj vrsti kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno,
+/// 2 = prepušteno − šutnja. Popis smije samo padati; kad korak postane pozitivan na svim profilima, brana
+/// „B3 dug" traži da ga se makne. Briše se u L1-13.
 pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[(PeriodKind::Month, 1)];
 
-/// Ravnalo težine: razlika Brižni − Štediša na zadanom planu BEZ situacija (medijan po profilu), stotinke boda.
-/// Izmjereno jednom: 15.10.2026, commit 76271d1, 1000 sjemena (`--round week` i `--round month`), Leonova odluka
-/// (anketa B3, opcija 1). Ne prati igru ni robote; mijenja se samo odlukom u kalibraciji L1-13.
+/// Ravnalo težine, stotinke boda: Brižni − Štediša bez situacija (planovi robota; medijan
+/// `Situations.shares.without` Caring − Saver po profilu), 1000 sjemena, 15.10.2026, commit 76271d1.
+/// Leonova odluka (anketa B3, opcija 1); ne prati igru ni robote, mijenja se samo u kalibraciji L1-13.
+/// Ponovno mjerenje: `run_v2` (`OptionsV2 { seeds: 1000, kind, situations: None }`) za Week i Month, pa za
+/// svaki profil `shares.without(Caring) − shares.without(Saver)` (privremeni test, ne commitati).
 pub fn plan_ruler(kind: PeriodKind, profile: Profile) -> i32 {
     match (kind, profile) {
         (PeriodKind::Week, Profile::A) => 845,
