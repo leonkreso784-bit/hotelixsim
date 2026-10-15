@@ -22,6 +22,9 @@ impl SituationTemplates {
             templates: self.templates.iter().map(template).collect(),
             group_limit: self.groups_per_season,
             groups_per_month: self.groups_per_month,
+            min_gap_weeks: self.min_gap_weeks,
+            opportunity_every_weeks: self.opportunity_every_weeks,
+            counts: None,
             names: core::NamePool {
                 guest: names(&self.names.guest),
                 staff: names(&self.names.staff),

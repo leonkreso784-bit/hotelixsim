@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use sim_hotel_v2::situations::SituationCounts;
 
 use crate::actor::Actor;
 use crate::dto::{MonthReportDto, PlanDto};
@@ -28,6 +29,33 @@ pub struct GameCreated {
     /// v2: kalendar krugova u trenutku stvaranja (igra ga nikad ne računa ponovno). v1: prazno.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rounds: Vec<RoundDefDto>,
+    /// v2: broj situacija po krugu, postavka igre (ADR-042 t. 13–14), zapisan izričito za svaku novu igru, pa kasnija
+    /// promjena zadanog broja u kodu ne mijenja staru igru. `None`: v1 ili stari dnevnik (zadano za vrstu kruga).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub situation_counts: Option<SituationCountsDto>,
+}
+
+/// Broj situacija po krugu po razini očekivane popunjenosti (`sim_hotel_v2::situations::SituationCounts`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SituationCountsDto {
+    pub low: u8,
+    pub mid: u8,
+    pub high: u8,
+}
+
+impl From<SituationCounts> for SituationCountsDto {
+    fn from(c: SituationCounts) -> Self {
+        let (low, mid, high) = c.levels();
+        SituationCountsDto { low, mid, high }
+    }
+}
+
+impl SituationCountsDto {
+    /// `None` kad zapis krši pravilo (3–8, ne pada s popunjenošću).
+    pub fn to_core(self) -> Option<SituationCounts> {
+        SituationCounts::new(self.low, self.mid, self.high)
+    }
 }
 
 /// Jedan krug v2 igre kakav je zapisan pri stvaranju (`sim_hotel_v2::Period` uz ključ kruga).

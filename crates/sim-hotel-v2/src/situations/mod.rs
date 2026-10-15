@@ -14,9 +14,7 @@ mod eligible;
 mod fill;
 mod template;
 
-pub use count::{
-    VirtualWeek, expected_occupancy_bp, period_count, situation_count, virtual_weeks, weekly_count,
-};
+pub use count::{SituationCounts, expected_occupancy_bp, situation_count, situation_count_with};
 pub use draw::{Draw, draw_collective, draw_situations, draw_situations_with};
 pub use eligible::DrawView;
 pub use template::{
@@ -36,15 +34,14 @@ pub struct Anchor {
 /// konkretnu situaciju; mjesta s iznosom i tekstom po odjelu ne traže kocku pa ih ovdje nema.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DrawnSituation {
-    /// Šifra primjerka, jedinstvena u igri: predložak i krug (`P-KLIMA.t03`); ponovljeni primjerak istog
-    /// predloška u istom (mjesečnom) krugu dobiva redni broj (`P-KLIMA.aug.2`).
+    /// Šifra primjerka, jedinstvena u igri: predložak i krug (`P-KLIMA.t03`). Isti predložak dolazi najviše jednom
+    /// u krugu; redni broj u šifri (`P-KLIMA.aug.2`) imaju samo primjerci iz starih dnevnika.
     pub code: String,
     pub template: String,
     pub period: Period,
-    /// Dan sezone primjerka (0 = 1. lipnja) za razmak ponavljanja: u tjednom krugu početak kruga, u mjesečnom
-    /// početak virtualnog tjedna u kojem je izvučen.
+    /// Dan sezone primjerka (0 = 1. lipnja) za razmak ponavljanja: početak kruga (i u mjesečnom krugu).
     pub day: u16,
-    /// Redni broj primjerka istog predloška u krugu (1 = prvi).
+    /// Redni broj primjerka istog predloška u krugu (1 = prvi; novo izvlačenje uvijek 1).
     pub occurrence: u8,
     /// Utor hotela; 0 za kolektivnu (ista za sve hotele).
     pub slot: u8,

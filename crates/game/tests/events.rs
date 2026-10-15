@@ -68,6 +68,11 @@ fn samples() -> Vec<GameEvent> {
                 },
             ],
             rounds: vec![],
+            situation_counts: Some(SituationCountsDto {
+                low: 3,
+                mid: 4,
+                high: 5,
+            }),
         }),
         GameEvent::PlanSet(PlanSet {
             hotel_id: h,

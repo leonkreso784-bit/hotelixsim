@@ -223,7 +223,6 @@ async fn monthly_round_answers_show_in_report_and_next_round() {
 }
 
 #[tokio::test]
-#[ignore = "B3, ADR-042 t. 12, Faza B: isti predložak dvaput u mjesečnom krugu (P-PRAONICA.jul i .jul.2)"]
 async fn monthly_round_never_repeats_a_template() {
     let s = Student::v2("month").await;
     for round in ["jun", "jul", "aug", "sep"] {

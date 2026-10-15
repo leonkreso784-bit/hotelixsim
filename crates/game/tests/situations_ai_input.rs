@@ -40,7 +40,10 @@ fn v2_game(seed: u64, kind: PeriodKind) -> Game {
         &Snapshot::read_v2(&repo_dir()).unwrap(),
         common::GUEST,
         common::hotel_ids(),
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )
     .unwrap()
     .into_iter()

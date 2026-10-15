@@ -223,16 +223,28 @@ fn v2_game_resolved_through(kind: sim_hotel_v2::PeriodKind, code: &str) -> Game 
     play_through(v2_game_from(&snap, 42, kind), code)
 }
 
-/// Nova v2 igra iz zadanog snimka i sjemena (bez obračuna).
+/// Nova v2 igra iz zadanog snimka i sjemena (bez obračuna), sa zadanim brojem situacija.
 pub fn v2_game_from(snap: &Snapshot, seed: u64, kind: sim_hotel_v2::PeriodKind) -> Game {
-    use game::command::{GameSettings, new_game_with};
+    v2_game_with(
+        snap,
+        seed,
+        game::command::GameSettings {
+            kind,
+            situations: None,
+        },
+    )
+}
+
+/// Nova v2 igra iz zadanog snimka, sjemena i postavki igre (bez obračuna).
+pub fn v2_game_with(snap: &Snapshot, seed: u64, settings: game::command::GameSettings) -> Game {
+    use game::command::new_game_with;
     let log: Vec<Recorded> = new_game_with(
         GameId(Uuid::from_u128(1)),
         seed,
         snap,
         GUEST,
         hotel_ids(),
-        GameSettings { kind },
+        settings,
     )
     .unwrap()
     .into_iter()

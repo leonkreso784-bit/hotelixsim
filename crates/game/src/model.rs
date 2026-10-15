@@ -10,7 +10,7 @@ use sim_hotel::{
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
 use sim_hotel_v2::department::PeriodAccounts;
-use sim_hotel_v2::situations::{DrawView, DrawnSituation, TemplateSet};
+use sim_hotel_v2::situations::{DrawView, DrawnSituation, SituationCounts, TemplateSet};
 use sim_hotel_v2::{
     Period, PeriodKind, PeriodPlan, PeriodReport, ResolveError, RoundHotel, collective_for_round,
     draw_for_round_with, period_indices, resolve_period, run_season_with,
@@ -21,7 +21,7 @@ use crate::costs::v2_costs;
 use crate::dto::{MonthReportDto, PlanDto};
 use crate::dto_v2::DetailDto;
 use crate::error::{GameError, corrupt};
-use crate::event::{HotelResolution, RoundDefDto};
+use crate::event::{HotelResolution, RoundDefDto, SituationCountsDto};
 use crate::renewal::renewal_choices;
 use crate::round::RoundKey;
 
@@ -145,6 +145,23 @@ impl Model {
                 created: created.to_owned(),
                 current: sim_hotel_v2::CORE_VERSION.to_owned(),
             }),
+        }
+    }
+
+    /// Broj situacija za `GameCreated.situation_counts`: v2 ga zapisuje uvijek izričito (zadano za vrstu kruga kad
+    /// postavka nije dana), v1 nikad; v1 sa zadanim brojem nije dopuštena (`InvalidSettings`).
+    pub(crate) fn situation_counts(
+        self,
+        kind: PeriodKind,
+        situations: Option<SituationCounts>,
+    ) -> Result<Option<SituationCountsDto>, GameError> {
+        match (self, situations) {
+            (Model::V1, None) => Ok(None),
+            (Model::V1, Some(_)) => Err(GameError::InvalidSettings),
+            (Model::V2, s) => Ok(Some(
+                s.unwrap_or_else(|| SituationCounts::default_for(kind))
+                    .into(),
+            )),
         }
     }
 

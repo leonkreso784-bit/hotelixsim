@@ -33,7 +33,10 @@ fn robot_game(seed: u64, kind: PeriodKind, profile: Profile, strategy: Strategy)
         &snap,
         GuestId(Uuid::from_u128(99)),
         ids,
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )
     .unwrap();
     let Some((actor, GameEvent::GameCreated(mut created))) = events.into_iter().next() else {

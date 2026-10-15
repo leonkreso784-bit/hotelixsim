@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use sim_hotel::Month;
 
+use super::count::SituationCounts;
 use crate::catalog::Catalog;
 use crate::department::{DeptCode, UsaliClass};
 
@@ -19,6 +20,13 @@ pub struct TemplateSet {
     pub group_limit: Option<u8>,
     /// Najviše ponuda grupe s dolaskom u istom mjesecu (M4, J-3); `None` = bez granice.
     pub groups_per_month: Option<u8>,
+    /// Najmanji razmak između dvije pojave istog predloška u tjednima (Leon): vrijedi i kad predložak traži manje.
+    pub min_gap_weeks: u8,
+    /// Prilika barem jednom u ovoliko uzastopnih tjedana (kad je koja dopuštena).
+    pub opportunity_every_weeks: u8,
+    /// Broj situacija po krugu, postavka igre; `None` = `SituationCounts::default_for` vrste kruga. Sadržaj ga ne
+    /// puni (igra ga postavlja iz `GameCreated`).
+    pub counts: Option<SituationCounts>,
 }
 
 impl TemplateSet {

@@ -673,6 +673,7 @@ fn game_created_with_core_2_0_0_is_outdated() {
         hotel_ids(),
         game::command::GameSettings {
             kind: PeriodKind::Week,
+            situations: None,
         },
     )
     .unwrap()

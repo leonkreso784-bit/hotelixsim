@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use engine::{Rng, label};
 use sim_hotel::{Catalog, HotelState, Month, Profile, euro_bounds, seasonal_range};
 use sim_hotel_v2::PeriodKind;
+use sim_hotel_v2::situations::SituationCounts;
 
 use crate::actor::{Actor, strategy_from_code};
 use crate::costs::{LevelCosts, PlanCosts, v1_costs};
@@ -24,10 +25,12 @@ const ROBOTS: [(&str, &str); 3] = [
 /// ostale smije prepustiti voditelju odjela.
 pub const MANDATORY_SITUATIONS: usize = 3;
 
-/// Postavke nove igre: vrsta kruga (tjedan ili mjesec).
+/// Postavke nove igre: vrsta kruga (tjedan ili mjesec) i broj situacija po krugu (samo v2; `None` = zadano za
+/// vrstu kruga, `SituationCounts::default_for`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GameSettings {
     pub kind: PeriodKind,
+    pub situations: Option<SituationCounts>,
 }
 
 fn profile_at(n: u64) -> Profile {
@@ -54,6 +57,7 @@ pub fn new_game(
         hotel_ids,
         GameSettings {
             kind: PeriodKind::Month,
+            situations: None,
         },
     )
 }
@@ -73,6 +77,7 @@ pub fn new_game_with(
         .map_err(|e| corrupt(format!("snimak: {e:?}")))?;
     let model = Model::of(&content, snapshot.model());
     let (months, rounds) = model.new_rounds(settings.kind)?;
+    let situation_counts = model.situation_counts(settings.kind, settings.situations)?;
     let profile = profile_at(Rng::derive(seed, &[label("game:profile")]).range(0, 3));
     let rot = Rng::derive(seed, &[label("game:robot-profiles")]).range(0, 3);
     let [h1, h2, h3, h4] = hotel_ids;
@@ -105,6 +110,7 @@ pub fn new_game_with(
         months,
         hotels,
         rounds,
+        situation_counts,
     };
     let first = Recorded {
         seq: 1,

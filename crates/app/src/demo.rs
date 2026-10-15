@@ -83,7 +83,10 @@ pub async fn start_demo(
         snapshot,
         guest,
         hotel_ids,
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )?;
     if let Some(tok) = &new_guest {
         deps.guests.create_guest(guest, token_hash(tok)).await?;

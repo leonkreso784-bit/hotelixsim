@@ -17,7 +17,10 @@ fn v2_events_from(snap: &Snapshot, kind: PeriodKind) -> Vec<Recorded> {
         snap,
         common::GUEST,
         common::hotel_ids(),
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )
     .unwrap()
     .into_iter()
@@ -69,6 +72,7 @@ fn v1_with_weeks_is_invalid_settings() {
         common::hotel_ids(),
         GameSettings {
             kind: PeriodKind::Week,
+            situations: None,
         },
     );
     assert_eq!(r.unwrap_err(), GameError::InvalidSettings);

@@ -229,6 +229,9 @@ fn august_distinct(cat: &Catalog, set: &TemplateSet, r: &RoundStart) -> usize {
             names: set.names.clone(),
             group_limit: None,
             groups_per_month: None,
+            min_gap_weeks: set.min_gap_weeks,
+            opportunity_every_weeks: set.opportunity_every_weeks,
+            counts: set.counts,
         };
         if draw(cat, &alone, r, &[], 0, &[])
             .iter()

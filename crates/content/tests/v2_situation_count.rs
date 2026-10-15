@@ -1,10 +1,8 @@
-//! Broj situacija u krugu (J-1, plan situacija §3 i Leonove odluke 13.10.): tjedno 3 / 4 / 5 po očekivanoj
-//! popunjenosti kruga, mjesečno razmjerno danima mjeseca.
+//! Broj situacija u krugu (J-1, plan situacija §3 i Leonove odluke 13.10.; ADR-042 t. 13): tjedno 3 / 4 / 5, mjesečno
+//! 4 / 5 / 6 po očekivanoj popunjenosti kruga (ispod 75 % / 75–89 % / od 90 %).
 
 use content::{Snapshot, repo_dir};
-use sim_hotel_v2::situations::{
-    expected_occupancy_bp, period_count, situation_count, weekly_count,
-};
+use sim_hotel_v2::situations::{SituationCounts, expected_occupancy_bp, situation_count};
 use sim_hotel_v2::{Catalog, HotelState, PeriodKind, Profile, season_periods};
 
 /// Katalog iz repoa, ne zamrznuti (m9): pragovi i razmjer po danima su pravilo i ne ovise o katalogu, a tablice po
@@ -37,7 +35,11 @@ fn weekly_thresholds_are_75_and_90_percent() {
         (10_000, 5),
     ];
     for (occ, n) in cases {
-        assert_eq!(weekly_count(occ), n, "popunjenost {occ} bp");
+        assert_eq!(
+            SituationCounts::WEEK.for_occupancy(occ),
+            n,
+            "popunjenost {occ} bp"
+        );
     }
 }
 
@@ -58,20 +60,31 @@ fn weekly_table_for_profiles_a_b_c() {
     }
 }
 
-/// Mjesečni krug: `round(tjedni broj popunjenosti mjeseca × dani mjeseca / 7)`, pola prema gore.
+/// Mjesečni krug: 4 / 5 / 6 po istim pragovima kao tjedni, bez obzira na broj dana mjeseca (ADR-042 t. 13).
 #[test]
-fn monthly_count_is_proportional_to_days() {
-    let june = season_periods(PeriodKind::Month)[0];
-    let july = season_periods(PeriodKind::Month)[1];
-    for (occ, n30, n31) in [(7_000, 13, 13), (8_000, 17, 18), (9_500, 21, 22)] {
-        assert_eq!(period_count(&june, occ).unwrap(), n30, "30 dana, {occ} bp");
-        assert_eq!(period_count(&july, occ).unwrap(), n31, "31 dan, {occ} bp");
+fn monthly_count_is_four_five_six() {
+    for (occ, n) in [
+        (0, 4),
+        (7_000, 4),
+        (7_499, 4),
+        (7_500, 5),
+        (8_000, 5),
+        (8_999, 5),
+        (9_000, 6),
+        (9_500, 6),
+    ] {
+        assert_eq!(
+            SituationCounts::MONTH.for_occupancy(occ),
+            n,
+            "popunjenost {occ} bp"
+        );
     }
+    // Isti mjeseci kao prije (jun 13, jul-kol 18/22, sep 17 ili 13): razina popunjenosti je ista, mijenja se samo broj.
     let cat = catalog();
     for (profile, months) in [
-        (Profile::A, [13, 18, 22, 17]),
-        (Profile::B, [13, 18, 22, 13]),
-        (Profile::C, [13, 18, 22, 13]),
+        (Profile::A, [4, 5, 6, 5]),
+        (Profile::B, [4, 5, 6, 4]),
+        (Profile::C, [4, 5, 6, 4]),
     ] {
         assert_eq!(
             counts(&cat, profile, PeriodKind::Month),

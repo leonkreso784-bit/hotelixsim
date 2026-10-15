@@ -112,8 +112,10 @@ fn thousand_seeds_respect_repeat_and_round_rules() {
                         }
                         seen.entry(d.template.clone()).or_default().push(d.day);
                     }
+                    // Tjedni krug: najviše 2 iz istog odjela. Mjesečni je jedan blok (B2a) s jednom granicom
+                    // `round_dept_limit(n)` ispod, pa se tjedna granica gleda samo u tjednom krugu.
                     assert!(
-                        per_week.values().all(|&c| c <= 2),
+                        kind != PeriodKind::Week || per_week.values().all(|&c| c <= 2),
                         "{}: {per_week:?}",
                         p.code()
                     );

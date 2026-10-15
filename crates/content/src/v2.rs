@@ -122,6 +122,12 @@ pub(crate) fn build_templates(
                 names: names.clone(),
                 groups_per_season: file.groups_per_season,
                 groups_per_month: file.groups_per_month,
+                min_gap_weeks: file
+                    .min_gap_weeks
+                    .unwrap_or(crate::templates::DEFAULT_MIN_GAP_WEEKS),
+                opportunity_every_weeks: file
+                    .opportunity_every_weeks
+                    .unwrap_or(crate::templates::DEFAULT_OPPORTUNITY_EVERY_WEEKS),
             }))
         }
         _ => Err(ContentError::Invalid(

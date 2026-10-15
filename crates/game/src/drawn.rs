@@ -283,7 +283,8 @@ impl Game {
             .situation_templates
             .as_ref()
             .ok_or_else(|| corrupt("predlošci situacija"))?;
-        let set = tpl.to_core();
+        let mut set = tpl.to_core();
+        set.counts = Some(self.situation_counts());
         let info = self.round_info(r)?;
         let pos = self.position(r)?;
         let prev = pos.checked_sub(1).and_then(|p| self.rounds.get(p)).copied();

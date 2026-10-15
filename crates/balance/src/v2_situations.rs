@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use sim_hotel_v2::situations::{DrawnSituation, TemplateSet};
+use sim_hotel_v2::situations::{DrawnSituation, SituationCounts, TemplateSet};
 use sim_hotel_v2::{
     Catalog, CatalogError, Cause, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError,
     SeasonResult, SeasonSituations, SituationTemplate, Strategy, TemplateDraw, Var, group_month,
@@ -263,12 +263,10 @@ pub(crate) fn shares(
     Ok(out)
 }
 
-/// Najmanje i najviše situacija koje krug smije imati: tjedno 3–5, mjesečno zbroj tjednih (13–22).
+/// Najmanje i najviše situacija koje krug smije imati uz zadani broj: tjedno 3–5, mjesečno 4–6.
 pub(crate) fn count_band(kind: PeriodKind) -> (u64, u64) {
-    match kind {
-        PeriodKind::Week => (3, 5),
-        PeriodKind::Month => (13, 22),
-    }
+    let (low, _, high) = SituationCounts::default_for(kind).levels();
+    (u64::from(low), u64::from(high))
 }
 
 /// Broj krugova sezone (za ispis prosjeka po sezoni).
