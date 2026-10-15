@@ -1,16 +1,15 @@
 //! Broj situacija u krugu (plan situacija §3; Leonove odluke 13.10.). Broj gleda samo **očekivanu popunjenost
 //! kruga** (više gostiju → više posla), nikad stanje hotela; stanje mijenja koje situacije dolaze (`draw`).
-//! Sidra S1–S4 i veća situacija ulaze u taj broj, ne dodaju se povrh.
+//! Sidra S1–S4 i veća situacija ulaze u taj broj, ne dodaju se povrh. Koliko je to po razini popunjenosti, postavka
+//! je igre (`SituationCounts`); zadano tjedno 3/4/5, mjesečno 4/5/6 (ADR-042 t. 13).
 
-use engine::calc::{self as c, Calc};
+use engine::calc as c;
 
 use crate::calendar::{Period, PeriodKind, avg_u16};
 use crate::catalog::Catalog;
 use crate::market::f_reputation_bp;
 use crate::resolve::ResolveError;
 use crate::state::HotelState;
-
-const WEEK_DAYS: i128 = 7;
 
 /// Očekivana popunjenost kruga (bp): osnovna popunjenost kataloga po danima kruga × faktor ugleda (ocjena na
 /// početku kruga, ista formula kao tržište), najviše 100 %. Poznata je na početku kruga i ne ovisi o planu.
@@ -26,69 +25,73 @@ pub fn expected_occupancy_bp(
     Ok(c::narrow(occ)?)
 }
 
-/// Tjedni krug: < 75 % → 3, 75–89 % → 4, ≥ 90 % → 5 (najviše 5, nikad manje od 3).
-pub fn weekly_count(occupancy_bp: u16) -> u8 {
-    match occupancy_bp {
-        0..7_500 => 3,
-        7_500..9_000 => 4,
-        _ => 5,
-    }
-}
-
-/// Broj za krug: tjedni po pragovima; mjesečni razmjerno danima,
-/// `round(tjedni broj × dani mjeseca / 7)` s polovicom prema gore (30 dana: 13 / 17 / 21; 31 dan: 13 / 18 / 22).
-pub fn period_count(p: &Period, occupancy_bp: u16) -> Calc<u8> {
-    let weekly = weekly_count(occupancy_bp);
-    match p.kind {
-        PeriodKind::Week => Ok(weekly),
-        PeriodKind::Month => c::narrow(c::div_round(
-            c::mul(i128::from(weekly), i128::from(p.days))?,
-            WEEK_DAYS,
-        )?),
-    }
-}
-
-/// Koliko situacija hotel ima u krugu (sidra i veća situacija uključeni).
-pub fn situation_count(state: &HotelState, p: &Period, cat: &Catalog) -> Result<u8, ResolveError> {
-    Ok(period_count(p, expected_occupancy_bp(state, p, cat)?)?)
-}
-
-/// Virtualni tjedan kruga: od `offset_days` dana od početka kruga, s `count` situacija (sidra, kolektivna i veća
-/// uključene u prvi).
+/// Broj situacija po krugu kao postavka igre (ADR-042 t. 13–14): `low` ispod 75 % očekivane popunjenosti, `mid` za
+/// 75–89 %, `high` od 90 %. Uvijek `MIN ≤ low ≤ mid ≤ high ≤ MAX` (više gostiju → više posla, nikad manje); polja
+/// su privatna, pa se invarijanta drži samo kroz `new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct VirtualWeek {
-    pub offset_days: u8,
-    pub count: u8,
+pub struct SituationCounts {
+    low: u8,
+    mid: u8,
+    high: u8,
 }
 
-/// Krug kao niz virtualnih tjedana, za razmak ponavljanja (Leon: isti predložak tek nakon 4 tjedna, i u
-/// mjesečnoj igri). Tjedni krug je jedan dio s cijelim brojem; mjesečni su dijelovi od 7 dana od početka
-/// mjeseca: svaki pun tjedan dobiva tjedni broj, zadnji dio ostatak do broja kruga (kolovoz 5+5+5+5+2).
-pub fn virtual_weeks(p: &Period, occupancy_bp: u16) -> Calc<Vec<VirtualWeek>> {
-    let n = period_count(p, occupancy_bp)?;
-    if p.kind == PeriodKind::Week {
-        return Ok(vec![VirtualWeek {
-            offset_days: 0,
-            count: n,
-        }]);
+impl SituationCounts {
+    /// Najmanje: koliko je obveznih situacija (`game::MANDATORY_SITUATIONS`).
+    pub const MIN: u8 = 3;
+    pub const MAX: u8 = 8;
+    /// Zadano za tjedni krug: 3 / 4 / 5.
+    pub const WEEK: SituationCounts = SituationCounts {
+        low: 3,
+        mid: 4,
+        high: 5,
+    };
+    /// Zadano za mjesečni krug: 4 / 5 / 6 (jedan krug, ne zbroj tjedana).
+    pub const MONTH: SituationCounts = SituationCounts {
+        low: 4,
+        mid: 5,
+        high: 6,
+    };
+
+    /// `None` kad broj izlazi iz `MIN..=MAX` ili pada s popunjenošću.
+    pub fn new(low: u8, mid: u8, high: u8) -> Option<SituationCounts> {
+        (Self::MIN <= low && low <= mid && mid <= high && high <= Self::MAX)
+            .then_some(SituationCounts { low, mid, high })
     }
-    let weekly = weekly_count(occupancy_bp);
-    let mut out = Vec::new();
-    let mut left = n;
-    let mut offset: u8 = 0;
-    while offset < p.days {
-        let next = offset.saturating_add(7);
-        let count = if next < p.days {
-            weekly.min(left)
-        } else {
-            left
-        };
-        out.push(VirtualWeek {
-            offset_days: offset,
-            count,
-        });
-        left = left.saturating_sub(count);
-        offset = next;
+
+    /// Zadani broj za vrstu kruga.
+    pub fn default_for(kind: PeriodKind) -> SituationCounts {
+        match kind {
+            PeriodKind::Week => Self::WEEK,
+            PeriodKind::Month => Self::MONTH,
+        }
     }
-    Ok(out)
+
+    /// `(low, mid, high)`.
+    pub fn levels(self) -> (u8, u8, u8) {
+        (self.low, self.mid, self.high)
+    }
+
+    /// Broj za očekivanu popunjenost: < 75 % → `low`, 75–89 % → `mid`, ≥ 90 % → `high`.
+    pub fn for_occupancy(self, occupancy_bp: u16) -> u8 {
+        match occupancy_bp {
+            0..7_500 => self.low,
+            7_500..9_000 => self.mid,
+            _ => self.high,
+        }
+    }
+}
+
+/// Koliko situacija hotel ima u krugu uz postavku `c` (sidra i veća situacija uključeni).
+pub fn situation_count_with(
+    s: &HotelState,
+    p: &Period,
+    cat: &Catalog,
+    c: SituationCounts,
+) -> Result<u8, ResolveError> {
+    Ok(c.for_occupancy(expected_occupancy_bp(s, p, cat)?))
+}
+
+/// Koliko situacija hotel ima u krugu uz zadani broj za vrstu kruga (`SituationCounts::default_for`).
+pub fn situation_count(state: &HotelState, p: &Period, cat: &Catalog) -> Result<u8, ResolveError> {
+    situation_count_with(state, p, cat, SituationCounts::default_for(p.kind))
 }

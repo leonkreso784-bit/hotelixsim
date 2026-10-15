@@ -18,7 +18,16 @@ pub struct SituationTemplates {
     pub groups_per_season: Option<u8>,
     /// `TemplateFile::groups_per_month`.
     pub groups_per_month: Option<u8>,
+    /// `TemplateFile::min_gap_weeks` (izostavljeno = `DEFAULT_MIN_GAP_WEEKS`).
+    pub min_gap_weeks: u8,
+    /// `TemplateFile::opportunity_every_weeks` (izostavljeno = `DEFAULT_OPPORTUNITY_EVERY_WEEKS`).
+    pub opportunity_every_weeks: u8,
 }
+
+/// Najmanji razmak između dvije pojave istog predloška u tjednima, kad ga datoteka ne navodi (stari snimci).
+pub const DEFAULT_MIN_GAP_WEEKS: u8 = 4;
+/// Prilika barem jednom u ovoliko tjedana, kad datoteka to ne navodi (stari snimci).
+pub const DEFAULT_OPPORTUNITY_EVERY_WEEKS: u8 = 3;
 
 /// Sadržaj `situation_templates.json`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,6 +43,14 @@ pub struct TemplateFile {
     /// Najviše ponuda grupe s dolaskom u istom mjesecu (M4, J-3); izostavljeno = bez granice.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub groups_per_month: Option<u8>,
+    /// Najmanji razmak između dvije pojave istog predloška u tjednima (Leon; vrijedi i kad predložak traži manje,
+    /// i u mjesečnoj igri); izostavljeno = `DEFAULT_MIN_GAP_WEEKS`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_gap_weeks: Option<u8>,
+    /// Prilika barem jednom u ovoliko uzastopnih tjedana (kad je koja dopuštena); izostavljeno =
+    /// `DEFAULT_OPPORTUNITY_EVERY_WEEKS`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opportunity_every_weeks: Option<u8>,
 }
 
 /// Kad dolazi „veća situacija" (Leon 13.10.): prosjek pet pokazatelja (0–100) na početku kruga je barem

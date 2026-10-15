@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use content::Content;
 use sim_hotel::{Category, IndexSet, Profile, SituationTemplate};
-use sim_hotel_v2::situations::DrawnSituation;
+use sim_hotel_v2::situations::{DrawnSituation, SituationCounts};
 
 use crate::actor::{Actor, strategy_from_code};
 use crate::drawn::DrawnInstance;
@@ -103,6 +103,8 @@ pub struct Game {
     pub(crate) drawn_rounds: BTreeSet<RoundKey>,
     /// Krugovi igre s kalendarom, redom `rounds`.
     rounds_info: Vec<RoundInfo>,
+    /// Broj situacija po krugu (`GameCreated.situation_counts`; stari dnevnik: zadano za vrstu kruga).
+    situation_counts: SituationCounts,
     refs: BTreeMap<Category, CoreRefs>,
 }
 
@@ -138,6 +140,18 @@ impl Game {
         let model = Model::of(&content, snap.model());
         model.check_version(&c.core_version)?;
         let rounds_info = model.rounds(&c.months, &c.rounds)?;
+        let situation_counts = match c.situation_counts {
+            Some(dto) => dto
+                .to_core()
+                .ok_or_else(|| corrupt("broj situacija u postavkama"))?,
+            None => SituationCounts::default_for(
+                rounds_info
+                    .first()
+                    .ok_or_else(|| corrupt("igra bez krugova"))?
+                    .period
+                    .kind,
+            ),
+        };
         let mut setups: Vec<HotelSetup> = c.hotels.clone();
         setups.sort_by_key(|h| h.slot);
         let mut refs = BTreeMap::new();
@@ -189,6 +203,7 @@ impl Game {
             model,
             drawn_rounds: BTreeSet::new(),
             rounds_info,
+            situation_counts,
             refs,
         })
     }
@@ -443,6 +458,11 @@ impl Game {
 
     pub fn rounds_info(&self) -> Vec<RoundInfo> {
         self.rounds_info.clone()
+    }
+
+    /// Broj situacija po krugu za cijelu igru (postavka iz `GameCreated`).
+    pub fn situation_counts(&self) -> SituationCounts {
+        self.situation_counts
     }
 
     /// Pozicija kruga u igri (od 0).

@@ -2,6 +2,8 @@
   "major": { "high_avg_min": 85, "low_avg_max": 35, "max_per_month": 1 },
   "groups_per_season": 3,
   "groups_per_month": 1,
+  "min_gap_weeks": 4,
+  "opportunity_every_weeks": 3,
   "templates": [
     {
       "code": "P-KLIMA",

@@ -133,14 +133,12 @@ pub(super) fn weight(
     Ok(Some(w))
 }
 
-/// Najmanji razmak između dva pojavljivanja istog predloška u tjednima (Leon): vrijedi i kad predložak traži manje.
-const MIN_GAP_WEEKS: u8 = 4;
-
 /// `max_per_season` i razmak od svih ranijih pojava (`earlier`: povijest i već izvučeni primjerci ovog kruga)
-/// u danima sezone: barem `max(gap_rounds, 4)` tjedana. Isto mjerilo za tjednu i mjesečnu igru (u mjesečnoj je
-/// dan primjerka početak njegova virtualnog tjedna).
+/// u danima sezone: barem `max(gap_rounds, min_gap_weeks)` tjedana. Isto mjerilo za tjednu i mjesečnu igru (dan
+/// primjerka je početak kruga).
 pub(super) fn repeat_allows<'h>(
     r: &Repeat,
+    min_gap_weeks: u8,
     code: &str,
     day: u16,
     earlier: impl Iterator<Item = &'h DrawnSituation>,
@@ -149,7 +147,7 @@ pub(super) fn repeat_allows<'h>(
     if past.len() >= usize::from(r.max_per_season) {
         return false;
     }
-    let gap = u16::from(r.gap_rounds.max(MIN_GAP_WEEKS)).saturating_mul(WEEK_DAYS);
+    let gap = u16::from(r.gap_rounds.max(min_gap_weeks)).saturating_mul(WEEK_DAYS);
     past.iter()
         .all(|h| h.day < day && day.saturating_sub(h.day) >= gap)
 }

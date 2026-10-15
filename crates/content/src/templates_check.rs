@@ -29,6 +29,12 @@ pub(crate) fn check(
                 .to_string(),
         );
     }
+    if file.min_gap_weeks == Some(0) || file.opportunity_every_weeks == Some(0) {
+        return invalid(
+            "min_gap_weeks / opportunity_every_weeks: najmanje 1 (za zadano polje se izostavi)"
+                .to_string(),
+        );
+    }
     let mut seen = BTreeSet::new();
     for t in &file.templates {
         let ctx = format!("predložak {}", t.code);
