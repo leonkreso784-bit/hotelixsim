@@ -242,7 +242,11 @@ pub(crate) fn path_report(
 /// Granice težine situacija (🟨 do kalibracije L1-13, ADR-042 t. 15 ih sužava na 15–25 %), bp.
 pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
 
-/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti točno 0 u danoj vrsti
+/// Strop duga (stotinke boda): dugovani korak smije biti nula ili negativan do ove vrijednosti. Stanje 15.10.2026:
+/// najgore −14 (mjesečno srednji − prepušteno −14/−11/−10), Leonova odluka. Smije samo rasti prema 0; L1-13 briše dug.
+pub const ORDER_DEBT_FLOOR: i32 = -25;
+
+/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni do `ORDER_DEBT_FLOOR` u danoj vrsti
 /// kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno, 2 = prepušteno − šutnja. Popis smije samo padati;
 /// kad korak postane pozitivan na svim profilima, brana „B3 dug" traži da ga se makne. Briše se u L1-13.
 pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[(PeriodKind::Month, 1)];
@@ -298,7 +302,7 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
             }
         }
         for (i, (step, (a, b))) in row.steps.iter().zip(STEP_NAMES).enumerate() {
-            let forgiven = *step == 0 && ORDER_DEBT.contains(&(r.kind, i));
+            let forgiven = *step >= ORDER_DEBT_FLOOR && ORDER_DEBT.contains(&(r.kind, i));
             if *step <= 0 && !forgiven {
                 f.push(format!(
                     "B3 redoslijed: {p} {a} prema {b} {} na kraju sezone (cilj više od 0)",

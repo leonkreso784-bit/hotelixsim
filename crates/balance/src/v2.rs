@@ -25,8 +25,8 @@ use crate::{
 };
 
 pub use crate::v2_answers::{
-    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, ORDER_DEBT, PathReport, PathRow,
-    WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
+    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, ORDER_DEBT, ORDER_DEBT_FLOOR, PathReport,
+    PathRow, WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
 };
 pub use crate::v2_situations::HOTEL_SLOT;
 
