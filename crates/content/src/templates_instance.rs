@@ -222,6 +222,17 @@ impl SituationTemplates {
             .any(|t| t.code == template && t.no_penalty)
     }
 
+    /// Prostor kojem predložak čita stanje i kamo ide popravak (`Template::condition_of`): `code` je šifra predloška ili
+    /// primjerka; bez polja ili za nepoznatu šifru `None`.
+    pub fn condition_of(&self, code: &str) -> Option<DeptCode> {
+        let template = code.split('.').next().unwrap_or(code);
+        self.templates
+            .iter()
+            .find(|t| t.code == template)
+            .and_then(|t| t.condition_of.as_deref())
+            .map(|c| DeptCode(c.to_string()))
+    }
+
     /// Brojevi primjerka: predložak, mjesec obračuna i iznosi kataloga za kategoriju hotela.
     fn amounts<'a>(
         &'a self,

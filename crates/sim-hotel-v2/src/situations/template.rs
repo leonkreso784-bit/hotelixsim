@@ -36,6 +36,14 @@ impl TemplateSet {
             .iter()
             .any(|t| t.code == code && t.no_penalty)
     }
+
+    /// Prostor koji predložak `code` gleda i popravlja umjesto svog odjela (`SituationSpec::condition_of`).
+    pub fn condition_of(&self, code: &str) -> Option<DeptCode> {
+        self.templates
+            .iter()
+            .find(|t| t.code == code)
+            .and_then(|t| t.condition_of.clone())
+    }
 }
 
 /// Veća situacija (Leon 13.10.): prosjek pet pokazatelja na početku kruga ≥ `high_avg_min` (izvrstan hotel) ili
@@ -67,6 +75,8 @@ pub struct SituationSpec {
     pub group_month: Option<Month>,
     /// „Samo nagrada" (S-4): nijedan ishod primjerka ne snižava pokazatelje (`situations::reward_only`).
     pub no_penalty: bool,
+    /// Prostor čije stanje čita `when.dept_condition_pts` (i pojačanja) i kamo ide popravak; `None` = odjel predloška.
+    pub condition_of: Option<DeptCode>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

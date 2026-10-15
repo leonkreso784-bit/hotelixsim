@@ -110,6 +110,10 @@ pub struct Template {
     /// (ADR-042 t. 7); izuzet od načela „kvar samo kad je stanje loše'.
     #[serde(default, skip_serializing_if = "crate::is_false")]
     pub external_cause: bool,
+    /// Čiji prostor gleda uvjet `dept_condition_pts` (u `when` i pojačanjima) i kamo ide popravak: šifra odjela koji se
+    /// troši (danas `rooms`). Bez polja je to odjel predloška (ADR-042 t. 7).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub condition_of: Option<String>,
 }
 
 /// Vrsta situacije (raznolikost u krugu).

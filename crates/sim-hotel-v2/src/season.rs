@@ -12,6 +12,7 @@ use sim_hotel::{
 
 use crate::calendar::{Period, PeriodKind, first_period_of_month, season_periods};
 use crate::catalog::Catalog;
+use crate::department::DeptCode;
 use crate::indices::{RefTable, period_indices, start_indices};
 use crate::plan::PeriodPlan;
 use crate::resolve::{PeriodReport, ResolveError, resolve_period};
@@ -353,7 +354,7 @@ pub fn run_season_responding(
     for p in &all {
         let plan = planner(&state, p)?;
         // Primjerci kruga i oznaka „samo nagrada" njihova predloška (S-4).
-        let mut instances: Vec<(SituationTemplate, bool)> = Vec::new();
+        let mut instances: Vec<(SituationTemplate, bool, Option<DeptCode>)> = Vec::new();
         let mut has_drawn = false;
         let fixed = match source {
             SeasonSituations::Fixed(list) => situations_for(p, list),
@@ -366,7 +367,11 @@ pub fn run_season_responding(
                 };
                 let (anchors, found) = draw_round(d, p, &view, &history, cat)?;
                 for s in &found {
-                    instances.push(((d.instance)(s)?, d.templates.no_penalty(&s.template)));
+                    instances.push((
+                        (d.instance)(s)?,
+                        d.templates.no_penalty(&s.template),
+                        d.templates.condition_of(&s.template),
+                    ));
                 }
                 history.extend(found.iter().cloned());
                 drawn.push(found);
@@ -390,7 +395,7 @@ pub fn run_season_responding(
             instances
                 .iter()
                 .zip(round_drawn)
-                .map(|((template, _), d)| RoundItem {
+                .map(|((template, _, _), d)| RoundItem {
                     template,
                     drawn: Some(d),
                 }),
@@ -408,10 +413,16 @@ pub fn run_season_responding(
                 let no_penalty = k
                     .checked_sub(anchors_len)
                     .and_then(|j| instances.get(j))
-                    .is_some_and(|(_, n)| *n);
+                    .is_some_and(|(_, n, _)| *n);
+                let own = item.drawn.and_then(|d| d.department.clone());
+                let space = k
+                    .checked_sub(anchors_len)
+                    .and_then(|j| instances.get(j))
+                    .and_then(|(_, _, c)| c.clone())
+                    .or(own);
                 RoundSituation {
                     outcome: if no_penalty { reward_only(o) } else { o },
-                    space: item.drawn.and_then(|d| d.department.clone()),
+                    space,
                 }
             })
             .collect();

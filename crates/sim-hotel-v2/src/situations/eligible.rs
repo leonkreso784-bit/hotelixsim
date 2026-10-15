@@ -87,6 +87,18 @@ pub(super) fn dept_facts(view: &DrawView, code: &DeptCode) -> Option<DeptFacts> 
     })
 }
 
+/// Stanje prostora za uvjet `dept_condition_pts`: odjel `condition_of` ako je zadan, inače odjel primjerka.
+pub(super) fn space_condition(
+    spec: &SituationSpec,
+    view: &DrawView,
+    own: Option<&DeptFacts>,
+) -> Option<i64> {
+    match &spec.condition_of {
+        Some(code) => dept_facts(view, code).map(|f| f.condition_pts),
+        None => own.map(|f| f.condition_pts),
+    }
+}
+
 fn within(b: &Option<Bounds>, v: i64) -> bool {
     b.as_ref().is_none_or(|b| b.contains(v))
 }
@@ -100,13 +112,23 @@ fn within_dept(b: &Option<Bounds>, d: Option<&DeptFacts>, f: fn(&DeptFacts) -> i
     }
 }
 
-pub(super) fn holds(c: &Conditions, h: &Facts, d: Option<&DeptFacts>) -> bool {
+/// Uvjet stanja prostora bez prostora ne vrijedi.
+fn within_space(b: &Option<Bounds>, space: Option<i64>) -> bool {
+    match (b, space) {
+        (None, _) => true,
+        (Some(b), Some(v)) => b.contains(v),
+        (Some(_), None) => false,
+    }
+}
+
+/// `space`: stanje prostora za `dept_condition_pts` (odjel predloška ili `condition_of`); ostali `dept_*` gledaju `d`.
+pub(super) fn holds(c: &Conditions, h: &Facts, d: Option<&DeptFacts>, space: Option<i64>) -> bool {
     (c.months.is_empty() || c.months.contains(&h.month))
         && within(&c.occupancy_bp, h.occupancy_bp)
         && within(&c.morale_pts, h.morale_pts)
         && within(&c.cash_cents, h.cash_cents)
         && c.group_accepted.is_none_or(|g| g == h.group_accepted)
-        && within_dept(&c.dept_condition_pts, d, |d| d.condition_pts)
+        && within_space(&c.dept_condition_pts, space)
         && within_dept(&c.dept_satisfaction_pts, d, |d| d.satisfaction_pts)
         && within_dept(&c.dept_load_hundredths, d, |d| d.load_hundredths)
         && within_dept(&c.dept_staff, d, |d| d.staff)
@@ -118,14 +140,20 @@ pub(super) fn weight(
     t: &SituationSpec,
     h: &Facts,
     d: Option<&DeptFacts>,
+    space: Option<i64>,
 ) -> Result<Option<u64>, ResolveError> {
-    if !holds(&t.when, h, d) {
+    if !holds(&t.when, h, d, space) {
         return Ok(None);
     }
     let mut w = u64::from(t.chance.base)
         .checked_mul(u64::from(t.weight))
         .ok_or(CalcError::Overflow)?;
-    for b in t.chance.boost.iter().filter(|b| holds(&b.when, h, d)) {
+    for b in t
+        .chance
+        .boost
+        .iter()
+        .filter(|b| holds(&b.when, h, d, space))
+    {
         w = w
             .checked_mul(u64::from(b.times))
             .ok_or(CalcError::Overflow)?;
