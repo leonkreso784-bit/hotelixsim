@@ -11,10 +11,12 @@ use balance::v2::{
     plan_ruler, render_v2, robot_measures_v2, run_v2,
 };
 use common::content_v2;
-use sim_hotel_v2::PeriodKind;
+use sim_hotel_v2::{PeriodKind, Profile};
 
 /// Strop duga nije besmislen (u (-100, 0)); provjera pri prevođenju.
 const _: () = assert!(ORDER_DEBT_FLOOR > -100 && ORDER_DEBT_FLOOR < 0);
+/// Strop smije samo rasti prema 0, nikad pasti ispod -25.
+const _: () = assert!(ORDER_DEBT_FLOOR >= -25);
 
 fn report(kind: PeriodKind) -> ReportV2 {
     run_v2(
@@ -61,13 +63,22 @@ fn has(f: &[String], parts: &[&str]) -> bool {
 }
 
 #[test]
-fn ruler_is_a_plausible_constant_per_kind_and_profile() {
-    for kind in [PeriodKind::Week, PeriodKind::Month] {
-        for row in &report(kind).situations.unwrap().paths.rows {
-            let ruler = plan_ruler(kind, row.profile);
-            // Anketa 15.10.: razlika dobar/slab plan je oko 6,8-10,9 boda (680-1090 stotinki).
-            assert!((300..=3_000).contains(&ruler), "{kind:?} {ruler}");
-        }
+fn ruler_is_pinned_and_changes_only_by_leons_decision() {
+    // Izmjereno 15.10.2026 (76271d1, 1000 sjemena). Ravnalo se mijenja SAMO Leonovom odlukom u kalibraciji L1-13.
+    let pinned = [
+        (PeriodKind::Week, Profile::A, 845),
+        (PeriodKind::Week, Profile::B, 678),
+        (PeriodKind::Week, Profile::C, 1_033),
+        (PeriodKind::Month, Profile::A, 812),
+        (PeriodKind::Month, Profile::B, 679),
+        (PeriodKind::Month, Profile::C, 1_090),
+    ];
+    for (kind, profile, v) in pinned {
+        assert_eq!(
+            plan_ruler(kind, profile),
+            v,
+            "{kind:?} {profile:?}: ravnalo se mijenja samo Leonovom odlukom (L1-13)"
+        );
     }
     assert_eq!(WEIGHT_BAND_BP, (500, 5_000));
 }
@@ -196,20 +207,13 @@ fn paid_off_debt_must_leave_the_list() {
     assert!(!has(&b3(&clean(PeriodKind::Week)), &["B3 dug:"]));
 }
 
+/// Brisanje duga u L1-13 mijenja i ovaj test i `clean(Month)` (korak 1 tamo postaje pozitivan).
 #[test]
-fn order_debt_list_has_one_entry_and_only_shrinks() {
-    assert!(
-        ORDER_DEBT.len() <= 1,
-        "dug smije samo padati: {ORDER_DEBT:?}"
-    );
-    assert!(
-        ORDER_DEBT.iter().all(|d| *d == (PeriodKind::Month, 1)),
-        "jedini dopušteni dug: (mjesečni krug, korak srednji − prepušteno): {ORDER_DEBT:?}"
-    );
+fn order_debt_is_exactly_the_month_middle_step() {
     assert_eq!(
-        ORDER_DEBT.len(),
-        1,
-        "dok dug stoji, popis ima točno jednu stavku"
+        ORDER_DEBT,
+        &[(PeriodKind::Month, 1)],
+        "jedini zapisani dug: (mjesečni krug, korak srednji − prepušteno)"
     );
 }
 
