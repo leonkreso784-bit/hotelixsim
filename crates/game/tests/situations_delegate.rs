@@ -12,7 +12,8 @@
 //!   stabilno po redu događaja) — isti poredak koji vidi pogled.
 //!
 //! Krugovi (sjeme 42, hotel igrača, nađeno sondom 14.10.):
-//! - mjesečna igra, `jun` (otvoren odmah): 13 situacija — S1, S3, P-DIJETE-IZGUBLJENO.jun | P-ALERGIJA.jun (lik),
+//! - mjesečna igra, `jun` (otvoren odmah): od B2a 4 situacije (mjesečno 4/5/6 umjesto 13–22) — S1, S3, kolektivna i
+//!   jedna izvučena; do B2a bilo je 13 — S1, S3, P-DIJETE-IZGUBLJENO.jun | P-ALERGIJA.jun (lik),
 //!   P-OLUJA.jun (kolektivna, bez odjela), …
 //! - tjedna igra, `t05` (nakon obračuna t01–t04): 4 situacije — S2 (sidro), P-OSPORENA-NAPLATA.t05,
 //!   P-LJUBIMAC.t05 | P-DOBAVLJAC.t05 (sva tri primjerka važnosti 2: poredak među njima je red događaja).
@@ -43,13 +44,13 @@ fn codes(g: &Game, r: RoundKey) -> Vec<String> {
         .collect()
 }
 
-/// Mjesečna igra, sjeme 42, lipanj otvoren (13 situacija).
+/// Mjesečna igra, sjeme 42, lipanj otvoren (od B2a 4 situacije, prije 13).
 fn monthly_june() -> (Game, RoundKey) {
     let g = common::v2_monthly_game_resolved_through("none");
     let r = g.current_round().unwrap();
     assert_eq!(r.code(), "jun");
     assert!(
-        codes(&g, r).len() >= 5,
+        codes(&g, r).len() >= 4,
         "jun sjemena 42: {:?}",
         codes(&g, r)
     );

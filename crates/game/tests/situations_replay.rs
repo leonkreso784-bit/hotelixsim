@@ -28,7 +28,10 @@ fn v2_events(seed: u64, kind: PeriodKind) -> Vec<Recorded> {
         &Snapshot::read_v2(&repo_dir()).unwrap(),
         common::GUEST,
         common::hotel_ids(),
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )
     .unwrap()
     .into_iter()

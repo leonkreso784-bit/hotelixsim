@@ -1,15 +1,18 @@
 //! Zapečaćeni otisak v2 (A3): igre nad zamrznutim snimkom pravila daju otisak vezan uz `sim_hotel_v2::CORE_VERSION`.
 //! Promjena obračuna bez dizanja verzije ruši test 1; nova verzija traži novi pečat (`seal_v2_digest`), stari ostaju.
+//! Od B2a otisak pokriva i broj situacija iz postavki igre (`GameCreated.situation_counts`, I3).
 mod common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use content::{Snapshot, fingerprint_value, repo_dir};
+use game::command::GameSettings;
 use game::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+use sim_hotel_v2::situations::SituationCounts;
 use sim_hotel_v2::{CORE_VERSION, PeriodKind};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -22,43 +25,65 @@ struct Case {
     seed: u64,
     kind: PeriodKind,
     human: Human,
+    /// Broj situacija iz postavki igre (niski/srednji/visoki); `None` = zadani za vrstu kruga.
+    situations: Option<(u8, u8, u8)>,
 }
-const CASES: [Case; 6] = [
+const CASES: [Case; 8] = [
     Case {
         name: "t7-odgovara",
         seed: 7,
         kind: PeriodKind::Week,
         human: Human::Answers,
+        situations: None,
     },
     Case {
         name: "m7-odgovara",
         seed: 7,
         kind: PeriodKind::Month,
         human: Human::Answers,
+        situations: None,
     },
     Case {
         name: "t42-sutnja",
         seed: 42,
         kind: PeriodKind::Week,
         human: Human::Silent,
+        situations: None,
     },
     Case {
         name: "m42-sutnja",
         seed: 42,
         kind: PeriodKind::Month,
         human: Human::Silent,
+        situations: None,
     },
     Case {
         name: "t2026-odgovara",
         seed: 2026,
         kind: PeriodKind::Week,
         human: Human::Answers,
+        situations: None,
     },
     Case {
         name: "m2026-sutnja",
         seed: 2026,
         kind: PeriodKind::Month,
         human: Human::Silent,
+        situations: None,
+    },
+    Case {
+        name: "t7-broj-578",
+        seed: 7,
+        kind: PeriodKind::Week,
+        human: Human::Answers,
+        situations: Some((5, 7, 8)),
+    },
+    Case {
+        name: "m42-broj-333",
+        seed: 42,
+        kind: PeriodKind::Month,
+        human: Human::Silent,
+        situations: Some((3, 3, 3)),
     },
 ];
 #[derive(Serialize, Deserialize)]
@@ -84,8 +109,14 @@ fn frozen_value() -> Value {
 /// Cijela sezona: roboti igraju sami; igrač šuti ili odgovara redom (n-ta situacija sezone dobiva odgovor n mod broj
 /// odgovora), a svaku drugu situaciju koju smije prepušta voditelju.
 fn play(snap: &Snapshot, c: &Case) -> Game {
+    let settings = GameSettings {
+        kind: c.kind,
+        situations: c.situations.map(|(low, mid, high)| {
+            SituationCounts::new(low, mid, high).expect("dopuštena postavka slučaja")
+        }),
+    };
     let (mut g, me, guest) = (
-        common::v2_game_from(snap, c.seed, c.kind),
+        common::v2_game_with(snap, c.seed, settings),
         common::hotel_ids()[0],
         Actor::Guest(common::GUEST),
     );
@@ -121,13 +152,19 @@ fn play(snap: &Snapshot, c: &Case) -> Game {
     g
 }
 
-/// Kanonski zapis: vrsta, autor i JSON svakog događaja (kako ide u bazu); iz `GameCreated` samo krugovi i hoteli.
+/// Kanonski zapis: vrsta, autor i JSON svakog događaja (kako ide u bazu); iz `GameCreated` samo krugovi, hoteli i
+/// broj situacija.
 fn digest(g: &Game) -> String {
     let mut h = Sha256::new();
     for r in &g.history {
         let payload = match &r.event {
             GameEvent::GameCreated(c) => {
-                json!({ "months": c.months, "hotels": c.hotels, "rounds": c.rounds })
+                json!({
+                    "months": c.months,
+                    "hotels": c.hotels,
+                    "rounds": c.rounds,
+                    "situation_counts": c.situation_counts,
+                })
             }
             e => e.to_payload(),
         };
@@ -217,6 +254,47 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
         CASES.iter().any(|c| c.kind == PeriodKind::Week)
             && CASES.iter().any(|c| c.kind == PeriodKind::Month)
     );
+    // Svaka vrsta kruga ima i slučaj sa svojim brojem situacija (I3: otisak zna broj, ne samo vrstu kruga).
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        assert!(
+            CASES
+                .iter()
+                .any(|c| c.kind == kind && c.situations.is_some()),
+            "nema slučaja sa svojim brojem situacija za jednu vrstu kruga"
+        );
+    }
+}
+
+#[test] // 3b: u svakom slučaju svaki krug ima izvučenu situaciju (šifra s točkom) i najviše `high` situacija
+fn every_round_has_a_drawn_situation_and_at_most_high() {
+    let snap = Snapshot::from_value(&frozen_value()).unwrap();
+    let me = common::hotel_ids()[0];
+    for c in &CASES {
+        let g = play(&snap, c);
+        let high = usize::from(g.situation_counts().levels().2);
+        assert!(!g.rounds.is_empty(), "{}", c.name);
+        for r in g.rounds.clone() {
+            let codes: Vec<String> = g
+                .situations_of_hotel(me, r)
+                .unwrap()
+                .iter()
+                .map(|t| t.code.clone())
+                .collect();
+            assert!(
+                codes.iter().any(|code| code.contains('.')),
+                "{} {}: nijedna izvučena situacija u {codes:?}",
+                c.name,
+                r.code()
+            );
+            assert!(
+                codes.len() <= high,
+                "{} {}: {} situacija, najviše {high}: {codes:?}",
+                c.name,
+                r.code(),
+                codes.len()
+            );
+        }
+    }
 }
 
 #[test] // 4: otisak reagira na pravila (bez pečata; trenutni sadržaj)
@@ -229,6 +307,24 @@ fn digest_reacts_to_a_rule_change() {
         Snapshot::from_value(&changed).unwrap(),
     );
     assert_ne!(digest(&play(&a, &CASES[0])), digest(&play(&b, &CASES[0])));
+}
+
+#[test] // 5: otisak reagira na broj situacija iz postavki (isti slučaj, drugi broj)
+fn digest_reacts_to_situation_counts() {
+    let snap = Snapshot::from_value(&frozen_value()).unwrap();
+    let case = |situations| Case {
+        name: "m42-isti",
+        seed: 42,
+        kind: PeriodKind::Month,
+        human: Human::Silent,
+        situations,
+    };
+    let (own, default) = (case(Some((3, 3, 3))), case(None));
+    assert_ne!(
+        digest(&play(&snap, &own)),
+        digest(&play(&snap, &default)),
+        "3/3/3 i zadani broj moraju dati različit otisak"
+    );
 }
 
 #[test]

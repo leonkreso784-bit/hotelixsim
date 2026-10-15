@@ -214,6 +214,51 @@ fn v2_snapshot_with_templates_round_trips() {
     );
 }
 
+/// B2a (ADR-042 t. 12): najmanji razmak ponavljanja i „prilika barem svaka N tjedana" žive u datoteci predložaka; stari
+/// snimak bez ta dva ključa dobiva 4 i 3, a nula je greška kao kod granica grupa. Broj situacija nije u sadržaju.
+#[test]
+fn gap_and_opportunity_live_in_the_template_file() {
+    use content::templates::{DEFAULT_MIN_GAP_WEEKS, DEFAULT_OPPORTUNITY_EVERY_WEEKS};
+    assert_eq!(
+        (DEFAULT_MIN_GAP_WEEKS, DEFAULT_OPPORTUNITY_EVERY_WEEKS),
+        (4, 3)
+    );
+    let core = |v: &Value| {
+        build(v)
+            .unwrap()
+            .situation_templates
+            .expect("v2 snimak ima predloške")
+            .to_core()
+    };
+    let v = v2_value();
+    assert_eq!(v["v2"]["situation_templates"]["min_gap_weeks"], 4);
+    assert_eq!(v["v2"]["situation_templates"]["opportunity_every_weeks"], 3);
+    let set = core(&v);
+    assert_eq!(
+        (set.min_gap_weeks, set.opportunity_every_weeks, set.counts),
+        (4, 3, None)
+    );
+
+    let mut old = v2_value();
+    let file = old["v2"]["situation_templates"].as_object_mut().unwrap();
+    assert!(file.remove("min_gap_weeks").is_some());
+    assert!(file.remove("opportunity_every_weeks").is_some());
+    let set = core(&old);
+    assert_eq!(
+        (set.min_gap_weeks, set.opportunity_every_weeks, set.counts),
+        (4, 3, None)
+    );
+
+    for key in ["min_gap_weeks", "opportunity_every_weeks"] {
+        let mut zero = v2_value();
+        zero["v2"]["situation_templates"][key] = json!(0);
+        assert!(
+            matches!(build(&zero), Err(ContentError::Invalid(_))),
+            "{key}: 0 mora pasti na provjeri sadržaja"
+        );
+    }
+}
+
 #[test]
 fn templates_and_names_come_together() {
     rejected(

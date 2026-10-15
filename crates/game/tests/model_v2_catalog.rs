@@ -21,6 +21,7 @@ fn v2_game() -> Game {
         common::hotel_ids(),
         GameSettings {
             kind: PeriodKind::Week,
+            situations: None,
         },
     )
     .unwrap()

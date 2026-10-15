@@ -20,6 +20,7 @@ fn fold(snap: &Snapshot) -> Game {
         common::hotel_ids(),
         GameSettings {
             kind: PeriodKind::Week,
+            situations: None,
         },
     )
     .unwrap()

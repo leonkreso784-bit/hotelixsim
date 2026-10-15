@@ -1,19 +1,16 @@
-//! Mjesečni krug (Leon: isti predložak smije se ponoviti uz razmak od barem 4 tjedna, i u mjesečnoj igri s
-//! 13–22 situacije): krug se izvlači kao niz virtualnih tjedana (7 dana od početka mjeseca, zadnji dio ostatak),
-//! pa predložak iz prvog tjedna smije doći opet od 28. dana mjeseca, s drugim imenom i drugim brojevima.
+//! Mjesečni krug (ADR-042 t. 12–13; mjesečno 4/5/6 situacija): izvlači se kao jedan krug, ne kao niz virtualnih
+//! tjedana. Isti predložak dolazi najviše jednom u krugu, a iz kruga u krug (razmak 30 dana ≥ 28) smije se ponoviti,
+//! s drugim imenom gosta.
 
 mod situations_common;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_hotel_v2::situations::{
-    DrawnSituation, NumberParam, Repeat, TemplateSet, expected_occupancy_bp, situation_count,
-    virtual_weeks,
-};
-use sim_hotel_v2::{Month, PeriodKind, Profile, season_periods};
+use sim_hotel_v2::situations::{DrawnSituation, NumberParam, Repeat, TemplateSet, situation_count};
+use sim_hotel_v2::{PeriodKind, Profile, season_periods};
 use situations_common::{Hotel, frozen, indices, season, start, with_general};
 
-/// Samo testni opći predlošci (bez uvjeta), dovoljno ih za kolovoz uz razmak od 4 tjedna.
+/// Samo testni opći predlošci (bez uvjeta), dovoljno ih za najveći krug (6) uz razmak od 4 tjedna.
 fn month_set() -> TemplateSet {
     let (_, mut set) = frozen();
     set.templates.clear();
@@ -32,66 +29,13 @@ fn month_set() -> TemplateSet {
     set
 }
 
-fn period(m: Month) -> sim_hotel_v2::Period {
-    *season_periods(PeriodKind::Month)
-        .iter()
-        .find(|p| p.start_month() == m)
-        .unwrap()
-}
-
+/// Mjesečni krug je jedan krug (ne niz virtualnih tjedana; ADR-042 t. 13): točno svoj broj situacija, svaki predložak
+/// najviše jednom u krugu, svi primjerci imaju dan početka kruga, a iz kruga u krug smije se ponoviti (t. 12).
 #[test]
-fn virtual_weeks_split_the_month_count() {
-    let (cat, _) = frozen();
-    let split = |profile: Profile, m: Month| -> Vec<(u8, u8)> {
-        let state = start(&cat, profile);
-        let p = period(m);
-        let occ = expected_occupancy_bp(&state, &p, &cat).unwrap();
-        virtual_weeks(&p, occ)
-            .unwrap()
-            .iter()
-            .map(|w| (w.offset_days, w.count))
-            .collect()
-    };
-    // Kolovoz (31 dan, 100 %): 22 = 5+5+5+5+2; lipanj C (30 dana, < 75 %): 13 = 3+3+3+3+1.
-    assert_eq!(
-        split(Profile::A, Month::Aug),
-        vec![(0, 5), (7, 5), (14, 5), (21, 5), (28, 2)]
-    );
-    assert_eq!(
-        split(Profile::C, Month::Jun),
-        vec![(0, 3), (7, 3), (14, 3), (21, 3), (28, 1)]
-    );
-    let state = start(&cat, Profile::A);
-    for p in season_periods(PeriodKind::Month) {
-        let occ = expected_occupancy_bp(&state, &p, &cat).unwrap();
-        let sum: u8 = virtual_weeks(&p, occ)
-            .unwrap()
-            .iter()
-            .map(|w| w.count)
-            .sum();
-        assert_eq!(
-            sum,
-            situation_count(&state, &p, &cat).unwrap(),
-            "{}",
-            p.code()
-        );
-    }
-    let t05 = season_periods(PeriodKind::Week)[4];
-    let occ = expected_occupancy_bp(&state, &t05, &cat).unwrap();
-    let weeks = virtual_weeks(&t05, occ).unwrap();
-    assert_eq!(weeks.len(), 1, "tjedni krug je jedan tjedan");
-    assert_eq!(weeks[0].offset_days, 0);
-    assert_eq!(weeks[0].count, situation_count(&state, &t05, &cat).unwrap());
-}
-
-/// Srpanj i kolovoz (i cijela mjesečna sezona): krug ima točno svoj broj, isti predložak se u krugu ponavlja
-/// samo uz razmak od barem 28 dana, šifre su jedinstvene u igri, a ponovljeni primjerak ima redni sufiks, drugo
-/// ime i druge brojeve.
-#[test]
-fn monthly_round_is_filled_and_repeats_keep_28_days() {
+fn monthly_round_draws_a_template_at_most_once() {
     let (cat, _) = frozen();
     let set = month_set();
-    let mut repeated = 0;
+    let mut consecutive = 0;
     for profile in [Profile::A, Profile::B, Profile::C] {
         let state = start(&cat, profile);
         let h = Hotel {
@@ -102,8 +46,8 @@ fn monthly_round_is_filled_and_repeats_keep_28_days() {
         for seed in 0..300 {
             let rounds = season(&cat, &set, &h, PeriodKind::Month, seed);
             let mut codes: BTreeSet<&str> = BTreeSet::new();
-            let mut days: BTreeMap<&str, Vec<u16>> = BTreeMap::new();
-            let mut earlier: BTreeMap<&str, Vec<&DrawnSituation>> = BTreeMap::new();
+            let mut earlier: BTreeMap<&str, &DrawnSituation> = BTreeMap::new();
+            let mut previous: BTreeSet<&str> = BTreeSet::new();
             for (p, drawn) in season_periods(PeriodKind::Month).iter().zip(&rounds) {
                 assert_eq!(
                     drawn.len(),
@@ -111,58 +55,36 @@ fn monthly_round_is_filled_and_repeats_keep_28_days() {
                     "{} (sjeme {seed})",
                     p.code()
                 );
-                let mut by_day: Vec<&DrawnSituation> = drawn.iter().collect();
-                by_day.sort_by_key(|d| d.day);
-                for d in by_day {
+                let mut templates: BTreeSet<&str> = BTreeSet::new();
+                for d in drawn {
+                    assert!(
+                        templates.insert(&d.template),
+                        "{}: predložak {} dvaput u krugu (sjeme {seed})",
+                        p.code(),
+                        d.template
+                    );
+                    assert_eq!(d.day, p.start_day, "{}: dan početka kruga", d.code);
+                    assert_eq!(d.occurrence, 1, "{}", d.code);
+                    assert_eq!(d.code, format!("{}.{}", d.template, p.code()));
                     assert!(codes.insert(&d.code), "šifra {} dvaput", d.code);
-                    let expected = if d.occurrence == 1 {
-                        format!("{}.{}", d.template, p.code())
-                    } else {
-                        format!("{}.{}.{}", d.template, p.code(), d.occurrence)
-                    };
-                    assert_eq!(d.code, expected);
-                    let before = earlier.entry(&d.template).or_default();
-                    for e in before.iter() {
-                        assert!(
-                            d.day - e.day >= 28,
-                            "{}: {} pa {} (sjeme {seed})",
-                            d.template,
-                            e.day,
-                            d.day
-                        );
+                    if previous.contains(d.template.as_str()) {
+                        consecutive += 1;
+                    }
+                    if let Some(e) = earlier.get(d.template.as_str()) {
                         assert_ne!(d.roles["gost"].name, e.roles["gost"].name, "{}", d.code);
                     }
-                    if d.occurrence > 1 {
-                        repeated += 1;
-                        let first = before
-                            .iter()
-                            .find(|e| e.period == *p && e.occurrence == 1)
-                            .expect("prvi primjerak u istom krugu");
-                        assert_ne!(d.numbers["broj"], first.numbers["broj"], "{}", d.code);
-                    }
-                    before.push(d);
-                    days.entry(&d.template).or_default().push(d.day);
                 }
-            }
-            if seed == 0 && profile == Profile::A {
-                let aug = period(Month::Aug);
-                let per_week: Vec<usize> = (0..5)
-                    .map(|k| {
-                        rounds[2]
-                            .iter()
-                            .filter(|d| d.day == aug.start_day + 7 * k)
-                            .count()
-                    })
-                    .collect();
-                assert_eq!(
-                    per_week,
-                    vec![5, 5, 5, 5, 2],
-                    "kolovoz po virtualnim tjednima"
-                );
+                previous = templates;
+                for d in drawn {
+                    earlier.insert(&d.template, d);
+                }
             }
         }
     }
-    assert!(repeated > 0, "ponavljanje u mjesecu se doista događa");
+    assert!(
+        consecutive > 0,
+        "predložak smije doći dva mjeseca zaredom (ADR-042 t. 12) i to se događa"
+    );
 }
 
 #[test]

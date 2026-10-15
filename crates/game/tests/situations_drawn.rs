@@ -29,7 +29,10 @@ fn events_of(snap: &Snapshot, seed: u64, kind: PeriodKind) -> Vec<Recorded> {
         snap,
         common::GUEST,
         common::hotel_ids(),
-        GameSettings { kind },
+        GameSettings {
+            kind,
+            situations: None,
+        },
     )
     .unwrap()
     .into_iter()
