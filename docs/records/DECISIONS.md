@@ -6,6 +6,9 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-051"></a>[ADR-051](DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md) | Pretpostavke faze B (B2a–B1a): broj situacija, mjerenje težine, prostor odjela | 🟨 ČEKA LEONOV PREGLED | 2026-10-15 |
+| <a id="adr-050"></a>[ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) | Popravak u situaciji diže stanje svog odjela; iznos „mehanizam sad, iznos u L1-13" | ✅ Leonova odluka 15.10. | 2026-10-15 |
+| <a id="adr-049"></a>[ADR-049](DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md) | „Situacije ~20 %" mjeri se od ravnala; redoslijed odgovora mjesečno dobiva zapisani dug | ✅ Leonova odluka 15.10. | 2026-10-15 |
 | <a id="adr-048"></a>[ADR-048](DECISIONS/ADR-048-lik-v3-redni-broj-poruke-i-zakljucak.md) | lik.v3: lik zna redni broj poruke i granicu razgovora | 🟨 ČEKA LEONOV PREGLED | 2026-10-15 |
 | <a id="adr-047"></a>[ADR-047](DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md) | Vlastiti odgovor vrijedi više od klika na najbolji ponuđeni (opcija A) | ✅ Leonova odluka 15.10. | 2026-10-15 |
 | <a id="adr-046"></a>[ADR-046](DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md) | Leonove odluke 15.10. za fazu B (popravak +10, duljina odgovora, sidra, P-INSPEKCIJA, redoslijed) | ✅ Leonova odluka 15.10. | 2026-10-15 |

@@ -78,6 +78,9 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
 5. Provjere prije commita: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
    `node scripts/check-core-deps.mjs`, `cargo test --workspace`, `corepack pnpm check:api`, `corepack pnpm lint`,
    `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm check:kod` (brana veličine koda, [ADR-039](docs/records/DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md)); za dokumentaciju `corepack pnpm check:docs` i `corepack pnpm test:docs`.
+   Balans modela: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check` (i `--round month`; v1:
+   `--seeds 100 --check`). Neobavezno `--situations L,M,H` (tri broja od 3 do 8, uzlazno) mijenja broj situacija po krugu za
+   vrstu iz `--round`; bez nje izlaz je isti kao prije.
 6. Dokumentacija ([pravila i granice](docs/README.md)): popis ADR-ova
    nakon novog ADR-a `corepack pnpm docs:adr`; razdvajanje plana `corepack pnpm docs:plan <plan.md>`; veličine svih dokumenata
    uz granice `node scripts/check-docs.mjs --popis`.

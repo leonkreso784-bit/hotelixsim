@@ -30,7 +30,7 @@ zapisanog načela. *Pouka:* **načelo igre zapisuje se kao provjera sadržaja** 
 predložak po predložak zaboravi. *Stanje:* ADR-042 t. 1, 7.
 
 **B3. Ista situacija dvaput u mjesecu** (`P-PRAONICA.jul.2`). *Uzrok:* mjesečni krug izvlači kao niz tjedana, a pravilo razmaka
-mjeri tjedne. *Pouka:* pravilo koje vrijedi „po krugu" mora se testirati i na tjednom i na mjesečnom krugu. *Stanje:* ADR-042 t. 12.
+mjeri tjedne. *Pouka:* pravilo koje vrijedi „po krugu" mora se testirati i na tjednom i na mjesečnom krugu. *Stanje:* **popravljeno u B2a** (15.10.): mjesečni krug se izvlači kao jedan blok, predložak se u krugu ne ponavlja ([ADR-042](DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 12–13).
 
 **B4. AI lik ne završi razgovor u 6 poruka.** *Uzrok:* granicu `MAX_CHAT_MESSAGES` provodi igra, ali AI je ne zna (nema je ni u
 uputi ni u ulazu). *Pouka:* **svaka granica koju igra provodi mora biti u ulazu AI-ja**. *Stanje:* ADR-042 t. 6.

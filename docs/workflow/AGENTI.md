@@ -37,7 +37,7 @@
    smiju samo cigle s odvojenim datotekama i bez utjecaja na napredak (npr. web i AI uputa). **Svako radno stablo ima
    svoju bazu** kad pokreće poslužitelj. **Prevedeni kod je zajednički:** sva stabla koriste
    `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target`; samo mjerenje osnovice (B8) ima privremeni target koji
-   se briše odmah nakon mjerenja. **Disk:** prije otvaranja stabla `df -h /c`; ispod 100 GB slobodno najprije čišćenje.
+   se briše odmah nakon mjerenja. **`check:api` nakon spajanja vrti s vlastitim `CARGO_TARGET_DIR=target/check-api`** dok drugo stablo prevodi (inače pada na tuđem napola gotovom kodu; B3b, 15.10.). **Disk:** prije otvaranja stabla `df -h /c`; ispod 100 GB slobodno najprije čišćenje.
    Stablo cigle se **briše isti dan kad se spoji** ([BUGS](../records/BUGS.md) B11).
 7. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
 

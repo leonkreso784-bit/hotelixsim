@@ -4,6 +4,24 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-15 (4) — faza B: B2a, B2b, B3a, B3b, B1a spojeni u sloj1
+
+- **Spojeno lokalno u `model-v2/sloj1`** (svaka cigla: čuvar testova → graditelj → pregled opus → spajanje `--no-ff`): B2a 143f593
+  (broj situacija u postavkama, mjesečno 4/5/6, `CORE_VERSION` 2.3.0; [BUGS](BUGS.md) B3 popravljen), B2b 635e647 (`--situations L,M,H` u balansu),
+  B3a 76271d1 (mjera udjela situacija, pet putova), B3b b94264a (brane B3 u `failures_v2`), B1a 39e5f25 (popravak diže stanje
+  svog odjela, 2.4.0). Nakon svakog spajanja **cijeli popis iz `ci.yml`** (23–24 provjere EXIT 0); v1 balans bajt-isti kroz sve cigle.
+- **Leonove odluke:** anketa B3 („~20 % mjeri se od ravnala", mjesečni dug redoslijeda) → [ADR-049](DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md);
+  anketa B1a („mehanizam sad, iznos u L1-13", privremeno +1) → [ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md);
+  pretpostavke voditelja 🟨 → [ADR-051](DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md).
+- **Važni nalazi pregleda:** B3a C1 (medijan se računao kao razlika medijana, ne po sjemenu; popravljeno 9f98a5f); B3b: čuvarov test
+  „negativan korak pada" protivio se Leonovoj odluci o dugu → strop −25 umjesto „točno 0"; B1a: bonus +10 bez faktora kruga rušio je
+  težinu (tjedno do 72 %) → Leon: mehanizam sad, iznos u L1-13, privremeno +1; dug redoslijeda time otplaćen.
+- **Smetnje:** `check:api` pada kad drugo stablo istodobno prevodi (zajednički `target`) → nakon spajanja vlastiti `CARGO_TARGET_DIR`
+  ([AGENTI](../workflow/AGENTI.md)); vitest mentor-poll testovi (SeasonScreen) nestabilni pod opterećenjem ([BACKLOG](BACKLOG.md)).
+- **Rizik za dalje:** tjedna težina B 48,9 % uz granicu 50 % — B4 mora izmjeriti `--check` 1000 tjedno i mjesečno prije spajanja.
+- **Gdje se vidi:** lokalno (`model-v2/sloj1` 39e5f25); stare probne v2 igre daju 409 (jezgra 2.4.0). Ledger:
+  [arhiva](../archive/2026-10-15-popravak-temelja-faza-b-ledger.md). Sljedeće B1b → B4a–c → PRAVILO → L1-13.
+
 ## 2026-10-15 — Faza A popravka gotova; kartice faze B; novo pravilo bodovanja
 
 - **A4–A6 spojeni u sloj1** (760dbec, 8f931fc, 024160a): A4 pregled i runda popravka (JS provjere i cmp balansa), A5 `lik.v3` i

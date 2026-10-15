@@ -357,6 +357,13 @@ razdoblja" u [planu Sloja 1](../plan/2026-10-10-v2-sloj1.md).
 - **Situacije** danas imaju mjesec (`crates/sim-hotel/src/mechanic.rs:51`). U v2 dobivaju i neobavezan tjedan u
   mjesecu (1–4); u mjesečnoj igri tjedan se zanemaruje. Prijedlog je 1–2 situacije tjedno. *Sloj 1 to još nema:*
   situacija mjeseca dolazi u krugu koji sadrži 1. dan mjeseca i obračunava se s tim mjesecom (P13, ADR-031 t. 3).
+- **Broj situacija po krugu (B2a, 15.10.):** postavka igre (`GameCreated.situation_counts`), tjedno 3/4/5, **mjesečno 4/5/6**
+  (ispod 75 % / 75–89 % / od 90 % očekivane popunjenosti), dopušteno 3–8; mjesečni krug se izvlači kao jedan blok, isti predložak
+  najviše jednom u krugu ([ADR-042](../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 12–14, pretpostavke
+  [ADR-051](../records/DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md)).
+- **Učinak situacije na prostor (B1a):** hitni popravak diže stanje odjela svoje situacije (`economy.repair_urgent_condition_pts`,
+  privremeno 100 = +1 bod; „oko +10" odlučuje Leon u L1-13, [ADR-050](../records/DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md)).
+  Ekran odjela popravak još prikazuje kao „održavanje" (C5).
 - **Grupe** (`state.rs:9-13`) se vežu za raspon datuma, ne za mjesec.
 - **Plan se prenosi.** Danas bez plana vrijedi zadani plan (`game.rs:411-419`). Uz 17 krugova to bi bilo nepodnošljivo,
   pa u v2 **vrijedi prošli plan dok ga student ne promijeni**, za obje vrste razdoblja. Jednokratni nalozi

@@ -178,4 +178,5 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [2026-10-10-ekrani-ledger.md](./archive/2026-10-10-ekrani-ledger.md) | ✅ Radni ledger koraka 5: presude voditelja 1–26, odgođeni nalazi, završni pregled i val popravaka |
 | [2026-10-13-temelj-rada.md](./archive/2026-10-13-temelj-rada.md) | ✅ Plan „Faza 0 TEMELJ RADA" (K0-2 pravila rada i područja, K0-3 brana `check:kod`, K0-7 arhitektura platforme; K0-1 CI dokazan 14.10.), taskovi u mapi istog imena |
 | [2026-10-13-temelj-rada-ledger.md](./archive/2026-10-13-temelj-rada-ledger.md) | ✅ Radni ledger Faze 0: presude, završni pregled i val popravaka, dokaz K0-1 |
+| [2026-10-15-popravak-temelja-faza-b-ledger.md](./archive/2026-10-15-popravak-temelja-faza-b-ledger.md) | Radni ledger popravka temelja: faza A i B do B1a (rulingi, ankete, nalazi pregleda, odgođeni minori) |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |

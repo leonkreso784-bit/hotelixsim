@@ -12,6 +12,7 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
 - Alat `corepack pnpm grane` (koliko je koja grana iza integracijske, `STARA` nakon 24 h) (A7).
 - `LICENSE` (sva prava pridržana) i README s cijelom idejom igre ([ADR-044](DECISIONS/ADR-044-licenca-sva-prava-pridrzana.md)).
 - Faza A gotova: igra i balans daju istu sezonu (A4), `lik.v3` i provjera mentora kruga (A5), scenariji „što student vidi" na razini API-ja (A6); `model-v2/sloj1` 024160a na GitHubu, CI zelen.
+- Faza B (lokalno u `model-v2/sloj1` 39e5f25, još bez pusha): broj situacija je postavka igre, mjesečno 4/5/6 u jednom bloku (B2a, `CORE_VERSION` 2.3.0); `balance --situations L,M,H` (B2b); blok „Situacije na zadanom planu" i brane B3 s ravnalom (B3a, B3b); hitni popravak u situaciji diže stanje svog odjela, privremeno +1 bod (B1a, 2.4.0, [ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md)). Stare probne v2 igre daju 409.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.
