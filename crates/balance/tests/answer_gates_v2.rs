@@ -7,8 +7,8 @@
 mod common;
 
 use balance::v2::{
-    ORDER_DEBT, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, failures_v2, plan_ruler,
-    render_v2, robot_measures_v2, run_v2,
+    ORDER_DEBT, ORDER_DEBT_FLOOR, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, failures_v2,
+    plan_ruler, render_v2, robot_measures_v2, run_v2,
 };
 use common::content_v2;
 use sim_hotel_v2::PeriodKind;
@@ -163,9 +163,17 @@ fn monthly_debt_forgives_only_middle_minus_delegated() {
         let f = b3(&r);
         assert!(has(&f, &["B3 redoslijed"]), "korak {i}: {f:?}");
     }
-    // Dug oprašta nulu, ne obrnut redoslijed: negativan korak mjesečno također pada.
+    // Dug je današnji negativan korak (do strop-a): -5 je oprošteno, ispod stropa pada.
+    assert!(
+        ORDER_DEBT_FLOOR > -100 && ORDER_DEBT_FLOOR < 0,
+        "{ORDER_DEBT_FLOOR}"
+    );
     let mut r = clean(PeriodKind::Month);
     paths_mut(&mut r).rows[0].steps[1] = -5;
+    assert!(!has(&b3(&r), &["B3 redoslijed"]), "{:?}", b3(&r));
+    paths_mut(&mut r).rows[0].steps[1] = ORDER_DEBT_FLOOR;
+    assert!(!has(&b3(&r), &["B3 redoslijed"]), "{:?}", b3(&r));
+    paths_mut(&mut r).rows[0].steps[1] = -30;
     let f = b3(&r);
     assert!(
         has(&f, &["B3 redoslijed", "srednji prema prepušteno"]),
