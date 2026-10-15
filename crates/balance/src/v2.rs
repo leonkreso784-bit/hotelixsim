@@ -13,6 +13,7 @@ use sim_hotel_v2::{
     SeasonResult, Strategy, Training, run_season_with, season_periods, start_indices,
 };
 
+use crate::v2_answers::{path_report, play, push_answer_paths};
 use crate::v2_situations::{
     DOMINANT_MAX_BP, DrawStats, SAVER_MAX_LOSS, SHARE_BAND_BP, Share, Situations, count_band,
     rounds_per_season, shares,
@@ -23,6 +24,10 @@ use crate::{
     ratio_bp, reference_profile, season_medians,
 };
 
+pub use crate::v2_answers::{
+    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, PathReport, PathRow, horizon,
+    offered_choice,
+};
 pub use crate::v2_situations::HOTEL_SLOT;
 
 pub struct OptionsV2 {
@@ -78,6 +83,8 @@ pub struct SituationReport {
     pub shares: Vec<Share>,
     /// Granica ponuda grupe po sezoni iz sadržaja.
     pub group_limit: Option<u8>,
+    /// Putovi odgovora na zadanom planu (B3a), za isti broj situacija kao ostatak izvještaja.
+    pub paths: PathReport,
 }
 
 type RefTables = Vec<(Category, RefTable)>;
@@ -489,6 +496,29 @@ pub fn robot_season_v2(
     )
 }
 
+/// Sezona na zadanom planu (`PeriodPlan::default_for`) kroz put odgovora `path`, zadani broj situacija, utor
+/// `HOTEL_SLOT`; isto sjeme daje iste primjerke svim putovima. Ulaz testa pariteta s igrom (B3a).
+pub fn path_season_v2(
+    content: &content::Content,
+    profile: Profile,
+    path: AnswerPath,
+    seed: u64,
+    kind: PeriodKind,
+) -> Result<SeasonResult, ResolveError> {
+    let cat = content
+        .v2
+        .as_ref()
+        .ok_or_else(|| ResolveError::Catalog(CatalogError::Missing("v2".to_string())))?;
+    let refs = category_refs(cat, kind)?;
+    play(
+        &Situations::new(content, None),
+        cat,
+        refs_for(cat, &refs, profile)?,
+        (profile, path, seed),
+        kind,
+    )
+}
+
 pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, ResolveError> {
     let cat = content
         .v2
@@ -577,6 +607,7 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
             draws,
             group_limit: sits.group_limit(),
             shares: shares(&sits, kind, cat, &owned, opts.seeds)?,
+            paths: path_report(&sits, kind, cat, &owned, opts.seeds)?,
         })
     } else {
         None
@@ -825,7 +856,7 @@ fn push_situations(s: &mut String, sr: &SituationReport) {
 }
 
 /// Postotak s jednom decimalom i zarezom: 2940 → „29,4 %".
-fn pct(bp: i32) -> String {
+pub(crate) fn pct(bp: i32) -> String {
     let sign = if bp < 0 { "-" } else { "" };
     let tenths = (bp.abs() + 5) / 10;
     format!("{sign}{},{} %", tenths / 10, tenths % 10)
@@ -882,6 +913,7 @@ pub fn render_v2(r: &ReportV2) -> String {
     }
     if let Some(sr) = &r.situations {
         push_situations(&mut s, sr);
+        push_answer_paths(&mut s, &sr.paths, &sr.shares);
     }
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",

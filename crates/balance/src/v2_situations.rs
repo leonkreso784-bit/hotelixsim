@@ -7,8 +7,9 @@ use std::collections::BTreeMap;
 use sim_hotel_v2::situations::{DrawnSituation, SituationCounts, TemplateSet};
 use sim_hotel_v2::{
     Catalog, CatalogError, Cause, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError,
-    SeasonResult, SeasonSituations, SituationTemplate, Strategy, TemplateDraw, Var, group_month,
-    run_robot_season, run_season_from, season_periods, situations_for,
+    Responder, SeasonResult, SeasonSituations, SituationTemplate, Strategy, TemplateDraw, Var,
+    group_month, run_robot_season, run_season_from, run_season_responding, season_periods,
+    situations_for,
 };
 
 use crate::median;
@@ -124,6 +125,21 @@ impl<'a> Situations<'a> {
     ) -> Result<SeasonResult, ResolveError> {
         self.with_source(profile, seed, cat, &mut |src| {
             run_season_from(profile, kind, cat, src, refs, planner, chooser)
+        })
+    }
+
+    /// Kao `with`, ali odgovarač odgovara na cijeli krug odjednom (prepuštanje, šutnja).
+    pub(crate) fn responding(
+        &self,
+        (profile, seed): (Profile, u64),
+        kind: PeriodKind,
+        cat: &Catalog,
+        refs: &RefTable,
+        planner: &mut Planner,
+        responder: &mut Responder,
+    ) -> Result<SeasonResult, ResolveError> {
+        self.with_source(profile, seed, cat, &mut |src| {
+            run_season_responding(profile, kind, cat, src, refs, planner, responder)
         })
     }
 }
