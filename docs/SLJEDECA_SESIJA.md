@@ -41,5 +41,4 @@ Prvo `df -h /c` (mora biti > 100 GB). Laptop je na punjaču. Push samo uz moj OK
 - 🟨 [ADR-048](./records/DECISIONS/ADR-048-lik-v3-redni-broj-poruke-i-zakljucak.md) (lik.v3) i stariji 🟨 ADR-ovi;
   pretpostavke P1–P8 u planu najkasnije prije B4.
 - Vidljivost morala u igri (Leon nije našao vezu plaća → moral) — BACKLOG, pitati treba li u fazu C.
-- Ostaci mapa `../hotelixsim-s1-ot` (1,2 GB) i `-s1-zv` bez `.git` — brisanje je dozvola odbila; Leon može sam.
 - 5 pitanja [VODITELJ_I_TRZISTE](./architecture/VODITELJ_I_TRZISTE.md) §3; banka ljudi K1 (radnici pojedinačno) nakon popravka.
