@@ -179,8 +179,10 @@ version = "0.1.0"
 dependencies = [
  "content",
  "engine",
+ "game",
  "sim-hotel",
  "sim-hotel-v2",
+ "uuid",
 ]
 
 [[package]]
