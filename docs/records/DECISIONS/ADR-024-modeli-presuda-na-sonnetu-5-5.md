@@ -24,3 +24,7 @@ odabrao lika na Haikuu, mentor ostaje na Sonnetu.
 kruga (`models.mentor`, `HOTELIXSIM_AI_MODEL_MENTOR`), jedan poziv po ljudskom hotelu po igri:
 [ADR-036](ADR-036-kraj-sezone-poredak-financije-robota-i.md). Uputa mentora kruga je `mentor.v3`
 ([ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md) dopuna).
+
+**Dopuna 15.10.** Mentor kruga (`models.mentor`) provjerava se kao sezonski: AI tekst mora imati četiri dijela
+(`game::debrief_has_parts`); nepotpun ili odrezan tekst se ne sprema kao AI-jev, nego se piše rezerva iz brojki, bez ponovnog
+poziva. Lik koristi uputu `lik.v3` ([ADR-048](ADR-048-lik-v3-redni-broj-poruke-i-zakljucak.md)).

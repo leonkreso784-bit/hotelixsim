@@ -11,6 +11,7 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
 - Zapečaćeni otisak sezone v2 vezan uz `CORE_VERSION` 2.2.0 (A3); stare v2 igre daju 409 i traže novu igru.
 - Alat `corepack pnpm grane` (koliko je koja grana iza integracijske, `STARA` nakon 24 h) (A7).
 - `LICENSE` (sva prava pridržana) i README s cijelom idejom igre ([ADR-044](DECISIONS/ADR-044-licenca-sva-prava-pridrzana.md)).
+- Faza A gotova: igra i balans daju istu sezonu (A4), `lik.v3` i provjera mentora kruga (A5), scenariji „što student vidi" na razini API-ja (A6); `model-v2/sloj1` 024160a na GitHubu, CI zelen.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.

@@ -20,7 +20,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
+  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039, 048 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
   (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
@@ -34,12 +34,14 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **POPRAVAK TEMELJA** — samo to dok nije gotovo
   ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
   [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
-  Faza A (brane koje mjere pravu stvar, kratke grane) → B (v2 mehanike po odjelu, jedna kalibracija L1-13, ADR-042) → C
-  (igra za semestar). Situacije čekaju na `model-v2/sloj1-l111` i ulaze s A1. Roboti su samo za demo (Leon 13.10.).
+  **Faza A gotova** (A1–A7 u `model-v2/sloj1` 024160a, na GitHubu, CI zelen; Leon odigrao 15.10.) → **B** (kartice
+  napisane, redoslijed B2a → B2b → B3a → B3b → B1a → B1b → B4a–c → PRAVILO → L1-13, [ADR-046](docs/records/DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md);
+  pravilo bodovanja [ADR-047](docs/records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md)) → C (igra za semestar).
+  Gradnja (prevođenje) samo na punjaču. Roboti su samo za demo (Leon 13.10.).
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
-  kod ≤ 1000 (`check:kod`). Pretinac `za-dokumentaciju.md` samo za nespojene grane (Situacije).
-- **Čeka Leona:** 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
+  kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
+- **Čeka Leona:** anketa B3 (težina situacija) kad B3a izmjeri brojke; slijepi pregled tekstova B4; 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
   ADR-ovi 🟨, 🟨 tekstovi iz grane situacija, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona". Banka ljudi ([nacrt](docs/architecture/BANKA_LJUDI.md)) čeka znak za K1.
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.

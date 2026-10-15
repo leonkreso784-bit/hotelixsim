@@ -29,7 +29,7 @@ revizora `.superpowers/sdd/2026-10-14-revizija/01…06-*.md` · [ADR-042](../rec
 |---|---|---|
 | P1 | Dominantna proba (§11.4) ostaje **brana modela** (čvrst plan, bez strategije robota) | A1: jedan poziv seli u `robot_measures_v2` |
 | P2 | v1 balans u CI-ju ostaje na **100 sjemena** (v1 je zamrznut i čuvan SHA testom); ispravlja se ADR-033 t. 8, ne CI | A1 korak K |
-| P3 | Načelo duljine: **sve oznake odgovora unutar 1,5×** najkraće (danas 0 od 55; srednji omjer 4,3×) | A2 (konstanta), B4 (prepisivanje) |
+| P3 | Načelo duljine: **sve oznake odgovora unutar 1,5×** najkraće (danas 0 od 55; srednji omjer 4,3×) — **potvrdio Leon 15.10.** | A2 (konstanta), B4 (prepisivanje) |
 | P4 | Načelo „šutnja nije bolja od najlošijeg odgovora" gleda **bodove i trošak** (16 predložaka u dugu); samo bodovi → dug 0 | A2 |
 | P5 | `{odjel}` je dopušten iza „odjel*" **i u zagradi** „({odjel})" (5 naslova, ispravan hrvatski) | A2 |
 | P6 | Pet predložaka dobiva `external_cause: true` (oluja, toplinski val, nestanak struje, dobavljač, terminal, po ADR-042 t. 7); P-INSPEKCIJA ostaje u dugu | A2, B4 |
@@ -76,6 +76,15 @@ A0 kopija ✅ ─► A1 brane + spajanje situacija ─┬─► val 2: A2 načel
                                               └─► A7 način rada (ne prevodi Rust, uz bilo koji val)
 kraj faze A: kopija, Leon igra mjesečnu v2 igru na jednoj adresi ─► faza B
 ```
+
+Faza B, redom (Leon odobrio okvir 15.10.; ne paralelno, jer B2a/B1a dižu `CORE_VERSION` i pišu `v2-golden.json`, a B2b/B3a diraju `crates/balance/src/v2.rs`):
+
+```text
+B2a ─► B2b ─► B3a ─► [anketa Leonu s brojkama B3a] ─► B3b ─► B1a ─► B1b ─► B4a ─► B4b ─► B4c ─► L1-13 ─► L1-13b ─► L1-14 ─► L1-15
+                       pravilo „vlastiti odgovor vrijedi više" (nacrt + anketa) mora sletjeti prije L1-13
+```
+Razlozi: B3 mjeri tek nakon B2a (B2a mijenja mjesečni udio situacija); B1a ne prije B3b (brane u `failures_v2`, I1);
+B4 nakon B1b (uvjeti kvarova trebaju `condition_of`). Ako krivo: kasniji B4 (~1 dan).
 Valovi poštuju „najviše 2 agenta prevode Rust". A1 i A4 diraju `crates/balance`, pa nikad zajedno.
 
 ## Faza A — učvrsti (~25–35 h)
@@ -94,15 +103,21 @@ pet scenarija „što student vidi" je zeleno; Leon odigra mjesečnu v2 igru sa 
 | A6 | [Scenariji „što student vidi"](2026-10-14-popravak-temelja/task-06-a6-scenariji-sto-student-vidi.md) | M, 4–5 h |
 | A7 | [Kratke grane i način rada](2026-10-14-popravak-temelja/task-07-a7-kratke-grane-i-nacin-rada.md) | S, 2–3 h |
 
-## Faza B — zamijeni v1 kalup gdje puca (~35–50 h) · obris, kartice se pišu na kraju faze A
+## Faza B — zamijeni v1 kalup gdje puca (~35–50 h) · kartice napisane 15.10.
 
 | cigla | što | ovisi o | Leonov dio |
 |---|---|---|---|
-| B1 | Vlastite v2 mehanike situacija s ciljem odjela: popravak diže stanje **tog** odjela (+10), učinak opreme ide u odjel situacije; uvjet stanja „čijeg prostora" (`condition_of`); ADR-042 t. 1, 7 · REVIZIJA #2 | A2, A3 | — (odlučeno) |
-| B2 | Broj situacija, razmak i „jednom u krugu" (B3) u postavke igre (`GameCreated`) i sadržaj; balans prima broj kao ulaz; mjesečno 4/5/6; ADR-042 t. 12–14 · REVIZIJA #13 | A1, A3 | — (odlučeno) |
-| B3 | Nova mjera „udio situacija" neovisna o robotovu planu (isti plan i sjeme, mijenja se samo kvaliteta odgovora: 5 / 3 / prepušteno 2 / šutnja) | A1, A4 | **anketa: što znači „~20 %"** |
-| B4 | Prepisati oznake 55 predložaka i sidara S1–S4 (P3), uvjeti kvarova (P6); dug iz A2 pada na 0 | A2 | pregled tekstova |
-| L1-13 | **Jedna** kalibracija: situacije ~20 % po novoj mjeri, ostale brane modela | B1–B4 | brojke koje student osjeti |
+| B2a | [Broj situacija u postavkama](2026-10-14-popravak-temelja/task-09-b2-broj-situacija-u-postavkama.md): jezgra, dnevnik (`GameCreated.situation_counts`) i pečat; razmak i prilika u sadržaj; mjesečno 4/5/6; **`CORE_VERSION` 2.2.0 → 2.3.0**; priprema `Case` s postavkama i `common::v2_game_with` · ADR-042 t. 12–14, REVIZIJA #13 · 7–8 h | A1, A3 | — (odlučeno) |
+| B2b | [Kartica B2b](2026-10-14-popravak-temelja/task-09b-b2b-balans-prima-broj-situacija.md): balans `--situations` i paritet s igrom, brojke bez promjene · 2–3 h | B2a | — |
+| B3a | [Mjera udjela situacija](2026-10-14-popravak-temelja/task-10-b3-mjera-udjela-situacija.md): mjerač 5 putova (najbolji / srednji / prepušteno / šutnja / bez) na zadanom planu, ispis i paritet s igrom; bez `CORE_VERSION` | B2b, A1, A4 | **anketa „~20 % od čega" nakon brojki B3a** |
+| B3b | [Isto](2026-10-14-popravak-temelja/task-10-b3-mjera-udjela-situacija.md): brane u `failures_v2` (I1); pojas težine 5–50 % samo ako B3a (mjereno nakon B2a) leži unutar njega s marginom, inače samo smjer (Δ > 0) | B3a, anketa | — |
+| B1a | [v2 učinak situacije u prostor odjela](2026-10-14-popravak-temelja/task-08-b1-v2-mehanike-situacija.md): popravak diže stanje **tog** odjela (+10, i uz ocjenu 1), načelo šutnje na v2 (I2), pečat A3 + **slučajevi I3** (slobodni odgovor s presudom, plan čovjeka); **`CORE_VERSION` 2.3.0 → 2.4.0** · ADR-042 t. 1, 7, REVIZIJA #2 | B3b, B2a, A2, A3 | — (odgovoreno: popravak i uz ocjenu 1, Leon 15.10.) |
+| B1b | [Kartica B1b](2026-10-14-popravak-temelja/task-08b-b1b-uvjet-condition-of.md): `condition_of` (uvjet stanja „čijeg odjela"), balans bajt-isti, bez dizanja verzije · ≈ 85 redaka | B1a | — |
+| B4a | [Prepis oznaka i uvjeta](2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md): alat, testovi, sidra S1–S4 (prepis u **zajedničkoj** datoteci), uvjeti klime i praonice, 15 predložaka (rooms, guest_facing) · ~6 h | B1b, A2 | pregled tekstova (slijepi); odgovoreno: 1,5×, zajednička datoteka |
+| B4b | [Isto](2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md): 22 predloška (hotel, staffed, admin, sales, maintenance, parking) · ~4 h | B4a | pregled tekstova |
+| B4c | [Isto](2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md): 18 predložaka (restoran, bar, spa, rooftop, lobby) + uvjeti kvarova P-BRAVE, P-CURENJE-VODE, P-DIZALO (preko `condition_of`); P-INSPEKCIJA = vanjski događaj (`external_cause`, Leon 15.10.); „dug pada na 0" = oznake i uvjeti kvarova, **ne** šutnja (`SilenceNotBetter` 16 → L1-13) · ~4 h | B4b | pregled tekstova |
+| PRAVILO | **Vlastiti odgovor vrijedi više** (Leon 15.10.: student koji sam odgovori gostu može dobiti više bodova od onoga koji samo klikne najbolje rješenje). Odlučeno: [nacrt](../architecture/BODOVANJE_VLASTITOG_ODGOVORA.md), opcija A, [ADR-047](../records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md) — klik najviše 4, vlastite riječi do 5. Lanac B3 postaje vlastiti > klik najbolji > srednji > prepušteno > šutnja. Mora sletjeti **prije L1-13**; ~10–14 h. **Kartica se piše kad je B3b spojen** (gradi na `GameSettings` iz B2a i mjeraču putova iz B3a) | B2a, B3b | — (odlučeno) |
+| L1-13 | **Jedna** kalibracija: situacije ~20 % po novoj mjeri, ostale brane modela; preuzima dug `SilenceNotBetter` (16, P4) | B4c, PRAVILO | brojke koje student osjeti |
 | L1-13b | Ostatak ADR-042: održavanje +5, jedno spremanje, izmiješani odgovori, izgled lika po rodu (rod u `RoleFill`), opis Smještaja | L1-13 | — (odlučeno) |
 | L1-14 | Igriva verzija: Leon igra tjednu i mjesečnu sezonu | L1-13b | popis izmjena |
 | L1-15 | `sloj1` → `main` | L1-14 | **izričit OK za push** |
