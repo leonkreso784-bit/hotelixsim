@@ -13,7 +13,7 @@ use sim_hotel_v2::{
     SeasonResult, Strategy, Training, run_season_with, season_periods, start_indices,
 };
 
-use crate::v2_answers::{path_report, play, push_answer_paths};
+use crate::v2_answers::{answer_path_failures, path_report, play, push_answer_paths};
 use crate::v2_situations::{
     DOMINANT_MAX_BP, DrawStats, SAVER_MAX_LOSS, SHARE_BAND_BP, Share, Situations, count_band,
     rounds_per_season, shares,
@@ -25,8 +25,8 @@ use crate::{
 };
 
 pub use crate::v2_answers::{
-    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, PathReport, PathRow, horizon,
-    offered_choice,
+    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, ORDER_DEBT, PathReport, PathRow,
+    WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
 };
 pub use crate::v2_situations::HOTEL_SLOT;
 
@@ -696,6 +696,7 @@ pub fn failures_v2(r: &ReportV2) -> Vec<String> {
 
     if let Some(sr) = &r.situations {
         situation_model_failures(&mut f, sr);
+        answer_path_failures(&mut f, &sr.paths);
     }
     check_repro(&mut f, r.reproducible);
     f
@@ -913,7 +914,7 @@ pub fn render_v2(r: &ReportV2) -> String {
     }
     if let Some(sr) = &r.situations {
         push_situations(&mut s, sr);
-        push_answer_paths(&mut s, &sr.paths, &sr.shares);
+        push_answer_paths(&mut s, &sr.paths);
     }
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",

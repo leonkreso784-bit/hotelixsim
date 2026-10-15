@@ -11,7 +11,7 @@ use sim_hotel_v2::{
 };
 
 use crate::v2::pct;
-use crate::v2_situations::{Share, Situations, share_bp};
+use crate::v2_situations::{Situations, share_bp};
 use crate::{hundredths, median};
 
 /// Zrcalo `game::MANDATORY_SITUATIONS` (`command.rs`): prvih toliko situacija kruga student rješava sam.
@@ -239,19 +239,90 @@ pub(crate) fn path_report(
     })
 }
 
-/// Raspon plana: medijan „bez situacija" Brižnog minus Štediše za profil (iz bloka udjela), stotinke.
-fn plan_range(shares: &[Share], profile: Profile) -> i32 {
-    let without = |s: sim_hotel_v2::Strategy| {
-        shares
-            .iter()
-            .find(|x| x.profile == profile && x.strategy == s)
-            .map_or(0, |x| x.without)
-    };
-    without(sim_hotel_v2::Strategy::Caring).saturating_sub(without(sim_hotel_v2::Strategy::Saver))
+/// Granice težine situacija (🟨 do kalibracije L1-13, ADR-042 t. 15 ih sužava na 15–25 %), bp.
+pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
+
+/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti točno 0 u danoj vrsti
+/// kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno, 2 = prepušteno − šutnja. Popis smije samo padati;
+/// kad korak postane pozitivan na svim profilima, brana „B3 dug" traži da ga se makne. Briše se u L1-13.
+pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[(PeriodKind::Month, 1)];
+
+/// Ravnalo težine: razlika Brižni − Štediša na zadanom planu BEZ situacija (medijan po profilu), stotinke boda.
+/// Izmjereno jednom: 15.10.2026, commit 76271d1, 1000 sjemena (`--round week` i `--round month`), Leonova odluka
+/// (anketa B3, opcija 1). Ne prati igru ni robote; mijenja se samo odlukom u kalibraciji L1-13.
+pub fn plan_ruler(kind: PeriodKind, profile: Profile) -> i32 {
+    match (kind, profile) {
+        (PeriodKind::Week, Profile::A) => 845,
+        (PeriodKind::Week, Profile::B) => 678,
+        (PeriodKind::Week, Profile::C) => 1_033,
+        (PeriodKind::Month, Profile::A) => 812,
+        (PeriodKind::Month, Profile::B) => 679,
+        (PeriodKind::Month, Profile::C) => 1_090,
+    }
+}
+
+const STEP_NAMES: [(&str, &str); 3] = [
+    ("najbolji", "srednji"),
+    ("srednji", "prepušteno"),
+    ("prepušteno", "šutnja"),
+];
+
+/// Brane modela za situacije na zadanom planu (B3b). Ne ovise o robotima: samo putovi odgovora i ravnalo.
+pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
+    let (lo, hi) = WEIGHT_BAND_BP;
+    for row in &r.rows {
+        let p = row.profile.code();
+        let [_, at_h, end] = row.best_vs_silent;
+        if at_h <= 0 {
+            f.push(format!(
+                "B3 odgovori: {p} najbolji odgovori prema šutnji {} nakon {}. kruga (cilj više od 0)",
+                hundredths(at_h),
+                r.horizon
+            ));
+        }
+        if end <= 0 {
+            f.push(format!(
+                "B3 odgovori: {p} najbolji odgovori prema šutnji {} na kraju sezone (cilj više od 0)",
+                hundredths(end)
+            ));
+        } else {
+            // Δ ≤ 0 je već pala gore; `share_bp` uzima apsolutnu vrijednost pa obrnuta težina ne smije do pojasa.
+            let bp = share_bp(end, plan_ruler(r.kind, row.profile));
+            if !(lo..=hi).contains(&bp) {
+                f.push(format!(
+                    "B3 težina: {p} situacije nose {} (cilj {}–{})",
+                    pct(bp),
+                    pct(lo),
+                    pct(hi)
+                ));
+            }
+        }
+        for (i, (step, (a, b))) in row.steps.iter().zip(STEP_NAMES).enumerate() {
+            let forgiven = *step == 0 && ORDER_DEBT.contains(&(r.kind, i));
+            if *step <= 0 && !forgiven {
+                f.push(format!(
+                    "B3 redoslijed: {p} {a} prema {b} {} na kraju sezone (cilj više od 0)",
+                    hundredths(*step)
+                ));
+            }
+        }
+    }
+    for &(kind, i) in ORDER_DEBT {
+        let paid = !r.rows.is_empty()
+            && r.rows
+                .iter()
+                .all(|row| row.steps.get(i).is_some_and(|s| *s > 0));
+        if kind == r.kind && paid {
+            let (a, b) = STEP_NAMES.get(i).copied().unwrap_or(("?", "?"));
+            f.push(format!(
+                "B3 dug: korak {a} prema {b} je pozitivan na svim profilima, makni ga iz ORDER_DEBT (L1-13)"
+            ));
+        }
+    }
 }
 
 /// Ispis bloka B3: isti plan i sjeme, mijenja se samo odgovor.
-pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport, shares: &[Share]) {
+pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
     s.push_str(
         "== Situacije na zadanom planu (B3): isti plan i sjeme, mijenja se samo odgovor ==\n",
     );
@@ -273,14 +344,15 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport, shares: &[Sh
         let v: Vec<String> = r.steps.iter().map(|x| hundredths(*x)).collect();
         s.push_str(&format!("    {} {}\n", r.profile.code(), v.join(" / ")));
     }
-    s.push_str("  težina za anketu (najbolji − šutnja na kraju sezone kao dio raspona plana, odnosno plana bez situacija):\n");
+    s.push_str("  težina za anketu (najbolji − šutnja na kraju sezone kao dio raspona plana, ravnalo: Brižni − Štediša bez situacija):\n");
     for r in &paths.rows {
-        let range = plan_range(shares, r.profile);
         s.push_str(&format!(
-            "    {} prema rasponu plana (Brižni − Štediša bez situacija) {}; prema zadanom planu bez situacija {}\n",
+            "    {} prema rasponu plana (Brižni − Štediša bez situacija) {}\n",
             r.profile.code(),
-            pct(share_bp(r.best_vs_silent[2], range)),
-            pct(share_bp(r.end[0].saturating_sub(r.end[4]), r.end[4]))
+            pct(share_bp(
+                r.best_vs_silent[2],
+                plan_ruler(paths.kind, r.profile)
+            ))
         ));
     }
 }
