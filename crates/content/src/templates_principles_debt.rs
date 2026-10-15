@@ -54,14 +54,7 @@ pub const KNOWN_VIOLATIONS: &[(Principle, &[&str])] = &[
     // Kvar bez uvjeta lošeg stanja odjela; P-BRAVE i P-CURENJE-VODE čekaju stanje drugog odjela (Faza B).
     (
         Principle::BreakdownCondition,
-        &[
-            "P-KLIMA",
-            "P-INSPEKCIJA",
-            "P-DIZALO",
-            "P-PRAONICA",
-            "P-BRAVE",
-            "P-CURENJE-VODE",
-        ],
+        &["P-INSPEKCIJA", "P-DIZALO", "P-BRAVE", "P-CURENJE-VODE"],
     ),
     // Šutnja nije lošija od najlošijeg odgovora (uz trošak).
     (

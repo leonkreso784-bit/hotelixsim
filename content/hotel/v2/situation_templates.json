@@ -10,7 +10,7 @@
       "kind": "prituzba",
       "department": "rooms",
       "weight": 2,
-      "when": { "months": ["jun", "jul", "aug"], "occupancy_bp": { "at_least": 6000 } },
+      "when": { "months": ["jun", "jul", "aug"], "occupancy_bp": { "at_least": 6000 }, "dept_condition_pts": { "below": 6500 } },
       "chance": { "base": 3, "boost": [{ "when": { "dept_condition_pts": { "below": 5000 } }, "times": 3 }] },
       "repeat": { "max_per_season": 3, "gap_rounds": 5 },
       "roles": {
@@ -2838,6 +2838,7 @@
       "kind": "kvar",
       "department": "rooms",
       "weight": 3,
+      "when": { "dept_condition_pts": { "below": 6500 } },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 2, "gap_rounds": 4 },
       "roles": {
