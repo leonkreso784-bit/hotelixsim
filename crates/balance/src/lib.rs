@@ -3,6 +3,7 @@
 
 use engine::calc;
 pub mod v2;
+mod v2_answers;
 mod v2_situations;
 
 use sim_hotel::{

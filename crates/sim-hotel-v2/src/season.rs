@@ -299,6 +299,17 @@ fn draw_round<'a>(
     )
 }
 
+/// Situacija kruga za odgovarača sezone; `drawn` je primjerak generatora (važnost određuje poredak u igri), sidro ga nema.
+#[derive(Clone, Copy)]
+pub struct RoundItem<'a> {
+    pub template: &'a SituationTemplate,
+    pub drawn: Option<&'a DrawnSituation>,
+}
+
+/// Ishodi kruga, jedan po stavci i istim redom; „samo nagradu" (S-4) primjenjuje jezgra.
+pub type Responder<'r> =
+    dyn FnMut(&Period, &[RoundItem]) -> Result<Vec<SituationOutcome>, ResolveError> + 'r;
+
 /// Sezona s vlastitim planerom i izborom odgovora; situacije iz `source`.
 pub fn run_season_from(
     profile: Profile,
@@ -308,6 +319,30 @@ pub fn run_season_from(
     refs: &RefTable,
     planner: &mut dyn FnMut(&HotelState, &Period) -> Result<PeriodPlan, ResolveError>,
     chooser: &mut dyn FnMut(&SituationTemplate) -> Result<usize, ResolveError>,
+) -> Result<SeasonResult, ResolveError> {
+    let mut responder = |_: &Period, items: &[RoundItem]| {
+        items
+            .iter()
+            .map(|item| {
+                let t = item.template;
+                let i = chooser(t)?;
+                let answer = t.answers.get(i).ok_or(ResolveError::BadChoice)?;
+                Ok(SituationOutcome::from_answer(&t.code, answer))
+            })
+            .collect()
+    };
+    run_season_responding(profile, kind, cat, source, refs, planner, &mut responder)
+}
+
+/// Sezona s vlastitim planerom i odgovaračem koji za cijeli krug vraća ishode (može i prepuštanje, šutnju).
+pub fn run_season_responding(
+    profile: Profile,
+    kind: PeriodKind,
+    cat: &Catalog,
+    source: SeasonSituations,
+    refs: &RefTable,
+    planner: &mut dyn FnMut(&HotelState, &Period) -> Result<PeriodPlan, ResolveError>,
+    responder: &mut Responder,
 ) -> Result<SeasonResult, ResolveError> {
     let mut state = HotelState::from_profile(cat, profile)?;
     let start = start_indices(&state, cat, refs)?;
@@ -319,6 +354,7 @@ pub fn run_season_from(
         let plan = planner(&state, p)?;
         // Primjerci kruga i oznaka „samo nagrada" njihova predloška (S-4).
         let mut instances: Vec<(SituationTemplate, bool)> = Vec::new();
+        let mut has_drawn = false;
         let fixed = match source {
             SeasonSituations::Fixed(list) => situations_for(p, list),
             SeasonSituations::Drawn(d) => {
@@ -334,17 +370,46 @@ pub fn run_season_from(
                 }
                 history.extend(found.iter().cloned());
                 drawn.push(found);
+                has_drawn = true;
                 anchors
             }
         };
-        let mut outcomes = Vec::new();
-        let anchors = fixed.into_iter().map(|t| (t, false));
-        for (t, no_penalty) in anchors.chain(instances.iter().map(|(t, n)| (t, *n))) {
-            let i = chooser(t)?;
-            let answer = t.answers.get(i).ok_or(ResolveError::BadChoice)?;
-            let o = SituationOutcome::from_answer(&t.code, answer);
-            outcomes.push(if no_penalty { reward_only(o) } else { o });
+        let round_drawn: &[DrawnSituation] = match drawn.last() {
+            Some(found) if has_drawn => found,
+            _ => &[],
+        };
+        let mut items: Vec<RoundItem> = fixed
+            .into_iter()
+            .map(|template| RoundItem {
+                template,
+                drawn: None,
+            })
+            .collect();
+        let anchors_len = items.len();
+        items.extend(
+            instances
+                .iter()
+                .zip(round_drawn)
+                .map(|((template, _), d)| RoundItem {
+                    template,
+                    drawn: Some(d),
+                }),
+        );
+        let answers = responder(p, &items)?;
+        if answers.len() != items.len() {
+            return Err(ResolveError::BadChoice);
         }
+        let outcomes: Vec<SituationOutcome> = answers
+            .into_iter()
+            .enumerate()
+            .map(|(k, o)| {
+                let no_penalty = k
+                    .checked_sub(anchors_len)
+                    .and_then(|j| instances.get(j))
+                    .is_some_and(|(_, n)| *n);
+                if no_penalty { reward_only(o) } else { o }
+            })
+            .collect();
         let report = resolve_period(&state, p, &plan, &outcomes, cat)?;
         let idx = period_indices(&report, cat, refs)?;
         state = report.after.clone();
