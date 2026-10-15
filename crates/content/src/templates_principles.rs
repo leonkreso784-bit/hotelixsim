@@ -70,6 +70,32 @@ pub(crate) fn is_breakdown(t: &Template) -> bool {
             .any(|m| matches!(m, TemplateMechanic::EquipmentRepair { .. }))
 }
 
+/// Troši li se prostor predloška: `condition_of`, inače odjel predloška ili svi članovi skupine; nijedan ne smije biti
+/// neraspoređen, a predložak cijelog hotela bez `condition_of` nema prostor. Vraća `true` (staro ponašanje) kad nema v2
+/// ili predloška u jezgri; to je danas nedostižno jer se jezgra gradi iz istih predložaka.
+fn wears(c: &Content, core: &CoreSet, t: &Template) -> bool {
+    let Some(v2) = &c.v2 else {
+        return true;
+    };
+    let Some(spec) = core.templates.iter().find(|s| s.code == t.code) else {
+        return true;
+    };
+    let spaces: Vec<_> = match (&spec.condition_of, spec.department.members(v2)) {
+        (Some(c), _) => vec![c.clone()],
+        (None, Some(m)) => m,
+        (None, None) => return false,
+    };
+    !spaces.is_empty()
+        && spaces.iter().all(|k| {
+            v2.departments.get(k).is_some_and(|d| {
+                !matches!(
+                    d.class,
+                    sim_hotel_v2::department::UsaliClass::Undistributed(_)
+                )
+            })
+        })
+}
+
 /// Sva kršenja načela u sadržaju: imena, pa predlošci redom datoteke; rezultat je sortiran.
 /// Sadržaj bez predložaka nema kršenja.
 pub fn principle_violations(c: &Content) -> Result<Vec<Violation>, ContentError> {
@@ -168,11 +194,11 @@ fn template_violations(
     }
     if is_breakdown(t)
         && !t.external_cause
-        && !t.when.dept_condition_pts.is_some_and(|b| b.below.is_some())
+        && !(wears(c, core, t) && t.when.dept_condition_pts.is_some_and(|b| b.below.is_some()))
     {
         push(
             Principle::BreakdownCondition,
-            "kvar bez uvjeta lošeg stanja odjela (dept_condition_pts.below) i bez external_cause"
+            "kvar bez uvjeta lošeg stanja odjela (dept_condition_pts.below) i bez external_cause, ili s uvjetom na prostoru koji se ne troši (condition_of)"
                 .into(),
         );
     }

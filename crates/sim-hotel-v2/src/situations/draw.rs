@@ -11,7 +11,9 @@ use engine::{Rng, label};
 use sim_hotel::{CatalogError, Month};
 
 use super::count::{SituationCounts, expected_occupancy_bp};
-use super::eligible::{DrawView, Facts, WEEK_DAYS, dept_facts, major_side, repeat_allows, weight};
+use super::eligible::{
+    DrawView, Facts, WEEK_DAYS, dept_facts, major_side, repeat_allows, space_condition, weight,
+};
 use super::fill::{FillCtx, Place, fill};
 use super::template::{Kind, Scope, SituationSpec, TemplateSet};
 use super::{Anchor, DrawnSituation};
@@ -201,13 +203,17 @@ fn candidates<'a>(
     }) {
         let mut options = Vec::new();
         match spec.department.members(cat) {
-            None => options.extend(weight(spec, facts, None)?.map(|w| (None, w))),
+            None => {
+                let space = space_condition(spec, view, None);
+                options.extend(weight(spec, facts, None, space)?.map(|w| (None, w)));
+            }
             Some(depts) => {
                 for code in depts {
                     let Some(df) = dept_facts(view, &code) else {
                         continue;
                     };
-                    options.extend(weight(spec, facts, Some(&df))?.map(|w| (Some(code), w)));
+                    let space = space_condition(spec, view, Some(&df));
+                    options.extend(weight(spec, facts, Some(&df), space)?.map(|w| (Some(code), w)));
                 }
             }
         }
@@ -239,7 +245,7 @@ fn collective<'a>(
                 d.history.iter(),
             )
     }) {
-        let Some(w) = weight(spec, facts, None)?.filter(|w| *w > 0) else {
+        let Some(w) = weight(spec, facts, None, None)?.filter(|w| *w > 0) else {
             continue;
         };
         let options = match spec.department.members(cat) {

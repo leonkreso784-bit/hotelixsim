@@ -411,13 +411,20 @@ impl Game {
         }
     }
 
-    /// Prostor situacije u obračunu (ADR-042 t. 1): odjel primjerka iz dnevnika; šifra koja nije izvučeni primjerak
-    /// (sidra S1–S4) i primjerak cijelog hotela nemaju odjel (`None`, Smještaj).
+    /// Prostor situacije u obračunu (ADR-042 t. 1): `condition_of` predloška primjerka, inače odjel primjerka iz
+    /// dnevnika; šifra koja nije izvučeni primjerak (sidra S1–S4) i primjerak cijelog hotela bez `condition_of`
+    /// nemaju odjel (`None`, Smještaj).
     pub(crate) fn space(&self, h: &HotelRecord, r: RoundKey, code: &str) -> Option<DeptCode> {
         h.drawn
             .get(&r)
             .and_then(|l| l.iter().find(|i| i.situation.code == code))
-            .and_then(|i| i.drawn.department.clone())
+            .and_then(|i| {
+                self.content
+                    .situation_templates
+                    .as_ref()
+                    .and_then(|t| t.condition_of(&i.drawn.template))
+                    .or_else(|| i.drawn.department.clone())
+            })
     }
 
     /// AI podaci situacije s tom šifrom: za šifru iz sadržaja (S1–S4) njezini; za izvučeni primjerak podaci

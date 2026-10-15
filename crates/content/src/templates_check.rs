@@ -143,7 +143,9 @@ fn check_template(
             "{ctx}: external_cause ide samo uz kvar ili popravak"
         ));
     }
-    let months = check_conditions(ctx, "when", &t.when, depts.is_some())?;
+    check_condition_of(ctx, t, v2)?;
+    let has_space = depts.is_some() || t.condition_of.is_some();
+    let months = check_conditions(ctx, "when", &t.when, depts.is_some(), has_space)?;
     if t.chance.base == 0 {
         return invalid(format!("{ctx}: chance.base mora biti barem 1"));
     }
@@ -157,7 +159,7 @@ fn check_template(
                 b.times
             ));
         }
-        check_conditions(ctx, "chance.boost", &b.when, depts.is_some())?;
+        check_conditions(ctx, "chance.boost", &b.when, depts.is_some(), has_space)?;
     }
     if t.repeat.max_per_season == 0 {
         return invalid(format!("{ctx}: repeat.max_per_season mora biti barem 1"));
@@ -255,6 +257,29 @@ fn mechanic_params(m: &TemplateMechanic) -> Vec<&str> {
         .collect()
 }
 
+/// `condition_of` smije imenovati samo poznati odjel koji se troši (nije neraspoređen).
+fn check_condition_of(
+    ctx: &str,
+    t: &Template,
+    v2: &sim_hotel_v2::Catalog,
+) -> Result<(), ContentError> {
+    let Some(code) = &t.condition_of else {
+        return Ok(());
+    };
+    let Some((_, spec)) = v2.departments.iter().find(|(k, _)| k.as_str() == code) else {
+        return invalid(format!("{ctx}: condition_of: nepoznat odjel '{code}'"));
+    };
+    if matches!(
+        spec.class,
+        sim_hotel_v2::department::UsaliClass::Undistributed(_)
+    ) {
+        return invalid(format!(
+            "{ctx}: condition_of: '{code}' je neraspoređen odjel, njegovo se stanje ne troši"
+        ));
+    }
+    Ok(())
+}
+
 /// Odjeli koje predložak može dobiti; `None` za cijeli hotel.
 fn departments(
     ctx: &str,
@@ -296,6 +321,7 @@ fn check_conditions(
     place: &str,
     c: &Conditions,
     has_dept: bool,
+    has_space: bool,
 ) -> Result<Vec<Month>, ContentError> {
     let mut months = Vec::new();
     for code in &c.months {
@@ -324,7 +350,12 @@ fn check_conditions(
     for (name, bounds, (lo, hi), dept) in all {
         let Some(b) = bounds else { continue };
         let f = format!("{ctx}: {place}.{name}");
-        if dept && !has_dept {
+        let allowed = if name == "dept_condition_pts" {
+            has_space
+        } else {
+            has_dept
+        };
+        if dept && !allowed {
             return invalid(format!("{f}: uvjet odjela traži predložak s odjelom"));
         }
         if b.at_least.is_none() && b.below.is_none() {

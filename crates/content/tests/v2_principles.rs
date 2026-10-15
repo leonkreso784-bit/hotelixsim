@@ -219,6 +219,49 @@ fn silence_is_not_better_than_the_worst_answer() {
         "loš odgovor plaća boravak, šutnja ništa (dug)"
     );
 }
+#[test] // 13 (B1b): uvjet stanja vrijedi samo na prostoru koji se troši
+fn breakdown_needs_a_space_that_wears() {
+    let below = |v: &mut Value, code: &str| {
+        tpl(v, code)["when"] = json!({"dept_condition_pts": {"below": 6000}});
+    };
+    // P-BRAVE je na Održavanju (ne troši se): uvjet na vlastitom odjelu nije uvjet.
+    assert!(
+        hit(|v| below(v, "P-BRAVE"), BreakdownCondition, "P-BRAVE"),
+        "Održavanje se ne troši"
+    );
+    // Isti uvjet, ali stanje Smještaja (condition_of), ispunjava načelo.
+    assert!(
+        !hit(
+            |v| {
+                below(v, "P-BRAVE");
+                tpl(v, "P-BRAVE")["condition_of"] = json!("rooms");
+            },
+            BreakdownCondition,
+            "P-BRAVE"
+        ),
+        "condition_of rooms: prostor se troši"
+    );
+    // P-DIZALO (cijeli hotel): s condition_of i uvjetom je u redu, s condition_of bez uvjeta nije.
+    assert!(
+        !hit(
+            |v| {
+                below(v, "P-DIZALO");
+                tpl(v, "P-DIZALO")["condition_of"] = json!("rooms");
+            },
+            BreakdownCondition,
+            "P-DIZALO"
+        ),
+        "P-DIZALO + condition_of + uvjet"
+    );
+    assert!(
+        hit(
+            |v| tpl(v, "P-DIZALO")["condition_of"] = json!("rooms"),
+            BreakdownCondition,
+            "P-DIZALO"
+        ),
+        "condition_of bez uvjeta nije uvjet"
+    );
+}
 #[test] // 12 (B1a, I2): načelo šutnje računa v2 situacije, obje vrste kruga
 fn silence_principle_uses_v2_situation_mechanics() {
     let week_off = |v: &mut Value| v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(1);

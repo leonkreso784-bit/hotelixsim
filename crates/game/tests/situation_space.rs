@@ -5,6 +5,7 @@ mod common;
 use common::{GUEST, apply_ev, hotel_ids};
 use content::{Snapshot, repo_dir};
 use game::*;
+use serde_json::json;
 use sim_hotel::Mechanic;
 use sim_hotel_v2::PeriodKind;
 use sim_hotel_v2::department::DeptCode;
@@ -56,6 +57,18 @@ fn condition(g: &Game, d: &DeptCode) -> i32 {
 /// Prvi krug (tjedna igra, šuti se) u kojem moj hotel ima primjerak s odjelom `d` (nije Smještaj ni neraspoređen),
 /// stanjem `d` ≤ 8 500 i odgovorom s hitnim popravkom.
 fn find(snap: &Snapshot, seed: u64) -> Option<Find> {
+    find_if(snap, seed, &|g, _, d| {
+        let class = g.content.v2.as_ref().unwrap().dept(d).unwrap().class;
+        d != &DeptCode::rooms() && !class.is_undistributed() && condition(g, d) <= 8_500
+    })
+}
+
+/// Kao `find`, ali primjerak bira `accept(igra, šifra situacije, odjel primjerka)`.
+fn find_if(
+    snap: &Snapshot,
+    seed: u64,
+    accept: &dyn Fn(&Game, &str, &DeptCode) -> bool,
+) -> Option<Find> {
     let me = hotel_ids()[0];
     let mut g = common::v2_game_from(snap, seed, PeriodKind::Week);
     while let Some(r) = g.current_round() {
@@ -64,14 +77,10 @@ fn find(snap: &Snapshot, seed: u64) -> Option<Find> {
             let Some(d) = i.drawn.department.clone() else {
                 continue;
             };
-            let class = g.content.v2.as_ref().unwrap().dept(&d).unwrap().class;
-            if d == DeptCode::rooms() || class.is_undistributed() {
+            if !accept(&g, &i.situation.code, &d) {
                 continue;
             }
-            let (Some(answer), true) = (
-                urgent_answer(&g, r, &i.situation.code),
-                condition(&g, &d) <= 8_500,
-            ) else {
+            let Some(answer) = urgent_answer(&g, r, &i.situation.code) else {
                 continue;
             };
             return Some(Find {
@@ -86,6 +95,8 @@ fn find(snap: &Snapshot, seed: u64) -> Option<Find> {
     }
     None
 }
+
+const SEEDS: u64 = 100;
 
 #[test]
 fn drawn_department_gets_the_urgent_repair() {
@@ -123,5 +134,68 @@ fn drawn_department_gets_the_urgent_repair() {
         condition(&a, &DeptCode::rooms()),
         condition(&b, &DeptCode::rooms()),
         "Smještaj ne dobiva popravak tuđeg odjela"
+    );
+}
+
+/// B1b (ADR-042 t. 7): `condition_of` premješta hitan popravak u taj prostor. P-INSPEKCIJA je na Restoranu (troši se),
+/// bez uvjeta stanja i s hitnim odgovorom 0; snimak joj daje `condition_of: "rooms"`, pa popravak ide u Smještaj, ne u
+/// Restoran. Izvorno je `major: low` i u igri se ne izvuče ni u 300 sjemena, pa joj snimak briše `major`
+/// (P-BRAVE i P-CURENJE-VODE na Održavanju ne bi razlikovali stari i novi put: popravak neraspoređenog odjela ionako
+/// ne ide u Održavanje).
+#[test]
+fn condition_of_moves_the_repair_to_that_space() {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    let i = v["v2"]["situation_templates"]["templates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|t| t["code"] == "P-INSPEKCIJA")
+        .unwrap();
+    let t = v["v2"]["situation_templates"]["templates"][i]
+        .as_object_mut()
+        .unwrap();
+    t.remove("major");
+    t.insert("condition_of".into(), json!("rooms"));
+    let snap = Snapshot::from_value(&v).unwrap();
+    let me = hotel_ids()[0];
+    let (seed, f) = (1..=SEEDS)
+        .find_map(|seed| {
+            find_if(&snap, seed, &|g, code, d| {
+                code.starts_with("P-INSPEKCIJA.")
+                    && d.as_str() == "restaurant"
+                    && condition(g, &DeptCode::rooms()) <= 9_000
+                    && condition(g, d) <= 9_000
+            })
+            .map(|f| (seed, f))
+        })
+        .expect(
+            "nijedno sjeme nema P-INSPEKCIJA na Restoranu sa stanjima <= 9 000: proširi raspon",
+        );
+    let (mut a, mut b) = (f.game.clone(), f.game.clone());
+    let ev = a.choose_answer(me, &f.situation, f.answer).unwrap();
+    apply_ev(&mut a, Actor::Guest(GUEST), ev);
+    for g in [&mut a, &mut b] {
+        close_and_resolve(g, f.round);
+    }
+    let bonus = a
+        .content
+        .v2
+        .as_ref()
+        .unwrap()
+        .economy
+        .repair_urgent_condition_pts;
+    assert!(bonus > 0);
+    let rooms = DeptCode::rooms();
+    assert!(
+        condition(&a, &rooms) - condition(&b, &rooms) >= bonus,
+        "sjeme {seed}, krug {:?}: popravak ide u Smještaj (condition_of): A {} / B {}",
+        f.round,
+        condition(&a, &rooms),
+        condition(&b, &rooms)
+    );
+    assert_eq!(
+        condition(&a, &f.dept),
+        condition(&b, &f.dept),
+        "Restoran ne dobiva popravak kad je condition_of Smještaj"
     );
 }
