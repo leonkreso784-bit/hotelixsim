@@ -19,6 +19,7 @@ fn week_report() -> balance::v2::ReportV2 {
         &OptionsV2 {
             seeds: 3,
             kind: PeriodKind::Week,
+            situations: None,
         },
     )
     .unwrap()

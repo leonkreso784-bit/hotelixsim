@@ -318,7 +318,15 @@ fn caring_robot_holds_most_of_the_seasonal_plan() {
     use sim_hotel_v2::PeriodKind;
     let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     for kind in [PeriodKind::Week, PeriodKind::Month] {
-        let r = run_v2(&content, &OptionsV2 { seeds: 1, kind }).unwrap();
+        let r = run_v2(
+            &content,
+            &OptionsV2 {
+                seeds: 1,
+                kind,
+                situations: None,
+            },
+        )
+        .unwrap();
         assert_eq!(r.caring_seasonal_vs_plan_bp.len(), 3);
         for (p, bp) in &r.caring_seasonal_vs_plan_bp {
             assert!(
