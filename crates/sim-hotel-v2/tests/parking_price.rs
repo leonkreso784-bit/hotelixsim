@@ -97,6 +97,7 @@ fn june(level: u16) -> DeptOutcome {
         building_pts: 0,
         building_share_bp: 0,
         deferred_wear_bp: 10_000,
+        situation_pts: 0,
     })
     .unwrap()
 }
@@ -177,6 +178,7 @@ fn staffed_department_without_people_still_serves_nothing() {
         building_pts: 0,
         building_share_bp: 0,
         deferred_wear_bp: 10_000,
+        situation_pts: 0,
     })
     .unwrap();
     assert_eq!((o.demand_uses, o.served_uses, o.revenue_cents), (560, 0, 0));

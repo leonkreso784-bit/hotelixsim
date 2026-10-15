@@ -17,7 +17,7 @@ use crate::plan::PeriodPlan;
 use crate::resolve::{PeriodReport, ResolveError, resolve_period};
 use crate::robots::robot_plan;
 use crate::situations::{
-    Anchor, Draw, DrawView, DrawnSituation, Kind, TemplateSet, draw_collective,
+    Anchor, Draw, DrawView, DrawnSituation, Kind, RoundSituation, TemplateSet, draw_collective,
     draw_situations_with, reward_only,
 };
 use crate::state::HotelState;
@@ -399,15 +399,20 @@ pub fn run_season_responding(
         if answers.len() != items.len() {
             return Err(ResolveError::BadChoice);
         }
-        let outcomes: Vec<SituationOutcome> = answers
+        // Prostor ishoda je odjel primjerka (ADR-042 t. 1); sidra su cijeli hotel.
+        let outcomes: Vec<RoundSituation> = answers
             .into_iter()
+            .zip(&items)
             .enumerate()
-            .map(|(k, o)| {
+            .map(|(k, (o, item))| {
                 let no_penalty = k
                     .checked_sub(anchors_len)
                     .and_then(|j| instances.get(j))
                     .is_some_and(|(_, n)| *n);
-                if no_penalty { reward_only(o) } else { o }
+                RoundSituation {
+                    outcome: if no_penalty { reward_only(o) } else { o },
+                    space: item.drawn.and_then(|d| d.department.clone()),
+                }
             })
             .collect();
         let report = resolve_period(&state, p, &plan, &outcomes, cat)?;

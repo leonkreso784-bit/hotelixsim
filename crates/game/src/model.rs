@@ -10,7 +10,9 @@ use sim_hotel::{
 };
 use sim_hotel_v2::calendar::{avg_i64, month_period};
 use sim_hotel_v2::department::PeriodAccounts;
-use sim_hotel_v2::situations::{DrawView, DrawnSituation, SituationCounts, TemplateSet};
+use sim_hotel_v2::situations::{
+    DrawView, DrawnSituation, RoundSituation, SituationCounts, TemplateSet,
+};
 use sim_hotel_v2::{
     Period, PeriodKind, PeriodPlan, PeriodReport, ResolveError, RoundHotel, collective_for_round,
     draw_for_round_with, period_indices, resolve_period, run_season_with,
@@ -412,19 +414,21 @@ impl Model {
     }
 
     /// Obračun jednog hotela u krugu. `report` je uvijek v1 oblika (za v2 sažetak kruga), `detail` samo za v2.
+    /// v1 uzima samo ishode (prostor situacije je v2, ADR-042 t. 1).
     pub(crate) fn resolve(
         self,
         s: &CoreState,
         r: &RoundInfo,
         p: &CorePlan,
-        o: &[SituationOutcome],
+        o: &[RoundSituation],
         c: &Content,
         refs: &CoreRefs,
     ) -> Result<Resolved, GameError> {
         match (self, s, p, refs) {
             (Model::V1, CoreState::V1(s), CorePlan::V1(p), CoreRefs::V1(refs)) => {
+                let o: Vec<SituationOutcome> = o.iter().map(|x| x.outcome.clone()).collect();
                 let report =
-                    resolve_month(s, r.key.require_month()?, p, o, &c.catalog).map_err(debug)?;
+                    resolve_month(s, r.key.require_month()?, p, &o, &c.catalog).map_err(debug)?;
                 let indices = month_indices(&report, &c.catalog, refs).map_err(debug)?;
                 Ok(Resolved {
                     report: MonthReportDto::from(&report),
@@ -774,7 +778,7 @@ impl Model {
         s: &CoreState,
         r: &RoundInfo,
         p: &CorePlan,
-        o: &[SituationOutcome],
+        o: &[RoundSituation],
         c: &Content,
     ) -> Result<PeriodReport, GameError> {
         match (self, s, p) {

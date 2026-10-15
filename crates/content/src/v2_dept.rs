@@ -233,6 +233,9 @@ pub(crate) struct EconomyDto {
     /// Uvjeti grupnih rezervacija (J-3); izostavljeno = sve 0 (isti zapis i otisak kao prije).
     #[serde(default, skip_serializing_if = "GroupTermsDto::is_zero")]
     groups: GroupTermsDto,
+    /// Bodovi stanja prostora po hitnom popravku (ADR-042 t. 1); bez ključa 0 (stari snimak: popravak je samo trošak).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    repair_urgent_condition_pts: Option<i32>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -493,6 +496,8 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
             .then(|| e.finance_index.code().to_string()),
         deferred_wear_bp: (e.deferred_wear_bp != DEFERRED_WEAR_DEFAULT_BP)
             .then_some(e.deferred_wear_bp),
+        repair_urgent_condition_pts: (e.repair_urgent_condition_pts != 0)
+            .then_some(e.repair_urgent_condition_pts),
     }
 }
 
@@ -542,5 +547,6 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
         ffe_reserve_bp: e.ffe_reserve_bp.unwrap_or(0),
         finance_index,
         deferred_wear_bp: e.deferred_wear_bp.unwrap_or(DEFERRED_WEAR_DEFAULT_BP),
+        repair_urgent_condition_pts: e.repair_urgent_condition_pts.unwrap_or(0),
     })
 }

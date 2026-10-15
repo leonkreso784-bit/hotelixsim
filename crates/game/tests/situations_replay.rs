@@ -15,7 +15,7 @@ use game::command::{GameSettings, new_game_with};
 use game::dto::MonthReportDto;
 use game::*;
 use sim_hotel::SituationOutcome;
-use sim_hotel_v2::situations::reward_only;
+use sim_hotel_v2::situations::{RoundSituation, reward_only};
 use sim_hotel_v2::{PeriodKind, resolve_period};
 use uuid::Uuid;
 
@@ -116,7 +116,7 @@ fn recomputed(g: &Game, hotel: HotelId, r: RoundKey) -> MonthReportDto {
         panic!("v2 plan");
     };
     let h = g.hotel(hotel).unwrap();
-    let outcomes: Vec<SituationOutcome> = g
+    let outcomes: Vec<RoundSituation> = g
         .situations_of_hotel(hotel, r)
         .unwrap()
         .into_iter()
@@ -125,12 +125,15 @@ fn recomputed(g: &Game, hotel: HotelId, r: RoundKey) -> MonthReportDto {
                 Some(&i) => SituationOutcome::from_answer(&t.code, &t.answers[usize::from(i)]),
                 None => SituationOutcome::unanswered(t),
             };
-            let no_penalty = h
+            let instance = h
                 .drawn
                 .get(&r)
-                .and_then(|l| l.iter().find(|i| i.situation.code == t.code))
-                .is_some_and(|i| i.no_penalty);
-            if no_penalty { reward_only(o) } else { o }
+                .and_then(|l| l.iter().find(|i| i.situation.code == t.code));
+            let no_penalty = instance.is_some_and(|i| i.no_penalty);
+            RoundSituation {
+                outcome: if no_penalty { reward_only(o) } else { o },
+                space: instance.and_then(|i| i.drawn.department.clone()),
+            }
         })
         .collect();
     let cat = g.content.v2.as_ref().unwrap();

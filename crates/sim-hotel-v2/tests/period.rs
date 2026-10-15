@@ -516,7 +516,14 @@ fn july_situation_in_week_five_books_its_group_into_july_days() {
     let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
-    let r = resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jul)], &c).unwrap();
+    let r = resolve_period(
+        &s,
+        &t05,
+        &plan,
+        &[RoundSituation::from(group_answer("S7", Month::Jul))],
+        &c,
+    )
+    .unwrap();
     // 310 noćenja u srpnju; t05 nosi srpanjske dane 1.–5. (dani 0–5 od 31), lipanjski dio ne nosi ništa.
     assert_eq!(r.summary.market.group_room_nights, 310 * 5 / 31);
     assert_eq!(r.after.groups.len(), 1);
@@ -530,7 +537,13 @@ fn june_group_in_july_situation_of_week_five_is_in_the_past() {
     let t05 = period_by_code(PeriodKind::Week, "t05").unwrap();
     let plan = PeriodPlan::default_for(&s, &t05, &c).unwrap();
     assert_eq!(
-        resolve_period(&s, &t05, &plan, &[group_answer("S7", Month::Jun)], &c),
+        resolve_period(
+            &s,
+            &t05,
+            &plan,
+            &[RoundSituation::from(group_answer("S7", Month::Jun))],
+            &c
+        ),
         Err(ResolveError::Mechanic(MechanicError::GroupInPast))
     );
 }
@@ -541,7 +554,14 @@ fn june_group_in_june_month_is_still_accepted() {
     let s = HotelState::from_profile(&c, Profile::C).unwrap();
     let jun = month_period(Month::Jun);
     let plan = PeriodPlan::default_for(&s, &jun, &c).unwrap();
-    let r = resolve_period(&s, &jun, &plan, &[group_answer("S1", Month::Jun)], &c).unwrap();
+    let r = resolve_period(
+        &s,
+        &jun,
+        &plan,
+        &[RoundSituation::from(group_answer("S1", Month::Jun))],
+        &c,
+    )
+    .unwrap();
     assert_eq!(r.summary.market.group_room_nights, 310);
     assert!(r.after.groups.is_empty());
 }

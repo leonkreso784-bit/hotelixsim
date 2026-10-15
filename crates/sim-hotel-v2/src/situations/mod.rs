@@ -76,3 +76,21 @@ pub fn reward_only(mut o: SituationOutcome) -> SituationOutcome {
     }
     o
 }
+
+/// Ishod situacije u obračunu v2 (ADR-042 t. 1): v1 ishod i odjel čiji prostor popravak mijenja;
+/// `None` (sidra, cijeli hotel) i neraspoređeni odjel = Smještaj; nepoznat odjel = greška kataloga.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RoundSituation {
+    pub outcome: SituationOutcome,
+    pub space: Option<DeptCode>,
+}
+
+impl From<SituationOutcome> for RoundSituation {
+    /// Ishod bez odjela (sidro, cijeli hotel): učinak na prostor ide u Smještaj.
+    fn from(outcome: SituationOutcome) -> Self {
+        RoundSituation {
+            outcome,
+            space: None,
+        }
+    }
+}
