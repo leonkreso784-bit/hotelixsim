@@ -111,6 +111,21 @@ pub fn assess_body(model: &str, input: &AssessInput) -> Value {
     )
 }
 
+/// Tijek razgovora za `lik.v3` (ADR-042 t. 6): redni broj studentove poruke i granica; zadnje dvije zatvaraju razgovor.
+pub fn conversation_stage(message_no: u8, message_max: u8) -> String {
+    match message_max.saturating_sub(message_no) {
+        0 => format!(
+            "Ovo je {message_no}. i zadnja poruka upravitelja (najviše {message_max}). Zaključi razgovor u ovom odgovoru: \
+             prihvati ponuđeno ili jasno reci što te i dalje muči. Ne postavljaj pitanje i ne otvaraj novu temu."
+        ),
+        1 => format!(
+            "Ovo je {message_no}. poruka upravitelja od najviše {message_max}; razgovor se bliži kraju. \
+             Ne otvaraj nova pitanja ni nove teme, nego odgovori na ono što je rekao."
+        ),
+        _ => format!("Ovo je {message_no}. poruka upravitelja od najviše {message_max}."),
+    }
+}
+
 /// Preduvjet (jamči pozivatelj): prijepis počinje studentovom porukom, izmjenjuje se i završava studentovom
 /// porukom; uvodna rečenica lika nije u prijepisu nego u uputi.
 pub fn character_body(model: &str, input: &CharacterInput) -> Value {
@@ -118,7 +133,11 @@ pub fn character_body(model: &str, input: &CharacterInput) -> Value {
     let system = prompts::CHARACTER
         .text
         .replace("{lik}", &format!("{}, {}. {}", c.name, c.role, c.brief))
-        .replace("{uvod}", &c.opening);
+        .replace("{uvod}", &c.opening)
+        .replace(
+            "{tijek}",
+            &conversation_stage(input.message_no, input.message_max),
+        );
     let messages: Vec<Value> = input
         .transcript
         .iter()

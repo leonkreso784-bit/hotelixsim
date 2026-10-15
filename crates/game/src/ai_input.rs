@@ -8,8 +8,9 @@ use sim_hotel_v2::FinanceBasis;
 pub use crate::debrief_v2::{DeferredWearFact, RenewalFact, RentCutFact};
 use crate::dto::{LineDto, MonthCode, PlanDto, indices_dto};
 use crate::error::{GameError, corrupt};
-use crate::game::{ChatLine, Game, RoundStatus};
+use crate::game::{ChatLine, Game, RoundStatus, student_count};
 use crate::ids::HotelId;
+use crate::talk::MAX_CHAT_MESSAGES;
 
 /// Ponuđeni odgovor kako ga vidi sudac: oznaka i brojevi kriterija koje ispunjava.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -47,6 +48,10 @@ pub struct CharacterInput {
     pub title: String,
     pub character: CharacterCard,
     pub transcript: Vec<ChatLine>,
+    /// Redni broj studentove poruke na koju lik sada odgovara (1 = prva) = broj studentovih redaka u prijepisu.
+    pub message_no: u8,
+    /// Najviše studentovih poruka u razgovoru (`MAX_CHAT_MESSAGES`).
+    pub message_max: u8,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -195,6 +200,7 @@ impl Game {
             .ai_entry_for(hotel, code)
             .and_then(|a| a.character.as_ref())
             .ok_or(GameError::NotFreeText)?;
+        let transcript = self.chat(hotel, code)?;
         Ok(CharacterInput {
             situation: code.to_owned(),
             title: t.title.clone(),
@@ -204,7 +210,9 @@ impl Game {
                 brief: c.brief.clone(),
                 opening: c.opening.clone(),
             },
-            transcript: self.chat(hotel, code)?,
+            message_no: u8::try_from(student_count(&transcript)).unwrap_or(u8::MAX),
+            message_max: MAX_CHAT_MESSAGES,
+            transcript,
         })
     }
 

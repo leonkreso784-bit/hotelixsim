@@ -10,6 +10,9 @@ use crate::{
 };
 use game::GuestId;
 
+/// Tekst lažnog mentora kruga: sva četiri dijela, inače ga radnik zamijeni rezervom.
+pub const FAKE_DEBRIEF: &str = "Što je išlo dobro\nMentor: dobar mjesec.\n\nŠto nije valjalo\nLažno.\n\nZašto\nLažno.\n\nŠto probati sljedeći put\nLažno.";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum JobStatus {
     Queued,
@@ -164,7 +167,7 @@ impl AiPort for FakeAi {
     }
 
     fn debrief(&self, _input: game::DebriefInput) -> BoxFut<'_, Result<AiOut<String>, AiError>> {
-        self.out(&self.debrief, "Mentor: dobar mjesec.".to_owned())
+        self.out(&self.debrief, FAKE_DEBRIEF.to_owned())
     }
 
     fn season_debrief(
