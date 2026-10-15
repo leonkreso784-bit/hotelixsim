@@ -12,9 +12,9 @@
 //!   stabilno po redu događaja) — isti poredak koji vidi pogled.
 //!
 //! Krugovi (sjeme 42, hotel igrača, nađeno sondom 14.10.):
-//! - mjesečna igra, `jun` (otvoren odmah): od B2a 4 situacije (mjesečno 4/5/6 umjesto 13–22) — S1, S3, kolektivna i
-//!   jedna izvučena; do B2a bilo je 13 — S1, S3, P-DIJETE-IZGUBLJENO.jun | P-ALERGIJA.jun (lik),
-//!   P-OLUJA.jun (kolektivna, bez odjela), …
+//! - mjesečna igra, `jun` (otvoren odmah): od B2a 4 situacije (mjesečno 4/5/6 umjesto 13–22): S1, S3, P-OLUJA.jun
+//!   (kolektivna) i P-PRAONICA.jun. Testovi koji trebaju 5. ili 6. mjesto gledaju kolovoz (6: S4, P-TOPLINSKI-VAL,
+//!   P-NESTALA-STVAR, P-POVISICA, P-DOBAVLJAC, P-POHVALA; 4. i 6. imaju lika), v. `monthly_round_where`.
 //! - tjedna igra, `t05` (nakon obračuna t01–t04): 4 situacije — S2 (sidro), P-OSPORENA-NAPLATA.t05,
 //!   P-LJUBIMAC.t05 | P-DOBAVLJAC.t05 (sva tri primjerka važnosti 2: poredak među njima je red događaja).
 //! - tjedna igra, `t10`: 5 situacija (prva je kolektivna P-TOPLINSKI-VAL.t10); `t01`: 3 (S1, S3, P-OLUJA.t01).
@@ -189,12 +189,12 @@ fn the_first_three_are_mandatory() {
 
 #[test]
 fn delegating_twice_or_after_an_answer_is_already_answered() {
-    // treba 6. mjesto (ili dalje) s likom i slobodnim odgovorom, kao nekad u lipnju
+    // treba krug u kojem 4. mjesto ima lika sa slobodnim odgovorom (razgovor se ne smije tiho preskočiti) i 6. mjesto
+    // (ili dalje) isto tako
+    let free = |g: &Game, c: &str| g.ai_entry_for(me(), c).is_some_and(|a| a.free_text);
     let (mut g, r) = monthly_round_where(|g, r| {
-        codes(g, r)
-            .iter()
-            .skip(5)
-            .any(|c| g.ai_entry_for(me(), c).is_some_and(|a| a.free_text))
+        let list = codes(g, r);
+        list.get(3).is_some_and(|c| free(g, c)) && list.iter().skip(5).any(|c| free(g, c))
     });
     let list = codes(&g, r);
     delegate(&mut g, &list[3]);
@@ -202,21 +202,20 @@ fn delegating_twice_or_after_an_answer_is_already_answered() {
         g.delegate_situation(me(), &list[3]),
         Err(GameError::AlreadyAnswered)
     );
-    // prepuštena se ne može ni odgovoriti ni razgovarati (P-ALERGIJA.jun ima lika)
+    // prepuštena se ne može ni odgovoriti ni razgovarati (4. mjesto odabranog kruga ima lika, vidi predikat gore)
     assert_eq!(
         g.choose_answer(me(), &list[3], 0),
         Err(GameError::AlreadyAnswered)
     );
-    if g.ai_entry_for(me(), &list[3]).is_some_and(|a| a.free_text) {
-        assert_eq!(
-            g.submit_response(me(), &list[3], "Ja ću to riješiti."),
-            Err(GameError::AlreadyAnswered)
-        );
-        assert_eq!(
-            g.send_message(me(), &list[3], "Dobar dan."),
-            Err(GameError::AlreadyAnswered)
-        );
-    }
+    assert!(free(&g, &list[3]), "{}: 4. mjesto ima lika", list[3]);
+    assert_eq!(
+        g.submit_response(me(), &list[3], "Ja ću to riješiti."),
+        Err(GameError::AlreadyAnswered)
+    );
+    assert_eq!(
+        g.send_message(me(), &list[3], "Dobar dan."),
+        Err(GameError::AlreadyAnswered)
+    );
     // ponuđeni odgovor pa prepuštanje
     let ev = g.choose_answer(me(), &list[4], 0).unwrap();
     common::apply_ev(&mut g, Actor::Guest(common::GUEST), ev);
@@ -326,7 +325,7 @@ fn recomputed(g: &Game, r: RoundKey, delegated: &BTreeSet<String>) -> game::dto:
 fn delegated_situation_resolves_with_quality_two_and_unanswered_mechanics() {
     let (mut g, r) = monthly_with_six();
     let list = codes(&g, r);
-    // četvrta (s likom) i peta (kolektivna, bez odjela) prepuštene; šesta ostaje bez odgovora
+    // četvrta i peta situacija kruga (kolovoz) prepuštene; šesta ostaje bez odgovora
     delegate(&mut g, &list[3]);
     delegate(&mut g, &list[4]);
     close_and_resolve(&mut g, r);

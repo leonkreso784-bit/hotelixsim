@@ -86,6 +86,12 @@ fn new_v2_game_writes_default_counts_for_its_round_kind() {
     let v1 = Snapshot::read(&repo_dir()).unwrap();
     let old = created_in(&v1, PeriodKind::Month, None).unwrap();
     assert_eq!(written(&old), None);
+
+    // v1 igra s izričitim brojem situacija je odbijena.
+    assert_eq!(
+        created_in(&v1, PeriodKind::Month, Some(SituationCounts::MONTH)).err(),
+        Some(GameError::InvalidSettings)
+    );
 }
 
 #[test]
