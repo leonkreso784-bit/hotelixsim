@@ -90,6 +90,102 @@
       }
     }
   },
+  "vanjski": {
+    "uloga": {
+      "dobavljac": 1400,
+      "poslovni_klijent": 1400,
+      "zastupnik_agencije": 1100,
+      "organizator_dogadanja": 700,
+      "susjed": 700,
+      "novinar": 600,
+      "inspektor_sanitarni": 600,
+      "policajac": 600,
+      "vatrogasac": 500,
+      "djelatnik_hitne": 500,
+      "lokalna_uprava": 550,
+      "inspektor_turisticki": 450,
+      "inspektor_rada": 450,
+      "inspektor_porezni": 450
+    },
+    "dob": {
+      "20-29": 1000,
+      "30-44": 4000,
+      "45-59": 4000,
+      "60-80": 1000
+    },
+    "rod_po_ulozi": {
+      "inspektor_sanitarni": {
+        "z_bp": 5500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3257; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "inspektor_turisticki": {
+        "z_bp": 5500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3359; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "inspektor_rada": {
+        "z_bp": 5500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3352; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "inspektor_porezni": {
+        "z_bp": 6500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3352, 3359; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "policajac": {
+        "z_bp": 1500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 5412; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "vatrogasac": {
+        "z_bp": 500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 5411; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "djelatnik_hitne": {
+        "z_bp": 6500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2211, 3258; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "novinar": {
+        "z_bp": 5500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2642; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "dobavljac": {
+        "z_bp": 3500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3322, 3323; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "organizator_dogadanja": {
+        "z_bp": 7500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3332; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "zastupnik_agencije": {
+        "z_bp": 7500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 4221; z_bp je prijedlog",
+        "potvrdeno": false
+      },
+      "poslovni_klijent": {
+        "z_bp": 5000,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: pola-pola do mjerenja (BANKA_LJUDI §2.4)",
+        "potvrdeno": false
+      },
+      "susjed": {
+        "z_bp": 5000,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: pola-pola do mjerenja (BANKA_LJUDI §2.4)",
+        "potvrdeno": false
+      },
+      "lokalna_uprava": {
+        "z_bp": 5500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2422; z_bp je prijedlog",
+        "potvrdeno": false
+      }
+    }
+  },
   "gosti": {
     "zemlja": {
       "AT": 2000,

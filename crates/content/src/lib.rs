@@ -26,6 +26,7 @@ mod ljudi_check_okvir;
 mod ljudi_imena;
 mod ljudi_raspodjele;
 mod ljudi_tekst;
+mod ljudi_vanjski;
 mod v2;
 mod v2_dept;
 

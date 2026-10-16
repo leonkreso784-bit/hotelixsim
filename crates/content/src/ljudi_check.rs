@@ -12,6 +12,7 @@ use std::ops::RangeInclusive;
 use crate::ContentError;
 use crate::ljudi::{Banka, Gost, Okvir, Podrijetlo, Radnik, Razina, Serija, Uloga, Vrsta};
 use crate::ljudi_tekst::{cirilica, latinsko_slovo, mnozina, rijeci, sadrzi};
+use crate::ljudi_vanjski;
 
 /// Ime i prezime: 2–30 znakova, latinica s dijakriticima, razmak, `-`, `'` (§1.2).
 pub(crate) const IME_ZNAKOVA: RangeInclusive<usize> = 2..=30;
@@ -104,17 +105,17 @@ impl Zabrane {
 }
 
 /// Zajednički dio radnika i gosta.
-struct Osoba<'a> {
-    put: &'a str,
-    id: &'a str,
-    ime: &'a str,
-    prezime: &'a str,
-    dob: u8,
-    zemlja: &'a str,
-    jezici: &'a [(String, u8)],
-    opis: Option<&'a str>,
+pub(crate) struct Osoba<'a> {
+    pub(crate) put: &'a str,
+    pub(crate) id: &'a str,
+    pub(crate) ime: &'a str,
+    pub(crate) prezime: &'a str,
+    pub(crate) dob: u8,
+    pub(crate) zemlja: &'a str,
+    pub(crate) jezici: &'a [(String, u8)],
+    pub(crate) opis: Option<&'a str>,
     /// Radnik (ne gost): vrijede pravila o jeziku radnika.
-    vrsta_radnik: bool,
+    pub(crate) vrsta_radnik: bool,
 }
 
 pub(crate) fn provjeri_banku(b: &Banka, o: &Okvir) -> Result<(), ContentError> {
@@ -149,6 +150,15 @@ pub(crate) fn provjeri_banku(b: &Banka, o: &Okvir) -> Result<(), ContentError> {
         }
         for g in &s.zapisi {
             gost(&mut p, o, &z, put, g);
+        }
+    }
+    for (put, s) in &b.vanjski {
+        if let Some(raspon) = zaglavlje(&mut p, put, s, Vrsta::Vanjski) {
+            let ids = s.zapisi.iter().map(|v| v.id.as_str());
+            id_jevi(&mut p, put, ids, 'V', raspon, &mut vidjeni);
+        }
+        for v in &s.zapisi {
+            ljudi_vanjski::vanjski(&mut p, o, &z, put, v);
         }
     }
     crate::ljudi_imena::imena(&mut p, b, o, &z);
@@ -208,7 +218,11 @@ fn zaglavlje<T>(p: &mut Popis, put: &str, s: &Serija<T>, vrsta: Vrsta) -> Option
     }
     let sirina = SERIJA_NAJVISE as u32;
     let (od, do_) = (sirina * n + 1, sirina * n + sirina);
-    let slovo = if vrsta == Vrsta::Radnici { 'R' } else { 'G' };
+    let slovo = match vrsta {
+        Vrsta::Radnici => 'R',
+        Vrsta::Gosti => 'G',
+        Vrsta::Vanjski => 'V',
+    };
     let (od_s, do_s) = (format!("{slovo}-{od:05}"), format!("{slovo}-{do_:05}"));
     if s.od != od_s || s.do_ != do_s {
         let ima = format!("{}–{}", s.od, s.do_);
@@ -398,7 +412,7 @@ fn gost(p: &mut Popis, o: &Okvir, z: &Zabrane, put: &str, g: &Gost) {
 }
 
 /// Ime, dob, zemlja, jezici i opis — isto za radnika i gosta.
-fn osoba(p: &mut Popis, o: &Okvir, z: &Zabrane, x: &Osoba, dob: &RangeInclusive<u8>) {
+pub(crate) fn osoba(p: &mut Popis, o: &Okvir, z: &Zabrane, x: &Osoba, dob: &RangeInclusive<u8>) {
     let (put, id) = (x.put, x.id);
     naziv(p, put, id, "ime", x.ime, &IME_ZNAKOVA);
     naziv(p, put, id, "prezime", x.prezime, &IME_ZNAKOVA);
@@ -468,7 +482,7 @@ fn razina_jezika(jezici: &[(String, u8)], kod: &str) -> u8 {
 }
 
 /// Ime, prezime ili slobodno mjesto: duljina i latinica s dijakriticima, razmak, `-`, `'`.
-fn naziv(
+pub(crate) fn naziv(
     p: &mut Popis,
     put: &str,
     id: &str,
@@ -500,7 +514,7 @@ fn naziv(
     }
 }
 
-fn znakovi_teksta(p: &mut Popis, put: &str, id: &str, polje: &str, s: &str) {
+pub(crate) fn znakovi_teksta(p: &mut Popis, put: &str, id: &str, polje: &str, s: &str) {
     if s.contains(['{', '}']) {
         p.dodaj(put, id, format!("{polje}: vitice {{}} nisu dopuštene"));
     }
@@ -509,7 +523,14 @@ fn znakovi_teksta(p: &mut Popis, put: &str, id: &str, polje: &str, s: &str) {
     }
 }
 
-fn nazivi_u_tekstu(p: &mut Popis, z: &Zabrane, put: &str, id: &str, polje: &str, s: &str) {
+pub(crate) fn nazivi_u_tekstu(
+    p: &mut Popis,
+    z: &Zabrane,
+    put: &str,
+    id: &str,
+    polje: &str,
+    s: &str,
+) {
     let tekst = rijeci(s);
     for (fraza, ime) in &z.nazivi {
         if sadrzi(&tekst, fraza) {

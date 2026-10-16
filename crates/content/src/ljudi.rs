@@ -1,6 +1,6 @@
-//! Banka ljudi ([BANKA_LJUDI](../../../docs/architecture/BANKA_LJUDI.md), ADR-042 t. 8): format zapisa RADNIK i GOST,
+//! Banka ljudi ([BANKA_LJUDI](../../../docs/architecture/BANKA_LJUDI.md), ADR-042 t. 8): format zapisa RADNIK, GOST i VANJSKI,
 //! okvir (`mjesta.json`, `zabranjeno.json`, `raspodjele.json` i partneri iz `v2/names.json`) i čitanje serija iz
-//! `content/hotel/v2/ljudi/{radnici,gosti}/serija-NNN.json`.
+//! `content/hotel/v2/ljudi/{radnici,gosti,vanjski}/serija-NNN.json`.
 //!
 //! Banka čuva **tko je osoba**; brojke (vještine, osobine, plaća) izvlači jezgra iz istih raspodjela za svakoga (§1.1),
 //! zato zapis nema ta polja, a `deny_unknown_fields` ih ne pušta. Igra banku još ne čita (K5). Pravila provjere su u
@@ -83,7 +83,7 @@ pub enum Vrsta {
     Vanjski,
 }
 
-/// STUB (čuvar K2v): uloga VANJSKOG (§1.5); graditelj dodaje `SVE`, `kod`, `sluzba`, `lokalna`.
+/// Uloga VANJSKOG (§1.5). Službe ⊂ lokalne; ostalo su tržišne uloge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UlogaVanjskog {
@@ -185,6 +185,59 @@ impl Segment {
     }
 }
 
+impl UlogaVanjskog {
+    pub const SVE: [UlogaVanjskog; 14] = [
+        UlogaVanjskog::InspektorSanitarni,
+        UlogaVanjskog::InspektorTuristicki,
+        UlogaVanjskog::InspektorRada,
+        UlogaVanjskog::InspektorPorezni,
+        UlogaVanjskog::Policajac,
+        UlogaVanjskog::Vatrogasac,
+        UlogaVanjskog::DjelatnikHitne,
+        UlogaVanjskog::Novinar,
+        UlogaVanjskog::Dobavljac,
+        UlogaVanjskog::OrganizatorDogadanja,
+        UlogaVanjskog::ZastupnikAgencije,
+        UlogaVanjskog::PoslovniKlijent,
+        UlogaVanjskog::Susjed,
+        UlogaVanjskog::LokalnaUprava,
+    ];
+    pub fn kod(self) -> &'static str {
+        match self {
+            UlogaVanjskog::InspektorSanitarni => "inspektor_sanitarni",
+            UlogaVanjskog::InspektorTuristicki => "inspektor_turisticki",
+            UlogaVanjskog::InspektorRada => "inspektor_rada",
+            UlogaVanjskog::InspektorPorezni => "inspektor_porezni",
+            UlogaVanjskog::Policajac => "policajac",
+            UlogaVanjskog::Vatrogasac => "vatrogasac",
+            UlogaVanjskog::DjelatnikHitne => "djelatnik_hitne",
+            UlogaVanjskog::Novinar => "novinar",
+            UlogaVanjskog::Dobavljac => "dobavljac",
+            UlogaVanjskog::OrganizatorDogadanja => "organizator_dogadanja",
+            UlogaVanjskog::ZastupnikAgencije => "zastupnik_agencije",
+            UlogaVanjskog::PoslovniKlijent => "poslovni_klijent",
+            UlogaVanjskog::Susjed => "susjed",
+            UlogaVanjskog::LokalnaUprava => "lokalna_uprava",
+        }
+    }
+    /// Službe: četiri inspektora, policajac, vatrogasac, djelatnik hitne, lokalna uprava.
+    pub fn sluzba(self) -> bool {
+        !matches!(
+            self,
+            UlogaVanjskog::Novinar
+                | UlogaVanjskog::Dobavljac
+                | UlogaVanjskog::OrganizatorDogadanja
+                | UlogaVanjskog::ZastupnikAgencije
+                | UlogaVanjskog::PoslovniKlijent
+                | UlogaVanjskog::Susjed
+        )
+    }
+    /// Lokalne: službe, dobavljač i susjed (zemlja HR, mjesto iz `mjesta.lokalno`); ostalo su tržišne.
+    pub fn lokalna(self) -> bool {
+        self.sluzba() || matches!(self, UlogaVanjskog::Dobavljac | UlogaVanjskog::Susjed)
+    }
+}
+
 impl Vrsta {
     pub fn kod(self) -> &'static str {
         match self {
@@ -235,7 +288,8 @@ pub struct Gost {
     pub opis: Option<String>,
 }
 
-/// VANJSKI (§1.5). STUB (čuvar K2v): samo oblik za serde; pravila piše graditelj u `ljudi_vanjski`.
+/// VANJSKI (§1.5): inspektor, služba, dobavljač, novinar, susjed… `ustanova` je generički naziv bez vlastitog imena.
+/// Pravila zapisa su u `ljudi_vanjski`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Vanjski {
@@ -308,13 +362,11 @@ pub struct Zabranjeno {
 pub struct Raspodjele {
     pub radnici: RaspodjeleRadnika,
     pub gosti: RaspodjeleGostiju,
-    /// STUB (čuvar K2v): `default` da stari okviri bez ključa rade; graditelj ga uklanja (polje je obvezno).
-    #[serde(default)]
     pub vanjski: RaspodjeleVanjskih,
 }
 
-/// Ciljevi vanjskih (§2.4). STUB (čuvar K2v).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
+/// Ciljevi vanjskih (§2.4).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RaspodjeleVanjskih {
     pub uloga: BTreeMap<UlogaVanjskog, u32>,
@@ -408,7 +460,7 @@ pub struct Odstupanje {
 }
 
 impl Banka {
-    /// `dir` = [`crate::repo_dir`]; čita sve `serija-*.json` iz `v2/ljudi/radnici` i `v2/ljudi/gosti`.
+    /// `dir` = [`crate::repo_dir`]; čita sve `serija-*.json` iz `v2/ljudi/{radnici,gosti,vanjski}` (mape moraju postojati, smiju biti prazne).
     pub fn read(dir: &Path) -> Result<Banka, ContentError> {
         let ljudi = dir.join("v2/ljudi");
         Ok(Banka {
