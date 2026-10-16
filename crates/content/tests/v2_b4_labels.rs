@@ -111,9 +111,6 @@ fn only_labels_and_listed_conditions_change() {
             for a in t["answers"].as_array_mut().unwrap() {
                 a.as_object_mut().unwrap().remove("label");
             }
-            if t["code"] == "P-INSPEKCIJA" {
-                t.as_object_mut().unwrap().remove("external_cause"); // B4c
-            }
             if matches!(t["code"].as_str(), Some("P-KLIMA" | "P-PRAONICA")) {
                 // `when` se ne serijalizira kad je prazan (P-PRAONICA ga danas nema): prazan objekt = izostavljen
                 let o = t.as_object_mut().unwrap();
@@ -130,7 +127,7 @@ fn only_labels_and_listed_conditions_change() {
     assert_eq!(
         skeleton(&v2_value()),
         SKELETON_SHA,
-        "B4 smije mijenjati samo oznake, uvjete kvarova (5 predložaka) i `external_cause` P-INSPEKCIJE"
+        "B4 smije mijenjati samo oznake, uvjete kvarova (5 predložaka) (`external_cause` P-INSPEKCIJE je B4c)"
     );
 }
 
@@ -197,6 +194,90 @@ fn best_answer_is_not_a_tell() {
     assert!(
         commas * 2 <= n,
         "najbolji ima najviše zareza u {commas}/{n}"
+    );
+}
+
+/// 🟨 T4b: markeri „za poslije / sastojak" (korijeni, mala slova) i prag 20 % jedinica. Pregled opusa B4a (Važno 1):
+/// u 9 od 19 jedinica samo najbolji odgovor imao dio „za poslije", pa se najbolji pogađao 10/10.
+const MARKERS: [&str; 15] = [
+    "sutra", "ubuduće", "kasnije", "idući", "sljedeć", "tjed", "potvrd", "plan", "provjer",
+    "isprik", "ispri", "naknad", "popust", "besplatn", "uzrok",
+];
+const EXCLUSIVE_MARKER_MAX_PCT: usize = 20; // 🟨
+
+#[test] // T4b
+fn best_answer_has_no_exclusive_marker() {
+    let v = v2_value();
+    let debt = KNOWN_VIOLATIONS
+        .iter()
+        .find(|(p, _)| *p == LabelLengths)
+        .map_or(&[][..], |(_, l)| *l);
+    // (šifra, oznake, indeks najboljeg) za očišćene predloške i sidra unutar 1,5×
+    let mut units: Vec<(String, Vec<String>, usize)> = Vec::new();
+    let labels = |a: &Value| -> Vec<String> {
+        a.as_array()
+            .unwrap()
+            .iter()
+            .map(|x| x["label"].as_str().unwrap().to_lowercase())
+            .collect()
+    };
+    for t in templates(&v) {
+        if debt.contains(&t["code"].as_str().unwrap()) {
+            continue;
+        }
+        let best = t["answers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .position(|a| tpl_quality(a) == 5)
+            .unwrap();
+        units.push((
+            t["code"].as_str().unwrap().into(),
+            labels(&t["answers"]),
+            best,
+        ));
+    }
+    for s in anchors(&v) {
+        if !within_ratio(&lens(&s["answers"])) {
+            continue;
+        }
+        let best = s["answers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .position(|a| a["quality"] == 5)
+            .unwrap();
+        units.push((
+            s["code"].as_str().unwrap().into(),
+            labels(&s["answers"]),
+            best,
+        ));
+    }
+    if units.is_empty() {
+        return;
+    }
+    let mut hits: Vec<String> = Vec::new();
+    for (code, l, best) in &units {
+        let found: Vec<&str> = MARKERS
+            .iter()
+            .copied()
+            .filter(|m| {
+                l[*best].contains(m)
+                    && l.iter()
+                        .enumerate()
+                        .all(|(i, x)| i == *best || !x.contains(m))
+            })
+            .collect();
+        if !found.is_empty() {
+            hits.push(format!("{code} (samo najbolji ima: {found:?})"));
+        }
+    }
+    assert!(
+        hits.len() * 100 <= units.len() * EXCLUSIVE_MARKER_MAX_PCT,
+        "{}/{} jedinica ima marker samo u najboljem odgovoru (najviše {EXCLUSIVE_MARKER_MAX_PCT} %): {}",
+        hits.len(),
+        units.len(),
+        hits.join("; ")
     );
 }
 
@@ -273,8 +354,8 @@ fn klima_and_praonica_need_bad_rooms_state() {
     for code in ["P-KLIMA", "P-PRAONICA"] {
         let t = templates(&v).iter().find(|t| t["code"] == code).unwrap();
         assert!(
-            t["when"]["dept_condition_pts"]["below"].is_number(),
-            "{code}: when.dept_condition_pts.below"
+            t["when"]["dept_condition_pts"]["below"] == 6500,
+            "{code}: when.dept_condition_pts.below mora biti točno 6500 (Leon 16.10.)"
         );
     }
     let open = repo_codes(BreakdownCondition);
