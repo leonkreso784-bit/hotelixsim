@@ -113,6 +113,8 @@ struct Osoba<'a> {
     zemlja: &'a str,
     jezici: &'a [(String, u8)],
     opis: Option<&'a str>,
+    /// Radnik (ne gost): vrijede pravila o jeziku radnika.
+    vrsta_radnik: bool,
 }
 
 pub(crate) fn provjeri_banku(b: &Banka, o: &Okvir) -> Result<(), ContentError> {
@@ -281,6 +283,7 @@ fn radnik(p: &mut Popis, o: &Okvir, z: &Zabrane, put: &str, r: &Radnik) {
             zemlja: &r.zemlja,
             jezici: &r.jezici,
             opis: r.opis.as_deref(),
+            vrsta_radnik: true,
         },
         &DOB_RADNIKA,
     );
@@ -374,6 +377,7 @@ fn gost(p: &mut Popis, o: &Okvir, z: &Zabrane, put: &str, g: &Gost) {
             zemlja: &g.zemlja,
             jezici: &g.jezici,
             opis: g.opis.as_deref(),
+            vrsta_radnik: false,
         },
         &DOB_GOSTA,
     );
@@ -428,6 +432,13 @@ fn osoba(p: &mut Popis, o: &Okvir, z: &Zabrane, x: &Osoba, dob: &RangeInclusive<
         }
     }
     if let Some(zm) = zemlja {
+        if zm.azija && razina_jezika(x.jezici, "hr") > 1 && x.vrsta_radnik {
+            let poruka = format!(
+                "jezici: zemlja {} u Aziji, hrvatski najviše na razini 1 (Leon 16.10., ADR-052)",
+                x.zemlja
+            );
+            p.dodaj(put, id, poruka);
+        }
         if !zm.materinji.iter().any(|m| razina_jezika(x.jezici, m) == 4) {
             let (kod, m) = (x.zemlja, zm.materinji.join(" ili "));
             let poruka =
@@ -474,6 +485,12 @@ fn naziv(
     let dopusten = |c: char| latinsko_slovo(c) || matches!(c, ' ' | '-' | '\'' | '’');
     if let Some(c) = s.chars().find(|c| !dopusten(*c)) {
         p.dodaj(put, id, format!("{polje}: nedopušten znak '{c}'"));
+    } else if !s.chars().any(latinsko_slovo) {
+        p.dodaj(
+            put,
+            id,
+            format!("{polje}: mora sadržavati barem jedno slovo"),
+        );
     } else if s != s.trim() || s.contains("  ") {
         p.dodaj(
             put,

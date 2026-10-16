@@ -36,6 +36,13 @@ pub(crate) fn provjeri_okvir(o: &Okvir) -> Result<(), ContentError> {
                 format!("mjesta.zemlje: kod '{kod}' mora biti dva velika slova (ISO 3166)"),
             );
         }
+        if matches!(kod.as_str(), "BA" | "RS" | "ME") && !zemlja.razumije_hr {
+            p.dodaj(
+                "",
+                "",
+                format!("mjesta.zemlje.{kod}.razumije_hr: mora biti true"),
+            );
+        }
         if zemlja.materinji.is_empty() {
             p.dodaj(
                 "",
@@ -166,6 +173,16 @@ pub(crate) fn provjeri_okvir(o: &Okvir) -> Result<(), ContentError> {
         "segmenta",
     );
     potpuno(&mut p, "gosti.rod", &g.rod, &Rod::SVE, Rod::kod, "roda");
+    // Bez HR u mjesta.json već je prijavljena jedna greška; ne dodajemo posljedične.
+    for k in g.zemlja.keys().filter(|k| *k != "ostalo") {
+        if m.zemlje.contains_key("HR") && !m.zemlje.contains_key(k) {
+            p.dodaj(
+                "",
+                "",
+                format!("raspodjele.gosti.zemlja: '{k}' nije zemlja iz mjesta.json"),
+            );
+        }
+    }
     zbroj(&mut p, "gosti.zemlja", g.zemlja.values());
     zbroj(&mut p, "gosti.segment", g.segment.values());
     zbroj(&mut p, "gosti.dob", g.dob.values());

@@ -44,39 +44,51 @@ fn dobni_razred(dob: u8, razredi: &BTreeMap<String, u32>) -> String {
 // Stereotip
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Razina, dob i rod unutar uloge moraju imati istu raspodjelu u svakoj skupini podrijetla (±`STEREOTIP_BP`).
-/// Pravilo šuti dok svaka skupina podrijetla nema barem `STEREOTIP_MIN_SKUPINA` zapisa; rod se uspoređuje unutar uloge
-/// (podrijetlo × uloga, i ta ćelija mora imati barem toliko zapisa). Raspodjela uloga smije ovisiti o podrijetlu
-/// (Leon 16.10.), pa je pravilo ne gleda.
+/// Razina, dob i rod moraju imati istu raspodjelu u svakoj skupini podrijetla **unutar uloge** (±`STEREOTIP_BP`).
+/// Uloga smije ovisiti o podrijetlu (Leon 16.10., odluka 3), pa se mješavina uloga ne gleda. Ćelija (uloga × podrijetlo)
+/// se uspoređuje s cijelom ulogom tek od `STEREOTIP_MIN_SKUPINA` zapisa 🟨; manje ćelije pravilo preskače.
 pub(crate) fn stereotip(b: &Banka, r: &Raspodjele) -> Vec<String> {
     let svi = radnici(b);
-    let skupine = po_podrijetlu(&svi);
-    if skupine.iter().any(|(_, v)| v.len() < STEREOTIP_MIN_SKUPINA) {
-        return Vec::new();
-    }
     let mut out = Vec::new();
-    for k in Razina::SVE {
-        let oznaka = format!("razina {}", k.kod());
-        usporedi(&mut out, &oznaka, &svi, &skupine, "cijele banke", |x| {
-            x.razina == k
-        });
-    }
-    for k in r.radnici.dob.keys() {
-        let Some((a, z)) = razred(k) else { continue };
-        let oznaka = format!("dob {k}");
-        usporedi(&mut out, &oznaka, &svi, &skupine, "cijele banke", |x| {
-            (a..=z).contains(&x.dob)
-        });
-    }
     for u in Uloga::SVE {
         let u_svi: Vec<&Radnik> = svi.iter().copied().filter(|x| x.uloga == u).collect();
-        let oznaka = format!("rod z u ulozi {}", u.kod());
         let celije = po_podrijetlu(&u_svi);
-        usporedi(&mut out, &oznaka, &u_svi, &celije, "cijele uloge", |x| {
-            x.rod == Rod::Z
-        });
+        let kontekst = format!("; usporedba unutar uloge {}", u.kod());
+        for k in Razina::SVE {
+            let oznaka = format!("razina {}", k.kod());
+            let tekst = Tekst::new(&oznaka, "cijele banke", &kontekst);
+            usporedi(&mut out, &tekst, &u_svi, &celije, |x| x.razina == k);
+        }
+        for k in r.radnici.dob.keys() {
+            let Some((a, z)) = razred(k) else { continue };
+            let oznaka = format!("dob {k}");
+            let tekst = Tekst::new(&oznaka, "cijele banke", &kontekst);
+            usporedi(&mut out, &tekst, &u_svi, &celije, |x| {
+                (a..=z).contains(&x.dob)
+            });
+        }
+        let oznaka = format!("rod z u ulozi {}", u.kod());
+        let tekst = Tekst::new(&oznaka, "cijele uloge", "");
+        usporedi(&mut out, &tekst, &u_svi, &celije, |x| x.rod == Rod::Z);
     }
     out
+}
+
+/// Dijelovi retka „stereotip:" (oznaka dimenzije, naziv osnovice, dodatak na kraju).
+struct Tekst<'a> {
+    oznaka: &'a str,
+    cijele: &'a str,
+    kraj: &'a str,
+}
+
+impl<'a> Tekst<'a> {
+    fn new(oznaka: &'a str, cijele: &'a str, kraj: &'a str) -> Self {
+        Tekst {
+            oznaka,
+            cijele,
+            kraj,
+        }
+    }
 }
 
 fn po_podrijetlu<'a>(svi: &[&'a Radnik]) -> Vec<(Podrijetlo, Vec<&'a Radnik>)> {
@@ -93,10 +105,9 @@ fn po_podrijetlu<'a>(svi: &[&'a Radnik]) -> Vec<(Podrijetlo, Vec<&'a Radnik>)> {
 
 fn usporedi(
     out: &mut Vec<String>,
-    oznaka: &str,
+    t: &Tekst,
     svi: &[&Radnik],
     skupine: &[(Podrijetlo, Vec<&Radnik>)],
-    cijele: &str,
     uvjet: impl Fn(&Radnik) -> bool,
 ) {
     let cilj = bp(svi.iter().filter(|x| uvjet(x)).count(), svi.len());
@@ -107,8 +118,11 @@ fn usporedi(
         let s = bp(v.iter().filter(|x| uvjet(x)).count(), v.len());
         if s.abs_diff(cilj) > STEREOTIP_BP {
             out.push(format!(
-                "stereotip: {oznaka}, skupina {}: {s} bp prema {cilj} bp {cijele} (dopušteno ±{STEREOTIP_BP} bp)",
-                p.kod()
+                "stereotip: {}, skupina {}: {s} bp prema {cilj} bp {} (dopušteno ±{STEREOTIP_BP} bp){}",
+                t.oznaka,
+                p.kod(),
+                t.cijele,
+                t.kraj
             ));
         }
     }
@@ -208,6 +222,9 @@ pub fn izvjestaj(b: &Banka, r: &Raspodjele) -> Vec<Odstupanje> {
 
 /// Na pečaćenju prekretnice (K4) svaka vrijednost iz izvještaja smije odstupati od cilja najviše `PREKRETNICA_BP`.
 pub fn provjeri_prekretnicu(b: &Banka, r: &Raspodjele) -> Result<(), ContentError> {
+    if radnici(b).is_empty() && gosti(b).is_empty() {
+        return Err(ContentError::Invalid("prekretnica: banka je prazna".into()));
+    }
     let retci: Vec<String> = izvjestaj(b, r)
         .into_iter()
         .filter(|o| o.stvarno_bp.abs_diff(o.cilj_bp) > PREKRETNICA_BP)
