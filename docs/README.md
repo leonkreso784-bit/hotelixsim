@@ -134,6 +134,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 |---|---|
 | [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u mapi `ROADMAP/` |
 | [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md) | 🟩 **aktivan** — popravak temelja po [reviziji](./architecture/REVIZIJA_TEMELJA.md): faza A (brane koje mjere pravu stvar, kratke grane; 7 kartica), B (v2 mehanike po odjelu, jedna kalibracija, L1-13…L1-15), C (igra za semestar) |
+| [2026-11-platforma.md](./plan/2026-11-platforma.md) | 🟨 **nacrt** (16.10., čeka Leona; područje platforma) — platforma do P3 usporedo s fazom C: četiri faze (SPREMNO ZA INTERNET, RAZRED bez i s jezgrom, PROFESOR), ~205 h, ovisnosti o jezgri, hosting i AI trošak, 6 pitanja |
 | [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | ⏸️ **pauziran** (14.10., ADR-043; ostatak u planu popravka) — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
 | [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (čeka spajanje Sloja 1; Taskovi 11–13) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 
