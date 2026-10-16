@@ -61,7 +61,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
               <li key={s.code}>
                 <Link to={`/situacije/${encodeURIComponent(s.code)}`} className="block">
                   <Card className="flex items-center gap-3">
-                    {s.character && <Avatar look={lookFor(s.character.name)} size={40} />}
+                    {s.character && <Avatar look={lookFor(s.character.name, s.character.look)} size={40} />}
                     <span className="min-w-0 flex-1 space-y-1">
                       <span className="block font-bold">{s.title}</span>
                       {deptLine(s) && <DeptLine code={s.department} name={deptName(s.department)} />}

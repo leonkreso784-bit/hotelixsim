@@ -27,7 +27,7 @@ export function Conversation({
   const c = conv.data;
   const used = c.lines.filter((l) => l.from === "student").length;
   const total = used + c.remaining;
-  const look = lookFor(c.character_name);
+  const look = lookFor(c.character_name, c.character_look);
 
   function submit(e: FormEvent) {
     e.preventDefault();

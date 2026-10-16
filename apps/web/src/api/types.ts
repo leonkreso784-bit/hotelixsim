@@ -13,6 +13,7 @@ export type RoundBody = S["RoundBody"];
 export type SituationsBody = S["SituationsBody"];
 export type SituationBody = S["SituationBody"];
 export type ConversationBody = S["ConversationBody"];
+export type CharacterLookBody = S["CharacterLookBody"];
 export type ResponseBody = S["ResponseBody"];
 export type CriterionBody = S["CriterionBody"];
 export type PlanBody = S["PlanBody"];

@@ -193,7 +193,7 @@ export function s1(over: Partial<SituationBody> = {}): SituationBody {
     ],
     chosen: null,
     free_text: true,
-    character: { name: "Petra Horvat", role: "gošća u sobi 214, s dvoje male djece" },
+    character: { name: "Petra Horvat", role: "gošća u sobi 214, s dvoje male djece", look: null },
     response: null,
     department: null,
     kind: null,
@@ -213,7 +213,7 @@ export function s2(over: Partial<SituationBody> = {}): SituationBody {
     ...s1(),
     code: "S2",
     title: "Šef kuhinje traži povišicu ili odlazi",
-    character: { name: "Marko Babić", role: "šef kuhinje, u hotelu sedam sezona" },
+    character: { name: "Marko Babić", role: "šef kuhinje, u hotelu sedam sezona", look: null },
     ...over,
   };
 }
@@ -263,6 +263,7 @@ export function conversation(over: Partial<ConversationBody> = {}): Conversation
   return {
     situation: "S1",
     character_name: "Petra Horvat",
+    character_look: null,
     role: "gošća u sobi 214, s dvoje male djece",
     opening: "Klima u sobi ne radi, a djeca ne mogu spavati. Vani je 34 °C!",
     lines: [],
