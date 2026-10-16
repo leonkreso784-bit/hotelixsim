@@ -138,8 +138,8 @@ fn repo_banka_prolazi() {
     ok(okvir.provjeri());
     let banka = Banka::read(&dir).expect("banka se čita");
     ok(banka.provjeri(&okvir));
-    // K1a: mape su prazne. (K1b: čuvar mijenja na 10 + 10.)
+    // K1b: 10 radnika i 10 gostiju za Leonov pregled.
     let radnika: usize = banka.radnici.iter().map(|(_, s)| s.zapisi.len()).sum();
     let gostiju: usize = banka.gosti.iter().map(|(_, s)| s.zapisi.len()).sum();
-    assert_eq!((radnika, gostiju), (0, 0));
+    assert_eq!((radnika, gostiju), (10, 10));
 }
