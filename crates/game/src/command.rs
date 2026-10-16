@@ -32,6 +32,8 @@ pub const MANDATORY_SITUATIONS: usize = 3;
 pub struct GameSettings {
     pub kind: PeriodKind,
     pub situations: Option<SituationCounts>,
+    /// Pravilo ocjene vlastitog odgovora (samo v2; `None` = zadano, `OwnWords`; uz v1 nije dopušteno).
+    pub answer_rule: Option<AnswerRule>,
 }
 
 fn profile_at(n: u64) -> Profile {
@@ -59,6 +61,7 @@ pub fn new_game(
         GameSettings {
             kind: PeriodKind::Month,
             situations: None,
+            answer_rule: None,
         },
     )
 }
@@ -79,6 +82,7 @@ pub fn new_game_with(
     let model = Model::of(&content, snapshot.model());
     let (months, rounds) = model.new_rounds(settings.kind)?;
     let situation_counts = model.situation_counts(settings.kind, settings.situations)?;
+    let answer_rule = model.answer_rule(settings.answer_rule)?;
     let profile = profile_at(Rng::derive(seed, &[label("game:profile")]).range(0, 3));
     let rot = Rng::derive(seed, &[label("game:robot-profiles")]).range(0, 3);
     let [h1, h2, h3, h4] = hotel_ids;
@@ -112,6 +116,7 @@ pub fn new_game_with(
         hotels,
         rounds,
         situation_counts,
+        answer_rule,
     };
     let first = Recorded {
         seq: 1,

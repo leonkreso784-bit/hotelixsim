@@ -34,7 +34,8 @@ fn human_game(seed: u64, kind: PeriodKind, profile: Profile, path: AnswerPath) -
         GameSettings {
             kind,
             situations: None,
-            answer_rule: None,
+            // Paritet putova (B3a) vrijedi za staro pravilo; put „klik najbolji“ s ograničenjem dolazi u PRAVILO-b.
+            answer_rule: Some(game::event::AnswerRule::Classic),
         },
     )
     .unwrap();

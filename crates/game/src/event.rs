@@ -33,6 +33,19 @@ pub struct GameCreated {
     /// promjena zadanog broja u kodu ne mijenja staru igru. `None`: v1 ili stari dnevnik (zadano za vrstu kruga).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub situation_counts: Option<SituationCountsDto>,
+    /// v2: pravilo ocjene vlastitog odgovora (ADR-047), zapisano izričito za svaku novu igru. `None`: v1 ili stari
+    /// dnevnik (čita se kao `Classic`, bajt-isto kao prije).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub answer_rule: Option<AnswerRule>,
+}
+
+/// Pravilo ocjene odgovora (ADR-047): `Classic` = klik na najbolji daje 5 kao vlastiti odgovor; `OwnWords` = klik u
+/// situaciji s likom najviše 4, vlastiti odgovor do 5.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AnswerRule {
+    Classic,
+    OwnWords,
 }
 
 /// Broj situacija po krugu po razini očekivane popunjenosti (`sim_hotel_v2::situations::SituationCounts`).
@@ -163,6 +176,9 @@ pub struct SituationResult {
     /// događaji i obračun bez prepuštanja ga nemaju, pa je njihov JSON bajt-isti.
     #[serde(default, skip_serializing_if = "is_false")]
     pub delegated: bool,
+    /// Pravilo je SNIZILO ocjenu (klik ili prepisan odgovor q 5 uz `OwnWords` → 4); stari događaji ga nemaju.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub capped: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -244,6 +260,12 @@ pub struct VerdictRecorded {
     pub meta: Option<AiMeta>,
     /// Na pregled profesoru (neutralna presuda ili AI ispad, ARHITEKTURA §8.3 korak 5).
     pub review: bool,
+    /// Student je prepisao ponuđeni odgovor s tim rednim brojem: vrijedi kao klik (ADR-047).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub copied: Option<u8>,
+    /// Student je zalijepio ≥ 2 ponuđena odgovora (kvar B13): nije odluka, neutralna 3 i mehanike šutnje.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub pasted: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

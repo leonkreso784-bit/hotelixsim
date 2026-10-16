@@ -73,6 +73,7 @@ fn samples() -> Vec<GameEvent> {
                 mid: 4,
                 high: 5,
             }),
+            answer_rule: Some(AnswerRule::OwnWords),
         }),
         GameEvent::PlanSet(PlanSet {
             hotel_id: h,
@@ -100,6 +101,7 @@ fn samples() -> Vec<GameEvent> {
                         quality: 1,
                         free_text: false,
                         delegated: false,
+                        capped: false,
                     },
                     SituationResult {
                         code: "S3".into(),
@@ -107,6 +109,7 @@ fn samples() -> Vec<GameEvent> {
                         quality: 1,
                         free_text: false,
                         delegated: false,
+                        capped: false,
                     },
                 ],
                 report: MonthReportDto::from(&r),

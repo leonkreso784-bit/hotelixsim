@@ -25,6 +25,9 @@ fn sit(code: &str, title: &str, quality: u8) -> DebriefSituation {
         neutral: false,
         unanswered: false,
         delegated: false,
+        capped: false,
+        copied: false,
+        pasted: false,
         chosen_label: None,
         department: None,
     }

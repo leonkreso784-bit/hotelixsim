@@ -86,6 +86,7 @@ pub async fn start_demo(
         GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )?;
     if let Some(tok) = &new_guest {
