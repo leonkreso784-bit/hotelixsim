@@ -34,8 +34,19 @@ fn primjeri_su_raznolici() {
     let dir = repo_dir();
     let okvir = Okvir::read(&dir).expect("okvir se čita");
     let banka = Banka::read(&dir).expect("banka se čita");
-    let radnici: Vec<_> = banka.radnici.iter().flat_map(|(_, s)| &s.zapisi).collect();
-    let gosti: Vec<_> = banka.gosti.iter().flat_map(|(_, s)| &s.zapisi).collect();
+    // K2: od serije-001 banka ima više serija; ovaj test i dalje čuva samo prvih 20 primjera (serija-000).
+    let radnici: Vec<_> = banka
+        .radnici
+        .iter()
+        .filter(|(put, _)| put.ends_with("/serija-000.json"))
+        .flat_map(|(_, s)| &s.zapisi)
+        .collect();
+    let gosti: Vec<_> = banka
+        .gosti
+        .iter()
+        .filter(|(put, _)| put.ends_with("/serija-000.json"))
+        .flat_map(|(_, s)| &s.zapisi)
+        .collect();
     let mut e: Vec<String> = Vec::new();
 
     if banka.radnici.is_empty() || banka.gosti.is_empty() {

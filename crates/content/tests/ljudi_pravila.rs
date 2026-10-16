@@ -331,3 +331,160 @@ fn zabranjeni_hotel_ili_marka() {
         "zanimanje: zabranjeni naziv",
     );
 }
+
+// ------------------------------------------------------------------------------------------ K2: pouke pregleda K1a/K1b
+
+#[test]
+fn ime_ima_slovo() {
+    // K1a pregled M1: samo interpunkcija nije ime, prezime ni mjesto.
+    for ime in ["--", "''", "- -"] {
+        jedina_greska(
+            r1(s(radnik(), "ime", json!(ime))),
+            "ime: mora sadržavati barem jedno slovo",
+        );
+    }
+    jedina_greska(
+        g1(s(gost(), "prezime", json!("--"))),
+        "prezime: mora sadržavati barem jedno slovo",
+    );
+    jedina_greska(
+        g1(s(gost(), "mjesto", json!("--"))),
+        "mjesto: mora sadržavati barem jedno slovo",
+    );
+    // Dijakritici, crtica i apostrof uz slova i dalje prolaze.
+    ok(r1(s(radnik(), "prezime", json!("O'Brien-Šarić"))));
+}
+
+/// Okvir u kojem je Nepal označen kao azijska zemlja (`azija: true`); BA i ostale ostaju bez oznake.
+fn okvir_s_azijom() -> content::ljudi::Okvir {
+    let mut m = mjesta_json();
+    m["zemlje"]["NP"]["azija"] = json!(true);
+    okvir_iz(m, zabranjeno_json(), raspodjele_json())
+}
+
+/// Radnik iz Nepala (kuhar, pa D8 o engleskom ne smeta) s danim jezicima.
+fn nepalac(jezici: Value) -> Value {
+    let v = s(radnik(), "uloga", json!("kuhar"));
+    let v = s(v, "podrijetlo", json!("inozemstvo"));
+    let v = s(v, "zemlja", json!("NP"));
+    let v = s(v, "mjesto", json!("Pokhara"));
+    s(v, "jezici", jezici)
+}
+
+fn provjeri_u_aziji(v: Value) -> Result<(), ContentError> {
+    let (r, g) = banka(vec![v], vec![]);
+    provjeri_s(&okvir_s_azijom(), r, g)
+}
+
+#[test]
+fn azija_hrvatski_najvise_jedan() {
+    // Leon 16.10. (ADR-052, K1b pregled M7): radnik iz Azije ima hrvatski 0–1; stroj to čuva i u K2+.
+    jedina_greska(
+        provjeri_u_aziji(nepalac(json!([["ne", 4], ["hr", 4], ["en", 3]]))),
+        "radnici/serija-000.json R-00001: jezici: zemlja NP u Aziji, hrvatski najviše na razini 1 (Leon 16.10., ADR-052)",
+    );
+    jedina_greska(
+        provjeri_u_aziji(nepalac(json!([["ne", 4], ["hr", 2], ["en", 3]]))),
+        "jezici: zemlja NP u Aziji, hrvatski najviše na razini 1",
+    );
+    // Dopušteno: bez hrvatskog (razina 0 se ne upisuje) i hrvatski na razini 1.
+    ok(provjeri_u_aziji(nepalac(json!([["ne", 4], ["en", 3]]))));
+    ok(provjeri_u_aziji(nepalac(json!([
+        ["ne", 4],
+        ["hr", 1],
+        ["en", 3]
+    ]))));
+    // Pravilo vrijedi samo za označene zemlje: radnik iz BA s hrvatskim 4 i dalje prolazi (D7).
+    let ba = s(radnik(), "podrijetlo", json!("inozemstvo"));
+    let ba = s(s(ba, "zemlja", json!("BA")), "mjesto", json!("Tuzla"));
+    let ba = s(ba, "jezici", json!([["hr", 4], ["en", 3]]));
+    let (r, g) = banka(vec![ba], vec![]);
+    ok(provjeri_s(&okvir_s_azijom(), r, g));
+}
+
+// ------------------------------------------------------------------------------------------ K2: S6 „unutar uloge"
+
+/// Deterministički udio: `i`-ti zapis ulazi u skupinu kad je `(i·korak + pomak) mod 20 < dvadesetine`. Za n koji je
+/// višekratnik 20 to je točno `dvadesetine / 20` zapisa, a različiti koraci ne povezuju svojstva.
+fn udio(i: usize, korak: usize, pomak: usize, dvadesetine: usize) -> bool {
+    (i * korak + pomak) % 20 < dvadesetine
+}
+
+/// `n` sobara: početnik za `poc` dvadesetina (ostali iskusni), dob 20 (razred 18–24) za `mladi`, ostali 40;
+/// rod z za `zene`.
+fn sobari(n: usize, poc: usize, mladi: usize, zene: usize) -> Vec<Spec> {
+    (0..n)
+        .map(|i| Spec {
+            uloga: "sobar",
+            razina: if udio(i, 1, 0, poc) {
+                "pocetnik"
+            } else {
+                "iskusan"
+            },
+            dob: if udio(i, 7, 3, mladi) { 20 } else { 40 },
+            rod: if udio(i, 13, 5, zene) { "z" } else { "m" },
+        })
+        .collect()
+}
+
+fn spoji(mut a: Vec<Spec>, b: Vec<Spec>) -> Vec<Spec> {
+    a.extend(b);
+    a
+}
+
+fn kuhari(n: usize) -> Vec<Spec> {
+    razine("kuhar", 40, &[("strucnjak", n)])
+}
+
+/// Uloge su jako iskrivljene po podrijetlu (sobari prevladavaju u inozemstvu), a razina, dob i rod UNUTAR uloge
+/// su isti u svim skupinama — osim u inozemstvu, gdje se sobari mijenjaju parametrima. Skupno bi razlike uloga
+/// (sobari: 80 % početnika, kuhari: 0 %) izgledale kao „stereotip", a unutar uloge ih nema.
+fn banka_s_ulogama(ino_sobari: Vec<Spec>) -> Datoteke {
+    radnici_iz(vec![
+        ("lokalno", spoji(sobari(100, 16, 10, 10), kuhari(100))),
+        ("regija", spoji(sobari(60, 16, 10, 10), kuhari(60))),
+        ("inozemstvo", spoji(ino_sobari, kuhari(20))),
+    ])
+}
+
+fn uhvaceno(res: &Result<(), ContentError>, igle: &[&str]) -> bool {
+    retci(res)
+        .iter()
+        .any(|l| igle.iter().all(|i| l.contains(i)))
+}
+
+#[test]
+fn stereotip_usporedba_je_unutar_uloge() {
+    // Pravilo ŠUTI: razlika u mješavini uloga nije stereotip (Leon 16.10., odluka 3), jer unutar sobara
+    // (i kuhara) razina, dob i rod jednako su raspoređeni u lokalnoj, regiji i inozemstvu.
+    ok(provjeri(banka_s_ulogama(sobari(100, 16, 10, 10)), vec![]));
+}
+
+#[test]
+fn stereotip_unutar_uloge_hvata_razinu_dob_i_rod() {
+    // Obrnute provjere uz isti miks uloga: iskrivljena skupina unutar uloge mora se javiti.
+    let razina = provjeri(banka_s_ulogama(sobari(100, 20, 10, 10)), vec![]);
+    assert!(
+        uhvaceno(
+            &razina,
+            &["stereotip: razina pocetnik", "skupina inozemstvo"]
+        ),
+        "iskrivljena razina nije uhvaćena: {:?}",
+        retci(&razina)
+    );
+    let dob = provjeri(banka_s_ulogama(sobari(100, 16, 18, 10)), vec![]);
+    assert!(
+        uhvaceno(&dob, &["stereotip: dob 18-24", "skupina inozemstvo"]),
+        "iskrivljena dob nije uhvaćena: {:?}",
+        retci(&dob)
+    );
+    let rod = provjeri(banka_s_ulogama(sobari(100, 16, 10, 18)), vec![]);
+    assert!(
+        uhvaceno(
+            &rod,
+            &["stereotip: rod z u ulozi sobar", "skupina inozemstvo"]
+        ),
+        "iskrivljen rod nije uhvaćen: {:?}",
+        retci(&rod)
+    );
+}

@@ -122,27 +122,32 @@
     "NP": {
       "naziv": "Nepal",
       "materinji": ["ne"],
-      "razumije_hr": false
+      "razumije_hr": false,
+      "azija": true
     },
     "IN": {
       "naziv": "Indija",
       "materinji": ["hi", "bn", "ml", "ta", "te", "pa", "mr", "gu"],
-      "razumije_hr": false
+      "razumije_hr": false,
+      "azija": true
     },
     "PH": {
       "naziv": "Filipini",
       "materinji": ["tl"],
-      "razumije_hr": false
+      "razumije_hr": false,
+      "azija": true
     },
     "BD": {
       "naziv": "Bangladeš",
       "materinji": ["bn"],
-      "razumije_hr": false
+      "razumije_hr": false,
+      "azija": true
     },
     "UZ": {
       "naziv": "Uzbekistan",
       "materinji": ["uz"],
-      "razumije_hr": false
+      "razumije_hr": false,
+      "azija": true
     },
     "AT": {
       "naziv": "Austrija",
