@@ -16,7 +16,7 @@
       "jezici": [["de", 4], ["en", 2]],
       "segment": "obitelj",
       "zanimanje": "učiteljica",
-      "opis": "Dolazi s mužem i dvoje djece u školskim praznicima. Na Kvarneru je prvi put bila kao dijete, s roditeljima."
+      "opis": "Dolazi s mužem i dvoje djece tijekom školskih praznika. Na Kvarneru je prvi put bila kao dijete, s roditeljima."
     },
     {
       "id": "G-00002",
@@ -51,7 +51,7 @@
       "rod": "m",
       "dob": 45,
       "zemlja": "IT",
-      "mjesto": "Trieste",
+      "mjesto": "Trst",
       "jezici": [["it", 4], ["en", 3], ["hr", 1]],
       "segment": "poslovni",
       "zanimanje": "voditelj nabave u brodogradilištu",
@@ -64,11 +64,11 @@
       "rod": "z",
       "dob": 55,
       "zemlja": "HU",
-      "mjesto": "Pécs",
+      "mjesto": "Pečuh",
       "jezici": [["hu", 4], ["de", 2]],
       "segment": "grupa",
       "zanimanje": "knjižničarka",
-      "opis": "S pjevačkim zborom iz Pécsa dolazi na nastup u Opatiji. Zbor svake godine bira jedan obalni grad za gostovanje."
+      "opis": "S pjevačkim zborom iz Pečuha dolazi na nastup u Opatiji. Zbor svake godine bira jedan obalni grad za gostovanje."
     },
     {
       "id": "G-00006",
@@ -101,7 +101,7 @@
       "rod": "m",
       "dob": 38,
       "zemlja": "PL",
-      "mjesto": "Kraków",
+      "mjesto": "Krakov",
       "jezici": [["pl", 4], ["en", 2]],
       "segment": "obitelj",
       "opis": "Sa suprugom i tri kćeri putuje autom iz Krakova, uz dvije noći u Sloveniji. Prvi put ljetuju na Kvarneru umjesto na Baltiku."
@@ -129,7 +129,7 @@
       "mjesto": "Leeds",
       "jezici": [["en", 4], ["fr", 1]],
       "segment": "wellness",
-      "zanimanje": "tiskar",
+      "zanimanje": "bivši vlasnik tiskare",
       "opis": "Dolazi sam na tjedan dana, nakon što je prodao svoju tiskaru u Leedsu. Rezervirao je paket sa saunom i plivanjem u zatvorenom bazenu."
     }
   ]
