@@ -10,7 +10,12 @@ use sha2::{Digest, Sha256};
 const ZAPECACENO: [(&str, &str); 0] = [];
 
 /// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku).
-const OTVORENO: &[&str] = &["gosti/serija-000.json", "radnici/serija-000.json"];
+const OTVORENO: &[&str] = &[
+    "gosti/serija-000.json",
+    "gosti/serija-001.json",
+    "radnici/serija-000.json",
+    "radnici/serija-001.json",
+];
 
 fn lf_hash(bytes: &[u8]) -> String {
     let lf: Vec<u8> = bytes

@@ -138,8 +138,65 @@ fn repo_banka_prolazi() {
     ok(okvir.provjeri());
     let banka = Banka::read(&dir).expect("banka se čita");
     ok(banka.provjeri(&okvir));
-    // K1b: 10 radnika i 10 gostiju za Leonov pregled.
+    // K1b: 10 + 10 u seriji-000; K2: još 50 + 50 u seriji-001 (ukupno 60 + 60).
     let radnika: usize = banka.radnici.iter().map(|(_, s)| s.zapisi.len()).sum();
     let gostiju: usize = banka.gosti.iter().map(|(_, s)| s.zapisi.len()).sum();
-    assert_eq!((radnika, gostiju), (10, 10));
+    assert_eq!((radnika, gostiju), (60, 60));
+}
+
+// ------------------------------------------------------------------------------------------ K2: pouke pregleda K1a/K1b
+
+#[test]
+fn gosti_zemlja_je_u_mjestima() {
+    // K1a pregled M2: tipfeler („AU" umjesto zemlje iz mjesta.json) ne smije proći kao tihi „ostalo".
+    let mut r = raspodjele_json();
+    let udio = r["gosti"]["zemlja"]["BA"].clone();
+    r["gosti"]["zemlja"].as_object_mut().unwrap().remove("BA");
+    r["gosti"]["zemlja"]["AU"] = udio;
+    let okvir = okvir_iz(mjesta_json(), zabranjeno_json(), r);
+    jedina_greska(
+        okvir.provjeri(),
+        "raspodjele.gosti.zemlja: 'AU' nije zemlja iz mjesta.json",
+    );
+}
+
+#[test]
+fn bosna_srbija_crna_gora_razumiju_hrvatski() {
+    // K1a pregled M2: D7 (ADR-042 t. 11) ovisi o zastavici, pa je njezino brisanje greška okvira, ne tiha slabost.
+    for kod in ["BA", "RS", "ME"] {
+        let mut m = mjesta_json();
+        m["zemlje"][kod]["razumije_hr"] = json!(false);
+        let okvir = okvir_iz(m, zabranjeno_json(), raspodjele_json());
+        jedina_greska(
+            okvir.provjeri(),
+            &format!("mjesta.zemlje.{kod}.razumije_hr: mora biti true"),
+        );
+    }
+}
+
+#[test]
+fn prazna_banka_nije_prekretnica() {
+    // K1a pregled M5: K4 ne smije „pečatiti prekretnicu" bez ijednog zapisa.
+    let prazna = Banka {
+        radnici: vec![],
+        gosti: vec![],
+    };
+    jedina_greska(
+        provjeri_prekretnicu(&prazna, &okvir().raspodjele),
+        "prekretnica: banka je prazna",
+    );
+}
+
+#[test]
+fn azija_je_oznacena_u_mjesta_json() {
+    // K1b pregled M7: pravilo „Azija hrvatski 0–1" čita zastavicu `azija` iz mjesta.json.
+    let okvir = Okvir::read(&repo_dir()).expect("okvir se čita");
+    let z = &okvir.mjesta.zemlje;
+    let azija = |k: &str| z.get(k).unwrap_or_else(|| panic!("nema {k}")).azija;
+    for k in ["NP", "IN", "PH", "BD"] {
+        assert!(azija(k), "mjesta.zemlje.{k}.azija mora biti true");
+    }
+    for k in ["HR", "BA", "RS", "ME", "MK", "AT", "DE"] {
+        assert!(!azija(k), "mjesta.zemlje.{k}.azija mora biti false");
+    }
 }
