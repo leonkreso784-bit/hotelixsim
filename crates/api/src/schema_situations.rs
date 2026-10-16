@@ -50,6 +50,61 @@ pub struct SituationBody {
 pub struct CharacterBody {
     pub name: String,
     pub role: String,
+    /// Rod, dob i podrijetlo za izgled lika; `null` za sidra S1–S4 i kad ime nije u popisu imena.
+    #[schema(required = true)]
+    pub look: Option<CharacterLookBody>,
+}
+
+/// Izgled lika primjerka: web po njemu crta lice (rod: brada, frizura, naušnice; dob; raspon boje kože).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+pub struct CharacterLookBody {
+    pub gender: GenderBody,
+    /// `null` kad dob nije poznata (web je bira iz imena).
+    #[schema(required = true)]
+    pub age_group: Option<AgeGroupBody>,
+    pub origin: OriginBody,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GenderBody {
+    F,
+    M,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum AgeGroupBody {
+    Young,
+    Adult,
+    Senior,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum OriginBody {
+    Regional,
+    Foreign,
+}
+
+impl From<app::CharacterLook> for CharacterLookBody {
+    fn from(l: app::CharacterLook) -> Self {
+        CharacterLookBody {
+            gender: match l.gender {
+                app::LookGender::F => GenderBody::F,
+                app::LookGender::M => GenderBody::M,
+            },
+            age_group: l.age_group.map(|a| match a {
+                app::AgeGroup::Young => AgeGroupBody::Young,
+                app::AgeGroup::Adult => AgeGroupBody::Adult,
+                app::AgeGroup::Senior => AgeGroupBody::Senior,
+            }),
+            origin: match l.origin {
+                app::Origin::Regional => OriginBody::Regional,
+                app::Origin::Foreign => OriginBody::Foreign,
+            },
+        }
+    }
 }
 
 /// Vrsta situacije iz predloška.
@@ -180,6 +235,7 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
                     character: i.character.as_ref().map(|c| CharacterBody {
                         name: c.name.clone(),
                         role: c.role.clone(),
+                        look: c.look.map(CharacterLookBody::from),
                     }),
                     response: i.response.as_ref().map(ResponseBody::from),
                     department: i.department.clone(),
@@ -222,6 +278,9 @@ pub struct ConversationBody {
     pub situation: String,
     pub character_name: String,
     pub role: String,
+    /// Isti izgled kao u popisu situacija.
+    #[schema(required = true)]
+    pub character_look: Option<CharacterLookBody>,
     pub opening: String,
     pub lines: Vec<ChatLineBody>,
     /// Koliko poruka student još smije poslati.
@@ -238,6 +297,7 @@ impl From<&app::ConversationView> for ConversationBody {
             situation: v.situation.clone(),
             character_name: v.character_name.clone(),
             role: v.role.clone(),
+            character_look: v.character_look.map(CharacterLookBody::from),
             opening: v.opening.clone(),
             lines: v
                 .lines

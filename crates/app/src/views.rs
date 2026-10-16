@@ -7,6 +7,7 @@ use game::{
 };
 
 use crate::demo::load_game;
+use crate::look::{CharacterLook, character_look};
 use crate::{AppError, Caller, Deps, ErrorCode};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -74,6 +75,8 @@ pub struct SituationItem {
 pub struct CharacterCardView {
     pub name: String,
     pub role: String,
+    /// Rod, dob i podrijetlo za izgled; `None` kad ime nije u točno jednom popisu imena (sidra, v1).
+    pub look: Option<CharacterLook>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -338,6 +341,7 @@ async fn situations_in_month(
                     .map(|c| CharacterCardView {
                         name: c.name.clone(),
                         role: c.role.clone(),
+                        look: character_look(&g.content, &c.name, &c.role),
                     }),
                 response: record
                     .responses
