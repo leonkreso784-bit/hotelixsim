@@ -142,6 +142,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | Dokument | Svrha |
 |---|---|
 | [AGENTI.md](./workflow/AGENTI.md) | Tok rada s agentima: plan → subagenti na grani → pregledi → `/kraj`; ledger, model po poslu, paralelni agenti, CI preko `gh` |
+| [SESIJA_BANKE.md](./workflow/SESIJA_BANKE.md) | Zasebna sesija za banku ljudi (Leon 16.10.): prompt za početak (`/banka`), što smije i ne smije, stablo i grana, jedno Rust mjesto, tok po seriji, pečat nakon Leonova OK, spajanje radi glavna sesija |
 
 ## `records/` — povijest
 
