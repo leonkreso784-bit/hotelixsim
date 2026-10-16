@@ -93,7 +93,7 @@
       "zemlja": "HR",
       "mjesto": "Kraljevica",
       "jezici": [["hr", 4], ["en", 2], ["de", 1]],
-      "opis": "Završila je hotelijersku školu u Crikvenici, a jedno ljeto pomagala je u obiteljskim apartmanima u Kraljevici. U hotelu radi prvu sezonu."
+      "opis": "Završila je hotelijersku školu u Crikvenici, a jedno ljeto pomagala je u obiteljskim apartmanima u Kraljevici. Sada traži posao u većem hotelu."
     },
     {
       "id": "R-00057",
@@ -228,7 +228,7 @@
       "zemlja": "HR",
       "mjesto": "Njivice",
       "jezici": [["hr", 4], ["de", 1], ["en", 1]],
-      "opis": "Tri sezone radi kao sobar na Krku, a prije toga je petnaest godina vozio dostavno vozilo u Vinkovcima. Zanima ga posao koji traje i izvan sezone."
+      "opis": "Tri sezone radi kao sobar na Krku, a prije toga je petnaest godina bio skladištar u Vinkovcima. Zanima ga posao koji traje i izvan sezone."
     },
     {
       "id": "R-00066",
@@ -258,7 +258,7 @@
       "zemlja": "RS",
       "mjesto": "Kragujevac",
       "jezici": [["sr", 4], ["hr", 4], ["en", 2]],
-      "opis": "Završila je kuharsku školu u Kragujevcu i dvije godine radila u restoranu u centru grada. Na moru radi prvu sezonu, kao pomoćna kuharica u hladnoj kuhinji."
+      "opis": "Završila je kuharsku školu u Kragujevcu i dvije godine radila u restoranu u centru grada. Na Kvarneru bi radila kao pomoćna kuharica u hladnoj kuhinji."
     },
     {
       "id": "R-00068",
@@ -292,9 +292,9 @@
     },
     {
       "id": "R-00070",
-      "ime": "Mirjana",
+      "ime": "Mladen",
       "prezime": "Kalebić",
-      "rod": "z",
+      "rod": "m",
       "dob": 46,
       "uloga": "kuhar",
       "razina": "pocetnik",
@@ -302,8 +302,8 @@
       "podrijetlo": "regija",
       "zemlja": "HR",
       "mjesto": "Split",
-      "jezici": [["hr", 4], ["en", 2]],
-      "opis": "Petnaest godina vodila je trgovinu tekstila u Splitu, a prošle godine završila je tečaj za kuhare. Sada traži prvu sezonu u hotelskoj kuhinji."
+      "jezici": [["hr", 4], ["en", 1]],
+      "opis": "Petnaest godina bio je službenik u banci u Splitu, a prošle godine završio je tečaj za kuhare. U hotelskoj kuhinji želi raditi uz iskusnije kuhare."
     },
     {
       "id": "R-00071",
@@ -322,9 +322,9 @@
     },
     {
       "id": "R-00072",
-      "ime": "Šime",
+      "ime": "Mirta",
       "prezime": "Perica",
-      "rod": "m",
+      "rod": "z",
       "dob": 31,
       "uloga": "kuhar",
       "razina": "iskusan",
@@ -333,7 +333,7 @@
       "zemlja": "HR",
       "mjesto": "Zadar",
       "jezici": [["hr", 4], ["de", 2], ["en", 2]],
-      "opis": "Devet godina kuha u restoranima u Zadru i Biogradu, a dvije zime radio je u kuhinji na skijalištu u Austriji. Sada traži hotel čija kuhinja radi cijelu godinu."
+      "opis": "Devet godina kuha u restoranima u Zadru i Biogradu, a dvije zime radila je u kuhinji na skijalištu u Austriji. Sada traži hotel čija kuhinja radi cijelu godinu."
     },
     {
       "id": "R-00073",
@@ -347,8 +347,8 @@
       "podrijetlo": "inozemstvo",
       "zemlja": "BA",
       "mjesto": "Mostar",
-      "jezici": [["bs", 4], ["hr", 4], ["en", 1], ["de", 1]],
-      "opis": "Sedam godina radi kao konobarica u Mostaru, ljeti u restoranima uz Stari most, a zimi u kafiću u centru. Ovo joj je prva sezona izvan Bosne i Hercegovine."
+      "jezici": [["bs", 4], ["hr", 4], ["en", 2], ["de", 1]],
+      "opis": "Sedam godina radi kao konobarica u Mostaru, ljeti u restoranima uz Stari most, a zimi u kafiću u centru. Na Kvarner dolazi jer je ovdje njezina sestra radila tri sezone."
     },
     {
       "id": "R-00074",
@@ -362,7 +362,7 @@
       "podrijetlo": "inozemstvo",
       "zemlja": "MK",
       "mjesto": "Ohrid",
-      "jezici": [["mk", 4], ["en", 1], ["hr", 2]],
+      "jezici": [["mk", 4], ["en", 2], ["hr", 2]],
       "opis": "Devet godina poslužuje u hotelima i restoranima uz Ohridsko jezero, a zadnje dvije godine vodio je salu. Hrvatski je počeo učiti prošle zime, prije prvog ugovora u Opatiji."
     },
     {
@@ -422,7 +422,7 @@
       "podrijetlo": "regija",
       "zemlja": "HR",
       "mjesto": "Osijek",
-      "jezici": [["hr", 4], ["en", 1], ["de", 2]],
+      "jezici": [["hr", 4], ["en", 2], ["de", 2]],
       "opis": "Devet sezona radi kao konobar u Poreču i Vodicama, a zimi u kavani u Osijeku. Ove godine želi ostati na moru i nakon sezone."
     },
     {
@@ -553,11 +553,11 @@
       "dob": 38,
       "uloga": "referent_uprave",
       "razina": "pocetnik",
-      "godine_iskustva": 1,
+      "godine_iskustva": 0,
       "podrijetlo": "regija",
       "zemlja": "HR",
       "mjesto": "Ogulin",
-      "jezici": [["hr", 4], ["en", 2], ["de", 1]],
+      "jezici": [["hr", 4], ["en", 1], ["de", 1]],
       "opis": "Petnaest godina bio je profesionalni vojnik, a prošle godine završio je prekvalifikaciju za ekonomista. U hotelu bi radio na nabavi i ugovorima s dobavljačima."
     },
     {
@@ -572,7 +572,7 @@
       "podrijetlo": "regija",
       "zemlja": "HR",
       "mjesto": "Požega",
-      "jezici": [["hr", 4], ["en", 1], ["de", 1]],
+      "jezici": [["hr", 4], ["en", 2], ["de", 1]],
       "opis": "Završila je ekonomiju u Osijeku i dvije godine radila u knjigovodstvenom servisu u Požegi. U hotelskoj upravi želi raditi na kontroli troškova."
     },
     {
@@ -587,7 +587,7 @@
       "podrijetlo": "lokalno",
       "zemlja": "HR",
       "mjesto": "Kostrena",
-      "jezici": [["hr", 4], ["en", 2], ["it", 1]],
+      "jezici": [["hr", 4], ["en", 1], ["it", 1]],
       "opis": "Sedam godina radi u kadrovskoj službi brodogradilišta u Rijeci, a prije toga radila je u cvjećarnici. U hotelu bi vodila zapošljavanje sezonskih radnika."
     },
     {
@@ -603,7 +603,7 @@
       "zemlja": "BA",
       "mjesto": "Banja Luka",
       "jezici": [["sr", 4], ["hr", 4], ["de", 3]],
-      "opis": "Devet godina radio je kao električar na gradilištima u Bavarskoj, a prije toga kao vozač u Banjoj Luci. U hotelu bi održavao električne instalacije i rasvjetu."
+      "opis": "Devet godina radio je kao električar na gradilištima u Bavarskoj, a prije toga kao frizer u Banjoj Luci. U hotelu bi održavao električne instalacije i rasvjetu."
     },
     {
       "id": "R-00091",
@@ -617,7 +617,7 @@
       "podrijetlo": "lokalno",
       "zemlja": "HR",
       "mjesto": "Delnice",
-      "jezici": [["hr", 4], ["en", 2], ["de", 1]],
+      "jezici": [["hr", 4], ["en", 1], ["de", 1]],
       "opis": "Završio je strojarsku školu u Delnicama i dvije zime radio na održavanju žičare na Platku. Ljeti želi raditi u hotelu, a zimi se vratiti na skijalište."
     },
     {
@@ -633,7 +633,7 @@
       "zemlja": "HR",
       "mjesto": "Šibenik",
       "jezici": [["hr", 4], ["it", 1]],
-      "opis": "Dvadeset godina vozio je kamion za šibensku tvornicu, a zadnjih šest sezona održava bazene i kotlovnice u hotelima na Kvarneru."
+      "opis": "Dvadeset godina bio je poštar u Šibeniku, a zadnjih šest sezona održava bazene i kotlovnice u hotelima na Kvarneru."
     },
     {
       "id": "R-00093",
@@ -723,7 +723,7 @@
       "zemlja": "HR",
       "mjesto": "Krapina",
       "jezici": [["hr", 4], ["en", 2]],
-      "opis": "Devet godina radi kao maserka u lječilištu u Krapinskim Toplicama, a prije toga bila je frizerka. Na Kvarneru želi raditi u hotelu s bazenom i saunom."
+      "opis": "Devet godina radi kao maserka u lječilištu u Krapinskim Toplicama, a prije toga vozila je dostavni kombi u Krapini. Na Kvarneru želi raditi u hotelu s bazenom i saunom."
     },
     {
       "id": "R-00099",
