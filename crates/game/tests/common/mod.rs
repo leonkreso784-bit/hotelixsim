@@ -327,3 +327,17 @@ pub fn play_through(mut g: Game, code: &str) -> Game {
     }
     g
 }
+
+/// Oznaka odgovora `answer` situacije `code` iz sadržaja repoa (testovi ne smiju pamtiti doslovne oznake: B4 ih prepisuje).
+pub fn repo_label(code: &str, answer: usize) -> String {
+    let v = content::Snapshot::read(&content::repo_dir())
+        .unwrap()
+        .to_value();
+    let s = v["situations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["code"] == code)
+        .unwrap();
+    s["answers"][answer]["label"].as_str().unwrap().to_owned()
+}

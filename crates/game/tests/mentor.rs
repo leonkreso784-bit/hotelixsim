@@ -46,7 +46,7 @@ fn july_plan() -> PlanDto {
 }
 
 const CHEF: &str = "Šef kuhinje traži povišicu ili odlazi";
-const CHEF_ANSWER: &str = "Bonus na kraju sezone ako ostane, bez razgovora";
+const SAMPLE_CHEF_ANSWER: &str = "Bonus na kraju sezone ako ostane, bez razgovora";
 
 /// Srpanj kao iz Leonova primjera, složen ručno da su brojke poznate.
 fn sample() -> DebriefInput {
@@ -59,7 +59,7 @@ fn sample() -> DebriefInput {
         last_date: (31, MonthCode::Jul),
         hotel_name: "Hotel Lungomare".into(),
         situations: vec![DebriefSituation {
-            chosen_label: Some(CHEF_ANSWER.into()),
+            chosen_label: Some(SAMPLE_CHEF_ANSWER.into()),
             ..sit("S2", CHEF, 2)
         }],
         indices_before: [5_210, 4_850, 4_876, 5_020, 5_600],
@@ -588,7 +588,7 @@ fn real_month_input_carries_codes_cash_and_unanswered() {
     let input = g.debrief_input(h, Month::Jul).unwrap();
     let s2 = input.situations.iter().find(|s| s.code == "S2").unwrap();
     assert_eq!((s2.quality, s2.unanswered), (2, false));
-    assert_eq!(s2.chosen_label.as_deref(), Some(CHEF_ANSWER));
+    assert_eq!(s2.chosen_label, Some(repo_label("S2", 1)));
     let july_start = g.state_at(h, Month::Jul).unwrap().summary();
     assert_eq!(
         (input.plan.wage_pct, input.seasonal_before),
@@ -649,7 +649,7 @@ fn fallback_good_and_bad_name_indices_and_situations() {
     assert!(bad.contains("Indeks Recenzije pao je s 49 na 48."), "{bad}");
     assert!(
         bad.contains(&format!(
-            "Situacija „{CHEF}“ riješena je loše (2/5): izabran je odgovor „{CHEF_ANSWER}“."
+            "Situacija „{CHEF}“ riješena je loše (2/5): izabran je odgovor „{SAMPLE_CHEF_ANSWER}“."
         )),
         "{bad}"
     );
@@ -702,7 +702,7 @@ fn fallback_situation_cause_uses_title() {
 #[test]
 fn chosen_answer_is_in_facts_and_free_text_is_marked() {
     let f = facts_json(&sample());
-    assert_eq!(f["situacije"][0]["odabrani_odgovor"], CHEF_ANSWER);
+    assert_eq!(f["situacije"][0]["odabrani_odgovor"], SAMPLE_CHEF_ANSWER);
     let mut input = sample();
     input.situations = vec![
         DebriefSituation {

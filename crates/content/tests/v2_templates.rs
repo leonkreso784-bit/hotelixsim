@@ -332,6 +332,10 @@ fn department_placeholder_needs_a_department() {
             let t = tpl(v, "P-KLIMA");
             t["department"] = json!("hotel");
             t["chance"] = json!({ "base": 3 }); // pojačanje gleda stanje odjela
+            t["when"]
+                .as_object_mut()
+                .unwrap()
+                .remove("dept_condition_pts"); // uvjet kvara isto (B4a)
             t["title"] = json!("Klima ({odjel})");
         },
         "{odjel}",
@@ -649,6 +653,10 @@ fn staff_role_needs_a_department() {
             let t = tpl(v, "P-KLIMA");
             t["department"] = json!("hotel");
             t["chance"] = json!({ "base": 3 });
+            t["when"]
+                .as_object_mut()
+                .unwrap()
+                .remove("dept_condition_pts"); // uvjet kvara (B4a)
             t["roles"]["kolega"] = json!({ "from": "staff", "gender": "f" });
             t["description"] = json!(
                 "{gost.ime}, {gost.tip}, zove; {kolega.ime} je na recepciji. Soba {soba}, {temp} °C."
