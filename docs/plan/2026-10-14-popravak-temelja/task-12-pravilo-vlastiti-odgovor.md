@@ -18,6 +18,10 @@ pregled opus (a: jezgra igre i pečat; b: balans) · **Prevodi Rust:** da (sva t
   odgovor ljudskog hotela vrijedi `min(q, 4)`. Bez lika klik ostaje do 5. Roboti se ne ograničavaju (🟨).
 - **Prepisan ponuđeni odgovor = klik tog odgovora**: kvaliteta `min(q odgovora, 4)`, mehanike tog odgovora.
 - **AI ne stigne** (neutralna presuda) uz `OwnWords`: kvaliteta **4** (ADR-047 t. 4), mehanike šutnje kao danas.
+- **Zalijepljeno više ponuđenih odgovora** (kvar B13; Leon 16.10., sesija 7): tekst koji pokriva ≥ 2 ponuđene oznake (svaku ≥ 70 % njezinih
+  riječi, 🟨) **nije odluka** → kvaliteta **3**, mehanike šutnje (`unanswered`, 0 €), `pasted: true`, `nearest_answer: None`; AI presuda se ne
+  gleda (kod odlučuje, 0 tokena). Vrijedi uz **oba** pravila (`Classic` i `OwnWords`) jer je to kvar, ne pravilo; provjera prepisivanja ide
+  **prije** provjere jednog prepisanog odgovora. Mentor i student vide „zalijepio si ponuđene odgovore, to nije tvoja odluka".
 - Mentor i izvještaj kruga znaju da je ocjena ograničena; student vidi napomenu uz ponuđene odgovore.
 - Balans: put „klik najbolji" i lanac **najbolji (vlastiti) > klik najbolji > srednji > prepušteno > šutnja**.
 
@@ -79,6 +83,7 @@ pub enum AnswerRule { Classic, OwnWords }
 // GameCreated:    #[serde(default, skip_serializing_if = "Option::is_none")] pub answer_rule: Option<AnswerRule>,
 // SituationResult: #[serde(default, skip_serializing_if = "is_false")] pub capped: bool,  // pravilo je SNIZILO ocjenu
 // VerdictRecorded: #[serde(default, skip_serializing_if = "Option::is_none")] pub copied: Option<u8>, // prepisan odgovor
+// VerdictRecorded: #[serde(default, skip_serializing_if = "is_false")] pub pasted: bool, // zalijepljeno ≥ 2 odgovora (B13)
 // game::command::GameSettings { kind, situations, pub answer_rule: Option<AnswerRule> }   // None = zadano (v2 OwnWords)
 // game::own_words
 pub const CLICK_MAX_QUALITY: u8 = 4;          // klik u situaciji s likom (ADR-047 t. 1)
@@ -88,6 +93,10 @@ pub fn words(text: &str) -> Vec<String>;      // mala slova, č/ć→c, đ→d, 
 pub fn copied_answer(text: &str, labels: &[&str]) -> Option<usize>;
 // zajedničke riječi (multiskup) * 10_000 >= COPY_MATCH_BP * max(riječi teksta, riječi oznake);
 // najveći udio pobjeđuje, kod jednakih manji indeks; prazan tekst ili oznaka → None
+pub fn pasted_answers(text: &str, labels: &[&str]) -> bool;
+// B13: broj oznaka čije su riječi (multiskup) pokrivene tekstom ≥ COPY_MATCH_BP / 10_000 je ≥ 2 → true (🟨 prag i „dvije")
+// game::DebriefSituation: pasted: bool; game::mentor::SituationFact: #[serde(rename = "zalijepljeni_odgovori", ...)] pub pasted: Option<&'static str>
+// app/api (c): ResponseView.pasted / ResponseBody.pasted: bool; web Verdict.tsx: „Zalijepio si ponuđene odgovore — to nije tvoja odluka."
 // game::Game
 pub fn answer_rule(&self) -> AnswerRule;
 pub fn click_capped(&self, hotel: HotelId, code: &str) -> bool; // OwnWords ∧ Controller::Human ∧ free_text
@@ -111,6 +120,7 @@ impl Situations { pub(crate) fn writable(&self, item: &RoundItem) -> bool }
 | klik bez lika, ili robot | `q` | odgovora | ne |
 | slobodni, AI presuda, nije prepisan | iz presude (do 5) | `nearest_answer` | ne |
 | slobodni, prepisan odgovor `i` (AI ili neutralno) | `min(q_i, 4)`, `nearest_answer = i`, `copied = i` | odgovora `i` | kad `q_i > 4` |
+| slobodni, zalijepljeno ≥ 2 ponuđena odgovora (B13; AI ili neutralno; **oba pravila**) | **3**, `nearest_answer: None`, `pasted: true` | šutnje (`unanswered`), 0 € | ne (nije sniženje, nije odluka) |
 | slobodni, neutralno, nije prepisan | **4** (`Classic` 3) | šutnje (`unanswered`), 0 € | ne |
 | prepušteno / šutnja | 2 / 1 | šutnje | ne |
 
@@ -135,6 +145,10 @@ PRAVILO-a — `crates/game/tests/answer_rule.rs` (nova; v2 igra preko `common::v
     mentor činjenica `ogranicena_ocjena` postoji samo uz `capped`; neutralni tekst kaže „4/5" uz `OwnWords`.
 12. `crates/game/tests/v2_sealed.rs`: `digest_reacts_to_answer_rule` (slučaj `m7-odgovara` uz `Classic` i `OwnWords` →
     različit otisak); `digest_cases_cover_rounds_profiles_and_answer_paths` traži `capped` u barem jednom slučaju.
+13. `pasted_answers_score_neutral_three` (B13): tekst = sve ponuđene oznake spojene → `record_verdict(draft_with(5, 0))` daje `quality 3`,
+    `pasted: true`, `nearest_answer: None`, `copied: None`, učinak šutnje (0 €); isto uz `Some(Classic)`; `neutral_verdict` s takvim tekstom isto.
+    Kroz `game::own_words`: `pasted_answers_needs_two_covered_labels` (jedna oznaka + svoje riječi → `false`; dvije oznake → `true`;
+    dvije oznake od kojih je jedna pokrivena 50 % → `false`, 🟨).
 RED: novi tipovi i polja ne postoje (E0432/E0560). `v1_frozen`, `fixtures_sealed` i `mentor_v1_frozen` ostaju zeleni bez
 izmjene (dokaz da `Classic` i `skip_serializing_if` čuvaju bajtove).
 
