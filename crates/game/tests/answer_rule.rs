@@ -313,7 +313,8 @@ fn own_words_best_keeps_five() {
 fn copied_best_answer_counts_as_click() {
     let (mut g, s) = first_free(None);
     let text = shout(&s.labels[usize::from(s.best())]);
-    let v = judge(&mut g, &s, &text, 5, 0);
+    // Sud kaže 1, ali prepisan je najbolji odgovor: `nearest_answer` mora doći iz prepisivanja, ne iz suda.
+    let v = judge(&mut g, &s, &text, 5, 1);
     assert_eq!(v.copied, Some(s.best()));
     assert_eq!(v.nearest_answer, Some(s.best()));
     assert_eq!(v.quality, CLICK_MAX_QUALITY);
@@ -346,8 +347,8 @@ fn classic_rule_keeps_old_scoring() {
     let r = result_of(&res, &s);
     assert_eq!((r.quality, r.capped), (5, false));
     let (mut g, s) = first_free(classic);
-    let v = judge(&mut g, &s, &shout(&s.labels[usize::from(s.best())]), 5, 0);
-    assert_eq!((v.quality, v.copied, v.nearest_answer), (5, None, Some(0)));
+    let v = judge(&mut g, &s, &shout(&s.labels[usize::from(s.best())]), 5, 1);
+    assert_eq!((v.quality, v.copied, v.nearest_answer), (5, None, Some(1)));
     let (mut g, s) = first_free(classic);
     let v = neutral(&mut g, &s, "Odgovaram gostu svojim riječima.");
     assert_eq!(v.quality, 3);
@@ -475,7 +476,7 @@ fn pasted_answers_score_neutral_three() {
 fn pasted_answers_needs_two_covered_labels() {
     let labels = ["a1 b2 c3 d4", "e5 f6 g7 h8"];
     assert!(pasted_answers("a1 b2 c3 d4 e5 f6 g7 h8", &labels));
-    assert!(pasted_answers("H8 g7 F6 e5 d4 C3 b2 a1 i9", &labels));
+    assert!(pasted_answers("A1 B2 C3 D4, E5 F6 G7 H8 i9", &labels));
     // Jedna oznaka + svoje riječi: nije zalijepljeno.
     assert!(!pasted_answers("a1 b2 c3 d4 i9 j0 k1 l2", &labels));
     // Druga oznaka pokrivena samo 50 %.
@@ -545,4 +546,86 @@ fn debrief_marks_capped_and_copied() {
             .expect("neutralna ocjena u činjenicama mentora");
         assert!(n.contains(grade), "{rule:?}: {n}");
     }
+}
+
+#[test] // C1 (pregled): zalijepljeno se prepoznaje po parovima susjednih riječi, ne po skupu riječi
+fn pasted_answers_uses_adjacent_word_pairs() {
+    let labels = ["a1 b2 c3 d4 e5", "f6 g7 h8 i9 j0"];
+    assert!(pasted_answers("a1 b2 c3 d4 e5 f6 g7 h8 i9 j0", &labels));
+    assert!(
+        pasted_answers("F6 G7 H8 I9 J0 A1 B2 C3 D4 E5", &labels),
+        "redoslijed oznaka je slobodan"
+    );
+    // 🟨 Riječi obiju oznaka ispremetane bez ijednog zajedničkog para susjednih riječi: nije zalijepljeno.
+    assert!(!pasted_answers("e5 d4 c3 b2 a1 j0 i9 h8 g7 f6", &labels));
+    assert!(!pasted_answers("a1 f6 b2 g7 c3 h8 d4 i9 e5 j0", &labels));
+}
+
+#[test] // C1: u cijelom sadržaju jedna prepisana oznaka je prepisana, nikad zalijepljena; sve oznake spojene su zalijepljene
+fn content_labels_are_copied_never_pasted() {
+    let g = new_game_rule(SEED, None);
+    let templates = g.content.situation_templates.as_ref().unwrap();
+    assert!(templates.templates.len() >= 59);
+    for t in &templates.templates {
+        let labels: Vec<&str> = t.answers.iter().map(|a| a.label.as_str()).collect();
+        for (i, l) in labels.iter().enumerate() {
+            assert!(
+                !pasted_answers(l, &labels),
+                "{}[{i}]: jedna oznaka nije zalijepljeno",
+                t.code
+            );
+            assert_eq!(
+                copied_answer(l, &labels),
+                Some(i),
+                "{}[{i}]: prepisana oznaka",
+                t.code
+            );
+        }
+        assert!(
+            pasted_answers(&labels.join(" "), &labels),
+            "{}: sve oznake spojene",
+            t.code
+        );
+        let rev: Vec<&str> = labels.iter().rev().copied().collect();
+        assert!(
+            pasted_answers(&rev.join(" ").to_uppercase(), &labels),
+            "{}: oznake obrnutim redom, velika slova",
+            t.code
+        );
+    }
+}
+
+#[test] // C1: dobar vlastni odgovor u obveznoj S1 nije zalijepljen, ocjena je iz presude
+fn good_own_answer_in_s1_is_not_pasted() {
+    for text in [
+        "Ispričat ću se obitelji i odmah ih premjestiti u drugu sobu, ponuditi večeru na račun hotela i poslati tehničara da odmah popravi klimu.",
+        "Ispričati se obitelji i odmah ih premjestiti u drugu sobu, ponuditi večeru na račun hotela i poslati tehničara da odmah popravi klimu.",
+    ] {
+        let (mut g, s) = first_with(None, &|s| s.code == "S1");
+        let labels: Vec<&str> = s.labels.iter().map(String::as_str).collect();
+        assert!(!pasted_answers(text, &labels), "{text}");
+        let v = judge(&mut g, &s, text, 4, 1);
+        assert!(!v.pasted && v.copied.is_none(), "{text}");
+        assert_eq!((v.quality, v.nearest_answer), (4, Some(1)));
+        assert!(!g.response_pasted(me(), &s.code));
+        let res = close_and_resolve(&mut g);
+        let r = result_of(&res, &s);
+        assert_eq!((r.quality, r.capped), (4, false));
+    }
+}
+
+#[test] // I1: javni upit koji app koristi da sud ne bude pozvan
+fn response_pasted_reports_the_text_check() {
+    let (mut g, s) = first_free(None);
+    let ev = g
+        .submit_response(me(), &s.code, &s.labels.join(" "))
+        .unwrap();
+    common::apply_ev(&mut g, guest(), ev);
+    assert!(g.response_pasted(me(), &s.code));
+    let (mut g, s) = first_free(None);
+    let ev = g
+        .submit_response(me(), &s.code, "Odgovaram gostu svojim riječima.")
+        .unwrap();
+    common::apply_ev(&mut g, guest(), ev);
+    assert!(!g.response_pasted(me(), &s.code));
 }
