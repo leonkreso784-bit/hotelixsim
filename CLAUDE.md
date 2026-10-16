@@ -35,7 +35,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
   [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
   **Faza A gotova** (na GitHubu). **Faza B:** B2a–B1a spojeni 15.10.; **B1b, B4a, B4b, B4c spojeni 16.10. u `model-v2/sloj1`** (B4c f7ac7cc, CI 24/24;
-  uvjeti kvarova Smještaj ispod 80, [ADR-054](docs/records/DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md); **ništa nije pushano**, ~24 commita iza `origin`).
+  uvjeti kvarova Smještaj ispod 80, [ADR-054](docs/records/DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md); **ništa nije pushano**, 38 commita ispred `origin/model-v2/sloj1`).
   Sljedeće: **anketa o redoslijedu** (Leon želi fazu C s izgledom likova; plan je PRAVILO → L1-13 → L1-13b → L1-14 → L1-15 → C, [ADR-046](docs/records/DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md))
   i **anketa o pravilu za zalijepljene odgovore** (kvar B13), pa **PRAVILO-a/b/c** (kartica gotova, [ADR-047](docs/records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md), 🟨 [ADR-055](docs/records/DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md); `CORE_VERSION` 2.4.0 → 2.5.0).
   **Banka ljudi:** K1a (adf5a4d) i K1b spojeni u sloj1; serije-000 (10 + 10 likova) OTVORENE do Leonova pregleda; sljedeće K2 (50 + 50) usporedo

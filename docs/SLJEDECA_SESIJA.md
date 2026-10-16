@@ -2,7 +2,7 @@
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
-Spojeni su B4c (f7ac7cc), K1a (adf5a4d) i K1b u `model-v2/sloj1` (16.10.; **ništa nije pushano**, ~24 commita iza `origin` — provjeri `git log origin/main..` i `git status -sb`).
+Spojeni su B4c (f7ac7cc), K1a (adf5a4d) i K1b u `model-v2/sloj1` (16.10.; **ništa nije pushano**, 38 commita ispred `origin/model-v2/sloj1` — provjeri `git log origin/main..` i `git status -sb`).
 Plan: [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md) → „Faza B". Ledgeri (vjeruj im i git logu):
 `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` (popravak) i `.superpowers/sdd/banka-ljudi-k1/progress.md` (banka ljudi);
 kako se šalju agenti: `upute-izvodacima.md` u mapi popravka (popis CI provjera = `.github/workflows/ci.yml`). Izvještaj prošlog kraja: `kraj-16-10-6.md`.
