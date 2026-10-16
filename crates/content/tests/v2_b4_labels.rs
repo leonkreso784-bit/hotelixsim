@@ -469,10 +469,11 @@ fn breakdown_conditions_via_condition_of() {
             t["condition_of"], "rooms",
             "{code}: condition_of mora biti rooms"
         );
-        // 🟨 prag 6500 kao bojler/klima/praonica; Leon ga potvrđuje anketom nakon mjerenja (B4c, ADR-005)
+        // Prag 8000: Leonova odluka 16.10. (anketa s brojkama; 5000–7000 ruše tjednu branu J-3 jer hotel A
+        // počinje na 7500 i dobro održan nikad ne padne ispod, a ova dva kvara su mu najčešće situacije).
         assert!(
-            t["when"]["dept_condition_pts"]["below"] == 6500,
-            "{code}: when.dept_condition_pts.below mora biti 6500 (🟨, Leon potvrđuje nakon mjerenja)"
+            t["when"]["dept_condition_pts"]["below"] == 8000,
+            "{code}: when.dept_condition_pts.below mora biti točno 8000 (Leon 16.10.)"
         );
     }
     assert_eq!(
