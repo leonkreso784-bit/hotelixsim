@@ -11,4 +11,4 @@ Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
 4. **Osnovica balansa bez novog mjerenja** kad se mijenjaju samo `docs/` i CLAUDE.md (B1b koristi mjerenje B1a); ako krivo, `cmp` pokaže razliku.
 5. **K1a (čuvar):** S1–S3 i R4 ne mogu dati točno jedan retak (dopušteni `stereotip:`/`prekretnica:`); sastav testova 400/50/50; O7, J1, O6 dopuštaju
    posljedičnu grešku raspona; JSON oblik okvira (`raspodjele.jezici`, `zemlje_*`, `gosti.rod`) pretpostavka čuvara — prilagođava se u jednom krugu ako graditelj javi BLOCKED.
-6. **Prag 65 za P-BRAVE, P-CURENJE-VODE, P-DIZALO** (B4c) čeka Leonovu anketu s brojkama; do tada commit 2 B4c se ne spaja.
+6. **Prag 65 za P-BRAVE, P-CURENJE-VODE, P-DIZALO** (B4c) čeka Leonovu anketu s brojkama; do tada commit 2 B4c se ne spaja. **Riješeno: prag 80, [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md).**

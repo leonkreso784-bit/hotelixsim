@@ -6,6 +6,8 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-055"></a>[ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) | Pretpostavke 16.10. (sesija 6): kartica PRAVILO, voditelj kao čuvar, banka ljudi, target po stablu | 🟨 ČEKA LEONOV PREGLED | 2026-10-16 |
+| <a id="adr-054"></a>[ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) | Leonove odluke 16.10. (sesija 6): prag 80 za tri kvara, kopiranje odgovora, smjer iduće sesije | ✅ Leonove odluke 16.10. | 2026-10-16 |
 | <a id="adr-053"></a>[ADR-053](DECISIONS/ADR-053-pretpostavke-16-10-oznake-testovi-b4.md) | Pretpostavke 16.10. (B4): sastojak samo u najboljem, oznake iz sadržaja, graditelji tekstova opus | 🟨 ČEKA LEONOV PREGLED | 2026-10-16 |
 | <a id="adr-052"></a>[ADR-052](DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md) | Leonove odluke 16.10.: uvjet kvara klime i praonice, banka ljudi usporedo, tri odgovora za K1 | ✅ Leonove odluke 16.10. | 2026-10-16 |
 | <a id="adr-051"></a>[ADR-051](DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md) | Pretpostavke faze B (B2a–B1a): broj situacija, mjerenje težine, prostor odjela | 🟨 ČEKA LEONOV PREGLED | 2026-10-15 |

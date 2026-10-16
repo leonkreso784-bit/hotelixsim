@@ -7,7 +7,7 @@
 (`dept_condition_pts` below 6500), kao kod bojlera. P-KLIMA zadržava pojačanje ispod 50. Mjereno: B3 težina tjedno A 42,8 → 41,9 %,
 B 48,9 → 48,9 %, C 41,5 → 41,2 %; mjesečno A 25,9 → 25,7 %; oba `--check` prolaze. Spojeno s B4a (6e8ff2e).
 Isti prag za **P-BRAVE, P-CURENJE-VODE i P-DIZALO** (B4c) **nije odlučen**: s njim tjedni krug profila A pri kraju sezone nema dovoljno
-dopuštenih situacija (brana J-3 pada), pa Leon odlučuje uz brojke prije spajanja ([BACKLOG](../BACKLOG.md)).
+dopuštenih situacija (brana J-3 pada), pa Leon odlučuje uz brojke prije spajanja ([BACKLOG](../BACKLOG.md)). **Riješeno 16.10. (sesija 6): prag 80, [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 1.**
 
 **2. Banka ljudi ide usporedo s popravkom temelja** (Leon: *„možemo li poslat još jednog agenta da gradi likove u igrici po planu"*).
 Dopuna ADR-043 („samo popravak"): K1 (format, pravila, 20 primjera) je zaseban kolosijek u svom ledgeru, grana `sadrzaj/banka-ljudi`,

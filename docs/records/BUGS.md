@@ -5,6 +5,19 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-16 — sesija 6
+
+**B12. Zajednički `CARGO_TARGET_DIR` među stablima daje zastarjelu biblioteku** (simptom: `unresolved import content::ljudi` bez retka "Compiling").
+*Uzrok:* za isti crate cargo daje isti hash artefakta (put je relativan prema korijenu), a svježinu gleda po vremenu izmjene datoteka; stablo čiji su izvori
+stariji od artefakta koji je izgradilo drugo stablo dobije tuđu biblioteku. Lažno zeleno je moguće. *Pouka:* **svako stablo svoj** `CARGO_TARGET_DIR=…/hotelixsim/target/<stablo>`
+(briše se sa stablom, B11), glavno stablo `target/`; ispravlja B11 i B8 ("zajednički target"). Uz to: `pnpm lint` (biome) provjerava i `content/**/*.json`,
+JSON formatirati prije commita; `check:api` EXIT 127 = Windows 0xC0000142 pod opterećenjem (okolina, ponoviti). *Stanje:* pravilo u [AGENTI](../workflow/AGENTI.md) t. 6 i 7, [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 4.
+
+**B13. Zalijepljeni svi ponuđeni odgovori najčešće dobiju 5** (prijavio Leon igrajući; u situaciji s kuharom koji traži povišicu 20 %, sidro S2, nije).
+*Uzrok:* presuda gleda smisao teksta, a ne to da je tekst prepisan iz ponude; AI se na zbroju svih odgovora ponaša nepredvidivo. *Pouka:* prepoznavanje prepisivanja
+mora biti u **kodu** (70 % riječi), ne u AI-ju: 0 ulaznih i izlaznih tokena, uvijek isti ishod ([ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 2).
+*Stanje:* **otvoreno**, vlasnik PRAVILO-a; Leon odlučuje što dobije "zalijepio više odgovora" (klik odgovarajućeg odgovora / neutralna 3 / najlošija) anketom na početku iduće sesije.
+
 ## 2026-10-15 — popravak temelja
 
 **B11. Disk pao na 12 GB slobodnog.** *Uzrok:* svako radno stablo (do 11 istodobno, plus 6 napuštenih mapa) prevodilo je

@@ -20,7 +20,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039, 048, 051, 053 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
+  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039, 048, 051, 053, 055 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
   (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
@@ -34,19 +34,22 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **POPRAVAK TEMELJA** — samo to dok nije gotovo
   ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
   [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
-  **Faza A gotova** (na GitHubu). **Faza B:** B2a–B1a spojeni 15.10. (39e5f25); **B1b, B4a, B4b spojeni 16.10. u `model-v2/sloj1` 8d134a4
-  (CI 24/24 nakon svake; nije pushano)** → sljedeće **B4c (napola: oznake c69f022 na grani, uvjeti kvarova čekaju Leonov prag 65) → PRAVILO → L1-13**
-  ([ADR-046](docs/records/DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md), pravilo bodovanja [ADR-047](docs/records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md)) → C (igra za semestar).
-  **Banka ljudi K1 ide usporedo** (Leon 16.10., [ADR-052](docs/records/DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md)): čuvar K1a 34dd18c, graditelj prekinut s necommitanim kodom u `../hotelixsim-ljudi`; ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`.
+  **Faza A gotova** (na GitHubu). **Faza B:** B2a–B1a spojeni 15.10.; **B1b, B4a, B4b, B4c spojeni 16.10. u `model-v2/sloj1`** (B4c f7ac7cc, CI 24/24;
+  uvjeti kvarova Smještaj ispod 80, [ADR-054](docs/records/DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md); **ništa nije pushano**, ~24 commita iza `origin`).
+  Sljedeće: **anketa o redoslijedu** (Leon želi fazu C s izgledom likova; plan je PRAVILO → L1-13 → L1-13b → L1-14 → L1-15 → C, [ADR-046](docs/records/DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md))
+  i **anketa o pravilu za zalijepljene odgovore** (kvar B13), pa **PRAVILO-a/b/c** (kartica gotova, [ADR-047](docs/records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md), 🟨 [ADR-055](docs/records/DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md); `CORE_VERSION` 2.4.0 → 2.5.0).
+  **Banka ljudi:** K1a (adf5a4d) i K1b spojeni u sloj1; serije-000 (10 + 10 likova) OTVORENE do Leonova pregleda; sljedeće K2 (50 + 50) usporedo
+  ([ADR-052](docs/records/DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`).
   Odluke 15.10.: težina situacija od ravnala ([ADR-049](docs/records/DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md)),
   popravak diže odjel, bonus privremeno +1 ([ADR-050](docs/records/DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md)).
-  **Pozor:** tjedna težina B je 48,9 % uz granicu 50 % — B4 vrti `--check` 1000 tjedno i mjesečno prije spajanja.
+  **Pozor:** tjedna težina B je 48,9 % uz granicu 50 % — svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno prije spajanja.
+  **Svako radno stablo svoj `CARGO_TARGET_DIR=…/hotelixsim/target/<stablo>`** (zajednički daje zastarjelu biblioteku, B12); najviše 2 agenta prevode Rust.
   Stare probne v2 igre daju 409 (jezgra 2.4.0). Gradnja (prevođenje) samo na punjaču. Roboti su samo za demo (Leon 13.10.).
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** slijepi pregled tekstova B4a/B4b; prag 65 za P-BRAVE, P-CURENJE-VODE, P-DIZALO (anketa); imena profesora FMTU-a (banka ljudi); nacrt plaće i obuke stranih radnika iz Azije (sukob s MODEL_V2 §5.4); „oko +10" za popravak, čestoća kvarova i težina ~20 % (L1-13, uvjet C5); 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
-  ADR-ovi 🟨 (novi: ADR-051 i ADR-053 pretpostavke faze B), 🟨 tekstovi iz grane situacija, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
+- **Čeka Leona:** slijepi pregled tekstova B4a/B4b/B4c; pregled 20 likova banke ljudi (`pregled-20.html`) uz rod po ulozi i sumnjive hotele Kvarnera; pravilo za zalijepljene odgovore (B13) i redoslijed faza (C prije L1-13?) — obje ankete na početku sesije; imena profesora FMTU-a (banka ljudi); nacrt plaće i obuke stranih radnika iz Azije (sukob s MODEL_V2 §5.4); „oko +10" za popravak, čestoća kvarova i težina ~20 % (L1-13, uvjet C5); 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
+  ADR-ovi 🟨 (novi: ADR-051, 053 i 055), 🟨 tekstovi iz grane situacija, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona". Banka ljudi: [nacrt](docs/architecture/BANKA_LJUDI.md).
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
