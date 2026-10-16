@@ -35,11 +35,13 @@
    --round week --seeds 1000 --check` i isto s `--round month` (v1: `--seeds 100 --check`). Pad brane = spajanje se vraća.
    **Dvije cigle koje diraju napredak** (jezgra, sadržaj s učinkom, balans) ne rade usporedno u dva stabla; usporedno
    smiju samo cigle s odvojenim datotekama i bez utjecaja na napredak (npr. web i AI uputa). **Svako radno stablo ima
-   svoju bazu** kad pokreće poslužitelj. **Prevedeni kod je zajednički:** sva stabla koriste
-   `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target`; samo mjerenje osnovice (B8) ima privremeni target koji
-   se briše odmah nakon mjerenja. **`check:api` nakon spajanja vrti s vlastitim `CARGO_TARGET_DIR=target/check-api`** dok drugo stablo prevodi (inače pada na tuđem napola gotovom kodu; B3b, 15.10.). **Disk:** prije otvaranja stabla `df -h /c`; ispod 100 GB slobodno najprije čišćenje.
+   svoju bazu** kad pokreće poslužitelj. **Svako stablo ima svoj prevedeni kod:**
+   `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target/<stablo>` (glavno stablo `target/`); briše se sa stablom i
+   mjerenje osnovice (B8) odmah nakon mjerenja. Zajednički target među stablima daje zastarjelu biblioteku i lažno zeleno
+   ([BUGS](../records/BUGS.md) B12). **`check:api` nakon spajanja vrti s vlastitim `CARGO_TARGET_DIR=target/check-api`** dok drugo stablo prevodi (inače pada na tuđem napola gotovom kodu; B3b, 15.10.). **Disk:** prije otvaranja stabla `df -h /c`; ispod 100 GB slobodno najprije čišćenje.
    Stablo cigle se **briše isti dan kad se spoji** ([BUGS](../records/BUGS.md) B11).
 7. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
+   Prije svakog commita sadržaja: JSON formatirati (`pnpm lint`, biome, provjerava i `content/**/*.json`). `check:api` EXIT 127 = Windows 0xC0000142 pod opterećenjem (okolina): ponoviti.
 
 ## 2 · Radni ledger, brief i pretinac
 

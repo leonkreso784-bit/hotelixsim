@@ -1,6 +1,6 @@
 # Banka ljudi — radnici i gosti kao sadržaj igre
 
-> **Status:** 🟨 NACRT (14.10.); K0 ✅ (odgovori §6 u ADR-042 t. 8); **K1 u tijeku** (16.10., usporedo s popravkom: [ADR-052](../records/DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), kartica u ledgeru `.superpowers/sdd/banka-ljudi-k1/`; rod = Eurostat LFS, zemlje = MUP, uloga smije ovisiti o podrijetlu). Povod: Leonova odluka
+> **Status:** 🟨 NACRT (14.10.); K0 ✅ (odgovori §6 u ADR-042 t. 8); **K1a spojen (adf5a4d) i K1b spojen** (16.10.; serija-000 = 10 radnika + 10 gostiju, serije OTVORENE do Leonova pregleda 20 zapisa; sljedeće K2) (usporedo s popravkom: [ADR-052](../records/DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), kartica u ledgeru `.superpowers/sdd/banka-ljudi-k1/`; rod = Eurostat LFS, zemlje = MUP, uloga smije ovisiti o podrijetlu). Povod: Leonova odluka
 > [ADR-042](../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 5 — *„jako puno likova, radnike i goste,
 > ~2000 ili više, strukturno, korak po korak, oprezno"*, uz dva agenta posvećena samo tome. Ovo je prvi korak: **format i
 > pravila**. Slijede provjera sadržaja u Rustu (`crates/content`) i punjenje u serijama (§5). Arhitektura ide kroz dokument i
@@ -250,7 +250,7 @@ jedan prolaz agenta. Zaglavlje datoteke: `{"format": 1, "vrsta": "radnici", "ser
 | korak | što | tko | gotovo kada |
 |---|---|---|---|
 | **K0** | ovaj dokument → Leonovi odgovori (§6) → ADR | glavna sesija, Leon | ADR s odlukama |
-| **K1** | format u Rustu (`ljudi.rs`, `ljudi_check.rs`), `raspodjele.json`, `mjesta.json`, `zabranjeno.json`, `ljudi_sealed.rs`; **20 ručnih primjera** (10 + 10) u `serija-000` i po **jedan namjerno loš primjer za svako pravilo** (test pada s jasnom porukom) | jedan agent (Rust) | `cargo test -p content` zelen; svako pravilo §3.6 ima test |
+| **K1** ✅ 16.10. (K1a adf5a4d, K1b) | format u Rustu (`ljudi.rs`, `ljudi_check.rs`), `raspodjele.json`, `mjesta.json`, `zabranjeno.json`, `ljudi_sealed.rs`; **20 ručnih primjera** (10 + 10) u `serija-000` i po **jedan namjerno loš primjer za svako pravilo** (test pada s jasnom porukom) | jedan agent (Rust) | `cargo test -p content` zelen; svako pravilo §3.6 ima test |
 | **K2** | prva serija: **50 radnika + 50 gostiju** | agent RADNICI, agent GOSTI | Leon pregleda **svih 100**; nalazi postaju pravila (stroj) ili upute agentima |
 | **K3** | serije po 50, svaka uz provjeru i izvještaj raspodjela | oba agenta, paralelno | „serija gotova" (§5.3) |
 | **K4** | pečat prekretnice (M1, M2, M3): `banka.json` nova verzija, raspodjela banke ≤ 3 p. b. od cilja | glavna sesija | izvještaj zelen; balans `--check` |
