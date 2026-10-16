@@ -52,7 +52,11 @@ fn robot_game(
         &snap,
         GuestId(Uuid::from_u128(99)),
         ids,
-        GameSettings { kind, situations },
+        GameSettings {
+            kind,
+            situations,
+            answer_rule: None,
+        },
     )
     .unwrap();
     let Some((actor, GameEvent::GameCreated(mut created))) = events.into_iter().next() else {

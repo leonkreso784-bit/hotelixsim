@@ -20,6 +20,7 @@ fn v2_events_from(snap: &Snapshot, kind: PeriodKind) -> Vec<Recorded> {
         GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()
@@ -73,6 +74,7 @@ fn v1_with_weeks_is_invalid_settings() {
         GameSettings {
             kind: PeriodKind::Week,
             situations: None,
+            answer_rule: None,
         },
     );
     assert_eq!(r.unwrap_err(), GameError::InvalidSettings);

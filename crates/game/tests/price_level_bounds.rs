@@ -21,6 +21,7 @@ fn fold(snap: &Snapshot) -> Game {
         GameSettings {
             kind: PeriodKind::Week,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()

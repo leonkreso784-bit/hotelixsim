@@ -20,6 +20,7 @@ mod mentor;
 mod mentor_check;
 mod mentor_v2;
 mod model;
+pub mod own_words;
 pub mod renewal;
 mod resolve;
 mod round;

@@ -18,6 +18,7 @@ use crate::mentor_v2::{
     FinanceNote, InvestmentFacts, equipment_rows, fallback_notes, finance_note, investment_facts,
     renewal_plan_text, revenue_rows,
 };
+use crate::own_words::RuleFacts;
 use crate::round::RoundKey;
 
 const MINUS: char = '\u{2212}';
@@ -170,8 +171,9 @@ pub struct SituationFact {
     pub delegated: bool,
     #[serde(rename = "obrazlozenje", skip_serializing_if = "Option::is_none")]
     pub rationale: Option<String>,
-    #[serde(rename = "neutralna_ocjena", skip_serializing_if = "Option::is_none")]
-    pub neutral: Option<&'static str>,
+    /// Činjenice o neutralnoj, ograničenoj i zalijepljenoj ocjeni (`own_words`).
+    #[serde(flatten)]
+    pub rule: RuleFacts,
     #[serde(skip)]
     pub quality: u8,
     /// Oznaka ponuđenog odgovora (bez slobodnog), za mentora bez AI-ja.
@@ -1073,9 +1075,7 @@ pub fn debrief_facts(input: &DebriefInput) -> DebriefFacts {
             unanswered: s.unanswered,
             delegated: s.delegated,
             rationale: s.rationale.clone(),
-            neutral: s.neutral.then_some(
-                "AI nije stigao ocijeniti odgovor, pa je dobio srednju ocjenu 3/5; odgovor čeka pregled.",
-            ),
+            rule: RuleFacts::of(s),
             quality: s.quality,
             chosen_label: s.chosen_label.clone(),
         })
@@ -1299,7 +1299,7 @@ pub fn fallback_debrief(input: &DebriefInput) -> String {
         out.push_str(&format!("Što probati {when}\n{}\n\n", advice(w.index)));
     }
 
-    for s in f.situations.iter().filter(|s| s.neutral.is_some()) {
+    for s in f.situations.iter().filter(|s| s.rule.neutral.is_some()) {
         out.push_str(&format!(
             "Napomena: situacija „{}“ dobila je neutralnu ocjenu {} jer odgovor nije stigao biti ocijenjen; čeka pregled.\n\n",
             s.title, s.grade

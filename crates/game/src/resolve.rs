@@ -7,6 +7,7 @@ use crate::dto::indices_dto;
 use crate::error::{GameError, corrupt};
 use crate::event::{GameEvent, HotelResolution, Recorded, RoundResolved, SituationResult};
 use crate::game::{Game, HotelRecord, RoundStatus};
+use crate::own_words::CLICK_MAX_QUALITY;
 use crate::round::RoundKey;
 use crate::verdict::NEUTRAL_DEADLINE;
 
@@ -48,17 +49,29 @@ impl Game {
                     .answers
                     .get(usize::from(i))
                     .ok_or_else(|| corrupt("indeks odgovora"))?;
+                // ADR-047: klik u situaciji s likom (ljudski hotel, `OwnWords`) vrijedi najviše 4.
+                let quality = if self.click_capped(h.setup.hotel_id, &t.code) {
+                    a.quality.min(CLICK_MAX_QUALITY)
+                } else {
+                    a.quality
+                };
                 results.push(SituationResult {
                     code: t.code.clone(),
                     answer: Some(i),
-                    quality: a.quality,
+                    quality,
                     free_text: false,
                     delegated: false,
+                    capped: quality < a.quality,
                 });
-                push(SituationOutcome::from_answer(&t.code, a));
+                push(SituationOutcome {
+                    code: t.code.clone(),
+                    mechanics: a.mechanics.clone(),
+                    quality,
+                });
             } else if let Some(fr) = h.responses.get(&key) {
                 // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
-                // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
+                // presuda (`None`) nosi mehanike `unanswered`: uz `Classic` kvaliteta je 3 (učinak `(q − 3)` je 0),
+                // uz `OwnWords` 4 (učinak `(4 − 3)` mehanika šutnje, namjerno), zalijepljeno uvijek 3; trošak
                 // kompenzacije iz `unanswered` je 0 €. Situacija „samo nagrada“ (v2, S-4) ni tada ne snižava
                 // pokazatelje (`Model::situation_outcome`).
                 let v = fr
@@ -74,12 +87,19 @@ impl Game {
                         .clone(),
                     None => t.unanswered.clone(),
                 };
+                // Prepisan ponuđeni odgovor vrijedi kao klik; `capped` kad mu je ocjena stvarno snižena.
+                let capped = v.copied.is_some_and(|i| {
+                    t.answers
+                        .get(usize::from(i))
+                        .is_some_and(|a| a.quality > v.quality)
+                });
                 results.push(SituationResult {
                     code: t.code.clone(),
                     answer: None,
                     quality: v.quality,
                     free_text: true,
                     delegated: false,
+                    capped,
                 });
                 let o = SituationOutcome {
                     code: t.code.clone(),
@@ -100,6 +120,7 @@ impl Game {
                     quality: o.quality,
                     free_text: false,
                     delegated: true,
+                    capped: false,
                 });
                 push(o);
             } else {
@@ -110,6 +131,7 @@ impl Game {
                     quality: o.quality,
                     free_text: false,
                     delegated: false,
+                    capped: false,
                 });
                 push(o);
             }

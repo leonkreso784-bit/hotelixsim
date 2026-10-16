@@ -70,6 +70,15 @@ pub struct DebriefSituation {
     /// mentora stare v1 igre ostane bajt-isti (`mentor_v1_frozen.rs`).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub delegated: bool,
+    /// Ocjenu je snizilo pravilo `OwnWords` (klik ili prepisan odgovor q 5 → 4). Izostavljeno kad je `false`.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub capped: bool,
+    /// Student je prepisao ponuđeni odgovor (vrijedi kao klik). Izostavljeno kad je `false`.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub copied: bool,
+    /// Student je zalijepio ≥ 2 ponuđena odgovora (B13). Izostavljeno kad je `false`.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub pasted: bool,
     /// Oznaka ponuđenog odgovora koji je student izabrao; `None` za slobodan odgovor i bez odgovora.
     pub chosen_label: Option<String>,
     /// Ime odjela izvučenog primjerka (npr. „Smještaj"); `None` za situaciju cijelog hotela, sidra S1–S4 i v1
@@ -290,9 +299,12 @@ impl Game {
                 quality: s.quality,
                 free_text: s.free_text,
                 rationale: verdict.map(|v| v.rationale.clone()),
-                neutral: verdict.is_some_and(|v| v.nearest_answer.is_none()),
+                neutral: verdict.is_some_and(|v| v.nearest_answer.is_none() && !v.pasted),
                 unanswered: s.answer.is_none() && !s.free_text && !s.delegated,
                 delegated: s.delegated,
+                capped: s.capped,
+                copied: verdict.is_some_and(|v| v.copied.is_some()),
+                pasted: verdict.is_some_and(|v| v.pasted),
                 chosen_label,
                 department,
             });

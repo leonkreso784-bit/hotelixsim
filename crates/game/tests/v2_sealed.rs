@@ -33,14 +33,17 @@ struct Case {
     human: Human,
     /// Broj situacija iz postavki igre (niski/srednji/visoki); `None` = zadani za vrstu kruga.
     situations: Option<(u8, u8, u8)>,
+    /// Pravilo ocjene vlastitog odgovora (ADR-047); `None` = zadano za nove v2 igre (`OwnWords`).
+    rule: Option<AnswerRule>,
 }
-const CASES: [Case; 10] = [
+const CASES: [Case; 11] = [
     Case {
         name: "t7-odgovara",
         seed: 7,
         kind: PeriodKind::Week,
         human: Human::Answers,
         situations: None,
+        rule: None,
     },
     Case {
         name: "m7-odgovara",
@@ -48,6 +51,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Month,
         human: Human::Answers,
         situations: None,
+        rule: None,
     },
     Case {
         name: "t42-sutnja",
@@ -55,6 +59,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Week,
         human: Human::Silent,
         situations: None,
+        rule: None,
     },
     Case {
         name: "m42-sutnja",
@@ -62,6 +67,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Month,
         human: Human::Silent,
         situations: None,
+        rule: None,
     },
     Case {
         name: "t2026-odgovara",
@@ -69,6 +75,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Week,
         human: Human::Answers,
         situations: None,
+        rule: None,
     },
     Case {
         name: "m2026-sutnja",
@@ -76,6 +83,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Month,
         human: Human::Silent,
         situations: None,
+        rule: None,
     },
     Case {
         name: "t7-broj-578",
@@ -83,6 +91,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Week,
         human: Human::Answers,
         situations: Some((5, 7, 8)),
+        rule: None,
     },
     Case {
         name: "m42-broj-333",
@@ -90,6 +99,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Month,
         human: Human::Silent,
         situations: Some((3, 3, 3)),
+        rule: None,
     },
     Case {
         name: "t42-slobodni",
@@ -97,6 +107,7 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Week,
         human: Human::FreeAnswer,
         situations: None,
+        rule: None,
     },
     Case {
         name: "m42-plan",
@@ -104,6 +115,16 @@ const CASES: [Case; 10] = [
         kind: PeriodKind::Month,
         human: Human::Plans,
         situations: None,
+        rule: None,
+    },
+    // Isti slučaj kao `m7-odgovara`, ali uz staro pravilo: otisak mora razlikovati pravilo ocjene.
+    Case {
+        name: "m7-odgovara-klasicno",
+        seed: 7,
+        kind: PeriodKind::Month,
+        human: Human::Answers,
+        situations: None,
+        rule: Some(AnswerRule::Classic),
     },
 ];
 #[derive(Serialize, Deserialize)]
@@ -171,6 +192,7 @@ fn play(snap: &Snapshot, c: &Case) -> Game {
         situations: c.situations.map(|(low, mid, high)| {
             SituationCounts::new(low, mid, high).expect("dopuštena postavka slučaja")
         }),
+        answer_rule: c.rule,
     };
     let (mut g, me, guest) = (
         common::v2_game_with(snap, c.seed, settings),
@@ -227,6 +249,7 @@ fn digest(g: &Game) -> String {
                     "hotels": c.hotels,
                     "rounds": c.rounds,
                     "situation_counts": c.situation_counts,
+                    "answer_rule": c.answer_rule,
                 })
             }
             e => e.to_payload(),
@@ -288,6 +311,7 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
     let snap = Snapshot::from_value(&frozen_value()).unwrap();
     let me = common::hotel_ids()[0];
     let (mut answered, mut delegated, mut silent) = (0, 0, 0);
+    let mut capped = 0;
     for c in &CASES {
         let g = play(&snap, c);
         let profiles: BTreeSet<&str> = g.hotels.iter().map(|h| h.setup.profile.as_str()).collect();
@@ -303,6 +327,13 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
                         .filter(|h| h.hotel_id == me)
                         .flat_map(|h| &h.situations)
                         .filter(|s| s.answer.is_none())
+                        .count();
+                    capped += rr
+                        .hotels
+                        .iter()
+                        .filter(|h| h.hotel_id == me)
+                        .flat_map(|h| &h.situations)
+                        .filter(|s| s.capped)
                         .count()
                 }
                 _ => {}
@@ -312,6 +343,11 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
     assert!(
         answered > 0 && delegated > 0 && silent > 0,
         "odgovori {answered}, prepušteno {delegated}, šutnja {silent}"
+    );
+    // ADR-047: pečat mora igrati i put kojim pravilo snižava ocjenu (klik na q 5 u situaciji s likom).
+    assert!(
+        capped > 0,
+        "nijedan slučaj pečata nema ograničen klik (capped)"
     );
     assert!(
         CASES.iter().any(|c| c.kind == PeriodKind::Week)
@@ -400,6 +436,34 @@ fn digest_reacts_to_a_rule_change() {
     assert_ne!(digest(&play(&a, &CASES[0])), digest(&play(&b, &CASES[0])));
 }
 
+#[test] // 4a: otisak reagira na pravilo ocjene (isti slučaj, drugo pravilo; ADR-047)
+fn digest_reacts_to_answer_rule() {
+    let snap = Snapshot::from_value(&frozen_value()).unwrap();
+    let case = |rule| Case {
+        name: "m7-isti",
+        seed: 7,
+        kind: PeriodKind::Month,
+        human: Human::Answers,
+        situations: None,
+        rule,
+    };
+    let (own, classic) = (
+        case(Some(AnswerRule::OwnWords)),
+        case(Some(AnswerRule::Classic)),
+    );
+    assert_ne!(
+        digest(&play(&snap, &own)),
+        digest(&play(&snap, &classic)),
+        "OwnWords i Classic moraju dati različit otisak"
+    );
+    // Zadano za novu v2 igru je OwnWords: isti obračun i isti zapis kao izričiti OwnWords.
+    assert_eq!(
+        digest(&play(&snap, &own)),
+        digest(&play(&snap, &case(None))),
+        "None (zadano) mora biti jednako OwnWords"
+    );
+}
+
 #[test] // 5: otisak reagira na broj situacija iz postavki (isti slučaj, drugi broj)
 fn digest_reacts_to_situation_counts() {
     let snap = Snapshot::from_value(&frozen_value()).unwrap();
@@ -409,6 +473,7 @@ fn digest_reacts_to_situation_counts() {
         kind: PeriodKind::Month,
         human: Human::Silent,
         situations,
+        rule: None,
     };
     let (own, default) = (case(Some((3, 3, 3))), case(None));
     assert_ne!(

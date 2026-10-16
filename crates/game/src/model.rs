@@ -23,7 +23,7 @@ use crate::costs::v2_costs;
 use crate::dto::{MonthReportDto, PlanDto};
 use crate::dto_v2::DetailDto;
 use crate::error::{GameError, corrupt};
-use crate::event::{HotelResolution, RoundDefDto, SituationCountsDto};
+use crate::event::{AnswerRule, HotelResolution, RoundDefDto, SituationCountsDto};
 use crate::renewal::renewal_choices;
 use crate::round::RoundKey;
 
@@ -164,6 +164,19 @@ impl Model {
                 s.unwrap_or_else(|| SituationCounts::default_for(kind))
                     .into(),
             )),
+        }
+    }
+
+    /// Pravilo ocjene za `GameCreated.answer_rule`: v2 ga zapisuje uvijek izričito (zadano `OwnWords`, ADR-047), v1
+    /// nikad; v1 s izričitim pravilom nije dopuštena (`InvalidSettings`).
+    pub(crate) fn answer_rule(
+        self,
+        rule: Option<AnswerRule>,
+    ) -> Result<Option<AnswerRule>, GameError> {
+        match (self, rule) {
+            (Model::V1, None) => Ok(None),
+            (Model::V1, Some(_)) => Err(GameError::InvalidSettings),
+            (Model::V2, r) => Ok(Some(r.unwrap_or(AnswerRule::OwnWords))),
         }
     }
 

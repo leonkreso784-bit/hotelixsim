@@ -32,6 +32,7 @@ fn events_of(snap: &Snapshot, seed: u64, kind: PeriodKind) -> Vec<Recorded> {
         GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()

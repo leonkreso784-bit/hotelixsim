@@ -231,6 +231,7 @@ pub fn v2_game_from(snap: &Snapshot, seed: u64, kind: sim_hotel_v2::PeriodKind) 
         game::command::GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )
 }

@@ -10,8 +10,8 @@ use crate::drawn::DrawnInstance;
 use crate::dto::PlanDto;
 use crate::error::{GameError, corrupt};
 use crate::event::{
-    Controller, DebriefRecorded, GameCreated, GameEvent, HotelResolution, HotelSetup, Recorded,
-    RoundResolved, SeasonDebriefRecorded, VerdictRecorded,
+    AnswerRule, Controller, DebriefRecorded, GameCreated, GameEvent, HotelResolution, HotelSetup,
+    Recorded, RoundResolved, SeasonDebriefRecorded, VerdictRecorded,
 };
 use crate::ids::{GameId, HotelId};
 use crate::model::{CorePlan, CoreRefs, CoreState, Model, RoundInfo};
@@ -105,6 +105,8 @@ pub struct Game {
     rounds_info: Vec<RoundInfo>,
     /// Broj situacija po krugu (`GameCreated.situation_counts`; stari dnevnik: zadano za vrstu kruga).
     situation_counts: SituationCounts,
+    /// Pravilo ocjene vlastitog odgovora (`GameCreated.answer_rule`; stari dnevnik i v1: `Classic`).
+    answer_rule: AnswerRule,
     refs: BTreeMap<Category, CoreRefs>,
 }
 
@@ -204,6 +206,7 @@ impl Game {
             drawn_rounds: BTreeSet::new(),
             rounds_info,
             situation_counts,
+            answer_rule: c.answer_rule.unwrap_or(AnswerRule::Classic),
             refs,
         })
     }
@@ -463,6 +466,20 @@ impl Game {
     /// Broj situacija po krugu za cijelu igru (postavka iz `GameCreated`).
     pub fn situation_counts(&self) -> SituationCounts {
         self.situation_counts
+    }
+
+    /// Pravilo ocjene vlastitog odgovora (ADR-047).
+    pub fn answer_rule(&self) -> AnswerRule {
+        self.answer_rule
+    }
+
+    /// Klik na ponuđeni odgovor ove situacije je ograničen na 4: `OwnWords`, ljudski hotel i situacija s likom.
+    pub fn click_capped(&self, hotel: HotelId, code: &str) -> bool {
+        self.answer_rule == AnswerRule::OwnWords
+            && self
+                .hotel(hotel)
+                .is_ok_and(|h| matches!(h.setup.controller, Controller::Human { .. }))
+            && self.ai_entry_for(hotel, code).is_some_and(|a| a.free_text)
     }
 
     /// Pozicija kruga u igri (od 0).

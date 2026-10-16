@@ -4,9 +4,13 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::GameError;
-use crate::event::{AiMeta, AiSource, CriterionVerdict, GameEvent, VerdictRecorded};
+use crate::event::{AiMeta, AiSource, AnswerRule, CriterionVerdict, GameEvent, VerdictRecorded};
 use crate::game::{Game, RoundStatus};
 use crate::ids::HotelId;
+use crate::own_words::{
+    CLICK_MAX_QUALITY, NEUTRAL_OWN_WORDS_QUALITY, PASTED_QUALITY, PASTED_RATIONALE, copied_answer,
+    pasted_answers,
+};
 use crate::round::RoundKey;
 
 /// Razlog neutralne presude kad rok zatvaranja istekne (ARHITEKTURA §8.3 korak 5).
@@ -204,6 +208,39 @@ impl Game {
         Ok(!has_verdict)
     }
 
+    /// Što je student napisao u odnosu na ponuđene odgovore (ADR-047, B13). Zalijepljeno ≥ 2 odgovora vrijedi uz oba
+    /// pravila; prepisan jedan odgovor samo uz `OwnWords`. Provjera zalijepljenog ide prije prepisivanja.
+    fn text_check(&self, hotel: HotelId, code: &str, m: RoundKey) -> Result<TextCheck, GameError> {
+        let h = self.hotel(hotel)?;
+        let Some(fr) = h.responses.get(&(m, code.to_owned())) else {
+            return Ok(TextCheck::Own);
+        };
+        let t = self
+            .hotel_situations(h, m)
+            .into_iter()
+            .find(|t| t.code == code)
+            .ok_or(GameError::UnknownSituation)?;
+        let labels: Vec<&str> = t.answers.iter().map(|a| a.label.as_str()).collect();
+        if pasted_answers(&fr.text, &labels) {
+            return Ok(TextCheck::Pasted);
+        }
+        if self.answer_rule() == AnswerRule::OwnWords
+            && let Some(i) = copied_answer(&fr.text, &labels)
+            && let Some(a) = t.answers.get(i)
+            && let Ok(idx) = u8::try_from(i)
+        {
+            return Ok(TextCheck::Copied(idx, a.quality.min(CLICK_MAX_QUALITY)));
+        }
+        Ok(TextCheck::Own)
+    }
+
+    /// Je li zapisani slobodni odgovor zalijepljen (≥ 2 ponuđena odgovora, B13)? Tada sud nije potreban: kod odlučuje.
+    pub fn response_pasted(&self, hotel: HotelId, code: &str) -> bool {
+        self.response_slot(hotel, code)
+            .and_then(|(m, _)| self.text_check(hotel, code, m))
+            .is_ok_and(|c| matches!(c, TextCheck::Pasted))
+    }
+
     /// Upis presude: `VerdictRecorded` dok odgovor čeka (runda `Open`/`Closing`), inače `VerdictLate`.
     pub fn record_verdict(
         &self,
@@ -213,7 +250,7 @@ impl Game {
         meta: AiMeta,
     ) -> Result<GameEvent, GameError> {
         let (m, has_verdict) = self.response_slot(hotel, code)?;
-        let rec = VerdictRecorded {
+        let mut rec = VerdictRecorded {
             hotel_id: hotel,
             month: m,
             situation: code.to_owned(),
@@ -224,7 +261,24 @@ impl Game {
             source: AiSource::Ai,
             meta: Some(meta),
             review: false,
+            copied: None,
+            pasted: false,
         };
+        match self.text_check(hotel, code, m)? {
+            TextCheck::Own => {}
+            TextCheck::Copied(i, q) => {
+                rec.nearest_answer = Some(i);
+                rec.quality = q;
+                rec.copied = Some(i);
+            }
+            TextCheck::Pasted => {
+                rec.criteria = Vec::new();
+                rec.nearest_answer = None;
+                rec.quality = PASTED_QUALITY;
+                rec.rationale = PASTED_RATIONALE.to_owned();
+                rec.pasted = true;
+            }
+        }
         let waiting = matches!(self.status(m)?, RoundStatus::Open | RoundStatus::Closing);
         Ok(if waiting && !has_verdict {
             GameEvent::VerdictRecorded(rec)
@@ -233,7 +287,8 @@ impl Game {
         })
     }
 
-    /// Neutralna presuda po pravilu (ARHITEKTURA §8.3 korak 5): mehanike `unanswered`, kvaliteta 3, na pregled.
+    /// Neutralna presuda po pravilu (ARHITEKTURA §8.3 korak 5): mehanike `unanswered`, na pregled. Kvaliteta je 3
+    /// (`Classic`) ili 4 (`OwnWords`, ADR-047 t. 4); prepisan odgovor vrijedi kao klik, zalijepljeni kao šutnja 3.
     pub fn neutral_verdict(
         &self,
         hotel: HotelId,
@@ -241,18 +296,39 @@ impl Game {
         reason: &str,
     ) -> Result<GameEvent, GameError> {
         let (m, _) = self.response_slot(hotel, code)?;
-        Ok(GameEvent::VerdictRecorded(VerdictRecorded {
+        let quality = match self.answer_rule() {
+            AnswerRule::Classic => NEUTRAL_QUALITY,
+            AnswerRule::OwnWords => NEUTRAL_OWN_WORDS_QUALITY,
+        };
+        let mut rec = VerdictRecorded {
             hotel_id: hotel,
             month: m,
             situation: code.to_owned(),
             criteria: Vec::new(),
             nearest_answer: None,
-            quality: NEUTRAL_QUALITY,
+            quality,
             rationale: reason.to_owned(),
             source: AiSource::Fallback,
             meta: None,
             review: true,
-        }))
+            copied: None,
+            pasted: false,
+        };
+        match self.text_check(hotel, code, m)? {
+            TextCheck::Own => {}
+            TextCheck::Copied(i, q) => {
+                rec.nearest_answer = Some(i);
+                rec.quality = q;
+                rec.copied = Some(i);
+            }
+            TextCheck::Pasted => {
+                rec.quality = PASTED_QUALITY;
+                rec.rationale = PASTED_RATIONALE.to_owned();
+                rec.review = false;
+                rec.pasted = true;
+            }
+        }
+        Ok(GameEvent::VerdictRecorded(rec))
     }
 
     /// Slobodni odgovori u mjesecu `m` bez presude: hotelima redom slota, situacijama redom iz sadržaja.
@@ -271,4 +347,12 @@ impl Game {
         }
         out
     }
+}
+
+/// Ishod provjere teksta slobodnog odgovora (vidi `Game::text_check`).
+enum TextCheck {
+    Own,
+    /// Prepisan ponuđeni odgovor (redni broj, kvaliteta kao klik).
+    Copied(u8, u8),
+    Pasted,
 }

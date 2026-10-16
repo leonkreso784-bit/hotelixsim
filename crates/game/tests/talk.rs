@@ -124,6 +124,8 @@ fn new_events_roundtrip_through_payload() {
         source: AiSource::Ai,
         meta: Some(meta.clone()),
         review: false,
+        copied: None,
+        pasted: false,
     };
     let all = vec![
         GameEvent::ChatMessageSent(ChatMessageSent {

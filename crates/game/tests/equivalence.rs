@@ -10,7 +10,14 @@ fn v2_monthly_degenerate_game_matches_v1_game() {
     let v1 = Snapshot::read(&repo_dir()).unwrap();
     let v2 = v1.degenerate_v2();
     let play = |snap: &Snapshot| {
-        let mut g = Game::fold(&common::new_game_events(snap)).unwrap();
+        // Test ne govori o pravilu ocjene: v2 igra igra po starom pravilu (`Classic`), kao v1.
+        let mut events = common::new_game_events(snap);
+        if let GameEvent::GameCreated(c) = &mut events[0].event
+            && c.answer_rule.is_some()
+        {
+            c.answer_rule = Some(event::AnswerRule::Classic);
+        }
+        let mut g = Game::fold(&events).unwrap();
         let h = common::hotel_ids()[0];
         let me = Actor::Guest(common::GUEST);
         let ev = g.choose_answer(h, "S1", 0).unwrap();
