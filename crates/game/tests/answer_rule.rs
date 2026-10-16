@@ -104,11 +104,9 @@ fn first_with(rule: Option<AnswerRule>, pick: &dyn Fn(&Sit) -> bool) -> (Game, S
     panic!("nema tražene situacije u sezoni");
 }
 
-/// Situacija s likom (smije se pisati) kojoj je najbolji odgovor q 5 i nije prvi.
+/// Situacija s likom (smije se pisati) kojoj je najbolji odgovor q 5 (u sadržaju v2 najbolji je uvijek prvi; izbor indeksa čuva test `copied_answer_prefers_highest_share_then_lowest_index`).
 fn first_free(rule: Option<AnswerRule>) -> (Game, Sit) {
-    first_with(rule, &|s| {
-        s.free && s.best_q() == 5 && s.best() != 0 && s.labels.len() >= 2
-    })
+    first_with(rule, &|s| s.free && s.best_q() == 5 && s.labels.len() >= 2)
 }
 
 /// Situacija bez lika kojoj je najbolji odgovor q 5.
