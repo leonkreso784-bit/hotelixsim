@@ -40,7 +40,7 @@ fn repo_codes(p: Principle) -> Vec<String> {
 fn repo_content_loads_checked_with_known_debt() {
     Snapshot::read_v2_checked(&repo_dir()).unwrap();
 } // 1
-#[test] // 2: dug samo za tri nova načela; stropovi = stanje 14.10.
+#[test] // 2: dug samo za tri nova načela; stropovi = stanje poslije B4c (dug oznaka i uvjeta kvarova je 0)
 fn known_debt_names_existing_templates_and_never_grows() {
     let v = v2_value();
     let codes: Vec<&str> = v["v2"]["situation_templates"]["templates"]
@@ -50,8 +50,8 @@ fn known_debt_names_existing_templates_and_never_grows() {
         .map(|t| t["code"].as_str().unwrap())
         .collect();
     let ceiling = [
-        (LabelLengths, 18),
-        (BreakdownCondition, 4),
+        (LabelLengths, 0),
+        (BreakdownCondition, 0),
         (SilenceNotBetter, 16),
     ];
     for (p, list) in KNOWN_VIOLATIONS {
@@ -158,7 +158,20 @@ fn breakdown_needs_bad_state_or_external_cause() {
         !hit(|_| {}, BreakdownCondition, "P-OLUJA"),
         "ADR-042 t. 7: vanjski događaj"
     );
-    assert!(hit(|_| {}, BreakdownCondition, "P-BRAVE"), "dug do Faze B");
+    // kvar bez uvjeta i bez vanjskog uzroka krši načelo (neovisno o tome što repo ima poslije B4c)
+    assert!(
+        hit(
+            |v| {
+                let o = tpl(v, "P-BRAVE").as_object_mut().unwrap();
+                o.remove("when");
+                o.remove("condition_of");
+                o.remove("external_cause");
+            },
+            BreakdownCondition,
+            "P-BRAVE"
+        ),
+        "kvar bez uvjeta"
+    );
     let mut v = v2_value();
     tpl(&mut v, "P-NOVINAR")["external_cause"] = json!(true);
     let r = Snapshot::from_value(&v).unwrap().build();
@@ -222,6 +235,8 @@ fn silence_is_not_better_than_the_worst_answer() {
 #[test] // 13 (B1b): uvjet stanja vrijedi samo na prostoru koji se troši
 fn breakdown_needs_a_space_that_wears() {
     let below = |v: &mut Value, code: &str| {
+        // početno stanje neovisno o repou (poslije B4c kvarovi već imaju condition_of)
+        tpl(v, code).as_object_mut().unwrap().remove("condition_of");
         tpl(v, code)["when"] = json!({"dept_condition_pts": {"below": 6000}});
     };
     // P-BRAVE je na Održavanju (ne troši se): uvjet na vlastitom odjelu nije uvjet.
@@ -255,7 +270,11 @@ fn breakdown_needs_a_space_that_wears() {
     );
     assert!(
         hit(
-            |v| tpl(v, "P-DIZALO")["condition_of"] = json!("rooms"),
+            |v| {
+                let t = tpl(v, "P-DIZALO");
+                t.as_object_mut().unwrap().remove("when");
+                t["condition_of"] = json!("rooms");
+            },
             BreakdownCondition,
             "P-DIZALO"
         ),

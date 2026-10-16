@@ -1,6 +1,6 @@
-//! Čuvar cigle B4 (prepis oznaka odgovora i uvjeta kvarova), porcije B4a i B4b. Kartica:
+//! Čuvar cigle B4 (prepis oznaka odgovora i uvjeta kvarova), porcije B4a, B4b i B4c. Kartica:
 //! `docs/plan/2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md`.
-//! b4c_ varijante T3 i T9 piše čuvar B4c.
+//! Porcija B4c: `b4c_batch_labels_have_no_debt` (T3) i `breakdown_conditions_via_condition_of` (T9).
 use content::{
     KNOWN_VIOLATIONS,
     Principle::{self, *},
@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 /// Isto što i `LABEL_RATIO_PCT` u `templates_principles.rs` (modul nije javan; graditelj ga ne mora izvoziti).
 const LABEL_RATIO_PCT: usize = 150;
 
-/// Otisak kostura (sve osim oznaka i dopuštenih uvjeta) izračunat iz neizmijenjenih datoteka stanja cc4a0f2.
+/// Otisak kostura (sve osim oznaka i dopuštenih uvjeta) izračunat iz neizmijenjenih datoteka stanja cc4a0f2; nepromijenjen i u B4c (8d134a4): dopuštena polja B4c u neizmijenjenom stanju ne postoje, pa ih brisanje ne mijenja.
 const SKELETON_SHA: &str =
     "sha256:2ad7856323ecb07968086435e417d53291855a1ee84db31c185957de74f9c773";
 
@@ -58,6 +58,28 @@ const B4B: [&str; 22] = [
     "P-BRAVE",
     "P-CURENJE-VODE",
     "P-PARKING-STETA",
+];
+
+/// Šifre porcije B4c (kartica, „Šifre porcija").
+const B4C: [&str; 18] = [
+    "P-NOVI-LJUDI",
+    "P-INSPEKCIJA",
+    "P-ALERGIJA",
+    "P-POSEBNA-PREHRANA",
+    "P-MANJAK-INVENTURA",
+    "P-DOBAVLJAC",
+    "P-PIJANI-GOST",
+    "P-PROSIDBA",
+    "P-BAZEN-PUMPA",
+    "P-LEZALJKE",
+    "P-SUSJEDI-BAZEN",
+    "P-SPA-TERMIN",
+    "P-SPA-TECAJ",
+    "P-WELLNESS-PAKET",
+    "P-VJENCANJE",
+    "P-ROOFTOP-BUKA",
+    "P-LOBBY-SUKOB",
+    "P-LOBBY-KAVA",
 ];
 
 fn v2_value() -> Value {
@@ -137,9 +159,14 @@ fn only_labels_and_listed_conditions_change() {
             for a in t["answers"].as_array_mut().unwrap() {
                 a.as_object_mut().unwrap().remove("label");
             }
-            if matches!(t["code"].as_str(), Some("P-KLIMA" | "P-PRAONICA")) {
-                // `when` se ne serijalizira kad je prazan (P-PRAONICA ga danas nema): prazan objekt = izostavljen
-                let o = t.as_object_mut().unwrap();
+            let code = t["code"].as_str().unwrap().to_string();
+            let o = t.as_object_mut().unwrap();
+            // dopušteno po šifri: uvjet stanja (B4a: klima, praonica; B4c: brave, curenje, dizalo)
+            if matches!(
+                code.as_str(),
+                "P-KLIMA" | "P-PRAONICA" | "P-BRAVE" | "P-CURENJE-VODE" | "P-DIZALO"
+            ) {
+                // `when` se ne serijalizira kad je prazan (danas ga nemaju P-PRAONICA ni ova tri): prazan objekt = izostavljen
                 if let Some(w) = o.get_mut("when").and_then(Value::as_object_mut) {
                     w.remove("dept_condition_pts");
                     if w.is_empty() {
@@ -147,13 +174,20 @@ fn only_labels_and_listed_conditions_change() {
                     }
                 }
             }
+            // B4c: `condition_of` samo uz ova tri kvara, `external_cause` samo uz P-INSPEKCIJU
+            if matches!(code.as_str(), "P-BRAVE" | "P-CURENJE-VODE" | "P-DIZALO") {
+                o.remove("condition_of");
+            }
+            if code == "P-INSPEKCIJA" {
+                o.remove("external_cause");
+            }
         }
         fingerprint_value(&v)
     }
     assert_eq!(
         skeleton(&v2_value()),
         SKELETON_SHA,
-        "B4 smije mijenjati samo oznake, uvjete kvarova (5 predložaka) (`external_cause` P-INSPEKCIJE je B4c)"
+        "B4 smije mijenjati samo oznake i uvjete kvarova: `when.dept_condition_pts` na P-KLIMA, P-PRAONICA, P-BRAVE, P-CURENJE-VODE, P-DIZALO; `condition_of` na zadnja tri; `external_cause` na P-INSPEKCIJI"
     );
 }
 
@@ -186,6 +220,22 @@ fn b4b_batch_labels_have_no_debt() {
         .find(|(p, _)| *p == LabelLengths)
         .map_or(&[][..], |(_, l)| *l);
     let listed: Vec<&&str> = debt.iter().filter(|c| B4B.contains(*c)).collect();
+    assert!(listed.is_empty(), "makni s popisa duga: {listed:?}");
+}
+
+#[test] // T3 (b4c)
+fn b4c_batch_labels_have_no_debt() {
+    let bad: Vec<String> = repo_codes(LabelLengths)
+        .into_iter()
+        .filter(|c| B4C.contains(&c.as_str()))
+        .collect();
+    assert!(bad.is_empty(), "oznake porcije B4c još krše 1,5×: {bad:?}");
+    // popis duga ne smije više nositi ni jednu šifru porcije
+    let debt = KNOWN_VIOLATIONS
+        .iter()
+        .find(|(p, _)| *p == LabelLengths)
+        .map_or(&[][..], |(_, l)| *l);
+    let listed: Vec<&&str> = debt.iter().filter(|c| B4C.contains(*c)).collect();
     assert!(listed.is_empty(), "makni s popisa duga: {listed:?}");
 }
 
@@ -407,8 +457,38 @@ fn klima_and_praonica_need_bad_rooms_state() {
             "{code} još krši uvjet kvara"
         );
     }
-    // ostala četiri ostaju u dugu do B4c (čuvar B4c briše ovu tvrdnju uz T9)
-    for code in ["P-INSPEKCIJA", "P-DIZALO", "P-BRAVE", "P-CURENJE-VODE"] {
-        assert!(open.iter().any(|c| c == code), "{code} je dug do B4c");
+}
+
+#[test] // T9 (B4c)
+fn breakdown_conditions_via_condition_of() {
+    let v = v2_value();
+    let find = |code: &str| templates(&v).iter().find(|t| t["code"] == code).unwrap();
+    for code in ["P-BRAVE", "P-CURENJE-VODE", "P-DIZALO"] {
+        let t = find(code);
+        assert_eq!(
+            t["condition_of"], "rooms",
+            "{code}: condition_of mora biti rooms"
+        );
+        // Prag 8000: Leonova odluka 16.10. (anketa s brojkama; 5000–7000 ruše tjednu branu J-3 jer hotel A
+        // počinje na 7500 i dobro održan nikad ne padne ispod, a ova dva kvara su mu najčešće situacije).
+        assert!(
+            t["when"]["dept_condition_pts"]["below"] == 8000,
+            "{code}: when.dept_condition_pts.below mora biti točno 8000 (Leon 16.10.)"
+        );
     }
+    assert_eq!(
+        find("P-INSPEKCIJA")["external_cause"],
+        true,
+        "P-INSPEKCIJA je vanjski događaj"
+    );
+    let open = repo_codes(BreakdownCondition);
+    assert!(
+        open.is_empty(),
+        "BreakdownCondition još ima prekršaje: {open:?}"
+    );
+    let debt = KNOWN_VIOLATIONS
+        .iter()
+        .find(|(p, _)| *p == BreakdownCondition)
+        .map_or(&[][..], |(_, l)| *l);
+    assert!(debt.is_empty(), "makni s popisa duga: {debt:?}");
 }

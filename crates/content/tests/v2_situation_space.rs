@@ -163,7 +163,14 @@ fn condition_of_must_name_a_space_that_wears() {
     });
     assert!(r.is_ok(), "P-DIZALO + condition_of rooms + uvjet: {r:?}");
 
-    let r = build_with(with_cond);
+    // Od B4c repo P-DIZALO već nosi `condition_of`; slučaj „bez" ga mora maknuti.
+    let r = build_with(|v| {
+        with_cond(v);
+        tpl(v, "P-DIZALO")
+            .as_object_mut()
+            .unwrap()
+            .remove("condition_of");
+    });
     assert!(
         matches!(&r, Err(ContentError::Invalid(m)) if m.contains("uvjet odjela traži predložak s odjelom")),
         "bez condition_of: {r:?}"
@@ -181,10 +188,23 @@ fn condition_of_must_name_a_space_that_wears() {
         );
     }
 
+    // B4c: ključ nose točno tri kvara Smještaja (ADR-042 t. 7), nitko drugi.
     let v = v2_value();
-    assert!(
-        !v.to_string().contains("condition_of"),
-        "repo snimak ne smije imati ključ (B4 ga upisuje)"
+    let mut with_key: Vec<&str> = v["v2"]["situation_templates"]["templates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|t| t.get("condition_of").is_some())
+        .map(|t| {
+            assert_eq!(t["condition_of"], "rooms", "{}: condition_of", t["code"]);
+            t["code"].as_str().unwrap()
+        })
+        .collect();
+    with_key.sort_unstable();
+    assert_eq!(
+        with_key,
+        ["P-BRAVE", "P-CURENJE-VODE", "P-DIZALO"],
+        "repo snimak: condition_of točno na tri kvara Smještaja (B4c)"
     );
 }
 
