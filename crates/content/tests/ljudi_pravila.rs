@@ -85,7 +85,8 @@ fn susjedi_razumiju_hrvatski() {
             json!("RS"),
         ),
         "jezici",
-        json!([["sr", 4], ["hr", 3]]),
+        // engleski ostaje: radnik() je recepcioner, pa bi bez njega pao i D8
+        json!([["sr", 4], ["hr", 3], ["en", 3]]),
     );
     jedina_greska(
         r1(r),
