@@ -150,6 +150,7 @@ fn june(choice: Choice) -> HotelResolution {
         GameSettings {
             kind: PeriodKind::Month,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()
@@ -281,6 +282,7 @@ fn june_synthetic(code: &str, pick: Pick) -> HotelResolution {
         GameSettings {
             kind: PeriodKind::Month,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()

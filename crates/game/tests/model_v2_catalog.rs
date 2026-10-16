@@ -22,6 +22,7 @@ fn v2_game() -> Game {
         GameSettings {
             kind: PeriodKind::Week,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()

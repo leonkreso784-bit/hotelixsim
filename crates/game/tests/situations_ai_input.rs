@@ -43,6 +43,7 @@ fn v2_game(seed: u64, kind: PeriodKind) -> Game {
         GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()

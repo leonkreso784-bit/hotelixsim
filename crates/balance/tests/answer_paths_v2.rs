@@ -34,6 +34,7 @@ fn human_game(seed: u64, kind: PeriodKind, profile: Profile, path: AnswerPath) -
         GameSettings {
             kind,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap();

@@ -22,7 +22,11 @@ fn created_in(
         snap,
         common::GUEST,
         common::hotel_ids(),
-        GameSettings { kind, situations },
+        GameSettings {
+            kind,
+            situations,
+            answer_rule: None,
+        },
     )
 }
 
@@ -194,6 +198,7 @@ fn monthly_game_with_three_has_three_in_every_round() {
         GameSettings {
             kind: PeriodKind::Month,
             situations: SituationCounts::new(3, 3, 3),
+            answer_rule: None,
         },
     );
     assert_eq!(g.situation_counts(), counts(3, 3, 3));

@@ -674,6 +674,7 @@ fn game_created_with_core_2_0_0_is_outdated() {
         game::command::GameSettings {
             kind: PeriodKind::Week,
             situations: None,
+            answer_rule: None,
         },
     )
     .unwrap()
