@@ -1,0 +1,288 @@
+{
+  "lokalno": [
+    "Rijeka",
+    "Opatija",
+    "Kastav",
+    "Matulji",
+    "Lovran",
+    "Mošćenička Draga",
+    "Ičići",
+    "Ika",
+    "Volosko",
+    "Viškovo",
+    "Kostrena",
+    "Bakar",
+    "Kraljevica",
+    "Crikvenica",
+    "Novi Vinodolski",
+    "Čavle",
+    "Jelenje",
+    "Klana",
+    "Krk",
+    "Omišalj",
+    "Malinska",
+    "Njivice",
+    "Punat",
+    "Baška",
+    "Vrbnik",
+    "Cres",
+    "Mali Lošinj",
+    "Rab",
+    "Lopar",
+    "Delnice",
+    "Pula",
+    "Rovinj",
+    "Poreč",
+    "Umag",
+    "Novigrad",
+    "Labin",
+    "Rabac",
+    "Pazin",
+    "Buzet",
+    "Vodnjan",
+    "Medulin",
+    "Fažana",
+    "Buje",
+    "Vrsar",
+    "Plomin"
+  ],
+  "regija": [
+    "Zagreb",
+    "Split",
+    "Osijek",
+    "Zadar",
+    "Slavonski Brod",
+    "Karlovac",
+    "Varaždin",
+    "Šibenik",
+    "Sisak",
+    "Velika Gorica",
+    "Vinkovci",
+    "Vukovar",
+    "Dubrovnik",
+    "Bjelovar",
+    "Koprivnica",
+    "Požega",
+    "Čakovec",
+    "Gospić",
+    "Virovitica",
+    "Samobor",
+    "Makarska",
+    "Ogulin",
+    "Otočac",
+    "Senj",
+    "Knin",
+    "Sinj",
+    "Trogir",
+    "Đakovo",
+    "Krapina",
+    "Zaprešić",
+    "Kutina",
+    "Nova Gradiška",
+    "Metković",
+    "Imotski",
+    "Petrinja"
+  ],
+  "zemlje": {
+    "HR": {
+      "naziv": "Hrvatska",
+      "materinji": ["hr"],
+      "razumije_hr": true
+    },
+    "BA": {
+      "naziv": "Bosna i Hercegovina",
+      "materinji": ["bs", "hr", "sr"],
+      "razumije_hr": true
+    },
+    "RS": {
+      "naziv": "Srbija",
+      "materinji": ["sr"],
+      "razumije_hr": true
+    },
+    "ME": {
+      "naziv": "Crna Gora",
+      "materinji": ["sr"],
+      "razumije_hr": true
+    },
+    "MK": {
+      "naziv": "Sjeverna Makedonija",
+      "materinji": ["mk"],
+      "razumije_hr": false
+    },
+    "XK": {
+      "naziv": "Kosovo",
+      "materinji": ["sq", "sr"],
+      "razumije_hr": false
+    },
+    "AL": {
+      "naziv": "Albanija",
+      "materinji": ["sq"],
+      "razumije_hr": false
+    },
+    "NP": {
+      "naziv": "Nepal",
+      "materinji": ["ne"],
+      "razumije_hr": false
+    },
+    "IN": {
+      "naziv": "Indija",
+      "materinji": ["hi", "bn", "ml", "ta", "te", "pa", "mr", "gu"],
+      "razumije_hr": false
+    },
+    "PH": {
+      "naziv": "Filipini",
+      "materinji": ["tl"],
+      "razumije_hr": false
+    },
+    "BD": {
+      "naziv": "Bangladeš",
+      "materinji": ["bn"],
+      "razumije_hr": false
+    },
+    "UZ": {
+      "naziv": "Uzbekistan",
+      "materinji": ["uz"],
+      "razumije_hr": false
+    },
+    "AT": {
+      "naziv": "Austrija",
+      "materinji": ["de"],
+      "razumije_hr": false
+    },
+    "DE": {
+      "naziv": "Njemačka",
+      "materinji": ["de"],
+      "razumije_hr": false
+    },
+    "CH": {
+      "naziv": "Švicarska",
+      "materinji": ["de", "fr", "it"],
+      "razumije_hr": false
+    },
+    "HU": {
+      "naziv": "Mađarska",
+      "materinji": ["hu"],
+      "razumije_hr": false
+    },
+    "SI": {
+      "naziv": "Slovenija",
+      "materinji": ["sl"],
+      "razumije_hr": false
+    },
+    "IT": {
+      "naziv": "Italija",
+      "materinji": ["it"],
+      "razumije_hr": false
+    },
+    "US": {
+      "naziv": "Sjedinjene Američke Države",
+      "materinji": ["en"],
+      "razumije_hr": false
+    },
+    "GB": {
+      "naziv": "Ujedinjeno Kraljevstvo",
+      "materinji": ["en"],
+      "razumije_hr": false
+    },
+    "IE": {
+      "naziv": "Irska",
+      "materinji": ["en"],
+      "razumije_hr": false
+    },
+    "NL": {
+      "naziv": "Nizozemska",
+      "materinji": ["nl"],
+      "razumije_hr": false
+    },
+    "BE": {
+      "naziv": "Belgija",
+      "materinji": ["nl", "fr"],
+      "razumije_hr": false
+    },
+    "FR": {
+      "naziv": "Francuska",
+      "materinji": ["fr"],
+      "razumije_hr": false
+    },
+    "ES": {
+      "naziv": "Španjolska",
+      "materinji": ["es"],
+      "razumije_hr": false
+    },
+    "PL": {
+      "naziv": "Poljska",
+      "materinji": ["pl"],
+      "razumije_hr": false
+    },
+    "UA": {
+      "naziv": "Ukrajina",
+      "materinji": ["uk"],
+      "razumije_hr": false
+    },
+    "SK": {
+      "naziv": "Slovačka",
+      "materinji": ["sk"],
+      "razumije_hr": false
+    },
+    "CZ": {
+      "naziv": "Češka",
+      "materinji": ["cs"],
+      "razumije_hr": false
+    },
+    "SE": {
+      "naziv": "Švedska",
+      "materinji": ["sv"],
+      "razumije_hr": false
+    },
+    "DK": {
+      "naziv": "Danska",
+      "materinji": ["da"],
+      "razumije_hr": false
+    },
+    "NO": {
+      "naziv": "Norveška",
+      "materinji": ["no"],
+      "razumije_hr": false
+    },
+    "RO": {
+      "naziv": "Rumunjska",
+      "materinji": ["ro"],
+      "razumije_hr": false
+    }
+  },
+  "jezici": [
+    "hr",
+    "en",
+    "de",
+    "it",
+    "fr",
+    "es",
+    "sl",
+    "hu",
+    "pl",
+    "cs",
+    "sk",
+    "uk",
+    "ru",
+    "nl",
+    "sv",
+    "da",
+    "no",
+    "ro",
+    "bs",
+    "sr",
+    "mk",
+    "sq",
+    "ne",
+    "hi",
+    "bn",
+    "ml",
+    "ta",
+    "te",
+    "pa",
+    "mr",
+    "gu",
+    "tl",
+    "uz"
+  ]
+}

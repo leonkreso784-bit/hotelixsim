@@ -20,6 +20,12 @@ mod templates_principles_debt;
 pub use templates_instance::Instance;
 pub use templates_principles::{Principle, Violation, check_principles_with, principle_violations};
 pub use templates_principles_debt::KNOWN_VIOLATIONS;
+pub mod ljudi;
+mod ljudi_check;
+mod ljudi_check_okvir;
+mod ljudi_imena;
+mod ljudi_raspodjele;
+mod ljudi_tekst;
 mod v2;
 mod v2_dept;
 

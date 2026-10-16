@@ -1,0 +1,131 @@
+{
+  "radnici": {
+    "uloga": {
+      "sobar": 2800,
+      "kuhar": 1400,
+      "konobar": 1400,
+      "recepcioner": 1100,
+      "referent_uprave": 900,
+      "tehnicar": 800,
+      "sanker": 700,
+      "terapeut": 500,
+      "referent_prodaje": 400
+    },
+    "razina": {
+      "pocetnik": 3500,
+      "iskusan": 4500,
+      "strucnjak": 2000
+    },
+    "dob": {
+      "18-24": 2200,
+      "25-34": 3000,
+      "35-49": 3200,
+      "50-65": 1600
+    },
+    "podrijetlo": {
+      "lokalno": 5000,
+      "regija": 2500,
+      "inozemstvo": 2500
+    },
+    "zemlje_inozemstvo": {
+      "BA": 2500,
+      "RS": 1800,
+      "MK": 1000,
+      "NP": 1500,
+      "IN": 800,
+      "PH": 1200,
+      "ostalo": 1200
+    },
+    "zemlje_izvor": "🟨 PRIVREMENO: popis zemalja iz BANKA_LJUDI §2.2 (BiH, Srbija, Sj. Makedonija, Nepal, Indija, Filipini, ostalo), udjeli [PROC]; zamjenjuje ga MUP statistika izdanih dozvola za boravak i rad, djelatnost turizam i ugostiteljstvo, zadnja godina (Leon 16.10.)",
+    "jezici": {
+      "en": [1000, 2000, 3500, 3000, 500],
+      "de": [4500, 2000, 2000, 1200, 300],
+      "it": [7000, 1500, 1000, 400, 100]
+    },
+    "rod_po_ulozi": {
+      "sobar": {
+        "z_bp": 9000,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 9112, 5151",
+        "potvrdeno": false
+      },
+      "kuhar": {
+        "z_bp": 4500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5120, 3434",
+        "potvrdeno": false
+      },
+      "konobar": {
+        "z_bp": 5000,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5131",
+        "potvrdeno": false
+      },
+      "recepcioner": {
+        "z_bp": 7000,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 4224",
+        "potvrdeno": false
+      },
+      "referent_uprave": {
+        "z_bp": 7500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 4311, 4110, 3313",
+        "potvrdeno": false
+      },
+      "tehnicar": {
+        "z_bp": 500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 7411, 7126, 7233",
+        "potvrdeno": false
+      },
+      "sanker": {
+        "z_bp": 3500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5132",
+        "potvrdeno": false
+      },
+      "terapeut": {
+        "z_bp": 7500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 3255, 5142",
+        "potvrdeno": false
+      },
+      "referent_prodaje": {
+        "z_bp": 6500,
+        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 3322, 2431",
+        "potvrdeno": false
+      }
+    }
+  },
+  "gosti": {
+    "zemlja": {
+      "AT": 2000,
+      "DE": 1800,
+      "HR": 1400,
+      "HU": 700,
+      "SI": 700,
+      "IT": 600,
+      "US": 400,
+      "NL": 300,
+      "RS": 300,
+      "PL": 300,
+      "UA": 200,
+      "SK": 200,
+      "BA": 200,
+      "CH": 200,
+      "CZ": 150,
+      "GB": 150,
+      "ostalo": 400
+    },
+    "segment": {
+      "par": 3500,
+      "obitelj": 2500,
+      "wellness": 1500,
+      "poslovni": 1500,
+      "grupa": 1000
+    },
+    "dob": {
+      "18-29": 1500,
+      "30-49": 4000,
+      "50-64": 2700,
+      "65-85": 1800
+    },
+    "rod": {
+      "z": 5000,
+      "m": 5000
+    }
+  }
+}
