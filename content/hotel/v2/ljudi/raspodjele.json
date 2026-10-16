@@ -38,27 +38,9 @@
     },
     "zemlje_izvor": "🟨 PRIVREMENO: popis zemalja iz BANKA_LJUDI §2.2 (BiH, Srbija, Sj. Makedonija, Nepal, Indija, Filipini, ostalo), udjeli [PROC]; zamjenjuje ga MUP statistika izdanih dozvola za boravak i rad, djelatnost turizam i ugostiteljstvo, zadnja godina (Leon 16.10.)",
     "jezici": {
-      "en": [
-        1000,
-        2000,
-        3500,
-        3000,
-        500
-      ],
-      "de": [
-        4500,
-        2000,
-        2000,
-        1200,
-        300
-      ],
-      "it": [
-        7000,
-        1500,
-        1000,
-        400,
-        100
-      ]
+      "en": [1000, 2000, 3500, 3000, 500],
+      "de": [4500, 2000, 2000, 1200, 300],
+      "it": [7000, 1500, 1000, 400, 100]
     },
     "rod_po_ulozi": {
       "sobar": {
