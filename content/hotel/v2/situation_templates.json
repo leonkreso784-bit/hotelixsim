@@ -408,7 +408,7 @@
       ],
       "answers": [
         {
-          "label": "Zahvaliti na preporuci, a za {sobe} soba na {noci} noći ponuditi 15 % popusta uz paket doručka",
+          "label": "Zahvaliti na preporuci i za {sobe} soba na {noci} noći ponuditi 15 %, paket doručka, depozit i rok otkaza",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             {
@@ -422,7 +422,7 @@
           ]
         },
         {
-          "label": "Prihvatiti {sobe} soba uz 15 % popusta, depozit i rok otkaza, a gošći zahvaliti na preporuci",
+          "label": "Prihvatiti {sobe} soba uz 15 % popusta, depozit i rok otkaza, a gošći predložiti godišnju suradnju tvrtke",
           "criteria": [1, 4, 5],
           "mechanics": [
             {
@@ -1444,7 +1444,7 @@
       ],
       "answers": [
         {
-          "label": "Prije vjetra spremiti suncobrane i tende, goste pozvati na program u zatvorenom, a štetu odmah popraviti",
+          "label": "Spremiti suncobrane i tende prije vjetra, goste pozvati na program unutra, a štetu popraviti čim jugo prođe",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": "program" },
@@ -1452,7 +1452,7 @@
           ]
         },
         {
-          "label": "Odmah osigurati namještaj, obavijestiti goste, a onima kojima je otkazan trajekt ponuditi kasniju odjavu",
+          "label": "Odmah osigurati namještaj, obavijestiti goste, a onima kojima je otkazan trajekt ponuditi kasniju odjavu iz sobe",
           "criteria": [1, 2, 4],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": 0 },
@@ -1460,7 +1460,7 @@
           ]
         },
         {
-          "label": "Odmah zatvoriti sve vanjske prostore i otkazati aktivnosti, a štetu popraviti kad nevrijeme prođe",
+          "label": "Odmah zatvoriti sve vanjske prostore i otkazati aktivnosti, a štetu popraviti čim nevrijeme prođe",
           "criteria": [1],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": 0 },
@@ -1518,7 +1518,7 @@
           ]
         },
         {
-          "label": "Prihvatiti {sobe} soba uz 15 % popusta, depozit i rok otkaza za popis posada",
+          "label": "Prihvatiti {sobe} soba uz 15 % popusta, depozit, rok otkaza i rok za popis posada",
           "criteria": [1, 2, 3],
           "mechanics": [
             {
@@ -2380,7 +2380,7 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "pokrice" }]
         },
         {
-          "label": "Uzeti dvoje ljudi preko agencije za ovaj tjedan, a prekovremene sate ostalima platiti",
+          "label": "Uzeti dvoje ljudi preko agencije za ovaj tjedan, a ostalima složiti smjene tako da imaju odmor između njih",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "pokrice" }]
         },
@@ -2949,7 +2949,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "popravak" }]
         },
         {
-          "label": "Gošći pokazati natpis uz rampu, prema kojem hotel ne odgovara za štetu, a zapisati joj broj za svaki slučaj",
+          "label": "Gošći pokazati natpis uz rampu, prema kojem hotel ne odgovara za štetu, a za svaki slučaj zapisati njezin broj",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -3046,17 +3046,17 @@
       ],
       "answers": [
         {
-          "label": "Opis djeteta dati svim zaposlenicima, prvo pregledati izlaze na cestu i vodu, a poslije s timom uvježbati postupak",
+          "label": "Opis djeteta dati svima, prvo pregledati izlaze i vodu, uz gošću ostaviti nekoga i zvati policiju te poslije uvježbati postupak",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "CrisisCommunication", "backup": "vjezba" }]
         },
         {
-          "label": "Svim zaposlenicima dati opis djeteta, uz gošću ostaviti nekoga i policiju zvati ako dijete nije nađeno za nekoliko minuta",
+          "label": "Svim zaposlenicima dati opis djeteta, uz gošću ostaviti nekoga, a policiju zvati ako dijete nije nađeno za nekoliko minuta",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
         },
         {
-          "label": "Preko razglasa u restoranu pozvati dijete imenom, provjeriti sobu obitelji, a poslije osoblju napisati postupak",
+          "label": "Preko razglasa u restoranu pozvati dijete imenom, provjeriti sobu obitelji na katu, a poslije osoblju napisati postupak za takve slučajeve",
           "criteria": [],
           "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
         }
@@ -3283,7 +3283,7 @@
       ],
       "answers": [
         {
-          "label": "Odlučiti po redoslijedu zahtjeva i to objasniti oboma, a za smjenu platiti zamjenu iz drugog odjela",
+          "label": "Saslušati oboje, odlučiti po redu zahtjeva, smjenu pokriti plaćenom zamjenom i uvesti pisane zahtjeve",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "dodatak" }]
         },
@@ -3293,12 +3293,12 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Odbiti oba zahtjeva jer je vrhunac sezone, a obojici slobodan vikend ponuditi u rujnu, kad je mirnije",
+          "label": "Odbiti oba zahtjeva jer je vrhunac sezone, a oboma slobodan vikend ponuditi u rujnu, kad je mirnije",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Reći im da se oko vikenda dogovore sami, a ako ne uspiju, neka odluči voditelj smjene",
+          "label": "Reći im da se oko vikenda dogovore sami, a zahtjeve za slobodne dane ubuduće predavati pisano",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
