@@ -234,6 +234,13 @@ impl Game {
         Ok(TextCheck::Own)
     }
 
+    /// Je li zapisani slobodni odgovor zalijepljen (≥ 2 ponuđena odgovora, B13)? Tada sud nije potreban: kod odlučuje.
+    pub fn response_pasted(&self, hotel: HotelId, code: &str) -> bool {
+        self.response_slot(hotel, code)
+            .and_then(|(m, _)| self.text_check(hotel, code, m))
+            .is_ok_and(|c| matches!(c, TextCheck::Pasted))
+    }
+
     /// Upis presude: `VerdictRecorded` dok odgovor čeka (runda `Open`/`Closing`), inače `VerdictLate`.
     pub fn record_verdict(
         &self,

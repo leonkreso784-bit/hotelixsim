@@ -86,17 +86,30 @@ pub fn copied_answer(text: &str, labels: &[&str]) -> Option<usize> {
     best.map(|(_, i)| i)
 }
 
-/// Kvar B13: tekst pokriva riječi barem dvije ponuđene oznake (svaku barem `COPY_MATCH_BP` njezinih riječi).
+/// Jedinice usporedbe za zalijepljeno: parovi susjednih riječi (bigrami); oznaka od samo jedne riječi nema parova,
+/// pa je njezina jedinica sama riječ (najmanje razumno, 🟨).
+fn units(ws: &[String]) -> Vec<String> {
+    if ws.len() < 2 {
+        return ws.to_vec();
+    }
+    ws.windows(2)
+        .map(|p| format!("{} {}", p[0], p[1]))
+        .collect()
+}
+
+/// Kvar B13: tekst pokriva barem dvije ponuđene oznake, svaku barem `COPY_MATCH_BP` njezinih PAROVA susjednih riječi
+/// (multiskup). Zalijepljen tekst čuva redoslijed riječi oznake, vlastita preformulacija ne (pregled C1).
 pub fn pasted_answers(text: &str, labels: &[&str]) -> bool {
     let tw = words(text);
-    let tc = counts(&tw);
+    let tu = units(&tw);
+    let tc = counts(&tu);
     labels
         .iter()
         .filter(|label| {
-            let lw = words(label);
-            !lw.is_empty()
-                && u64::from(common(&tc, &counts(&lw))) * 10_000
-                    >= u64::from(COPY_MATCH_BP) * u64::from(len(lw.len()))
+            let lu = units(&words(label));
+            !lu.is_empty()
+                && u64::from(common(&tc, &counts(&lu))) * 10_000
+                    >= u64::from(COPY_MATCH_BP) * u64::from(len(lu.len()))
         })
         .count()
         >= 2

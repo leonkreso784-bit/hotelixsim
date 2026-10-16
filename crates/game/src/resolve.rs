@@ -70,7 +70,8 @@ impl Game {
                 });
             } else if let Some(fr) = h.responses.get(&key) {
                 // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
-                // presuda (`None`) nosi mehanike `unanswered` s kvalitetom 3: učinak `(q − 3)` je 0, a trošak
+                // presuda (`None`) nosi mehanike `unanswered`: uz `Classic` kvaliteta je 3 (učinak `(q − 3)` je 0),
+                // uz `OwnWords` 4 (učinak `(4 − 3)` mehanika šutnje, namjerno), zalijepljeno uvijek 3; trošak
                 // kompenzacije iz `unanswered` je 0 €. Situacija „samo nagrada“ (v2, S-4) ni tada ne snižava
                 // pokazatelje (`Model::situation_outcome`).
                 let v = fr

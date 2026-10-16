@@ -284,6 +284,29 @@ async fn run_assess(deps: &Deps, job: &Job) -> Result<(), AppError> {
     if verdict_settled(&g, p.hotel_id, &p.situation)? {
         return finish(deps, job.game_id, claim).await; // AI presuda već postoji
     }
+    // Zalijepljeni ponuđeni odgovori (B13): kod odlučuje, sud se ne zove (0 tokena).
+    if g.response_pasted(p.hotel_id, &p.situation) {
+        let (hotel, code) = (p.hotel_id, p.situation);
+        deps.log
+            .decide(
+                job.game_id,
+                Box::new(move |raw: &[RawEvent]| {
+                    let g = fold_raw(raw)?;
+                    let ev = if g.response_pending(hotel, &code)? {
+                        Some(g.neutral_verdict(hotel, &code, NEUTRAL_FAILED)?)
+                    } else {
+                        None
+                    };
+                    Ok(Decision {
+                        events: system_events(ev.as_slice()),
+                        finish_job: Some(claim),
+                        ..Decision::default()
+                    })
+                }),
+            )
+            .await?;
+        return Ok(());
+    }
     let input = g.assess_input(p.hotel_id, &p.situation)?;
     let judged = match deps.ai.assess(input).await {
         Ok(out) => g
