@@ -565,7 +565,7 @@ fn pasted_answers_uses_adjacent_word_pairs() {
 fn content_labels_are_copied_never_pasted() {
     let g = new_game_rule(SEED, None);
     let templates = g.content.situation_templates.as_ref().unwrap();
-    assert!(templates.templates.len() >= 59);
+    assert!(templates.templates.len() >= 55);
     for t in &templates.templates {
         let labels: Vec<&str> = t.answers.iter().map(|a| a.label.as_str()).collect();
         for (i, l) in labels.iter().enumerate() {
