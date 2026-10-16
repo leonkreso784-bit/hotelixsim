@@ -350,7 +350,7 @@
           ]
         },
         {
-          "label": "Ostaviti goste u sobama uz 20 % popusta tjedan dana, a bojler popraviti i ostale provjeriti na redovnom servisu",
+          "label": "Gostima krila B dati 20 % popusta na noćenje tjedan dana, a bojler popraviti i ostale provjeriti na redovnom servisu",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "popust" },
@@ -1946,7 +1946,7 @@
       ],
       "answers": [
         {
-          "label": "Objasniti zašto hotel ne prima pse, platiti prvu noć u pansionu za pse i gošći zadržati sobu bez naplate otkaza",
+          "label": "Objasniti zašto hotel ne prima pse, nazvati pansion u blizini i psu platiti prvu noć na račun hotela",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
         },
