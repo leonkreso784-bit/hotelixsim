@@ -279,22 +279,22 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se u ime hotela, odmah ispraviti račun, ponuditi doručak na račun hotela, uz svakog novog konobara odrediti mentora i uvesti kratak dogovor prije smjene, sutra pitati gosta je li sve u redu",
+          "label": "Ispričati se u ime hotela, ispraviti račun i dati doručak na račun hotela, a novim konobarima odrediti mentora",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Ispričati se, ispraviti račun i ponuditi doručak na račun hotela",
+          "label": "Ispričati se gostu, odmah mu donijeti točnu narudžbu i ispraviti račun, a doručak dati na račun hotela",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Ispričati se, objasniti da je konobar nov i da će dobiti ukor, ispraviti račun i ponuditi piće",
+          "label": "Ispraviti račun, gostu ponuditi piće na račun hotela i objasniti mu da će novi konobar za tu grešku dobiti ukor",
           "criteria": [2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Ispričati se, ispraviti račun i ponuditi besplatne preostale tri noći",
+          "label": "Ispričati se, odmah ispraviti račun i gostu za neugodnost ponuditi besplatne preostale tri noći u hotelu",
           "criteria": [1, 2],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
         }
@@ -509,7 +509,7 @@
       ],
       "answers": [
         {
-          "label": "Prihvatiti uz uvjete: rooftop do 23 sata, glazba prema pravilima o buci, depozit i rok otkaza, dodatni ljudi te večeri, 10 % popusta na sobe; goste hotela unaprijed obavijestiti i ponuditi im piće u lobby baru",
+          "label": "Prihvatiti uz 10 % popusta, depozit i glazbu do 23 sata, a goste hotela unaprijed obavijestiti i počastiti pićem u lobby baru",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             {
@@ -524,7 +524,7 @@
           ]
         },
         {
-          "label": "Prihvatiti uz depozit i rok otkaza, glazbu do 23 sata i 10 % popusta na sobe; goste hotela ne obavještavati posebno",
+          "label": "Prije odluke pitati za broj ljudi i glazbu, pa prihvatiti uz 10 % popusta na sobe, depozit i rok otkaza",
           "criteria": [1, 2, 4],
           "mechanics": [
             {
@@ -539,7 +539,7 @@
           ]
         },
         {
-          "label": "Prihvatiti sve kako traže: rooftop cijelu večer, glazba do 1 sat, 10 % popusta na sobe",
+          "label": "Prihvatiti sve kako organizatorica traži, s rooftopom cijelu večer, glazbom do 1 sat i 10 % popusta na sobe",
           "criteria": [],
           "mechanics": [
             {
@@ -554,7 +554,7 @@
           ]
         },
         {
-          "label": "Odbiti: rooftop je za goste hotela",
+          "label": "Odbiti vjenčanje, jer bi gosti hotela tu subotu ostali bez rooftopa, a u sobama na zadnjem katu nitko ne bi mogao spavati",
           "criteria": [3],
           "mechanics": [
             {
@@ -617,22 +617,22 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, odmah ponuditi tihu sobu, s voditeljem bara dogovoriti tišu glazbu nakon 23 sata, sobe ispod rooftopa ubuduće prodavati uz obavijest i sutra pitati gosta kako je spavao",
+          "label": "Ispričati se, odmah ponuditi tihu sobu, s barom dogovoriti tišu glazbu nakon 23 sata i sutra pitati kako je spavao",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se, odmah ponuditi tihu sobu i sutra pitati gosta kako je spavao",
+          "label": "Ispričati se, gostu odmah za ovu noć dati sobu na nižem katu, a sutra ujutro provjeriti kako je spavao i je li zadovoljan",
           "criteria": [1, 2, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se i odmah zatvarati rooftop u 22 sata do kraja sezone",
+          "label": "Ispričati se gostu i od večeras zatvarati rooftop u 22 sata, do kraja sezone, da gosti mogu mirno spavati",
           "criteria": [1, 2],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se i vratiti novac za tri noći, a glazba ostaje kao i dosad",
+          "label": "Ispričati se gostu i vratiti mu novac za tri noći, a glazbu na rooftopu ostaviti kakva je bila dosad",
           "criteria": [1],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
         }
@@ -677,22 +677,22 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, danas mu naći mjesto i ponuditi piće, uvesti i najaviti pravilo da se ručnik bez gosta duže od sat vremena sklanja, dati upute osoblju bazena i provjeriti ima li dovoljno ležaljki za špicu",
+          "label": "Ispričati se, danas mu naći mjesto uz piće na račun hotela, a pravilo o ručnicima najaviti i dati osoblju upute",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Ispričati se, naći mu mjesto i najaviti pravilo o ručnicima",
+          "label": "Ispričati se, odmah mu naći mjesto u hladu, a uz bazen istaknuti da se ručnik bez gosta sklanja nakon sat vremena",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Naložiti osoblju da odmah skloni sve ručnike s praznih ležaljki, bez najave",
+          "label": "Osoblju naložiti da odmah i bez najave skloni ručnike s praznih ležaljki, a gostu dati jednu od njih",
           "criteria": [2],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Objasniti da su ležaljke za one koji dođu prvi",
+          "label": "Gostu objasniti da su ležaljke za one koji dođu prvi, a da sutra može sići ranije i sam zauzeti mjesto",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -720,7 +720,7 @@
       ],
       "answers": [
         {
-          "label": "Odmah zatvoriti bazen i jasno obavijestiti goste (razlog i rok), hitno popraviti pumpu, prije otvaranja provjeriti vodu, ponuditi prijevoz do plaže i u plan održavanja staviti pričuvnu pumpu",
+          "label": "Zatvoriti bazen uz natpis s razlogom i rokom, hitno popraviti pumpu, a gostima ponuditi prijevoz do plaže",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "prijevoz" },
@@ -728,7 +728,7 @@
           ]
         },
         {
-          "label": "Zatvoriti bazen, obavijestiti goste i hitno popraviti pumpu",
+          "label": "Zatvoriti bazen, hitno popraviti pumpu i prije otvaranja provjeriti vodu, a goste obavijestiti na recepciji",
           "criteria": [1, 2, 4],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -736,7 +736,7 @@
           ]
         },
         {
-          "label": "Zatvoriti bazen bez objašnjenja i čekati redovni servis",
+          "label": "Zatvoriti bazen i pumpu dati na redovni servis, a gostima reći da prate obavijesti na recepciji",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -744,7 +744,7 @@
           ]
         },
         {
-          "label": "Dodati više kemikalija i ostaviti bazen otvoren dok tehničar ne stigne",
+          "label": "Dodati više kemikalija i bazen ostaviti otvoren, a tehničara pozvati da pumpu pogleda kad stigne",
           "criteria": [],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -798,22 +798,22 @@
       ],
       "answers": [
         {
-          "label": "Ispričati se, ponuditi termin večeras s drugom terapeutkinjom i masažu na račun hotela, provjeriti kako je termin dvaput upisan i za špicu dodati termine ili sezonca u wellnessu",
+          "label": "Ispričati se, večeras dati termin kod druge terapeutkinje i masažu na račun hotela, a za špicu dodati termine",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "masaza" }]
         },
         {
-          "label": "Ispričati se, ponuditi termin večeras i provjeriti sustav rezervacija",
+          "label": "Ispričati se, ponuditi joj termin večeras kod iste terapeutkinje i provjeriti kako je termin dva puta upisan u sustav",
           "criteria": [1, 2, 4],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se i ponuditi masažu na račun hotela sutra navečer",
+          "label": "Ispričati se i masažu na račun hotela ponuditi sutra navečer, kad se oslobodi prvi termin",
           "criteria": [1, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "masaza" }]
         },
         {
-          "label": "Objasniti da je pogreška u sustavu i ponuditi termin sutra",
+          "label": "Objasniti gošći da je pogreška nastala u sustavu, a ne kod osoblja, i ponuditi joj termin sutra navečer",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -848,22 +848,22 @@
       ],
       "answers": [
         {
-          "label": "Saslušati je, platiti tečaj uz dogovor da ostane barem do kraja iduće sezone, uvesti jasno pravilo za obuku cijelog tima, novi tretman staviti u ponudu i dogovoriti da ga prenese kolegicama",
+          "label": "Saslušati je, platiti tečaj uz obvezu ostanka do kraja iduće sezone, a uvesti pravilo obuke za cijeli tim",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "tecaj" }]
         },
         {
-          "label": "Platiti tečaj uz dogovor da ostane do kraja iduće sezone",
+          "label": "Platiti tečaj uz dogovor da ostane barem do kraja iduće sezone, a novi tretman staviti u ponudu",
           "criteria": [1, 2, 4],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "tecaj" }]
         },
         {
-          "label": "Dati 10 % povišice da ostane, bez tečaja",
+          "label": "Dati joj 10 % povišice da ostane, a tečaj ostaviti za iduću godinu, kad hotel bude imao više novca",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 10, "bonus": 0 }]
         },
         {
-          "label": "Odbiti: hotel ove sezone ne plaća tečajeve",
+          "label": "Odbiti, jer hotel ove sezone ne plaća tečajeve, ali joj zahvaliti na trudu i pohvalama koje dobiva od gostiju",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
@@ -903,22 +903,22 @@
       ],
       "answers": [
         {
-          "label": "Saslušati njega pa kolegu, zajedno dogovoriti pravilo za napojnice i smjene, obojici reći da svađa pred gostima nije prihvatljiva i provjeriti je li bar preopterećen",
+          "label": "Saslušati obojicu, svađu pred gostima odmah zaustaviti, uvesti isto pravilo za napojnice i provjeriti opterećenje bara",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Saslušati obojicu i zajedno dogovoriti isto pravilo za napojnice i smjene",
+          "label": "Saslušati obojicu i s njima zajedno dogovoriti jedno pravilo za napojnice i smjene, a jučerašnju svađu ostaviti iza sebe",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Premjestiti kolegu u drugi bar, kako traži",
+          "label": "Odmah premjestiti kolegu u drugi bar, kako barmen traži, jer je problem očito među njima dvojicom",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Dati mu 5 % povišice da ostane i ništa drugo ne mijenjati",
+          "label": "Barmenu dati 5 % povišice da ostane, a raspored smjena i podjelu napojnica provjeriti nakon sezone",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 5, "bonus": 0 }]
         }
@@ -949,7 +949,7 @@
       ],
       "answers": [
         {
-          "label": "Gostima u redu ponuditi kavu na račun hotela, zatražiti zamjenski aparat od dobavljača kave i do tada kavu nositi iz restorana, hitno popraviti stari, u plan nabave staviti novi i uvesti redovni servis ostale opreme bara",
+          "label": "Gostima u redu dati kavu na račun hotela, hitno popraviti aparat uz zamjenski od dobavljača, a novi staviti u plan",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "kava" },
@@ -957,7 +957,7 @@
           ]
         },
         {
-          "label": "Gostima u redu ponuditi kavu na račun hotela, zatražiti zamjenski aparat od dobavljača kave i hitno popraviti stari",
+          "label": "Gostima u redu ponuditi kavu na račun hotela, hitno popraviti aparat, a u jutarnjoj špici dodati još jednog barmena",
           "criteria": [1, 2, 4],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "kava" },
@@ -965,7 +965,7 @@
           ]
         },
         {
-          "label": "Gostima ponuditi kavu na račun hotela, a aparat poslati na servis nakon sezone",
+          "label": "Gostima ponuditi kavu na račun hotela, a aparat poslati na servis nakon sezone, kad ima manje posla",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "kava" },
@@ -973,7 +973,7 @@
           ]
         },
         {
-          "label": "Zakrpati aparat i nastaviti do kraja sezone",
+          "label": "Aparat zakrpati da izdrži do kraja sezone, a zamjenu planirati za zimu, kad u lobby baru ima manje gostiju",
           "criteria": [],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": 0 },
@@ -1182,7 +1182,7 @@
       ],
       "answers": [
         {
-          "label": "Prihvatiti nalaz, baciti spornu hranu, hitno popraviti hladnjaču, gostima s tegobama osigurati liječnika, iskreno obavijestiti goste, uvesti dnevno vođenje temperatura s odgovornom osobom i obučiti cijelu kuhinju",
+          "label": "Prihvatiti nalaz, baciti spornu hranu i hitno popraviti hladnjaču, a oboljelim gostima dovesti liječnika i kuhare obučiti",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": "mjere" },
@@ -1191,7 +1191,7 @@
           ]
         },
         {
-          "label": "Prihvatiti nalaz, baciti spornu hranu i hitno popraviti hladnjaču, a gostima ništa ne govoriti",
+          "label": "Prihvatiti nalaz, baciti spornu hranu i hitno popraviti hladnjaču, a gostima ne spominjati inspekciju kako se ne bi uznemirili i otišli",
           "criteria": [1, 2, 3],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": "mjere" },
@@ -1200,7 +1200,7 @@
           ]
         },
         {
-          "label": "Zatvoriti kuhinju na tri dana i naručiti hranu od vanjskog ugostitelja, bez promjena u radu kuhinje",
+          "label": "Zatvoriti kuhinju na tri dana, hranu za goste naručiti od vanjskog ugostitelja, a rad kuhinje ostaviti kakav jest",
           "criteria": [2, 4],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": "vanjska" },
@@ -1209,7 +1209,7 @@
           ]
         },
         {
-          "label": "Uvjeravati inspektora da su prijave gostiju pretjerane i tražiti da ne piše zapisnik",
+          "label": "Inspektoru objasniti da su prijave gostiju pretjerane, kuhinju do sutra očistiti i zamoliti ga da ne piše zapisnik",
           "criteria": [],
           "mechanics": [
             { "type": "CrisisCommunication", "backup": 0 },
@@ -1608,22 +1608,22 @@
       ],
       "answers": [
         {
-          "label": "Ostati uz obitelj dok dijete ne bude dobro, iskreno se ispričati, utvrditi gdje se informacija izgubila, označiti alergene na jelovniku i uz stol, obučiti cijeli tim i do kraja boravka dogovoriti siguran jelovnik za dijete",
+          "label": "Ostati uz obitelj i iskreno se ispričati, utvrditi gdje se informacija izgubila, a cijeli tim obučiti o označavanju alergena",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "CrisisCommunication", "backup": "mjere" }]
         },
         {
-          "label": "Iskreno se ispričati, označiti alergene na jelovniku i uz stol i do kraja boravka dogovoriti siguran jelovnik za dijete",
+          "label": "Iskreno se ispričati, za dijete do kraja boravka dogovoriti siguran jelovnik, a alergene označiti na jelovniku i uz stol",
           "criteria": [1, 3, 5],
           "mechanics": [{ "type": "CrisisCommunication", "backup": "paznja" }]
         },
         {
-          "label": "Ispričati se, obitelji ne naplaćivati restoran do kraja boravka i konobaru dati otkaz",
+          "label": "Ispričati se, obitelji do kraja boravka ne naplaćivati restoran, a konobaru koji je pogriješio odmah dati otkaz",
           "criteria": [1],
           "mechanics": [{ "type": "CrisisCommunication", "backup": "restoran" }]
         },
         {
-          "label": "Objasniti roditeljima da su alergiju trebali napisati pri rezervaciji",
+          "label": "Roditeljima mirno objasniti da je alergiju trebalo navesti pri rezervaciji, a konobaru reći da drugi put pazi",
           "criteria": [],
           "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
         }
@@ -1786,22 +1786,22 @@
       ],
       "answers": [
         {
-          "label": "Sa šefom kuhinje i gošćom dogovoriti obroke za cijeli boravak, pripremati ih odvojeno na posebnoj dasci i posuđu, nabaviti kruh bez glutena, označiti alergene na švedskom stolu, dati joj jednu osobu za kontakt i nakon prvog dana pitati je kako je",
+          "label": "S gošćom i šefom kuhinje dogovoriti obroke, pripremati ih odvojeno, nabaviti kruh bez glutena i dati joj osobu za kontakt",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "namirnice" }]
         },
         {
-          "label": "Sa šefom kuhinje dogovoriti odvojenu pripremu njezinih obroka i nabaviti kruh bez glutena",
+          "label": "Sa šefom kuhinje dogovoriti odvojenu pripremu njezinih obroka, a za doručak, ručak i večeru nabaviti kruh bez glutena",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "namirnice" }]
         },
         {
-          "label": "Označiti jela bez glutena na švedskom stolu i reći gošći da bira sama",
+          "label": "Na švedskom stolu jasno označiti jela bez glutena i ostale alergene, a gošći reći da bira sama prema oznakama",
           "criteria": [4],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Objasniti da kuhinja ne može ništa jamčiti i preporučiti restoran u gradu",
+          "label": "Gošći iskreno reći da kuhinja ne može ništa jamčiti, a za ručak i večeru preporučiti joj dobar i provjeren restoran bez glutena u gradu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -1995,22 +1995,22 @@
       ],
       "answers": [
         {
-          "label": "Ponovno prebrojati i usporediti s prodajom i otpisima, ključ skladišta ostaviti dvjema osobama, uvesti evidenciju izdavanja i tjednu inventuru, timu reći što je utvrđeno i da nitko nije optužen bez dokaza, a ako se dokaz nađe, postupiti po pravilniku o radu",
+          "label": "Ponovno prebrojati i usporediti s prodajom, ključ dati dvjema osobama i timu reći da nitko nije optužen bez dokaza",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Ponovno prebrojati, ključ skladišta ostaviti dvjema osobama i uvesti evidenciju izdavanja pića",
+          "label": "Ponovno prebrojati boce, ključ skladišta ostaviti dvjema osobama i uvesti evidenciju izdavanja koja se stvarno vodi",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Otpustiti novog sezonca na kojega se sumnja",
+          "label": "Otpustiti novog sezonca na kojega konobari najviše sumnjaju, a ostalima reći da je stvar time riješena",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Svim konobarima manjak odbiti od plaće, na jednake dijelove",
+          "label": "Manjak podijeliti na jednake dijelove i odbiti od plaće svim konobarima, a ubuduće i svaki novi manjak dijeliti isto tako",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
@@ -2037,22 +2037,22 @@
       ],
       "answers": [
         {
-          "label": "Konobarima odmah reći što nema i što preporučiti, kupiti robu od drugog dobavljača uz dokumente o podrijetlu, šefu kuhinje dopustiti dnevni jelovnik iz zaliha, s dobavljačem dogovoriti popust prema ugovoru i ubuduće imati drugog dobavljača za ključne namirnice",
+          "label": "Konobarima na vrijeme reći što nema, dnevni jelovnik ponuditi iz zaliha, a robu kupiti od drugog dobavljača i ubuduće raditi s oba",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "nabava" }]
         },
         {
-          "label": "Konobarima reći što nema, kupiti robu od drugog dobavljača i večeras ponuditi dnevni jelovnik iz zaliha",
+          "label": "Robu za večeras naručiti kod druge tvrtke, šefu kuhinje dopustiti jelovnik iz zaliha i konobare upozoriti na jela kojih nema",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "nabava" }]
         },
         {
-          "label": "Kupiti robu na tržnici bez računa i dokumenata o podrijetlu, da jelovnik ostane isti",
+          "label": "Odmah kupiti robu na tržnici bez računa i dokumenata, da jelovnik ostane isti, a ubuduće tako nabavljati i za špicu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ne mijenjati ništa: kad gost naruči jelo kojeg nema, konobar kaže da ga danas nema",
+          "label": "Ne mijenjati jelovnik, nego kad gost naruči jelo kojeg danas nema, konobar mu se ispriča i preporuči neko drugo jelo s jelovnika",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2490,22 +2490,22 @@
       ],
       "answers": [
         {
-          "label": "Saslušati ga i ispričati se, provjeriti dozvolu i pravila o noćnom miru, s voditeljem bara dogovoriti kraj glazbe u 23 sata i tiše zvučnike okrenute od kuća, susjedima dati broj za kontakt i za tjedan dana pitati jesu li zadovoljni",
+          "label": "Saslušati ga, glazbu uskladiti s dozvolom i završavati u 23 sata, a susjedima dati broj za kontakt",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se i s voditeljem bara dogovoriti kraj glazbe u 23 sata i tiše zvučnike",
+          "label": "Ispričati se, s voditeljem bara dogovoriti kraj glazbe u 23 sata i tiše zvučnike, a njih okrenuti od kuća",
           "criteria": [1, 3, 4],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Odmah ukinuti večernji program do kraja sezone",
+          "label": "Ispričati se susjedu, a večernji program uz bazen ukinuti do kraja sezone da redar više ne dolazi",
           "criteria": [1, 2],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Objasniti da hotel ima dozvolu i da je ljeto u turističkom mjestu",
+          "label": "Objasniti susjedu da hotel ima dozvolu za glazbu do ponoći, a ljeti je u turističkom mjestu uvijek tako",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2650,7 +2650,7 @@
       ],
       "answers": [
         {
-          "label": "Provjeriti raspored terapeuta, ponuditi {sobe} soba uz 15 % popusta na paket, s depozitom, rokom otkaza i terminima masaža dogovorenima unaprijed, jednog terapeuta sezonca zadržati do kraja rujna i predložiti suradnju i iduće godine",
+          "label": "Provjeriti raspored terapeuta, pa ponuditi {sobe} soba uz 15 % popusta, depozit i termine masaža unaprijed",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [
             {
@@ -2664,7 +2664,7 @@
           ]
         },
         {
-          "label": "Ponuditi {sobe} soba uz 15 % popusta na paket, depozit i rok otkaza",
+          "label": "Prihvatiti {sobe} soba uz protuponudu od 15 % popusta na paket, depozit, rok otkaza i rok za popis gostiju",
           "criteria": [1, 3, 4],
           "mechanics": [
             {
@@ -2678,7 +2678,7 @@
           ]
         },
         {
-          "label": "Pristati na 25 % popusta bez provjere termina",
+          "label": "Pristati na 25 % popusta kako agencija traži, a raspored terapeuta provjeriti tek kad stigne popis gostiju",
           "criteria": [1],
           "mechanics": [
             {
@@ -2692,7 +2692,7 @@
           ]
         },
         {
-          "label": "Odbiti jer u rujnu wellness radi sa smanjenim timom",
+          "label": "Odbiti ponudu, jer u rujnu wellness radi sa smanjenim timom i terapeuti ne bi stigli obaviti sve masaže",
           "criteria": [],
           "mechanics": [
             {
@@ -2814,22 +2814,22 @@
       ],
       "answers": [
         {
-          "label": "Stol predati drugom konobaru, gostu mirno i diskretno reći da više neće dobivati alkohol i ponuditi vodu i hranu, ostalim gostima se ispričati, gostu pomoći do sobe ili taksija i zvati policiju ako postane agresivan, zapisati događaj i sutra razgovarati s konobaricom",
+          "label": "Stol predati drugom konobaru, gostu diskretno uskratiti alkohol i zvati policiju ako postane agresivan",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Stol predati drugom konobaru i gostu diskretno reći da više neće dobivati alkohol, uz vodu i hranu",
+          "label": "Stol predati drugom konobaru i gostu tiho reći da više neće dobivati alkohol, uz čašu vode i nešto za jelo",
           "criteria": [1, 2, 3],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Pred svima glasno izbaciti gosta iz restorana",
+          "label": "Konobaricu maknuti od stola, a gosta odmah i glasno pred svim gostima izbaciti iz restorana",
           "criteria": [1],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
-          "label": "Gostu donijeti još jednu bocu da se smiri, a konobarici reći da bude strpljiva",
+          "label": "Gostu donijeti još jednu bocu da se smiri i ne pravi scenu, a konobaricu zamoliti da bude strpljiva s njim",
           "criteria": [],
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
@@ -3447,17 +3447,17 @@
       ],
       "answers": [
         {
-          "label": "Dogovoriti najljepši slobodni stol i točno vrijeme, odrediti jednog konobara koji vodi večer i donosi prsten s desertom, sve držati u tajnosti, cvijeće i tortu naplatiti gostu, a čašu pjenušca dati kao pažnju hotela i ponuditi fotografiju za uspomenu",
+          "label": "Tajno dogovoriti stol i vrijeme, tortu i cvijeće naplatiti gostu, a uz desert dati pjenušac na račun hotela",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pjenusac" }]
         },
         {
-          "label": "Dogovoriti lijep stol i vrijeme, odrediti konobara koji donosi prsten s desertom i sve držati u tajnosti",
+          "label": "Dogovoriti lijep stol i točno vrijeme, odrediti konobara koji donosi prsten i desert, a sve držati u tajnosti",
           "criteria": [1, 2, 4],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Reći da je restoran sutra pun i da posebne želje nisu moguće",
+          "label": "Reći gostu da je sutra restoran gotovo pun i da posebne pripreme nisu moguće, a za dvoje mu dati stol u lobby baru",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }

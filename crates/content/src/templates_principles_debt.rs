@@ -5,30 +5,8 @@
 use crate::templates_principles::Principle;
 
 pub const KNOWN_VIOLATIONS: &[(Principle, &[&str])] = &[
-    // Predlošci čije oznake prepisuje B4c; najmanji omjer duljina odgovora danas je 2,52 (P-INSPEKCIJA).
-    (
-        Principle::LabelLengths,
-        &[
-            "P-NOVI-LJUDI",
-            "P-VJENCANJE",
-            "P-ROOFTOP-BUKA",
-            "P-LEZALJKE",
-            "P-BAZEN-PUMPA",
-            "P-SPA-TERMIN",
-            "P-SPA-TECAJ",
-            "P-LOBBY-SUKOB",
-            "P-LOBBY-KAVA",
-            "P-INSPEKCIJA",
-            "P-ALERGIJA",
-            "P-POSEBNA-PREHRANA",
-            "P-MANJAK-INVENTURA",
-            "P-DOBAVLJAC",
-            "P-SUSJEDI-BAZEN",
-            "P-WELLNESS-PAKET",
-            "P-PIJANI-GOST",
-            "P-PROSIDBA",
-        ],
-    ),
+    // Oznake svih predložaka su unutar 1,5× od B4c (B4a–B4c); dug duljina je otplaćen.
+    (Principle::LabelLengths, &[]),
     // Kvar bez uvjeta lošeg stanja odjela; P-BRAVE i P-CURENJE-VODE čekaju stanje drugog odjela (Faza B).
     (
         Principle::BreakdownCondition,
