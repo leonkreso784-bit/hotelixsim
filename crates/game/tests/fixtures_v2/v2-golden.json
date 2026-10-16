@@ -29,6 +29,19 @@
       "t42-sutnja": "a3647b155097ab119bf0a681dab79fb8021448d91d9011398411b9a5b314cc90",
       "t7-broj-578": "a81dd3081c230a55426ac03a3d873a3273ce8249f7d141df61f4973970f927d2",
       "t7-odgovara": "edb3d23e0a9cabdabb883dd74915efeff08c63d10a9df9c538c1411189e4d22e"
+    },
+    "2.5.0": {
+      "m2026-sutnja": "6f908b4d8442929418cdd0a2f095fadd5f9e3c178384dd2f09fbc0e2aede69df",
+      "m42-broj-333": "b6feeaa876bf8a137715f8e96e818dc3046715f93ae785cc6cf4af4dc1ce2290",
+      "m42-plan": "b9350cec8d4fd74f36e0dcfcb03af41e80dab1b47f748d9ce9fec9c60cfd9b99",
+      "m42-sutnja": "5b215663dfce10f7eb312be0cb4a629dd9e011c0a570f298d847de09cd3cb339",
+      "m7-odgovara": "20b6654cffc586149f26357533b971824f767e5ea106fc5b34acff1ff6e96b12",
+      "m7-odgovara-klasicno": "5721920e40beeb3e45d99e7df21868d683dbaf63151f1b1e648ca89aa58eab5b",
+      "t2026-odgovara": "7cd7e43f75f197d49af17fd5cf41531c844bc3eba905271f4e060b2160705193",
+      "t42-slobodni": "bc11cfb045f7c75a95445e1d2fbfa06caba8617e37afc59f7d0e2383c2322e86",
+      "t42-sutnja": "0ef5fa52cb26dce590e10280e747969cda76ff64b367464ff64a71a255d035ec",
+      "t7-broj-578": "83a6ee26abbadec424019a092b8446743b782507af413e71b05567ffb2d57eb1",
+      "t7-odgovara": "cdd682770fa016dbf261b193ca4cb14acb2eab3e6bff21e9bf63a576312f6780"
     }
   },
   "snapshot": "sha256:946935d55693dcec5aee438c723515f48d8dd5f5a0b6e74606178e9bea3ba504"
