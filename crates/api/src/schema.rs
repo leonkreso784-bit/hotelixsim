@@ -14,8 +14,8 @@ use utoipa::ToSchema;
 use crate::problem::{Problem, ProblemCode};
 
 pub use crate::schema_situations::{
-    CharacterBody, CriterionBody, ResponseBody, ResponseStatusBody, RoleBody, SituationBody,
-    SituationKindBody, SituationsBody,
+    CharacterBody, ChatLineBody, ConversationBody, CriterionBody, ResponseBody, ResponseStatusBody,
+    RoleBody, SituationBody, SituationKindBody, SituationsBody, SpeakerBody,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -1149,59 +1149,6 @@ impl TryFrom<&app::SeasonGameView> for SeasonBody {
 pub struct TextBody {
     #[schema(max_length = 2000)]
     pub text: String,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum SpeakerBody {
-    Student,
-    Character,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct ChatLineBody {
-    pub from: SpeakerBody,
-    pub text: String,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct ConversationBody {
-    pub situation: String,
-    pub character_name: String,
-    pub role: String,
-    pub opening: String,
-    pub lines: Vec<ChatLineBody>,
-    /// Koliko poruka student još smije poslati.
-    pub remaining: u8,
-    /// Lik još nije odgovorio na zadnju poruku.
-    pub awaiting_reply: bool,
-    /// Runda je otvorena; inače je razgovor samo za čitanje.
-    pub open: bool,
-}
-
-impl From<&app::ConversationView> for ConversationBody {
-    fn from(v: &app::ConversationView) -> Self {
-        ConversationBody {
-            situation: v.situation.clone(),
-            character_name: v.character_name.clone(),
-            role: v.role.clone(),
-            opening: v.opening.clone(),
-            lines: v
-                .lines
-                .iter()
-                .map(|l| ChatLineBody {
-                    from: match l.from {
-                        game::Speaker::Student => SpeakerBody::Student,
-                        game::Speaker::Character => SpeakerBody::Character,
-                    },
-                    text: l.text.clone(),
-                })
-                .collect(),
-            remaining: v.remaining,
-            awaiting_reply: v.awaiting_reply,
-            open: v.open,
-        }
-    }
 }
 
 #[derive(Deserialize, ToSchema)]
