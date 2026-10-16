@@ -7,11 +7,9 @@ use crate::templates_principles::Principle;
 pub const KNOWN_VIOLATIONS: &[(Principle, &[&str])] = &[
     // Oznake svih predložaka su unutar 1,5× od B4c (B4a–B4c); dug duljina je otplaćen.
     (Principle::LabelLengths, &[]),
-    // Kvar bez uvjeta lošeg stanja odjela; P-BRAVE i P-CURENJE-VODE čekaju stanje drugog odjela (Faza B).
-    (
-        Principle::BreakdownCondition,
-        &["P-INSPEKCIJA", "P-DIZALO", "P-BRAVE", "P-CURENJE-VODE"],
-    ),
+    // Svaki kvar ima uvjet lošeg stanja (P-BRAVE, P-CURENJE-VODE i P-DIZALO preko `condition_of: rooms`) ili je
+    // vanjski događaj (P-INSPEKCIJA); dug je otplaćen u B4c.
+    (Principle::BreakdownCondition, &[]),
     // Šutnja nije lošija od najlošijeg odgovora (uz trošak).
     (
         Principle::SilenceNotBetter,

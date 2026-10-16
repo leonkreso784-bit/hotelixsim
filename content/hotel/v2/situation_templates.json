@@ -1223,7 +1223,8 @@
         { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
-      "effect_band": { "cost_night_pct": [0, 2500] }
+      "effect_band": { "cost_night_pct": [0, 2500] },
+      "external_cause": true
     },
     {
       "code": "P-VAL-RECENZIJA",
@@ -2205,7 +2206,9 @@
       "code": "P-DIZALO",
       "kind": "kvar",
       "department": "hotel",
+      "condition_of": "rooms",
       "weight": 3,
+      "when": { "dept_condition_pts": { "below": 8000 } },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 2, "gap_rounds": 6 },
       "params": { "vecera": { "price_pct": 80 } },
@@ -3128,7 +3131,9 @@
       "code": "P-BRAVE",
       "kind": "kvar",
       "department": "maintenance",
+      "condition_of": "rooms",
       "weight": 3,
+      "when": { "dept_condition_pts": { "below": 8000 } },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 3, "gap_rounds": 4 },
       "roles": {
@@ -3194,7 +3199,9 @@
       "code": "P-CURENJE-VODE",
       "kind": "kvar",
       "department": "maintenance",
+      "condition_of": "rooms",
       "weight": 3,
+      "when": { "dept_condition_pts": { "below": 8000 } },
       "chance": { "base": 2 },
       "repeat": { "max_per_season": 3, "gap_rounds": 4 },
       "roles": {
