@@ -196,6 +196,50 @@ fn stereotip_suti_ispod_praga() {
 }
 
 #[test]
+fn stereotip_ne_gleda_uloge_po_podrijetlu() {
+    // Uloge su jako iskrivljene po podrijetlu (Leon 16.10.): lokalno sobar/kuhar 50 : 50, regija i inozemstvo samo
+    // sobari. Razina, dob i rod unutar uloge isti u svim skupinama, pa pravilo ne smije ništa javiti.
+    let banka = |inoz: &[(&'static str, usize)]| {
+        let mut lok = razine(
+            "sobar",
+            40,
+            &[("pocetnik", 80), ("iskusan", 80), ("strucnjak", 40)],
+        );
+        lok.extend(razine(
+            "kuhar",
+            40,
+            &[("pocetnik", 80), ("iskusan", 80), ("strucnjak", 40)],
+        ));
+        let reg = razine(
+            "sobar",
+            40,
+            &[("pocetnik", 20), ("iskusan", 20), ("strucnjak", 10)],
+        );
+        radnici_iz(vec![
+            ("lokalno", lok),
+            ("regija", reg),
+            ("inozemstvo", razine("sobar", 40, inoz)),
+        ])
+    };
+    ok(provjeri(
+        banka(&[("pocetnik", 20), ("iskusan", 20), ("strucnjak", 10)]),
+        vec![],
+    ));
+    // Obrnuta provjera: iskrivi razinu unutar uloge u inozemstvu → pravilo mora pasti.
+    let r = provjeri(
+        banka(&[("pocetnik", 40), ("iskusan", 5), ("strucnjak", 5)]),
+        vec![],
+    );
+    assert!(
+        retci(&r)
+            .iter()
+            .any(|l| l.contains("stereotip: razina pocetnik, skupina inozemstvo")),
+        "iskrivljena razina nije uhvaćena: {:?}",
+        retci(&r)
+    );
+}
+
+#[test]
 fn zabranjena_rijec_u_opisu() {
     let r = s(
         radnik(),
