@@ -67,7 +67,7 @@
           ]
         },
         {
-          "label": "Ispričati se, vratiti gošći novac za cijeli boravak, a tehničara poslati kad dođe na red",
+          "label": "Ispričati se, vratiti gošći novac za cijeli boravak, tehničara poslati kad dođe na red i sutra je nazvati",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "boravak" },
@@ -350,7 +350,7 @@
           ]
         },
         {
-          "label": "Ostaviti goste u sobama uz 20 % popusta na noćenje u krilu B tjedan dana, a bojler prepustiti redovnom servisu",
+          "label": "Ostaviti goste u sobama uz 20 % popusta tjedan dana, a bojler popraviti i ostale provjeriti na redovnom servisu",
           "criteria": [1],
           "mechanics": [
             { "type": "ServiceRecovery", "compensation": "popust" },
@@ -1336,7 +1336,7 @@
           ]
         },
         {
-          "label": "Glavnoj domaćici dati 8 % povišice da smiri sobarice, a raspored i broj soba ostaviti kakvi jesu",
+          "label": "Glavnoj domaćici dati 8 % povišice da smiri sobarice, a o rasporedu i broju soba razgovarati za dva tjedna",
           "criteria": [],
           "mechanics": [
             { "type": "StaffRetention", "raise_one_pct": 8, "bonus": 0 },
@@ -1678,7 +1678,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Spremiti prtljagu, objasniti da je ulazak u 14 sati i preporučiti im kafić u blizini",
+          "label": "Spremiti prtljagu, objasniti da je ulazak u 14 sati, a ubuduće to jasnije napisati u potvrdi",
           "criteria": [3],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
@@ -1946,7 +1946,7 @@
       ],
       "answers": [
         {
-          "label": "Objasniti zašto hotel ne prima pse, platiti prvu noć u pansionu za pse i pravilo istaknuti u potvrdi",
+          "label": "Objasniti zašto hotel ne prima pse, platiti prvu noć u pansionu za pse i gošći zadržati sobu bez naplate otkaza",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
         },
@@ -1956,7 +1956,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Iznimno pustiti psa u sobu jer je kasno i gošća nema kamo, a nju zamoliti da pazi da pas ne smeta drugima",
+          "label": "Iznimno pustiti psa u sobu jer je kasno, a sobu poslije očistiti kao i svaku drugu",
           "criteria": [1],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
@@ -2755,7 +2755,7 @@
       ],
       "answers": [
         {
-          "label": "Izaći pred red i reći koliko će se čekati, ponuditi hladno piće i subotom ubuduće dodati treću osobu",
+          "label": "Izaći pred red i reći koliko će se čekati, ponuditi hladno piće i ubuduće subotom dodati treću osobu",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
@@ -2770,7 +2770,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Gostima objasniti da je subota dan smjene i da se tada na prijavu uvijek malo čeka",
+          "label": "Gostima objasniti da je subota dan smjene, a ubuduće ih na gužvu upozoriti već u potvrdi rezervacije",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -2874,7 +2874,7 @@
       ],
       "answers": [
         {
-          "label": "Poslati kombi po pola posteljine, gostima unaprijed javiti kašnjenje i ubuduće držati rezervnu garnituru",
+          "label": "Poslati kombi po pola posteljine, gostima javiti kašnjenje i ponuditi piće, a ubuduće držati rezervu",
           "criteria": [1, 2, 3, 4, 5],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
@@ -2889,7 +2889,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "kupnja" }]
         },
         {
-          "label": "Pričekati kamion iz praonice, a gostima koji stignu prije njega reći da sobe još nisu gotove",
+          "label": "Pričekati kamion iz praonice, gostima reći da sobe nisu gotove i ubuduće tražiti raniju dostavu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -3522,7 +3522,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Ispričati se gostu, pa iskreno objasniti da je zgrada stara i da se prostor ne može prilagoditi",
+          "label": "Reći gostu da se stara zgrada ne može prilagoditi preko sezone, a rampu staviti u plan za zimu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
@@ -3570,7 +3570,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },
         {
-          "label": "Javno odgovoriti da gošća iznosi neistine i da hotel ima račune koji to dokazuju",
+          "label": "Javno odgovoriti da gošća iznosi neistine i da će hotel recenziju prijaviti portalu",
           "criteria": [],
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         },

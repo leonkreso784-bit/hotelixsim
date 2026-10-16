@@ -9,7 +9,7 @@
     ],
     "answers": [
       {
-        "label": "Ispričati se, premjestiti obitelj uz večeru na račun hotela, poslati tehničara i sutra ih nazvati",
+        "label": "Ispričati se, premjestiti obitelj uz večeru na račun hotela i odmah poslati tehničara da popravi klimu",
         "quality": 5,
         "mechanics": [
           { "type": "ServiceRecovery", "compensation_cents": 12000 },
@@ -166,7 +166,7 @@
         ]
       },
       {
-        "label": "Odbiti ponudu: u kolovozu se sobe ionako prodaju po punoj cijeni bez agencije",
+        "label": "Odbiti ponudu agencije, a sobe u kolovozu prodavati po punoj cijeni izravno gostima",
         "quality": 2,
         "mechanics": [
           {
