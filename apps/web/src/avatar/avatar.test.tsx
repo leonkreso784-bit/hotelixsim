@@ -306,8 +306,25 @@ const FOREIGN_SKIN = [0, 1, 2, 6];
 const HINT_AGES: (Age | null)[] = ["young", "adult", "senior", null];
 const HINT_ORIGINS = ["regional", "foreign"] as const;
 const HINT_NAMES = Array.from({ length: 300 }, (_, i) => `lik-${i}`);
-// GRADITELJ: upiši vrijednost iz prvog zelenog prolaza (lookFor("Anna Müller", foreign/f/null)); od tada je pravilo kao za SEED_*.
-const ANNA_MULLER_SNAPSHOT: AvatarLook | null = null;
+// Upisano iz prvog zelenog prolaza (lookFor("Anna Müller", foreign/f/null)); od tada je pravilo kao za SEED_*.
+const ANNA_MULLER_SNAPSHOT: AvatarLook | null = {
+  skin: 2,
+  hair: "wavy",
+  hairColor: 2,
+  eyes: "happy",
+  mouth: "smile",
+  facialHair: "none",
+  glasses: "none",
+  hat: "none",
+  clothes: 1,
+  backdrop: 1,
+  brows: "straight",
+  nose: "wide",
+  age: "young",
+  earrings: "studs",
+  neckwear: "none",
+  outfit: "shirt",
+};
 
 function allHints(gender: "f" | "m"): LookHint[] {
   return HINT_AGES.flatMap((age_group) => HINT_ORIGINS.map((origin) => ({ gender, age_group, origin })));
