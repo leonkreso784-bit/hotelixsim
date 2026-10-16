@@ -6,6 +6,8 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-053"></a>[ADR-053](DECISIONS/ADR-053-pretpostavke-16-10-oznake-testovi-b4.md) | Pretpostavke 16.10. (B4): sastojak samo u najboljem, oznake iz sadržaja, graditelji tekstova opus | 🟨 ČEKA LEONOV PREGLED | 2026-10-16 |
+| <a id="adr-052"></a>[ADR-052](DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md) | Leonove odluke 16.10.: uvjet kvara klime i praonice, banka ljudi usporedo, tri odgovora za K1 | ✅ Leonove odluke 16.10. | 2026-10-16 |
 | <a id="adr-051"></a>[ADR-051](DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md) | Pretpostavke faze B (B2a–B1a): broj situacija, mjerenje težine, prostor odjela | 🟨 ČEKA LEONOV PREGLED | 2026-10-15 |
 | <a id="adr-050"></a>[ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) | Popravak u situaciji diže stanje svog odjela; iznos „mehanizam sad, iznos u L1-13" | ✅ Leonova odluka 15.10. | 2026-10-15 |
 | <a id="adr-049"></a>[ADR-049](DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md) | „Situacije ~20 %" mjeri se od ravnala; redoslijed odgovora mjesečno dobiva zapisani dug | ✅ Leonova odluka 15.10. | 2026-10-15 |

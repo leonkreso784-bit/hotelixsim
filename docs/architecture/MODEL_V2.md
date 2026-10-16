@@ -444,6 +444,7 @@ To je Leonova petlja: obučiš početnika, on postane izvrstan i tada traži vi�
   ali razlika u plaći po podrijetlu bila bi upravo pravilo koje ovaj dokument zabranjuje (a u Hrvatskoj i protuzakonita).
   Agencija zato nije jeftinija po glavi. Ona daje **ljude kad ih na lokalnoj burzi nema** (u srpnju i kolovozu), uz
   dodatne troškove. Student vidi ukupni trošak po osobi: plaća + naknada + dozvola + smještaj.
+  *(Leonova želja 16.10. o nižoj plaći i težoj obuci radnika iz Azije sukobljava se s ovim: vidi stavku o stranim radnicima iz Azije u [BACKLOG](../records/BACKLOG.md); odluka ovdje ostaje dok Leon ne odluči.)*
 - **Smještaj radnika** treba svakome s `treba_smjestaj`, bilo da je iz inozemstva ili iz Slavonije. Dvije mogućnosti:
   1. **najam kreveta u gradu**: trošak po krevetu po danu; više kreveta je skuplje u vrhu sezone [PROC];
   2. **sobe hotela za radnike**: 2 radnika po sobi. Nema najma, ali soba nije za prodaju. To je **izgubljeni prihod**

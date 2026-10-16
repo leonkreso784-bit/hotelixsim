@@ -4,6 +4,23 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-16 (5) — faza B: B1b, B4a, B4b spojeni; B4c napola; banka ljudi K1 započeta
+
+- **Spojeno lokalno u `model-v2/sloj1`** (čuvar testova → graditelj → pregled opus → `--no-ff`): B1b cc4a0f2 (`condition_of`),
+  B4a 6e8ff2e (oznake sidara i 15 predložaka, uvjet kvara klime i praonice), B4b 8d134a4 (22 predloška). Nakon svakog spajanja **cijeli
+  popis iz `ci.yml`**: 24–25 od 24–25 EXIT 0 (cargo test 959 → 968 → 969); v1 i v2 balans bajt-isti kroz B1b i B4b. **Nijedan push danas.**
+- **Pregledi:** B1b čist (dva testa dopisana za pokrivenost). B4a: „za poslije" bilo samo u najboljem u 9 od 19 jedinica → novi test T4b
+  ([ADR-053](DECISIONS/ADR-053-pretpostavke-16-10-oznake-testovi-b4.md)), nakon popravka 0 od 19. B4b: dva sadržajna nesklada s mehanikom
+  (bolovanje, izgubljeno dijete) popravljena u rundi 1; nalaz da samo najbolji troši novac ide u L1-13 ([BACKLOG](BACKLOG.md)).
+- **Leonove odluke:** uvjet kvara klime i praonice = Smještaj ispod 65; banka ljudi usporedo s popravkom; tri odgovora za K1
+  → [ADR-052](DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md). Nova želja o stranim radnicima iz Azije
+  (niža plaća, teža obuka) sukobljava se s MODEL_V2 §5.4 → nacrt prije L2b ([BACKLOG](BACKLOG.md)).
+- **B4c napola:** čuvar 479f6e2; graditelj c69f022 (oznake 18 predložaka, bajt-isti balansi). Commit 2 (uvjeti kvarova) nije napravljen:
+  uz prag 65 na P-BRAVE, P-CURENJE-VODE i P-DIZALO pada brana J-3 i tri testa kapaciteta → anketa Leonu s brojkama prije spajanja.
+- **Banka ljudi K1:** kartica (opus, 247 r.), čuvar K1a 34dd18c (42 testa, grana `sadrzaj/banka-ljudi`); graditelj prekinut s necommitanim kodom
+  u `../hotelixsim-ljudi` (nije provjereno da prevodi).
+- **Gdje se vidi:** lokalno (`model-v2/sloj1` 8d134a4, neobjavljeno). Ledgeri: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`, `.superpowers/sdd/banka-ljudi-k1/progress.md`.
+
 ## 2026-10-15 (4) — faza B: B2a, B2b, B3a, B3b, B1a spojeni u sloj1
 
 - **Spojeno lokalno u `model-v2/sloj1`** (svaka cigla: čuvar testova → graditelj → pregled opus → spajanje `--no-ff`): B2a 143f593

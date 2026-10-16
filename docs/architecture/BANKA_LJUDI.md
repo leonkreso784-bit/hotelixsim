@@ -1,6 +1,6 @@
 # Banka ljudi — radnici i gosti kao sadržaj igre
 
-> **Status:** 🟨 NACRT (14.10.); Leonovi odgovori na §6 u ADR-042 t. 8 (sva odgovorena). Povod: Leonova odluka
+> **Status:** 🟨 NACRT (14.10.); K0 ✅ (odgovori §6 u ADR-042 t. 8); **K1 u tijeku** (16.10., usporedo s popravkom: [ADR-052](../records/DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), kartica u ledgeru `.superpowers/sdd/banka-ljudi-k1/`; rod = Eurostat LFS, zemlje = MUP, uloga smije ovisiti o podrijetlu). Povod: Leonova odluka
 > [ADR-042](../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 5 — *„jako puno likova, radnike i goste,
 > ~2000 ili više, strukturno, korak po korak, oprezno"*, uz dva agenta posvećena samo tome. Ovo je prvi korak: **format i
 > pravila**. Slijede provjera sadržaja u Rustu (`crates/content`) i punjenje u serijama (§5). Arhitektura ide kroz dokument i
