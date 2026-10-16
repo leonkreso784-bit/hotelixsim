@@ -588,19 +588,7 @@ fn real_month_input_carries_codes_cash_and_unanswered() {
     let input = g.debrief_input(h, Month::Jul).unwrap();
     let s2 = input.situations.iter().find(|s| s.code == "S2").unwrap();
     assert_eq!((s2.quality, s2.unanswered), (2, false));
-    // Očekivana oznaka dolazi iz sadržaja repoa (igra igra taj sadržaj), ne iz konstante: oznake se prepisuju (B4).
-    let snap = content::Snapshot::read(&content::repo_dir())
-        .unwrap()
-        .to_value();
-    let s2_repo = snap["situations"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|s| s["code"] == "S2")
-        .unwrap();
-    let expected = s2_repo["answers"][1]["label"].as_str().unwrap();
-    assert!(!expected.is_empty());
-    assert_eq!(s2.chosen_label.as_deref(), Some(expected));
+    assert_eq!(s2.chosen_label, Some(repo_label("S2", 1)));
     let july_start = g.state_at(h, Month::Jul).unwrap().summary();
     assert_eq!(
         (input.plan.wage_pct, input.seasonal_before),
