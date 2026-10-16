@@ -1,6 +1,6 @@
-//! Čuvar cigle B4 (prepis oznaka odgovora i uvjeta kvarova), porcija B4a. Kartica:
+//! Čuvar cigle B4 (prepis oznaka odgovora i uvjeta kvarova), porcije B4a i B4b. Kartica:
 //! `docs/plan/2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md`.
-//! b4b_/b4c_ varijante T3 i T9 pišu čuvari B4b/B4c.
+//! b4c_ varijante T3 i T9 piše čuvar B4c.
 use content::{
     KNOWN_VIOLATIONS,
     Principle::{self, *},
@@ -32,6 +32,32 @@ const B4A: [&str; 15] = [
     "P-POHVALA",
     "P-PRISTUPACNOST",
     "P-NETOCNA-RECENZIJA",
+];
+
+/// Šifre porcije B4b (kartica, „Šifre porcija").
+const B4B: [&str; 22] = [
+    "P-NOVINAR",
+    "P-KONGRES",
+    "P-VAL-RECENZIJA",
+    "P-TOPLINSKI-VAL",
+    "P-OLUJA",
+    "P-REGATA",
+    "P-GOST-POZLILO",
+    "P-DIZALO",
+    "P-NESTANAK-STRUJE",
+    "P-DIJETE-IZGUBLJENO",
+    "P-POVISICA",
+    "P-BOLOVANJE",
+    "P-SLOBODNI-DANI",
+    "P-OSPORENA-NAPLATA",
+    "P-RACUN-GRESKA",
+    "P-TERMINAL",
+    "P-PREPORUKA",
+    "P-LAST-MINUTE",
+    "P-RADNICI-TVRTKE",
+    "P-BRAVE",
+    "P-CURENJE-VODE",
+    "P-PARKING-STETA",
 ];
 
 fn v2_value() -> Value {
@@ -144,6 +170,22 @@ fn b4a_batch_labels_have_no_debt() {
         .find(|(p, _)| *p == LabelLengths)
         .map_or(&[][..], |(_, l)| *l);
     let listed: Vec<&&str> = debt.iter().filter(|c| B4A.contains(*c)).collect();
+    assert!(listed.is_empty(), "makni s popisa duga: {listed:?}");
+}
+
+#[test] // T3 (b4b)
+fn b4b_batch_labels_have_no_debt() {
+    let bad: Vec<String> = repo_codes(LabelLengths)
+        .into_iter()
+        .filter(|c| B4B.contains(&c.as_str()))
+        .collect();
+    assert!(bad.is_empty(), "oznake porcije B4b još krše 1,5×: {bad:?}");
+    // popis duga ne smije više nositi ni jednu šifru porcije
+    let debt = KNOWN_VIOLATIONS
+        .iter()
+        .find(|(p, _)| *p == LabelLengths)
+        .map_or(&[][..], |(_, l)| *l);
+    let listed: Vec<&&str> = debt.iter().filter(|c| B4B.contains(*c)).collect();
     assert!(listed.is_empty(), "makni s popisa duga: {listed:?}");
 }
 

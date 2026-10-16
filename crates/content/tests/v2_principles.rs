@@ -50,7 +50,7 @@ fn known_debt_names_existing_templates_and_never_grows() {
         .map(|t| t["code"].as_str().unwrap())
         .collect();
     let ceiling = [
-        (LabelLengths, 40),
+        (LabelLengths, 18),
         (BreakdownCondition, 4),
         (SilenceNotBetter, 16),
     ];
