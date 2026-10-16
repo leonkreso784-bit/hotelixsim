@@ -26,6 +26,15 @@ pub fn gost() -> Value {
     })
 }
 
+/// Valjan VANJSKI (K2v): sanitarni inspektor, 47 godina, Kastav (lokalno iz testnog okvira).
+pub fn vanjski() -> Value {
+    json!({
+        "id": "V-00001", "ime": "Davor", "prezime": "Starčević", "rod": "m", "dob": 47,
+        "uloga": "inspektor_sanitarni", "ustanova": "sanitarna inspekcija", "zemlja": "HR",
+        "mjesto": "Kastav", "jezici": [["hr", 4], ["en", 2]]
+    })
+}
+
 /// Kopija zapisa s jednim promijenjenim (ili dodanim) poljem.
 pub fn s(mut v: Value, polje: &str, vrijednost: Value) -> Value {
     v[polje] = vrijednost;
@@ -85,7 +94,33 @@ pub fn zabranjeno_json() -> Value {
     })
 }
 
+pub const ULOGE_VANJSKIH: [&str; 14] = [
+    "inspektor_sanitarni",
+    "inspektor_turisticki",
+    "inspektor_rada",
+    "inspektor_porezni",
+    "policajac",
+    "vatrogasac",
+    "djelatnik_hitne",
+    "novinar",
+    "dobavljac",
+    "organizator_dogadanja",
+    "zastupnik_agencije",
+    "poslovni_klijent",
+    "susjed",
+    "lokalna_uprava",
+];
+
 pub fn raspodjele_json() -> Value {
+    let rod_vanjskih: serde_json::Map<String, Value> = ULOGE_VANJSKIH
+        .iter()
+        .map(|u| {
+            (
+                u.to_string(),
+                json!({"z_bp": 5000, "izvor": "Testni izvor (Eurostat LFS, ISCO-08 x spol)", "potvrdeno": false}),
+            )
+        })
+        .collect();
     let rod: serde_json::Map<String, Value> = ULOGE
         .iter()
         .map(|u| {
@@ -108,6 +143,15 @@ pub fn raspodjele_json() -> Value {
             "jezici": {"en": [1000, 2000, 3500, 3000, 500], "de": [4500, 2000, 2000, 1200, 300],
                        "it": [7000, 1500, 1000, 400, 100]},
             "rod_po_ulozi": Value::Object(rod)
+        },
+        "vanjski": {
+            "uloga": {"dobavljac": 1400, "poslovni_klijent": 1400, "zastupnik_agencije": 1100,
+                      "organizator_dogadanja": 700, "susjed": 700, "novinar": 600,
+                      "inspektor_sanitarni": 600, "policajac": 600, "vatrogasac": 500,
+                      "djelatnik_hitne": 500, "lokalna_uprava": 550, "inspektor_turisticki": 450,
+                      "inspektor_rada": 450, "inspektor_porezni": 450},
+            "dob": {"20-29": 1000, "30-44": 4000, "45-59": 4000, "60-80": 1000},
+            "rod_po_ulozi": Value::Object(rod_vanjskih)
         },
         "gosti": {
             "zemlja": {"AT": 3500, "DE": 3000, "HR": 2000, "BA": 500, "RS": 500, "ME": 500},
@@ -138,7 +182,11 @@ pub fn okvir() -> Okvir {
 
 /// Zaglavlje serije N (`od`/`do` = 50·N+1 … 50·N+50) s danim zapisima.
 pub fn serija(vrsta: &str, n: u32, zapisi: Vec<Value>) -> Value {
-    let slovo = if vrsta == "radnici" { 'R' } else { 'G' };
+    let slovo = match vrsta {
+        "radnici" => 'R',
+        "vanjski" => 'V',
+        _ => 'G',
+    };
     json!({
         "format": 1, "vrsta": vrsta, "serija": n,
         "od": format!("{slovo}-{:05}", 50 * n + 1), "do": format!("{slovo}-{:05}", 50 * n + 50),
@@ -164,6 +212,35 @@ pub fn banka(r: Vec<Value>, g: Vec<Value>) -> (Datoteke, Datoteke) {
         vec![("gosti/serija-000.json".to_string(), serija("gosti", 0, g))]
     };
     (radnici, gosti)
+}
+
+/// Zapisi u `vanjski/serija-000.json` (prazan popis = datoteke nema).
+pub fn vanjski_datoteke(v: Vec<Value>) -> Datoteke {
+    if v.is_empty() {
+        vec![]
+    } else {
+        vec![(
+            "vanjski/serija-000.json".to_string(),
+            serija("vanjski", 0, v),
+        )]
+    }
+}
+
+/// Čitanje i provjera banke s tri vrste (`Banka::iz_vrijednosti` + `s_vanjskima` + `provjeri`).
+pub fn provjeri_svi(
+    okvir: &Okvir,
+    radnici: Datoteke,
+    gosti: Datoteke,
+    vanjski: Datoteke,
+) -> Result<(), ContentError> {
+    Banka::iz_vrijednosti(radnici, gosti)?
+        .s_vanjskima(vanjski)?
+        .provjeri(okvir)
+}
+
+/// Zapisi samo u jednoj seriji vanjskih (radnika i gostiju nema).
+pub fn provjeri_v(v: Vec<Value>) -> Result<(), ContentError> {
+    provjeri_svi(&okvir(), vec![], vec![], vanjski_datoteke(v))
 }
 
 /// Čitanje (serde + oblik) pa provjera pravila, kao `Banka::read` + `provjeri`.
@@ -277,6 +354,20 @@ pub fn deset_radnika() -> Vec<Value> {
         rod: "z",
     };
     (0..10).map(|i| radnik_i(i, "lokalno", &sp)).collect()
+}
+
+/// Valjan vanjski za redni broj `i` (jedinstveno ime i prezime): sanitarni inspektor iz Kastva.
+pub fn vanjski_i(i: usize) -> Value {
+    let mut v = vanjski();
+    v["id"] = json!(format!("V-{:05}", i + 1));
+    v["ime"] = json!(rijec('M', i));
+    v["prezime"] = json!(rijec('K', i * 7 + 3));
+    v
+}
+
+/// Deset valjanih vanjskih s različitim imenima i prezimenima (V-00001 … V-00010).
+pub fn deset_vanjskih() -> Vec<Value> {
+    (0..10).map(vanjski_i).collect()
 }
 
 /// Skupine (podrijetlo, specifikacije) redom; ID-jevi teku kroz sve skupine, serije po 50 zapisa.

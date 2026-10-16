@@ -80,6 +80,27 @@ pub enum Segment {
 pub enum Vrsta {
     Radnici,
     Gosti,
+    Vanjski,
+}
+
+/// STUB (čuvar K2v): uloga VANJSKOG (§1.5); graditelj dodaje `SVE`, `kod`, `sluzba`, `lokalna`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UlogaVanjskog {
+    InspektorSanitarni,
+    InspektorTuristicki,
+    InspektorRada,
+    InspektorPorezni,
+    Policajac,
+    Vatrogasac,
+    DjelatnikHitne,
+    Novinar,
+    Dobavljac,
+    OrganizatorDogadanja,
+    ZastupnikAgencije,
+    PoslovniKlijent,
+    Susjed,
+    LokalnaUprava,
 }
 
 impl Rod {
@@ -169,6 +190,7 @@ impl Vrsta {
         match self {
             Vrsta::Radnici => "radnici",
             Vrsta::Gosti => "gosti",
+            Vrsta::Vanjski => "vanjski",
         }
     }
 }
@@ -210,6 +232,23 @@ pub struct Gost {
     pub jezici: Vec<(String, u8)>,
     pub segment: Segment,
     pub zanimanje: Option<String>,
+    pub opis: Option<String>,
+}
+
+/// VANJSKI (§1.5). STUB (čuvar K2v): samo oblik za serde; pravila piše graditelj u `ljudi_vanjski`.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Vanjski {
+    pub id: String,
+    pub ime: String,
+    pub prezime: String,
+    pub rod: Rod,
+    pub dob: u8,
+    pub uloga: UlogaVanjskog,
+    pub ustanova: Option<String>,
+    pub zemlja: String,
+    pub mjesto: String,
+    pub jezici: Vec<(String, u8)>,
     pub opis: Option<String>,
 }
 
@@ -269,6 +308,19 @@ pub struct Zabranjeno {
 pub struct Raspodjele {
     pub radnici: RaspodjeleRadnika,
     pub gosti: RaspodjeleGostiju,
+    /// STUB (čuvar K2v): `default` da stari okviri bez ključa rade; graditelj ga uklanja (polje je obvezno).
+    #[serde(default)]
+    pub vanjski: RaspodjeleVanjskih,
+}
+
+/// Ciljevi vanjskih (§2.4). STUB (čuvar K2v).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RaspodjeleVanjskih {
+    pub uloga: BTreeMap<UlogaVanjskog, u32>,
+    /// Dobni razredi `"20-29"` …, bez rupa od 20 do 80.
+    pub dob: BTreeMap<String, u32>,
+    pub rod_po_ulozi: BTreeMap<UlogaVanjskog, RodUloge>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -343,6 +395,7 @@ impl Okvir {
 pub struct Banka {
     pub radnici: Vec<(String, Serija<Radnik>)>,
     pub gosti: Vec<(String, Serija<Gost>)>,
+    pub vanjski: Vec<(String, Serija<Vanjski>)>,
 }
 
 /// Izvještaj raspodjele: udio jedne vrijednosti dimenzije u banci prema cilju iz `raspodjele.json`.
@@ -361,6 +414,7 @@ impl Banka {
         Ok(Banka {
             radnici: read_serije(&ljudi, Vrsta::Radnici)?,
             gosti: read_serije(&ljudi, Vrsta::Gosti)?,
+            vanjski: read_serije(&ljudi, Vrsta::Vanjski)?,
         })
     }
 
@@ -372,6 +426,15 @@ impl Banka {
         Ok(Banka {
             radnici: iz_vrijednosti(radnici)?,
             gosti: iz_vrijednosti(gosti)?,
+            vanjski: vec![],
+        })
+    }
+
+    /// Banka s vanjskim serijama (put, JSON) dodanima iza radnika i gostiju; za testove i alate.
+    pub fn s_vanjskima(self, vanjski: Vec<(String, Value)>) -> Result<Banka, ContentError> {
+        Ok(Banka {
+            vanjski: iz_vrijednosti(vanjski)?,
+            ..self
         })
     }
 

@@ -32,7 +32,7 @@ fn ljudi_serije_su_zapecacene_ili_otvorene() {
     let dir =
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../content/hotel/v2/ljudi");
     let mut nadjeno: Vec<String> = Vec::new();
-    for vrsta in ["radnici", "gosti"] {
+    for vrsta in ["radnici", "gosti", "vanjski"] {
         for e in std::fs::read_dir(dir.join(vrsta)).unwrap() {
             let ime = e.unwrap().file_name().into_string().unwrap();
             if ime.starts_with("serija-") && ime.ends_with(".json") {
