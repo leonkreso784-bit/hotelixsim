@@ -19,7 +19,7 @@ pregled opus (a: jezgra igre i pečat; b: balans) · **Prevodi Rust:** da (sva t
 - **Prepisan ponuđeni odgovor = klik tog odgovora**: kvaliteta `min(q odgovora, 4)`, mehanike tog odgovora.
 - **AI ne stigne** (neutralna presuda) uz `OwnWords`: kvaliteta **4** (ADR-047 t. 4), mehanike šutnje kao danas.
 - **Zalijepljeno više ponuđenih odgovora** (kvar B13; Leon 16.10., sesija 7): tekst koji pokriva ≥ 2 ponuđene oznake (svaku ≥ 70 % njezinih
-  riječi, 🟨) **nije odluka** → kvaliteta **3**, mehanike šutnje (`unanswered`, 0 €), `pasted: true`, `nearest_answer: None`; AI presuda se ne
+  **parova susjednih riječi**, 🟨; pregled PRAVILO-a C1: pojedinačne riječi lažno hvataju dobar vlastiti odgovor u S1, parovi 0/229 lažnih i 59/59 uhvaćenih) **nije odluka** → kvaliteta **3**, mehanike šutnje (`unanswered`, 0 €), `pasted: true`, `nearest_answer: None`; AI presuda se ne
   gleda (kod odlučuje, 0 tokena). Vrijedi uz **oba** pravila (`Classic` i `OwnWords`) jer je to kvar, ne pravilo; provjera prepisivanja ide
   **prije** provjere jednog prepisanog odgovora. Mentor i student vide „zalijepio si ponuđene odgovore, to nije tvoja odluka".
 - Mentor i izvještaj kruga znaju da je ocjena ograničena; student vidi napomenu uz ponuđene odgovore.

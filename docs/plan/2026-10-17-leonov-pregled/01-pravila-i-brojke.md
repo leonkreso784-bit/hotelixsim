@@ -60,8 +60,9 @@ A1–A4 koče L1-13 (jednu zajedničku kalibraciju brojki), A5–A6 koče spajan
 ### A6 · Zalijepljeni odgovori: kada se smatra da je zalijepio
 - **Što je:** ti si 16.10. (sesija 7) odlučio: tko u polje zalijepi više ponuđenih odgovora dobije neutralnu 3, bez učinka
   (kao šutnja) i poruku „to nije tvoja odluka". Ostaje odrediti granicu.
-- **Pretpostavili smo:** tekst pokriva **barem dvije** ponuđene oznake, svaku s barem 70 % njezinih riječi; ta provjera ide
-  prije provjere „prepisao jedan".
+- **Pretpostavili smo:** tekst pokriva **barem dvije** ponuđene oznake, svaku s barem 70 % njezinih **parova susjednih
+  riječi** (pregled PRAVILO-a 17.10.: pojedinačne riječi lažno su hvatale dobar vlastiti odgovor u obveznoj situaciji; parovi
+  na cijelom sadržaju 0 lažnih od 229, a sve zalijepljene uhvate); ta provjera ide prije provjere „prepisao jedan".
 - **Preporuka:** ok.
 - **Inače:** već jedna cijela oznaka i pola druge. **Cijena:** student koji citira dio odgovora pa ga objasni može biti
   lažno uhvaćen.
