@@ -1,6 +1,8 @@
 //! B3b: brane modela za situacije na zadanom planu (putovi odgovora iz B3a). `--check` pada kad situacije postanu
 //! nevažne, obrnute ili presudne; robot pritom ne igra nikakvu ulogu. Ravnalo težine (Leon 15.10., opcija 1) je
 //! konstanta u kodu, izmjerena jednom; ovdje se samo čita preko `plan_ruler`.
+//! PRAVILO-b: lanac ima četiri koraka (najbolji > klik najbolji > srednji > prepušteno > šutnja); težina se i dalje
+//! mjeri na vlastitom odgovoru (`best_vs_silent`), klik (`click_vs_silent`) se samo ispisuje.
 //!
 //! Izvještaj se uzima iz pravog `run_v2` (3 sjemena), pa se putovi prepišu "čistim" brojkama; tako test mjeri samo
 //! brane, a ne igru. Svaki test gleda samo poruke koje počinju s "B3".
@@ -42,7 +44,8 @@ fn clean(kind: PeriodKind) -> ReportV2 {
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(kind, row.profile);
         row.best_vs_silent = [-50, 100, ruler / 3];
-        row.steps = [100, 100, 100];
+        row.click_vs_silent = ruler / 4;
+        row.steps = [100; 4];
     }
     r
 }
@@ -130,36 +133,66 @@ fn same_round_cost_is_not_a_gate() {
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(PeriodKind::Week, row.profile);
         row.best_vs_silent = [-500, 100, ruler / 3];
-        row.steps = [100; 3];
+        row.steps = [100; 4];
     }
     assert_eq!(b3(&r), Vec::<String>::new());
 }
 
+/// Četiri koraka lanca, redom: najbolji − klik najbolji, klik najbolji − srednji, srednji − prepušteno,
+/// prepušteno − šutnja.
+const STEPS: [(&str, &str); 4] = [
+    ("najbolji", "klik najbolji"),
+    ("klik najbolji", "srednji"),
+    ("srednji", "prepušteno"),
+    ("prepušteno", "šutnja"),
+];
+
 #[test]
 fn order_gate_fails() {
-    let mut r = clean(PeriodKind::Week);
-    paths_mut(&mut r).rows[0].steps[1] = 0;
-    let f = b3(&r);
-    assert!(
-        has(
-            &f,
-            &[
-                "B3 redoslijed",
-                "srednji prema prepušteno",
-                "na kraju sezone"
-            ]
-        ),
-        "{f:?}"
-    );
-    for (i, names) in [(0, ["najbolji", "srednji"]), (2, ["prepušteno", "šutnja"])] {
-        let mut r = clean(PeriodKind::Week);
-        paths_mut(&mut r).rows[0].steps[i] = -1;
-        let f = b3(&r);
-        assert!(
-            has(&f, &["B3 redoslijed", names[0], "prema", names[1]]),
-            "{f:?}"
-        );
+    for (i, (a, b)) in STEPS.into_iter().enumerate() {
+        for v in [0, -1] {
+            let mut r = clean(PeriodKind::Week);
+            paths_mut(&mut r).rows[0].steps[i] = v;
+            let f = b3(&r);
+            assert!(
+                has(
+                    &f,
+                    &[
+                        "B3 redoslijed",
+                        &format!("{a} prema {b}"),
+                        "na kraju sezone"
+                    ]
+                ),
+                "korak {i} = {v}: {f:?}"
+            );
+            assert_eq!(f.len(), 1, "korak {i} = {v}: pada samo taj korak: {f:?}");
+        }
     }
+}
+
+#[test]
+fn click_steps_are_gates() {
+    // Doslovna poruka iz kartice (profil A je prvi redak, korak 0.00).
+    let mut r = clean(PeriodKind::Week);
+    let p = paths_mut(&mut r).rows[0].profile.code();
+    paths_mut(&mut r).rows[0].steps[0] = 0;
+    assert!(
+        b3(&r).contains(&format!(
+            "B3 redoslijed: {p} najbolji prema klik najbolji 0.00 na kraju sezone (cilj više od 0)"
+        )),
+        "{:?}",
+        b3(&r)
+    );
+    let mut r = clean(PeriodKind::Month);
+    paths_mut(&mut r).rows[1].steps[1] = -3;
+    let p = paths_mut(&mut r).rows[1].profile.code();
+    assert!(
+        b3(&r).contains(&format!(
+            "B3 redoslijed: {p} klik najbolji prema srednji -0.03 na kraju sezone (cilj više od 0)"
+        )),
+        "{:?}",
+        b3(&r)
+    );
 }
 
 #[test]
@@ -167,14 +200,14 @@ fn monthly_middle_minus_delegated_is_a_real_gate() {
     // Dug je otplaćen (B1a, 15.10.): mjesečno srednji − prepušteno ≤ 0 pada kao i tjedno, bez oprosta.
     for v in [0, -5, ORDER_DEBT_FLOOR] {
         let mut r = clean(PeriodKind::Month);
-        paths_mut(&mut r).rows[0].steps[1] = v;
+        paths_mut(&mut r).rows[0].steps[2] = v;
         let f = b3(&r);
         assert!(
             has(&f, &["B3 redoslijed", "srednji prema prepušteno"]),
             "korak {v}: {f:?}"
         );
     }
-    for i in [0, 2] {
+    for i in [0, 1, 3] {
         let mut r = clean(PeriodKind::Month);
         paths_mut(&mut r).rows[0].steps[i] = 0;
         assert!(has(&b3(&r), &["B3 redoslijed"]), "korak {i}");
@@ -188,7 +221,7 @@ fn empty_debt_list_has_no_debt_message() {
         let mut r = clean(kind);
         assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
         for row in &mut paths_mut(&mut r).rows {
-            row.steps = [100, 100, 100];
+            row.steps = [100; 4];
         }
         assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
     }
@@ -256,7 +289,7 @@ fn negative_delta_never_passes_as_weight_band() {
 fn b3_messages_are_not_robot_measures() {
     let mut r = clean(PeriodKind::Week);
     paths_mut(&mut r).rows[0].best_vs_silent = [0, 0, -1];
-    paths_mut(&mut r).rows[0].steps = [0, 0, 0];
+    paths_mut(&mut r).rows[0].steps = [0; 4];
     assert!(!robot_measures_v2(&r).iter().any(|x| x.contains("B3")));
     let text = render_v2(&r);
     let robots = text.split("== Mjere robota").nth(1).unwrap_or("");
@@ -271,4 +304,29 @@ fn print_keeps_only_the_ruler_weight_line() {
         !text.contains("prema zadanom planu bez situacija"),
         "stari redak težine odlazi (anketa 15.10., opcija 1)"
     );
+}
+
+/// Težina se mjeri na vlastitom odgovoru (`best_vs_silent`, ADR-047 t. 3); klik se samo ispisuje, ma kakav bio.
+#[test]
+fn weight_band_stays_on_own_words_best() {
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for click in [-5_000, -1, 0, 1, 9 * 1_000, 100_000] {
+            let mut r = clean(kind);
+            for row in &mut paths_mut(&mut r).rows {
+                row.click_vs_silent = click;
+            }
+            assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?} klik {click}");
+            assert!(
+                !robot_measures_v2(&r).iter().any(|x| x.contains("B3")),
+                "{kind:?}: klik nije mjera robota"
+            );
+        }
+        // Težinu i dalje nosi `best_vs_silent[2]`: izvan pojasa pada, a klik u pojasu to ne spašava.
+        let mut r = clean(kind);
+        let row = &mut paths_mut(&mut r).rows[0];
+        row.best_vs_silent[2] = 9 * plan_ruler(kind, row.profile);
+        row.click_vs_silent = plan_ruler(kind, row.profile) / 4;
+        let p = row.profile.code();
+        assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
+    }
 }

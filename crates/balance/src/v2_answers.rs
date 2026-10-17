@@ -1,5 +1,6 @@
 //! B3a: putovi odgovora na zadanom planu. Svaki profil i sjeme vrte isti zadani plan (`PeriodPlan::default_for`), a
-//! mijenja se samo kako se rješavaju situacije: najbolji, srednji, prepušteno voditelju, šutnja, bez situacija.
+//! mijenja se samo kako se rješavaju situacije: najbolji (vlastiti odgovor), klik najbolji (PRAVILO-b, ADR-047), srednji,
+//! prepušteno voditelju, šutnja, bez situacija.
 //! Pravila prepuštanja zrcale igru (`game`): tri prve situacije kruga su obvezne, ostale ide voditelju uz kvalitetu 2.
 
 use std::cmp::Reverse;
@@ -16,6 +17,9 @@ use crate::{hundredths, median};
 
 /// Zrcalo `game::MANDATORY_SITUATIONS` (`command.rs`): prvih toliko situacija kruga student rješava sam.
 pub const MANDATORY_SITUATIONS: usize = 3;
+/// Zrcalo `game::own_words::CLICK_MAX_QUALITY` (ADR-047 t. 1): klik u situaciji s likom vrijedi najviše toliko.
+/// Balans ne ovisi o `game` (samo u testovima), pa je zrcalo; test pariteta čuva da se brojke ne razilaze.
+pub const CLICK_MAX_QUALITY: u8 = 4;
 /// Zrcalo kvalitete prepuštene situacije u igri (`game` `resolve.rs`; nije izvezena, čuva ju test pariteta).
 pub const DELEGATED_QUALITY: u8 = 2;
 
@@ -23,6 +27,7 @@ pub const DELEGATED_QUALITY: u8 = 2;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AnswerPath {
     Best,
+    ClickBest,
     Middle,
     Delegated,
     Silent,
@@ -30,8 +35,9 @@ pub enum AnswerPath {
 }
 
 impl AnswerPath {
-    pub const ALL: [AnswerPath; 5] = [
+    pub const ALL: [AnswerPath; 6] = [
         AnswerPath::Best,
+        AnswerPath::ClickBest,
         AnswerPath::Middle,
         AnswerPath::Delegated,
         AnswerPath::Silent,
@@ -41,6 +47,7 @@ impl AnswerPath {
     pub fn name(self) -> &'static str {
         match self {
             AnswerPath::Best => "najbolji",
+            AnswerPath::ClickBest => "klik najbolji",
             AnswerPath::Middle => "srednji",
             AnswerPath::Delegated => "prepušteno",
             AnswerPath::Silent => "šutnja",
@@ -60,7 +67,7 @@ pub fn horizon(kind: PeriodKind) -> usize {
 /// Odgovor koji put nudi na predlošku: najbolji (najviša kvaliteta, kod jednakih manji indeks) ili srednji.
 pub fn offered_choice(path: AnswerPath, t: &SituationTemplate) -> Option<usize> {
     match path {
-        AnswerPath::Best => {
+        AnswerPath::Best | AnswerPath::ClickBest => {
             let mut best: Option<(usize, u8)> = None;
             for (i, a) in t.answers.iter().enumerate() {
                 if best.is_none_or(|(_, q)| a.quality > q) {
@@ -76,15 +83,24 @@ pub fn offered_choice(path: AnswerPath, t: &SituationTemplate) -> Option<usize> 
 
 /// Ishodi kruga za put. Prepušteno: poredak kao u igri (sidra redom, pa primjerci po važnosti silazno, stabilno);
 /// prvih `MANDATORY_SITUATIONS` je obvezno (šutnja), ostale idu voditelju.
-fn respond(path: AnswerPath, items: &[RoundItem]) -> Result<Vec<SituationOutcome>, ResolveError> {
+fn respond(
+    path: AnswerPath,
+    items: &[RoundItem],
+    writable: &dyn Fn(&RoundItem) -> bool,
+) -> Result<Vec<SituationOutcome>, ResolveError> {
     match path {
-        AnswerPath::Best | AnswerPath::Middle => items
+        AnswerPath::Best | AnswerPath::ClickBest | AnswerPath::Middle => items
             .iter()
             .map(|item| {
                 let t = item.template;
                 let i = offered_choice(path, t).ok_or(ResolveError::BadChoice)?;
                 let a = t.answers.get(i).ok_or(ResolveError::BadChoice)?;
-                Ok(SituationOutcome::from_answer(&t.code, a))
+                let mut o = SituationOutcome::from_answer(&t.code, a);
+                // ADR-047 t. 1: klik na ponuđeni odgovor gdje student može pisati vrijedi najviše 4 (kao `game`).
+                if path == AnswerPath::ClickBest && writable(item) {
+                    o.quality = o.quality.min(CLICK_MAX_QUALITY);
+                }
+                Ok(o)
             })
             .collect(),
         AnswerPath::Silent | AnswerPath::NoSituations => Ok(items
@@ -130,7 +146,8 @@ pub(crate) fn play(
 ) -> Result<SeasonResult, ResolveError> {
     let mut planner =
         |s: &sim_hotel_v2::HotelState, p: &Period| Ok(PeriodPlan::default_for(s, p, cat)?);
-    let mut responder = |_: &Period, items: &[RoundItem]| respond(path, items);
+    let mut responder =
+        |_: &Period, items: &[RoundItem]| respond(path, items, &|i| sits.writable(i));
     if path == AnswerPath::NoSituations {
         return run_season_responding(
             profile,
@@ -157,11 +174,14 @@ pub(crate) fn play(
 pub struct PathRow {
     pub profile: Profile,
     /// Medijan napretka na kraju sezone, redom `AnswerPath::ALL`.
-    pub end: [i32; 5],
+    pub end: [i32; 6],
     /// Medijan razlike po sjemenu najbolji − šutnja: nakon 1 kruga, nakon `horizon(kind)`, kraj sezone.
     pub best_vs_silent: [i32; 3],
-    /// Medijan razlike po sjemenu na kraju: najbolji − srednji, srednji − prepušteno, prepušteno − šutnja.
-    pub steps: [i32; 3],
+    /// Medijan razlike po sjemenu klik najbolji − šutnja na kraju sezone (samo se ispisuje, nije brana).
+    pub click_vs_silent: i32,
+    /// Medijan razlike po sjemenu na kraju: najbolji − klik najbolji, klik najbolji − srednji, srednji − prepušteno,
+    /// prepušteno − šutnja.
+    pub steps: [i32; 4],
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -198,9 +218,9 @@ pub(crate) fn path_report(
     let mut rows = Vec::new();
     for profile in Profile::ALL {
         let refs = refs_for(profile)?;
-        let mut end: [Vec<i32>; 5] = Default::default();
-        let mut at_one: [Vec<i32>; 5] = Default::default();
-        let mut at_h: [Vec<i32>; 5] = Default::default();
+        let mut end: [Vec<i32>; 6] = Default::default();
+        let mut at_one: [Vec<i32>; 6] = Default::default();
+        let mut at_h: [Vec<i32>; 6] = Default::default();
         for seed in 0..seeds {
             for (k, path) in AnswerPath::ALL.into_iter().enumerate() {
                 let r = play(sits, cat, &refs, (profile, path, seed), kind)?;
@@ -215,21 +235,27 @@ pub(crate) fn path_report(
                 }
             }
         }
-        let diff = |a: &[Vec<i32>; 5], x: usize, y: usize| -> i32 {
+        let diff = |a: &[Vec<i32>; 6], x: usize, y: usize| -> i32 {
             median_of_diffs(
                 a.get(x).map_or(&[][..], Vec::as_slice),
                 a.get(y).map_or(&[][..], Vec::as_slice),
             )
         };
-        let mut medians = [0_i32; 5];
+        let mut medians = [0_i32; 6];
         for (m, v) in medians.iter_mut().zip(end.iter()) {
             *m = median(&mut v.clone());
         }
         rows.push(PathRow {
             profile,
             end: medians,
-            best_vs_silent: [diff(&at_one, 0, 3), diff(&at_h, 0, 3), diff(&end, 0, 3)],
-            steps: [diff(&end, 0, 1), diff(&end, 1, 2), diff(&end, 2, 3)],
+            best_vs_silent: [diff(&at_one, 0, 4), diff(&at_h, 0, 4), diff(&end, 0, 4)],
+            click_vs_silent: diff(&end, 1, 4),
+            steps: [
+                diff(&end, 0, 1),
+                diff(&end, 1, 2),
+                diff(&end, 2, 3),
+                diff(&end, 3, 4),
+            ],
         });
     }
     Ok(PathReport {
@@ -247,8 +273,8 @@ pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
 pub const ORDER_DEBT_FLOOR: i32 = -25;
 
 /// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni
-/// do `ORDER_DEBT_FLOOR` u danoj vrsti kruga. Korak 0 = najbolji − srednji, 1 = srednji − prepušteno,
-/// 2 = prepušteno − šutnja. Popis smije samo padati; kad korak postane pozitivan na svim profilima, brana
+/// do `ORDER_DEBT_FLOOR` u danoj vrsti kruga. Korak 0 = najbolji − klik najbolji, 1 = klik najbolji − srednji,
+/// 2 = srednji − prepušteno, 3 = prepušteno − šutnja. Popis smije samo padati; kad korak postane pozitivan na svim profilima, brana
 /// „B3 dug" traži da ga se makne. Prazan od B1a (15.10.2026): uz bonus hitnog popravka mjesečni korak srednji −
 /// prepušteno je pozitivan na svim profilima (odluka voditelja).
 pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[];
@@ -269,8 +295,9 @@ pub fn plan_ruler(kind: PeriodKind, profile: Profile) -> i32 {
     }
 }
 
-const STEP_NAMES: [(&str, &str); 3] = [
-    ("najbolji", "srednji"),
+const STEP_NAMES: [(&str, &str); 4] = [
+    ("najbolji", "klik najbolji"),
+    ("klik najbolji", "srednji"),
     ("srednji", "prepušteno"),
     ("prepušteno", "šutnja"),
 ];
@@ -334,7 +361,7 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
     s.push_str(
         "== Situacije na zadanom planu (B3): isti plan i sjeme, mijenja se samo odgovor ==\n",
     );
-    s.push_str("  napredak na kraju sezone, medijan (najbolji / srednji / prepušteno / šutnja / bez situacija):\n");
+    s.push_str("  napredak na kraju sezone, medijan (najbolji / klik najbolji / srednji / prepušteno / šutnja / bez situacija):\n");
     for r in &paths.rows {
         let v: Vec<String> = r.end.iter().map(|x| hundredths(*x)).collect();
         s.push_str(&format!("    {} {}\n", r.profile.code(), v.join(" / ")));
@@ -347,7 +374,7 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
         let v: Vec<String> = r.best_vs_silent.iter().map(|x| hundredths(*x)).collect();
         s.push_str(&format!("    {} {}\n", r.profile.code(), v.join(" / ")));
     }
-    s.push_str("  koraci na kraju sezone, medijan razlike po sjemenu (najbolji − srednji / srednji − prepušteno / prepušteno − šutnja):\n");
+    s.push_str("  koraci na kraju sezone, medijan razlike po sjemenu (najbolji − klik / klik − srednji / srednji − prepušteno / prepušteno − šutnja):\n");
     for r in &paths.rows {
         let v: Vec<String> = r.steps.iter().map(|x| hundredths(*x)).collect();
         s.push_str(&format!("    {} {}\n", r.profile.code(), v.join(" / ")));
@@ -359,6 +386,19 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
             r.profile.code(),
             pct(share_bp(
                 r.best_vs_silent[2],
+                plan_ruler(paths.kind, r.profile)
+            ))
+        ));
+    }
+    s.push_str("  težina klika (klik najbolji − šutnja na kraju sezone kao dio raspona plana; samo ispis, nije brana):
+");
+    for r in &paths.rows {
+        s.push_str(&format!(
+            "    {} klik najbolji prema rasponu plana (Brižni − Štediša bez situacija) {}
+",
+            r.profile.code(),
+            pct(share_bp(
+                r.click_vs_silent,
                 plan_ruler(paths.kind, r.profile)
             ))
         ));

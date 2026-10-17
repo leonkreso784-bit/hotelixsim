@@ -25,10 +25,10 @@ use crate::{
 };
 
 pub use crate::v2_answers::{
-    AnswerPath, DELEGATED_QUALITY, MANDATORY_SITUATIONS, ORDER_DEBT, ORDER_DEBT_FLOOR, PathReport,
-    PathRow, WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
+    AnswerPath, CLICK_MAX_QUALITY, DELEGATED_QUALITY, MANDATORY_SITUATIONS, ORDER_DEBT,
+    ORDER_DEBT_FLOOR, PathReport, PathRow, WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
 };
-pub use crate::v2_situations::HOTEL_SLOT;
+pub use crate::v2_situations::{HOTEL_SLOT, writable_v2};
 
 pub struct OptionsV2 {
     pub seeds: u64,

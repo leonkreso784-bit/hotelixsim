@@ -1,14 +1,21 @@
 //! B3a: balans za svaki profil i sjeme vrti isti zadani plan, a mijenja se samo kako se rješavaju situacije (pet
 //! putova). Review Focus 2: igra s čovjekom koji igra put daje isto što i `path_season_v2`.
+//! PRAVILO-b (ADR-047): šesti put „klik najbolji“ (klik na najbolji ponuđeni odgovor, najviše 4 gdje student može pisati).
 use balance::v2::{
-    AnswerPath, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS, OptionsV2, horizon,
-    offered_choice, path_season_v2, render_v2, run_v2,
+    AnswerPath, CLICK_MAX_QUALITY, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS, OptionsV2,
+    horizon, offered_choice, path_season_v2, render_v2, run_v2, writable_v2,
 };
 use content::{Snapshot, repo_dir};
 use game::command::{GameSettings, new_game_with};
 use game::dto::indices_dto;
-use game::{Actor, Controller, Game, GameEvent, GameId, GuestId, HotelId, Recorded, ResolveStep};
-use sim_hotel_v2::{PeriodKind, Profile, SeasonResult, SituationTemplate, situations_for};
+use game::event::{AiMeta, AnswerRule, CriterionVerdict};
+use game::{
+    Actor, Controller, Game, GameEvent, GameId, GuestId, HotelId, Recorded, ResolveStep,
+    VerdictDraft,
+};
+use sim_hotel_v2::{
+    PeriodKind, Profile, RoundItem, SeasonResult, SituationTemplate, situations_for,
+};
 use uuid::Uuid;
 
 /// Po krugu: šifre situacija (sortirane), pet pokazatelja nakon kruga, napredak od početka (stotinke).
@@ -17,6 +24,33 @@ type Trace = Vec<(Vec<String>, [u16; 5], i32)>;
 fn apply(g: &mut Game, actor: Actor, event: GameEvent) {
     let seq = g.last_seq + 1;
     g.apply(Recorded { seq, actor, event }).unwrap();
+}
+
+/// Student piše vlastitim riječima: ni jedan ponuđeni odgovor nije prepisan ni zalijepljen.
+const OWN_TEXT: &str = "Poštovani gostu, hvala vam na strpljenju. Preuzimam odgovornost, a do kraja dana javljam se s konkretnim rješenjem koje vam odgovara.";
+
+/// Nacrt presude: svih pet kriterija ispunjeno, najbliži ponuđeni odgovor `nearest` (ocjena 5).
+fn full_marks(nearest: u8) -> VerdictDraft {
+    VerdictDraft {
+        criteria: (1u8..=5)
+            .map(|n| CriterionVerdict {
+                n,
+                met: true,
+                reason: format!("razlog {n}"),
+            })
+            .collect(),
+        nearest_answer: nearest,
+        rationale: "obrazloženje".into(),
+    }
+}
+
+fn test_meta() -> AiMeta {
+    AiMeta {
+        model: "test-model".into(),
+        prompt: "test-prompt".into(),
+        input_tokens: 10,
+        output_tokens: 5,
+    }
 }
 
 /// Igra s jednim ljudskim hotelom u utoru balansa, zadani broj situacija, bez plana (→ zadani plan). Igrač igra
@@ -34,8 +68,8 @@ fn human_game(seed: u64, kind: PeriodKind, profile: Profile, path: AnswerPath) -
         GameSettings {
             kind,
             situations: None,
-            // Paritet putova (B3a) vrijedi za staro pravilo; put „klik najbolji“ s ograničenjem dolazi u PRAVILO-b.
-            answer_rule: Some(game::event::AnswerRule::Classic),
+            // PRAVILO-b: paritet uz novo pravilo (zadano za nove v2 igre): klik u situaciji s likom vrijedi najviše 4.
+            answer_rule: Some(AnswerRule::OwnWords),
         },
     )
     .unwrap();
@@ -68,8 +102,18 @@ fn human_game(seed: u64, kind: PeriodKind, profile: Profile, path: AnswerPath) -
             .collect();
         for (code, choice) in list {
             match path {
-                AnswerPath::Best | AnswerPath::Middle => {
-                    let a = u8::try_from(choice.expect("Best/Middle nude odgovor")).unwrap();
+                AnswerPath::Best if g.click_capped(me, &code) => {
+                    // Vlastiti odgovor (ADR-047 t. 3): u situaciji s likom student piše, presuda daje 5 kriterija.
+                    let a = u8::try_from(choice.expect("Best nudi odgovor")).unwrap();
+                    let ev = g.submit_response(me, &code, OWN_TEXT).unwrap();
+                    apply(&mut g, me_actor.clone(), ev);
+                    let v = g.validate_verdict_for(me, &code, full_marks(a)).unwrap();
+                    let ev = g.record_verdict(me, &code, v, test_meta()).unwrap();
+                    apply(&mut g, Actor::System, ev);
+                }
+                AnswerPath::Best | AnswerPath::ClickBest | AnswerPath::Middle => {
+                    let a =
+                        u8::try_from(choice.expect("Best/ClickBest/Middle nude odgovor")).unwrap();
                     let ev = g.choose_answer(me, &code, a).unwrap();
                     apply(&mut g, me_actor.clone(), ev);
                 }
@@ -135,6 +179,8 @@ fn season_trace(s: &SeasonResult, anchors: &[SituationTemplate]) -> Trace {
 #[test]
 fn mirrors_match_the_game() {
     assert_eq!(MANDATORY_SITUATIONS, game::MANDATORY_SITUATIONS);
+    assert_eq!(CLICK_MAX_QUALITY, game::own_words::CLICK_MAX_QUALITY);
+    assert_eq!(CLICK_MAX_QUALITY, 4);
 }
 
 #[test]
@@ -144,6 +190,7 @@ fn path_constants_and_names() {
         AnswerPath::ALL,
         [
             AnswerPath::Best,
+            AnswerPath::ClickBest,
             AnswerPath::Middle,
             AnswerPath::Delegated,
             AnswerPath::Silent,
@@ -155,6 +202,7 @@ fn path_constants_and_names() {
         names,
         [
             "najbolji",
+            "klik najbolji",
             "srednji",
             "prepušteno",
             "šutnja",
@@ -173,6 +221,12 @@ fn offered_choice_only_for_best_and_middle() {
     let mut seen = 0;
     for t in content.situations.iter().filter(|t| t.answers.len() >= 2) {
         let best = offered_choice(AnswerPath::Best, t).unwrap();
+        assert_eq!(
+            offered_choice(AnswerPath::ClickBest, t),
+            Some(best),
+            "{}: klik najbolji nudi isti odgovor kao najbolji",
+            t.code
+        );
         let top = t.answers.iter().map(|a| a.quality).max().unwrap();
         assert_eq!(t.answers[best].quality, top, "{}", t.code);
         assert!(
@@ -211,6 +265,7 @@ fn answer_paths_in_game_match_balance() {
         for profile in Profile::ALL {
             for path in [
                 AnswerPath::Best,
+                AnswerPath::ClickBest,
                 AnswerPath::Middle,
                 AnswerPath::Delegated,
                 AnswerPath::Silent,
@@ -316,9 +371,118 @@ fn report_prints_answer_paths() {
         assert!(
             text.lines()
                 .any(|l| l.trim_start().starts_with(&format!("{p} "))
-                    && l.matches(" / ").count() == 4),
-            "redak za profil {p} s pet putova"
+                    && l.matches(" / ").count() == 5),
+            "redak za profil {p} sa šest putova"
+        );
+        // Redak težine klika po profilu (PRAVILO-b): počinje profilom, spominje „klik“ i postotak (pct: „25,0 %“).
+        assert!(
+            text.lines()
+                .any(|l| l.trim_start().starts_with(&format!("{p} "))
+                    && l.contains("klik")
+                    && l.contains(" %")),
+            "redak težine klika za profil {p}"
         );
     }
+    assert!(
+        text.lines().any(|l| l
+            .contains("najbolji / klik najbolji / srednji / prepušteno / šutnja / bez situacija")),
+        "zaglavlje s klik najbolji"
+    );
     assert!(text.contains("težina za anketu"));
+    assert!(text.contains("prema rasponu plana"));
+    for row in &paths.rows {
+        assert_eq!(row.end.len(), 6);
+        assert_eq!(row.steps.len(), 4);
+        // Monotonija (klik ≤ najbolji) se NE tvrdi nad medijanom od 3 sjemena: izvlačenje ovisi o stanju
+        // hotela pa pojedino sjeme smije ispasti bolje (pregled PRAVILO-b I2, Ruling voditelja 17.10.).
+        // Smjer ograničenja čuva `click_best_is_never_above_best_and_sometimes_below` nad zbrojem.
+    }
+}
+
+/// Sidro i primjerak: balans zna smije li se na situaciji pisati kao igra (`ai_entry_for(..).free_text`).
+#[test]
+fn writable_matches_game_free_text() {
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let (mut with_character, mut without_character) = (0_usize, 0_usize);
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let g = human_game(42, kind, Profile::B, AnswerPath::Silent);
+        let me = g.hotels[0].setup.hotel_id;
+        let mut check = |item: &RoundItem, at: &str| {
+            let code = &item.template.code;
+            let game_says = g.ai_entry_for(me, code).is_some_and(|a| a.free_text);
+            assert_eq!(
+                writable_v2(&content, item),
+                game_says,
+                "{kind:?} {at} {code}"
+            );
+            if game_says {
+                with_character += 1;
+            } else {
+                without_character += 1;
+            }
+        };
+        for t in &content.situations {
+            let item = RoundItem {
+                template: t,
+                drawn: None,
+            };
+            check(&item, "sidro");
+        }
+        for i in g.hotels[0].drawn.values().flatten() {
+            let item = RoundItem {
+                template: &i.situation,
+                drawn: Some(&i.drawn),
+            };
+            check(&item, "primjerak");
+        }
+    }
+    assert!(
+        with_character > 0,
+        "usporedba nije prazna: ima situacija s likom"
+    );
+    assert!(
+        without_character > 0,
+        "usporedba nije prazna: ima situacija bez lika"
+    );
+}
+
+/// Klik najbolji ne smije biti bolji od vlastitog odgovora (isti odgovor, kvaliteta `min(q, 4)` samo gdje se piše),
+/// a ukupno mora biti strogo lošiji: ograničenje se vidi u brojkama.
+///
+/// Ruling voditelja 17.10. (PRAVILO-b): uspoređuje se ZBROJ po vrsti kruga, ne svako sjeme. Od kruga u kojem
+/// klik dobije 4 umjesto 5 stanje hotela se razilazi, pa se razilazi i izvlačenje primjeraka; pojedino sjeme
+/// zato smije ispasti i bolje (Month C sjeme 1). Prvi krug ima iste primjerke (isto kao `best`/`silent` gore).
+#[test]
+fn click_best_is_never_above_best_and_sometimes_below() {
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
+    let mut total_best = 0_i64;
+    let mut total_click = 0_i64;
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let mut kind_best = 0_i64;
+        let mut kind_click = 0_i64;
+        for profile in Profile::ALL {
+            for seed in 0..5 {
+                let best = path_season_v2(&content, profile, AnswerPath::Best, seed, kind).unwrap();
+                let click =
+                    path_season_v2(&content, profile, AnswerPath::ClickBest, seed, kind).unwrap();
+                let at = format!("{kind:?} {} sjeme {seed}", profile.code());
+                assert_eq!(
+                    click.drawn[0], best.drawn[0],
+                    "{at}: isti primjerci u 1. krugu"
+                );
+                kind_best += i64::from(best.progress_pts);
+                kind_click += i64::from(click.progress_pts);
+            }
+        }
+        assert!(
+            kind_click <= kind_best,
+            "{kind:?}: klik najbolji ukupno bolji od vlastitog ({kind_click} > {kind_best})"
+        );
+        total_best += kind_best;
+        total_click += kind_click;
+    }
+    assert!(
+        total_click < total_best,
+        "ograničenje klika nigdje ne mijenja napredak ({total_click} = {total_best})"
+    );
 }
