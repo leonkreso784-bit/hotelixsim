@@ -94,7 +94,7 @@ fn character_uniform_reads_template_role_key() {
 }
 
 /// 3. Stanje prije cigle sadržaja C10: nijedan predložak danas nema ulogu s uniformom (ta cigla ovaj test mijenja
-/// svjesno, u svom RED commitu).
+///    svjesno, u svom RED commitu).
 #[test]
 fn no_template_has_a_uniform_today() {
     let c = v2_content();
@@ -106,7 +106,7 @@ fn no_template_has_a_uniform_today() {
 }
 
 /// 6. Čuvar budućeg sadržaja: uloga koja opisom (naziv ili vrsta) govori o službi mora imati ključ iz rječnika i biti
-/// partner — inače lik policajca ostaje tiho bez uniforme. Fraze, ne korijeni ("hitno odgovoriti" nije služba).
+///    partner — inače lik policajca ostaje tiho bez uniforme. Fraze, ne korijeni ("hitno odgovoriti" nije služba).
 #[test]
 fn service_roles_use_bank_keys() {
     let c = v2_content();
