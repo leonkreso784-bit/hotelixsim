@@ -7,9 +7,9 @@ use std::collections::BTreeMap;
 use sim_hotel_v2::situations::{DrawnSituation, SituationCounts, TemplateSet};
 use sim_hotel_v2::{
     Catalog, CatalogError, Cause, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError,
-    Responder, SeasonResult, SeasonSituations, SituationTemplate, Strategy, TemplateDraw, Var,
-    group_month, run_robot_season, run_season_from, run_season_responding, season_periods,
-    situations_for,
+    Responder, RoundItem, SeasonResult, SeasonSituations, SituationTemplate, Strategy,
+    TemplateDraw, Var, group_month, run_robot_season, run_season_from, run_season_responding,
+    season_periods, situations_for,
 };
 
 use crate::median;
@@ -27,6 +27,22 @@ pub(crate) const DOMINANT_MAX_BP: i32 = 1_500;
 pub(crate) const SHARE_STRATEGIES: [Strategy; 2] = [Strategy::Saver, Strategy::Caring];
 /// Štediši situacije smanjuju napredak, najviše za 6 bodova (stotinke).
 pub(crate) const SAVER_MAX_LOSS: i32 = 600;
+
+/// Ima li stavka lika, pa student može pisati vlastiti odgovor (`ai_entry_for(..).free_text` u igri): sidro po
+/// `content.ai`, primjerak po liku njegova predloška.
+pub fn writable_v2(content: &content::Content, item: &RoundItem) -> bool {
+    let code = &item.template.code;
+    if let Some(ai) = content.ai.get(code) {
+        return ai.free_text;
+    }
+    item.drawn.is_some_and(|d| {
+        content
+            .situation_templates
+            .as_ref()
+            .and_then(|t| t.templates.iter().find(|t| t.code == d.template))
+            .is_some_and(|t| t.character.is_some())
+    })
+}
 
 /// Situacije sezone: predlošci iz sadržaja (u jezgrenom obliku) ili stari popis.
 pub(crate) struct Situations<'a> {
@@ -51,6 +67,11 @@ impl<'a> Situations<'a> {
                 set
             }),
         }
+    }
+
+    /// Smije li student na ovoj stavci pisati vlastiti odgovor (zrcalo `game`: situacija ima lika).
+    pub(crate) fn writable(&self, item: &RoundItem) -> bool {
+        writable_v2(self.content, item)
     }
 
     pub(crate) fn has_templates(&self) -> bool {
