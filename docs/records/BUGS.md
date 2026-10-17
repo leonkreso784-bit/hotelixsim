@@ -5,6 +5,22 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-17 — sesija 8
+
+**B14. Test balansa tražio iste primjerke i „klik ≤ vlastiti" po sjemenu** (PRAVILO-b; graditelj BLOCKED na čuvarovu testu, kasnije isto u testu ispisa nad medijanom 3 sjemena).
+*Uzrok:* izvlačenje primjeraka ovisi o stanju hotela, pa putovi s različitim ishodom imaju iste primjerke samo do prvog kruga u kojem se stanje razdvoji; po pojedinom sjemenu
+klik zna ispasti bolji (mjesečno C, sjeme 1). *Pouka:* testovi koji uspoređuju putove balansa **ne traže iste primjerke ni monotoniju po sjemenu ili medijanu** kad put
+mijenja stanje; isti su samo primjerci prvog kruga, a redoslijed se tvrdi nad **zbrojem** po vrsti kruga (i branom na 1000 sjemena). *Stanje:* popravio voditelj (d8a7cc7, b0335d4), [ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 3.
+
+**B15. Lažno crveno pod opterećenjem: vitest „Timeout waiting for worker" i cargo 0xC0000142** (CI nakon IZGLED-a i nakon PRAVILO-a/-b, dok su istodobno gradile tri stvari).
+*Uzrok:* okolina (Windows ne stigne podići proces ili radnika), ne test. *Pouka:* takav EXIT (vitest timeout, `cargo test` EXIT 101/127 s `STATUS_DLL_INIT_FAILED`) **samo se ponovi**,
+kad opterećenje padne; ne popravlja se kod ni test. Pravi pad ima poruku testa. *Stanje:* pravilo u nalozima (`upute-izvodacima.md` §2).
+
+**B16. Disk pao na 45 GB** (ispod Leonove granice 50) dok su istodobno gradili CI na `main`, PRAVILO-b i paralelna sesija banke. *Uzrok:* svako stablo ima svoj
+`target/<stablo>` od više GB (B12), a stari `target/` spojenih cigli i privremene mape (`sqlx-tmp`, `tmp`) nisu obrisani odmah. *Pouka:* **najviše dva `cargo` ukupno,
+jedan Rust slot po sesiji** (glavna i banka); `df -h /c` prije svake gradnje; `target/<stablo>` se briše odmah nakon spajanja, ne na kraju dana. *Stanje:* obrisano šest mapa → 77 GB;
+[ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 6.
+
 ## 2026-10-16 — sesija 6
 
 **B12. Zajednički `CARGO_TARGET_DIR` među stablima daje zastarjelu biblioteku** (simptom: `unresolved import content::ljudi` bez retka "Compiling").

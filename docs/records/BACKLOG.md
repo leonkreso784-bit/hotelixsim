@@ -155,7 +155,7 @@ Leonove želje 12.10.; brojke idu kroz Leonovu anketu pri planu sloja 2. Ideje n
 
 Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretpostavkom i mijenja kad odgovori. Leon je 17.10. odgovorio na
 43 pitanja paketa ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)); stare stavke v1 (brojke prve igre, A12) i
-riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md).
+riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) i [ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md).
 
 - [leon] **Slijepi pregled tekstova B4a, B4b i B4c** (B1 „ok", još nije napravljen) — `.superpowers/sdd/2026-10-14-popravak-temelja/b4a-pregled-tekstova.md`, `b4b-pregled-tekstova.md`, `b4c-pregled-tekstova.md` (uz „Napomene voditelja"); blokira L1-15, ne spajanje. Nakon njega B4-ispravci i napomene a–e iz B2 ([ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 6).
 - [leon] **Ocjene za mjerilo AI-ja** (B4 „ok") — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1); prije C3. Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
@@ -169,6 +169,11 @@ riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DE
 - [L1-13] **Tablica značaja situacija** (B2) — tri razine s boljim imenima (danas `weight` 1–4 i `major: high|low`, student ih ne vidi); značajnije situacije i pametnije odluke nose više bodova.
 - [L1-13] **Tumačenja za Leona uz tablicu:** „zadovoljan gost" = ocjena ≥ 4; imena triju razina; ADR-046 t. 1 („i uz ocjenu 1") nadjačan.
 - [L1-13] **Slabiji odgovor s troškom** (A4 „ok") — jednom slabijem odgovoru dati trošak (npr. pretjeranu naknadu, kao P-KLIMA[2]), da „biraj jedini koji gostu nešto daje" ne pogađa najbolji. Izvor: `b4b-pregled-tekstova.md`.
+- [L1-13] **Klik nosi 92–95 % vlastitog odgovora** (pregled PRAVILO-b I1, 17.10.) — klik gubi samo ocjenu (5 → 4), ne mehanike najboljeg; tjedno B 45,1 % prema 48,9 %, a ADR-047 t. 3 očekivao ~75 %. Leon u anketi L1-13: prihvatiti, klik gubi i dio mehanika, ili cilj težine klika ([ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 4).
+- [leon] **Pregled 10–20 lica jednog kruga u igri** (C11, IZGLED spojen 872ff46) — Leon mijenja frizure po rodu, učestalost brade (1 od 3) i naušnica (1 od 2) u `look.ts` (`HINT_HAIR_F/M`).
+- [web] **IZGLED-c: uniforme vanjskih** (Leon 17.10.) — policijska, vatrogasna, hitna i liječnici; uniforma iz uloge ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) C10), banka ne mijenja format; kartica u sesiji 9.
+- [banka ljudi] **K5 zamjenjuje popis imena zapisima banke** (IZGLED) — tada `Origin` dobiva vrijednosti po zemlji, a tamniji tonovi kože (3, 4, 5, 7) ulaze u bazene.
+- [sloj1] **Balans ne ograničava put „srednji"** (pregled PRAVILO-b M1) — igra uz vlastiti odgovor ograničava svaki klik; danas isto jer je srednji ≤ 4, razilazi se tek uz predložak s dva odgovora (ADR-059 t. 5).
 - [L1-14] **Priče hotela A i B i obnova od 150.000 €** (A12) — Leon provjerava pri igranju sezone („prepoznajem li ovaj hotel?").
 - [faza C+] **Sučelje soba** (A1) — svaka soba vidljiva i obnovljiva zasebno; nova mehanika i ekran, 3–5 cigala, ne u L1-13 ([ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) Izmjena 17.10.).
 - [faza C+] **Mjere potrošnje hotela** (A13) — energija i voda kao pokazatelj u igri (nova mehanika).

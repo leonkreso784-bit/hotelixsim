@@ -4,6 +4,42 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-17 (8) — Sesija 8: Leonovih 43 odgovora u ADR-ove, IZGLED i PRAVILO-b spojeni, PRAVILO-c započet
+
+- **Jutro (samo dokumenti):** Leonovi odgovori na 43 pitanja i razgovor → [ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md),
+  [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md), [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) (ec3ba48);
+  kartica [L1-13](../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), BANKA_LJUDI s nacrtom rizika C3 ([07-poznate-osobe-rizik](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)),
+  VODITELJ_I_TRZISTE, ROADMAP (ee67b23); ispravak ADR-056 B2 (e71ecc4); sitnice BACKLOG-a (748bcab); dubinska provjera arhitekture E4
+  ([PROVJERA_ARHITEKTURE](../architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), e581849: „ok uz uvjete", 7 stavki, 5 pitanja za Leona).
+- **CI nakon PRAVILO-a potvrđen zelen:** `cargo test --workspace` prvi put pao na linkeru (0xC0000142, okolina), ponovljen EXIT 0; balansi bajt-isti.
+- **IZGLED (a+b) spojen** (872ff46): lik u situaciji i razgovoru dobiva rod, dobnu skupinu i podrijetlo; web crta lice iz tih podataka. Pregled opus DA
+  (0 C / 1 I — sukob duga `check-kod.mjs` riješen pri spajanju / 7 M). CI nakon spajanja svi EXIT 0 (vitest „Timeout waiting for worker" prvi put, ponovljen 0); balans bajt-isti.
+- **PRAVILO-b spojen** (ee6de80): balans dobiva put „klik najbolji" (najviše 4 gdje se piše vlastiti odgovor), lanac B3 s 4 koraka, paritet s igrom.
+  Voditelj popravio dva testa (d8a7cc7, b0335d4): monotonija „klik ≤ vlastiti" vrijedi nad zbrojem, ne po sjemenu ni medijanu ([BUGS](BUGS.md) B14).
+  Pregled opus DA (0 C / 2 I / 7 M). **Za Leona (I1):** klik nosi 92–95 % učinka vlastitog odgovora (gubi samo ocjenu, ne mehanike) → odluka u anketi L1-13.
+- **CI nakon PRAVILO-b:** fmt, clippy, core-deps, probe-mutacija, git diff, sqlx, balansi v1/v2 svi EXIT 0; v1 bajt-isti, v2 tjedno i mjesečno razlikuju se
+  samo u bloku klika (pogledano na `/kraj`); `cargo test --workspace` EXIT 127 (0xC0000142) — skripta zaustavljena na Leonov „zaustavi sve"; ponoviti u sesiji 9.
+- **PRAVILO-c u tijeku:** čuvar 2c7af1a (7 RED testova); graditelj zaustavljen s necommitanim izmjenama u `../hotelixsim-pravilo-c`.
+- **Paralelna sesija banke ljudi** (Leon 17.10.): pečat 000/001, vanjski 10 + 50, K3 serija-002, K4 u tijeku, rebase na ee6de80. Leon traži uniforme za
+  avatare vanjskih (policija, vatrogasci, hitna) → nova cigla IZGLED-c u glavnoj sesiji.
+- **Disk** pao na 45 GB dok su gradile tri stvari; obrisani stari `target/<stablo>` → 77 GB ([BUGS](BUGS.md) B16). Pretpostavke: [ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md).
+- **Gdje se vidi:** lokalno, `model-v2/sloj1` ee6de80 + docs-commit; **ništa danas nije pushano** (20 commita ispred `origin` s docs-commitom kraja). Main ostaje demo do kraja faze B.
+  Izvještaj: `.superpowers/sdd/2026-10-14-popravak-temelja/kraj-17-10-8.md`.
+
+---
+
+## 2026-10-17 (7) — Sesija 7 (16.–17.10.): PRAVILO-a spojen i objavljen, IZGLED započet, paket od 43 pitanja
+
+- **PRAVILO-a spojen** (9a275d8, `CORE_VERSION` 2.5.0) i uz Leonov OK pushan; GitHub CI zelen. Pregled opus našao lažno „zalijepljeno" na dobrom
+  odgovoru → pravilo o parovima susjednih riječi ([BUGS](BUGS.md) B13).
+- **Leonove ankete:** IZGLED odmah usporedo s PRAVILO-om, B13 = neutralna 3, stil lika crtić iz podataka; vanjski su treća vrsta banke ljudi; platforma od studenog
+  → [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md).
+- **Dokumenti:** nacrt [IZGLED_LIKA](../architecture/IZGLED_LIKA.md), kartica IZGLED, nacrt [plana platforme](../plan/2026-11-platforma.md),
+  [SESIJA_BANKE](../workflow/SESIJA_BANKE.md), paket [43 pitanja](../plan/2026-10-17-leonov-pregled.md) (i Word na Leonovoj radnoj površini).
+- IZGLED-a i -b napisani u stablu `../hotelixsim-izgled`, dovršeni u sesiji 8. `/kraj` sesije 7 nije pisan; ovaj unos je napisan na kraju sesije 8.
+
+---
+
 ## 2026-10-16 (6) — Sesija 6: B4c dovršen, banka ljudi K1a + K1b, kartica PRAVILO
 
 - **B4c spojen** (`model-v2/sloj1` f7ac7cc, CI 24/24): oznake 18 predložaka (najdulja ≤ 1,39× najkraće; dug `LabelLengths` 0 za svih 55) i uvjeti kvarova
