@@ -110,7 +110,7 @@ export function lookFor(name: string, hint?: LookHint | null): AvatarLook;
 // KNOWN_LOOKS[name] pobjeđuje; bez hinta lookFromSeed (bajt-isto); s hintom applyUniform(lookFromHint(name, hint), hint.uniform)
 export const UNIFORM_LOOK: Record<Uniform, Pick<AvatarLook, "outfit" | "clothes" | "hat" | "neckwear">> = {
   police: { outfit: "police", clothes: 10, hat: "police", neckwear: "none" },
-  fire: { outfit: "firefighter", clothes: 10, hat: "none", neckwear: "none" },
+  fire: { outfit: "firefighter", clothes: 10, hat: "fire", neckwear: "none" },
   ems: { outfit: "paramedic", clothes: 11, hat: "none", neckwear: "none" },
   doctor: { outfit: "coat", clothes: 6, hat: "none", neckwear: "stethoscope" },
 };
