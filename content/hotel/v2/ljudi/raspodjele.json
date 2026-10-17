@@ -69,7 +69,7 @@
         "potvrdeno": true
       },
       "referent_uprave": {
-        "z_bp": 7000,
+        "z_bp": 6800,
         "izvor": "Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR): skupina 41 = 83 % i 43 = 58 %, ponderirano, žene 68 %. Izmjereno 17.10.2026.",
         "potvrdeno": true
       },
