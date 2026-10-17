@@ -4210,11 +4210,19 @@
           "rationale"
         ],
         "properties": {
+          "copied": {
+            "type": "boolean",
+            "description": "Prepisan je jedan ponuđeni odgovor: vrijedi kao klik. Stariji klijenti ga ne šalju, pa nije obvezno u shemi."
+          },
           "criteria": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CriterionBody"
             }
+          },
+          "pasted": {
+            "type": "boolean",
+            "description": "Zalijepljeno je više ponuđenih odgovora: nije odluka, neutralna ocjena."
           },
           "quality": {
             "type": [
@@ -4804,6 +4812,7 @@
           "answers",
           "chosen",
           "free_text",
+          "click_capped",
           "character",
           "response",
           "department",
@@ -4840,6 +4849,10 @@
             ],
             "format": "int32",
             "minimum": 0
+          },
+          "click_capped": {
+            "type": "boolean",
+            "description": "Klik na ponuđeni odgovor daje najviše 4 od 5 (v2, lik i vlastiti odgovor); web to kaže prije klika."
           },
           "code": {
             "type": "string"

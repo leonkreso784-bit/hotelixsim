@@ -52,6 +52,8 @@ pub struct SituationItem {
     pub chosen: Option<u8>,
     /// Student smije odgovoriti svojim riječima (i razgovarati s likom).
     pub free_text: bool,
+    /// Klik na ponuđeni odgovor daje najviše 4 od 5 (PRAVILO, ADR-047): v2, lik i vlastiti odgovor; v1 uvijek `false`.
+    pub click_capped: bool,
     pub character: Option<CharacterCardView>,
     pub response: Option<ResponseView>,
     /// Kod odjela izvučenog primjerka; `None` za situaciju cijelog hotela, sidra S1–S4 i v1.
@@ -104,6 +106,10 @@ pub struct ResponseView {
     pub quality: Option<u8>,
     pub criteria: Vec<CriterionView>,
     pub rationale: Option<String>,
+    /// Prepisan je jedan ponuđeni odgovor: vrijedi kao klik (ADR-047); bez presude `false`.
+    pub copied: bool,
+    /// Zalijepljeno je više ponuđenih odgovora: nije odluka, neutralna ocjena (kvar B13); bez presude `false`.
+    pub pasted: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -276,6 +282,8 @@ fn response_view(g: &Game, hotel: HotelId, code: &str, fr: &FreeResponse) -> Res
             quality: None,
             criteria: Vec::new(),
             rationale: None,
+            copied: false,
+            pasted: false,
         };
     };
     let criteria = v
@@ -301,6 +309,8 @@ fn response_view(g: &Game, hotel: HotelId, code: &str, fr: &FreeResponse) -> Res
         quality: Some(v.quality),
         criteria,
         rationale: Some(v.rationale.clone()),
+        copied: v.copied.is_some(),
+        pasted: v.pasted,
     }
 }
 
@@ -336,6 +346,7 @@ async fn situations_in_month(
                 answers: t.answers.iter().map(|a| a.label.clone()).collect(),
                 chosen: record.answers.get(&key).copied(),
                 free_text: ai.is_some_and(|a| a.free_text),
+                click_capped: g.click_capped(hotel, &t.code),
                 character: ai
                     .and_then(|a| a.character.as_ref())
                     .map(|c| CharacterCardView {

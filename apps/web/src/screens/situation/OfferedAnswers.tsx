@@ -60,6 +60,7 @@ export function OfferedAnswers({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">{heading}</h2>
+      {s.click_capped && <p className="text-sm text-muted">{t("answers.clickCap")}</p>}
       <ol className="space-y-2">
         {s.answers.map((label, i) => (
           <li key={label}>
