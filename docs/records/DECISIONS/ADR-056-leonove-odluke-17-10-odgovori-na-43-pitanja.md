@@ -42,8 +42,10 @@ da prihvaća preporuku iz paketa. Ono što je voditelj protumačio stoji kao „
 ## B — tekstovi i mjerilo AI-ja
 - **B1 ok:** Leon slijepo pregledava sve tri datoteke (B4a, B4b, B4c) prije L1-15; voditelj zatim šalje jedan krug B4-ispravaka.
 - **B2 značaj situacija.** *„Treba napraviti tablicu situacija (značajne, polu značajne, ne toliko značajne), bolje imenovati i rasporediti;
-  značajnije situacije i pametnije odluke nose više bodova"* → L1-13: imenovanje tri razine i bodovi po razini (predlošci već imaju
-  `major`/`minor`, student ih ne vidi). Napomene a–e iz paketa ostaju preporuka do slijepog pregleda (ADR-055 t. 6).
+  značajnije situacije i pametnije odluke nose više bodova"* → L1-13: imenovanje tri razine i bodovi po razini. Ispravak 17.10.
+  (provjereno u `situation_templates.json`): predlošci nemaju `major`/`minor` nego `weight` 1–4 (2 / 27 / 17 / 9 od 55) i `major: high|low`
+  na 5 predložaka; tri razine izvode se iz `weight` (kartica L1-13), student ih danas ne vidi. Napomene a–e iz paketa ostaju preporuka do
+  slijepog pregleda (ADR-055 t. 6).
 - **B3 ok:** voditelj sam popravlja P-RANI-DOLAZAK, rezervni tekst lika i objašnjenje „Zaposleni"; agent piše nacrt opisa S3 i rubrika S3 i S4, Leon potvrđuje.
 - **B4 ok:** Leon upisuje 40 ocjena za mjerilo AI suca (~40 min) prije C3 i prije svake zamjene modela suca.
 - **B5 ok:** Leon čita kriterije S1 i S2 (~10 min); nacrt S1b i S5–S8 iz prve igre se zatvara (v1 zamrznut).
