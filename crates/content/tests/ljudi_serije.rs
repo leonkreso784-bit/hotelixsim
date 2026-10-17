@@ -1,15 +1,62 @@
-//! Banka ljudi (K2, čuvar): serija-001 = 50 radnika (R-00051–R-00100) i 50 gostiju (G-00051–G-00100). Raspon serije N je
-//! 50·N+1 … 50·N+50. Testovi čitaju stvarni repo (`Banka::read`, `Okvir::read`), ne prepisuju konstante; ciljeve i dobne
-//! razrede uzimaju iz `raspodjele.json`. Pragovi za 50 zapisa su ovdje (čuvarev prijedlog, vidi k2-tests.md); svi prekršaji
-//! se skupljaju u jedan `panic!`. Nova pravila stroja (Azija, S6) i opća provjera banke su u `ljudi_pravila.rs` i
+//! Banka ljudi (K3, čuvar): svaka puna serija N ≥ 1 radnika i gostiju (001 = R/G-00051…00100, 002 = 00101…00150, …).
+//! Raspon serije N je 50·N+1 … 50·N+50. Testovi prolaze kroz SVAKU seriju koja postoji na disku i traže da postoje
+//! serije 1 i 2 (`OBVEZNE`); kad se doda serija-003, vrijedi i za nju bez izmjene testa. Čitaju stvarni repo
+//! (`Banka::read`, `Okvir::read`); ciljeve i dobne razrede uzimaju iz `raspodjele.json`. Pragovi za 50 zapisa su ovdje
+//! (čuvarev prijedlog, vidi k2-tests.md); prekršaji se skupljaju u jedan `panic!`, a svaka poruka nosi put serije.
+//! „Nijedan opis se ne ponavlja doslovno" gleda cijelu banku (sve serije, sve tri vrste). Serija 000 ostaje pod
+//! `primjeri_su_raznolici`. Nova pravila stroja (Azija, S6) i opća provjera banke su u `ljudi_pravila.rs` i
 //! `ljudi_okvir.rs` (`repo_banka_prolazi`).
 use content::ljudi::{Banka, Gost, Okvir, Podrijetlo, Radnik, Razina, Rod, Segment, Uloga};
 use content::repo_dir;
 use content::templates::Names;
 use std::collections::{BTreeMap, BTreeSet};
 
-const R: &str = "radnici/serija-001.json";
-const G: &str = "gosti/serija-001.json";
+/// Serije koje MORAJU postojati (inače bi petlja bez serije prolazila prazno); uz njih se provjeravaju i sve ostale N ≥ 1 s diska.
+const OBVEZNE: [u32; 2] = [1, 2];
+
+/// Broj serije iz puta `<vrsta>/serija-NNN.json`.
+fn broj_serije(put: &str) -> u32 {
+    put.rsplit_once("serija-")
+        .and_then(|(_, r)| r.strip_suffix(".json"))
+        .and_then(|n| n.parse().ok())
+        .unwrap_or_else(|| panic!("put {put:?} nije oblika '<vrsta>/serija-NNN.json'"))
+}
+
+/// Svi N ≥ 1 koji postoje kao radnici ili gosti na disku, uz obvezne; uzlazno.
+fn brojevi(b: &Banka) -> Vec<u32> {
+    let mut v: BTreeSet<u32> = OBVEZNE.into_iter().collect();
+    v.extend(
+        b.radnici
+            .iter()
+            .map(|(p, _)| broj_serije(p))
+            .filter(|&n| n >= 1),
+    );
+    v.extend(
+        b.gosti
+            .iter()
+            .map(|(p, _)| broj_serije(p))
+            .filter(|&n| n >= 1),
+    );
+    v.into_iter().collect()
+}
+
+fn put_r(n: u32) -> String {
+    format!("radnici/serija-{n:03}.json")
+}
+
+fn put_g(n: u32) -> String {
+    format!("gosti/serija-{n:03}.json")
+}
+
+fn radnici_serije(b: &Banka, n: u32) -> Option<&content::ljudi::Serija<Radnik>> {
+    let put = put_r(n);
+    b.radnici.iter().find(|(p, _)| *p == put).map(|(_, s)| s)
+}
+
+fn gosti_serije(b: &Banka, n: u32) -> Option<&content::ljudi::Serija<Gost>> {
+    let put = put_g(n);
+    b.gosti.iter().find(|(p, _)| *p == put).map(|(_, s)| s)
+}
 
 fn raspon(k: &str) -> (u8, u8) {
     let (a, b) = k
@@ -42,81 +89,69 @@ fn sva_imena() -> BTreeSet<String> {
         .collect()
 }
 
-fn radnici_001(b: &Banka) -> Option<&content::ljudi::Serija<Radnik>> {
-    b.radnici.iter().find(|(p, _)| p == R).map(|(_, s)| s)
-}
-
-fn gosti_001(b: &Banka) -> Option<&content::ljudi::Serija<Gost>> {
-    b.gosti.iter().find(|(p, _)| p == G).map(|(_, s)| s)
+/// Zaglavlje (`serija: N`, od–do) i ID-jevi točno 50·N+1 … 50·N+50 redom; `prefiks` je 'R' ili 'G'.
+fn provjeri_cjelovitost<T>(
+    put: &str,
+    n: u32,
+    prefiks: char,
+    s: &content::ljudi::Serija<T>,
+    id: impl Fn(&T) -> &str,
+    e: &mut Vec<String>,
+) {
+    let (prvi, zadnji) = (50 * n + 1, 50 * n + 50);
+    let (od, do_) = (
+        format!("{prefiks}-{prvi:05}"),
+        format!("{prefiks}-{zadnji:05}"),
+    );
+    if (s.serija, s.od.as_str(), s.do_.as_str()) != (n, od.as_str(), do_.as_str()) {
+        e.push(format!(
+            "{put}: zaglavlje serija {} {}–{}, očekivano {n} {od}–{do_}",
+            s.serija, s.od, s.do_
+        ));
+    }
+    let ids: Vec<&str> = s.zapisi.iter().map(&id).collect();
+    let want: Vec<String> = (prvi..=zadnji)
+        .map(|i| format!("{prefiks}-{i:05}"))
+        .collect();
+    if ids != want {
+        e.push(format!(
+            "{put}: {} zapisa, ID-jevi moraju biti točno {od}…{do_} redom (ima {:?}…)",
+            ids.len(),
+            ids.iter().take(3).collect::<Vec<_>>()
+        ));
+    }
 }
 
 #[test]
-fn serija_001_ima_pedeset_i_pedeset() {
-    // G1 za K2: zaglavlje `serija: 1`, raspon i točno 50 zapisa po vrsti, ID-jevi bez rupa.
+fn serije_su_pune() {
+    // G1 (K3): za svaku seriju N ≥ 1 zaglavlje `serija: N`, raspon 50·N+1 … 50·N+50, točno 50 zapisa, ID-jevi bez rupa.
     let banka = Banka::read(&repo_dir()).expect("banka se čita");
     let mut e: Vec<String> = Vec::new();
-
-    match radnici_001(&banka) {
-        None => e.push(format!("nema serija-001: nema datoteke {R}")),
-        Some(s) => {
-            if (s.serija, s.od.as_str(), s.do_.as_str()) != (1, "R-00051", "R-00100") {
-                e.push(format!(
-                    "{R}: zaglavlje serija {} {}–{}, očekivano 1 R-00051–R-00100",
-                    s.serija, s.od, s.do_
-                ));
-            }
-            let ids: Vec<&str> = s.zapisi.iter().map(|r| r.id.as_str()).collect();
-            let want: Vec<String> = (51..=100).map(|i| format!("R-{i:05}")).collect();
-            if ids != want {
-                e.push(format!(
-                    "{R}: {} zapisa, ID-jevi moraju biti točno R-00051…R-00100 redom (ima {:?}…)",
-                    ids.len(),
-                    ids.iter().take(3).collect::<Vec<_>>()
-                ));
-            }
+    for n in brojevi(&banka) {
+        match radnici_serije(&banka, n) {
+            None => e.push(format!("nema serija-{n:03}: nema datoteke {}", put_r(n))),
+            Some(s) => provjeri_cjelovitost(&put_r(n), n, 'R', s, |r| r.id.as_str(), &mut e),
         }
-    }
-    match gosti_001(&banka) {
-        None => e.push(format!("nema serija-001: nema datoteke {G}")),
-        Some(s) => {
-            if (s.serija, s.od.as_str(), s.do_.as_str()) != (1, "G-00051", "G-00100") {
-                e.push(format!(
-                    "{G}: zaglavlje serija {} {}–{}, očekivano 1 G-00051–G-00100",
-                    s.serija, s.od, s.do_
-                ));
-            }
-            let ids: Vec<&str> = s.zapisi.iter().map(|g| g.id.as_str()).collect();
-            let want: Vec<String> = (51..=100).map(|i| format!("G-{i:05}")).collect();
-            if ids != want {
-                e.push(format!(
-                    "{G}: {} zapisa, ID-jevi moraju biti točno G-00051…G-00100 redom (ima {:?}…)",
-                    ids.len(),
-                    ids.iter().take(3).collect::<Vec<_>>()
-                ));
-            }
+        match gosti_serije(&banka, n) {
+            None => e.push(format!("nema serija-{n:03}: nema datoteke {}", put_g(n))),
+            Some(s) => provjeri_cjelovitost(&put_g(n), n, 'G', s, |g| g.id.as_str(), &mut e),
         }
     }
     assert!(
         e.is_empty(),
-        "serija-001 nije cjelovita ({} prekršaja):\n  - {}",
+        "serije nisu cjelovite ({} prekršaja):
+  - {}",
         e.len(),
-        e.join("\n  - ")
+        e.join(
+            "
+  - "
+        )
     );
 }
 
-#[test]
-fn serija_001_je_raznolika() {
-    // G2 za K2: kao `primjeri_su_raznolici` za 000, ali pragovi za 50 + 50 (+ K1b M4/M5: razlozi i „prvi put").
-    let dir = repo_dir();
-    let okvir = Okvir::read(&dir).expect("okvir se čita");
-    let banka = Banka::read(&dir).expect("banka se čita");
-    let (Some(rs), Some(gs)) = (radnici_001(&banka), gosti_001(&banka)) else {
-        panic!("nema serija-001: radnici {R} i gosti {G} moraju postojati");
-    };
-    let (radnici, gosti) = (&rs.zapisi, &gs.zapisi);
+/// Pragovi raznolikosti za 50 radnika jedne serije (K2 T3, razilaženje 2 i 3).
+fn raznolikost_radnika(radnici: &[Radnik], okvir: &Okvir) -> Vec<String> {
     let mut e: Vec<String> = Vec::new();
-
-    // ---------------------------------------------------------------- radnici
     for u in Uloga::SVE {
         if !radnici.iter().any(|r| r.uloga == u) {
             e.push(format!("radnici: nema uloge {}", u.kod()));
@@ -217,7 +252,12 @@ fn serija_001_je_raznolika() {
         }
     }
 
-    // ---------------------------------------------------------------- gosti
+    e
+}
+
+/// Pragovi raznolikosti za 50 gostiju jedne serije (K2 T3, razilaženje 2 i 4).
+fn raznolikost_gostiju(gosti: &[Gost], okvir: &Okvir) -> Vec<String> {
+    let mut e: Vec<String> = Vec::new();
     let zemlje: BTreeSet<&str> = gosti.iter().map(|g| g.zemlja.as_str()).collect();
     if zemlje.len() < 15 {
         e.push(format!(
@@ -287,32 +327,83 @@ fn serija_001_je_raznolika() {
         }
     }
 
-    // ---------------------------------------------------------------- opis i imena (obje vrste)
-    let bez_opisa = radnici.iter().filter(|r| r.opis.is_none()).count()
-        + gosti.iter().filter(|g| g.opis.is_none()).count();
-    if bez_opisa > 0 {
-        e.push(format!(
-            "opis: {bez_opisa} od 100 zapisa je bez opisa (svi moraju imati)"
-        ));
+    e
+}
+
+#[test]
+fn serije_su_raznolike() {
+    // G2 (K3): kao `primjeri_su_raznolici` za 000, ali pragovi za 50 + 50 po SVAKOJ seriji N ≥ 1 (+ K1b M4/M5), a opisi i imena
+    // gledaju cijelu banku (sve serije, sve tri vrste).
+    let dir = repo_dir();
+    let okvir = Okvir::read(&dir).expect("okvir se čita");
+    let banka = Banka::read(&dir).expect("banka se čita");
+    let mut e: Vec<String> = Vec::new();
+
+    for n in brojevi(&banka) {
+        match radnici_serije(&banka, n) {
+            None => e.push(format!(
+                "nema serija-{n:03}: radnici {} moraju postojati",
+                put_r(n)
+            )),
+            Some(s) => e.extend(
+                raznolikost_radnika(&s.zapisi, &okvir)
+                    .into_iter()
+                    .map(|m| format!("{}: {m}", put_r(n))),
+            ),
+        }
+        match gosti_serije(&banka, n) {
+            None => e.push(format!(
+                "nema serija-{n:03}: gosti {} moraju postojati",
+                put_g(n)
+            )),
+            Some(s) => e.extend(
+                raznolikost_gostiju(&s.zapisi, &okvir)
+                    .into_iter()
+                    .map(|m| format!("{}: {m}", put_g(n))),
+            ),
+        }
     }
-    let opisi: Vec<&str> = radnici
-        .iter()
-        .filter_map(|r| r.opis.as_deref())
-        .chain(gosti.iter().filter_map(|g| g.opis.as_deref()))
-        .collect();
-    let razliciti: BTreeSet<&str> = opisi.iter().copied().collect();
-    if razliciti.len() != opisi.len() {
-        e.push(format!(
-            "opis: {} opisa, od toga {} različitih (doslovno ponavljanje)",
-            opisi.len(),
-            razliciti.len()
-        ));
+
+    // ---------------------------------------------------------------- opis i imena (cijela banka, sve tri vrste)
+    let mut opisi: Vec<(String, &str)> = Vec::new(); // (id s putem, opis)
+    let mut bez_opisa: Vec<String> = Vec::new();
+    let mut puna: Vec<(String, &str, &str)> = Vec::new(); // (put + id, ime, prezime)
+    for (put, s) in &banka.radnici {
+        for r in &s.zapisi {
+            match r.opis.as_deref() {
+                Some(o) => opisi.push((format!("{put} {}", r.id), o)),
+                None => bez_opisa.push(format!("{put} {}", r.id)),
+            }
+            puna.push((format!("{put} {}", r.id), &r.ime, &r.prezime));
+        }
+    }
+    for (put, s) in &banka.gosti {
+        for g in &s.zapisi {
+            match g.opis.as_deref() {
+                Some(o) => opisi.push((format!("{put} {}", g.id), o)),
+                None => bez_opisa.push(format!("{put} {}", g.id)),
+            }
+            puna.push((format!("{put} {}", g.id), &g.ime, &g.prezime));
+        }
+    }
+    for (put, s) in &banka.vanjski {
+        for v in &s.zapisi {
+            if let Some(o) = v.opis.as_deref() {
+                opisi.push((format!("{put} {}", v.id), o));
+            }
+        }
+    }
+    // Radnici i gosti serija N ≥ 1 moraju imati opis; serija-000 i vanjski se ovdje samo broje u ponavljanje.
+    for id in bez_opisa.iter().filter(|x| !x.contains("serija-000")) {
+        e.push(format!("opis: {id} je bez opisa (svi moraju imati)"));
+    }
+    let mut vidjeni: BTreeMap<&str, &str> = BTreeMap::new();
+    for (id, o) in &opisi {
+        if let Some(prvi) = vidjeni.insert(o, id) {
+            e.push(format!("opis: {id} ponavlja doslovno opis iz {prvi}"));
+        }
     }
     let imena = sva_imena();
-    let puna = radnici
-        .iter()
-        .map(|r| (&r.id, &r.ime, &r.prezime))
-        .chain(gosti.iter().map(|g| (&g.id, &g.ime, &g.prezime)));
     for (id, ime, prezime) in puna {
         if imena.contains(&format!("{ime} {prezime}").to_lowercase()) {
             e.push(format!(
@@ -323,8 +414,12 @@ fn serija_001_je_raznolika() {
 
     assert!(
         e.is_empty(),
-        "serija-001 nije raznolika ({} prekršaja):\n  - {}",
+        "serije nisu raznolike ({} prekršaja):
+  - {}",
         e.len(),
-        e.join("\n  - ")
+        e.join(
+            "
+  - "
+        )
     );
 }

@@ -27,8 +27,12 @@ const ZAPECACENO: [(&str, &str); 4] = [
     ),
 ];
 
-/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku).
-const OTVORENO: &[&str] = &["vanjski/serija-000.json"];
+/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku; K3: serija-002 radnika i gostiju, uzorak 10 + 10).
+const OTVORENO: &[&str] = &[
+    "gosti/serija-002.json",
+    "radnici/serija-002.json",
+    "vanjski/serija-000.json",
+];
 
 fn lf_hash(bytes: &[u8]) -> String {
     let lf: Vec<u8> = bytes
