@@ -38,10 +38,12 @@ impl Game {
             let key = (m, t.code.clone());
             let no_penalty = self.no_penalty(h, m, &t.code);
             let space = self.space(h, m, &t.code);
+            let fault = self.fault(h, m, &t.code);
             let mut push = |o: SituationOutcome| {
                 outcomes.push(RoundSituation {
                     outcome: model.situation_outcome(o, no_penalty),
                     space: space.clone(),
+                    fault,
                 })
             };
             if let Some(&i) = h.answers.get(&key) {

@@ -231,7 +231,7 @@ fn instance_of(c: &Content, code: &str, month: Month) -> (SituationTemplate, Per
     let d = DrawnSituation {
         code: format!("{code}.{}", month.code()),
         template: code.to_string(),
-        period: p.clone(),
+        period: p,
         day: 1,
         occurrence: 1,
         slot: 1,

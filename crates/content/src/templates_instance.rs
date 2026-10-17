@@ -222,6 +222,15 @@ impl SituationTemplates {
             .any(|t| t.code == template && t.no_penalty)
     }
 
+    /// Je li situacija kvar prostora (L1-13-1): vrsta `kvar` ili popravak opreme u odgovoru, bez `external_cause`;
+    /// `code` je šifra predloška ili primjerka, nepoznata šifra nije kvar.
+    pub fn space_fault(&self, code: &str) -> bool {
+        let template = code.split('.').next().unwrap_or(code);
+        self.templates.iter().any(|t| {
+            t.code == template && crate::templates_principles::is_breakdown(t) && !t.external_cause
+        })
+    }
+
     /// Prostor kojem predložak čita stanje i kamo ide popravak (`Template::condition_of`): `code` je šifra predloška ili
     /// primjerka; bez polja ili za nepoznatu šifru `None`.
     pub fn condition_of(&self, code: &str) -> Option<DeptCode> {

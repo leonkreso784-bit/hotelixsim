@@ -46,6 +46,12 @@ pub struct EconomyV2 {
     /// Bodovi stanja prostora odjela situacije po hitnom popravku (ADR-042 t. 1; 1000 = +10), bez faktora kruga;
     /// 0 = hitan popravak je samo trošak (v1).
     pub repair_urgent_condition_pts: i32,
+    /// Kvar prostora (L1-13 dio 1, A1): bodovi stanja prostora koje kvar skida u krugu u kojem se pojavio (i uz
+    /// šutnju), bez faktora kruga; 0 = pravilo isključeno (stari snimak).
+    pub fault_condition_pts: i32,
+    /// Bodovi stanja prostora koje hitni popravak uz ocjenu >= `FAULT_FIXED_MIN_QUALITY` vraća kvaru prostora,
+    /// jednom po situaciji, bez faktora kruga; 0 = isključeno.
+    pub fault_fixed_condition_pts: i32,
 }
 
 /// Uvjeti grupnih rezervacija (J-3): grupa je odluka s cijenom, ne čisti dobitak. Sve 0 = v1 ponašanje.
@@ -394,6 +400,17 @@ impl Catalog {
                 "v2.economy.repair_urgent_condition_pts".to_string(),
             ));
         }
+        for (value, field) in [
+            (self.economy.fault_condition_pts, "fault_condition_pts"),
+            (
+                self.economy.fault_fixed_condition_pts,
+                "fault_fixed_condition_pts",
+            ),
+        ] {
+            if !(0_i32..=10_000_i32).contains(&value) {
+                return Err(CatalogError::OutOfRange(format!("v2.economy.{field}")));
+            }
+        }
         self.validate_leases()
     }
 
@@ -684,6 +701,8 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             deferred_wear_bp: 10_000,
             groups: GroupTerms::default(),
             repair_urgent_condition_pts: 0,
+            fault_condition_pts: 0,
+            fault_fixed_condition_pts: 0,
         },
     }
 }

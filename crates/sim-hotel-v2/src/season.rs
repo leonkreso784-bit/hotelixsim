@@ -300,6 +300,14 @@ fn draw_round<'a>(
     )
 }
 
+/// Što sezona zna o izvučenom primjerku osim predloška: oznake njegova predloška.
+struct InstanceMeta {
+    template: SituationTemplate,
+    no_penalty: bool,
+    condition_of: Option<DeptCode>,
+    fault: bool,
+}
+
 /// Situacija kruga za odgovarača sezone; `drawn` je primjerak generatora (važnost određuje poredak u igri), sidro ga nema.
 #[derive(Clone, Copy)]
 pub struct RoundItem<'a> {
@@ -353,8 +361,8 @@ pub fn run_season_responding(
     let mut history: Vec<DrawnSituation> = Vec::new();
     for p in &all {
         let plan = planner(&state, p)?;
-        // Primjerci kruga i oznaka „samo nagrada" njihova predloška (S-4).
-        let mut instances: Vec<(SituationTemplate, bool, Option<DeptCode>)> = Vec::new();
+        // Primjerci kruga, oznaka „samo nagrada" (S-4), prostor i oznaka kvara prostora njihova predloška.
+        let mut instances: Vec<InstanceMeta> = Vec::new();
         let mut has_drawn = false;
         let fixed = match source {
             SeasonSituations::Fixed(list) => situations_for(p, list),
@@ -367,11 +375,12 @@ pub fn run_season_responding(
                 };
                 let (anchors, found) = draw_round(d, p, &view, &history, cat)?;
                 for s in &found {
-                    instances.push((
-                        (d.instance)(s)?,
-                        d.templates.no_penalty(&s.template),
-                        d.templates.condition_of(&s.template),
-                    ));
+                    instances.push(InstanceMeta {
+                        template: (d.instance)(s)?,
+                        no_penalty: d.templates.no_penalty(&s.template),
+                        condition_of: d.templates.condition_of(&s.template),
+                        fault: d.templates.space_fault(&s.template),
+                    });
                 }
                 history.extend(found.iter().cloned());
                 drawn.push(found);
@@ -395,8 +404,8 @@ pub fn run_season_responding(
             instances
                 .iter()
                 .zip(round_drawn)
-                .map(|((template, _, _), d)| RoundItem {
-                    template,
+                .map(|(meta, d)| RoundItem {
+                    template: &meta.template,
                     drawn: Some(d),
                 }),
         );
@@ -410,19 +419,14 @@ pub fn run_season_responding(
             .zip(&items)
             .enumerate()
             .map(|(k, (o, item))| {
-                let no_penalty = k
-                    .checked_sub(anchors_len)
-                    .and_then(|j| instances.get(j))
-                    .is_some_and(|(_, n, _)| *n);
+                let meta = k.checked_sub(anchors_len).and_then(|j| instances.get(j));
+                let no_penalty = meta.is_some_and(|m| m.no_penalty);
                 let own = item.drawn.and_then(|d| d.department.clone());
-                let space = k
-                    .checked_sub(anchors_len)
-                    .and_then(|j| instances.get(j))
-                    .and_then(|(_, _, c)| c.clone())
-                    .or(own);
+                let space = meta.and_then(|m| m.condition_of.clone()).or(own);
                 RoundSituation {
                     outcome: if no_penalty { reward_only(o) } else { o },
                     space,
+                    fault: meta.is_some_and(|m| m.fault),
                 }
             })
             .collect();

@@ -236,6 +236,17 @@ pub(crate) struct EconomyDto {
     /// Bodovi stanja prostora po hitnom popravku (ADR-042 t. 1); bez ključa 0 (stari snimak: popravak je samo trošak).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     repair_urgent_condition_pts: Option<i32>,
+    /// Kvar prostora (L1-13-1): bodovi stanja koje kvar skida; bez ključa 0 (pravilo isključeno).
+    #[serde(default, skip_serializing_if = "none_or_zero")]
+    fault_condition_pts: Option<i32>,
+    /// Bodovi koje hitni popravak uz dobru ocjenu vraća kvaru prostora; bez ključa 0.
+    #[serde(default, skip_serializing_if = "none_or_zero")]
+    fault_fixed_condition_pts: Option<i32>,
+}
+
+/// Ključ koji se ne zapisuje kad ga nema ili je 0 (isti zapis i otisak kao prije, stari snimci).
+fn none_or_zero(v: &Option<i32>) -> bool {
+    matches!(v, None | Some(0))
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -498,6 +509,9 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
             .then_some(e.deferred_wear_bp),
         repair_urgent_condition_pts: (e.repair_urgent_condition_pts != 0)
             .then_some(e.repair_urgent_condition_pts),
+        fault_condition_pts: (e.fault_condition_pts != 0).then_some(e.fault_condition_pts),
+        fault_fixed_condition_pts: (e.fault_fixed_condition_pts != 0)
+            .then_some(e.fault_fixed_condition_pts),
     }
 }
 
@@ -548,5 +562,7 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
         finance_index,
         deferred_wear_bp: e.deferred_wear_bp.unwrap_or(DEFERRED_WEAR_DEFAULT_BP),
         repair_urgent_condition_pts: e.repair_urgent_condition_pts.unwrap_or(0),
+        fault_condition_pts: e.fault_condition_pts.unwrap_or(0),
+        fault_fixed_condition_pts: e.fault_fixed_condition_pts.unwrap_or(0),
     })
 }
