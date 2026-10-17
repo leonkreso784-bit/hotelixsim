@@ -133,10 +133,22 @@ G-1 je jedina P3 cigla ove faze (3 h). Prave greške koje valja riješiti uz pil
 
 | id | cigla | što se radi | dokaz | h | Leon |
 |---|---|---|---|---|---|
-| GENERATOR HOTELA | F3-1…8: opis hotela u snimku (`HotelSetup.profile` → `"gen:1"`), `generate(sjeme, postavke, slot)`, banka imena (bez stvarnih hotela s Kvarnera, ADR-002), referenca po hotelu, balans `--generate`, postavka raznolikosti | A/B/C bajt-isto; proptest determinizma | 56 | popis imena, prag; ovisi o vrstama soba i obnovi |
+| GENERATOR HOTELA | (17.10.: dolazi **nakon** BANKE HOTELA i samo je puni, niže) F3-1…8: opis hotela u snimku (`HotelSetup.profile` → `"gen:1"`), `generate(sjeme, postavke, slot)`, banka imena (bez stvarnih hotela s Kvarnera, ADR-002), referenca po hotelu, balans `--generate`, postavka raznolikosti | A/B/C bajt-isto; proptest determinizma | 56 | popis imena, prag; ovisi o vrstama soba i obnovi |
 | AAI@EduHr | F5-1 generički OIDC (`openidconnect`, PKCE) · F5-2 Google/Microsoft za profesora · F5-3 Supabase Auth kao posrednik (SAML) · F5-4 povezivanje na isti `user_id` (povijest ostaje) · F5-5 TOTP za admina · **čim fakultet odobri** (AAI-0) | test s lažnim IdP-om; ista povijest nakon povezivanja | 29 | D4; ovisi o fakultetu i Srcu |
 | SSE | `LISTEN/NOTIFY` + ruta, samo ako G-8/polling pokaže potrebu | G-8 | 8 | — |
 | ENGLESKI (sučelje) | `packages/i18n/src/en.ts` uz `hr.ts` (627 redaka), tipiziran lokal, izbor jezika, `format.ts` bez tvrdog hr-HR ([BACKLOG.md:67](../../records/BACKLOG.md)), `t()` tipizirani parametri ([:69](../../records/BACKLOG.md)); sadržaj i prompti su u [igra.md](./igra.md) | ista igra na hr i en; brojevi i datumi po lokalu | ~12 | popis jezika |
+
+---
+## Nove cigle iz Leonovih odluka 17.10. ([ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md); mjesta 🟨 voditelja)
+
+Leon: *„ovo što već imamo je pilot, a ovo što gradimo je već produkcijska platforma; spremamo se za profesorov DA."* Standard
+„gotovo" je **40 studenata igra tri mjeseca bez Leona uz računalo**. Redoslijed 🟨: [ROADMAP](../ROADMAP.md) „Pilot → produkcija".
+
+| id | cigla | što se radi | dokaz | ovisi o | h [PROC] | P | Leon |
+|---|---|---|---|---|---|---|---|
+| AI-M | Mjerenje AI troška po igri | prije pilota: Leon odigra jednu tjednu v2 sezonu sa situacijama i razgovorima, zbroj tokena po modelu iz dnevnika × cijene (upit u [planu platforme](../2026-11-platforma.md) §5); ista projekcija kao F0-9 | zapisan trošak po igri i po studentu, ne procjena | F0-9 | ~2 | prije P4 | igra jednu sezonu |
+| BH-P | **BANKA HOTELA: platforma** | profesor pri stvaranju razreda dodjeljuje hotel iz banke **po studentu ili nasumce**; dodjela se zaključava u „Pokreni" i ide u `GameCreated` | dva studenta s različitim hotelima u istoj igri; nasumična dodjela ista za isto sjeme | F1-8, BH-J ([igra.md](./igra.md)) | [PROC] ? | 🟨 nakon razredne igre | — |
+| PR-1 | Profesorovo sučelje: temelji (E6) | strukturiran izbornik AI situacija (po **odjelu hotela**), vlastite situacije, pregled razgovora studenta s gostom ili zaposlenikom, ocjena po njima, mentor uključen ili isključen, otvaranje tjedna ili mjeseca (student čeka); Leon: *„trebat će nam nekoliko sesija da inženjerski postavimo temelje"* → najprije nacrt u [PLATFORMA](../../architecture/PLATFORMA.md), pa cigle u fazi PROFESOR | nacrt s raspravom (ADR-006) | F2-1 | više sesija [PROC] | P3–P4 | rasprava o nacrtu |
 
 ---
 ## Odluke (Leon)

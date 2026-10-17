@@ -15,7 +15,7 @@
 | 1 · pojmovi (svaki jednom) i odgovor „možemo li nastaviti" | [01-pojmovi-i-odgovor.md](./PLATFORMA/01-pojmovi-i-odgovor.md) |
 | 2 · uloge, razred = jedna igra s N hotela, tablice, profesorski CRUD, pregled uživo, granica AI troška | [02-uloge-i-razred.md](./PLATFORMA/02-uloge-i-razred.md) |
 | 3 · prijava: usporedba, računi pa AAI@EduHr, Supabase Auth kao posrednik | [03-prijava.md](./PLATFORMA/03-prijava.md) |
-| 4 · generirani hoteli: danas, oblik, pravednost, ovisnosti | [04-generirani-hoteli.md](./PLATFORMA/04-generirani-hoteli.md) |
+| 4 · generirani hoteli: danas, oblik, pravednost, ovisnosti (17.10.: banka hotela prije generatora) | [04-generirani-hoteli.md](./PLATFORMA/04-generirani-hoteli.md) |
 | 5 · igrini slojevi (dobavljači, rezervacije, gosti, vrste soba, pošta), avatari, natjecanje za ljude | [05-igrini-slojevi.md](./PLATFORMA/05-igrini-slojevi.md) |
 | 6 · produkcija i trošak: jedna adresa, hosting (Railway Hobby), kopije, što mora biti gotovo, CI/CD, opterećenje | [06-produkcija-i-trosak.md](./PLATFORMA/06-produkcija-i-trosak.md) |
 | 7 · GDPR i sigurnost: podaci, uloge, AI razgovori, anonimizacija u zajedničkoj igri | [07-gdpr-i-sigurnost.md](./PLATFORMA/07-gdpr-i-sigurnost.md) |

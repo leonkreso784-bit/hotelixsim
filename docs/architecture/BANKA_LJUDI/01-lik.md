@@ -43,8 +43,30 @@ stara imena), naziv uloge u rodu, `treba_smjestaj` (🟨 iz podrijetla: `regija`
 (iz kataloga po zemlji, L2b-1). U stanju hotela `Zaposlenik` dobiva polje `lik: R-00412` umjesto „indeksa u banku imena"
 (🟨 malo proširenje MODEL_V2 §3.3; `id` `Z-0001` ostaje brojač hotela).
 
-**Voditelj odjela** se ne piše u banku: postaje ga `strucnjak` (ili `iskusan`) struke tog odjela, pri stvaranju hotela ili
-nalogom „postavi voditelja" (L2a-5, L2a-7). Tako nema posebne zalihe voditelja koja bi mogla presušiti.
+**Voditelj odjela** se ne piše u banku kao uloga: postaje ga `strucnjak` (ili `iskusan`) struke tog odjela, pri stvaranju
+hotela ili nalogom „postavi voditelja" (L2a-5, L2a-7). Tako nema posebne zalihe voditelja koja bi mogla presušiti.
+
+### Podvrste radnika (Leonova odluka 17.10., C1; [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md))
+
+**Leon:** *„trebamo raditi tri vrste i unutar njih više vrsta; unutar radnika trebamo dodati voditelje, studente i radnike.
+Njih student može sve istrenirati da budu na razini voditelja (što je najviša razina)."* Uz A9: *„trebat ćemo puno puno
+različitih voditelja… oni rade treninge i može im se prepustiti da koordiniraju cijeli odjel."* Uz D1: svaki radnik i voditelj
+ima **vidljivu crtu koliko je jak, a koliko slab** (*„može doći loš voditelj i dobar voditelj"*).
+
+**Kako to sjeda na postojeće polje `razina` (opis značenja; JSON i Rust se ovdje ne mijenjaju):**
+
+| podvrsta (Leon) | u banci danas | značenje u igri 🟨 (tumačenje voditelja) |
+|---|---|---|
+| **student / praktikant** | `razina: pocetnik`, `godine_iskustva` 0–1, dob većinom 19–25 | početnik koji je ujedno na studentskom ugovoru ili praksi: niža plaća, kraći boravak (sezona); **status ugovora nije razina** pa traži novo polje (npr. `ugovor: student`) **novim formatom** (§4.3), kad ga faza LJUDI zatreba |
+| **radnik** | `razina: pocetnik` ili `iskusan` | obični zaposlenik struke |
+| **voditelj** | `razina: strucnjak` | najviša razina; može voditi odjel, raditi obuke i preuzeti koordinaciju odjela (L2a-5). „Razina voditelja" = `strucnjak` |
+
+- **Svi su trenirljivi do razine voditelja:** obuka i iskustvo dižu `pocetnik` → `iskusan` → `strucnjak`. To je mehanika jezgre
+  (L2a-5, rast vještina i obuka), ne polje banke: banka čuva **početnu** razinu.
+- **Crta „jak / slab"** je ono što jezgra izvodi iz razine i sjemena (vještine, osobine; §1.1), a ekran Ljudi (L2a-10) pokazuje
+  uz svakog radnika i voditelja. Dvojica `strucnjak` mogu biti različito dobra; zato student vidi crtu, ne samo naziv razine.
+- **„Puno različitih voditelja":** udio `strucnjak` u banci (§2.2: 20 %) daje ~600 mogućih voditelja u M3; ako faza LJUDI pokaže
+  manjak po struci, sesija banke diže udio u sljedećim serijama (cilj u `raspodjele.json`), bez promjene formata.
 
 ## 1.3 GOST (`G-00001`…)
 
@@ -81,7 +103,7 @@ sve brojke situacije. **Veza s predlošcima** (🟨, promjena predložaka, ne ba
 
 **Leonove odluke 16.10. (sesija 7, tekstom):** (1) banka dobiva **treću vrstu: vanjske ljude**, *„pod vanjski radnici
 mislim na inspekciju, policiju i vatrogasce"*; (2) **tri agenta, svaki svoju vrstu** (gosti, radnici, vanjski), svaki piše
-samo svoju mapu (§5.5); (3) kasnije **zasebna sesija** koja radi samo na banci i provjerava je (§5.6). Time ADR-042 t. 8
+samo svoju mapu (§5.5); (3) **zasebna sesija** koja radi samo na banci i provjerava je (§5.6; od 17.10. **paralelna**, istodobno s glavnom). Time ADR-042 t. 8
 (pitanje 10, „partneri nakon M1") vrijedi u novom obliku: 🟨 vanjski kreću odmah, korakom K2v, usporedo s K2 i K3.
 
 **Tko je vanjski.** Osoba koja u situaciji dolazi **izvana**: nije zaposlenik hotela (radnik) ni gost koji spava u hotelu.

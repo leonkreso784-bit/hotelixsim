@@ -1,6 +1,6 @@
 # HotelixSim — pitanja za profesore
 
-> **Spremno za slanje** nakon Leonova pregleda. Šalje se sve od „Poštovani" do potpisa; bilješka „Za nas" na dnu
+> **Poslano** (Leon, prije 17.10.2026.); odgovor još nije stigao, vidi „Za nas". Šalje se sve od „Poštovani" do potpisa; bilješka „Za nas" na dnu
 > se ne šalje.
 
 ---
@@ -91,6 +91,11 @@ Leon Kreso
 ---
 
 ## Za nas (ne šalje se)
+
+- **Stanje 17.10.2026. (Leon, E2):** *„Poslano, ali nije odgovoreno još; sljedeći tjedan imam sastanak, profesor ne zna ni što sam
+  napravio već."* Sastanak je u **tjednu od 20.10.2026.** Profesor još ne zna što je izgrađeno, pa za sastanak treba
+  **kratki prikaz** (jedna adresa i put kroz igru, ~10 min: hotel, situacija s razgovorom, AI ocjena, mentor, napredak; uz to
+  što dolazi: razred i profesorovo sučelje). Odgovori na 10–12 (brojke) pomažu L1-13 i brojkama A10–A12, a 16 (veličina hotela) banci hotela; ništa od toga ne čeka na njih.
 
 - **Kamo idu odgovori:** 10–12 → [DEMO](./DEMO.md) „Za Leonovu provjeru" (točke 2–4) i [BACKLOG](../records/BACKLOG.md)
   „Otvoreno za Leona"; 8 → DEMO §8 (težine); 9 → [ARHITEKTURA](../architecture/ARHITEKTURA.md) §12; 15 → ARHITEKTURA

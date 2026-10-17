@@ -75,5 +75,7 @@ AI za pilot plaćamo mi (za demo postoje besplatni API ključevi, Leon 03.10.); 
 ## 8 · Što je izvan pilota (vizija)
 
 Međusobni utjecaj studenata · profesorova ploča (pokreće, zadaje šokove, ocjenjuje) · više hotela i tržišta ·
-natjecanje među generacijama i fakultetima. Iz zamrznutog Sokratovog smjera smiju se posuditi ideje
+natjecanje među generacijama i fakultetima. „Više hotela" ovdje (🟨 tumačenje: student vodi više hotela ili lanac) nije **banka
+hotela** (Leon 17.10.: profesor dodjeljuje svakom studentu jedan hotel iz popisa raznih veličina); banka hotela je dio puta
+prema pilotu ([ROADMAP](../plan/ROADMAP.md)). Iz zamrznutog Sokratovog smjera smiju se posuditi ideje
 **exam modula** i **organizacije** (fakultet kao kupac).

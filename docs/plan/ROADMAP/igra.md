@@ -35,7 +35,7 @@ P4 ožujak (studentski pilot) · poslije = iza pilota.
 | L1-11b | ✅ Dijagnoza tjedan ≈ mjesec (ADR-040 t. 3; uzrok: mjesečni Brižni bez silaska iz ZP-6; popravak RB-1 252fe8b po [ADR-041](../../records/DECISIONS/ADR-041-mjesecni-brizni-otpusta-prije-pada.md), B Brižni 2,96 → 0,18) | zašto Brižni u profilu B igra drukčije po tjednima i mjesecima (2,57 od 2,96); popravak uzroka, granica 3,00 ostaje | tj≈mj s zalihom; balansi 1000 `--check` | L1-10 | 3 | P1 | ako uzrok traži pravilo igre |
 | L1-11 | ✅ Spoji SITUACIJE → sloj1 (14.10. popravak A1 55d34f4: brane modela ruše `--check`, mjere robota se ispisuju, bez kalibracije; prije: grana `model-v2/sloj1-l111` b1bf446, 13 sukoba riješeno, 879/0; pada samo brana „udio situacija" za B Brižnog → L1-13 na toj grani, pa `--ff-only`) | 14 zajedničkih datoteka jezgre; S-4 sadržaj; dug `check-kod.mjs` za `game/tests/mentor.rs` 1670 → 1671 (G-2) | isto + tj≈mj | L1-10, L1-11b, L1-6 | 4 | P1 | — |
 | L1-12 | ~~Spoji KS-3 → sloj1~~ | KS-3 ulazi sa spajanjem obnove (L1-10) | — | — | 0 | P1 | **„demo gotov" prije L1-10** |
-| L1-13 | Zajednički balans | Brižni ≥ 80 % sezonskog plana, pojasevi marži, F (±2, C ±1), situacije ≈ 20 % napretka ([ADR-042](../../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 15; brana 15–25 %), pravednost profila | tri balansa 1000 `--check`; tablica prije/poslije | L1-12 | 5 | P1 | brojke koje igrač osjeti |
+| L1-13 | Zajednički balans ([kartica](../2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), odluke 17.10. [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)) | Brižni ≥ 80 % sezonskog plana, pojasevi marži, F (±2, C ±1), situacije ≈ 20 % napretka slabijim učinkom svake (broj ostaje; [ADR-042](../../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 15; brana 15–25 %), pravednost profila; **17.10.:** kvar u sobi −1 / dobar popravak +2, **tablica značaja situacija** (tri razine, bodovi po razini, student vidi razinu), gostinjske situacije po popunjenosti, šutnja 16 → 0 | tri balansa 1000 `--check` nakon svakog dijela; tablica prije/poslije | L1-12 | 5 → 🟨 [PROC] više (četiri dijela) | P1 | tablica mjerenja; imena razina |
 | L1-13b | Izmjene iz Leonova pregleda 14.10. | [ADR-042](../../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 1–4, 6, 7, 10–14: kvar popravlja stanje i svi kvarovi prostora gledaju stanje, održavanje +5/mj, jedno spremanje, lik zaključi u 6 poruka, odgovori izmiješani i ujednačeni, izgled lika po rodu/dobi/podrijetlu, jednom u krugu, mjesečno 4/5/6 kao postavka igre, opis Smještaja | testovi po točki; tri balansa 1000 `--check` | L1-11, revizija temelja | 12 | P1 | odlučeno |
 | L1-14 | Igriva verzija za Leona | adresa + put do novoga; Leon prolazi igru | Leonov popis izmjena | L1-13 | 2 | P1 | što mijenjati |
 | L1-15 | sloj1 → main | spajanje i push | CI zelen (`gh run list`) | L1-14 | 1 | P1 | **izričit OK za push** (repo javan) |
@@ -132,7 +132,7 @@ profesor može isključiti preotimanje za razred. Detalji: [ADR-037](../../recor
 | L2b-1 | Sadržaj jezika i agencija | jezični sastav po mjesecu (DZS + Kvarner, N8), po zemlji rok/naknada/dozvola, tečajevi | provjera sadržaja; izvor zabilježen | L2a-1 | 4 | P4 | pregled brojki |
 | L2b-2 | Jezici → kvaliteta | pokrivenost odjela pomiče kvalitetu i teme; obuka jezika +1 | pokrivenost 100 % = staro | L2b-1, L2a-5 | 4 | P4 | veličina učinka |
 | L2b-3 | Agencija: nalog | „5 radnika za domaćinstvo", dolaze nakon roka, naknada + dozvola | tablično; radnik iz istih raspodjela | L2b-1, L2a-6 | 4 | P4 | plaća ista za istu vještinu (N1) |
-| L2b-4 | Smještaj radnika | krevet u gradu; sobe za radnike (≤ 10 %) — puni oblik čeka status sobe (S3-3, poslije pilota) | zbroj troškova = zbroj po osobama do centa | L2b-3 | 4 | P4 | N10; cijena kreveta |
+| L2b-4 | Smještaj radnika (17.10.: širi ga LJ-S niže) | krevet u gradu; sobe za radnike (≤ 10 %) — puni oblik čeka status sobe (S3-3, poslije pilota) | zbroj troškova = zbroj po osobama do centa | L2b-3 | 4 | P4 | N10; cijena kreveta |
 | L2b-5 | Test zamjene podrijetla | ista osoba, drugo podrijetlo → razlika samo u jezicima, roku, naknadi, dozvoli, smještaju | test | L2b-4 | 2 | P4 | — |
 | L2b-6 | Balans | agencija nije dominantna | tri balansa `--check` | L2b-5 | 3 | P4 | — |
 | L2b-7 | Igra + API | | `check:api`; fold | L2b-6 | 3 | P4 | — |
@@ -185,7 +185,30 @@ Redoslijed se odlučuje nakon pilota; svaka grupa je zaseban val s jednim podiza
 | generator gostiju | uz R4-1 | ~4 | banka imena |
 | ENGLESKI (sadržaj) | prijevod situacija i banki (imena, rečenice, osobine), prompti lik/mentor/presuda (`lik.v2`, `presuda.v3`, mentor) i provjera da AI odgovara na jeziku igre; sučelje i format su u [platforma.md](./platforma.md) | ~30 [PROC] | smjer: igra mora kasnije biti i na engleskom; mjerilo ocjena po jeziku |
 
-Generator hotela (ideja 10) je u [platforma.md](./platforma.md), faza poslije.
+Generator hotela (ideja 10) je u [platforma.md](./platforma.md), faza poslije; od 17.10. prije njega dolazi BANKA HOTELA (niže).
+
+---
+## Nove cigle iz Leonovih odluka 17.10. ([ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md); mjesta 🟨 voditelja)
+
+Leon: *„ovo što već imamo je pilot, a ovo što gradimo je već produkcijska platforma"*. Redoslijed nakon L1-13…L1-15 je
+🟨 prijedlog voditelja ([ROADMAP](../ROADMAP.md) „Pilot → produkcija"): prvo PLATFORMA do najmanje igrive razredne igre, tek onda
+sobe, voditelji, smještaj radnika i banka hotela. Sati su 🟨 [PROC]; gdje ih nema, procjenu daje kartica kad faza krene.
+
+| id | cigla | što se radi | faza (🟨) | h [PROC] | Leon |
+|---|---|---|---|---|---|
+| ZN-1 | Tablica značaja situacija (B2) | tri razine (prijedlog: ključna / važna / svakodnevna iz `weight`), bodovi po razini, razina vidljiva studentu | **L1-13** (dio 2) | u L1-13 | imena razina |
+| HN-1 | Student imenuje hotel (C4) | ime hotela prije ulaska u igru, slobodno; 🟨 najmanja brana za vulgarnosti; ime u dnevniku (`GameCreated`) i na ekranima | C (mala) | ~2–3 | — |
+| TR-1 | Kartica „Tržište" (D3–D5) | na ekranu pokazatelja: graf zainteresiranih, smještenih i kapaciteta kroz sezonu (noćenja, gosti u zagradi), rastav zanimanja, samo sezonsko očekivanje ([VODITELJ_I_TRZISTE](../../architecture/VODITELJ_I_TRZISTE.md) §2–3) | C ili iza | ~11 (3 + 4 + 4) | — |
+| SB-1…5 | Sučelje soba (A1) | svaka soba zasebno vidljiva i obnovljiva; kvar je posljedica neodržane sobe; spaja se s grupom SOBE (S3-1…S3-6) iz „poslije pilota" | C+ (nakon platforme do razredne igre) | 3–5 cigala | izgled ekrana |
+| MP-1 | Mjere potrošnje hotela (A13) | energija i voda kao pokazatelj u igri (trošak, pouka o održivosti); trošak AI-ja po igri mjeri platforma ([platforma.md](./platforma.md)) | C+ | [PROC] ? | brojke potrošnje |
+| LJ-T | Obuka pojedinačno ili skupina (A9) | student trenira jednog radnika ili skupinu u odjelu i bira **trenera iz redova radnika**; svi trenirljivi do razine voditelja (`strucnjak`); proširuje L2a-5 | LJUDI | [PROC] ? | — |
+| LJ-V | Mnogo voditelja (A9, D1, D2) | voditelj kao podvrsta radnika iz banke (`strucnjak`), vidljiva crta jak / slab za svakog radnika i voditelja, voditelj vodi obuke i koordinira odjel (D2 = c); proširuje L2a-5 i L2a-10 | LJUDI | [PROC] ? | — |
+| LJ-S | Smještaj radnika (A11–A12) | zasebna mehanika: ekran, trošak i kapacitet; student smještaj **kupuje, iznajmljuje ili koristi sobe svog hotela**; ne treba svaki radnik smještaj; zamjenjuje i širi L2b-4 | LJUDI | [PROC] ? | cijene najma i kupnje |
+| BH-S | **BANKA HOTELA: sadržaj** | istraživanje pravih hotela i plaća (A10, A12) → 10–15 hotela 4* raznih veličina (ne uvijek 120 soba), provjera stroja, pečat u serijama koje Leon pregleda (kao banka ljudi) | nakon L1-13 (i L1-14/15), prije kraja faze C | [PROC] ? | pregled i pečat serija |
+| BH-J | **BANKA HOTELA: jezgra** | ključ hotela A/B/C → tekst (`HotelSetup.profile`, [PLATFORMA §4](../../architecture/PLATFORMA/04-generirani-hoteli.md)), referenca napretka **po hotelu**, balans po svakom hotelu; pravednost 80 vs 160 soba: indeksi po sobi ili udjelu, ne u eurima (§4.3) | isto | [PROC] ? | — |
+
+Platformski dio banke hotela (profesor dodjeljuje hotel po studentu ili nasumce) je u [platforma.md](./platforma.md) (BH-P).
+Generator hotela kasnije samo **puni** banku hotela.
 
 ---
 ## Linije reza (ako zapne, redom)

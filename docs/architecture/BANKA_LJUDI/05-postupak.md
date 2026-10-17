@@ -18,7 +18,7 @@ Dio indeksa [BANKA_LJUDI.md](../BANKA_LJUDI.md).
 ## 5.2 Agenti i datoteke
 - **Agent RADNICI** piše samo `radnici/serija-NNN.json`, **agent GOSTI** samo `gosti/serija-NNN.json`, **agent VANJSKI** samo
   `vanjski/serija-NNN.json` (§5.5). Zajedničke datoteke (`banka.json`, `raspodjele.json`, `povuceni.json`, `ljudi_sealed.rs`,
-  Rust kod) mijenja **samo sesija koja vodi banku** (danas glavna, kasnije sesija banke, §5.6).
+  Rust kod) mijenja **samo sesija koja vodi banku** (od 17.10. paralelna sesija banke, §5.6).
 - **Raspon ID-jeva i broj serije** dodjeljuje glavna sesija u zadatku; **sudar imena** dvaju agenata hvata provjera pri
   spajanju, a ispravlja ga agent kasnije serije.
 - **Novi agent za svaku seriju** (pouka „agenti i tokeni": jedan agent ne smije narasti preko ~400k tokena). Ulaz: ovaj
@@ -52,14 +52,17 @@ koju traži faza IGRE — stop do novog formata (§4.3). **Leon kaže stop** —
 - Sudar imena među tri serije hvata `cargo test -p content` (puno ime jedinstveno u cijeloj banci, §3.1); ispravlja ga pisac
   kasnije serije. Raspon ID-jeva i broj serije za svaku vrstu dodjeljuje sesija banke u nalogu.
 
-## 5.6 Zasebna sesija za banku (Leonova odluka 16.10.)
+## 5.6 Paralelna sesija banke (Leonove odluke 16. i 17.10.)
 
-Kasnije banka dobiva **svoju sesiju Claude Codea**, usporednu s glavnom (popravak temelja, faze IGRE). To je drugi kolosijek
-(ADR-052 t. 2), ne nova faza.
+Banka ima **svoju sesiju Claude Codea koja radi ISTODOBNO s glavnom** (popravak temelja, faze IGRE); nije nova ni zamjenska
+sesija. To je drugi kolosijek (ADR-052 t. 2), ne nova faza. Leon 17.10.: *„što više ljudi to bolje, uvijek se mogu koristiti"*:
+nakon pečata serija 000 i 001 i koraka K2v paralelna sesija puni nove serije (K3: 50 + 50 radnika i gostiju, vanjski po
+prekretnicama §2.4). Prompt za početak (Leon ga zalijepi u novi prozor, ne `/newsession`):
+`.superpowers/sdd/banka-ljudi-k1/PROMPT-PARALELNA-SESIJA.md`. **Spaja glavna sesija** (niže).
 
 | | sesija banke | glavna sesija |
 |---|---|---|
-| **smije** | serije svih triju vrsta, pravila i okvir banke (`crates/content/src/ljudi*.rs`, `crates/content/tests/ljudi*.rs`, `content/hotel/v2/ljudi/**`), alati pregleda (`scripts/ljudi-*`), pregledi za Leona, ovaj dokument i njegovu mapu, svoj ledger | sve ostalo |
+| **smije** | pečat serija (prvi: 000 i 001, odlučen 17.10.), serije svih triju vrsta, pravila i okvir banke (`crates/content/src/ljudi*.rs`, `crates/content/tests/ljudi*.rs`, `content/hotel/v2/ljudi/**`), alati pregleda (`scripts/ljudi-*`), pregledi za Leona, ovaj dokument i njegovu mapu, svoj ledger | sve ostalo |
 | **ne smije** | jezgru i igru (`crates/sim-*`, `game`, `balance`, `api`), predloške i `names.json`, web, `CORE_VERSION`, balans; `CLAUDE.md`, predaju, dnevnik, ADR-ove (vidi niže) | mijenjati datoteke banke dok sesija banke radi |
 | **Rust** | najviše **1** proces, uvijek `CARGO_TARGET_DIR=…/hotelixsim/target/ljudi` | najviše **1** proces, svoj target |
 

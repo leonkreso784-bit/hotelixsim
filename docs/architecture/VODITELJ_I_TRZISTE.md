@@ -1,6 +1,6 @@
 # Voditelj odjela i uvid u tržište — nacrt za raspravu
 
-> **Status:** nacrt za raspravu (13.10.), ništa nije odlučeno. Povod: Leonove dvije ideje od 13.10. —
+> **Status:** nacrt za raspravu (13.10.); **pet pitanja §3 Leon je odgovorio 17.10.2026.** (✅, [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)). Cigle ostaju u fazi C i LJUDI (L2a-5). Povod: Leonove dvije ideje od 13.10. —
 > *„menadžer odjela bi trebao upravljati odjelom i biti odgovoran za odjel"* i *„graf i uvid u trenutno stanje: koliko
 > turista dolazi, kolika je zainteresiranost"*. Odluke idu u ADR, cigle u [ROADMAP/igra.md](../plan/ROADMAP/igra.md).
 
@@ -74,11 +74,17 @@ najmanja jedinica je krug (tjedan ili mjesec), cijeli hotel.
 **Cijena [PROC]:** novi DTO s polja `market` + ruta (~3 h, `schema.rs` je zajednička datoteka — uz dogovor kolosijeka), graf
 poopćenjem postojećeg `ProgressChart` (~4 h, nakon spajanja grane obnove gdje živi), ekran i UI čuvar (~4 h). Balans se ne mijenja.
 
-## 3. Pitanja za Leona
-1. **Voditelj — korak 1 sada** (imenovani voditelji na Odjelima i u situacijama, bez nove mehanike) ili sve tek u L2a-5?
-2. **„Odgovoran" znači:** (a) vodi odluke odjela kad mu ih prepustiš, (b) ocjena odjela je njegova ocjena i prema njoj ga
-   nagrađuješ ili mijenjaš, ili (c) oboje? Prijedlog: (c), u koraku 2.
-3. **Tržište — gdje:** novi ekran „Tržište", kartica na Pokazateljima ili na Moj hotel?
-4. **Jedinica:** „gosti" (ljudi, razumljivije) ili „noćenja" (hotelska mjera)? Prijedlog: noćenja, uz gostiju u zagradi.
-5. **Prognoza prije odluke:** samo sezonska očekivanja, ili i „ako postaviš cijenu X, očekuj oko Y noćenja"? Drugo uči
-   elastičnost cijene, ali igru čini lakšom (student isproba cijenu prije zatvaranja kruga).
+## 3. Pitanja za Leona — odgovorena 17.10. (✅ [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md))
+
+Pitanja su u [Leonovu pregledu](../plan/2026-10-17-leonov-pregled/04-voditelj-i-platforma.md) bila D1–D5.
+
+| # | pitanje | Leon 17.10. | što vrijedi |
+|---|---|---|---|
+| 1 (D1) | voditelj — korak 1 sada ili u L2a-5? | *„Može po tvojoj preporuci, ne zaboravi: svaki radnik i voditelj mora imati svoju crtu koliko je jak, a koliko slab… može doći loš voditelj i dobar voditelj."* | ✅ imenovani voditelji **kad igra počne uzimati ljude iz banke** (K5), ne prije; do tada popravak temelja. **Svaki radnik i voditelj ima vidljivu crtu jak / slab**: izvodi je jezgra iz polja `razina` i sjemena (vještine, osobine; [BANKA_LJUDI](./BANKA_LJUDI/01-lik.md) §1.1, §1.2), pokazuje ekran Ljudi (L2a-10). Voditelji su podvrsta radnika (`strucnjak`), trebat će ih „puno puno različitih" (A9) |
+| 2 (D2) | „odgovoran" znači (a), (b) ili (c)? | *„C"* | ✅ **(c) oboje**, u L2a-5: vodi odluke odjela kad mu ih student prepusti **i** ocjena odjela je njegova ocjena. Uz A9: voditelj radi i obuke i može koordinirati cijeli odjel |
+| 3 (D3) | tržište — gdje? | *„Može tržište s grafovima."* | ✅ **kartica „Tržište" na ekranu s pokazateljima**, s grafom kroz sezonu i rastavom (§2), bez nove stavke izbornika |
+| 4 (D4) | jedinica: gosti ili noćenja? | *„Može preporuka."* | ✅ **noćenja**, broj gostiju u zagradi |
+| 5 (D5) | prognoza prije odluke? | *„Odlično, jako je bitno da imamo primjere ponude i potražnje u igri."* | ✅ **samo sezonsko očekivanje** (§2 t. 3); kako cijena mijenja broj gostiju student uči iz rastava nakon kruga |
+
+**Gdje to ide:** voditelj (korak 2, t. 2) je cigla **L2a-5** u fazi LJUDI; kartica „Tržište" (t. 3–5) je cigla faze C ili
+iza nje ([ROADMAP/igra](../plan/ROADMAP/igra.md)). Ništa od ovoga ne ulazi u popravak temelja.

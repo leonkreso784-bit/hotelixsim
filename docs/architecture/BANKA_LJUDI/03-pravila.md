@@ -34,6 +34,16 @@ Stvarne poznate osobe (popis zabranjenih: političari, sportaši, javne osobe, p
 Kvarnera (isti popis kao generirani hoteli, [PLATFORMA §4](../PLATFORMA/04-generirani-hoteli.md) t. 4) i robne marke;
 maloljetni radnici; zdravlje, vjera, politika, spolnost kao obilježje lika; vitice `{}` (mjesta za zamjenu); ćirilica.
 
+**Odluke 17.10.** ([ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)):
+- **C4:** `zabranjeno.json` vrijedi **samo za likove banke** (i generirane tekstove). **Student svoj hotel imenuje slobodno**
+  prije ulaska u igru (*„student nazove hotel kako god hoće"*), bez popisa; 🟨 voditelj zadržava najmanju branu za vulgarnosti
+  (Leon nije rekao ne). Hoteli Kvarnera na popisu: sumnjive („Excelsior", „Astoria", „Istra") ostaviti, dopuniti otoke i
+  Crikvenicu iz javnog popisa (preporuka; Leonu *„nije toliko bitno"*).
+- **C5:** popis profesora FMTU-a **ne dolazi**; na popisu ostaje „Leon Kreso". Leon: *„neće se pogoditi… ako se pogodi, riješit
+  ćemo"*. Pogodak se ispravlja zamjenom imena u otvorenoj seriji ili povlačenjem zapisa (`povuceni.json`, §4.3).
+- **C3:** Leon želi likove **nalik** poznatim i javnim osobama s izmijenjenim imenom; to otvara pravni i nastavni rizik pa ide
+  kroz nacrt [§7](./07-poznate-osobe-rizik.md) i **čeka Leona**. Dok ne odluči, pravilo iznad vrijedi bez iznimke.
+
 ## 3.6 Tko što provjerava
 
 | provjera | stroj (Rust, `crates/content`, test pri svakom `cargo test`) | čovjek (uzorak Leonu) |

@@ -4,6 +4,13 @@ Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Faza: GENERATOR HOTELA u „poslije
 F3-1…8). Ovisnost o razredu: u razrednoj igri ([ADR-037](../../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) t. 1)
 svaki student ima svoj hotel u istoj igri, pa generator puni slotove 1..N.
 
+> **17.10.2026.: Leon odlučio BANKA HOTELA prije generatora** ([ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)).
+> *„Trebat ćemo napraviti i banku hotela gdje će profesor moći dodijeliti hotele studentima koje želi."* Prvi korak nije
+> generator nego **popis gotovih, pregledanih hotela** raznih veličina (10–15 hotela 4*, pečat u serijama kao banka ljudi);
+> profesor dodjeljuje hotel po studentu ili nasumce. Generator iz ovog dijela dolazi kasnije i samo **puni banku**. Mjesto i
+> tri komada (sadržaj, jezgra, platforma): [ROADMAP](../../plan/ROADMAP.md) „Pilot → produkcija i banka hotela". Oblik iz
+> §4.2 (opis hotela u dnevniku, ključ profila kao tekst) i **pravednost iz §4.3 vrijede i za banku hotela**.
+
 ## 4.1 Danas
 
 | što | gdje |
@@ -37,7 +44,8 @@ svaki student ima svoj hotel u istoj igri, pa generator puni slotove 1..N.
 
 ## 4.3 Pravednost uz ocjenu napretka
 
-Hoteli različite veličine smiju biti različiti, ali **mogućnost napretka mora biti jednaka**. To traži tri stvari:
+Hoteli različite veličine smiju biti različiti, ali **mogućnost napretka mora biti jednaka**. Vrijedi jednako za hotele iz
+banke (17.10.) i iz generatora. To traži tri stvari:
 
 - **Referentna tablica po hotelu, ne po kategoriji.** Referenca postaje „isti taj hotel uz zadani plan", pa napredak
   znači „koliko si bolji od vlastitog nečinjenja". Cijena: po jedan izračun po hotelu, koji treba držati u predmemoriji.

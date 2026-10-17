@@ -239,3 +239,31 @@ testovi, provjeravatelj, balans, a prije izlaska na internet ni F0-3 zaštita, F
    platformu kao F0-10 (preporuka: P3 inače stoji na fazi 3); (b) cijela faza C, pa RAZRED U JEZGRI (P3 klizi u veljaču).
 6. **Vlastite situacije profesora (F2b):** (a) odmah planirati za P4 (preporuka: −40 h, P3 i bez njih pokazuje razred);
    (b) ostaviti u P3 i rezati tek ako tempo zapne.
+
+### 7a. Što je Leon rekao 17.10.2026. (E3, E6; [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md))
+
+**Pilot → produkcija.** Leon: *„ovo što već imamo je pilot, a ovo što gradimo je već produkcijska platforma."* 🟨 Redoslijed
+nakon L1-13…L1-15 (platforma do najmanje igrive razredne igre prije novih mehanika igre) je u [ROADMAP-u](./ROADMAP.md)
+„Pilot → produkcija i banka hotela"; on ovaj nacrt pomiče prema pitanju 5 (a).
+
+**E3 (hosting i prijava), doslovno:** *„Hosting je najmanje problem, mislim da ćemo koristiti Cloudflare, još nije sigurno.
+Profesor će dobiti svoje vlastite informacije za prijavu. Ja bih ful volio Supabase uključiti, ali me strah zbog latencije."*
+- **Pitanje 3 (hosting):** 🟨 vjerojatno **Cloudflare**, nije sigurno; **Railway nije odbijen**. Tumačenje voditelja
+  [PROVJERITI]: naš poslužitelj je Rust (axum) s Postgresom i poslovima u pozadini; Cloudflare je jak za domenu (F0-S3 već
+  predviđa Cloudflare Registrar), statiku i zaštitu, a za dugo živući Rust poslužitelj i bazu treba provjeriti što nudi i po
+  kojoj cijeni. Odluka tek uz izmjereni trošak (AI-M i F0-S2).
+- **Pitanje 2 (profesor za probu):** profesor dobiva **vlastite podatke za prijavu**. To vrijedi i za (a) i za (b); otvoreno
+  ostaje kako ih dobiva (poveznica ili poruka).
+- **Supabase:** Leonova želja, uz strah od latencije. Napomena voditelja: Supabase u EU regiji je oko **30 ms** od Hrvatske
+  [PROC]; za igru je važna udaljenost **poslužitelja od baze** (ista regija = par ms), ne studenta od baze. Pravi trošak je
+  **mjesečna pretplata** za stalno upaljenu bazu; Leon već plaća Supabase Pro za drugi projekt, pa treba provjeriti cijenu
+  dodatnog projekta [PROVJERITI]. §5 („Supabase se ne koristi") zato više nije zaključeno.
+- **Ostalih 5 pitanja (1, 2 u dijelu „kako", 4, 5, 6) ostaje otvoreno.**
+
+**E6 (profesor), doslovno skraćeno:** *„Profesor bira koje AI situacije želi, trebat ćemo mu napraviti lijep strukturiran
+izbornik situacija. On može stavljati svoje situacije i pisati ih, može vidjeti što je korisnik pričao s gostom ili
+zaposlenikom… i na temelju toga davati ocjene, može isključiti AI mentora ili ga uključiti. Bira kada otvara novi tjedan ili
+mjesec… trebat će nam nekoliko sesija da inženjerski postavimo temelje profesorova sučelja."* Anketa: „branša" = **odjel
+hotela** (recepcija, restoran, wellness, održavanje). Uz to: situacije pripremljene unaprijed uz profesorov izbor (ne u hodu),
+ritam bira profesor. → cigla **PR-1** u [ROADMAP/platforma](./ROADMAP/platforma.md) (najprije nacrt s raspravom, ADR-006);
+vlastite situacije (pitanje 6) Leon želi, ali time nije rekao P3 ili P4.
