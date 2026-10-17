@@ -11,7 +11,8 @@ Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflo
 *Uzrok:* za isti crate cargo daje isti hash artefakta (put je relativan prema korijenu), a svježinu gleda po vremenu izmjene datoteka; stablo čiji su izvori
 stariji od artefakta koji je izgradilo drugo stablo dobije tuđu biblioteku. Lažno zeleno je moguće. *Pouka:* **svako stablo svoj** `CARGO_TARGET_DIR=…/hotelixsim/target/<stablo>`
 (briše se sa stablom, B11), glavno stablo `target/`; ispravlja B11 i B8 ("zajednički target"). Uz to: `pnpm lint` (biome) provjerava i `content/**/*.json`,
-JSON formatirati prije commita; `check:api` EXIT 127 = Windows 0xC0000142 pod opterećenjem (okolina, ponoviti). *Stanje:* pravilo u [AGENTI](../workflow/AGENTI.md) t. 6 i 7, [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 4.
+JSON formatirati prije commita; `check:api` EXIT 127 = Windows 0xC0000142 pod opterećenjem (okolina, ponoviti). *Druga B12 (15.10., spojena ovamo):* CI je pao na `lint` nakon A3 jer generirani pečat `fixtures_v2/v2-snapshot.json` nije bio izuzet iz `biome` kao v1 pečati, a ni čuvar, ni graditelj, ni provjeravatelj nisu vrtjeli `corepack pnpm lint` (kartica ga nije tražila). *Pouka:* svaka cigla vrti cijeli popis provjera iz CI-ja, ne samo onaj u kartici; `biome.json` izuzima `**/tests/fixtures_v2` (Global Constraints plana popravka).
+*Stanje:* pravilo u [AGENTI](../workflow/AGENTI.md) t. 6 i 7, [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 4.
 
 **B13. Zalijepljeni svi ponuđeni odgovori najčešće dobiju 5** (prijavio Leon igrajući; u situaciji s kuharom koji traži povišicu 20 %, sidro S2, nije).
 *Uzrok:* presuda gleda smisao teksta, a ne to da je tekst prepisan iz ponude; AI se na zbroju svih odgovora ponaša nepredvidivo. *Pouka:* prepoznavanje prepisivanja
@@ -25,11 +26,6 @@ mora biti u **kodu** (70 % riječi), ne u AI-ju: 0 ulaznih i izlaznih tokena, uv
 Rust u svoj `target/` od više GB, a stabla spojenih grana nisu brisana. *Pouka:* jedan zajednički `CARGO_TARGET_DIR`,
 stablo se briše isti dan kad se spoji, `df -h /c` prije otvaranja stabla; granica je **50 GB slobodnog** (Leon 16.10., prije 100 GB; [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 9).
 *Stanje:* pravilo u [AGENTI.md](../workflow/AGENTI.md) §1 t. 6; spojena stabla i stari `target/` obrisani 15.10.
-
-**B12. CI pao na `lint` nakon A3.** *Uzrok:* generirani pečat `fixtures_v2/v2-snapshot.json` nije bio izuzet iz
-`biome` kao v1 pečati, a ni čuvar, ni graditelj, ni provjeravatelj nisu vrtjeli `corepack pnpm lint` (kartica ga nije
-tražila). *Pouka:* svaka cigla vrti cijeli popis provjera iz CI-ja, ne samo onaj u kartici. *Stanje:* `biome.json`
-izuzima `**/tests/fixtures_v2`; Global Constraints plana popravka.
 
 ## 2026-10-14 — iz Leonova igranja i spajanja grana
 

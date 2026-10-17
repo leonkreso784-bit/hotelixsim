@@ -185,7 +185,7 @@ P3 su **profesori na internetu, ne pilot**. Najjeftinija varijanta koja čuva te
 | **ukupno novo** | od izlaska (prijedlog: početak prosinca, interno) do 15.1. ≈ 1,5 mj | **~10–15 € ukupno** |
 
 **Ostaje lokalno:** razvoj, balans, sva radna stabla, baza za razvoj; produkcijska baza nikad ne koristi lokalnu lozinku
-iz povijesti repoa. Supabase se ne koristi (AAI@EduHr nudi OIDC, posrednik ne treba, §3.3).
+iz povijesti repoa. Supabase nije odlučen (Leon 17.10., [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) E3: želja uz strah od latencije; hosting vjerojatno Cloudflare 🟨).
 **ADR-004** („Railway tek za pilot") treba dopunu: izlazak za P3, prije pilota, uz izričit OK 🟨.
 
 **AI trošak po razredu [PROC]:** ~1–2 $ po studentu za cijelu sezonu (PLATFORMA §6.2). Proba P3 od 4–6 tjednih krugova

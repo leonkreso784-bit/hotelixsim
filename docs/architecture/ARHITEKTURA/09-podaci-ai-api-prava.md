@@ -131,6 +131,8 @@ Okvirni resursi:
 
 ## 12 · Prijava i prava
 
+- **Odluka (Leon 17.10., [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) E1):**
+  **sesije, ne JWT** (L10); pružatelj prijave još nije odlučen (E3). Odlomci niže (JWT/JWKS, kandidati) su raniji nacrt.
 - **Identitet:** vanjski pružatelj prijave po standardu **OIDC**; naš backend samo provjerava token (JWT, ključevi
   preko JWKS). Prijavu ne pišemo sami.
 - **Kandidati (otvoreno):** Supabase Auth (besplatan start, biblioteke za mobitel) · Clerk (najudobniji, plaća se

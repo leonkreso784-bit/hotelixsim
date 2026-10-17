@@ -1,6 +1,7 @@
 # Situacije S1b, S5–S8 — nacrt ponuđenih odgovora i rubrika
 
-> **Nacrt za Leonovu provjeru — on je mjerilo za rubrike (DEMO „Za Leonovu provjeru" t. 5).**
+> **Zatvoreno 17.10. — povijest.** Leon je nacrt zatvorio ([ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) B5):
+> v1 je zamrznut, a v2 ima vlastite predloške. Tekst niže se više ne provjerava ni ne gradi.
 > Ništa ovdje nije potvrđeno. Brojke su [PROC] osim ako piše drukčije. Oblik je isti kao S1–S4 u
 > [DEMO.md](DEMO.md) §7. Datoteka DEMO.md nije mijenjana.
 

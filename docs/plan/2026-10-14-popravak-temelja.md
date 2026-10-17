@@ -46,7 +46,7 @@ Vrijede `.superpowers/sdd/2026-10-10-v2-sloj1/global-constraints.md` i `implemen
 - **Svaka cigla prije predaje vrti cijeli popis provjera iz CI-ja** (`.github/workflows/ci.yml`: fmt, clippy, core-deps,
   testovi, balansi, check:docs, test:docs, check:kod, check:api, lint, typecheck, test, web build), ne samo kartične (B12).
 - **Tekstovi poruka brana balansa ostaju doslovno isti** (usporedba s ~40 povijesnih izvještaja).
-- **Najviše 2 agenta istodobno prevode Rust.** Sva stabla dijele `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target`;
+- **Najviše 2 agenta istodobno prevode Rust.** Svako stablo ima svoj `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target/<stablo>` (zajednički daje zastarjelu biblioteku, BUGS B12, AGENTI t. 6);
   samo osnovica (B8) ima privremeni target koji se briše odmah. Stablo koje pokreće poslužitelj ima svoju bazu (B9).
   Disk ostaje iznad 100 GB slobodno; stablo cigle se briše isti dan kad se spoji (B11).
 - **Grana cigle živi najviše ~1 dan**; nakon svakog spajanja balans v2 tjedno i mjesečno s 1000 sjemena i `--check`.

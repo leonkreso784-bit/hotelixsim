@@ -108,7 +108,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [VIZIJA.md](./product/VIZIJA.md) | Zašto i za koga: dobiveni hotel, fer start, pet osi situacija, AI u četiri uloge, relativna ocjena |
 | [DEMO.md](./product/DEMO.md) | **Spec demoa**: stvarni sloj hotela, pet indeksa, profili A/B/C, mehanike, situacije S1–S8, roboti, provjere (§11), pravila zaokruživanja (§12, nacrt) |
 | [DIZAJN.md](./product/DIZAJN.md) | Leonov logo i koncept ekrana v2 (boje, tri ekrana, likovi, kako su riješena neslaganja s igrom); slike u [dizajn/](./product/dizajn/) |
-| [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — čeka Leonovu provjeru |
+| [SITUACIJE_S1b_S5-S8.md](./product/SITUACIJE_S1b_S5-S8.md) | Nacrt ponuđenih odgovora i rubrika za S1b i S5–S8 — zatvoreno 17.10. ([ADR-056](./records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) B5), povijest |
 | [PITANJA_ZA_PROFESORE.md](./product/PITANJA_ZA_PROFESORE.md) | Pitanja za profesore FMTU-a — čeka Leonov pregled prije slanja |
 | [PROSIRENJA.md](./product/PROSIRENJA.md) | **Put B**: katalog dodataka nakon demoa (odjeli, zaposlenici, sobe, recenzije, pokazatelji, računalo) — što student vidi, što uči, koje brojke mijenja, sloj |
 | [IDEJE.md](./product/IDEJE.md) | Ideje za nakon profesorova pregleda (vrste soba, agencije, događaji, novine, platforma) — skupljaju se, ne grade se dok Leon ne odluči redoslijed |

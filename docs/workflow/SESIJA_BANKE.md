@@ -1,11 +1,15 @@
-# SESIJA BANKE — upute za zasebnu sesiju koja puni i provjerava banku ljudi
+# SESIJA BANKE — upute za paralelnu sesiju koja puni i provjerava banku ljudi
 
 > Vrijedi od 16.10. (Leon, sesija 7: *„drugu sesiju koja paralelno radi samo na radnicima i provjerava ih"*). Kreće **kad K2v
 > (treća vrsta VANJSKI) sleti u `model-v2/sloj1`**, da sesija ima sve tri vrste i jasna pravila. Nacrt banke:
 > [BANKA_LJUDI](../architecture/BANKA_LJUDI.md) (§5.5 tri agenta, §5.6 sesija banke); tok agenata: [AGENTI](./AGENTI.md).
 > Skill za početak: `/banka` (`.claude/skills/banka/SKILL.md`).
+> **Od 17.10. je to PARALELNA sesija:** radi **istodobno s glavnom** (ne nova sesija poslije nje); prompt za početak je
+> `.superpowers/sdd/banka-ljudi-k1/PROMPT-PARALELNA-SESIJA.md` (ne `/newsession`, jer ta naredba čita predaju glavne sesije).
+> **Jedan Rust slot** po sesiji (§3), `CARGO_TARGET_DIR=…/hotelixsim/target/ljudi`; **spaja glavna sesija**, banka joj u ledgeru
+> javi „SPREMNO ZA SPAJANJE: <commit>". Prompt niže je raniji (16.10.); vrijedi gornji.
 
-## Prompt za početak (Leon zalijepi u NOVI prozor Claude Codea, u stablu `hotelixsim-ljudi`, nakon `/clear`)
+## Raniji prompt za početak, 16.10. (Leon zalijepi u NOVI prozor Claude Codea, u stablu `hotelixsim-ljudi`, nakon `/clear`)
 
 ```text
 /banka
