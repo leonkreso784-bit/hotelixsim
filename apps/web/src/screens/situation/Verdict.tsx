@@ -32,7 +32,7 @@ export function Verdict({
           <h2 className="text-lg font-bold">
             {response.quality !== null ? t("verdict.total", { q: response.quality }) : t("verdict.grade")}
           </h2>
-          <p className="text-sm">{t("verdict.neutral")}</p>
+          <p className="text-sm">{response.pasted ? t("verdict.pasted") : t("verdict.neutral")}</p>
         </Card>
       ) : (
         <Card tone="accent" className="space-y-3">
@@ -64,6 +64,7 @@ export function Verdict({
           {response.rationale && <p className="text-sm">{response.rationale}</p>}
         </Card>
       )}
+      {response.copied && <p className="text-sm font-semibold">{t("verdict.copied")}</p>}
       {response.status === "judged" && (
         <p className="flex items-center gap-2 text-xs text-muted">
           <Info size={14} aria-hidden="true" />

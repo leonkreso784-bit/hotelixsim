@@ -246,6 +246,7 @@ export const hr = {
   "answers.cancel": "Odustani",
   "answers.missed": "Mjesec je zatvoren bez odgovora.",
   "answers.missed.week": "Tjedan je zatvoren bez odgovora.",
+  "answers.clickCap": "Klikom dobivaš najviše 4 od 5. Za punih 5 odgovori gostu svojim riječima.",
   "response.title": "Tvoj odgovor",
   "response.label": "Tvoj odgovor svojim riječima",
   "response.placeholder": "Napiši što radiš i zašto…",
@@ -260,6 +261,10 @@ export const hr = {
   "verdict.notMet": "nije ispunjeno",
   "verdict.neutral":
     "AI ocjena nije stigla na vrijeme: vrijedi neutralna ocjena, a odgovor pregledava profesor.",
+  "verdict.copied":
+    "Jedan od ponuđenih odgovora je prepisan, pa vrijedi kao klik: najviše 4 od 5. Za punih 5 napiši vlastitu odluku.",
+  "verdict.pasted":
+    "Zalijepljeno je više ponuđenih odgovora odjednom, a to nije tvoja odluka. Zato vrijedi neutralna ocjena. Sljedeći put napiši što ćeš sam učiniti.",
   "verdict.note": "AI ocjenjuje odgovor. Pravila računaju brojke.",
   "notFound.title": "Ova stranica ne postoji.",
   "notFound.back": "Natrag na hotel",

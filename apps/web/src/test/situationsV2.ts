@@ -15,6 +15,7 @@ export function instance(
     answers: ["Riješiti odmah i javiti se gostu", "Pričekati do sutra", "Ne raditi ništa"],
     chosen: null,
     free_text: false,
+    click_capped: false,
     character: null,
     response: null,
     department,

@@ -19,6 +19,8 @@ pub struct SituationBody {
     pub chosen: Option<u8>,
     /// Student smije odgovoriti svojim riječima i razgovarati s likom.
     pub free_text: bool,
+    /// Klik na ponuđeni odgovor daje najviše 4 od 5 (v2, lik i vlastiti odgovor); web to kaže prije klika.
+    pub click_capped: bool,
     #[schema(required = true)]
     pub character: Option<CharacterBody>,
     #[schema(required = true)]
@@ -178,6 +180,12 @@ pub struct ResponseBody {
     pub criteria: Vec<CriterionBody>,
     #[schema(required = true)]
     pub rationale: Option<String>,
+    /// Prepisan je jedan ponuđeni odgovor: vrijedi kao klik. Stariji klijenti ga ne šalju, pa nije obvezno u shemi.
+    #[schema(required = false)]
+    pub copied: bool,
+    /// Zalijepljeno je više ponuđenih odgovora: nije odluka, neutralna ocjena.
+    #[schema(required = false)]
+    pub pasted: bool,
 }
 
 impl From<&app::ResponseView> for ResponseBody {
@@ -197,6 +205,8 @@ impl From<&app::ResponseView> for ResponseBody {
                 })
                 .collect(),
             rationale: r.rationale.clone(),
+            copied: r.copied,
+            pasted: r.pasted,
         }
     }
 }
@@ -232,6 +242,7 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
                     answers: i.answers.clone(),
                     chosen: i.chosen,
                     free_text: i.free_text,
+                    click_capped: i.click_capped,
                     character: i.character.as_ref().map(|c| CharacterBody {
                         name: c.name.clone(),
                         role: c.role.clone(),

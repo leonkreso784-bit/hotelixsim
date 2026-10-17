@@ -1311,7 +1311,11 @@ export interface components {
         };
         /** @description Slobodan odgovor studenta i njegova presuda (ponuđeni odgovori nemaju ovo). */
         ResponseBody: {
+            /** @description Prepisan je jedan ponuđeni odgovor: vrijedi kao klik. Stariji klijenti ga ne šalju, pa nije obvezno u shemi. */
+            copied?: boolean;
             criteria: components["schemas"]["CriterionBody"][];
+            /** @description Zalijepljeno je više ponuđenih odgovora: nije odluka, neutralna ocjena. */
+            pasted?: boolean;
             /** Format: int32 */
             quality: number | null;
             rationale: string | null;
@@ -1531,6 +1535,8 @@ export interface components {
             character: components["schemas"]["CharacterBody"] | null;
             /** Format: int32 */
             chosen: number | null;
+            /** @description Klik na ponuđeni odgovor daje najviše 4 od 5 (v2, lik i vlastiti odgovor); web to kaže prije klika. */
+            click_capped: boolean;
             code: string;
             /** @description Prepuštena voditelju odjela. */
             delegated: boolean;
