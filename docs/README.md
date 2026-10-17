@@ -126,6 +126,7 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [BODOVANJE_VLASTITOG_ODGOVORA.md](./architecture/BODOVANJE_VLASTITOG_ODGOVORA.md) | Vlastiti odgovor vrijedi više od klika na najbolji (Leon 15.10.): opcije s brojkama, mjesto prije L1-13, anketa; nacrt za raspravu |
 | [PLATFORMA.md](./architecture/PLATFORMA.md) | **Platforma**: razred = jedna igra s N hotela, računi i uloge, profesorov pregled, generirani hoteli, produkcija (Railway) i trošak, GDPR; nacrt za raspravu, odluke u ADR-037 (dijelovi u `PLATFORMA/`) |
 | [REVIZIJA_TEMELJA.md](./architecture/REVIZIJA_TEMELJA.md) | **Revizija temelja 14.10.**: što je temelj, što je nadogradnja, gdje puca (s dokazima), cijena popravka prema gradnji ispočetka, preporuka u fazama A–C; čeka Leonovu odluku |
+| [PROVJERA_ARHITEKTURE_2026-10-17.md](./architecture/PROVJERA_ARHITEKTURE_2026-10-17.md) | **Dubinska provjera arhitekture 17.10.** (E4): je li Rust + TypeScript + Postgres ok za razred od 40 kroz semestar, s dokazima i izmjerenim AI troškom; uvjeti (stara igra, opterećenje, hosting s kopijama), Cloudflare, sedam stavki „promijeniti sada“; čeka Leonovu odluku |
 | [MODEL_V2.md](./architecture/MODEL_V2.md) | **Put B**: kako hotel od brojeva postaje skup stvari (odjeli, zaposlenici, sobe, recenzije) — entiteti, slojevi, determinizam, stare igre |
 
 ## `plan/` — što sada
