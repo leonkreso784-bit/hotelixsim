@@ -327,3 +327,38 @@ impl From<&app::ConversationView> for ConversationBody {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// IZGLED-c, test 7: `uniform` u JSON-u je `snake_case` vrijednost iz kartice, a bez uniforme `null` (ključ postoji).
+    #[test]
+    fn uniform_serializes_as_agreed() {
+        let look = |u: Option<app::Uniform>| {
+            serde_json::to_value(CharacterLookBody::from(app::CharacterLook {
+                gender: app::LookGender::F,
+                age_group: Some(app::AgeGroup::Adult),
+                origin: app::Origin::Regional,
+                uniform: u,
+            }))
+            .unwrap()
+        };
+        for (u, want) in [
+            (app::Uniform::Police, "police"),
+            (app::Uniform::Fire, "fire"),
+            (app::Uniform::Ems, "ems"),
+            (app::Uniform::Doctor, "doctor"),
+        ] {
+            assert_eq!(look(Some(u))["uniform"], want);
+            assert_eq!(
+                serde_json::to_value(UniformBody::from(u)).unwrap(),
+                serde_json::json!(want)
+            );
+        }
+        let none = look(None);
+        assert!(none.as_object().unwrap().contains_key("uniform"));
+        assert!(none["uniform"].is_null());
+        assert_eq!(none["gender"], "f");
+    }
+}

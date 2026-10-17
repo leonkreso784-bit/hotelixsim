@@ -73,7 +73,8 @@ fn look_from_name_lists() {
         Some(CharacterLook {
             gender: LookGender::F,
             age_group: None,
-            origin: Origin::Foreign
+            origin: Origin::Foreign,
+            uniform: None
         })
     );
     assert_eq!(
@@ -81,7 +82,8 @@ fn look_from_name_lists() {
         Some(CharacterLook {
             gender: LookGender::M,
             age_group: None,
-            origin: Origin::Foreign
+            origin: Origin::Foreign,
+            uniform: None
         })
     );
     assert_eq!(
@@ -89,7 +91,8 @@ fn look_from_name_lists() {
         Some(CharacterLook {
             gender: LookGender::F,
             age_group: Some(AgeGroup::Adult),
-            origin: Origin::Regional
+            origin: Origin::Regional,
+            uniform: None
         })
     );
     assert_eq!(
@@ -97,7 +100,8 @@ fn look_from_name_lists() {
         Some(CharacterLook {
             gender: LookGender::M,
             age_group: Some(AgeGroup::Adult),
-            origin: Origin::Regional
+            origin: Origin::Regional,
+            uniform: None
         })
     );
 }

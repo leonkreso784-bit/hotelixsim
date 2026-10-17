@@ -44,7 +44,7 @@ async fn character_look_has_the_agreed_json_shape() {
             .unwrap_or_else(|| panic!("{what}: look nije objekt: {look}"));
         let mut keys: Vec<_> = o.keys().map(String::as_str).collect();
         keys.sort_unstable();
-        assert_eq!(keys, ["age_group", "gender", "origin"], "{what}");
+        assert_eq!(keys, ["age_group", "gender", "origin", "uniform"], "{what}");
         assert!(
             ["f", "m"].contains(&look["gender"].as_str().unwrap()),
             "{what}"
@@ -58,6 +58,8 @@ async fn character_look_has_the_agreed_json_shape() {
             ["regional", "foreign"].contains(&look["origin"].as_str().unwrap()),
             "{what}"
         );
+        // IZGLED-c: ključ `uniform` je obavezan; danas nijedan predložak nema ulogu službe, pa je `null`.
+        assert!(look["uniform"].is_null(), "{what}: {look}");
     };
 
     let inst = items
