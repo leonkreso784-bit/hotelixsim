@@ -65,6 +65,30 @@ pub struct CharacterLookBody {
     #[schema(required = true)]
     pub age_group: Option<AgeGroupBody>,
     pub origin: OriginBody,
+    /// Odora službe (policija, vatrogasci, hitna, liječnik) iz ključa uloge lika; `null` za lik bez odore.
+    #[schema(required = true)]
+    pub uniform: Option<UniformBody>,
+}
+
+/// Odora službe vanjskog lika: web crta odjeću, kapu i ovratnik; lice ostaje isto.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum UniformBody {
+    Police,
+    Fire,
+    Ems,
+    Doctor,
+}
+
+impl From<app::Uniform> for UniformBody {
+    fn from(u: app::Uniform) -> Self {
+        match u {
+            app::Uniform::Police => UniformBody::Police,
+            app::Uniform::Fire => UniformBody::Fire,
+            app::Uniform::Ems => UniformBody::Ems,
+            app::Uniform::Doctor => UniformBody::Doctor,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
@@ -105,6 +129,7 @@ impl From<app::CharacterLook> for CharacterLookBody {
                 app::Origin::Regional => OriginBody::Regional,
                 app::Origin::Foreign => OriginBody::Foreign,
             },
+            uniform: l.uniform.map(UniformBody::from),
         }
     }
 }

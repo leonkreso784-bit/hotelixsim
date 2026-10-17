@@ -21,7 +21,7 @@ export const HAIR = [
   "#E8CFA0",
   "#6B2E1F",
 ] as const;
-/** plava, zelena, oker, ljubičasta, crvena, tamna, bijela (kuhar), tirkizna, malina, kava */
+/** plava, zelena, oker, ljubičasta, crvena, tamna, bijela (kuhar, kuta), tirkizna, malina, kava, tamnoplava (policija, vatrogasci), crvena hitne */
 export const CLOTHES = [
   "#246BFD",
   "#15924A",
@@ -33,6 +33,8 @@ export const CLOTHES = [
   "#00897B",
   "#C2185B",
   "#8D6E63",
+  "#1F2F4D",
+  "#C8102E",
 ] as const;
 /** pijesak, menta, svijetloplava — boje koncepta v2 */
 export const BACKDROP = ["#F4E8D5", "#D8F0EE", "#EAF1FF"] as const;

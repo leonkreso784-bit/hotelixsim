@@ -7,7 +7,7 @@ use game::{
 };
 
 use crate::demo::load_game;
-use crate::look::{CharacterLook, character_look};
+use crate::look::{CharacterLook, look_of_character};
 use crate::{AppError, Caller, Deps, ErrorCode};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -352,7 +352,7 @@ async fn situations_in_month(
                     .map(|c| CharacterCardView {
                         name: c.name.clone(),
                         role: c.role.clone(),
-                        look: character_look(&g.content, &c.name, &c.role),
+                        look: look_of_character(&g, hotel, &t.code, c),
                     }),
                 response: record
                     .responses

@@ -1,4 +1,4 @@
-import { t } from "@hotelixsim/i18n";
+import { type MessageKey, t } from "@hotelixsim/i18n";
 import { Avatar } from "../avatar/Avatar";
 import {
   AGES,
@@ -7,6 +7,8 @@ import {
   EARRINGS,
   HAIR_STYLES,
   KNOWN_LOOKS,
+  type LookHint,
+  lookFor,
   lookFromSeed,
   MENTOR_LOOK,
   NECKWEAR,
@@ -26,6 +28,39 @@ const GUESTS = [
   "Lana Vuković",
   "Karlo Šimić",
   "Ema Knežević",
+];
+/** Red „Službe“: odora iz podatka `uniform` (kao iz API-ja), lice iz imena; imena su izmišljena za galeriju. */
+const SERVICES: readonly { label: MessageKey; name: string; hint: LookHint }[] = [
+  {
+    label: "avatars.service.police_m",
+    name: "Marin Jelić",
+    hint: { gender: "m", age_group: "adult", origin: "regional", uniform: "police" },
+  },
+  {
+    label: "avatars.service.police_f",
+    name: "Ivana Kos",
+    hint: { gender: "f", age_group: "adult", origin: "regional", uniform: "police" },
+  },
+  {
+    label: "avatars.service.fire",
+    name: "Dario Rukavina",
+    hint: { gender: "m", age_group: "adult", origin: "regional", uniform: "fire" },
+  },
+  {
+    label: "avatars.service.ems",
+    name: "Sanja Matić",
+    hint: { gender: "f", age_group: "adult", origin: "regional", uniform: "ems" },
+  },
+  {
+    label: "avatars.service.doctor_m",
+    name: "Goran Lukić",
+    hint: { gender: "m", age_group: "senior", origin: "regional", uniform: "doctor" },
+  },
+  {
+    label: "avatars.service.doctor_f",
+    name: "Petra Vidić",
+    hint: { gender: "f", age_group: "adult", origin: "regional", uniform: "doctor" },
+  },
 ];
 const TRAIT_KEYS = ["brows", "nose", "age", "earrings", "neckwear", "outfit"] as const;
 const ITEM = "flex flex-col items-center gap-1";
@@ -95,6 +130,20 @@ export function AvatarGallery() {
             <li key={hair} className={ITEM}>
               <Avatar look={{ ...PLAYER_LOOK, hair }} size={56} />
               {hair}
+            </li>
+          ))}
+        </ul>
+      </Card>
+      <Card>
+        <h2 className="pb-2 font-bold">{t("avatars.services")}</h2>
+        <ul className="grid grid-cols-3 gap-3 text-center text-xs">
+          {SERVICES.map(({ label, name, hint }) => (
+            <li key={label} className={ITEM}>
+              <span className="flex items-end gap-1">
+                <Avatar look={lookFor(name, hint)} size={56} />
+                <Avatar look={lookFor(name, hint)} size={36} />
+              </span>
+              {t(label)}
             </li>
           ))}
         </ul>

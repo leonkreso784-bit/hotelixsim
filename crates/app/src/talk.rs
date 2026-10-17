@@ -4,7 +4,7 @@ use game::{Actor, ChatLine, Game, HotelId, MAX_CHAT_MESSAGES, RoundStatus, Speak
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{ASSESS_KIND, AssessPayload, CHAT_KIND, ChatPayload, assess_key, chat_key};
-use crate::look::{CharacterLook, character_look};
+use crate::look::{CharacterLook, look_of_character};
 use crate::views::{game_of_hotel, require_owner};
 use crate::{
     AppError, Caller, Decision, Deps, ErrorCode, NewJob, RawEvent, SituationsView, situations,
@@ -43,7 +43,7 @@ fn view_of(g: &Game, hotel: HotelId, code: &str) -> Result<ConversationView, App
         situation: code.to_owned(),
         character_name: c.name.clone(),
         role: c.role.clone(),
-        character_look: character_look(&g.content, &c.name, &c.role),
+        character_look: look_of_character(g, hotel, code, c),
         opening: c.opening.clone(),
         awaiting_reply: open && lines.last().is_some_and(|l| l.from == Speaker::Student),
         lines,
