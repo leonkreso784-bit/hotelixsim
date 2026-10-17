@@ -1,4 +1,4 @@
-//! Brana serija banke ljudi: svaka `serija-*.json` pod `content/hotel/v2/ljudi/radnici` i `gosti` mora biti u točno
+//! Brana serija banke ljudi: svaka `serija-*.json` pod `content/hotel/v2/ljudi/radnici`, `gosti` i `vanjski` mora biti u točno
 //! jednom popisu — `ZAPECACENO` (SHA-256, nepromjenjiva osim povlačenjem, BANKA_LJUDI §4.3) ili `OTVORENO`
 //! (čeka Leonov pregled). Pečate se samo serije; `raspodjele/mjesta/zabranjeno` mijenja glavna sesija, a
 //! `repo_banka_prolazi` svaki put ponovno provjeri cijelu banku. Obrazac: `fixtures_sealed.rs` (CRLF → LF).
@@ -7,15 +7,28 @@
 use sha2::{Digest, Sha256};
 
 /// (put pod `ljudi/`, SHA-256 sadržaja s LF završecima).
-const ZAPECACENO: [(&str, &str); 0] = [];
+/// Serije 000 i 001 radnika i gostiju: Leon pregledao svih 120 i odobrio pečat 17.10. („super su").
+const ZAPECACENO: [(&str, &str); 4] = [
+    (
+        "gosti/serija-000.json",
+        "70da915d34b136be92956aa70922b693913ce37a8c98b6c3342191d936ab6759",
+    ),
+    (
+        "gosti/serija-001.json",
+        "b486caaedebd7143a1d32704251fe0415f20043e12a72268621ecf1ddcefd4b5",
+    ),
+    (
+        "radnici/serija-000.json",
+        "360d99eb769ff9de33a7503e7ecb87909c72cd53f700027757c01a99103dc872",
+    ),
+    (
+        "radnici/serija-001.json",
+        "f45bd629217915b678eaab28eba4cee643600dee8e17e7ae3051574645b71efa",
+    ),
+];
 
 /// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku).
-const OTVORENO: &[&str] = &[
-    "gosti/serija-000.json",
-    "gosti/serija-001.json",
-    "radnici/serija-000.json",
-    "radnici/serija-001.json",
-];
+const OTVORENO: &[&str] = &[];
 
 fn lf_hash(bytes: &[u8]) -> String {
     let lf: Vec<u8> = bytes
