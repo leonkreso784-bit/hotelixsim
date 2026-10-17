@@ -136,7 +136,7 @@ export function AvatarGallery() {
       </Card>
       <Card>
         <h2 className="pb-2 font-bold">{t("avatars.services")}</h2>
-        <ul className="grid grid-cols-3 gap-3 text-center text-xs">
+        <ul className="grid grid-cols-2 gap-3 text-center text-xs sm:grid-cols-3">
           {SERVICES.map(({ label, name, hint }) => (
             <li key={label} className={ITEM}>
               <span className="flex items-end gap-1">
