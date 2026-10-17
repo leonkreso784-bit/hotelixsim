@@ -1,5 +1,5 @@
 # ADR-030 — Raspored dokumentacije: granice veličine, indeks + mapa, ADR po datoteci
-**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [plan](../../plan/2026-10-10-dokumentacija.md), [docs/README.md](../../README.md)
+**Datum:** 2026-10-10 · **Status:** ✅ **Potvrdio Leon 17.10.** (F1; dopune 1000 i 1200 su Leonove od 13.10.) · **Vezano:** [plan](../../plan/2026-10-10-dokumentacija.md), [docs/README.md](../../README.md)
 
 **Kontekst.** Leon 10.10.: *„Neke md datoteke imaju previše informacija … Na nekim mjestima ima preko 3000 linija — to je
 JAKO JAKO loše. Sve treba biti savršeno raspoređeno u dokumentacijama jer to je srce naših operacija."* Plan sloja 1 imao
@@ -44,3 +44,5 @@ rezerviran za sloj 1, pa u indeksu namjerno postoji praznina.
 dokumenta: ponovno `razdvoji` s drugim brojem dijelova (stari § brojevi se ne gube). ADR natrag u jednu datoteku:
 jedna skripta koja spoji datoteke u `DECISIONS.md`. Premještanje je išlo bez promjene sadržaja, pa se ništa ne
 prepisuje ispočetka; najskuplji dio, navikavanje na novi raspored, ne vraća se nikakvim alatom.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): F1: pravila dokumentacije vrijede kako su zapisana.

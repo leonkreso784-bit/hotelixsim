@@ -1,5 +1,5 @@
 # ADR-055 — Pretpostavke 16.10. (sesija 6): kartica PRAVILO, voditelj kao čuvar, banka ljudi, target po stablu
-**Datum:** 2026-10-16 · **Status:** 🟨 ČEKA LEONOV PREGLED · **Vezano:** [ADR-053](ADR-053-pretpostavke-16-10-oznake-testovi-b4.md),
+**Datum:** 2026-10-16 · **Status:** ✅ **Potvrdio Leon 17.10., osim t. 6 🟨** (t. 1 A5 i A6; t. 2, 4, 5 F1; t. 3 C1, C2, C6) · **Vezano:** [ADR-053](ADR-053-pretpostavke-16-10-oznake-testovi-b4.md),
 [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md), [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md),
 [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8, [plan popravka](../../plan/2026-10-14-popravak-temelja.md)
 
@@ -19,3 +19,5 @@ Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
 5. **Mjerenje inačica prije ankete o igri:** jedan agent, jedan krug (B4c prag: 7 inačica izmjereno prije nego što je Leon pitan). Ako krivo: ~1 h mjerenja viška.
 6. **B4c nadskup:** granica "najviše 2/18 čistih" za pravilo "najbolji je nadskup slabijeg" (rezultat 0 čistih + 3 granična: P-POSEBNA-PREHRANA kruh, P-LEZALJKE, P-SPA-TERMIN).
    Ako krivo: prag u testu, ili tri oznake još jednom.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 1 (A5 „ok svih pet"; granica zalijepljenih bigramima A6), t. 2, 4, 5 (F1), t. 3 (C1 pečat svih 120, C2 rod po ulozi privremeno, C6 gradovi). t. 6 ostaje 🟨 do Leonova slijepog pregleda tekstova B4 (B1, B2).

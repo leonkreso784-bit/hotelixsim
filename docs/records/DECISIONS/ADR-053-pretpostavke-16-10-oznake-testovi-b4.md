@@ -1,5 +1,5 @@
 # ADR-053 — Pretpostavke 16.10. (B4): sastojak samo u najboljem, oznake iz sadržaja, graditelji tekstova opus
-**Datum:** 2026-10-16 · **Status:** 🟨 ČEKA LEONOV PREGLED · **Vezano:** [ADR-051](ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md),
+**Datum:** 2026-10-16 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 1–5 F1; t. 6 riješio ADR-054 t. 1) · **Vezano:** [ADR-051](ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md),
 [ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), [plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B1b, B4a–c)
 
 Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
@@ -12,3 +12,5 @@ Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
 5. **K1a (čuvar):** S1–S3 i R4 ne mogu dati točno jedan retak (dopušteni `stereotip:`/`prekretnica:`); sastav testova 400/50/50; O7, J1, O6 dopuštaju
    posljedičnu grešku raspona; JSON oblik okvira (`raspodjele.jezici`, `zemlje_*`, `gosti.rod`) pretpostavka čuvara — prilagođava se u jednom krugu ako graditelj javi BLOCKED.
 6. **Prag 65 za P-BRAVE, P-CURENJE-VODE, P-DIZALO** (B4c) čeka Leonovu anketu s brojkama; do tada commit 2 B4c se ne spaja. **Riješeno: prag 80, [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md).**
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 1–5 (F1); t. 6 je riješen pragom 80 (ADR-054 t. 1, F2).

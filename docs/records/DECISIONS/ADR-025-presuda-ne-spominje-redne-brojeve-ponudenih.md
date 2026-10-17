@@ -1,5 +1,5 @@
 # ADR-025 — Presuda ne spominje redne brojeve ponuđenih odgovora ni kriterija
-**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** · **Vezano:** [ADR-018](ADR-018-leonove-proizvodne-odluke-za-ai-sloj.md) t. 10, [ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md)
+**Datum:** 2026-10-10 · **Status:** ✅ **Potvrdio Leon 17.10.** (A13 e) · **Vezano:** [ADR-018](ADR-018-leonove-proizvodne-odluke-za-ai-sloj.md) t. 10, [ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md)
 
 **Kontekst.** U prolazu s pravim AI-jem 10.10. presuda je studentu napisala *„Odgovor odgovara ponuđenom odgovoru 0"*.
 Korisnička poruka presude nosi `[0]`, `[1]`… ispred ponuđenih odgovora (model mora vratiti `nearest_answer` kao broj), a
@@ -15,3 +15,5 @@ i jedinicu, bez internih oznaka.
 **Cijena ako krivo:** rijetko lažno odbijanje (npr. „u odgovoru 2 puta spominješ…") stoji jedan dodatni poziv presude
 (≈ 0,008 $); ako se ponovi do zadnjeg pokušaja, student dobije neutralnu ocjenu umjesto AI-jeve. Alternativa (prepisati
 broj u tekst ponuđenog odgovora) bila bi tiha izmjena AI-jeva teksta s rizikom krive gramatike.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): A13 e: presuda ne spominje redne brojeve.

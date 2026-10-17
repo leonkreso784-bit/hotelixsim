@@ -1,5 +1,5 @@
 # ADR-028 — Leonove odluke za put B: ljudi kao u Simsima, burza rada, tjedni krug, AI razgovori
-**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** (osim t. 9 i pravila o nacionalnosti — vidi dolje) ·
+**Datum:** 2026-10-10 · **Status:** ✅ **Leonova odluka 10.10.** (pravilo voditelja potvrdio Leon 17.10., A9; proširenje t. 9 na ljude zamijenio ADR-037) ·
 **Vezano:** [ADR-026](ADR-026-put-b-hotel-od-brojeva-postaje.md), [MODEL_V2.md](../../architecture/MODEL_V2.md) §9, [PROSIRENJA.md](../../product/PROSIRENJA.md)
 
 **Kontekst.** Arhitekt je u MODEL_V2 §9 postavio 12 pitanja s preporukama; Leon je odgovorio 10.10. i dodao nove
@@ -34,3 +34,5 @@ igra je **tjedna** po zadanom; (5) mentor tjedno kratko bez AI-ja, **AI mentor n
 (10) sobe hotela kao smještaj osoblja **do 10 % soba**; (11) **jedna skrivena osobina** kandidata, otkriva je razgovor
 za posao ili 4 tjedna rada.
 **Cijena ako krivo:** tjedni krug i bogati ljudi povećavaju posao sloja 1 i 2 — nova procjena u MODEL_V2 §5.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): pravilo voditelja (A9 „ok" na preporuku: plaća po ulozi i razini, obuka sporija po znanju hrvatskog i engleskog, nikakvo pravilo po podrijetlu; dodatak: treniranje pojedinačno ili u skupini, trener iz redova radnika). „Ljude drugih hotela student ne vidi" zamijenio je [ADR-037](ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) (F2).

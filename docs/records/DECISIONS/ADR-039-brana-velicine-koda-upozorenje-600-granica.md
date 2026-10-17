@@ -1,5 +1,5 @@
 # ADR-039 — Brana veličine koda: upozorenje 600, granica 1000, popis duga
-**Datum:** 2026-10-13 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (pretpostavka voditelja, [ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)) ·
+**Datum:** 2026-10-13 · **Status:** ✅ **Potvrdio Leon 17.10.** (F1; pretpostavka voditelja, [ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)) ·
 **Vezano:** [ADR-030](ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) Dopuna 2, [ADR-038](ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 4,
 [kvaliteta.md](../../plan/ROADMAP/kvaliteta.md) K0-3
 
@@ -23,3 +23,5 @@ ADR-038 t. 4 traži da nijedna dirana datoteka ne pređe granicu veličine. Faza
   posla. Testovi u `scripts/check-kod*.test.mjs` vrijede dok god brana postoji.
 - Upozorenja iznad 600 su danas šum (10 istih u svakom pokretanju); kad ih Leon prihvati, valja ih svesti na nova.
 - Do Leonove potvrde brana vrijedi kao pravilo rada; stavka je u [BACKLOG](../BACKLOG.md) „Otvoreno za Leona".
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): F1: upozorenje 600, greška 1000 za kod (za `.md` vrijedi 1200).

@@ -153,59 +153,43 @@ Leonove želje 12.10.; brojke idu kroz Leonovu anketu pri planu sloja 2. Ideje n
 
 ## Otvoreno za Leona
 
-Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretpostavkom i mijenja kad odgovori.
+Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretpostavkom i mijenja kad odgovori. Leon je 17.10. odgovorio na
+43 pitanja paketa ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)); stare stavke v1 (brojke prve igre, A12) i
+riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md).
 
-- [leon] **Ostali prihod (hrana, piće, usluge) = 30 % prihoda soba** — je li realno? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 2. (SLJEDECA_SESIJA §5.2)
-- [leon] **Trošak zaposlenog 2 200 €/mj i omjer 30 stalnih + 20 sezonaca** (120 soba, 4*) — realno? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 3.
-- [leon] **Brana veličine koda `check:kod`: upozorenje 600, granica 1000, popis duga (3 datoteke)** — potvrda ili druge brojke (za `.md` si rekao 1200). Odgovor: [ADR-039](DECISIONS/ADR-039-brana-velicine-koda-upozorenje-600-granica.md).
-- [leon] **S3: 25 % popusta agenciji za grupu u kolovozu** — realna ponuda? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 4.
-- [leon] **Kriteriji rubrika u S1–S4** — Leon je mjerilo; blokira sadržaj i AI presude, ne kod jezgre. Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 5.
-- [leon] **Priče profila A i B (§5)** — prepoznaje li takve hotele? Odgovor: [DEMO](../product/DEMO.md) „Za Leonovu provjeru", točka 6.
-- [leon] **Pitanja za profesore** — Leon ih šalje tijekom tjedna 5.–11.10.; pregled prije slanja. Odgovor: [PITANJA_ZA_PROFESORE](../product/PITANJA_ZA_PROFESORE.md).
-- [leon] **Inkubator** — prijava do **16.11.**: nosi li se Sokrat ili simulacija. Odgovor: [ROADMAP](../plan/ROADMAP.md).
-- [leon] **Potvrda ARHITEKTURE v2** — ROADMAP kaže „Leon ih je pregledao", a ARHITEKTURA kaže „prijedlog dok Leon ne potvrdi"; potvrditi ili ostaviti raspravu otvorenom, pa uskladiti oba. Odgovor: [ARHITEKTURA](../architecture/ARHITEKTURA.md).
-- [leon] **Sezonska marža 35,8 % blizu donje granice (35 %)**, lipanj 22,5 %, rujan 20,3 % (rujan nosi 34 sezonca jer plan smije pustiti najviše 10 mjesečno). Odgovor: [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 5 i [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 2.
-- [leon] **B ima fiksne troškove samo 3 % niže od C (145 000 prema 150 000 €)** — §5 kaže „niži fiksni troškovi", ali uz likvidnost bez granice (ADR-014) svaki euro razlike ulazi u blagajnu i F profila B raste sam od sebe: s 112 500 € B je najbolji pod svim strategijama (razlika medijana 8,69), sa 140 000 € tijesno prolazi (4,24). Jasno niži fiksni troškovi traže promjenu formule F ili ocjene napretka (nova odluka). Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 3.
-- [leon] **A: ugled od opreme i iskustva, a premalo ljudi** — A sad ima opremu 75, iskustvo 70, 28 stalnih i početno opterećenje 2,20 (u lipnju ≈ 1,6, pa kazna u O nestane sama). Sa starim podacima A pada na medijan −12,96 (razlika profila 10,4). Prepoznaje li Leon takav hotel? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 4.
-- [leon] **Obnova je i dalje najbolja proba za A i C, ali nije dominantna** — sad košta 6–7 bodova F (prije je F rastao), a napredak je A −0,39 → +5,02, B −3,03 → +2,03, C −0,90 → +6,21; za B je bolja „plaća 115". Treba li obnova od 150 000 € biti dobra odluka već u prvoj sezoni? Odgovor: [KALIBRACIJA](../research/KALIBRACIJA_2026-10-04.md) „Za Leonovu provjeru", točka 5.
-- [leon] **Najviše sezonaca 50, ne 40** (DEMO §6.1 promijenjen u kalibraciji) — rasprodan kolovoz traži 44 sezonca da marža ostane ≤ 50 %. Realno za 4* od 120 soba? Odgovor: `content/hotel/catalog.json` (`seasonal_max`), DEMO §6.1.
-- [leon] **Ponuđeni odgovori S3 i S4** u `content/hotel/situations.json` su nacrt (ADR-013 t. 7) — provjeriti uz rubrike. Odgovor: `content/hotel/situations.json`, [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 7.
-- [leon] **Ishod neodgovorene situacije** (kvaliteta 1 + mehanike `unanswered` za S1–S4; S3 ignorirana = ponuda propada bez kazne) — realno? Odgovor: `content/hotel/situations.json` (Task 1 plana), [ADR-015](DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 2.
-- [leon] **Ocjene za mjerilo AI-ja** — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1). Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
-- [leon] **Koncept ekrana prema igri** — ocjena na portalima do 10 ili do 5; „1/4" mjeseca ili demo s 2 mjeseca; kratki nazivi kriterija rubrike; avatari likova. Odgovor: [DIZAJN.md](../product/DIZAJN.md) §3.
-- [leon] **Sadržaj situacija:** rezerva lika „Gošća je previše ljuta da bi nastavila razgovor" zvuči kao ocjena studenta — preformulirati neutralno; **PRIJE DEMOA:** S3 nema opisa situacije (samo naslov; DEMO §1.5 obećaje „ponuda agencije (brojke)", a osnovna ponuda nigdje nije rečena — opis traži i polje u API-ju jer je jedini „opis" danas uvodna rečenica lika) — „(nacrt)" je maknut iz naslova S3 i S4 10.10.; `znacenje` za „Zaposleni" je predugo i tehničko za studenta. Odgovor: `content/hotel/situations.json`, `content/hotel/catalog.json`.
-- [leon] **Put B — 12 odluka prije gradnje** (isti ljudi po profilu, odjeli po profilu, stare igre na v1, otpuštanje, broj mjeseci, RevPAR nad svim sobama, GOP po USALI-ju, odgovor na recenziju, vidljivost drugih hotela, cijena po tipu sobe, imena, voditelj odjela) — svaka s preporukom. Odgovor: [MODEL_V2.md](../architecture/MODEL_V2.md) §9.
-- [leon] **Hosting za prvi izlazak (13.10.)** — potvrda preporuke: Railway Hobby, servis i Postgres na Railwayu u istoj regiji, ~5–10 €/mj [PROC]; Supabase samo kasnije za prijavu. Izlazak tek uz profesorov OK i tvoj izričit OK (ADR-004, ADR-005); do tada 0 €. Odgovor: [PLATFORMA dio 06](../architecture/PLATFORMA/06-produkcija-i-trosak.md).
-- [leon] **Sesije umjesto JWT-a (L10)** — potvrda; nakon nje ispravak ARHITEKTURA §12 i zasebni ADR. Odgovor: [PLATFORMA dio 03](../architecture/PLATFORMA/03-prijava.md).
-- [leon] **Voditelj odjela i graf tržišta (13.10., tvoje ideje)** — 5 pitanja: imenovani voditelji već sada ili tek u L2a-5; što znači „odgovoran" (vodi odluke odjela / ocjena odjela je njegova / oboje); gdje graf (ekran Tržište, Pokazatelji, Moj hotel); gosti ili noćenja; prognoza prije odluke. Odgovor: [VODITELJ_I_TRZISTE](../architecture/VODITELJ_I_TRZISTE.md) §3.
-- [web] **Bočni izbornik na računalu:** razmak od vrha `md:top-28` tvrdo zadan ispod zaglavlja — kod velikog teksta ili dugog čipa može se preklopiti; staviti izbornik i zaglavlje u isti stupac. Odgovor: `apps/web/src/ui/Layout.tsx`.
-- [leon] **Vizija za razvoj cijele aplikacije (Leon 10.10.)** — ništa od ovoga ne ulazi u demo, za demo je dovoljno što imamo:
-  - više situacija i više od dva mjeseca;
-  - novi likovi: Ivan Gudeljević (zaštitar koji se često opija), Dominik Smurjević („prati sve što je prljavo"), Nikola Magdić, Dr. Tin Šljivović, Leona Krešo — uloge Nikole, Tina i Leone još nisu zadane; pitanje pristanka za prava imena;
-  - profesor pri kreiranju igre bira razdoblje (dani / tjedni / mjeseci), broj AI-situacija, dodaje vlastite situacije, bira vrste situacija i „branšu". Otvoreno: (1) je li branša odjel hotela ili vrsta objekta, (2) AI situacije unaprijed uz profesorovo odobrenje ili u hodu, (3) bira li se duljina igre ili ritam kruga. Ide kroz dizajnerski dokument (arhitektura);
+- [leon] **Slijepi pregled tekstova B4a, B4b i B4c** (B1 „ok", još nije napravljen) — `.superpowers/sdd/2026-10-14-popravak-temelja/b4a-pregled-tekstova.md`, `b4b-pregled-tekstova.md`, `b4c-pregled-tekstova.md` (uz „Napomene voditelja"); blokira L1-15, ne spajanje. Nakon njega B4-ispravci i napomene a–e iz B2 ([ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 6).
+- [leon] **Ocjene za mjerilo AI-ja** (B4 „ok") — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1); prije C3. Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
+- [leon] **Rubrike S1 i S2** (B5) — Leon pročita kriterije (~10 min); nacrt opisa S3 i rubrika S3 i S4 piše agent, Leon potvrđuje (B3 c).
+- [leon] **Poznate osobe s izmijenjenim imenom (C3)** — Leonova ideja „kao BitLife"; ništa se ne gradi dok ne pročita [nacrt rizika](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md); deset nesigurnih imena banke čeka isti nacrt.
+- [leon] **Pet pitanja plana platforme** (§7; E3 je odgovorio dio o profesorovu računu) — prijava za P3, Railway ili Cloudflare za P3 (Leon 17.10. „nije sigurno"; Supabase uz strah od latencije), ritam kolosijeka, redoslijed IGRE od studenog, vlastite situacije profesora. Odgovor: [plan platforme](../plan/2026-11-platforma.md).
+- [leon] **Inkubator** (E5 „ok") — prijaviti HotelixSim (ne Sokrat Study) do **16.11.**
+- [leon] **Pitanja za profesore** (E2) — poslano, odgovora još nema; sastanak sljedeći tjedan. Odgovor: [PITANJA_ZA_PROFESORE](../product/PITANJA_ZA_PROFESORE.md).
+- [kvaliteta] **Duboka provjera arhitekture (E4)** — Leon: „ti provjeri duboko i reci mi je li ok"; dubinski pregled (najjači model) → nalaz Leonu → tek tada ✅ [ADR-003](DECISIONS/ADR-003-arhitektura-rust-jezgra-backend-typescript-sucelje.md) i usklađivanje ARHITEKTURA/ROADMAP.
+- [prije L1-13] **Istražiti prave hotele i prave plaće** — broj soba i ljudi po odjelu u stvarnim hotelima raznih veličina (A10, norma [ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 9) i plaće po ulozi u hrvatskom hotelijerstvu (A12: 2.200 € ima rijetko tko osim direktora i nekih voditelja).
+- [L1-13] **Tablica značaja situacija** (B2) — tri razine s boljim imenima (danas `major`/`minor`, student ih ne vidi); značajnije situacije i pametnije odluke nose više bodova.
+- [L1-13] **Slabiji odgovor s troškom** (A4 „ok") — jednom slabijem odgovoru dati trošak (npr. pretjeranu naknadu, kao P-KLIMA[2]), da „biraj jedini koji gostu nešto daje" ne pogađa najbolji. Izvor: `b4b-pregled-tekstova.md`.
+- [L1-14] **Priče hotela A i B i obnova od 150.000 €** (A12) — Leon provjerava pri igranju sezone („prepoznajem li ovaj hotel?").
+- [faza C+] **Sučelje soba** (A1) — svaka soba vidljiva i obnovljiva zasebno; nova mehanika i ekran, 3–5 cigala, ne u L1-13 ([ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) Izmjena 17.10.).
+- [faza C+] **Mjere potrošnje hotela** (A13) — energija i voda kao pokazatelj u igri (nova mehanika).
+- [LJUDI] **Smještaj radnika kao zasebna mehanika** (A11) — student smještaj kupuje, iznajmljuje ili koristi svoj hotel; ekran, trošak i kapacitet; tada se smještaj izdvaja iz 2.500 € po radniku Smještaja.
+- [LJUDI] **Treniranje i voditelji** (A9, C1, D1) — trening pojedinačno ili skupine u odjelu, trener iz redova radnika; podvrste voditelji, studenti i radnici, svi trenirljivi do razine voditelja; vidljiva crta snage i slabosti svakog radnika i voditelja; puno različitih voditelja.
+- [igra] **Student imenuje svoj hotel prije igre** (C4) — slobodno ime; najmanja brana vulgarnosti 🟨 (ADR-058 t. 18).
+- [igra] **Banka hotela** (Leon 17.10.) — profesor dodjeljuje studentima gotove, pregledane hotele raznih veličina; mjesto u rasporedu 🟨 (ADR-058 t. 21), vidi [ROADMAP](../plan/ROADMAP.md).
+- [platforma] **Profesorovo sučelje** (E6) — strukturiran izbornik AI situacija po odjelu hotela, vlastite situacije, uvid u studentove razgovore, ocjene, AI mentor uključen ili isključen, profesor otvara tjedan ili mjesec; temelji kroz više sesija.
+- [platforma] **ARHITEKTURA §12 uskladiti sa sesijama** (E1 „ok": sesije, ne JWT; L10) — ispravak teksta. Vidi [PLATFORMA dio 08](../architecture/PLATFORMA/08-faze-i-pitanja.md).
+- [prije pilota] **Izmjeriti AI trošak po igri** (A13) — Leon odigra lokalno jednu tjednu v2 sezonu, pa SQL iz [plana platforme](../plan/2026-11-platforma.md) §5 i cijene iz ADR-024; danas je samo procjena 10–20 $ po razredu.
+- [web] **Bočni izbornik na računalu** (F1: voditelj popravi bez pitanja): razmak od vrha `md:top-28` tvrdo zadan ispod zaglavlja — kod velikog teksta ili dugog čipa može se preklopiti; staviti izbornik i zaglavlje u isti stupac. Odgovor: `apps/web/src/ui/Layout.tsx`.
+- [leon] **Vizija za razvoj cijele aplikacije (Leon 10.10.)** — što bira profesor odlučeno 17.10. (E6, gore); ostaje:
+  - novi likovi: Ivan Gudeljević (zaštitar koji se često opija), Dominik Smurjević („prati sve što je prljavo"), Nikola Magdić, Dr. Tin Šljivović, Leona Krešo — uloge Nikole, Tina i Leone još nisu zadane; pitanje pristanka za prava imena (veže se uz C3);
   - studenti ulaze u igru kodom, kao u Kahootu;
-  - trošak tokena smanjiti „na drugačiji način" — izračunat ćemo kasnije; mjerilo (40 odgovora) za usporedbu modela presude;
+  - trošak tokena smanjiti „na drugačiji način" — mjerilo (40 odgovora) za usporedbu modela presude;
   - uređivač lika ([ADR-021](DECISIONS/ADR-021-koncept-ekrana-v2-i-odluke-o.md)).
-- [leon] **Pretpostavke ADR-019** (AI kroz red poslova, rok presude 120 s, rezerve na zadnjem pokušaju, likovi i nacrti mjerila) čekaju pregled. Odgovor: [ADR-019](DECISIONS/ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md).
-- [leon] **Pretpostavke ADR-017** (odluke voditelja gradnje: identitet preuzimanja posla, 500 za nepoznat profil, provjere pristupa prije tijela, odgovor bez mjeseca u putanji, javne funkcije jezgre, zabrane u `game`) čekaju pregled. Odgovor: [ADR-017](DECISIONS/ADR-017-odluke-voditelja-gradnje-u-koraku-3.md).
-- [leon] **Pretpostavke ADR-015** (crate `game`, zaključavanje igre po naredbi, vlastiti red poslova, server ne migrira sam) čekaju pregled. Odgovor: [ADR-015](DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md).
-- [leon] **Pretpostavke ADR-013** (centrirani indeksi, početni F, sezonci po planu, redoslijed obračuna, cilj marže 35–45 %) čekaju pregled. Odgovor: [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md).
-
-- [leon] **Pretpostavke Sloja 1** (P5–P18, pravila tjednog kruga i odjela, kalibracija, sučelje Odjela, kraj sezone)
-  čekaju pregled; posebno **norma osoblja 4\*** (Smještaj 17–25, Uprava 5–7, Prodaja 1,5–3, Održavanje 3–6 ljudi na
-  100 soba [PROC]). Odgovor: [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md), ADR-031…036
-  ([ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 9 za normu).
-- [leon] **Strani radnici iz Azije: plaća i obuka (želja 16.10., sukob s odlukom)** — Leon želi radnike iz Azije (ne BiH/Srbija/Crna Gora) s nižom plaćom (800–900 €) bez pada morala ostalima i s puno težom obukom. **Sukob** s [MODEL_V2](../architecture/MODEL_V2.md) §5.4 („plaća ista za istu vještinu", N1; razlika po podrijetlu je protuzakonita) i s ROADMAP/igra L2b-3. Voditeljev prijedlog (Leon nije odlučio): bez pravila po podrijetlu — plaća po ulozi i razini (agencijski početnici na najnižoj plaći uloge ≈ 800–900 €), obuka sporija po razini hrvatskog/engleskog (Azija 0–1, BiH/RS/ME 4), moral ostalih se ne mijenja jer im se plaća ne mijenja; plaća ispod minimalca uloge = odluka s rizikom inspekcije. → nacrt prije L2b-3 (i L2a-6 burza).
-- [leon] **L1-13: samo najbolji odgovor troši novac / daje naknadu (mehanika)** — u 11 od 12 predložaka B4b (i 4 od 6 u B4c) samo najbolji odgovor ima trošak ili naknadu gostu, pa pravilo „biraj jedini odgovor koji gostu nešto daje" pogađa najbolji (4/5 u pokusu). Tekst to ne smije skrivati; kod miješanja odgovora (L1-13b) to odaje najbolji. Odlučuje Leon: treba li slabijem odgovoru dati trošak (npr. pretjeranu naknadu, kao P-KLIMA[2]). Izvor: `b4b-pregled-tekstova.md`.
-- [leon] **Slijepi pregled tekstova B4a, B4b i B4c** — `.superpowers/sdd/2026-10-14-popravak-temelja/b4a-pregled-tekstova.md`, `b4b-pregled-tekstova.md`, `b4c-pregled-tekstova.md` (uz „Napomene voditelja"); blokira L1-15, ne spajanje. (Prag 65/80 za tri kvara riješen: [ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md).)
-- [leon] **Banka ljudi: pregled 20 primjera (K1b)** — `.superpowers/sdd/banka-ljudi-k1/pregled-20.html` (tablica s filtrom) ili `pregled-20.md` ("Odluka: __" po zapisu); serije su OTVORENE do pečata. Uz to: **rod po ulozi** (svih 10 radnika prati većinski rod iz 🟨 `rod_po_ulozi`, ADR-042 t. 8 odbio je pravilo 25 %), poznata imena (R-00010 Kinkela nesigurno) i **sumnjivi hoteli Kvarnera** u `zabranjeno.json` (Excelsior, Astoria, Istra).
-- [leon] **Banka ljudi: imena profesora FMTU-a za `zabranjeno.json`** — K1 kreće bez njih (okvir i hoteli Kvarnera 🟨); dopisuju se kad Leon da ([ADR-052](DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md)).
-- [leon] **Pravilo za zalijepljene odgovore (kvar B13)** — što dobije student koji u polje vlastitog odgovora zalijepi više ponuđenih odgovora odjednom: klik odgovarajućeg odgovora / neutralna 3 / najlošija. Anketa na početku iduće sesije, prije PRAVILO-a ([BUGS](BUGS.md) B13, [ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 2).
-- [leon] **Redoslijed: faza C s izgledom likova prije L1-13?** — Leonova želja 16.10.; plan je PRAVILO → L1-13 → L1-13b (izgled lika) → L1-14 → L1-15 → C. Anketa uz kratki nacrt "izgled lika" i cijenu preskakanja ([ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 3).
+- [banka ljudi] **Pečat serija 000 i 001** (C1: „super su", zapečatiti svih 120) — pečat radi glavna sesija ili sesija banke; rod po ulozi privremeno, Eurostat izmjeriti prije sljedeće serije (C2).
+- [banka ljudi] **S6 ćelija ≥ 40 do M1 vidi samo sobare** (I1 pregleda K2) — neizravna standardizacija za male uloge u K3.
 - [sloj1] **N3: „središnji" odgovor pogađa najbolji** — pravilo „odgovor s najviše zajedničkih riječi" pogađa najbolji u 8 od 19 jedinica B4a (plus 5 izjednačenih); nakon B4c mjereno: B4c 9/16 → 5/17, svih 59 jedinica 25/56 → 21/57; unija pravila 44 % prema ~27 % slučajnih (M4 pregleda B4c) — odlučiti u L1-13b (miješanje odgovora).
 - [banka ljudi] **Odgođeni minori pregleda K1a/K1b za K2:** nema pravila "Azija hrvatski 0–1" u kodu (pravilo postoji samo u nacrtu); test S6 ne razlikuje "slijep unutar uloge" od "slijep skupno" (čuvar K2); P1 staje na prvoj nedostajućoj datoteci; ostali minori u `k1a-review.md` i `k1b-review.md` (M2, M5 sadržaj; M4, M6–M8).
 - [sloj1] **Odgođeni minori pregleda B4c:** N3 unija (gore); nadskup "granični ×3" (P-POSEBNA-PREHRANA kruh, P-LEZALJKE, P-SPA-TERMIN razlika samo isprika); M1 prag 80 nije u kartici B4 (stoji u ADR-054); M6 poruke commita bez dijakritika (povijest, ne mijenja se).
-- [sloj1] **Sadržaj situacija:** P-RANI-DOLAZAK ima neusklađen broj (opis „jedna gošća", oznake „Stigli su"); S3 i S4 su bez rubrike. Slabiji odgovori P-PRISTUPACNOST[2], P-KRIZA[2], P-BOJLER[2] nose radnje iz rubrike bez kriterija (N1 B4a) — za Leonov pregled.
+- [sloj1] **Sadržaj situacija** (B3 „ok": voditelj popravlja sam) — P-RANI-DOLAZAK ima neusklađen broj (opis „jedna gošća", oznake „Stigli su"); rezerva lika „Gošća je previše ljuta da bi nastavila razgovor" → „Gošća je prekinula razgovor."; `znacenje` za „Zaposleni" je predugo i tehničko; S3 nema opisa, a S3 i S4 rubrike (nacrt piše agent). Slabiji odgovori P-PRISTUPACNOST[2], P-KRIZA[2], P-BOJLER[2] nose radnje iz rubrike bez kriterija (N1 B4a) — u B4-ispravcima nakon slijepog pregleda.
 - [sloj1] **Minor odgođeni iz B4:** `wears` (B1b, `templates_principles`) vraća true kad nema podataka; popis riječi testa T4b zaobilazi sinonim.
 
 ## Drugi val (poslije demoa)
@@ -213,7 +197,7 @@ Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretp
 Opseg koji [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) t. 8 odgađa iza demoa; spec je u [DEMO.md](../product/DEMO.md).
 
 - [drugi val] **Splet okolnosti i tragovi (§9)** — odluke ostavljaju tragove koji se kasnije vraćaju.
-- [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — za robote/balans (§11.3) faltaju; task sadržaja. Nacrt za Leonovu provjeru (rubrike su njegove): [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md). (DEMO §7, §11.3)
+- [drugi val] **Rubrike i ponuđeni odgovori za S1b i S5–S8** — **zatvoreno 17.10.** (B5: v1 zamrznut, v2 ima svoje predloške); nacrt ostaje kao povijest: [SITUACIJE](../product/SITUACIJE_S1b_S5-S8.md).
 - [drugi val] **Naplata otvorenih tragova na kraju sezone.**
 - [drugi val] Limit 3 demo igre po IP-u na dan i brisanje gosta i igre nakon 7 dana (DEMO §1.4; Leon 05.10.).
 - [drugi val] **Različit učinak S4 po stanju hotela.**
@@ -222,7 +206,7 @@ Opseg koji [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-se
 
 ## Rupe u specu DEMO.md
 
-Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) (profil C na 50, sezonska marža, pravila zaokruživanja P1–P32, nedefinirano manje); pretpostavke čekaju Leonov pregled (vidi „Otvoreno za Leona").
+Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md) (profil C na 50, sezonska marža, pravila zaokruživanja P1–P32, nedefinirano manje); Leon ih je potvrdio 17.10. (A13, F1; [ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)).
 
 ## CI i alati
 

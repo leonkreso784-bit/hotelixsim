@@ -29,3 +29,10 @@ odvojene grane (B6, B8, B9). Uz to načela igre nisu zapisana kao provjere (B1, 
 - Plan [Sloja 1](../../plan/2026-10-10-v2-sloj1.md) je pauziran: L1-11 postaje cigla A1, L1-13 i L1-13b idu na kraj faze B,
   L1-14 i L1-15 zatvaraju fazu B. ROADMAP faze iza ZAVRŠETKA SLOJA 1 pomiču se za trajanje popravka (~125–185 h [PROC]).
 - Svaka faza završava Leonovim igranjem i kopijom; odluke o brojkama koje student osjeti idu kroz anketu.
+
+**Izmjena 17.10. (Leonova odluka 16.10., sesija 7; [ADR-057](ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 8).**
+t. 2 se sužava: **kolosijek PLATFORMA počinje u studenom 2026., usporedo s fazom C**, ne nakon kraja popravka (P3 ovisi o platformi više nego o C4;
+nacrt: [plan platforme](../../plan/2026-11-platforma.md)). Banka ljudi već ide usporedo ([ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md)
+t. 2), sada i kao paralelna sesija (ADR-057 t. 6). Ograničenje ostaje: najviše 2 agenta koji prevode Rust ukupno. Ostale nove značajke igre
+(LJUDI, voditelji, sobe, smještaj radnika, banka hotela) i dalje čekaju kraj popravka; redoslijed nakon L1-13 je 🟨
+[ADR-058](ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) t. 22.

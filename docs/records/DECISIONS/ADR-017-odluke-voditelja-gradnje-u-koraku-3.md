@@ -1,5 +1,5 @@
 # ADR-017 — Odluke voditelja gradnje u koraku 3 (red poslova, greške, putanje, javne funkcije)
-**Datum:** 2026-10-05 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-015](ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md), [ADR-016](ADR-016-leonove-proizvodne-odluke-za-korak-3.md)
+**Datum:** 2026-10-05 · **Status:** ✅ **Potvrdio Leon 17.10.** (F1; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-015](ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md), [ADR-016](ADR-016-leonove-proizvodne-odluke-za-korak-3.md)
 
 **Kontekst.** Tijekom gradnje koraka 3 voditelj je presudio više tehničkih pitanja umjesto Leona. Svako je malo i
 mijenja se lokalno; zapisano da se ne izgube.
@@ -19,3 +19,5 @@ mijenja se lokalno; zapisano da se ne izgube.
   Razlog: obračun runde mora ostati ponovljiv. Cijena: stroža pravila pri pisanju.
 - **Pravilo oblika snimka** (nova polja content DTO-a samo uz `#[serde(default)]`; ispravak otiska nad kanonskim
   `Value`) dokumentirano u [ADR-015](ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 3, a kodni ispravak je dug za korak 4 (BACKLOG `[korak 4]`).
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): F1: sve točke vrijede kako su zapisane.

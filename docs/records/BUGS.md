@@ -16,13 +16,14 @@ JSON formatirati prije commita; `check:api` EXIT 127 = Windows 0xC0000142 pod op
 **B13. Zalijepljeni svi ponuđeni odgovori najčešće dobiju 5** (prijavio Leon igrajući; u situaciji s kuharom koji traži povišicu 20 %, sidro S2, nije).
 *Uzrok:* presuda gleda smisao teksta, a ne to da je tekst prepisan iz ponude; AI se na zbroju svih odgovora ponaša nepredvidivo. *Pouka:* prepoznavanje prepisivanja
 mora biti u **kodu** (70 % riječi), ne u AI-ju: 0 ulaznih i izlaznih tokena, uvijek isti ishod ([ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 2).
-*Stanje:* **otvoreno**, vlasnik PRAVILO-a; Leon odlučuje što dobije "zalijepio više odgovora" (klik odgovarajućeg odgovora / neutralna 3 / najlošija) anketom na početku iduće sesije.
+*Druga pouka (pregled PRAVILO-a, 17.10.):* pravilo o **pojedinačnim riječima** (skup riječi bez redoslijeda) lažno je proglasilo zalijepljenim dobar vlastiti odgovor u obveznoj S1 i jednu prepisanu oznaku; **parovi susjednih riječi** (bigrami, isti prag 70 %, barem dvije oznake) daju 0 lažnih od 229 i hvataju svih 59 zalijepljenih. Pravilo o tekstu mjeri se na cijelom sadržaju prije spajanja, ne na primjeru.
+*Stanje:* **riješeno u kodu** (PRAVILO-a, spojeno 9a275d8, `CORE_VERSION` 2.5.0): zalijepljena dva ili više ponuđenih odgovora = neutralna 3 bez učinka, sudac se ne zove; Leonove odluke u [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 2 i [ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) A6.
 
 ## 2026-10-15 — popravak temelja
 
 **B11. Disk pao na 12 GB slobodnog.** *Uzrok:* svako radno stablo (do 11 istodobno, plus 6 napuštenih mapa) prevodilo je
 Rust u svoj `target/` od više GB, a stabla spojenih grana nisu brisana. *Pouka:* jedan zajednički `CARGO_TARGET_DIR`,
-stablo se briše isti dan kad se spoji, `df -h /c` prije otvaranja stabla; Leon želi uvijek više od 100 GB slobodno.
+stablo se briše isti dan kad se spoji, `df -h /c` prije otvaranja stabla; granica je **50 GB slobodnog** (Leon 16.10., prije 100 GB; [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 9).
 *Stanje:* pravilo u [AGENTI.md](../workflow/AGENTI.md) §1 t. 6; spojena stabla i stari `target/` obrisani 15.10.
 
 **B12. CI pao na `lint` nakon A3.** *Uzrok:* generirani pečat `fixtures_v2/v2-snapshot.json` nije bio izuzet iz

@@ -12,7 +12,7 @@
 
 Ti si SESIJA BANKE (docs/workflow/SESIJA_BANKE.md). Radiš samo na banci ljudi, usporedo s glavnom sesijom.
 Ledger: C:/Users/leonk/Documents/hotelixsim/.superpowers/sdd/banka-ljudi-k1/progress.md (zapisi s prefiksom "SESIJA BANKE:").
-Prvo `df -h /c` (mora biti > 100 GB). Laptop je na punjaču. Push samo uz moj OK; u sloj1 ne spajaš, to radi glavna sesija.
+Prvo `df -h /c` (mora biti > 50 GB). Laptop je na punjaču. Push samo uz moj OK; u sloj1 ne spajaš, to radi glavna sesija.
 1) K3: serija-002 radnika, gostiju i vanjskih (tri agenta, svaki svoju vrstu, ID-jevi po rasponu iz ledgera), pregled, 10 zapisa za mene.
 2) Moji pregledi iz Excela (Odluka/Napomena) za serije-000 i -001: ispravi, pa zatraži pečat.
 3) K2v-50 (vanjski serija-001, 50 zapisa) ako je K2v spojen.
@@ -57,7 +57,7 @@ Granica računala je **2 procesa koja prevode Rust** zbrojeno za obje sesije ([A
    upiše u ledger banke „trebam oba mjesta do …"; sesija banke to pročita na početku svakog koraka i tada ne pokreće cargo.
    Obrnuto, banka upiše „SESIJA BANKE: cijeli CI do …" dok vrti CI prije predaje. (`RUST.lock` nije potreban: ledger se ionako
    čita; ako se sesije mimoilaze, dodat će se.)
-5. Gradnja samo kad je laptop na punjaču; `df -h /c` ≥ 100 GB prije gradnje. `target/ljudi` je velik (~2,5 GB+); briše se tek
+5. Gradnja samo kad je laptop na punjaču; `df -h /c` ≥ 50 GB prije gradnje. `target/ljudi` je velik (~2,5 GB+); briše se tek
    kad se stablo `hotelixsim-ljudi` ukida.
 
 ## 4 · Tok jedne serije

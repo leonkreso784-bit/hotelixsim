@@ -1,5 +1,5 @@
 # ADR-019 — AI sloj: arhitektonske pretpostavke koraka 4
-**Datum:** 2026-10-09 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-018](ADR-018-leonove-proizvodne-odluke-za-ai-sloj.md),
+**Datum:** 2026-10-09 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 4–5 A13, ostalo F1; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-018](ADR-018-leonove-proizvodne-odluke-za-ai-sloj.md),
 [ADR-015](ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md), ARHITEKTURA §8.3–8.4, §9.4, §10 · **Plan:** [2026-10-09-ai-sloj.md](../../archive/2026-10-09-ai-sloj.md)
 
 **Kontekst.** Korak 4 dodaje AI (presuda, lik, mentor) na igru iz koraka 3. ARHITEKTURA opisuje cilj, ali ne i kako se
@@ -34,3 +34,5 @@ to uklapa u dnevnik, red poslova i rok demoa ~14.10. Ovo su pretpostavke s kojim
    zato postaju `presuda.v2` (v1 ostaje u repou radi povijesti).
 **Posljedice.** Novi crate `ai`, migracija `0004`, šest novih događaja (`schema_ver` ostaje 1). Ako Leon odbije t. 3,
 lik prelazi na izravan poziv u zahtjevu (mijenja se `app/talk.rs` i ruta); ako odbije t. 5, mijenja se jedna konstanta.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 4–5 (A13 b: rezervni tekst, obračun čeka presude najviše 120 s), ostale točke F1.

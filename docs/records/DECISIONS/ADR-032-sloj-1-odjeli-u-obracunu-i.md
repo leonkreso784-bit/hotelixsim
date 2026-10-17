@@ -1,6 +1,6 @@
 # ADR-032 — Sloj 1: odjeli u obračunu i stanju
-**Datum:** 2026-10-11 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (t. 8: smjer je Leonov iz ankete 11.10. „Po odjelu,
-isti zbroj"; t. 9: brojke 4\* čekaju Leonovu potvrdu) · **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md)
+**Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10., osim t. 9 🟨** (t. 1–8 F1, smjer t. 8 Leonov iz ankete 11.10.;
+t. 9: broj soba varira, norma čeka istraživanje pravih hotela, A10) · **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md)
 P7–P12, [ADR-031](ADR-031-sloj-1-tjedni-krug-u-jezgri.md), [MODEL_V2.md](../../architecture/MODEL_V2.md) §3.2, §3.8
 
 **Kontekst.** Taskovi 11–14 i 23 te završni popravci (ZP) uveli su odjele po USALI-ju u stanje, plan i obračun v2.
@@ -59,3 +59,5 @@ Odjeli su morali ostati ekvivalentni v1 u degeneriranom katalogu, pa su se moral
 
 **Cijena ako krivo:** t. 1–5 i 7 su pravila u `sim-hotel-v2/src/resolve/` i `game/src/model.rs` uz ponovni balans;
 t. 6 je jedna funkcija; t. 8 je raspodjela bez utjecaja na novac; t. 9 su brojke u sadržaju.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 1–8 (F1). t. 9 ostaje 🟨: Leon (A10) *„to ovisi o broju soba… trebamo istražiti na internetu neke dobre primjere"*; norma se ispravlja nakon istraživanja.

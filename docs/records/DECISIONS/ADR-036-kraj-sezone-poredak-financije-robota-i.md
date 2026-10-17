@@ -1,6 +1,5 @@
 # ADR-036 — Kraj sezone: poredak, financije robota i sezonski mentor
-**Datum:** 2026-10-13 · **Status:** 🟨 **ČEKA LEONOV PREGLED**, osim Leonovih odluka ✅ 12. i 13.10.
-(t. 1, t. 2) · **Vezano:** [ADR-024](ADR-024-modeli-presuda-na-sonnetu-5-5.md),
+**Datum:** 2026-10-13 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 3–9 A13 k; t. 1–2 Leonove odluke 12. i 13.10.) · **Vezano:** [ADR-024](ADR-024-modeli-presuda-na-sonnetu-5-5.md),
 [ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md), ARHITEKTURA §9.4 i §12,
 [MODEL_V2.md](../../architecture/MODEL_V2.md) §6.3, §6.5
 
@@ -41,3 +40,5 @@ dodao API kraja sezone, KS-2 sezonskog mentora; ekran kraja sezone (KS-3) je na 
 
 **Cijena ako krivo:** t. 1–4 su `crates/game/src/season.rs` i jedna ruta; t. 5–9 su `season_mentor.rs`, uputa i
 radnik. Živi test `season_mentor_writes_four_parts` (`cargo test -p ai --test live -- --ignored`) još nije pokrenut.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 3–9 (A13 k: dijeljeno mjesto, sezonski mentor).

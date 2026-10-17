@@ -38,7 +38,7 @@
    svoju bazu** kad pokreće poslužitelj. **Svako stablo ima svoj prevedeni kod:**
    `CARGO_TARGET_DIR=C:/Users/leonk/Documents/hotelixsim/target/<stablo>` (glavno stablo `target/`); briše se sa stablom i
    mjerenje osnovice (B8) odmah nakon mjerenja. Zajednički target među stablima daje zastarjelu biblioteku i lažno zeleno
-   ([BUGS](../records/BUGS.md) B12). **`check:api` nakon spajanja vrti s vlastitim `CARGO_TARGET_DIR=target/check-api`** dok drugo stablo prevodi (inače pada na tuđem napola gotovom kodu; B3b, 15.10.). **Disk:** prije otvaranja stabla `df -h /c`; ispod 100 GB slobodno najprije čišćenje.
+   ([BUGS](../records/BUGS.md) B12). **`check:api` nakon spajanja vrti s vlastitim `CARGO_TARGET_DIR=target/check-api`** dok drugo stablo prevodi (inače pada na tuđem napola gotovom kodu; B3b, 15.10.). **Disk:** prije otvaranja stabla `df -h /c`; ispod 50 GB slobodno najprije čišćenje (Leon 16.10., ADR-057 t. 9).
    Stablo cigle se **briše isti dan kad se spoji** ([BUGS](../records/BUGS.md) B11).
 7. **`/kraj`** — dnevnik, ADR-ovi, predaja, brana `check:docs`, lokalni commit; push tek uz Leonov izričit OK.
    Prije svakog commita sadržaja: JSON formatirati (`pnpm lint`, biome, provjerava i `content/**/*.json`). `check:api` EXIT 127 = Windows 0xC0000142 pod opterećenjem (okolina): ponoviti.

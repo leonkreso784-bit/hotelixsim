@@ -1,5 +1,5 @@
 # ADR-026 — Put B: hotel od brojeva postaje skup stvari, u slojevima
-**Datum:** 2026-10-10 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (smjer je Leonov, pretpostavke Claudeove) ·
+**Datum:** 2026-10-10 · **Status:** ✅ **Potvrdio Leon 17.10.** (smjer je Leonov; t. 4 A13 f, t. 5 F1) ·
 **Vezano:** [PROSIRENJA.md](../../product/PROSIRENJA.md), [MODEL_V2.md](../../architecture/MODEL_V2.md), [ADR-023](ADR-023-mentor-govori-ljudski-pripremljene-cinjenice-cetiri.md)
 
 **Kontekst.** Leon 10.10.: igra treba biti *„kao BitLife — opsežno do bola"*: profili zaposlenika, sve sobe sa stanjem,
@@ -22,3 +22,5 @@ djelovati na pojedinca) i B — pravi entiteti u simulaciji. Leon je izabrao **B
    Procjena: 110–165 sati rada agenata za slojeve 0–4 — tjedni, ne dani; najmanji „wow" je sloj 0 + 1.
 **Cijena ako krivo:** put B je najveća promjena modela od početka — tjedni rada ako se slojevi rade temeljito; ako
 Leon odluči drukčiji redoslijed, mijenja se samo redoslijed slojeva, ne model.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 4 (A13 f: odjeli ovise o hotelu, zaposlenicima upravlja student, recenzije iz banke rečenica), t. 5 (F1).

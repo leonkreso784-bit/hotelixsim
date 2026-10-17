@@ -1,5 +1,5 @@
 # ADR-022 — Ekrani igrača: pretpostavke plana koraka 5
-**Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-021](ADR-021-koncept-ekrana-v2-i-odluke-o.md),
+**Datum:** 2026-10-10 · **Status:** ✅ **Potvrdio Leon 17.10.** (A13 c; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-021](ADR-021-koncept-ekrana-v2-i-odluke-o.md),
 [DIZAJN.md](../../product/DIZAJN.md), DEMO §1.4–1.5 · **Plan:** [2026-10-10-ekrani.md](../../archive/2026-10-10-ekrani.md)
 
 **Odluka (pretpostavke):**
@@ -25,3 +25,5 @@
    svake 2 s dok je runda `closing`; nakon 150 s obračuna ekran kaže da traje dulje nego inače.
 10. **Provjera u pregledniku** je ručna (Playwright MCP, 390 px) na pravom poslužitelju i bazi; e2e u CI-ju traži
    Postgres i poslužitelj u poslu weba — BACKLOG `[ekrani]`.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): A13 c: slobodan odgovor prvi, promjene indeksa „od početka"; ostale točke uz isto „ok sve".

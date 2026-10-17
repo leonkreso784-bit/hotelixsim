@@ -1,5 +1,5 @@
 # ADR-008 — Odluke iz gradnje kostura koje je Claude donio umjesto Leona
-**Datum:** 2026-10-04 · **Status:** 🟨 ČEKA LEONOV PREGLED · **Vezano:** [ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md), [ADR-007](ADR-007-lokalna-baza-zaseban-postgresql-16-klaster.md),
+**Datum:** 2026-10-04 · **Status:** ✅ **Potvrdio Leon 17.10.** (F1) · **Vezano:** [ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md), [ADR-007](ADR-007-lokalna-baza-zaseban-postgresql-16-klaster.md),
 [ADR-009](ADR-009-ojacavanje-brana-determinizma-je-task-1.md) · **Izvor:** [SLJEDECA_SESIJA.md](../../SLJEDECA_SESIJA.md) §4
 
 **Kontekst.** Po pravilu „radi bez pitanja" ([ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)) Claude je tijekom gradnje kostura sam odlučivao sitnije
@@ -13,3 +13,5 @@ stvari. Sve su u gitu i mogu se vratiti. (Točka 2 je zaseban [ADR-007](ADR-007-
 6. README i `.gitattributes` popravljeni za svježi Windows stroj (LF svugdje, `SQLX_OFFLINE`).
 7. Sitni nalazi pregleda (~40) zapisani kao ulaz za sljedeće planove, ne popravljeni odmah ([BACKLOG](../BACKLOG.md)).
 **Posljedice.** Leon pregledava; ono što odbije, vraća se iz gita. Do tada vrijede kao radna pretpostavka.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): F1: svih sedam točaka vrijedi kako su zapisane.

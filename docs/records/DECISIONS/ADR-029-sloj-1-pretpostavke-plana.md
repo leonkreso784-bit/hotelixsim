@@ -1,5 +1,5 @@
 # ADR-029 — Sloj 1: pretpostavke plana
-**Datum:** 2026-10-11 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (P1–P4 su Leonove odluke ✅ iz ADR-028) ·
+**Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10.** (P6, P13, P18 A13; P5, P7–P12, P14–P17 i Brižni F1; P1–P4 su Leonove odluke iz ADR-028) ·
 **Vezano:** [ADR-028](ADR-028-leonove-odluke-za-put-b-ljudi.md), [plan Sloja 1](../../plan/2026-10-10-v2-sloj1.md),
 [MODEL_V2.md](../../architecture/MODEL_V2.md) §4, §6, §8, [ADR-031](ADR-031-sloj-1-tjedni-krug-u-jezgri.md),
 [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md), [ADR-033](ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md),
@@ -61,3 +61,5 @@ kapaciteti odjela (restoran 6, lobby bar 20, rooftop 16, wellness 7, bar uz baze
    provjere prolaze. Nova provjera u balansu: Brižni drži barem 80 % sezonskog plana hotela.
 
 **Cijena ako krivo:** po retku tablice (stupac „ako krivo"), uz procjene iz tablice pretpostavki u planu.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): P6, P13, P18 (A13 i), P5, P7–P12, P14–P17 i formula Brižnog (F1); kalibracija sadržaja uz A11.

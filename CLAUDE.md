@@ -20,7 +20,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-013, 015, 017, 019, 022, 023, 025–027, 029–033, 035, 036, 039, 048, 051, 053, 055 i pravilo o nacionalnosti u [ADR-028](docs/records/DECISIONS/ADR-028-leonove-odluke-za-put-b-ljudi.md)
+  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6 i ADR-058; Leonove odluke 17.10.: ADR-056, 057
   (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
@@ -48,9 +48,9 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** slijepi pregled tekstova B4a/B4b/B4c; pregled 20 likova banke ljudi (`pregled-20.html`) uz rod po ulozi i sumnjive hotele Kvarnera; pravilo za zalijepljene odgovore (B13) i redoslijed faza (C prije L1-13?) — obje ankete na početku sesije; imena profesora FMTU-a (banka ljudi); nacrt plaće i obuke stranih radnika iz Azije (sukob s MODEL_V2 §5.4); „oko +10" za popravak, čestoća kvarova i težina ~20 % (L1-13, uvjet C5); 5 pitanja o voditelju odjela i grafu tržišta ([nacrt](docs/architecture/VODITELJ_I_TRZISTE.md)), opis S3 (BACKLOG),
-  ADR-ovi 🟨 (novi: ADR-051, 053 i 055), 🟨 tekstovi iz grane situacija, ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`),
-  [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona". Banka ljudi: [nacrt](docs/architecture/BANKA_LJUDI.md).
+- **Čeka Leona:** slijepi pregled tekstova B4a/B4b/B4c; ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); C3 poznate osobe
+  ([nacrt rizika](docs/architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)); 5 pitanja [plana platforme](docs/plan/2026-11-platforma.md) §7;
+  mjesto banke hotela (🟨 ADR-058); nalaz E4 (duboka provjera arhitekture); [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".
 - **Git:** GitHub `leonkreso784-bit/hotelixsim` (**javan** — push je objava) kao `origin`. Neobjavljeno: `git log origin/main..main`.
   CI gledaj sam: `"/c/Program Files/GitHub CLI/gh.exe" run list -R leonkreso784-bit/hotelixsim -L 3`
   (`gh` je prijavljen, nije na PATH-u).

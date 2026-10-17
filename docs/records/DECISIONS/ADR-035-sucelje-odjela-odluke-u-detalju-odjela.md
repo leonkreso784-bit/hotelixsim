@@ -1,6 +1,6 @@
 # ADR-035 — Sučelje Odjela: odluke u detalju odjela i ocjena odjela
-**Datum:** 2026-10-12 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (pretpostavke kontrolora i izvođača grane `model-v2/sloj1-odjeli`),
-osim Leonovih odluka ✅ 12. i 13.10. (anketa: t. 1, formula u t. 2, pragovi u t. 3) ·
+**Datum:** 2026-10-12 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 4–10 A13 j; t. 1–3 Leonove odluke 12. i 13.10.: anketa t. 1, formula u t. 2,
+pragovi u t. 3) ·
 **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md) P7, P18, [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md),
 [UI_PRAVILA](../../product/UI_PRAVILA.md) §1, §7, §8
 
@@ -57,3 +57,5 @@ odjel pokaže koliko je dobar (traka), da odluke budu uz odjel i da svaka odluka
 
 **Cijena ako krivo:** sve je u `apps/web` (pragovi u `levels.ts`, mjere u `score.ts` i `insights.ts`); API polja su
 samo dodana.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 4–10 (A13 j: usklađenost ljudi, rečenice, najam, cijena uz odluku, nespremljene izmjene).

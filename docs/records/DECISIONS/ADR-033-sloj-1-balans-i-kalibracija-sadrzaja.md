@@ -1,6 +1,6 @@
 # ADR-033 — Sloj 1: balans i kalibracija sadržaja v2
-**Datum:** 2026-10-11 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (brojke [PROC] su procjene za hrvatski hotel 4\* na
-moru) · **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md), [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md),
+**Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 1 i 8 F1; t. 2–7 A11 kao privremene procjene [PROC] za hrvatski hotel 4\*
+na moru) · **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md), [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md),
 [ADR-013](ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md), [MODEL_V2.md](../../architecture/MODEL_V2.md)
 §4.2, §8 (sloj 1, „Balans")
 
@@ -54,3 +54,5 @@ računa se i ispisuje u odjeljku „Mjere robota", ali ne ruši provjeru: praved
 sezonci ≥ 80 %, udio situacija Brižnog, Brižni Δ > 0 te Štediša Δ < 0 i najviše 6 bodova. „Brižni sezonci ≥ 80 %" je
 i test robota (`crates/balance/tests/robots_v2.rs`). v1 provjere su nepromijenjene. **Ispravak t. 8:** CI vrti v1 sa
 100 sjemena (`ci.yml`), a v2 tjedno i mjesečno s 1000 (v1 je zamrznut i čuvan zlatnim SHA testom).
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 1 i 8 (F1), t. 2–7 (A11 „ok", privremeno). Plaće t. 7 provjeravaju se istraživanjem pravih plaća (A12); smještaj sezonaca izdvaja se kad dođe mehanika smještaja radnika (faza LJUDI).

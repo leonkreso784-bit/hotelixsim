@@ -1,5 +1,5 @@
 # ADR-013 — Pretpostavke jezgre: centrirani indeksi, sezonci po planu, redoslijed obračuna, drugi val
-**Datum:** 2026-10-04 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-012](ADR-012-ciljani-rok-demoa-14-10-prvo.md),
+**Datum:** 2026-10-04 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 1 A13, t. 2–4 i 6–9 F1, t. 5 F2; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-012](ADR-012-ciljani-rok-demoa-14-10-prvo.md),
 [ADR-009](ADR-009-ojacavanje-brana-determinizma-je-task-1.md) · **Plan:** [2026-10-04-jezgra.md](../../archive/2026-10-04-jezgra.md) · **Model:** `scripts/oracle-jezgra.mjs`
 
 **Kontekst.** Revizija 04.10. našla je rupe u [DEMO.md](../../product/DEMO.md) (BACKLOG „Rupe u specu"): profil C po §4
@@ -27,3 +27,5 @@ kolovoz nije pun pa grupa iz S3 nikoga ne istiskuje. Plan jezgre ne može napisa
 9. Pravila cjelobrojnog računa P1–P32 iz DEMO §12 vrijede kako su napisana.
 **Posljedice.** Kalibracija (Task 11 plana) mora postići i da kolovoz bude dovoljno pun da grupa iz S3 istiskuje
 goste. Ako Leon odbije točku 1, mijenja se jedna funkcija (`centred`) i referentna tablica; ostale točke su podaci.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 1 (A13 a), t. 2–4 i 6–9 (F1); cilj marže t. 5 je Leonov od 10.10. (ADR-028, odgovor 9), profesorova potvrda ostaje (E2).

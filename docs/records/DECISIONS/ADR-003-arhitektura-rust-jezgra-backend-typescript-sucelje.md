@@ -11,3 +11,6 @@ ostalo je prijedlog.
 **Posljedice.** **Status je izrijekom nepotvrđen:** `ARHITEKTURA.md` (zaglavlje) kaže „prijedlog dok Leon ne potvrdi", dok
 `ROADMAP.md` navodi da ju je Leon pregledao; do izričite Leonove potvrde vrijedi stroža formulacija (nacrt). Kostur
 (Rust workspace, API, jedan ekran) već je izgrađen na toj osnovi, pa je promjena smjera skupa. Brane determinizma: [ADR-009](ADR-009-ojacavanje-brana-determinizma-je-task-1.md).
+
+**17.10. (E4, [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)):** Leon: *„Meni je ok, ti provjeri duboko i reci mi je li ok."*
+Status ostaje nacrt dok dubinski pregled arhitekture (najjači model) ne da nalaz Leonu; tek tada ✅ ([BACKLOG](../BACKLOG.md)).

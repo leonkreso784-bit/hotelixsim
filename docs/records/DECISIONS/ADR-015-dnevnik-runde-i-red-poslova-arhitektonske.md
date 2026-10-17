@@ -1,5 +1,5 @@
 # ADR-015 — Dnevnik, runde i red poslova: arhitektonske pretpostavke koraka 3
-**Datum:** 2026-10-05 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-012](ADR-012-ciljani-rok-demoa-14-10-prvo.md),
+**Datum:** 2026-10-05 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 2 A8, ostalo F1; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-012](ADR-012-ciljani-rok-demoa-14-10-prvo.md),
 [ADR-013](ADR-013-pretpostavke-jezgre-centrirani-indeksi-sezonci-po.md), ARHITEKTURA §6.2, §7.2, §8–§9, §11–§12 · **Plan:** [2026-10-05-dnevnik-runde.md](../../archive/2026-10-05-dnevnik-runde.md)
 
 **Kontekst.** DEMO korak 3 pretvara jezgru u igru: gost, tri robota, runde koje zatvara gumb, obračun u redu poslova,
@@ -58,3 +58,5 @@ promjena nosi uzrok). Arhitektura toga nije bila zapisana; ovo su pretpostavke s
 **Posljedice.** Novi crate `game` i proširena brana čistoće; jezgra dobiva jedno polje i jednu funkciju; baza dobiva
 dvije migracije. Ako Leon odbije t. 13, mijenja se jedna funkcija (`new_game`); ako odbije t. 2, mijenja se samo sadržaj
 `unanswered`. Otvorena proizvodna pitanja (t. 2 i t. 13) su u [BACKLOG.md](../BACKLOG.md) → „Otvoreno za Leona".
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 2 (A8: šutnja = ocjena 1, S3 bez odgovora bez kazne; L1-13 popravlja 16 predložaka), ostale točke F1.

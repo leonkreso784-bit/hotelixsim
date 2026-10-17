@@ -1,5 +1,5 @@
 # ADR-031 — Sloj 1: tjedni krug u jezgri v2
-**Datum:** 2026-10-11 · **Status:** 🟨 **ČEKA LEONOV PREGLED** (odluke voditelja gradnje, „radi bez pitanja") ·
+**Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 2 i 4 A13, t. 1, 3 i 5 F1) ·
 **Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md) P13, P16, [plan Sloja 1](../../plan/2026-10-10-v2-sloj1.md)
 „Pravila razdoblja", [MODEL_V2.md](../../architecture/MODEL_V2.md) §4
 
@@ -32,3 +32,5 @@ dalje dati točno v1 brojke (ekvivalencija), pa svako pravilo za cijeli mjesec m
 
 **Cijena ako krivo:** t. 1–3 su po jedna funkcija u `sim-hotel-v2` uz ponovnu kalibraciju tjednih koeficijenata
 (balans); t. 4 je jedna funkcija u `game`.
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): t. 2 i 4 (A13 h), t. 1, 3 i 5 (F1).

@@ -1,5 +1,5 @@
 # ADR-023 — Mentor govori ljudski: pripremljene činjenice, četiri dijela, brojke samo s imenom i jedinicom
-**Datum:** 2026-10-10 · **Status:** 🟨 ČEKA LEONOV PREGLED (Claude, „radi bez pitanja") · **Vezano:** [ADR-019](ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md),
+**Datum:** 2026-10-10 · **Status:** ✅ **Potvrdio Leon 17.10.** (A13 d, uz Dopunu 12.10.; pretpostavke Claudea, „radi bez pitanja") · **Vezano:** [ADR-019](ADR-019-ai-sloj-arhitektonske-pretpostavke-koraka-4.md),
 [ADR-022](ADR-022-ekrani-igraca-pretpostavke-plana-koraka-5.md) t. 7, ARHITEKTURA §8.5 · **Plan:** [2026-10-10-ekrani.md](../../archive/2026-10-10-ekrani.md) (Task 14)
 
 **Kontekst.** Mentor je u srpnju napisao *„najviše je pao treći (s 4876 na 4269) … −600 uz osnovnih −453 i −1000 zbog
@@ -58,3 +58,5 @@ i održavanje „isto kao prošli tjedan/mjesec" ili „promijenjeno u odnosu na
 (ZV-6); v1 i mjesečna v2 ostaju bajt-isti, a serde ključevi (`mjesec`, `iduci_mjesec`, …) su ugovor s uputom i nisu
 mijenjani. Odlasci u činjenicama navode odjele („otišle 3 osobe (Smještaj 2, Restoran 1)"). Živi test mentora nije
 pokretan (samo jedinični). Sezonski mentor: [ADR-036](ADR-036-kraj-sezone-poredak-financije-robota-i.md).
+
+**Potvrdio Leon 17.10.** ([ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): A13 d: mentor u četiri dijela, do ~170 riječi, brojka uvijek s imenom i jedinicom; vrijedi i Dopuna 12.10.
