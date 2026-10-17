@@ -32,6 +32,7 @@ const OTVORENO: &[&str] = &[
     "gosti/serija-002.json",
     "radnici/serija-002.json",
     "vanjski/serija-000.json",
+    "vanjski/serija-001.json",
 ];
 
 fn lf_hash(bytes: &[u8]) -> String {
