@@ -105,6 +105,29 @@ describe("slobodan odgovor", () => {
     expect(document.querySelector("ul.divide-y")).toBeNull();
   });
 
+  // PRAVILO-c (ADR-047, ADR-056 A6): prepisan ili zalijepljen ponuđeni odgovor vrijedi kao klik i student to čuje.
+  it("copied: true pokazuje poruku da prepisan odgovor vrijedi kao klik", async () => {
+    const api = standardApi().on(
+      "GET",
+      "/v1/hotels/:hotel/situations",
+      situations([s1({ response: { ...judged, copied: true, quality: 4 } }), s3()]),
+    );
+    renderApp(api, "/situacije/S1");
+    await screen.findByRole("heading", { name: "AI obrazloženje" });
+    expect(screen.getByText(/vrijedi kao klik/)).toBeTruthy();
+  });
+
+  it("copied: false nema poruke o kopiranju", async () => {
+    const api = standardApi().on(
+      "GET",
+      "/v1/hotels/:hotel/situations",
+      situations([s1({ response: { ...judged, copied: false } }), s3()]),
+    );
+    renderApp(api, "/situacije/S1");
+    await screen.findByRole("heading", { name: "AI obrazloženje" });
+    expect(screen.queryByText(/vrijedi kao klik/)).toBeNull();
+  });
+
   it("S3 nema polja za slobodan odgovor", async () => {
     renderApp(standardApi(), "/situacije/S3");
     await screen.findByRole("heading", { name: /Agencija nudi grupu/ });
