@@ -2,11 +2,11 @@
 //! putova). Review Focus 2: igra s čovjekom koji igra put daje isto što i `path_season_v2`.
 //! PRAVILO-b (ADR-047): šesti put „klik najbolji“ (klik na najbolji ponuđeni odgovor, najviše 4 gdje student može pisati).
 use balance::v2::{
-    AnswerPath, CLICK_MAX_QUALITY, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS, OptionsV2,
-    horizon, offered_choice, path_season_v2, render_v2, run_v2, writable_v2,
+    horizon, offered_choice, path_season_v2, render_v2, run_v2, writable_v2, AnswerPath, OptionsV2,
+    CLICK_MAX_QUALITY, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS,
 };
-use content::{Snapshot, repo_dir};
-use game::command::{GameSettings, new_game_with};
+use content::{repo_dir, Snapshot};
+use game::command::{new_game_with, GameSettings};
 use game::dto::indices_dto;
 use game::event::{AiMeta, AnswerRule, CriterionVerdict};
 use game::{
@@ -14,7 +14,7 @@ use game::{
     VerdictDraft,
 };
 use sim_hotel_v2::{
-    PeriodKind, Profile, RoundItem, SeasonResult, SituationTemplate, situations_for,
+    situations_for, PeriodKind, Profile, RoundItem, SeasonResult, SituationTemplate,
 };
 use uuid::Uuid;
 
@@ -456,29 +456,42 @@ fn writable_matches_game_free_text() {
 }
 
 /// Klik najbolji ne smije biti bolji od vlastitog odgovora (isti odgovor, kvaliteta `min(q, 4)` samo gdje se piše),
-/// a negdje mora biti strogo lošiji: ograničenje se vidi u brojkama.
+/// a ukupno mora biti strogo lošiji: ograničenje se vidi u brojkama.
+///
+/// Ruling voditelja 17.10. (PRAVILO-b): uspoređuje se ZBROJ po vrsti kruga, ne svako sjeme. Od kruga u kojem
+/// klik dobije 4 umjesto 5 stanje hotela se razilazi, pa se razilazi i izvlačenje primjeraka; pojedino sjeme
+/// zato smije ispasti i bolje (Month C sjeme 1). Prvi krug ima iste primjerke (isto kao `best`/`silent` gore).
 #[test]
 fn click_best_is_never_above_best_and_sometimes_below() {
     let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
-    let mut strictly_below = 0_usize;
+    let mut total_best = 0_i64;
+    let mut total_click = 0_i64;
     for kind in [PeriodKind::Week, PeriodKind::Month] {
+        let mut kind_best = 0_i64;
+        let mut kind_click = 0_i64;
         for profile in Profile::ALL {
             for seed in 0..5 {
                 let best = path_season_v2(&content, profile, AnswerPath::Best, seed, kind).unwrap();
                 let click =
                     path_season_v2(&content, profile, AnswerPath::ClickBest, seed, kind).unwrap();
                 let at = format!("{kind:?} {} sjeme {seed}", profile.code());
-                assert!(click.progress_pts <= best.progress_pts, "{at}");
-                // Isti primjerci: put mijenja samo ocjenu, ne izvlačenje.
-                assert_eq!(click.drawn, best.drawn, "{at}: isti primjerci");
-                if click.progress_pts < best.progress_pts {
-                    strictly_below += 1;
-                }
+                assert_eq!(
+                    click.drawn[0], best.drawn[0],
+                    "{at}: isti primjerci u 1. krugu"
+                );
+                kind_best += i64::from(best.progress_pts);
+                kind_click += i64::from(click.progress_pts);
             }
         }
+        assert!(
+            kind_click <= kind_best,
+            "{kind:?}: klik najbolji ukupno bolji od vlastitog ({kind_click} > {kind_best})"
+        );
+        total_best += kind_best;
+        total_click += kind_click;
     }
     assert!(
-        strictly_below > 0,
-        "ograničenje klika nigdje ne mijenja napredak"
+        total_click < total_best,
+        "ograničenje klika nigdje ne mijenja napredak ({total_click} = {total_best})"
     );
 }
