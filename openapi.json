@@ -1529,6 +1529,14 @@
           "system"
         ]
       },
+      "AgeGroupBody": {
+        "type": "string",
+        "enum": [
+          "young",
+          "adult",
+          "senior"
+        ]
+      },
       "AnswerBody": {
         "type": "object",
         "required": [
@@ -1615,14 +1623,54 @@
         "type": "object",
         "required": [
           "name",
-          "role"
+          "role",
+          "look"
         ],
         "properties": {
+          "look": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CharacterLookBody",
+                "description": "Rod, dob i podrijetlo za izgled lika; `null` za sidra S1–S4 i kad ime nije u popisu imena."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
           "role": {
             "type": "string"
+          }
+        }
+      },
+      "CharacterLookBody": {
+        "type": "object",
+        "description": "Izgled lika primjerka: web po njemu crta lice (rod: brada, frizura, naušnice; dob; raspon boje kože).",
+        "required": [
+          "gender",
+          "age_group",
+          "origin"
+        ],
+        "properties": {
+          "age_group": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgeGroupBody",
+                "description": "`null` kad dob nije poznata (web je bira iz imena)."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gender": {
+            "$ref": "#/components/schemas/GenderBody"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/OriginBody"
           }
         }
       },
@@ -1647,6 +1695,7 @@
           "situation",
           "character_name",
           "role",
+          "character_look",
           "opening",
           "lines",
           "remaining",
@@ -1657,6 +1706,17 @@
           "awaiting_reply": {
             "type": "boolean",
             "description": "Lik još nije odgovorio na zadnju poruku."
+          },
+          "character_look": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CharacterLookBody",
+                "description": "Isti izgled kao u popisu situacija."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "character_name": {
             "type": "string"
@@ -2823,6 +2883,13 @@
           }
         }
       },
+      "GenderBody": {
+        "type": "string",
+        "enum": [
+          "f",
+          "m"
+        ]
+      },
       "HealthBody": {
         "type": "object",
         "required": [
@@ -3260,6 +3327,13 @@
           }
         },
         "additionalProperties": false
+      },
+      "OriginBody": {
+        "type": "string",
+        "enum": [
+          "regional",
+          "foreign"
+        ]
       },
       "PlBody": {
         "type": "object",

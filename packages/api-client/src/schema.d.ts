@@ -387,6 +387,8 @@ export interface components {
     schemas: {
         /** @enum {string} */
         ActorKind: "guest" | "robot" | "system";
+        /** @enum {string} */
+        AgeGroupBody: "young" | "adult" | "senior";
         AnswerBody: {
             /**
              * Format: int32
@@ -418,8 +420,15 @@ export interface components {
          */
         CauseCode: "baseline" | "price" | "reputation" | "marketing" | "groups" | "capacity" | "other_revenue" | "wage" | "load" | "training" | "hires" | "release" | "turnover" | "maintenance" | "renovation" | "reply_reviews" | "fixed_costs" | "interest" | "situation";
         CharacterBody: {
+            look: components["schemas"]["CharacterLookBody"] | null;
             name: string;
             role: string;
+        };
+        /** @description Izgled lika primjerka: web po njemu crta lice (rod: brada, frizura, naušnice; dob; raspon boje kože). */
+        CharacterLookBody: {
+            age_group: components["schemas"]["AgeGroupBody"] | null;
+            gender: components["schemas"]["GenderBody"];
+            origin: components["schemas"]["OriginBody"];
         };
         ChatLineBody: {
             from: components["schemas"]["SpeakerBody"];
@@ -428,6 +437,7 @@ export interface components {
         ConversationBody: {
             /** @description Lik još nije odgovorio na zadnju poruku. */
             awaiting_reply: boolean;
+            character_look: components["schemas"]["CharacterLookBody"] | null;
             character_name: string;
             lines: components["schemas"]["ChatLineBody"][];
             /** @description Runda je otvorena; inače je razgovor samo za čitanje. */
@@ -822,6 +832,8 @@ export interface components {
             /** @description Svi krugovi igre s kalendarom. */
             rounds: components["schemas"]["RoundInfoBody"][];
         };
+        /** @enum {string} */
+        GenderBody: "f" | "m";
         HealthBody: {
             database: components["schemas"]["DatabaseState"];
             /**
@@ -988,6 +1000,8 @@ export interface components {
             model?: components["schemas"]["ModelCode"] | null;
             round_kind?: components["schemas"]["RoundKindCode"] | null;
         };
+        /** @enum {string} */
+        OriginBody: "regional" | "foreign";
         PlBody: {
             capex_cents?: components["schemas"]["PlRatioBody"] | null;
             /** Format: int32 */

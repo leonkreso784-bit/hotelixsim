@@ -218,6 +218,40 @@ export function lookFromSeed(seed: string): AvatarLook {
   };
 }
 
+/** Podaci o liku iz API-ja (rod, dob, podrijetlo); bez njih izgled ostaje izgled iz imena. */
+export type LookHint = { gender: "f" | "m"; age_group: Age | null; origin: "regional" | "foreign" };
+
+// Zamrznuti bazeni za izgled iz podataka lika (kao SEED_*: samo dodavanje na kraj). Koža 3, 4, 5, 7 tek iz banke ljudi (K5).
+export const HINT_SKIN_REGIONAL = [0, 1, 6] as const;
+export const HINT_SKIN_FOREIGN = [0, 1, 2, 6] as const;
+export const HINT_HAIR_F = ["long", "ponytail", "bun", "bob", "wavy", "curly", "side", "short"] as const;
+export const HINT_HAIR_M = ["short", "buzz", "side", "slick", "curly", "wavy", "none"] as const;
+export const HINT_BEARD_M = ["stubble", "mustache", "beard", "goatee", "full"] as const;
+const HINT_EARRINGS_F = ["studs", "hoops"] as const;
+
+/** Izgled iz roda, dobi i podrijetla: ostalo bira ime (lookFromSeed), a rod/dob/podrijetlo iz zasebnog toka. Redoslijed izvlačenja je fiksan i troši se i kad se ne koristi. */
+export function lookFromHint(name: string, hint: LookHint): AvatarLook {
+  const base = lookFromSeed(name);
+  const r = rng(`${name}|izgled`);
+  const female = hint.gender === "f";
+  const skin = pick(hint.origin === "foreign" ? HINT_SKIN_FOREIGN : HINT_SKIN_REGIONAL, r);
+  const hair = pick(female ? HINT_HAIR_F : HINT_HAIR_M, r);
+  const beardRoll = r(3) === 0;
+  const beard = pick(HINT_BEARD_M, r);
+  const earRoll = r(2) === 0;
+  const ear = pick(HINT_EARRINGS_F, r);
+  const age = hint.age_group ?? base.age;
+  return {
+    ...base,
+    skin,
+    hair,
+    hairColor: hint.age_group === "senior" ? 5 : base.hairColor,
+    facialHair: !female && beardRoll ? beard : "none",
+    earrings: female && earRoll ? ear : "none",
+    age,
+  };
+}
+
 /** Ti — upravitelj hotela. Uređivač (poslije demoa) mijenja upravo ovo. */
 export const PLAYER_LOOK: AvatarLook = {
   skin: 1,
@@ -352,6 +386,7 @@ export const KNOWN_LOOKS: Record<string, AvatarLook> = {
   },
 };
 
-export function lookFor(name: string): AvatarLook {
-  return Object.hasOwn(KNOWN_LOOKS, name) ? (KNOWN_LOOKS[name] as AvatarLook) : lookFromSeed(name);
+export function lookFor(name: string, hint?: LookHint | null): AvatarLook {
+  if (Object.hasOwn(KNOWN_LOOKS, name)) return KNOWN_LOOKS[name] as AvatarLook;
+  return hint ? lookFromHint(name, hint) : lookFromSeed(name);
 }
