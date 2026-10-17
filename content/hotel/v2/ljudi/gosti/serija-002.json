@@ -29,12 +29,12 @@
       "jezici": [["de", 4], ["en", 1], ["it", 2]],
       "segment": "par",
       "zanimanje": "dispečer gradskog prijevoza",
-      "opis": "Godišnji odmor uzima u listopadu, kad supruga završi sezonu u turističkoj agenciji. Ove godine žele planinariti po Učki, a večeri provoditi u Voloskom."
+      "opis": "Godišnji odmor uzima u listopadu, kad supruga završi sezonu u turističkoj agenciji. Žele planinariti po Učki, a večeri provoditi u Voloskom."
     },
     {
       "id": "G-00103",
-      "ime": "Carina",
-      "prezime": "Weninger",
+      "ime": "Bettina",
+      "prezime": "Hirschmugl",
       "rod": "z",
       "dob": 28,
       "zemlja": "AT",
@@ -42,7 +42,7 @@
       "jezici": [["de", 4], ["en", 3], ["es", 1]],
       "segment": "par",
       "zanimanje": "učiteljica glazbe",
-      "opis": "Dečko ju je iznenadio putovanjem za godišnjicu veze i rezervirao tri noći bez njezina znanja. Iz Graza su putovali vlakom preko Zagreba."
+      "opis": "Dečko ju je iznenadio putovanjem za godišnjicu veze i rezervirao tri noći bez njezina znanja. Kofer joj je potajno spakirala sestra, da iznenađenje ne propadne."
     },
     {
       "id": "G-00104",
@@ -211,7 +211,7 @@
       "jezici": [["de", 4], ["en", 2]],
       "segment": "obitelj",
       "zanimanje": "elektroinženjerka",
-      "opis": "Tjedan dana u lipnju provodi ovdje s mužem i sinom od šest godina. Sin u rujnu kreće u školu, pa je ovo zadnja godina kad mogu putovati izvan školskih praznika."
+      "opis": "Tjedan dana u lipnju provodi ovdje s mužem i sinom od šest godina. Sin na jesen kreće u školu, pa je ovo zadnja godina kad mogu putovati izvan školskih praznika."
     },
     {
       "id": "G-00117",
@@ -237,7 +237,7 @@
       "jezici": [["de", 4], ["en", 1], ["fr", 1]],
       "segment": "wellness",
       "zanimanje": "umirovljena sutkinja",
-      "opis": "Svake jeseni posjećuje drugo mjesto s dugom lječilišnom tradicijom, a ove je godine izabrala Opatiju. Ostaje dvanaest dana i za svaki je dan unaprijed rezervirala masažu."
+      "opis": "Svake jeseni obilazi po jedno mjesto s dugom lječilišnom tradicijom, a sad je na redu Opatija. Ostaje dvanaest dana i za svaki je dan unaprijed rezervirala masažu."
     },
     {
       "id": "G-00119",
@@ -276,7 +276,7 @@
       "jezici": [["hr", 4], ["it", 2], ["en", 1]],
       "segment": "par",
       "zanimanje": "profesor matematike",
-      "opis": "Na Kvarner sa suprugom dolazi svake jeseni, kad kod kuće završi gužva s turistima. Ove godine žele vidjeti Kastav i Trsat, jer su dosad obilazili samo otoke."
+      "opis": "Na Kvarner sa suprugom dolazi svake jeseni, kad kod kuće završi gužva s turistima. Sad žele vidjeti Kastav i Trsat, jer su dosad obilazili samo otoke."
     },
     {
       "id": "G-00122",
@@ -315,7 +315,7 @@
       "jezici": [["hr", 4], ["en", 2]],
       "segment": "wellness",
       "zanimanje": "voditeljica računovodstva",
-      "opis": "Tri puta godišnje dolazi na produženi vikend s masažama, a termine bira kad na poslu zaključi tromjesečje. Iz Siska putuje autobusom preko Zagreba."
+      "opis": "Tri puta godišnje dolazi na produženi vikend s masažama, a termine bira kad na poslu zaključi tromjesečje. Prvu masažu uvijek rezervira za dan dolaska."
     },
     {
       "id": "G-00125",
@@ -358,8 +358,8 @@
     },
     {
       "id": "G-00128",
-      "ime": "Erzsébet",
-      "prezime": "Pásztor",
+      "ime": "Edit",
+      "prezime": "Somogyvári",
       "rod": "z",
       "dob": 60,
       "zemlja": "HU",
@@ -367,7 +367,7 @@
       "jezici": [["hu", 4], ["de", 2]],
       "segment": "par",
       "zanimanje": "kontrolorica kvalitete u mljekari",
-      "opis": "Muž i ona putuju vlakom preko Zagreba i ostaju pet noći. Kvarner im je preporučila kći, koja je u Rijeci bila na studentskoj razmjeni."
+      "opis": "Muž i ona ostaju pet noći i za svaku su večer rezervirali stol u drugom restoranu. Kvarner im je preporučila kći, koja je u Rijeci bila na studentskoj razmjeni."
     },
     {
       "id": "G-00129",
@@ -419,7 +419,7 @@
       "jezici": [["sl", 4], ["hr", 3], ["de", 2]],
       "segment": "par",
       "zanimanje": "umirovljeni vinogradar",
-      "opis": "Kad završi berba u njegovu vinogradu, sa suprugom svake godine provede tjedan dana na moru. Ove su godine doveli i susjede, koji imaju sobu do njihove."
+      "opis": "Kad završi berba u njegovu vinogradu, sa suprugom svake godine provede tjedan dana na moru. Ovaj put poveli su i susjede, koji imaju sobu do njihove."
     },
     {
       "id": "G-00133",
@@ -549,7 +549,7 @@
       "jezici": [["pl", 4], ["en", 2], ["de", 1]],
       "segment": "par",
       "zanimanje": "zavarivač u brodogradilištu",
-      "opis": "Svake godine sa suprugom ljetuje na drugom moru, a ove su godine odabrali Jadran. Do Kvarnera su se vozili dva dana, s noćenjem u Brnu."
+      "opis": "Dosad je sa suprugom ljetovao na Baltiku, a do Kvarnera su se vozili dva dana, s noćenjem u Brnu."
     },
     {
       "id": "G-00143",
@@ -575,7 +575,7 @@
       "jezici": [["sk", 4], ["cs", 3], ["de", 1]],
       "segment": "grupa",
       "zanimanje": "umirovljena laborantica",
-      "opis": "Svake godine s dvadesetak bivših kolega iz košičke čeličane organizira zajedničko putovanje. Ove je godine odabrala Kvarner i rezervirala dvanaest dvokrevetnih soba na četiri noći."
+      "opis": "S dvadesetak bivših kolega iz čeličane u kojoj je radila svake godine organizira zajedničko putovanje. Za Kvarner je rezervirala dvanaest dvokrevetnih soba na četiri noći."
     },
     {
       "id": "G-00145",
@@ -588,7 +588,7 @@
       "jezici": [["bs", 4], ["hr", 4], ["en", 3], ["de", 2]],
       "segment": "par",
       "zanimanje": "logopedinja",
-      "opis": "Iz Tuzle je s dečkom stigla autobusom preko Zagreba i ostaje šest noći. Oboje rade u istoj školi, pa su godišnji odmor uzeli u kolovozu."
+      "opis": "Ostaje šest noći s dečkom, a za vikend im se pridružuje njegova sestra. Oboje rade u istoj školi, pa su godišnji odmor uzeli u kolovozu."
     },
     {
       "id": "G-00146",
@@ -653,7 +653,7 @@
       "jezici": [["no", 4], ["en", 4], ["de", 2]],
       "segment": "obitelj",
       "zanimanje": "inženjer na naftnoj platformi",
-      "opis": "Između dviju smjena na platformi ima tri slobodna tjedna, a ove ih je godine iskoristio za Jadran sa suprugom i dvoje djece. Na Kvarneru su osam dana, a zatim idu na Plitvice."
+      "opis": "Između dviju smjena na platformi ima tri slobodna tjedna, a sad ih je iskoristio za Jadran sa suprugom i dvoje djece. Na Kvarneru su osam dana, a zatim idu na Plitvice."
     }
   ]
 }

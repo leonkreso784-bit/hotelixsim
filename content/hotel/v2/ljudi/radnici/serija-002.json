@@ -213,7 +213,7 @@
       "zemlja": "UA",
       "mjesto": "Žitomir",
       "jezici": [["uk", 4], ["ru", 3], ["de", 2], ["hr", 2]],
-      "opis": "Pet godina spremala je sobe u lječilištu u Truskavcu, a posljednje dvije sezone radi u hotelu u Poreču."
+      "opis": "Pet godina spremala je sobe u lječilištu u Truskavcu, a od pretprošle godine radi u hotelu u Poreču."
     },
     {
       "id": "R-00115",
@@ -247,9 +247,9 @@
     },
     {
       "id": "R-00117",
-      "ime": "Dolores",
-      "prezime": "Picinić",
-      "rod": "z",
+      "ime": "Silvano",
+      "prezime": "Kozulić",
+      "rod": "m",
       "dob": 46,
       "uloga": "kuhar",
       "razina": "strucnjak",
@@ -273,13 +273,13 @@
       "zemlja": "BA",
       "mjesto": "Bihać",
       "jezici": [["bs", 4], ["hr", 4], ["en", 3], ["de", 1]],
-      "opis": "Studentica je prehrambene tehnologije u Bihaću i ljeti radi sezonu kao pomoćna kuharica. Prošlo je ljeto pripremala doručke u pansionu u Neumu."
+      "opis": "Ljeti radi sezonu kao pomoćna kuharica, a zimi studira prehrambenu tehnologiju u Bihaću. Prošlo je ljeto pripremala doručke u pansionu u Neumu."
     },
     {
       "id": "R-00119",
-      "ime": "Sudip",
+      "ime": "Pramila",
       "prezime": "Ghimire",
-      "rod": "m",
+      "rod": "z",
       "dob": 33,
       "uloga": "kuhar",
       "razina": "iskusan",
@@ -303,7 +303,7 @@
       "zemlja": "IN",
       "mjesto": "Dehradun",
       "jezici": [["hi", 4], ["en", 3]],
-      "opis": "Dvadeset godina kuha u hotelima u Delhiju, Goi i Maskatu, a posljednjih sedam vodio je kuhinju za osoblje hotela s petsto soba."
+      "opis": "Dvadeset godina kuha u hotelima u Delhiju, Goi i Maskatu, a u Maskatu je sedam godina vodio kuhinju za osoblje hotela s petsto soba."
     },
     {
       "id": "R-00121",
@@ -333,13 +333,13 @@
       "zemlja": "HR",
       "mjesto": "Pula",
       "jezici": [["hr", 4], ["en", 3], ["de", 1]],
-      "opis": "Student je informatike u Puli i drugo ljeto radi kao konobar u restoranu u Fažani. Za hotel je slobodan od lipnja do sredine rujna, kad počinju predavanja."
+      "opis": "Drugo ljeto radi kao konobar u restoranu u Fažani, uz studij informatike u Puli. Za hotel je slobodan od lipnja do kraja rujna, prije početka predavanja."
     },
     {
       "id": "R-00123",
-      "ime": "Romina",
+      "ime": "Mauro",
       "prezime": "Licul",
-      "rod": "z",
+      "rod": "m",
       "dob": 41,
       "uloga": "konobar",
       "razina": "pocetnik",
@@ -348,12 +348,12 @@
       "zemlja": "HR",
       "mjesto": "Labin",
       "jezici": [["hr", 4], ["it", 2], ["en", 2]],
-      "opis": "Četrnaest godina crtala je karte i mjerila teren u geodetskom uredu u Puli. Od prošle godine radi kao konobarica u Rapcu."
+      "opis": "Četrnaest godina crtao je karte i mjerio teren u geodetskom uredu u Puli. Od prošle godine radi kao konobar u Rapcu."
     },
     {
       "id": "R-00124",
-      "ime": "Frane",
-      "prezime": "Bitunjac",
+      "ime": "Stipe",
+      "prezime": "Ugrin",
       "rod": "m",
       "dob": 34,
       "uloga": "konobar",
@@ -378,13 +378,13 @@
       "zemlja": "HR",
       "mjesto": "Rovinj",
       "jezici": [["hr", 4], ["it", 3], ["en", 3], ["de", 2]],
-      "opis": "Pet ljeta radi kao konobarica u Rovinju, posljednja tri u restoranu u staroj jezgri. Zimi radi u knjižari na rovinjskoj rivi."
+      "opis": "Pet ljeta radi kao konobarica u Rovinju, od čega tri u restoranu u staroj jezgri. Zimi radi u knjižari na rovinjskoj rivi."
     },
     {
       "id": "R-00126",
-      "ime": "Rodel",
+      "ime": "Jocelyn",
       "prezime": "Macaraeg",
-      "rod": "m",
+      "rod": "z",
       "dob": 28,
       "uloga": "konobar",
       "razina": "iskusan",
@@ -438,7 +438,7 @@
       "zemlja": "HR",
       "mjesto": "Rijeka",
       "jezici": [["hr", 4], ["en", 4]],
-      "opis": "Studentica je anglistike u Rijeci, a prošlo je ljeto radila u turističkom informativnom centru na Korzu. Za recepciju je slobodna do kraja rujna."
+      "opis": "Uz studij anglistike u Rijeci prošlo je ljeto radila u turističkom informativnom centru na Korzu. Na recepciji može raditi cijelo ljeto."
     },
     {
       "id": "R-00130",
@@ -618,7 +618,7 @@
       "zemlja": "HR",
       "mjesto": "Novi Vinodolski",
       "jezici": [["hr", 4], ["de", 2]],
-      "opis": "Trideset dvije godine održava hotele u Selcu i Novom Vinodolskom, a posljednjih deset vodio je ekipu od pet majstora."
+      "opis": "Trideset dvije godine održava hotele u Selcu i Novom Vinodolskom, a danas vodi ekipu od pet majstora."
     },
     {
       "id": "R-00142",
@@ -648,7 +648,7 @@
       "zemlja": "HR",
       "mjesto": "Zadar",
       "jezici": [["hr", 4], ["en", 3], ["it", 1], ["de", 1]],
-      "opis": "Studentica je povijesti umjetnosti u Zadru, a prošlo je ljeto radila za šankom kafića na plaži u Ninu. Ove sezone traži posao u hotelskom baru na Kvarneru."
+      "opis": "Prošlo je ljeto radila za šankom kafića na plaži u Ninu, a u Zadru studira povijest umjetnosti. Ove sezone traži posao u hotelskom baru na Kvarneru."
     },
     {
       "id": "R-00144",
@@ -663,7 +663,7 @@
       "zemlja": "HR",
       "mjesto": "Opatija",
       "jezici": [["hr", 4], ["en", 2]],
-      "opis": "Šest godina radi za šankom u Opatiji, posljednje tri u vinskom baru, pa poznaje istarska i kvarnerska vina."
+      "opis": "Šest godina radi za šankom u Opatiji, od toga tri u vinskom baru, pa poznaje istarska i kvarnerska vina."
     },
     {
       "id": "R-00145",
