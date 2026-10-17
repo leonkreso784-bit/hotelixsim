@@ -15,7 +15,7 @@ const ZAPECACENO: [(&str, &str); 4] = [
     ),
     (
         "gosti/serija-001.json",
-        "b486caaedebd7143a1d32704251fe0415f20043e12a72268621ecf1ddcefd4b5",
+        "1a89ff47f834771171c4a4b2e64a682b0f744373613675cd1392b16c0096fa67",
     ),
     (
         "radnici/serija-000.json",

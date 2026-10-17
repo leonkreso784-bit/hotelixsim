@@ -28,15 +28,20 @@
       "inozemstvo": 2500
     },
     "zemlje_inozemstvo": {
-      "BA": 2500,
-      "RS": 1800,
-      "MK": 1000,
-      "NP": 1500,
-      "IN": 800,
-      "PH": 1200,
-      "ostalo": 1200
+      "BA": 1900,
+      "NP": 2100,
+      "RS": 1400,
+      "PH": 1300,
+      "IN": 900,
+      "MK": 650,
+      "XK": 300,
+      "UZ": 250,
+      "BD": 150,
+      "ME": 100,
+      "AL": 100,
+      "ostalo": 850
     },
-    "zemlje_izvor": "🟨 PRIVREMENO: popis zemalja iz BANKA_LJUDI §2.2 (BiH, Srbija, Sj. Makedonija, Nepal, Indija, Filipini, ostalo), udjeli [PROC]; zamjenjuje ga MUP statistika izdanih dozvola za boravak i rad, djelatnost turizam i ugostiteljstvo, zadnja godina (Leon 16.10.)",
+    "zemlje_izvor": "MUP RH, izdane dozvole za boravak i rad, stanje 31.12.2025. (170.723; turizam i ugostiteljstvo 52.858 = 31 %); MUP ne objavljuje djelatnost × državljanstvo, pa su udjeli PROCJENA iz ukupnih dozvola po državljanstvu, korigirani prema turizmu (Nepal, Filipini više; Uzbekistan, Bangladeš, Kosovo manje; Egipat u ostalo). Izmjereno 17.10.2026.",
     "jezici": {
       "en": [1000, 2000, 3500, 3000, 500],
       "de": [4500, 2000, 2000, 1200, 300],
@@ -44,48 +49,48 @@
     },
     "rod_po_ulozi": {
       "sobar": {
-        "z_bp": 9000,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 9112, 5151",
-        "potvrdeno": false
+        "z_bp": 9300,
+        "izvor": "Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR): skupina 91 (čistači i pomoćnici), žene 93 %. Izmjereno 17.10.2026.",
+        "potvrdeno": true
       },
       "kuhar": {
         "z_bp": 4500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5120, 3434",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 51 = 63 % (miješa kuhare, frizere, kozmetičare), NACE I = 56 %; stara brojka nije opovrgnuta.",
         "potvrdeno": false
       },
       "konobar": {
         "z_bp": 5000,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5131",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 51 = 63 %, NACE I = 56 %; stara brojka nije opovrgnuta.",
         "potvrdeno": false
       },
       "recepcioner": {
         "z_bp": 7000,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 4224",
-        "potvrdeno": false
+        "izvor": "Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR): skupina 42 (usluge korisnicima), žene 70 %. Izmjereno 17.10.2026.",
+        "potvrdeno": true
       },
       "referent_uprave": {
-        "z_bp": 7500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 4311, 4110, 3313",
-        "potvrdeno": false
+        "z_bp": 7000,
+        "izvor": "Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR): skupina 41 = 83 % i 43 = 58 %, ponderirano, žene 68 %. Izmjereno 17.10.2026.",
+        "potvrdeno": true
       },
       "tehnicar": {
-        "z_bp": 500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 7411, 7126, 7233",
+        "z_bp": 300,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 72 = 2 %; 71 i 74 bez žena u uzorku; EU 2–4 %.",
         "potvrdeno": false
       },
       "sanker": {
         "z_bp": 3500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 5132",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 51 = 63 %, NACE I = 56 %; šankeri zasebno nisu izmjereni; stara brojka nije opovrgnuta.",
         "potvrdeno": false
       },
       "terapeut": {
         "z_bp": 7500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 3255, 5142",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupine 32 = 86 % (fizioterapija) i 51 = 63 % (masaža, kozmetika).",
         "potvrdeno": false
       },
       "referent_prodaje": {
-        "z_bp": 6500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis (Leon 16.10.); uloga -> ISCO-08: 3322, 2431",
+        "z_bp": 6000,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupine 33 = 58 % i 42 = 70 %, ponderirano 60 %.",
         "potvrdeno": false
       }
     }
@@ -115,73 +120,73 @@
     },
     "rod_po_ulozi": {
       "inspektor_sanitarni": {
-        "z_bp": 5500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3257; z_bp je prijedlog",
+        "z_bp": 6500,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 32 = 86 % (gornja granica; inspektori su manji, miješaniji dio).",
         "potvrdeno": false
       },
       "inspektor_turisticki": {
-        "z_bp": 5500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3359; z_bp je prijedlog",
+        "z_bp": 5800,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 33 = 58 % (široka: financije, prodaja, državni suradnici).",
         "potvrdeno": false
       },
       "inspektor_rada": {
-        "z_bp": 5500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3352; z_bp je prijedlog",
+        "z_bp": 5800,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 33 = 58 %.",
         "potvrdeno": false
       },
       "inspektor_porezni": {
-        "z_bp": 6500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3352, 3359; z_bp je prijedlog",
+        "z_bp": 5800,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 33 = 58 %.",
         "potvrdeno": false
       },
       "policajac": {
-        "z_bp": 1500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 5412; z_bp je prijedlog",
+        "z_bp": 1300,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 54 = 13 % (policija, vatrogasci, zaštitari; mali uzorak).",
         "potvrdeno": false
       },
       "vatrogasac": {
         "z_bp": 500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 5411; z_bp je prijedlog",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 54 = 13 %; vatrogasci uži i muškiji.",
         "potvrdeno": false
       },
       "djelatnik_hitne": {
         "z_bp": 6500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2211, 3258; z_bp je prijedlog",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupine 22 = 74 % i 32 = 86 %; hitna ima više muških tehničara.",
         "potvrdeno": false
       },
       "novinar": {
-        "z_bp": 5500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2642; z_bp je prijedlog",
+        "z_bp": 6500,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 26 = 65 % (novinari, autori, pravnici, socijalni radnici).",
         "potvrdeno": false
       },
       "dobavljac": {
         "z_bp": 3500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3322, 3323; z_bp je prijedlog",
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupine 33 = 58 % i 52 = 75 %; veleprodajni zastupnici muškiji; stara brojka nije opovrgnuta.",
         "potvrdeno": false
       },
       "organizator_dogadanja": {
-        "z_bp": 7500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 3332; z_bp je prijedlog",
+        "z_bp": 5800,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 33 = 58 %.",
         "potvrdeno": false
       },
       "zastupnik_agencije": {
-        "z_bp": 7500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 4221; z_bp je prijedlog",
-        "potvrdeno": false
+        "z_bp": 7000,
+        "izvor": "Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR): skupina 42 (usluge korisnicima), žene 70 %. Izmjereno 17.10.2026.",
+        "potvrdeno": true
       },
       "poslovni_klijent": {
-        "z_bp": 5000,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: pola-pola do mjerenja (BANKA_LJUDI §2.4)",
+        "z_bp": 3200,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 1 (menadžeri) = 32 %; 12 = 44 %.",
         "potvrdeno": false
       },
       "susjed": {
         "z_bp": 5000,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: pola-pola do mjerenja (BANKA_LJUDI §2.4)",
+        "izvor": "Nije zanimanje: pola-pola (zaposleni u HR 2025 47 % žena, Eurostat lfsa_egai2d TOTAL).",
         "potvrdeno": false
       },
       "lokalna_uprava": {
-        "z_bp": 5500,
-        "izvor": "🟨 PRIVREMENO, nije izmjereno: Eurostat LFS (anketa o radnoj snazi), Hrvatska, zaposleni po zanimanju ISCO-08 i spolu, zadnja godina - tablica za upis; uloga -> ISCO-08: 2422; z_bp je prijedlog",
+        "z_bp": 7300,
+        "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupina 24 = 73 % (službenici); čelnici 11 = 40 %.",
         "potvrdeno": false
       }
     }
