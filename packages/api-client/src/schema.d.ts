@@ -429,6 +429,7 @@ export interface components {
             age_group: components["schemas"]["AgeGroupBody"] | null;
             gender: components["schemas"]["GenderBody"];
             origin: components["schemas"]["OriginBody"];
+            uniform: components["schemas"]["UniformBody"] | null;
         };
         ChatLineBody: {
             from: components["schemas"]["SpeakerBody"];
@@ -1597,6 +1598,11 @@ export interface components {
             /** Format: int32 */
             morale_pts: number;
         };
+        /**
+         * @description Odora službe vanjskog lika: web crta odjeću, kapu i ovratnik; lice ostaje isto.
+         * @enum {string}
+         */
+        UniformBody: "police" | "fire" | "ems" | "doctor";
         /** @enum {string} */
         UnitCode: "room_nights" | "cents" | "people" | "points" | "rating_hundredths" | "bp";
         /** @enum {string} */

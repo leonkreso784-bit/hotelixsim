@@ -1,7 +1,9 @@
 //! Izgled lika primjerka (ADR-042 t. 11, kartica IZGLED): rod, dobna skupina i podrijetlo.
 //! Izvor je popis imena snimka igre (`content.situation_templates.names`) i ključne riječi opisa uloge;
 //! jezgra se ne dira. Ime koje nije u točno jednom popisu nema izgled (`None`, stari izgled u pregledniku).
+//! Uniforma (IZGLED-c) dolazi iz KLJUČA uloge lika u predlošku (`Template.character.role`), ne iz opisa.
 use content::Content;
+use game::{Game, HotelId};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LookGender {
@@ -22,11 +24,85 @@ pub enum Origin {
     Foreign,
 }
 
+/// Odora službe vanjskog lika (kartica IZGLED-c §4): mijenja samo odjeću, kapu i ovratnik, nikad lice.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Uniform {
+    Police,
+    Fire,
+    Ems,
+    Doctor,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CharacterLook {
     pub gender: LookGender,
     pub age_group: Option<AgeGroup>,
     pub origin: Origin,
+    /// `None`: lik bez odore (nepoznata uloga, sidra, v1).
+    pub uniform: Option<Uniform>,
+}
+
+/// Rječnik uloga banke (BANKA_LJUDI §1.5); isti ključ u predlošku. Samo točan ključ, bez podniza i velikih slova.
+pub const UNIFORM_ROLES: [(&str, Uniform); 4] = [
+    ("policajac", Uniform::Police),
+    ("vatrogasac", Uniform::Fire),
+    ("djelatnik_hitne", Uniform::Ems),
+    ("lijecnik", Uniform::Doctor),
+];
+
+/// Uniforma za ključ uloge (točna usporedba).
+pub fn uniform_for_role(key: &str) -> Option<Uniform> {
+    UNIFORM_ROLES
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, u)| *u)
+}
+
+/// Uniforma lika predloška `template` iz snimka sadržaja: ključ `character.role` → `uniform_for_role`. `None`: v1,
+/// nepoznat predložak, predložak bez lika, uloga bez uniforme.
+pub fn character_uniform(content: &Content, template: &str) -> Option<Uniform> {
+    let t = content
+        .situation_templates
+        .as_ref()?
+        .templates
+        .iter()
+        .find(|t| t.code == template)?;
+    uniform_for_role(&t.character.as_ref()?.role)
+}
+
+/// Ključ uloge lika primjerka hotela (kao `situation_card`): primjerak tog hotela, njegov predložak, `character.role`.
+/// `None` za sidra S1–S4, v1 i nepoznatu šifru.
+pub fn character_role_key<'a>(g: &'a Game, hotel: HotelId, code: &str) -> Option<&'a str> {
+    let i = g
+        .hotel(hotel)
+        .ok()?
+        .drawn
+        .values()
+        .flatten()
+        .find(|i| i.situation.code == code)?;
+    g.content
+        .situation_templates
+        .as_ref()?
+        .templates
+        .iter()
+        .find(|t| t.code == i.drawn.template)?
+        .character
+        .as_ref()
+        .map(|c| c.role.as_str())
+}
+
+/// `character_look` s uniformom iz `character_role_key`; ime izvan popisa imena → `None` (i bez uniforme).
+pub fn look_of_character(
+    g: &Game,
+    hotel: HotelId,
+    code: &str,
+    c: &content::Character,
+) -> Option<CharacterLook> {
+    let look = character_look(&g.content, &c.name, &c.role)?;
+    Some(CharacterLook {
+        uniform: character_role_key(g, hotel, code).and_then(uniform_for_role),
+        ..look
+    })
 }
 
 /// Dobna skupina iz ključnih riječi opisa uloge (cijele riječi, mala slova); starija ima prednost pred mlađom.
@@ -84,5 +160,6 @@ pub fn character_look(content: &Content, name: &str, role: &str) -> Option<Chara
         } else {
             Origin::Regional
         },
+        uniform: None,
     })
 }

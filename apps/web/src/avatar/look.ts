@@ -19,13 +19,23 @@ export const EYES = ["dot", "happy", "wide"] as const;
 export const MOUTHS = ["smile", "neutral", "worried", "grin"] as const;
 export const FACIAL_HAIR = ["none", "stubble", "mustache", "beard", "goatee", "full"] as const;
 export const GLASSES = ["none", "round", "square"] as const;
-export const HATS = ["none", "chef", "cap", "beanie"] as const;
+export const HATS = ["none", "chef", "cap", "beanie", "police", "fire"] as const;
 export const BROWS = ["straight", "arched", "thick", "worried"] as const;
 export const NOSES = ["button", "long", "wide"] as const;
 export const AGES = ["young", "adult", "senior"] as const;
 export const EARRINGS = ["none", "studs", "hoops"] as const;
-export const NECKWEAR = ["none", "tie", "scarf", "bowtie"] as const;
-export const OUTFITS = ["shirt", "blazer", "uniform", "apron", "tshirt"] as const;
+export const NECKWEAR = ["none", "tie", "scarf", "bowtie", "stethoscope"] as const;
+export const OUTFITS = [
+  "shirt",
+  "blazer",
+  "uniform",
+  "apron",
+  "tshirt",
+  "police",
+  "firefighter",
+  "paramedic",
+  "coat",
+] as const;
 
 export type HairStyle = (typeof HAIR_STYLES)[number];
 export type Eyes = (typeof EYES)[number];
@@ -218,8 +228,17 @@ export function lookFromSeed(seed: string): AvatarLook {
   };
 }
 
-/** Podaci o liku iz API-ja (rod, dob, podrijetlo); bez njih izgled ostaje izgled iz imena. */
-export type LookHint = { gender: "f" | "m"; age_group: Age | null; origin: "regional" | "foreign" };
+/** Odora službe vanjskog lika (API `uniform`, iz ključa uloge). */
+export const UNIFORMS = ["police", "fire", "ems", "doctor"] as const;
+export type Uniform = (typeof UNIFORMS)[number];
+
+/** Podaci o liku iz API-ja (rod, dob, podrijetlo, odora); bez njih izgled ostaje izgled iz imena. */
+export type LookHint = {
+  gender: "f" | "m";
+  age_group: Age | null;
+  origin: "regional" | "foreign";
+  uniform?: Uniform | null | undefined;
+};
 
 // Zamrznuti bazeni za izgled iz podataka lika (kao SEED_*: samo dodavanje na kraj). Koža 3, 4, 5, 7 tek iz banke ljudi (K5).
 export const HINT_SKIN_REGIONAL = [0, 1, 6] as const;
@@ -250,6 +269,20 @@ export function lookFromHint(name: string, hint: LookHint): AvatarLook {
     earrings: female && earRoll ? ear : "none",
     age,
   };
+}
+
+/** Odora službe: samo odjeća, boja, kapa i ovratnik (kartica IZGLED-c §4, kaciga vatrogasca 18.10.). */
+export const UNIFORM_LOOK: Record<Uniform, Pick<AvatarLook, "outfit" | "clothes" | "hat" | "neckwear">> = {
+  police: { outfit: "police", clothes: 10, hat: "police", neckwear: "none" },
+  fire: { outfit: "firefighter", clothes: 10, hat: "fire", neckwear: "none" },
+  ems: { outfit: "paramedic", clothes: 11, hat: "none", neckwear: "none" },
+  doctor: { outfit: "coat", clothes: 6, hat: "none", neckwear: "stethoscope" },
+};
+
+/** Odjeća službe preko izgleda: ne troši slučajnost i ne dira lice; bez odore ili nepoznata vrijednost → izgled isti. */
+export function applyUniform(look: AvatarLook, uniform: Uniform | null | undefined): AvatarLook {
+  if (!uniform || !Object.hasOwn(UNIFORM_LOOK, uniform)) return look;
+  return { ...look, ...UNIFORM_LOOK[uniform] };
 }
 
 /** Ti — upravitelj hotela. Uređivač (poslije demoa) mijenja upravo ovo. */
@@ -388,5 +421,5 @@ export const KNOWN_LOOKS: Record<string, AvatarLook> = {
 
 export function lookFor(name: string, hint?: LookHint | null): AvatarLook {
   if (Object.hasOwn(KNOWN_LOOKS, name)) return KNOWN_LOOKS[name] as AvatarLook;
-  return hint ? lookFromHint(name, hint) : lookFromSeed(name);
+  return hint ? applyUniform(lookFromHint(name, hint), hint.uniform) : lookFromSeed(name);
 }

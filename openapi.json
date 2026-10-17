@@ -1652,7 +1652,8 @@
         "required": [
           "gender",
           "age_group",
-          "origin"
+          "origin",
+          "uniform"
         ],
         "properties": {
           "age_group": {
@@ -1671,6 +1672,17 @@
           },
           "origin": {
             "$ref": "#/components/schemas/OriginBody"
+          },
+          "uniform": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UniformBody",
+                "description": "Odora službe (policija, vatrogasci, hitna, liječnik) iz ključa uloge lika; `null` za lik bez odore."
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -5048,6 +5060,16 @@
             "format": "int32"
           }
         }
+      },
+      "UniformBody": {
+        "type": "string",
+        "description": "Odora službe vanjskog lika: web crta odjeću, kapu i ovratnik; lice ostaje isto.",
+        "enum": [
+          "police",
+          "fire",
+          "ems",
+          "doctor"
+        ]
       },
       "UnitCode": {
         "type": "string",

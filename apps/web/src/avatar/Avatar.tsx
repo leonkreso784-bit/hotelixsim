@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { AvatarLook } from "./look";
 import { BACKDROP, CLOTHES, HAIR, SKIN } from "./palette";
+import { ServiceHat, ServiceOutfit, Stethoscope } from "./uniforms";
 
 const at = <T,>(xs: readonly T[], i: number): T => xs[Math.min(Math.max(i, 0), xs.length - 1)] as T;
 const LINE = "#3B2A22";
@@ -326,6 +327,11 @@ function Outfit({ look, skin }: { look: AvatarLook; skin: string }) {
           strokeWidth={0.6}
         />
       );
+    case "police":
+    case "firefighter":
+    case "paramedic":
+    case "coat":
+      return <ServiceOutfit outfit={look.outfit} />;
   }
 }
 
@@ -355,6 +361,8 @@ function Neckwear({ look }: { look: AvatarLook }) {
           <circle cx={32} cy={47.4} r={1.4} />
         </g>
       );
+    case "stethoscope":
+      return <Stethoscope />;
   }
 }
 
@@ -446,6 +454,7 @@ function Glasses({ look }: { look: AvatarLook }) {
 }
 
 function HatLayer({ look, clothes }: { look: AvatarLook; clothes: string }) {
+  if (look.hat === "police" || look.hat === "fire") return <ServiceHat hat={look.hat} />;
   if (look.hat === "chef")
     return (
       <g data-part="hat-chef" fill="#fff" stroke="#E2E8F3" strokeWidth={0.8}>
