@@ -1,109 +1,178 @@
-Cigla L1-13 je **jedna** zajednička kalibracija brojki v2 igre na kraju faze B. Ova kartica zapisuje Leonove odluke od
-17.10.2026. (odgovori na 43 pitanja i razgovor; [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md))
-i iz njih izvodi što L1-13 mora napraviti. **Nije još puna kartica za izvođača:** datoteke i retke, testove čuvara i
-interfejse voditelj upisuje kad L1-13 krene (po uzoru na [PRAVILO](task-12-pravilo-vlastiti-odgovor.md)), na svježem
-stanju grane. Pitanja: [Leonov pregled, dio A](../2026-10-17-leonov-pregled/01-pravila-i-brojke.md) (A1–A13) i
-[dio B](../2026-10-17-leonov-pregled/02-tekstovi.md) (B2).
+Cigla L1-13 je **jedna** zajednička kalibracija brojki v2 igre na kraju faze B, po Leonovim odlukama od 17.10.
+([ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)) i 18.10. (anketa sesije 9, dno ove kartice).
+**Puna kartica za izvođače** (čuvar → graditelj → provjeravatelj), po uzoru na [PRAVILO](task-12-pravilo-vlastiti-odgovor.md): ovo je
+pregled (odluke, redoslijed, verzija, zajednička sučelja, provjere, rizici), a svaki dio ima svoju karticu (tablica „Kartice dijelova“);
+retci su provjereni 18.10. na f81a622 (`model-v2/sloj1`). Pitanja: [Leonov pregled, dio A](../2026-10-17-leonov-pregled/01-pravila-i-brojke.md)
+(A1–A13) i [dio B](../2026-10-17-leonov-pregled/02-tekstovi.md) (B2).
 
-### Task L1-13: Jedna kalibracija brojki (kvar i popravak, značaj situacija, popunjenost, težina ~20 %)
+### Task L1-13: Jedna kalibracija brojki (kvar i popravak, klik 75 %, značaj, gosti i popunjenost, težina ~20 %)
 
-**Veličina:** 🟨 [PROC] veća od 5 h iz [ROADMAP/igra](../ROADMAP/igra.md), jer su 17.10. dodane dvije mehanike (A1, B2) i
-jedno pravilo broja (A7); voditelj je dijeli na dijelove 1–4 niže, svaki na svojoj kratkoj grani (ADR-038 t. 6) ·
-**Ovisi o:** B4c ✅, PRAVILO-a ✅ (9a275d8), PRAVILO-b (put „klik najbolji" u balansu; težina se mjeri na vlastitom putu i na
-kliku) · **Slijedi ga:** L1-13b, L1-14, L1-15 · **Model:** čuvar i graditelj sonnet, provjeravatelj **opus** (jezgra, balans) ·
-**Prevodi Rust:** da (sva četiri dijela; nikad dva dijela usporedo, jer svi diraju napredak).
+**Veličina:** 🟨 [PROC] 1: 4–5 h · 1b: 4 h · 2: 4 h · 3: 3–4 h · 4: 6–8 h + Leonova tablica · **Ovisi o:** B4c ✅, PRAVILO-a ✅
+(9a275d8), PRAVILO-b ✅ (ee6de80), PRAVILO-c i IZGLED-c spojeni · **Slijedi ga:** L1-13b, L1-14, L1-15 · **Model:** čuvar i
+graditelj **sonnet**, provjeravatelj **opus** (jezgra, balans) · **Prevodi Rust:** da, svih pet dijelova; **nikad dva dijela
+usporedo** (svi diraju napredak i `situation_effect`), jedan Rust slot po sesiji (ADR-059 t. 6).
 
-**Uvjet za svaku izmjenu (ne samo na kraju):** `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check`
-i isto s `--round month`, prije i poslije, s opisanim pomakom. Tjedna težina hotela B danas je **48,9 % uz granicu 50 %**
-(margina 1,1 bod): svaka mehanika koja dodaje učinak situacijama može je prebaciti. Dijelovi 1–3 smiju prolaziti s
-pojasom 5–50 %; tek dio 4 sužava pojas na 15–25 % (ADR-042 t. 15, [ADR-049](../../records/DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md)).
+**Uvjet za svaku izmjenu:** `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check` i isto s
+`--round month`, prije i poslije, uz `cmp`/`diff` s osnovicom `.superpowers/sdd/2026-10-14-popravak-temelja/nakon-pravilo-c/`
+(ili izlazom prethodnog dijela). Tjedna težina B je **48,9 % uz granicu 50 %**: zato dijelovi 1, 2 i 3 grade mehaniku
+**iza ključa sadržaja** (u repou isključen) i balans im mora ostati bajt-isti; brojke se mijenjaju samo u 1b (samo put klika) i 4.
 
-## Leonove odluke 17.10. (ADR-056)
+## Leonove odluke (17.10. i 18.10.)
 
-| # | Leon (doslovno, skraćeno) | što to znači za L1-13 |
-|---|---|---|
-| A1 | *„Hitni popravak ne rješava stanje tog odjela, već samo privremeno popravlja klimu."* Kvar u sobi = **−1 bod**; popravak odmah i gost kasnije zadovoljan = **+2** (*„miču prethodni −1, rezultat +1"*). Anketa: bodovi su na **napretku odjela 0–100** | hitni popravak **ne diže** stanje odjela kao obnova; kvar spušta stanje Smještaja za 1 bod (100 bp), dobro riješen kvar ga diže za 2 (neto +1). **Privremeni +1 iz [ADR-050](../../records/DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) se ukida** (`economy.repair_urgent_condition_pts` 100 → 0) i zamjenjuje ovim pravilom. „Oko +10" više nije cilj |
-| A2 | *„Prepuštam tebi da pravedno odlučiš brojke."* | čestoću kvarova bira voditelj, uz **tablicu mjerenja** (dobro održan prema zapuštenom hotelu, 3–4 inačice) koju Leon vidi prije spajanja; nije anketa |
-| A3 | *„20 %"*; anketa: **isti broj situacija, slabiji učinak svake** | težina ~20 % (pojas 15–25 %) postiže se manjim učinkom po situaciji (`situation_effect_bp` u `periods.json`, novac i bodovi odgovora), ne manjim brojem situacija |
-| A4 | ok | jednom slabijem odgovoru u predlošcima gdje „samo najbolji troši novac" dati trošak (npr. pretjerana naknada, kao u P-KLIMA) |
-| A7 | *„Broj bi trebao ovisiti o popunjenosti… Broj situacija koje nisu vezane za goste ostaje isti."* | broj situacija **vezanih za goste raste s popunjenošću**, ostale su stalne; novo pravilo izvlačenja i **ponovni balans**. Dio *„to sve ne treba biti riješeno od nas, već voditelja"* je po anketi voditelj odjela iz faze LJUDI (L2a-5) i u L1-13 se ne gradi |
-| A8 | *„Da, slažem se, super."* | 16 predložaka koji danas krše „šutnja nije bolja" (`SilenceNotBetter`, dug P4) popraviti; dug pada na 0 |
-| B2 | *„Tablica situacija (značajne, polu značajne, ne toliko značajne), bolje imenovati… Značajnije situacije i pametnije odluke nose više bodova."* | **tri razine značaja**, imenovane; bodovi po razini; student vidi razinu |
-
-**Tumačenje voditelja (🟨, provjeriti s Leonom uz tablicu prije spajanja):**
-1. **„Zadovoljan gost" = ocjena odgovora ≥ 4** u situaciji kvara s hitnim popravkom. Ocjena 1–3 uz hitni popravak ostavlja −1
-   (kvar je riješen, gost nije). To mijenja [ADR-046](../../records/DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md) t. 1
-   (popravak diže odjel „i uz ocjenu 1"); ADR-056 ga nadjačava.
-2. **„Kvar u sobi"** = situacija vrste kvar čiji je prostor Smještaj (odjel `rooms` ili `condition_of: "rooms"`, B1b), ne svaki
-   kvar u hotelu. Kvarovi drugih prostora (praonica, dizalo) slijede isto pravilo na svom prostoru 🟨.
-3. **−1 dolazi kad se kvar pojavi**, ne kad ga student loše riješi; šutnja ostavlja −1 i posljedice „nitko nije reagirao" (A8).
-4. Pravi lijek za stanje sobe ostaje održavanje i obnova; **sučelje soba** (svaka soba zasebno vidljiva i obnovljiva, Leon u A1)
-   nova je mehanika u fazi C ili kasnije ([ROADMAP/igra](../ROADMAP/igra.md)), **ne** u L1-13.
-
-## Dijelovi i redoslijed
-
-| dio | što | dira (provjereno 17.10. na 847d165) | Leonov dio |
+| # | Leon (skraćeno) | što radi L1-13 | dio |
 |---|---|---|---|
-| 1 · kvar i popravak (A1) | kvar Smještaja −100 bp pri izvlačenju; hitni popravak uz ocjenu ≥ 4 +200 bp; `repair_urgent_condition_pts` 0 (polje ostaje radi starih snimaka) | `crates/sim-hotel-v2/src/resolve/situations.rs` (`situation_effect`, :25-49), `crates/sim-hotel-v2/src/catalog.rs` (`economy` :48, provjera :392), `content/hotel/v2/economy.json` | tablica s tri ishoda (šutnja, popravak uz 3, popravak uz 5) |
-| 2 · značaj situacija (B2) | tri razine i bodovi po razini; razina vidljiva studentu | `crates/content/src/templates.rs` (`weight` 1–4 :78-80, `major` :83-85), `content/hotel/v2/situation_templates.json`, web ekran situacija | imena triju razina (prijedlog niže) |
-| 3 · popunjenost (A7) | broj situacija vezanih za goste raste s popunjenošću, ostale stalne; prve 3 i dalje obvezne | `crates/sim-hotel-v2/src/situations/count.rs` i `draw.rs`, postavka broja iz B2a (`GameCreated.situation_counts`) | raspon po krugu (npr. lipanj 3, kolovoz 6), u tablici |
-| 4 · kalibracija (A2, A3, A4, A8) | težina 15–25 % tjedno i mjesečno za A/B/C; čestoća kvarova; trošak slabijem odgovoru; `SilenceNotBetter` 16 → 0; brisanje `ORDER_DEBT_FLOOR`, testa `order_debt` i grane `clean(Month)` | `content/hotel/v2/periods.json` (`situation_effect_bp`), `situation_templates.json` (`chance`, odgovori), `crates/balance/src/v2.rs` (`SHARE_BAND_BP`), `crates/balance/src/v2_situations.rs`, `crates/balance/tests/answer_gates_v2.rs`, `crates/content/src/templates_principles_debt.rs` | tablica mjerenja prije spajanja (A2: voditelj bira, Leon vidi) |
+| A1 | *„Hitni popravak ne rješava stanje tog odjela, već samo privremeno popravlja klimu."* Kvar −1, popravak uz zadovoljnog gosta +2 (neto +1), na **stanju odjela 0–100** | kvar prostora spušta stanje prostora za 100 bp; hitni popravak uz ocjenu ≥ 4 diže 200 bp; privremeni +1 iz [ADR-050](../../records/DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) (`repair_urgent_condition_pts` 100) → 0 | 1 (mehanika), 4 (uključenje) |
+| 18.10. t. 3 | „zadovoljan gost" = ocjena **4 ili 5** uz hitni popravak → +2; 1–3 ostavlja −1 | `FAULT_FIXED_MIN_QUALITY = 4` | 1 |
+| 18.10. t. 1 | klik na ponuđeni odgovor nosi **~75 % učinka vlastitog**; gubi i dio mehanike (stanje odjela, novac, gosti); **brana**: težina klika ≤ ~75 % težine vlastitog najboljeg, tjedno i mjesečno | klik pod `OwnWords` u situaciji s likom (i prepisan odgovor) dobiva samo `click_gain_bp` od svake **dobiti**; nova brana „B3 klik" | **1b** |
+| B2 + 18.10. t. 2 | tri razine, imenovane, bodovi po razini, student vidi razinu: **ključna / važna / svakodnevna** iz `weight` 4 / 3 / 1–2 | `Significance` iz `weight`, faktor bodova po razini, oznaka na ekranu | 2 (mehanika), 4 (faktori) |
+| A7 | *„Broj bi trebao ovisiti o popunjenosti… Broj situacija koje nisu vezane za goste ostaje isti."* | mjesta iznad niske razine broja (`SituationCounts.low`) pune samo situacije s gostima | 3 (mehanika), 4 (uključenje) |
+| A2 | *„Prepuštam tebi da pravedno odlučiš brojke."* | čestoću kvarova bira voditelj uz **tablicu mjerenja** (niže) koju Leon vidi prije spajanja | 4 |
+| A3 | *„20 %"*, isti broj situacija, slabiji učinak svake | pojas brane 15–25 % (`WEIGHT_BAND_BP`), `situation_effect_bp` niže | 4 |
+| A4 | ok | trošak jednom slabijem odgovoru gdje „samo najbolji troši novac" (grubo brojanje 18.10.: ~11 predložaka [PROC]) | 4 |
+| A8 | ok | 16 predložaka `SilenceNotBetter` popraviti (šutnja dobiva gore `unanswered`); dug 16 → 0 | 4 |
 
-Redoslijed 1 → 2 → 3 → 4: mehanike prvo, **jedna** kalibracija na kraju (inače se brojke štimaju triput). `CORE_VERSION` se
-diže **jednom** za cijeli L1-13 (🟨 2.5.0 → 2.6.0), na zadnjem spajanju; hoće li dijelovi 1–3 do tada ići iza postavke ili se
-spojiti zajedno s dijelom 4, voditelj odlučuje kad piše punu karticu. Probne v2 igre nakon toga daju 409 (Leonu se kaže).
+Ostaje iz tumačenja 17.10. (🟨, bez promjene): **„kvar prostora"** nije samo vrsta `kvar` nego svaki vlastiti kvar (t. 2 niže);
+**−1 dolazi u krugu u kojem se kvar pojavio**, i uz šutnju; **sučelje soba** je faza C ili kasnije ([ADR-050](../../records/DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) Izmjena t. 4), ne L1-13.
 
-### Dio 2: tri razine značaja (B2)
+## Dijelovi, grane i redoslijed
 
-**Nalaz voditelja 17.10.:** predlošci **nemaju** polje ozbiljnosti `major`/`minor`, kako je pisalo u razgovoru. Imaju dvije
-druge stvari: `weight` 1–4 (važnost: redoslijed na ekranu i prednost u izvlačenju; danas 2 × 1, 27 × 2, 17 × 3, 9 × 4) i
-`major: high|low` (5 predložaka: „veća situacija" za izvrstan ili vrlo loš hotel). Student ni jedno ni drugo ne vidi kao razinu.
+| dio | grana (iz `model-v2/sloj1`, nakon spajanja prethodnog) | što | balans nakon spajanja | pečat |
+|---|---|---|---|---|
+| 1 · kvar | `l113-1-kvar` | −100 / +200 na stanju prostora, ključevi u `economy`, u repou 0 | **bajt-isti** | bajt-isti |
+| 1b · klik 75 % | `l113-1b-klik` | `click_gain_bp`, zastavica klika, brana „B3 klik"; vrijednost u repou izmjerena | mijenja se **samo put klika** | bajt-isti |
+| 2 · značaj | `l113-2-znacaj` | `Significance`, faktori u `economy` (u repou 10 000), oznaka u API-ju i webu | bajt-isti | bajt-isti |
+| 3 · gosti | `l113-3-gosti` | dodatna mjesta samo gostima, ključ u predlošcima (u repou `false`), redak ispisa | samo novi redak ispisa | bajt-isti |
+| 4 · kalibracija | `l113-4-kalibracija` | uključenje 1–3, A2/A3/A4/A8, pojas 15–25 %, dug, **`CORE_VERSION` 2.6.0**, pečat | nove brojke, tablica za Leona | novi pečat 2.6.0 |
 
-**Prijedlog 🟨:** razina se **izvodi iz `weight`**, bez novog polja: 4 → **ključna**, 3 → **važna**, 1–2 → **svakodnevna**
-(danas 9 / 17 / 29 predložaka). Imena su prijedlog za Leonovo „bolje imenovati". Bodovi po razini: učinak situacije množi se
-faktorom razine (npr. 1,5 / 1,0 / 0,6 [PROC]), pa značajnija situacija i pametnija odluka nose više; točne faktore daje
-kalibracija (dio 4). `major` ostaje kako jest (uvjet izvlačenja, ne razina). Student vidi razinu na kartici situacije
-(oznaka uz naslov; boja nikad sama, [UI_PRAVILA](../../product/UI_PRAVILA.md)).
-**Inače:** novo polje `significance` u predlošku (čisto, ali 55 predložaka + provjera + prepis; ~2 h više [PROC]).
+Radno stablo `../hotelixsim-l113-<dio>`, `CARGO_TARGET_DIR=…/hotelixsim/target/l113-<dio>` (B12), briše se odmah nakon spajanja
+(B16). Izlazi provjera u `.superpowers/sdd/2026-10-14-popravak-temelja/l113-<dio>-provjere/`.
 
-### Dio 3: popunjenost (A7)
+## Gdje ide klik 75 % i zašto u zaseban dio 1b
 
-**Prijedlog 🟨:** situacija je „vezana za goste" ako ima ulogu `"from": "guest"` ili je u skupini `*guest_facing` (koliko ih je,
-provjeriti na sadržaju). Broj gostinjskih u krugu = osnova + korak po popunjenosti prošlog kruga [PROC], ostale stalne.
-Ukupan broj ostaje u granicama postavke igre (B2a: tjedno 3–5, mjesečno 4/5/6) dok Leon ne kaže drukčije; više od gornje
-granice je odluka o igri (anketa). Rizik: srpanj i kolovoz teži, lipanj i rujan prazniji (A7 „Inače" u pregledu).
+**Gdje se klik danas ograničava (samo ocjena):**
+- igra: `crates/game/src/game.rs:477-483` (`click_capped` = `OwnWords` ∧ ljudski hotel ∧ `free_text`), `crates/game/src/resolve.rs:52-57`
+  (klik `min(q, 4)`) i `:90-95` (prepisan odgovor, `copied`); konstanta `crates/game/src/own_words.rs:11`;
+- balans: `crates/balance/src/v2_answers.rs:99-102` (`ClickBest` ∧ `writable` → `min(q, 4)`), zrcalo `:20-22`, `writable_v2`
+  u `crates/balance/src/v2_situations.rs:33-46`; težina klika je samo ispis (`:393-405`).
 
-## Testovi čuvara (obris; punu listu piše čuvar iz pune kartice)
+**Zašto klik danas nosi 92–95 %** (nalaz I1, ADR-059 t. 4): bodovi svih mehanika su `(q − 3) × k` (`crates/sim-hotel/src/mechanic.rs:145-236`),
+pa klik 4 prema šutnji 1 ima 3/4 bodovnog dijela vlastitog (5 prema 1), a novac, grupe i popravak ne ovise o ocjeni i klik ih
+dobiva cijele. Izmjereno (`nakon-pravilo-c`): Δ klika = 86–90 % Δ vlastitog; težina klika tjedno 38,9 / 45,1 / 37,7 % uz
+41,6 / 48,9 / 41,2 % (omjer 92–94 %), mjesečno 24,0 / 32,2 / 19,0 % uz 25,7 / 33,8 / 20,3 % (93–95 %).
 
-- kvar Smještaja: izvlačenje spusti stanje za točno 100 bp; hitni popravak uz ocjenu 5 vrati +200 (neto +100); uz ocjenu 3
-  ostane −100; šutnja ostane −100 i nikad nije bolja od najlošijeg odgovora;
-- `repair_urgent_condition_pts` 0 u sadržaju; stari snimak bez ključa igra isto kao prije (pečat A3, `v2_sealed`);
-- razina: svaki predložak ima točno jednu od tri razine; ekran pokazuje naziv razine;
-- popunjenost: veća popunjenost nikad ne daje manje gostinjskih situacija; negostinjskih jednako u svakom krugu;
-- dug: `SilenceNotBetter` 0, `ORDER_DEBT_FLOOR` i `order_debt` obrisani;
-- balans: težina 15–25 % za A, B i C, tjedno i mjesečno, na vlastitom putu; klik najbolji ispod vlastitog (ADR-047 t. 3).
+**Odluka: zaseban dio 1b, odmah nakon dijela 1** (ne u dijelu 4):
+1. Dira istu funkciju kao dio 1 (`situation_effect`) i mora odlučiti dobiva li klik +2 popravka (da, umanjeno, jer Leon izrijekom
+   kaže „gubi stanje odjela"); dva dijela u istoj funkciji redom, ne u kalibraciji.
+2. Mehanika klika **ne dira put „najbolji"** (vlastiti odgovor i roboti nisu klik), pa se može uključiti odmah: težina vlastitog
+   (margina 1,1 bod) ostaje ista, mijenjaju se samo retci klika. Brana dobiva pravi broj od prvog dana.
+3. Dio 4 je i bez toga najveći; mehanika u njemu bila bi treće štimanje u istom diffu.
+Cijena: jedna grana više (~4 h) i dio 4 opet podešava `click_gain_bp` jer niža težina vlastitog mijenja omjer (vidi 1b, Rizik).
 
-## Provjere
+## CORE_VERSION i ključevi sadržaja (odluka)
 
-Cijeli CI popis (fmt, clippy, core-deps, testovi, tri balansa, check:docs, test:docs, check:kod, check:api, lint, typecheck,
-test, web build), ne samo kartične. Tri balansa 1000 `--check` **nakon svakog dijela**; tablica prije/poslije za Leona.
+**Jedno dizanje 2.5.0 → 2.6.0, u dijelu 4.** Igra sprema svoj snimak pravila (`GameCreated.snapshot`, `crates/game/src/event.rs:15-36`),
+pa promjena **sadržaja** u repou ne mijenja staru igru; verziju traži samo promjena **koda** koja mijenja obračun istog snimka
+(pečat `crates/game/tests/v2_sealed.rs:276-298`). Zato:
+- Svaki novi ključ ima **neutralnu zadanu vrijednost** kad ga nema (0 bp gubitka, 10 000 bp faktora, `false`): zamrznuti snimak
+  pečata i stare igre računaju **bajt-isto**, pa dijelovi 1–3 i 1b ne dižu verziju (pečat 2.5.0 ostaje zelen bez izmjene, to je dokaz).
+- Dijelovi 1, 2, 3 drže ključ u repou **isključen** (balans bajt-isti); 1b ga uključuje (samo klik); dio 4 uključuje sve i kalibrira.
+- Dio 4 diže verziju jer **dodaje slučajeve pečata** koji igraju zamrznuti snimak s ključevima L1-13 (test 1 traži iste slučajeve
+  za istu verziju, `:286-290`; snimak se ne mijenja, `:301-307`). Bez toga nove mehanike ne bi bile zapečaćene.
+- **Iza postavke igre (`GameSettings`) ne** — sadržajni ključ je jeftiniji i već je obrazac (`repair_urgent_condition_pts`, `groups`).
+**Cijena:** svaka mehanika nosi ključ i granu „isključeno = danas" (test po ključu); dijelovi 1–3 na balansu nisu izmjereni dok
+ih dio 4 ne uključi, pa provjeravatelj svakog dijela vrti **probni balans** s uključenim ključem (`--content` kopija, ne commita) i
+zapisuje brojke u izvještaj. Leonove probne v2 igre daju **409 jednom**, nakon dijela 4 (Leonu se kaže).
 
-## Rizik i odluke
+## Zajednička sučelja (Produces; svaki dio dodaje svoj redak)
 
-- 🟨 „Zadovoljan gost" = ocjena ≥ 4 (tumačenje 1). Ako Leon misli na kasnije zadovoljstvo gosta (recenzija, indeks), to čeka
-  recenzije (R4) i ne stane u L1-13.
-- 🟨 −1 na svakom kvaru i +2 samo uz dobar odgovor mogu **spustiti** napredak lošeg studenta više nego danas; tablica to
-  pokazuje po profilu (A/B/C), jer zapušten hotel ima više kvarova.
-- 🟨 Razine iz `weight` vežu važnost na ekranu i značaj bodova u jedno polje; ako ih Leon želi razdvojiti, dolazi polje
-  `significance` (Inače u dijelu 2).
-- B1a je izmjerila +200 po svakom popravku kao preveliko (tjedno B 57,6 %); novo pravilo daje +200 samo uz ocjenu ≥ 4, a −100
-  svakom kvaru, pa se učinak mjeri, ne pretpostavlja.
+```rust
+// sim_hotel_v2::situations (mod.rs:80-96) — svaki konstruktor dobiva nova polja; From<SituationOutcome>: false/false/Important
+pub struct RoundSituation {
+    pub outcome: SituationOutcome,
+    pub space: Option<DeptCode>,
+    pub fault: bool,                 // dio 1: kvar prostora (TemplateSet::space_fault)
+    pub click: bool,                 // dio 1b: klik (ili prepisan odgovor) gdje se smije pisati, OwnWords, čovjek
+    pub significance: Significance,  // dio 2: iz weight primjerka; sidra Important
+}
+pub const FAULT_FIXED_MIN_QUALITY: u8 = 4;                      // dio 1, Leon 18.10.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Significance { Key, Important, Everyday }  // dio 2
+impl Significance { pub fn from_weight(w: u8) -> Self; /* 4 Key, 3 Important, ostalo Everyday */ pub fn code(self) -> &'static str /* "kljucna" | "vazna" | "svakodnevna" */ }
+// sim_hotel_v2::catalog::EconomyV2 (catalog.rs:33-50), sadržaj content/hotel/v2/economy.json, DTO crates/content/src/v2_dept.rs:230-241
+pub fault_condition_pts: i32,          // dio 1; bez ključa 0; provjera 0..=10_000
+pub fault_fixed_condition_pts: i32,    // dio 1; bez ključa 0; provjera 0..=10_000
+pub click_gain_bp: u16,                // dio 1b; bez ključa 10_000; provjera 0..=10_000
+pub significance_bp: SignificanceBp,   // dio 2; { key, important, everyday }, bez ključa 10_000 svaki; provjera 1_000..=30_000 🟨
+// sim_hotel_v2::situations::TemplateSet (template.rs:14-29)
+pub fn space_fault(&self, code: &str) -> bool;   // dio 1 (uz SituationSpec.space_fault)
+pub guest_extra_slots: bool;                     // dio 3; content TemplateFile.guest_extra_slots, bez ključa false
+impl SituationSpec { pub fn guest_related(&self) -> bool }  // dio 3
+```
 
-**Leonov dio:** tablica mjerenja prije spajanja (A2: brojke bira voditelj „pravedno", Leon vidi); imena triju razina (B2);
-potvrda tumačenja 1 („zadovoljan gost").
+**Redoslijed računa u `situation_effect`** (`crates/sim-hotel-v2/src/resolve/situations.rs:27-57`), konačno stanje nakon dijela 2:
+1. `e = effects(outcome)` (v1 mehanike, bez izmjene);
+2. bodovi (zadovoljstvo, moral, ocjena, privremeni popravak) × **jedan** faktor `situation_effect_bp × significance_bp(razina) / 10 000`
+   (jedno zaokruživanje; uz 10 000 točno današnji `scaled`, `:123-128`);
+3. oprema += broj hitnih popravaka × `repair_urgent_condition_pts` (stari ključ ostaje radi starih snimaka);
+   oprema += `fault_fixed_condition_pts` ako `fault` ∧ hitni popravak u odgovoru ∧ `q ≥ 4` (jednom po situaciji);
+4. ako `click`: svaki **pozitivan** dio zadovoljstva, morala, ocjene i opreme × `click_gain_bp / 10 000` (zaokruženo), a
+   `room_nights` svake grupe isto (najmanje 1); troškovi, povišice i negativni dijelovi ostaju puni;
+5. ako `fault`: oprema −= `fault_condition_pts` (bez faktora kruga, razine i klika: fizički kvar).
 
-## Leonove odluke 18.10. (anketa, sesija 9) — zamjenjuju 🟨 iznad
+## Kartice dijelova (redom, jedna grana po dijelu)
+
+| dio | kartica |
+|---|---|
+| 1 · kvar i popravak (A1) | [task-14-1-kvar.md](task-14-1-kvar.md) |
+| 1b · klik nosi ~75 % (18.10. t. 1) | [task-14-1b-klik.md](task-14-1b-klik.md) |
+| 2 · tri razine značaja (B2) | [task-14-2-znacaj.md](task-14-2-znacaj.md) |
+| 3 · situacije s gostima i popunjenost (A7) | [task-14-3-gosti.md](task-14-3-gosti.md) |
+| 4 · kalibracija (A2, A3, A4, A8) i 2.6.0 | [task-14-4-kalibracija.md](task-14-4-kalibracija.md) |
+
+## Provjere (svaki dio; cijeli popis iz `.github/workflows/ci.yml`)
+
+`cargo fmt --all -- --check` · `cargo clippy --workspace --all-targets -- -D warnings` · `node scripts/check-core-deps.mjs` ·
+`node scripts/probe-mutacija.mjs` · `git diff --exit-code` (nakon commita) · `cargo sqlx migrate run --source crates/store/migrations` +
+`cargo sqlx prepare --workspace --check` · `cargo test --workspace` (uz bazu `hotelixsim_agenti`, ADR-059 t. 8) · `cargo run -q -p balance
+--release -- --seeds 100 --check` i `--seeds 1000` (v1 **bajt-isti**, `cmp`) · `--model v2 --round week --seeds 1000 --check` i
+`--round month` (`cmp`/`diff` s osnovicom; očekivani diff po dijelu iz tablice dijelova) · `corepack pnpm check:docs`, `test:docs`,
+`check:kod`, `check:api`, `lint`, `typecheck`, `test` · `corepack pnpm --filter @hotelixsim/web build`. cargo deny samo u CI-ju.
+Lažno crveno pod opterećenjem (vitest timeout, 0xC0000142) samo se ponovi (B15). Ispod 50 GB slobodno ne gradi (B16).
+
+**Provjeravatelj (opus) uz to:** (a) `v2_sealed` zelen bez izmjene u dijelovima 1–3 i 1b; (b) probni balans s uključenim ključem
+ponovljen sam, ne prepisan iz izvještaja; (c) u 1b diff balansa samo u retcima klika; (d) ekran izvještaja kruga pokazuje −1 / +2 kao
+učinak **situacije** na stanje prostora (redak `explain.rs:220`, uzrok situacija), ne kao održavanje (ADR-050 t. 4 i Izmjena t. 5).
+
+## Rizici i odluke 🟨 (svaka s cijenom ako je kriva)
+
+1. **Kvar prostora = vrsta `kvar` ili hitni/privremeni popravak u odgovoru, bez vanjskog uzroka** (9 predložaka). Cijena: jedno
+   pravilo u `templates_core.rs`; ako Leon misli samo na sobe, uvjet `prostor == rooms` (P-BAZEN-PUMPA i P-LOBBY-KAVA ispadaju).
+2. **+2 jednom po situaciji**, bez obzira na broj hitnih popravaka u odgovoru; bez faktora kruga i razine. Cijena: jedan uvjet.
+3. **Klik gubi dobit, ne štedi trošak** (troškovi puni, dobit × `click_gain_bp`, uključivo +2 popravka i noćenja grupe). Cijena: ako
+   Leon ne želi manju grupu za klik, grupe se izuzmu (jedan redak), a faktor ostalog pada.
+4. **Brana klika na omjeru težina** (≤ 75,0 %), cilj 70–75 %; nema donje brane. Cijena: jedna konstanta (`CLICK_WEIGHT_MAX_BP`).
+5. **Razina iz `weight`**, sidra važna bez oznake, faktori 1,5 / 1,0 / 0,6 kao početak. Cijena: polje `significance` (~2 h) ako se razdvaja.
+6. **Dodatna mjesta samo gostima, jednako u prosjeku** (ne strogo po krugu); „s gostima" = uloga gost ili odjel uz goste (27/55).
+   Cijena: drugi predikat u `guest_related`.
+7. **Ključevi sadržaja umjesto postavke igre; jedno dizanje 2.6.0 u dijelu 4** uz nove slučajeve pečata. Cijena: Leonove probne
+   igre 409 jednom; dijelovi 1–3 mjereni samo probnim balansom do dijela 4.
+8. **A2 čestoća:** inačice I0–I3 i cilj „održavan ≤ 1 kvar na mjesec, zapušten ×3" su voditeljev prijedlog (Leon: „pravedno").
+9. **Tekstovi klika** (`answers.clickCap`, `CAPPED_FACT`) kažu i „manji učinak"; mentor dobiva istu činjenicu, `mentor.v4` se ne mijenja.
+
+## Leonov dio
+
+- **Prije spajanja dijela 4:** tablica A2 (izbor inačice) i tablica prije/poslije (težina vlastitog i klika, A/B/C, tjedno i mjesečno).
+- ✅ Odlučeno 18.10. (druga anketa): 🟨 1 — kvar prostora = 9 predložaka (i P-KLIMA, P-DOTRAJALO); 🟨 3 — klik gubi dio dobiti, trošak cijeli; 🟨 6 — „s gostima" = uloga gost ili odjel uz goste (27/55).
+- Odlučeno 18.10.: klik ~75 %, imena razina, „zadovoljan gost" ≥ 4.
+
+**Review Focus kandidati:**
+1. Prepisan odgovor uz AI ispad: ide kao klik (manja dobit) prije pravila „neutralno 4" (mehanike šutnje, bez dobiti za umanjiti).
+2. Klik na slabiji odgovor (q ≤ 4, `capped: false`) i dalje gubi dobit: `click` prati `click_capped`, ne `capped` — namjerno (Leon: „klik nosi 75 %").
+3. Kvar uz `no_penalty`: ne postoji (test), inače bi −1 prekršio „samo nagrada".
+4. Ponovljivost: `Responder` s `Answered` ne mijenja redoslijed RNG-a (izvlačenje ne čita ishode istog kruga).
+5. Pečat 2.5.0 ostaje u `v2-golden.json`; slučajevi `*-l113` postoje samo pod 2.6.0.
+
+## Leonove odluke 18.10. (anketa, sesija 9) — ugrađene gore
 1. **Klik (nalaz I1, ADR-059 t. 4):** klik na ponuđeni odgovor nosi **~75 % učinka vlastitog** (ne 92–95 %): gubi i dio mehanike
-   (stanje odjela, novac, gosti), ne samo ocjenu. Nova **brana** u balansu: težina klika ≤ ~75 % težine vlastitog najboljeg, tjedno i mjesečno.
-2. **Razine značaja (B2):** **ključna / važna / svakodnevna**, izvedeno iz `weight` (4 / 3 / 1–2), kako predlaže dio 2.
-3. **„Zadovoljan gost" (tumačenje 1):** ocjena odgovora **4 ili 5** uz hitni popravak → +2 (neto +1); ocjena 1–3 ostavlja −1.
+   (stanje odjela, novac, gosti), ne samo ocjenu. Nova **brana** u balansu: težina klika ≤ ~75 % težine vlastitog najboljeg, tjedno i mjesečno. → dio 1b.
+2. **Razine značaja (B2):** **ključna / važna / svakodnevna**, izvedeno iz `weight` (4 / 3 / 1–2). → dio 2.
+3. **„Zadovoljan gost":** ocjena odgovora **4 ili 5** uz hitni popravak → +2 (neto +1); ocjena 1–3 ostavlja −1. → dio 1.
