@@ -1,6 +1,6 @@
 //! Banka ljudi (K1b), G2: 20 primjera (10 radnika, 10 gostiju) pokrivaju raznolikost iz kartice K1b i nacrta §2.2/§2.3.
 //! Dobne razrede čita iz `raspodjele.json` (ne prepisuje ih). Svi prekršaji se skupljaju u jedan `panic!`.
-use content::ljudi::{Banka, Okvir, Razina, Rod, Segment, Uloga};
+use content::ljudi::{Banka, Okvir, Razina, Rod, Segment, Uloga, UlogaVanjskog};
 use content::repo_dir;
 use content::templates::Names;
 use std::collections::BTreeSet;
@@ -203,6 +203,136 @@ fn primjeri_su_raznolici() {
     assert!(
         e.is_empty(),
         "primjeri nisu raznoliki ({} prekršaja):\n  - {}",
+        e.len(),
+        e.join("\n  - ")
+    );
+}
+
+/// K2v-b, VG2: 10 vanjskih u `vanjski/serija-000.json` pokrivaju raznolikost iz kartice K2v i nacrta §1.5/§2.4.
+/// Dobne razrede čita iz `raspodjele.json` → `vanjski.dob`. Svi prekršaji se skupljaju u jedan `panic!`.
+#[test]
+fn vanjski_primjeri_raznoliki() {
+    let dir = repo_dir();
+    let okvir = Okvir::read(&dir).expect("okvir se čita");
+    let banka = Banka::read(&dir).expect("banka se čita");
+    let vanjski: Vec<_> = banka
+        .vanjski
+        .iter()
+        .filter(|(put, _)| put.ends_with("/serija-000.json"))
+        .flat_map(|(_, s)| &s.zapisi)
+        .collect();
+    assert!(
+        !vanjski.is_empty(),
+        "nema serije: vanjski {} datoteka, nijedna serija-000.json (očekivano content/hotel/v2/ljudi/vanjski/serija-000.json s 10 zapisa)",
+        banka.vanjski.len()
+    );
+    let mut e: Vec<String> = Vec::new();
+
+    if vanjski.len() != 10 {
+        e.push(format!("vanjskih je {}, mora biti 10", vanjski.len()));
+    }
+    let mut vid: Vec<&str> = vanjski.iter().map(|v| v.id.as_str()).collect();
+    vid.sort();
+    let want: Vec<String> = (1..=10).map(|i| format!("V-{i:05}")).collect();
+    if vid != want {
+        e.push(format!(
+            "ID-jevi vanjskih {vid:?}, očekivano V-00001…V-00010"
+        ));
+    }
+
+    // Uloge.
+    let uloge: BTreeSet<&str> = vanjski.iter().map(|v| v.uloga.kod()).collect();
+    if uloge.len() < 8 {
+        e.push(format!(
+            "vanjski: {} različitih uloga {uloge:?}, traži se najmanje 8",
+            uloge.len()
+        ));
+    }
+    for obvezna in ["policajac", "vatrogasac", "inspektor_sanitarni"] {
+        if !uloge.contains(obvezna) {
+            e.push(format!("vanjski: nema uloge {obvezna} (Leonova obvezna)"));
+        }
+    }
+
+    // Parovi (uloga, rod) koje predlošci danas traže.
+    for (uloga, rod) in [
+        (UlogaVanjskog::InspektorSanitarni, Rod::M),
+        (UlogaVanjskog::Novinar, Rod::Z),
+        (UlogaVanjskog::Dobavljac, Rod::M),
+        (UlogaVanjskog::OrganizatorDogadanja, Rod::Z),
+        (UlogaVanjskog::ZastupnikAgencije, Rod::Z),
+    ] {
+        if !vanjski.iter().any(|v| v.uloga == uloga && v.rod == rod) {
+            e.push(format!(
+                "vanjski: nema para uloga {} + rod {} (traže ga predlošci)",
+                uloga.kod(),
+                rod.kod()
+            ));
+        }
+    }
+    for rod in Rod::SVE {
+        if !vanjski.iter().any(|v| v.rod == rod) {
+            e.push(format!("vanjski: nema roda {}", rod.kod()));
+        }
+    }
+
+    // Strani zapisi: barem jedan, i to samo u tržišnoj ulozi.
+    let strani: Vec<_> = vanjski.iter().filter(|v| v.zemlja != "HR").collect();
+    if strani.is_empty() {
+        e.push("vanjski: nema stranog zapisa (zemlja različita od HR)".into());
+    }
+    for v in &strani {
+        if !matches!(
+            v.uloga,
+            UlogaVanjskog::Novinar
+                | UlogaVanjskog::OrganizatorDogadanja
+                | UlogaVanjskog::ZastupnikAgencije
+                | UlogaVanjskog::PoslovniKlijent
+        ) {
+            e.push(format!(
+                "vanjski: {} je strani ({}), a uloga {} nije tržišna (novinar, organizator_dogadanja, zastupnik_agencije, poslovni_klijent)",
+                v.id,
+                v.zemlja,
+                v.uloga.kod()
+            ));
+        }
+    }
+
+    // Dob u najmanje 3 razreda iz raspodjele.
+    let popunjeni = okvir
+        .raspodjele
+        .vanjski
+        .dob
+        .keys()
+        .filter(|k| {
+            let (a, z) = raspon(k);
+            vanjski.iter().any(|v| (a..=z).contains(&v.dob))
+        })
+        .count();
+    if popunjeni < 3 {
+        e.push(format!(
+            "vanjski: dob pokriva {popunjeni} dobnih razreda iz raspodjele, traži se najmanje 3"
+        ));
+    }
+
+    // Opis i ustanova.
+    let bez_opisa = vanjski.iter().filter(|v| v.opis.is_none()).count();
+    if bez_opisa > 0 {
+        e.push(format!(
+            "opis: {bez_opisa} od {} vanjskih bez opisa (traže se svi)",
+            vanjski.len()
+        ));
+    }
+    let s_ustanovom = vanjski.iter().filter(|v| v.ustanova.is_some()).count();
+    if s_ustanovom < 6 {
+        e.push(format!(
+            "ustanova: {s_ustanovom} vanjskih ima ustanovu, traži se najmanje 6"
+        ));
+    }
+
+    assert!(
+        e.is_empty(),
+        "vanjski primjeri nisu raznoliki ({} prekršaja):\n  - {}",
         e.len(),
         e.join("\n  - ")
     );
