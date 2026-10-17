@@ -2,11 +2,11 @@
 //! putova). Review Focus 2: igra s čovjekom koji igra put daje isto što i `path_season_v2`.
 //! PRAVILO-b (ADR-047): šesti put „klik najbolji“ (klik na najbolji ponuđeni odgovor, najviše 4 gdje student može pisati).
 use balance::v2::{
-    horizon, offered_choice, path_season_v2, render_v2, run_v2, writable_v2, AnswerPath, OptionsV2,
-    CLICK_MAX_QUALITY, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS,
+    AnswerPath, CLICK_MAX_QUALITY, DELEGATED_QUALITY, HOTEL_SLOT, MANDATORY_SITUATIONS, OptionsV2,
+    horizon, offered_choice, path_season_v2, render_v2, run_v2, writable_v2,
 };
-use content::{repo_dir, Snapshot};
-use game::command::{new_game_with, GameSettings};
+use content::{Snapshot, repo_dir};
+use game::command::{GameSettings, new_game_with};
 use game::dto::indices_dto;
 use game::event::{AiMeta, AnswerRule, CriterionVerdict};
 use game::{
@@ -14,7 +14,7 @@ use game::{
     VerdictDraft,
 };
 use sim_hotel_v2::{
-    situations_for, PeriodKind, Profile, RoundItem, SeasonResult, SituationTemplate,
+    PeriodKind, Profile, RoundItem, SeasonResult, SituationTemplate, situations_for,
 };
 use uuid::Uuid;
 
