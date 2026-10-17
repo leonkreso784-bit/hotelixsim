@@ -101,3 +101,9 @@ test, web build), ne samo kartične. Tri balansa 1000 `--check` **nakon svakog d
 
 **Leonov dio:** tablica mjerenja prije spajanja (A2: brojke bira voditelj „pravedno", Leon vidi); imena triju razina (B2);
 potvrda tumačenja 1 („zadovoljan gost").
+
+## Leonove odluke 18.10. (anketa, sesija 9) — zamjenjuju 🟨 iznad
+1. **Klik (nalaz I1, ADR-059 t. 4):** klik na ponuđeni odgovor nosi **~75 % učinka vlastitog** (ne 92–95 %): gubi i dio mehanike
+   (stanje odjela, novac, gosti), ne samo ocjenu. Nova **brana** u balansu: težina klika ≤ ~75 % težine vlastitog najboljeg, tjedno i mjesečno.
+2. **Razine značaja (B2):** **ključna / važna / svakodnevna**, izvedeno iz `weight` (4 / 3 / 1–2), kako predlaže dio 2.
+3. **„Zadovoljan gost" (tumačenje 1):** ocjena odgovora **4 ili 5** uz hitni popravak → +2 (neto +1); ocjena 1–3 ostavlja −1.
