@@ -393,18 +393,9 @@ fn report_prints_answer_paths() {
     for row in &paths.rows {
         assert_eq!(row.end.len(), 6);
         assert_eq!(row.steps.len(), 4);
-        // Ograničenje samo snižava: klik najbolji nikad nije bolji od vlastitog odgovora.
-        assert!(
-            row.end[1] <= row.end[0],
-            "{:?}: klik <= najbolji",
-            row.profile
-        );
-        assert!(row.steps[0] >= 0, "{:?}: najbolji − klik", row.profile);
-        assert!(
-            row.click_vs_silent <= row.best_vs_silent[2],
-            "{:?}: klik − šutnja <= najbolji − šutnja",
-            row.profile
-        );
+        // Monotonija (klik ≤ najbolji) se NE tvrdi nad medijanom od 3 sjemena: izvlačenje ovisi o stanju
+        // hotela pa pojedino sjeme smije ispasti bolje (pregled PRAVILO-b I2, Ruling voditelja 17.10.).
+        // Smjer ograničenja čuva `click_best_is_never_above_best_and_sometimes_below` nad zbrojem.
     }
 }
 
