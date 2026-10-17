@@ -10,11 +10,11 @@ kako se šalju agenti: `upute-izvodacima.md` u mapi popravka (§5 je najnovije s
 ## Prompt za početak (Leon zalijepi nakon `/clear` + `/newsession`)
 
 ```text
-Nastavljamo. Ledgeri: .superpowers/sdd/2026-10-14-popravak-temelja/progress.md i .superpowers/sdd/banka-ljudi-k1/progress.md. Prvo pročitaj upute-izvodacima.md (§5 i §2).
-Prvo `df -h /c` (ispod 50 GB ne gradi — prvo čišćenje). Laptop je na punjaču. Push samo uz moj OK.
+Nastavljamo (sesija 9). Ledgeri: .superpowers/sdd/2026-10-14-popravak-temelja/progress.md i .superpowers/sdd/banka-ljudi-k1/progress.md (zadnji zapisi „KRAJ SESIJE 8"). Prvo pročitaj upute-izvodacima.md (§5 i §2).
+Prvo `df -h /c` (ispod 50 GB ne gradi — prvo čišćenje; glavni target/debug je obrisan na kraju sesije 8, prvo prevođenje traje ~15 min) i baza. Laptop je na punjaču. Push samo uz moj OK (20 commita čeka).
 Paralelna sesija banke ljudi radi istodobno: ona ima jedan Rust slot, ova jedan (najviše 2 cargo ukupno).
 Redoslijed:
-1) nakon-pravilo-b: ponovi `cargo test --workspace` (s bazom) i pogledaj diff balansa v2 tjedno i mjesečno prema nakon-izgled (smije se razlikovati samo blok klika).
+1) nakon-pravilo-b: ponovi SAMO `cargo test --workspace` (s bazom) i `corepack pnpm test` (oba pala zbog opterećenja, ne zbog koda); diff balansa v2 prema nakon-izgled već provjeren (samo blok klika).
 2) PRAVILO-c: novi graditelj NASTAVLJA od necommitanog u ../hotelixsim-pravilo-c (ne piše ispočetka) → pregled (sonnet) → spajanje + CI → brisanje stabla i target/pravilo-c.
 3) Banku ljudi spoji kad njezin ledger kaže „SPREMNO ZA SPAJANJE".
 4) IZGLED-c: kartica i cigla za uniforme vanjskih (policija, vatrogasci, hitna i liječnici).
