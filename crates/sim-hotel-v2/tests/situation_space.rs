@@ -32,6 +32,7 @@ fn repair(id: &str, urgent: bool, space: Option<&str>) -> RoundSituation {
         space: space.map(code),
         fault: false,
         click: false,
+        significance: sim_hotel_v2::situations::Significance::Important,
     }
 }
 

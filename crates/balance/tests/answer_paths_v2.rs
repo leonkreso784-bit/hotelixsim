@@ -315,6 +315,58 @@ fn click_gain_in_game_matches_balance() {
     }
 }
 
+/// Snimak v2 sadržaja s faktorima razina značaja `economy.significance_bp` (L1-13 dio 2).
+fn snap_with_significance(key: u16, important: u16, everyday: u16) -> Snapshot {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    let e = &mut v["v2"]["economy"]["significance_bp"];
+    e["key"] = key.into();
+    e["important"] = important.into();
+    e["everyday"] = everyday.into();
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// L1-13 dio 2: igra i balans istom razinom značaja (`RoundSituation.significance`: iz `weight` izvučenog primjerka,
+/// sidro važna). Uz faktore 18 000 / 12 000 / 6 000 svi putovi daju iste situacije, pokazatelje i napredak u igri i u
+/// balansu, a napredak se razlikuje od neutralnih 10 000 barem na jednom putu (zastavica stvarno djeluje u oba).
+#[test]
+fn significance_in_game_matches_balance() {
+    let content = snap_with_significance(18_000, 12_000, 6_000)
+        .build()
+        .unwrap();
+    let neutral = snap_with_significance(10_000, 10_000, 10_000)
+        .build()
+        .unwrap();
+    let snap = snap_with_significance(18_000, 12_000, 6_000);
+    let mut differs = 0;
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for profile in Profile::ALL {
+            for path in [
+                AnswerPath::Best,
+                AnswerPath::ClickBest,
+                AnswerPath::Delegated,
+                AnswerPath::Silent,
+            ] {
+                let at = format!("{kind:?} {} {path:?}", profile.code());
+                let g = human_game_from(&snap, 42, kind, profile, path);
+                let s = path_season_v2(&content, profile, path, 42, kind).unwrap();
+                assert_eq!(
+                    game_trace(&g),
+                    season_trace(&s, &content.situations),
+                    "{at}"
+                );
+                let s0 = path_season_v2(&neutral, profile, path, 42, kind).unwrap();
+                if s.progress_pts != s0.progress_pts {
+                    differs += 1;
+                }
+            }
+        }
+    }
+    assert!(
+        differs > 0,
+        "faktori razina moraju mijenjati napredak sezone"
+    );
+}
+
 /// Review Focus 2: igra s čovjekom (utor HOTEL_SLOT, bez plana → zadani plan) koji igra put `path` daje iste
 /// situacije, pokazatelje i napredak po krugu kao `path_season_v2`.
 #[test]

@@ -137,6 +137,10 @@ fn recomputed(g: &Game, hotel: HotelId, r: RoundKey) -> MonthReportDto {
                 fault: instance.is_some_and(|i| i.space_fault),
                 click: h.answers.contains_key(&(r, t.code.clone()))
                     && g.click_capped(hotel, &t.code),
+                significance: instance
+                    .map_or(sim_hotel_v2::situations::Significance::Important, |i| {
+                        sim_hotel_v2::situations::Significance::from_weight(i.drawn.weight)
+                    }),
             }
         })
         .collect();
