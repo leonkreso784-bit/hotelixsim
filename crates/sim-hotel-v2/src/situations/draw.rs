@@ -186,6 +186,17 @@ fn round_count(d: &Draw, occupancy_bp: u16) -> u8 {
         .for_occupancy(occupancy_bp)
 }
 
+/// Puni li mjesto s rednim brojem `slot` (od 0) samo situacije s gostima: ključ uključen i mjesto je iznad `low`.
+fn guest_only(d: &Draw, slot: usize) -> bool {
+    let low = d
+        .templates
+        .counts
+        .unwrap_or_else(|| SituationCounts::default_for(d.period.kind))
+        .levels()
+        .0;
+    d.templates.guest_extra_slots && slot >= usize::from(low)
+}
+
 /// Dopušteni predlošci za hotel na dan `day`: uvjeti pojave (po odjelu za skupine), otvoren odjel, ponavljanje
 /// prema povijesti; predložak koji je već izvučen u ovom krugu ne ulazi (najviše jednom u krugu, ADR-042 t. 12).
 fn candidates<'a>(
@@ -501,6 +512,15 @@ pub fn draw_situations_with(
             })
             .filter(|(_, opts)| !opts.is_empty())
             .collect();
+        // Dodatna mjesta iznad `low` (L1-13-3): samo situacije s gostima; kandidata nema = manje situacija.
+        let allowed: Vec<(usize, Options)> = if guest_only(d, pre.saturating_add(drawn)) {
+            allowed
+                .into_iter()
+                .filter(|(i, _)| pool.get(*i).is_some_and(|c| c.spec.guest_related()))
+                .collect()
+        } else {
+            allowed
+        };
         if allowed.is_empty() {
             break;
         }

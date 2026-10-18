@@ -16,7 +16,7 @@ use sim_hotel_v2::{
 use crate::v2_answers::{answer_path_failures, path_report, play, push_answer_paths};
 use crate::v2_situations::{
     DOMINANT_MAX_BP, DrawStats, SAVER_MAX_LOSS, SHARE_BAND_BP, Share, Situations, count_band,
-    rounds_per_season, shares,
+    levels_line, rounds_per_season, shares,
 };
 use crate::{
     Probe, REPRO_SEED, all_reproducible, check_dominant, check_fairness, check_repro, check_start,
@@ -457,7 +457,7 @@ fn kind_medians(
     let (medians, profile_medians) = season_medians::<ResolveError>(seeds, &mut |p, s, seed| {
         let r = sits.robot((p, s, seed), kind, cat, refs_for(cat, refs, p)?)?;
         if let Some(d) = draws.as_deref_mut() {
-            d.add(&r, sits);
+            d.add(&r, sits, cat)?;
         }
         let end = r.periods.last().map_or(&r.start, |(_, i)| i);
         let f = i32::from(end.get(Index::Finance).hundredths());
@@ -817,6 +817,7 @@ fn push_situations(s: &mut String, sr: &SituationReport) {
         per_season / 100,
         per_season % 100
     ));
+    s.push_str(&levels_line(d));
     s.push_str(&format!(
         "  krugova u granici kruga (|zbroj| >= 800): zadovoljstvo {} moral {} od {}\n",
         d.bound_satisfaction, d.bound_morale, d.rounds
