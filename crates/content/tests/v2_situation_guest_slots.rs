@@ -1,10 +1,11 @@
 //! L1-13 dio 3 (A7): dodatna mjesta u krugu pune samo situacije s gostima. Broj situacija već raste s očekivanom
 //! popunjenošću kruga (`SituationCounts`: niska / srednja / visoka), ali je dodatna mjesta punio bilo koji predložak.
-//! Uz ključ `TemplateSet::guest_extra_slots` (sadržaj `situation_templates.json`, u repou ISKLJUČEN do dijela 4)
+//! Uz ključ `TemplateSet::guest_extra_slots` (sadržaj `situation_templates.json`, u repou UKLJUČEN od dijela 4)
 //! mjesta iznad `low` (`SituationCounts::levels().0`) smiju popuniti samo predlošci s gostima
 //! (`SituationSpec::guest_related`: uloga `from: guest` ili odjel `*guest_facing`, 27 od 55), pa je očekivani broj
 //! ostalih isti na svakoj popunjenosti. Prva mjesta (sidra, kolektivna, veća) i ukupni broj ostaju kakvi jesu.
-//! Isključen ključ je TOČNO današnje izvlačenje (zlatni otisak ispod, izmjeren prije izmjene).
+//! Isključen ključ je TOČNO današnje izvlačenje (zlatni otisak ispod, izmjeren prije izmjene; od dijela 4 nad
+//! pravilima pojave devet kvarova prostora kakva su bila na c1ef169, jer ih kalibracija A2 mijenja).
 
 mod situations_common;
 
@@ -296,13 +297,70 @@ fn fingerprint(cat: &Catalog, set: &TemplateSet) -> (u64, usize) {
     (h, n)
 }
 
+/// Pravila pojave (`when`, `chance`) devet kvarova prostora na c1ef169 (prije kalibracije A2, L1-13 dio 4): zlatni
+/// otisak `TODAYS_DRAW` je izmjeren nad njima. Dio 4 mijenja samo čestoću tih devet (ostalo isto), pa otisak nad
+/// repoom s ovim pravilima i dalje mjeri samo kod izvlačenja.
+const FAULT_DRAW_RULES_C1EF169: [(&str, &str); 9] = [
+    (
+        "P-KLIMA",
+        r#"{"when":{"months":["jun","jul","aug"],"occupancy_bp":{"at_least":6000},"dept_condition_pts":{"below":6500}},"chance":{"base":3,"boost":[{"when":{"dept_condition_pts":{"below":5000}},"times":3}]}}"#,
+    ),
+    (
+        "P-DOTRAJALO",
+        r#"{"when":{"dept_condition_pts":{"below":5500}},"chance":{"base":2,"boost":[{"when":{"dept_condition_pts":{"below":4000}},"times":3}]}}"#,
+    ),
+    (
+        "P-BOJLER",
+        r#"{"when":{"months":["jul","aug","sep"],"dept_condition_pts":{"below":6500}},"chance":{"base":2,"boost":[{"when":{"dept_condition_pts":{"below":4500}},"times":3}]}}"#,
+    ),
+    (
+        "P-BAZEN-PUMPA",
+        r#"{"when":{"dept_condition_pts":{"below":6000}},"chance":{"base":2,"boost":[{"when":{"dept_condition_pts":{"below":4500}},"times":3}]}}"#,
+    ),
+    (
+        "P-LOBBY-KAVA",
+        r#"{"when":{"dept_condition_pts":{"below":6000}},"chance":{"base":2,"boost":[{"when":{"dept_load_hundredths":{"at_least":200}},"times":2}]}}"#,
+    ),
+    (
+        "P-DIZALO",
+        r#"{"when":{"dept_condition_pts":{"below":8000}},"chance":{"base":2}}"#,
+    ),
+    (
+        "P-PRAONICA",
+        r#"{"when":{"dept_condition_pts":{"below":6500}},"chance":{"base":2}}"#,
+    ),
+    (
+        "P-BRAVE",
+        r#"{"when":{"dept_condition_pts":{"below":8000}},"chance":{"base":2}}"#,
+    ),
+    (
+        "P-CURENJE-VODE",
+        r#"{"when":{"dept_condition_pts":{"below":8000}},"chance":{"base":2}}"#,
+    ),
+];
+
+/// Repo s pravilima pojave devet kvarova s c1ef169 (`FAULT_DRAW_RULES_C1EF169`).
+fn live_c1ef169() -> (Catalog, TemplateSet) {
+    let mut v = repo_value();
+    for (code, rule) in FAULT_DRAW_RULES_C1EF169 {
+        let rule: Value = serde_json::from_str(rule).unwrap();
+        let list = v["v2"]["situation_templates"]["templates"]
+            .as_array_mut()
+            .unwrap();
+        let t = list
+            .iter_mut()
+            .find(|t| t["code"] == code)
+            .unwrap_or_else(|| panic!("nema predloška {code}"));
+        t["when"] = rule["when"].clone();
+        t["chance"] = rule["chance"].clone();
+    }
+    let c = build(&v);
+    (c.v2.unwrap(), c.situation_templates.unwrap().to_core())
+}
+
 #[test] // 4
 fn flag_off_is_todays_draw() {
-    let (cat, set) = live();
-    assert!(
-        !set.guest_extra_slots,
-        "repo drži ključ isključen do dijela 4"
-    );
+    let (cat, set) = live_c1ef169();
     let (off, n) = fingerprint(&cat, &with_flag(set.clone(), false));
     assert!(n > 10_000, "otisak pokriva dovoljno primjeraka ({n})");
     assert_eq!(
@@ -383,15 +441,29 @@ fn guest_related_is_role_or_guest_facing_department() {
     assert!(t.guest_related(), "bilo koja uloga gosta");
 }
 
+/// L1-13 dio 4 (test čuvara 6): repo uključuje ključ (`situation_templates.json`), i on dolazi do jezgre.
+#[test]
+fn repo_guest_extra_slots_on() {
+    let v = repo_value();
+    assert_eq!(
+        v["v2"]["situation_templates"].get("guest_extra_slots"),
+        Some(&json!(true)),
+        "guest_extra_slots: true u content/hotel/v2/situation_templates.json"
+    );
+    let c = build(&v);
+    let tpl = c.situation_templates.as_ref().unwrap();
+    assert!(tpl.guest_extra_slots);
+    assert!(tpl.to_core().guest_extra_slots);
+}
+
 #[test] // 5
 fn missing_guest_flag_reads_false() {
-    let v = repo_value();
-    assert!(
-        v["v2"]["situation_templates"]
-            .get("guest_extra_slots")
-            .is_none(),
-        "bez ključa u situation_templates.json do dijela 4"
-    );
+    // Stari snimak (prije dijela 4) nema ključa.
+    let mut v = repo_value();
+    v["v2"]["situation_templates"]
+        .as_object_mut()
+        .unwrap()
+        .remove("guest_extra_slots");
     let c = build(&v);
     let tpl = c.situation_templates.as_ref().unwrap();
     assert!(!tpl.guest_extra_slots);

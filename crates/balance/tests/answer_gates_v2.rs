@@ -11,16 +11,11 @@
 mod common;
 
 use balance::v2::{
-    CLICK_WEIGHT_MAX_BP, ORDER_DEBT, ORDER_DEBT_FLOOR, OptionsV2, PathReport, ReportV2,
-    WEIGHT_BAND_BP, failures_v2, plan_ruler, render_v2, robot_measures_v2, run_v2,
+    CLICK_WEIGHT_MAX_BP, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, failures_v2, plan_ruler,
+    render_v2, robot_measures_v2, run_v2,
 };
 use common::content_v2;
 use sim_hotel_v2::{PeriodKind, Profile};
-
-/// Strop duga nije besmislen (u (-100, 0)); provjera pri prevođenju.
-const _: () = assert!(ORDER_DEBT_FLOOR > -100 && ORDER_DEBT_FLOOR < 0);
-/// Strop smije samo rasti prema 0, nikad pasti ispod -25.
-const _: () = assert!(ORDER_DEBT_FLOOR >= -25);
 
 fn report(kind: PeriodKind) -> ReportV2 {
     run_v2(
@@ -39,18 +34,18 @@ fn paths_mut(r: &mut ReportV2) -> &mut PathReport {
 }
 
 /// Izvještaj čiji su putovi svugdje zdravi: trošak u istom krugu, dobit nakon horizonta i na kraju, svi koraci lanca
-/// pozitivni, težina oko 25 % (Δ = ravnalo / 3). Dug je otplaćen u B1a (15.10., bonus +1), pa je i mjesečni korak
-/// „srednji − prepušteno" pozitivan.
+/// pozitivni, težina 20 % (Δ = ravnalo / 4; L1-13 dio 4, Leon A3 „20 %"). Dug je otplaćen u B1a (15.10., bonus +1),
+/// a mehanizam duga je obrisan u L1-13 dio 4.
 fn clean(kind: PeriodKind) -> ReportV2 {
     let mut r = report(kind);
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(kind, row.profile);
-        row.best_vs_silent = [-50, 100, ruler / 3];
-        // Klik nosi 16,7 % uz 25 % vlastitog: omjer 66,7 % (brana najviše 75 %).
-        row.click_vs_silent = ruler / 5;
+        row.best_vs_silent = [-50, 100, ruler / 4];
+        // Klik nosi 14,3 % uz 20 % vlastitog: omjer 71 % (cilj 70–75 %, brana najviše 75 %).
+        row.click_vs_silent = ruler / 6;
         // Isto na situacijama s likom (Δ prema šutnji tamo): omjer 66,7 %, brana najviše 75 % (M1, Leon 18.10.).
-        row.best_vs_mute = ruler / 3;
-        row.click_vs_mute = ruler / 5;
+        row.best_vs_mute = ruler / 4;
+        row.click_vs_mute = ruler / 6;
         row.steps = [100; 4];
     }
     r
@@ -85,7 +80,7 @@ fn ruler_is_pinned_and_changes_only_by_leons_decision() {
             "{kind:?} {profile:?}: ravnalo se mijenja samo Leonovom odlukom (L1-13)"
         );
     }
-    assert_eq!(WEIGHT_BAND_BP, (500, 5_000));
+    assert_eq!(WEIGHT_BAND_BP, (1_500, 2_500));
 }
 
 #[test]
@@ -138,7 +133,7 @@ fn same_round_cost_is_not_a_gate() {
     let mut r = clean(PeriodKind::Week);
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(PeriodKind::Week, row.profile);
-        row.best_vs_silent = [-500, 100, ruler / 3];
+        row.best_vs_silent = [-500, 100, ruler / 4];
         row.steps = [100; 4];
     }
     assert_eq!(b3(&r), Vec::<String>::new());
@@ -203,8 +198,9 @@ fn click_steps_are_gates() {
 
 #[test]
 fn monthly_middle_minus_delegated_is_a_real_gate() {
-    // Dug je otplaćen (B1a, 15.10.): mjesečno srednji − prepušteno ≤ 0 pada kao i tjedno, bez oprosta.
-    for v in [0, -5, ORDER_DEBT_FLOOR] {
+    // Dug je otplaćen (B1a, 15.10.) i mehanizam duga obrisan (L1-13 dio 4): mjesečno srednji − prepušteno ≤ 0 pada
+    // kao i tjedno, bez oprosta; −25 je bivši strop duga (`ORDER_DEBT_FLOOR`), doslovno.
+    for v in [0, -5, -25] {
         let mut r = clean(PeriodKind::Month);
         paths_mut(&mut r).rows[0].steps[2] = v;
         let f = b3(&r);
@@ -220,23 +216,41 @@ fn monthly_middle_minus_delegated_is_a_real_gate() {
     }
 }
 
+/// L1-13 dio 4 (test čuvara 2): mehanizma duga redoslijeda više nema: ni popisa (`ORDER_DEBT`), ni stropa
+/// (`ORDER_DEBT_FLOOR`), ni oprosta, ni poruke „B3 dug". Korak lanca ≤ 0 uvijek pada, tjedno i mjesečno, na svakom
+/// koraku i profilu, koliko god bio malen ili velik.
 #[test]
-fn empty_debt_list_has_no_debt_message() {
-    // ORDER_DEBT je const u src-u, pa se mehanizam duga ne može ovdje isprobati; uz prazan popis nema ni poruke ni oprosta.
-    for kind in [PeriodKind::Week, PeriodKind::Month] {
-        let mut r = clean(kind);
-        assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
-        for row in &mut paths_mut(&mut r).rows {
-            row.steps = [100; 4];
+fn debt_mechanism_is_gone() {
+    for (file, src) in [
+        ("v2_answers.rs", include_str!("../src/v2_answers.rs")),
+        ("v2.rs", include_str!("../src/v2.rs")),
+    ] {
+        for word in ["ORDER_DEBT", "B3 dug", "forgiven"] {
+            assert!(
+                !src.contains(word),
+                "crates/balance/src/{file}: '{word}' još postoji; mehanizam duga se briše u L1-13 dio 4"
+            );
         }
-        assert!(!has(&b3(&r), &["B3 dug:"]), "{kind:?}");
     }
-}
-
-/// Otplaćen u B1a 15.10. uz bonus +1; dug smije samo padati, pa ostaje prazan.
-#[test]
-fn order_debt_is_empty() {
-    assert!(ORDER_DEBT.is_empty());
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for (i, (a, b)) in STEPS.into_iter().enumerate() {
+            for v in [0, -1, -14, -25, -26, -10_000] {
+                for row in 0..3 {
+                    let mut r = clean(kind);
+                    paths_mut(&mut r).rows[row].steps[i] = v;
+                    let f = b3(&r);
+                    assert!(
+                        has(&f, &["B3 redoslijed", &format!("{a} prema {b}")]),
+                        "{kind:?} red {row} korak {i} = {v}: {f:?}"
+                    );
+                    assert!(!has(&f, &["B3 dug"]), "{kind:?}: {f:?}");
+                }
+            }
+        }
+        // Svi koraci pozitivni: nema poruke ni o redoslijedu ni o dugu.
+        assert!(!has(&b3(&clean(kind)), &["B3 redoslijed"]), "{kind:?}");
+        assert!(!has(&b3(&clean(kind)), &["B3 dug"]), "{kind:?}");
+    }
 }
 
 #[test]
@@ -258,16 +272,82 @@ fn weight_gate_fails() {
         paths_mut(&mut r).rows[1].best_vs_silent[2] = 1;
         let p = paths_mut(&mut r).rows[1].profile.code();
         assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
-        // Gornji rub pojasa prolazi: Δ = ravnalo je točno 50 %.
+        // Gornji rub pojasa prolazi: Δ = ravnalo / 3 je 25 % (cjelobrojno ne više), korak iznad pada.
         let mut r = clean(kind);
         for row in &mut paths_mut(&mut r).rows {
-            row.best_vs_silent[2] = plan_ruler(kind, row.profile);
+            row.best_vs_silent[2] = plan_ruler(kind, row.profile) / 3;
         }
         assert_eq!(
             b3(&r),
             Vec::<String>::new(),
-            "{kind:?}: Δ = ravnalo je 50 %"
+            "{kind:?}: Δ = ravnalo / 3 je 25 %"
         );
+        for row in &mut paths_mut(&mut r).rows {
+            row.best_vs_silent[2] += 1;
+        }
+        let f = b3(&r);
+        assert_eq!(
+            f.len(),
+            3,
+            "{kind:?}: korak iznad 25 % pada na sva tri profila: {f:?}"
+        );
+        assert!(f.iter().all(|x| x.starts_with("B3 težina")), "{f:?}");
+    }
+}
+
+/// Najmanja Δ (stotinke) koja uz ravnalo `ruler` nosi barem 15 %: `share_bp` = Δ · 10 000 / (Δ + ravnalo), dolje;
+/// Δ · 8 500 ≥ ravnalo · 1 500 ⇔ Δ ≥ 3 · ravnalo / 17.
+fn lower_edge(ruler: i32) -> i32 {
+    (3 * ruler + 16) / 17
+}
+
+/// Rub pojasa: Δ na rubu iz ravnala, Δ korak izvan ruba, ime ruba.
+type Edge = (fn(i32) -> i32, fn(i32) -> i32, &'static str);
+
+/// L1-13 dio 4 (test čuvara 1, Leon A3 „20 %"): pojas težine je 15–25 %; oba ruba prolaze, korak izvan pada,
+/// tjedno i mjesečno na svakom profilu, i poruka kaže novi pojas.
+#[test]
+fn weight_band_is_fifteen_to_twenty_five() {
+    assert_eq!(WEIGHT_BAND_BP, (1_500, 2_500));
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        // (rub, korak izvan ruba): gornji ravnalo / 3 (najveća Δ s težinom ≤ 25,0 % za svih šest ravnala), donji
+        // `lower_edge`.
+        let edges: [Edge; 2] = [
+            (|r| r / 3, |r| r / 3 + 1, "25 %"),
+            (lower_edge, |r| lower_edge(r) - 1, "15 %"),
+        ];
+        for (edge, outside, name) in edges {
+            let mut r = clean(kind);
+            for row in &mut paths_mut(&mut r).rows {
+                row.best_vs_silent[2] = edge(plan_ruler(kind, row.profile));
+            }
+            assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?}: rub {name} prolazi");
+            for k in 0..3 {
+                let mut r = clean(kind);
+                let row = &mut paths_mut(&mut r).rows[k];
+                row.best_vs_silent[2] = outside(plan_ruler(kind, row.profile));
+                let p = row.profile.code();
+                let f = b3(&r);
+                assert_eq!(
+                    f.len(),
+                    1,
+                    "{kind:?} {p}: korak izvan ruba {name} pada: {f:?}"
+                );
+                assert!(
+                    f[0].starts_with(&format!("B3 težina: {p} situacije nose "))
+                        && f[0].ends_with(" (cilj 15,0 %–25,0 %)"),
+                    "{kind:?} {p}: {f:?}"
+                );
+            }
+        }
+        // Stari pojas 5–50 % više ne vrijedi: 10 % (Δ = ravnalo / 9) i 40 % (Δ = ravnalo · 2 / 3) padaju.
+        for delta in [|r: i32| r / 9, |r: i32| r * 2 / 3] {
+            let mut r = clean(kind);
+            let row = &mut paths_mut(&mut r).rows[0];
+            row.best_vs_silent[2] = delta(plan_ruler(kind, row.profile));
+            let p = row.profile.code();
+            assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
+        }
     }
 }
 
@@ -277,7 +357,7 @@ fn negative_delta_never_passes_as_weight_band() {
     for kind in [PeriodKind::Week, PeriodKind::Month] {
         let mut r = clean(kind);
         let row = &mut paths_mut(&mut r).rows[0];
-        row.best_vs_silent[2] = -(plan_ruler(kind, row.profile) / 3);
+        row.best_vs_silent[2] = -(plan_ruler(kind, row.profile) / 4);
         let f = b3(&r);
         assert!(!f.is_empty(), "{kind:?}: obrnuta težina ne smije proći");
         assert!(
@@ -474,16 +554,16 @@ fn print_has_click_to_own_ratio_lines() {
 }
 
 /// Težina klika ima svoju branu, a pojas težine i dalje nosi vlastiti najbolji (`best_vs_silent`): klik u pojasu
-/// ne spašava vlastiti izvan pojasa, a klik izvan pojasa (ispod 5 % ili iznad 50 %) sam po sebi nije kršenje pojasa.
+/// ne spašava vlastiti izvan pojasa, a klik izvan pojasa (ispod 15 % ili iznad 25 %) sam po sebi nije kršenje pojasa.
 #[test]
 fn weight_band_stays_on_own_words_best() {
     for kind in [PeriodKind::Week, PeriodKind::Month] {
-        // Klik do tri četvrtine vlastitog (clean: 16,7 % uz 25 %) i svi manji (čak i nula) ne diraju ni pojas ni brane.
+        // Klik do tri četvrtine vlastitog (clean: 14,3 % uz 20 %) i svi manji (čak i nula) ne diraju ni pojas ni brane.
         for click in [Some(-1), Some(0), Some(1), None] {
             let mut r = clean(kind);
             for row in &mut paths_mut(&mut r).rows {
-                // `None` = kao u `clean`: ravnalo / 5 profila.
-                row.click_vs_silent = click.unwrap_or(plan_ruler(kind, row.profile) / 5);
+                // `None` = kao u `clean`: ravnalo / 6 profila.
+                row.click_vs_silent = click.unwrap_or(plan_ruler(kind, row.profile) / 6);
                 row.click_vs_mute = row.click_vs_silent;
             }
             assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?} klik {click:?}");

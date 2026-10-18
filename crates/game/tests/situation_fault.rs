@@ -21,6 +21,11 @@ fn snap(keys: bool) -> Snapshot {
     if keys {
         v["v2"]["economy"]["fault_condition_pts"] = json!(100);
         v["v2"]["economy"]["fault_fixed_condition_pts"] = json!(200);
+    } else {
+        // Od L1-13 dijela 4 repo nosi ključeve kvara: igra „bez" ih briše (stari snimak).
+        let e = v["v2"]["economy"].as_object_mut().unwrap();
+        e.remove("fault_condition_pts");
+        e.remove("fault_fixed_condition_pts");
     }
     Snapshot::from_value(&v).unwrap()
 }

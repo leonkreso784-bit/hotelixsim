@@ -1,7 +1,8 @@
 //! L1-13 dio 1 (A1): sadržaj kvara prostora. Predložak je „kvar prostora" (`SituationSpec::space_fault`) kad je vrste
 //! `kvar` ili neki odgovor ili neodgovoreno ima `EquipmentRepair`, a nema `external_cause` (Leon 18.10.: točno
-//! devet). Ključevi `economy.fault_condition_pts` i `economy.fault_fixed_condition_pts` u repou ne postoje (isključeno
-//! do dijela 4), bez ključa se čitaju kao 0, a pravilo isključeno ne mijenja nijedan učinak.
+//! devet). Ključevi `economy.fault_condition_pts` i `economy.fault_fixed_condition_pts` su u repou od dijela 4
+//! uključeni (Leonovi −1 / +2, stari ključ hitnog popravka obrisan); bez ključa se čitaju kao 0, a pravilo isključeno
+//! ne mijenja nijedan učinak (stari snimci).
 //!
 //! Tablica `fault_outcomes_table` ispisuje Leonu učinak na stanje prostora (`cargo test -p content --test
 //! v2_situation_fault fault_outcomes_table -- --nocapture`).
@@ -59,9 +60,23 @@ fn with_keys() -> Content {
     build(&v).unwrap()
 }
 
+/// Vrijednost iz repoa bez ključeva kvara (kao stari snimak prije dijela 4).
+fn without_fault_keys() -> Value {
+    let mut v = repo_value();
+    for k in ["fault_condition_pts", "fault_fixed_condition_pts"] {
+        v["v2"]["economy"].as_object_mut().unwrap().remove(k);
+    }
+    v
+}
+
+/// Repo bez ključeva kvara: pravilo isključeno.
+fn no_keys() -> Content {
+    build(&without_fault_keys()).unwrap()
+}
+
 /// Isti sadržaj bez ključeva kvara i sa starim ključem hitnog popravka 0: osnovica za usporedbu s `with_keys`.
 fn off0() -> Content {
-    let mut v = repo_value();
+    let mut v = without_fault_keys();
     v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(0);
     build(&v).unwrap()
 }
@@ -147,26 +162,33 @@ fn no_template_is_fault_and_reward_only() {
     }
 }
 
-#[test] // 9c
-fn repo_fault_keys_are_off_until_part_four() {
+#[test] // 9c (L1-13 dio 4, test čuvara 6): repo uključuje kvar prostora Leonovim brojkama (A1: −1, popravak +2) i
+// briše stari ključ hitnog popravka (privremeni +1 iz ADR-050 → 0; stari snimci ga i dalje čitaju).
+fn repo_fault_keys_are_on() {
     let v = repo_value();
     let e = v["v2"]["economy"].as_object().unwrap();
-    assert!(
-        !e.contains_key("fault_condition_pts"),
-        "ključa nema u repou"
+    assert_eq!(
+        e.get("fault_condition_pts"),
+        Some(&json!(100)),
+        "ključ u economy.json"
+    );
+    assert_eq!(
+        e.get("fault_fixed_condition_pts"),
+        Some(&json!(200)),
+        "ključ u economy.json"
     );
     assert!(
-        !e.contains_key("fault_fixed_condition_pts"),
-        "ključa nema u repou"
+        !e.contains_key("repair_urgent_condition_pts"),
+        "stari ključ hitnog popravka se briše iz economy.json (0)"
     );
     let eco = repo().v2.unwrap().economy;
     assert_eq!(
-        (eco.fault_condition_pts, eco.fault_fixed_condition_pts),
-        (0, 0)
-    );
-    assert_eq!(
-        eco.repair_urgent_condition_pts, 100,
-        "stari ključ ostaje 100 do dijela 4 (ondje 0)"
+        (
+            eco.fault_condition_pts,
+            eco.fault_fixed_condition_pts,
+            eco.repair_urgent_condition_pts
+        ),
+        (100, 200, 0)
     );
 }
 
@@ -287,7 +309,7 @@ fn rounds(m: Month) -> Vec<Period> {
 
 #[test] // 4 (karakterizacija nad sadržajem: ključevi 0, svih devet predložaka i oba kruga)
 fn fault_rule_is_off_without_keys_for_the_nine() {
-    let c = repo();
+    let c = no_keys();
     for code in NINE {
         for m in [Month::Jun, Month::Aug] {
             let (inst, _) = instance_of(&c, code, m);

@@ -157,6 +157,7 @@ fn typical_season_fills_every_round() {
 #[test]
 fn closed_departments_from_august_keep_rounds_nearly_full() {
     let (cat, set) = live();
+    let set = without_guest_flag(set);
     let closable: Vec<DeptCode> = cat
         .departments
         .iter()
@@ -260,15 +261,14 @@ fn august_has_enough_distinct_templates_for_every_profile() {
     assert!(low.values().all(|&n| n >= AUGUST_DISTINCT_MIN), "{low:?}");
 }
 
-/// Pokrivenost iz početnog stanja (pregled J-2, I2): A/B/C, tjedna i mjesečna igra, nepromijenjeno početno stanje
-/// i prosječni pokazatelji — svaki krug dobiva točno `broj − sidra`.
-#[test]
-fn repo_templates_fill_every_round() {
-    let (cat, set) = live();
+/// Krugovi bez punog broja iz početnog stanja (A/B/C, tjedno i mjesečno, prosječni pokazatelji): opisi, broj krugova i
+/// najveći manjak u jednom krugu.
+fn short_from_start(cat: &Catalog, set: &TemplateSet) -> (Vec<String>, usize, usize) {
     let mut short: Vec<String> = Vec::new();
+    let (mut rounds, mut worst) = (0, 0);
     for kind in KINDS {
         for profile in PROFILES {
-            let state = start(&cat, profile);
+            let state = start(cat, profile);
             let h = Hotel {
                 state: &state,
                 indices: indices(5_000),
@@ -278,9 +278,11 @@ fn repo_templates_fill_every_round() {
                 let mut history: Vec<DrawnSituation> = Vec::new();
                 for p in season_periods(kind) {
                     let anchors = anchors_for(kind, p.index);
-                    let drawn = round(&cat, &set, &h, &p, &history, seed, &anchors);
-                    let n = usize::from(situation_count(&state, &p, &cat).unwrap());
+                    let drawn = round(cat, set, &h, &p, &history, seed, &anchors);
+                    let n = usize::from(situation_count(&state, &p, cat).unwrap());
+                    rounds += 1;
                     if drawn.len() != n - anchors.len() {
+                        worst = worst.max(n - anchors.len() - drawn.len());
                         short.push(format!(
                             "{} {profile:?} sjeme {seed}: {} od {}",
                             p.code(),
@@ -293,10 +295,45 @@ fn repo_templates_fill_every_round() {
             }
         }
     }
+    (short, rounds, worst)
+}
+
+/// Bez ključa `guest_extra_slots` (kapacitet cijelog bazena predložaka): uz ključ dodatna mjesta pune samo situacije
+/// s gostima i krug smije biti kraći (L1-13 dio 3, prihvaćeno; `guest_extra_slots_rarely_shorten_rounds`).
+fn without_guest_flag(mut set: TemplateSet) -> TemplateSet {
+    set.guest_extra_slots = false;
+    set
+}
+
+/// Pokrivenost iz početnog stanja (pregled J-2, I2): A/B/C, tjedna i mjesečna igra, nepromijenjeno početno stanje
+/// i prosječni pokazatelji — svaki krug dobiva točno `broj − sidra` (bazen bez ključa gostiju).
+#[test]
+fn repo_templates_fill_every_round() {
+    let (cat, set) = live();
+    let (short, _, _) = short_from_start(&cat, &without_guest_flag(set));
     assert!(
         short.is_empty(),
         "{} krugova bez punog broja: {:?}",
         short.len(),
         &short[..short.len().min(20)]
+    );
+}
+
+/// L1-13 dio 4: uz uključen ključ `guest_extra_slots` (repo) krug je kraći samo kad nema kandidata s gostima za
+/// dodatno mjesto: rijetko (najviše 1 % krugova) i najviše za jednu situaciju.
+#[test]
+fn guest_extra_slots_rarely_shorten_rounds() {
+    let (cat, set) = live();
+    assert!(set.guest_extra_slots, "repo uključuje ključ (dio 4)");
+    let (short, rounds, worst) = short_from_start(&cat, &set);
+    println!(
+        "uz ključ gostiju: {} od {rounds} krugova kraće: {short:?}",
+        short.len()
+    );
+    assert!(worst <= 1, "manjak najviše jedna situacija: {short:?}");
+    assert!(
+        short.len() * 100 <= rounds,
+        "{} od {rounds}: {short:?}",
+        short.len()
     );
 }

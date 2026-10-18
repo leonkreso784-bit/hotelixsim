@@ -22,9 +22,17 @@ fn repair_bonus_round_trips_and_old_snapshot_reads_zero() {
         .unwrap()
         .v2
         .unwrap();
+    // L1-13 dio 4 (A1): hitni popravak ne rješava stanje odjela; privremeni +1 (Leon 15.10.) se briše, ključ ostaje
+    // samo za stare snimke.
+    assert!(
+        v["v2"]["economy"]
+            .get("repair_urgent_condition_pts")
+            .is_none(),
+        "ključa nema u content/hotel/v2/economy.json"
+    );
     assert_eq!(
-        repo.economy.repair_urgent_condition_pts, 100,
-        "repo gradi 100 (privremeno, Leon 15.10.; pravi iznos u L1-13)"
+        repo.economy.repair_urgent_condition_pts, 0,
+        "repo gradi 0 (L1-13 dio 4)"
     );
 
     v["v2"]["economy"]

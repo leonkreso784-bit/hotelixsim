@@ -40,7 +40,7 @@ fn repo_codes(p: Principle) -> Vec<String> {
 fn repo_content_loads_checked_with_known_debt() {
     Snapshot::read_v2_checked(&repo_dir()).unwrap();
 } // 1
-#[test] // 2: dug samo za tri nova načela; stropovi = stanje poslije B4c (dug oznaka i uvjeta kvarova je 0)
+#[test] // 2: dug samo za tri nova načela; stropovi = stanje poslije L1-13 dio 4 (sva tri duga 0)
 fn known_debt_names_existing_templates_and_never_grows() {
     let v = v2_value();
     let codes: Vec<&str> = v["v2"]["situation_templates"]["templates"]
@@ -52,7 +52,7 @@ fn known_debt_names_existing_templates_and_never_grows() {
     let ceiling = [
         (LabelLengths, 0),
         (BreakdownCondition, 0),
-        (SilenceNotBetter, 16),
+        (SilenceNotBetter, 0),
     ];
     for (p, list) in KNOWN_VIOLATIONS {
         let max = ceiling.iter().find(|(q, _)| q == p).map_or(0, |(_, n)| *n);
@@ -215,7 +215,7 @@ fn names_are_unique_across_lists() {
         "names"
     ));
 }
-#[test] // 8: P-DOTRAJALO danas: najlošiji s hitnim popravkom je skuplji, ali šutnja gubi opremu → nema dominacije
+#[test] // 8: P-DOTRAJALO: najlošiji s hitnim popravkom je skuplji, ali šutnja gubi opremu → nema dominacije
 fn silence_is_not_better_than_the_worst_answer() {
     assert!(!hit(|_| {}, SilenceNotBetter, "P-DOTRAJALO"));
     assert!(
@@ -227,10 +227,120 @@ fn silence_is_not_better_than_the_worst_answer() {
         ),
         "isti bodovi, bez troška popravka"
     );
+    // Bio je dug (loš odgovor plaća boravak, šutnja ništa); L1-13 dio 4 (A8) daje šutnji gore `unanswered`.
     assert!(
-        hit(|_| {}, SilenceNotBetter, "P-NOVINAR"),
-        "loš odgovor plaća boravak, šutnja ništa (dug)"
+        !hit(|_| {}, SilenceNotBetter, "P-NOVINAR"),
+        "P-NOVINAR: šutnja ne smije biti bolja od najlošijeg odgovora (A8)"
     );
+}
+
+/// L1-13 dio 4 (test čuvara 3, A8): dug načela „šutnja nije bolja" je otplaćen. Popis `KNOWN_VIOLATIONS` za
+/// `SilenceNotBetter` je prazan, repo nema nijedan takav prekršaj, i repo se učitava s provjerom načela.
+#[test]
+fn silence_never_better_has_no_debt() {
+    let debt = KNOWN_VIOLATIONS
+        .iter()
+        .find(|(p, _)| *p == SilenceNotBetter)
+        .map_or(&[][..], |(_, l)| *l);
+    assert!(debt.is_empty(), "makni s popisa duga: {debt:?}");
+    let open = repo_codes(SilenceNotBetter);
+    assert!(
+        open.is_empty(),
+        "šutnja je još bolja od najlošijeg odgovora: {open:?}"
+    );
+    Snapshot::read_v2_checked(&repo_dir()).expect("repo se učitava s provjerom načela");
+}
+
+/// Sadržaj u kojem P-DOTRAJALO ima ključeve kvara po volji, faktor kruga tjedno 1 bp (bodovi kruga → 0, kao
+/// `week_off`), stari ključ hitnog popravka 0 i sva tri odgovora osim najboljeg kvalitete 4 (četiri kriterija):
+/// najlošiji su tada odgovori s hitnim popravkom (i jedan s privremenim, jednak šutnji), pa samo +2 popravka uz
+/// ocjenu ≥ 4 odvaja odgovor od šutnje.
+fn fault_case(v: &mut Value, fault: i32, fixed: i32) {
+    v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(1);
+    v["v2"]["periods"]["month"]["situation_effect_bp"] = json!(1);
+    let e = &mut v["v2"]["economy"];
+    e["repair_urgent_condition_pts"] = json!(0);
+    e["fault_condition_pts"] = json!(fault);
+    e["fault_fixed_condition_pts"] = json!(fixed);
+    for i in 1..4 {
+        tpl(v, "P-DOTRAJALO")["answers"][i]["criteria"] = json!([1, 2, 3, 4]);
+    }
+}
+
+/// Pregled L1-13 dio 1 (M3): provjera načela šutnje računa i pravilo kvara prostora (`fault` iz predloška), ne
+/// `fault: false`. P-DOTRAJALO je kvar prostora; uz ključeve kvara (−1 / +2) hitni popravak ocjene 4 diže stanje
+/// za +1 neto, šutnja ga spušta za −1, pa šutnja nije bolja. Bez ključeva (0 / 0) šutnja je jeftinija uz iste bodove
+/// i krši načelo: provjera je osjetljiva na kvar.
+#[test]
+fn silence_check_counts_the_space_fault() {
+    assert!(
+        hit(|v| fault_case(v, 0, 0), SilenceNotBetter, "P-DOTRAJALO"),
+        "bez ključeva kvara šutnja je jeftinija uz iste bodove"
+    );
+    assert!(
+        !hit(|v| fault_case(v, 100, 200), SilenceNotBetter, "P-DOTRAJALO"),
+        "uz kvar (−1) i popravak ocjene ≥ 4 (+2) odgovor drži stanje više od šutnje: provjera mora računati kvar"
+    );
+}
+
+/// Sadržaj s faktorima razina `levels` (ključna, važna, svakodnevna), P-DOTRAJALO važnosti `weight`, faktorima kruga
+/// zapisanima u testu (325 tjedno, 350 mjesečno, kao na c1ef169) i bez starog ključa hitnog popravka.
+fn level_case(v: &mut Value, levels: (u16, u16, u16), weight: u8) {
+    v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(325);
+    v["v2"]["periods"]["month"]["situation_effect_bp"] = json!(350);
+    let e = &mut v["v2"]["economy"];
+    e["repair_urgent_condition_pts"] = json!(0);
+    e["significance_bp"] = json!({"key": levels.0, "important": levels.1, "everyday": levels.2});
+    tpl(v, "P-DOTRAJALO")["weight"] = json!(weight);
+}
+
+/// Pregled L1-13 dio 2 (Minor 1): provjera načela šutnje računa razinu iz `weight` predloška
+/// (`Significance::from_weight`), kao igra, a ne uvijek „važna". Šutnja P-DOTRAJALO gubi opremu privremenim
+/// popravkom (−100 × faktor kruga × faktor razine): uz faktor 10 000 to je −3 boda, uz 1 000 manje od pola boda
+/// (0), pa je šutnja tada jeftinija uz iste bodove i krši načelo.
+#[test]
+fn silence_check_uses_level_from_weight() {
+    let low = 1_000;
+    // Svakodnevna (weight 1–2) s faktorom 0,1: šutnja ne gubi ništa → krši.
+    for weight in [1, 2] {
+        assert!(
+            hit(
+                |v| level_case(v, (10_000, 10_000, low), weight),
+                SilenceNotBetter,
+                "P-DOTRAJALO"
+            ),
+            "weight {weight} je svakodnevna: provjera mora računati faktor svakodnevne"
+        );
+    }
+    // Ključna (weight 4) s faktorom 0,1: isto.
+    assert!(
+        hit(
+            |v| level_case(v, (low, 10_000, 10_000), 4),
+            SilenceNotBetter,
+            "P-DOTRAJALO"
+        ),
+        "weight 4 je ključna: provjera mora računati faktor ključne"
+    );
+    // Važna (weight 3) ima faktor 1,0: šutnja gubi −3, nema kršenja (i kad su ostale razine 0,1).
+    assert!(
+        !hit(
+            |v| level_case(v, (low, 10_000, low), 3),
+            SilenceNotBetter,
+            "P-DOTRAJALO"
+        ),
+        "weight 3 je važna: faktor 10 000"
+    );
+    // Kontrola: uz neutralne faktore nijedna razina ne krši.
+    for weight in [1, 2, 3, 4] {
+        assert!(
+            !hit(
+                |v| level_case(v, (10_000, 10_000, 10_000), weight),
+                SilenceNotBetter,
+                "P-DOTRAJALO"
+            ),
+            "weight {weight} uz neutralne faktore"
+        );
+    }
 }
 #[test] // 13 (B1b): uvjet stanja vrijedi samo na prostoru koji se troši
 fn breakdown_needs_a_space_that_wears() {
@@ -284,26 +394,27 @@ fn breakdown_needs_a_space_that_wears() {
 #[test] // 12 (B1a, I2): načelo šutnje računa v2 situacije, obje vrste kruga
 fn silence_principle_uses_v2_situation_mechanics() {
     let week_off = |v: &mut Value| v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(1);
-    let no_bonus = |v: &mut Value| v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(0);
+    // Stari ključ hitnog popravka: u repou ga od L1-13 dijela 4 nema (0), stari snimci ga nose (100).
+    let old_bonus = |v: &mut Value| v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(100);
     assert!(!hit(|_| {}, SilenceNotBetter, "P-DOTRAJALO"));
     assert!(
-        !hit(week_off, SilenceNotBetter, "P-DOTRAJALO"),
-        "+10 odvaja hitni odgovor od šutnje"
+        !hit(old_bonus, SilenceNotBetter, "P-DOTRAJALO"),
+        "šutnja gubi opremu (privremeni popravak)"
     );
     assert!(
-        !hit(no_bonus, SilenceNotBetter, "P-DOTRAJALO"),
-        "šutnja i dalje gubi opremu (privremeni popravak)"
-    );
-    assert!(
-        hit(
+        !hit(
             |v| {
                 week_off(v);
-                no_bonus(v)
+                old_bonus(v)
             },
             SilenceNotBetter,
             "P-DOTRAJALO"
         ),
-        "tjedni krug bez bonusa: bodovi 0 = 0, šutnja jeftinija (80 € prema 250 €)"
+        "+1 starog ključa odvaja hitni odgovor od šutnje"
+    );
+    assert!(
+        hit(week_off, SilenceNotBetter, "P-DOTRAJALO"),
+        "tjedni krug bez bonusa (repo od dijela 4): bodovi 0 = 0, šutnja jeftinija (80 € prema 250 €)"
     );
 }
 #[test] // 9: dug smije samo padati
@@ -326,10 +437,8 @@ fn debt_list_only_shrinks() {
     other_dir.push((LabelLengths, &["P-NEPOSTOJI"][..]));
     check_principles_with(&c, &other_dir)
         .expect("šifra koje nema (druga mapa sadržaja) ne ruši učitavanje");
-    assert!(
-        check_principles_with(&c, &[]).is_err(),
-        "bez popisa duga današnji sadržaj pada"
-    );
+    // L1-13 dio 4: sav dug je otplaćen, pa repo prolazi i bez popisa.
+    check_principles_with(&c, &[]).expect("dug je 0: repo prolazi i bez popisa duga");
 }
 #[test]
 fn snapshot_from_the_log_is_never_checked_for_principles() {

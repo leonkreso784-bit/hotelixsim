@@ -1,8 +1,8 @@
 //! L1-13 dio 2: razine značaja u sadržaju. (a) razina se IZVODI iz `weight` predloška (4 ključna, 3 važna, 1–2
 //! svakodnevna): u repou 9 / 17 / 29 od 55 predložaka, bez novog polja u `situation_templates.json`;
-//! (b) ključ `economy.significance_bp {key, important, everyday}` u repou ne postoji (sve tri 10 000 do dijela 4,
-//! pečat i otisak bajt-isti), bez ključa se čita kao 10 000, a sva tri 10 000 se ne zapisuju; (c) izvan 1 000..=30 000
-//! provjera kataloga odbija, a nepoznato polje u objektu odbija učitavanje.
+//! (b) ključ `economy.significance_bp {key, important, everyday}` je u repou od dijela 4 postavljen (ključna nosi
+//! više od svakodnevne), bez ključa se čita kao 10 000 (stari snimci), a sva tri 10 000 se ne zapisuju; (c) izvan
+//! 1 000..=30 000 provjera kataloga odbija, a nepoznato polje u objektu odbija učitavanje.
 
 use content::{Content, Snapshot, fingerprint_value, repo_dir};
 use serde_json::{Value, json};
@@ -24,6 +24,16 @@ fn levels(c: &Content) -> (u16, u16, u16) {
 fn with(levels: Value) -> Value {
     let mut v = repo_value();
     v["v2"]["economy"]["significance_bp"] = levels;
+    v
+}
+
+/// Repo bez ključa razina (kao stari snimak prije dijela 4).
+fn without_key() -> Value {
+    let mut v = repo_value();
+    v["v2"]["economy"]
+        .as_object_mut()
+        .unwrap()
+        .remove("significance_bp");
     v
 }
 
@@ -62,19 +72,32 @@ fn templates_have_no_significance_field() {
     );
 }
 
-#[test] // 3
-fn repo_significance_keys_are_neutral_until_part_four() {
+#[test] // 3 (L1-13 dio 4, test čuvara 6): faktori razina su u repou postavljeni (B2: bodovi po razini). Brojke bira
+// kalibracija; test traži samo poredak: ključna nosi više od svakodnevne (i nakon kalibracije), važna je između.
+fn repo_significance_factors_set() {
     let v = repo_value();
+    let key = v["v2"]["economy"]
+        .get("significance_bp")
+        .expect("significance_bp je u content/hotel/v2/economy.json");
+    for field in ["key", "important", "everyday"] {
+        assert!(key.get(field).is_some_and(Value::is_u64), "{field}: {key}");
+    }
+    let (k, i, e) = levels(&build(&v).unwrap());
+    assert!(k > e, "ključna ({k}) mora nositi više od svakodnevne ({e})");
     assert!(
-        v["v2"]["economy"].get("significance_bp").is_none(),
-        "bez ključa u economy.json do dijela 4"
+        k >= i && i >= e,
+        "ključna ≥ važna ≥ svakodnevna: {k} / {i} / {e}"
     );
-    assert_eq!(levels(&build(&v).unwrap()), (10_000, 10_000, 10_000));
+    assert_ne!(
+        (k, i, e),
+        (10_000, 10_000, 10_000),
+        "faktori nisu neutralni"
+    );
 }
 
 #[test] // 3
 fn missing_significance_reads_neutral() {
-    let old = repo_value();
+    let old = without_key();
     assert_eq!(levels(&build(&old).unwrap()), (10_000, 10_000, 10_000));
     assert_eq!(
         fingerprint_value(&Snapshot::from_value(&old).unwrap().to_value()),

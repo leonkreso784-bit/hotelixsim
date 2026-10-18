@@ -742,8 +742,13 @@ fn click_loses_part_of_gain() {
 fn click_on_a_weaker_answer_also_loses_gain() {
     // Klik na odgovor ocjene 3 nije „ograničen" (capped: false) i nema dobiti zadovoljstva, ali je klik pa gubi dobit
     // stanja prostora (hitni popravak): „klik nosi 75 %" vrijedi za svaki klik, ne samo za najbolji.
+    // Dobit stanja prostora ovdje daje stari ključ hitnog popravka (repo od L1-13 dijela 4 ima 0): snimak ga nosi
+    // izričito, kao stara igra.
     let run = |bp: u16| {
-        let mut g = gain_game(None, bp);
+        let mut v = snap_gain(bp).to_value();
+        v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(100);
+        let snap = Snapshot::from_value(&v).unwrap();
+        let mut g = common::v2_game_with(&snap, SEED, settings(None));
         let (s, i) = first_gainful(&mut g, 3, Gain::Repair);
         let before = rooms_condition(&g);
         click(&mut g, &s, i);

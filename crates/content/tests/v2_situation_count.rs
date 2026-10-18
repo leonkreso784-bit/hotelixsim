@@ -132,3 +132,40 @@ fn count_does_not_depend_on_hotel_condition() {
         );
     }
 }
+
+/// L1-13 dio 4 (pregled dijela 3, M2): razina očekivane popunjenosti kruga je javna funkcija jezgre
+/// (`SituationCounts::level`: 0 niska < 75 %, 1 srednja 75–89 %, 2 visoka od 90 %) i ne ovisi o broju situacija, pa
+/// vrijedi i za neuobičajen broj (3 / 3 / 5: srednja razina ima isti broj kao niska, ali je i dalje srednja). Broj
+/// kruga je uvijek broj te razine (`for_occupancy`).
+#[test]
+fn occupancy_level_is_independent_of_counts() {
+    for (occ, level) in [
+        (0, 0),
+        (7_499, 0),
+        (7_500, 1),
+        (8_000, 1),
+        (8_999, 1),
+        (9_000, 2),
+        (10_000, 2),
+    ] {
+        assert_eq!(SituationCounts::level(occ), level, "popunjenost {occ} bp");
+    }
+    for (low, mid, high) in [
+        (3, 3, 5),
+        (3, 4, 5),
+        (4, 5, 6),
+        (5, 7, 8),
+        (3, 3, 3),
+        (8, 8, 8),
+    ] {
+        let c = SituationCounts::new(low, mid, high).unwrap();
+        let by_level = [low, mid, high];
+        for occ in (0..=10_000_u16).step_by(125).chain([7_499, 8_999]) {
+            assert_eq!(
+                c.for_occupancy(occ),
+                by_level[SituationCounts::level(occ)],
+                "{low}/{mid}/{high} uz {occ} bp"
+            );
+        }
+    }
+}

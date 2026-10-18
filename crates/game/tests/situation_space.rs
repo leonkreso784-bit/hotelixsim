@@ -98,9 +98,25 @@ fn find_if(
 
 const SEEDS: u64 = 100;
 
+/// Repo kao stari snimak (prije L1-13 dijela 4): stari ključ hitnog popravka `repair_urgent_condition_pts` 100, bez
+/// ključeva kvara i s punom dobiti klika. Testovi ovdje mjere samo stari ključ, koji ostaje radi starih igara.
+fn old_key_value() -> serde_json::Value {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    let e = v["v2"]["economy"].as_object_mut().unwrap();
+    for k in [
+        "fault_condition_pts",
+        "fault_fixed_condition_pts",
+        "click_gain_bp",
+    ] {
+        e.remove(k);
+    }
+    e.insert("repair_urgent_condition_pts".into(), json!(100));
+    v
+}
+
 #[test]
 fn drawn_department_gets_the_urgent_repair() {
-    let snap = Snapshot::read_v2(&repo_dir()).unwrap();
+    let snap = Snapshot::from_value(&old_key_value()).unwrap();
     let me = hotel_ids()[0];
     let (seed, f) = (1..=40)
         .find_map(|seed| find(&snap, seed).map(|f| (seed, f)))
@@ -144,7 +160,7 @@ fn drawn_department_gets_the_urgent_repair() {
 /// ne ide u Održavanje).
 #[test]
 fn condition_of_moves_the_repair_to_that_space() {
-    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    let mut v = old_key_value();
     // L1-13-1b: klik umanjuje popravak (`click_gain_bp`); ovaj test mjeri samo odjel popravka, pa je dobit puna.
     v["v2"]["economy"]
         .as_object_mut()
