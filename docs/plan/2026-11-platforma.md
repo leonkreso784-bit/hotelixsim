@@ -267,3 +267,9 @@ mjesec… trebat će nam nekoliko sesija da inženjerski postavimo temelje profe
 hotela** (recepcija, restoran, wellness, održavanje). Uz to: situacije pripremljene unaprijed uz profesorov izbor (ne u hodu),
 ritam bira profesor. → cigla **PR-1** u [ROADMAP/platforma](./ROADMAP/platforma.md) (najprije nacrt s raspravom, ADR-006);
 vlastite situacije (pitanje 6) Leon želi, ali time nije rekao P3 ili P4.
+
+### 7b. Što je Leon rekao 18.10.2026. ([ADR-060](../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12–14)
+
+- **Pilot igre prije platforme:** deploy je odobren na kraju faze B (nakon OK-a za sloj1 → `main`), uz prijedlog hostinga s €/mj i zaštitu AI troška.
+  To je izlazak igre na internet, ne P3 platforme; §5 i pitanje 3 ostaju otvoreni za P3.
+- **Bez podrške profesora i fakulteta nema cijelog proizvoda do studenog:** cigle ovog plana čekaju profesorov odgovor; plan ostaje nacrt.

@@ -14,3 +14,7 @@ prije pilota), uz Leonov izričit OK ([ADR-005](ADR-005-radi-bez-pitanja-pretpos
 [ADR-058](ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) t. 9. Pružatelj nije odlučen: plan predlaže Railway Hobby (~5–10 €/mj [PROC]),
 a Leon 17.10. (E3, [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)): *„hosting je najmanje problem, mislim da ćemo koristiti
 Cloudflare, još nije sigurno"*; Supabase mu je privlačan, ali ga je strah latencije. Naslov „Railway tek za pilot" ostaje kao povijest odluke.
+
+**Izmjena 18.10. (Leonova odluka, [ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12–14).** Pilot igre izlazi na internet
+odmah na kraju faze B, nakon Leonova OK-a za spajanje `model-v2/sloj1` → `main` (deploy je za taj jedan izlazak odobren unaprijed). Prije objave:
+prijedlog hostinga s €/mj i zaštita AI troška (pristupni kod ili ograničenje poziva). Pružatelj se bira u prijedlogu; Railway nije obvezan.

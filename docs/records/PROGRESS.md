@@ -4,6 +4,33 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-18 (9) — Sesija 9 (17.–18.10.): PRAVILO-c, IZGLED-c, L1-13 dijelovi 1 i 1b i banka (280 ljudi) spojeni i objavljeni
+
+- **CI nakon PRAVILO-b dovršen:** ponovljeni `cargo test --workspace` (s bazom) i `corepack pnpm test` oba EXIT 0. Osnovica za dalje je `nakon-pravilo-b/`.
+- **PRAVILO-c spojen** (8e39085): napomena uz ponuđene odgovore kad klik daje najviše 4, a presuda kaže je li odgovor prepisan ili zalijepljen.
+  Pregled sonnet Approved, 2 Minor. CI: sve EXIT 0, a v2 tjedno i mjesečno bajt-isti s `nakon-pravilo-b/`.
+- **IZGLED-c spojen** (879da8a + dopuna 69762f1): policajac, vatrogasac (s kacigom), djelatnik hitne (crvena odora, plava zvijezda života) i
+  liječnik (nova uloga `lijecnik`, bijela kuta i stetoskop) nose odoru na avataru; `/likovi` ima red „Službe". Pregled sonnet Approved.
+  Raspored na mobitelu popravio je voditelj (a833ec9). Prvi commit tog popravka nije uspio (`-am` uz `-F`), pa je trebalo drugo spajanje ([BUGS](BUGS.md) B17).
+- **L1-13 kartica i dijelovi:** puna kartica s pet dijelova (d2be165). **Dio 1, kvar prostora** (7f22802): kvar skida 1 bod stanja prostora, a hitni
+  popravak uz ocjenu 4–5 vraća 2. U repou je iza ključa, isključeno, pa je balans bajt-isti. Pregled opus Approved, 3 Minor.
+  **Dio 1b, klik** (9813b8a): u situaciji s likom klik zadrži 85 % dobiti, a trošak je pun. Graditelj je bio BLOCKED (ni dobit 0 nije držala
+  branu od 75 %). Dijagnoza opusa pokazala je zašto: situacije bez lika nose 39 % / 70 % Δ, a trošak klik smanjuje. Leon je zatim odlučio
+  M1: brana mjeri samo situacije s likom. Pregled opus tražio je 8500 umjesto neodobrenih 9000 i presudio 5 izmjena testova čuvara (B18).
+- **Banka ljudi spojena** (ee0f673, 280 ljudi: radnici 110, gosti 110, vanjski 60; pečat 000/001). Paralelna sesija banke 9b zatim je napravila
+  K4 i K5 i ulogu `lijecnik` (530 ljudi, grana 106ede1 „SPREMNO ZA SPAJANJE", još nije spojena).
+- **Leonove odluke** (pet anketa i tekst): uniforme, klik ~75 % gdje se piše, razine značaja, „zadovoljan gost" ≥ 4, kvar = 9 predložaka, „s gostima" 27/55,
+  **pilot odobren na kraju faze B**, a bez podrške fakulteta nema cijelog proizvoda do studenog → [ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md)
+  (i pretpostavke 🟨 t. 17–20). Leon dao „ok za sve" za push `model-v2/sloj1`.
+- **Railway:** na Leonov zahtjev obrisana su oba projekta KuhAI (`ajkuham` s Postgresom i `zoological-sparkle`). Railway briše s odgodom 48 h
+  (`deletedAt` 2026-10-20 01:23 UTC), a do tada se mogu vratiti ([BUGS](BUGS.md) B21).
+- **L1-13 dio 2 (značaj):** čuvar je zaustavljen usred rada na Leonov „idemo završit za danas". Ništa nije commitano, a necommitano je spremljeno
+  u `l113-2-provjere/cuvar-prekinut-necommitano.diff`. Sesija 10 čisti stablo i šalje novog čuvara.
+- **Gdje se vidi:** GitHub, `model-v2/sloj1` d8d991f (+ e700e7a predaja i docs-commit ovog kraja). Svako spajanje je pushano, a GitHub CI je zelen
+  (39075464484 … 39096546459). `main` ostaje demo do kraja faze B. Izvještaj: `.superpowers/sdd/2026-10-14-popravak-temelja/kraj-18-10-9.md`.
+
+---
+
 ## 2026-10-17 (8) — Sesija 8: Leonovih 43 odgovora u ADR-ove, IZGLED i PRAVILO-b spojeni, PRAVILO-c započet
 
 - **Jutro (samo dokumenti):** Leonovi odgovori na 43 pitanja i razgovor → [ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md),

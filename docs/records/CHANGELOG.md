@@ -22,6 +22,18 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
 - IZGLED (a+b) (lokalno 872ff46, bez pusha): lik u situaciji i razgovoru dobiva rod, dobnu skupinu i podrijetlo (API `character.look`, `character_look`), a web crta lice iz tih podataka (`lookFor(ime, hint)`): gošća nema bradu, gost nema naušnice, stariji lik ima sijedu kosu. Lik bez podataka (sidra S1–S4, ljestvica) izgleda isto kao prije. Razgovorna tijela API-ja preseljena iz `schema.rs` u `schema_situations.rs` (dug 1770 → 1717 redaka). Balans bajt-isti.
 - PRAVILO-b (lokalno ee6de80, bez pusha): balans v2 ima šesti put „klik najbolji" (najviše 4 gdje situacija ima lika), lanac B3 s četiri koraka (najbolji > klik > srednji > prepušteno > šutnja) i ispis „težina klika" (tjedno A/B/C 38,9 / 45,1 / 37,7 %, mjesečno 24,0 / 32,2 / 19,0 %; samo ispis, nije brana). Stari brojevi balansa isti; igra i `CORE_VERSION` nedirnuti.
 - Dokumenti 17.10. (lokalno, bez pusha): Leonove odluke iz 43 odgovora ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)–[058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md)), kartica [L1-13](../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), nacrt rizika „likovi nalik poznatim osobama" ([BANKA_LJUDI §7](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)) i dubinska provjera arhitekture ([E4](../architecture/PROVJERA_ARHITEKTURE_2026-10-17.md)).
+- PRAVILO-c (`model-v2/sloj1` 8e39085, na GitHubu): uz ponuđene odgovore u situaciji s likom student vidi napomenu da klik daje najviše 4 od 5.
+  Presuda kaže je li odgovor prepisan od ponuđenog (vrijedi kao klik) ili zalijepljen (neutralna 3). API: `click_capped`, `copied`, `pasted`. Balans bajt-isti.
+- IZGLED-c (879da8a + 69762f1, na GitHubu): policajac, vatrogasac (s kacigom), djelatnik hitne (crvena odora s plavom zvijezdom života, bez crvenog
+  križa) i liječnik (nova uloga `lijecnik`, bijela kuta i stetoskop) nose odoru svoje službe na avataru. Uniforma dolazi iz uloge (API `uniform`),
+  a lice ostaje isto. Galerija `/likovi` ima red „Službe" ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 1–3).
+- L1-13 dio 1 (7f22802, na GitHubu): kvar prostora (9 predložaka) skida 1 bod stanja prostora, a hitni popravak uz ocjenu 4–5 vraća 2.
+  Iza ključa, u repou isključeno; uključuje se u dijelu 4 (kalibracija). Balans i pečat bajt-isti, `CORE_VERSION` 2.5.0.
+- L1-13 dio 1b (9813b8a, na GitHubu): **student osjeti** da klik na ponuđeni odgovor u situaciji s likom zadrži 85 % dobiti (zadovoljstvo, moral,
+  ocjena, oprema, noćenja grupe), a trošak plaća cijeli. Na tim situacijama klik tako nosi 65–74 % učinka vlastitog odgovora, a u cijeloj igri ~90 %.
+  Napomena uz odgovore sad kaže „najviše 4 od 5 i manji učinak odluke". Balans: nova brana „B3 klik" (≤ 75 % na situacijama s likom), a put „srednji" računa se kao klik
+  ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 4–7, 17).
+- Banka ljudi (ee0f673, na GitHubu): 280 ljudi (radnici 110, gosti 110, vanjski 60), serije 000 i 001 zapečaćene. Igra banku još ne čita.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.

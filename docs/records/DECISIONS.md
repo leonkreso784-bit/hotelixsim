@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-060"></a>[ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) | Leonove odluke 18.10. i pretpostavke sesije 9: uniforme, klik 75 % gdje se piše, pilot prije proizvoda | ✅ Leonove odluke 18.10., 🟨 t. 17–20 ČEKA LEONOV PREGLED | 2026-10-18 |
 | <a id="adr-059"></a>[ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) | Pretpostavke sesije 8: PRAVILO-b u balansu, IZGLED pri spajanju, PRAVILO-c, jedan Rust slot | 🟨 ČEKA LEONOV PREGLED | 2026-10-17 |
 | <a id="adr-058"></a>[ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) | Pretpostavke sesije 7 i 8: IZGLED, vanjski, plan platforme, K2, PRAVILO-a, sesija banke, banka hotela | 🟨 ČEKA LEONOV PREGLED | 2026-10-17 |
 | <a id="adr-057"></a>[ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) | Leonove odluke sesije 7 (16.–17.10.): redoslijed, B13, stil lika, vanjski, sesija banke, platforma, disk | ✅ Leonove odluke 16. i 17.10. | 2026-10-17 |

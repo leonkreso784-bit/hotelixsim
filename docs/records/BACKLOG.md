@@ -78,6 +78,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [prije Railwaya]
 
+- [pilot] **Prije deploya pilota (kraj faze B)** — prijedlog hostinga s €/mj i najjeftinijom varijantom, zaštita AI troška (pristupni kod ili ograničenje AI poziva po igri/danu), jer prijave nema ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12). Stavke ispod ovog naslova pregledati za taj izlazak.
 - [prije Railwaya] **Red poslova:** mogući deadlock u expiry `UPDATE` bez reda/`SKIP LOCKED` tek uz više radnika; seq overflow kao `sqlx::Error::Protocol`; dvostruke dev-ovisnosti u `store`. (T7, T8)
 - [prije Railwaya] **Nema testa za `connect_lazy` na nedostupnu bazu (~3 s) ni `migrate` na svježoj bazi.** (Task 4 #3, L55)
 - [prije Railwaya] **sqlx bez TLS značajke** — dodati `tls-rustls` (nikad native-tls/openssl). (Task 4 #4, L56)
@@ -134,6 +135,7 @@ nalazi pregleda koji nisu popravljeni.
 - [sloj1] **C5, uvjet prije dizanja bonusa popravka:** ekran odjela (`apps/web` `helpers.ts` `shownChanges`) pripisuje popravak iz situacije „održavanju"; uz +1 nevidljivo, uz +10 kriva pouka. ([ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md); B1a)
 - [sloj1] **Mjere robota nakon B1a (za L1-13):** tjedno §11.3 pravednost 560 > 499, J-3 Brižni 43,5 %, „tjedno ≈ mjesečno" B brižni; uz `--situations` ispod 4/5/6 mjesečno J-3 raznolikost P-POHVALA 25 % > 15 % (B2b). Ne ruše `--check`.
 - [sloj1] **Odgođeni minori B2a–B1a** (detalj: [ledger](../archive/2026-10-15-popravak-temelja-faza-b-ledger.md), redci „minor (deferred)"): B2a: test 5 pečata djelomično tautologija, `draw.rs` 556 redaka, `model.rs:1423` opis „zadanim"→„izričitim"; B2b: `--situations` uz v1 tiho zanemaren, `run_v2` n-torka, bez rubnih testova; B3a: put „bez situacija" se vrti 1000× bez potrebe, zaglavlje „kao dio raspona plana" ≠ |Δ|/(|Δ|+R), `has_drawn` suvišan, `pct` kružni uvoz v2↔v2_answers; B3b: `unwrap_or(("?","?"))` i oprost tiho ignoriraju dug s indeksom ≥ 3, doc `ORDER_DEBT` > 120 znakova; B1a: zastario komentar `ORDER_DEBT_FLOOR` i mrtav mehanizam duga (briše L1-13), pečat ne pokriva bonus > 0, plan čovjeka u pečatu uzak.
+- [sloj1] **Odgođeni minori sesije 9** (ledger popravka, redci „minor (deferred)"; [ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 19): PRAVILO-c — nema testa za `verdict.pasted` (`Verdict.tsx:35`) ni `pasted` u API testu, `hr.ts` `verdict.pasted` tri rečenice → skratiti; IZGLED-c — na 36 px gube se srebrna traka vatrogasca i olovka na kuti; L1-13-1 — M1 redak tablice kvara bez oznake odgovora, M3 `templates_principles.rs:327` šutnja provjerena s `fault: false` (ponoviti u dijelu 4); L1-13-1b (`l113-1b-review.md`) — M1 poruka brane kaže „težine" a mjeri Δ, M2 redak „težina klika" bez „samo ispis", M3 nema negativnog testa za M1, M4 zrcalo `recomputed` ne postavlja `click` za prepisan odgovor, **M5 mentor ne zna da klik na slabiji odgovor gubi 15 % dobiti**, M6 `silence_dominates` samo uz punu dobit, M7 `--check` ~15 % dulji.
 - [sloj1] **P1–P8 🟨 iz plana popravka** pokazati Leonu najkasnije prije B4. (Pečat sa slobodnim odgovorom i planom čovjeka dodan u B1a.)
 - [sloj1] **Razmak prije „%" u tekstovima iz Rusta** (objašnjenje kruga, `crates/game/src/mentor.rs` „{pct} % potražnje") je običan, a web ga ima nelomljivog. Ne dirati dok v1 mora ostati bajt-ist (ili samo u v2 grani teksta). (OD-7)
 - [sloj1] **Mentor i sezonski ugovori:** mentor krajem kolovoza upozori „rujan pada, planiraj kraj sezonskih ugovora"; u v2 redak troškova „fiksni troškovi" (stalni dio zajedničkih službi) treba drugo ime, blizu Računa dobiti — tekst je zajednički s v1, pa objašnjenje mora nositi model (ili `LineDto` drugi uzrok); redak blagajne već se zove „fiksni troškovi zgrade (najam, osiguranje, porez)". (ZP)
@@ -155,7 +157,7 @@ Leonove želje 12.10.; brojke idu kroz Leonovu anketu pri planu sloja 2. Ideje n
 
 Pitanja o domeni ne blokiraju kod: brojke su podaci u katalogu, gradi se s pretpostavkom i mijenja kad odgovori. Leon je 17.10. odgovorio na
 43 pitanja paketa ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)); stare stavke v1 (brojke prve igre, A12) i
-riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) i [ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md).
+riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md), [ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) i [ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 17–20.
 
 - [leon] **Slijepi pregled tekstova B4a, B4b i B4c** (B1 „ok", još nije napravljen) — `.superpowers/sdd/2026-10-14-popravak-temelja/b4a-pregled-tekstova.md`, `b4b-pregled-tekstova.md`, `b4c-pregled-tekstova.md` (uz „Napomene voditelja"); blokira L1-15, ne spajanje. Nakon njega B4-ispravci i napomene a–e iz B2 ([ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md) t. 6).
 - [leon] **Ocjene za mjerilo AI-ja** (B4 „ok") — upisati `leon_quality` (1–5) za 40 nacrta odgovora, pa `cargo run -p ai --bin mjerilo -- S1 S2` (prag 80 % unutar ±1); prije C3. Odgovor: `content/hotel/mjerilo/S1.json`, `S2.json`, DEMO §11 t. 7.
@@ -167,13 +169,13 @@ riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DE
 - [kvaliteta] **Duboka provjera arhitekture (E4)** — Leon: „ti provjeri duboko i reci mi je li ok"; dubinski pregled (najjači model) → nalaz Leonu → tek tada ✅ [ADR-003](DECISIONS/ADR-003-arhitektura-rust-jezgra-backend-typescript-sucelje.md) i usklađivanje ARHITEKTURA/ROADMAP.
 - [prije L1-13] **Istražiti prave hotele i prave plaće** — broj soba i ljudi po odjelu u stvarnim hotelima raznih veličina (A10, norma [ADR-032](DECISIONS/ADR-032-sloj-1-odjeli-u-obracunu-i.md) t. 9) i plaće po ulozi u hrvatskom hotelijerstvu (A12: 2.200 € ima rijetko tko osim direktora i nekih voditelja).
 - [L1-13] **Tablica značaja situacija** (B2) — tri razine s boljim imenima (danas `weight` 1–4 i `major: high|low`, student ih ne vidi); značajnije situacije i pametnije odluke nose više bodova.
-- [L1-13] **Tumačenja za Leona uz tablicu:** „zadovoljan gost" = ocjena ≥ 4; imena triju razina; ADR-046 t. 1 („i uz ocjenu 1") nadjačan.
+- [L1-13] ~~Tumačenja za Leona uz tablicu~~ — **odlučeno 18.10.**: „zadovoljan gost" = ocjena ≥ 4, razine ključna / važna / svakodnevna ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 8–9).
 - [L1-13] **Slabiji odgovor s troškom** (A4 „ok") — jednom slabijem odgovoru dati trošak (npr. pretjeranu naknadu, kao P-KLIMA[2]), da „biraj jedini koji gostu nešto daje" ne pogađa najbolji. Izvor: `b4b-pregled-tekstova.md`.
-- [L1-13] **Klik nosi 92–95 % vlastitog odgovora** (pregled PRAVILO-b I1, 17.10.) — klik gubi samo ocjenu (5 → 4), ne mehanike najboljeg; tjedno B 45,1 % prema 48,9 %, a ADR-047 t. 3 očekivao ~75 %. Leon u anketi L1-13: prihvatiti, klik gubi i dio mehanika, ili cilj težine klika ([ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 4).
+- [L1-13] ~~Klik nosi 92–95 % vlastitog odgovora~~ — **odlučeno 18.10.** i spojeno (9813b8a): klik zadrži 85 % dobiti, brana ≤ 75 % na situacijama s likom; ukupno ~90 % ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 4–7). Dio 4 ponavlja mjerenje (t. 18).
 - [leon] **Pregled 10–20 lica jednog kruga u igri** (C11, IZGLED spojen 872ff46) — Leon mijenja frizure po rodu, učestalost brade (1 od 3) i naušnica (1 od 2) u `look.ts` (`HINT_HAIR_F/M`).
-- [web] **IZGLED-c: uniforme vanjskih** (Leon 17.10.) — policijska, vatrogasna, hitna i liječnici; uniforma iz uloge ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) C10), banka ne mijenja format; kartica u sesiji 9.
+- [leon] **Pregled reda „Službe" na `/likovi`** (IZGLED-c spojen 879da8a) — policajac, vatrogasac, hitna, liječnik; boje `#1F2F4D` i `#C8102E` 🟨 ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 20).
 - [banka ljudi] **K5 zamjenjuje popis imena zapisima banke** (IZGLED) — tada `Origin` dobiva vrijednosti po zemlji, a tamniji tonovi kože (3, 4, 5, 7) ulaze u bazene.
-- [sloj1] **Balans ne ograničava put „srednji"** (pregled PRAVILO-b M1) — igra uz vlastiti odgovor ograničava svaki klik; danas isto jer je srednji ≤ 4, razilazi se tek uz predložak s dva odgovora (ADR-059 t. 5).
+- [sloj1] ~~Balans ne ograničava put „srednji"~~ — **zatvoreno 18.10.**: put „srednji" je u balansu klik, kao u igri ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 17 🟨).
 - [L1-14] **Priče hotela A i B i obnova od 150.000 €** (A12) — Leon provjerava pri igranju sezone („prepoznajem li ovaj hotel?").
 - [faza C+] **Sučelje soba** (A1) — svaka soba vidljiva i obnovljiva zasebno; nova mehanika i ekran, 3–5 cigala, ne u L1-13 ([ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) Izmjena 17.10.).
 - [faza C+] **Mjere potrošnje hotela** (A13) — energija i voda kao pokazatelj u igri (nova mehanika).
@@ -217,6 +219,7 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
 
 ## CI i alati
 
+- [ci] **`biome` glavnog stabla čita `.superpowers/`** (gitignorirano, GitHub CI ga ne vidi) — skripta sesije banke rušila je lokalni `lint` ([BUGS](BUGS.md) B19); izuzeti `.superpowers/**` u `biome.json`.
 - [alati] **Sokratis `docs` mjeri staro pravilo (2026-10-13)** — 0/100, 124 nalaza: 122 „not-indexed" (traži svaki dio u
   `docs/README.md`; naše pravilo 2 dopušta podindeks `X.md`), 1 „multiple-active-plans" (taskove u mapi plana broji kao
   planove), 1 „docs-lag" (točno). Uz to mjeri tekuće stablo i kad mu se zada druga mapa. Prijedlog: Sokratis za

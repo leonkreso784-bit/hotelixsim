@@ -43,3 +43,6 @@ PRAVILO-a t. 14) ovdje se ne ponavlja. Svaka stavka ima cijenu ako je kriva.
     u testu igra modela v1 (`classic_game_never_marks_click_capped`). Napomena `click_capped` vrijedi gdje se piše vlastiti odgovor (`free_text`, u praksi lik).
     Web testovi traže dijelove teksta (`/Klikom dobivaš najviše 4 od 5/`, `/vrijedi kao klik/`), ne cijeli tekst. Cijena: jedan test više kad nova igra
     dobije izbor pravila.
+
+**Dopuna 18.10.:** t. 4 razriješio je Leon (klik ~75 % samo na situacijama s likom, `click_gain_bp` 8500), a t. 5 zatvara pretpostavka
+„put srednji je u balansu klik" — oboje u [ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 4–7 i 17.

@@ -5,6 +5,32 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-18 — sesija 9
+
+**B17. Commit popravka nije napravljen, a spajanje je otišlo bez njega** (IZGLED-c, voditeljev popravak reda „Službe" a833ec9).
+*Uzrok:* `git commit -am x -F poruka` puca jer `-m` i `-F` ne idu zajedno. Greška se nije vidjela, pa je `merge` spojio granu bez popravka
+i trebalo je drugo spajanje (69762f1). *Pouka:* commit samo `git add …` + `git commit -F <datoteka>`, bez `-m`. Prije spajanja
+`git log -1 --stat` grane mora pokazati očekivani commit. *Stanje:* popravljeno drugim spajanjem.
+
+**B18. Graditelj je mijenjao testove čuvara izvan dopuštenog** (L1-13-1b: `v2_b4_labels`, `situation_fault`, `situation_space`, `v2_click_gain`, naslov u `answer_gates_v2`).
+*Uzrok:* nova formula brane (Leonova odluka M1) i umanjena dobit klika dirnule su testove koje čuvar nije predvidio, a graditelj ih je sam prilagodio.
+*Pouka:* graditelj testove čuvara ne mijenja (upute §2). Ako mora, navodi svaku izmjenu izrijekom, a **pregled ih presuđuje pojedinačno**:
+opravdana, slabi li test, što ga sad pokriva. *Stanje:* pregled opus presudio je svih 5 opravdanima, nijedna ne slabi test (`l113-1b-review.md`).
+
+**B19. Lint glavnog stabla pada na datoteci sesije banke u `.superpowers/`** (nakon PRAVILO-c, IZGLED-c, L1-13-1 i banke: `okvir-17-10.mjs`).
+*Uzrok:* `biome` glavnog stabla čita i gitignorirani `.superpowers/`, pa vidi skriptu paralelne sesije. GitHub CI je ne vidi i ostaje zelen.
+*Pouka:* crveni `lint` u CI-ju nakon spajanja prvo provjeri put. Ako je pod `.superpowers/`, nije pad koda, nego se sredi datoteka (ovdje formatiranje).
+*Stanje:* sesija banke formatirala je datoteku 18.10., pa je `nakon-l113-1b` lint EXIT 0. Izuzeće `.superpowers/` u `biome.json` ostaje u [BACKLOG](BACKLOG.md).
+
+**B20. Objašnjenje graditelja o balansu bilo je tanko** (L1-13-1b BLOCKED: „glavni dio Δ klika je trošak").
+*Uzrok:* graditelj je mjerio samo ishod (omjer po `click_gain_bp`), a ne sastav Δ. Dijagnoza je pokazala suprotno: trošak klik **smanjuje** (−76 / −58),
+a omjer drže situacije bez lika (39 % / 70 % Δ), u kojima su klik i vlastiti isti. *Pouka:* kad balans ne drži branu, prije ankete Leonu ide
+**dijagnoza sastava** (opus, varijante po dijelovima). Anketa s krivim uzrokom nudi krive opcije. *Stanje:* `l113-1b-dijagnoza.md` → Leonova odluka M1.
+
+**B21. Railway briše projekte s odgodom od 48 h** (KuhAI `ajkuham` i `zoological-sparkle`, `railway project delete` 18.10.).
+*Uzrok:* Railway projekt samo označi (`deletedAt` 2026-10-20 01:23 UTC), a do tada se može vratiti u nadzornoj ploči.
+*Pouka:* nakon brisanja provjeri `deletedAt` i reci Leonu točan datum brisanja. „Obrisano" nije gotovo do tog datuma. *Stanje:* zakazano za 20.10.
+
 ## 2026-10-17 — sesija 8
 
 **B14. Test balansa tražio iste primjerke i „klik ≤ vlastiti" po sjemenu** (PRAVILO-b; graditelj BLOCKED na čuvarovu testu, kasnije isto u testu ispisa nad medijanom 3 sjemena).
