@@ -7,12 +7,14 @@ use content::{Snapshot, repo_dir};
 use game::command::{GameSettings, new_game_with};
 use game::event::AnswerRule;
 use game::own_words::{
-    CLICK_MAX_QUALITY, COPY_MATCH_BP, NEUTRAL_OWN_WORDS_QUALITY, copied_answer, pasted_answers,
-    words,
+    CAPPED_FACT, CLICK_MAX_QUALITY, COPY_MATCH_BP, NEUTRAL_OWN_WORDS_QUALITY, copied_answer,
+    pasted_answers, words,
 };
 use game::*;
-use serde_json::Value;
+use serde_json::{Value, json};
+use sim_hotel::Mechanic;
 use sim_hotel_v2::PeriodKind;
+use sim_hotel_v2::department::DeptCode;
 use uuid::Uuid;
 
 const SEED: u64 = 42;
@@ -628,4 +630,225 @@ fn response_pasted_reports_the_text_check() {
         .unwrap();
     common::apply_ev(&mut g, guest(), ev);
     assert!(!g.response_pasted(me(), &s.code));
+}
+
+// ---- L1-13 dio 1b (Leon 18.10. t. 1): klik i prepisan odgovor nose `click_gain_bp` od svake dobiti ----
+
+/// Snimak v2 sadržaja s ključem `economy.click_gain_bp` (10 000 = bez gubitka dobiti, kao stari snimak).
+fn snap_gain(bp: u16) -> Snapshot {
+    let mut v = v2_snap().to_value();
+    v["v2"]["economy"]["click_gain_bp"] = json!(bp);
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// Isto sjeme i isti snimak osim ključa klika: do prvog klika obje igre su iste.
+fn gain_game(rule: Option<AnswerRule>, bp: u16) -> Game {
+    common::v2_game_with(&snap_gain(bp), SEED, settings(rule))
+}
+
+/// Zadovoljstvo mojeg hotela u zadnjem obračunatom krugu (stotinke boda).
+fn satisfaction(g: &Game) -> i32 {
+    let CoreState::V2(s) = g.latest_state(me()).unwrap() else {
+        panic!("v2 stanje");
+    };
+    s.satisfaction_pts
+}
+
+/// Stanje prostora Smještaja mojeg hotela u zadnjem obračunatom krugu (bp, 0–10 000).
+fn rooms_condition(g: &Game) -> i32 {
+    let CoreState::V2(s) = g.latest_state(me()).unwrap() else {
+        panic!("v2 stanje");
+    };
+    s.departments[&DeptCode::rooms()].condition_pts
+}
+
+/// Što odgovor daje: zadovoljstvo gosta (oporavak ili krizna komunikacija; učinak je `(q − 3) × k`, pa traži q ≥ 4)
+/// ili stanje prostora (hitni popravak, stari ključ `repair_urgent_condition_pts`; ne ovisi o ocjeni).
+#[derive(Clone, Copy)]
+enum Gain {
+    Satisfaction,
+    Repair,
+}
+
+fn gives(gain: Gain, m: &[Mechanic]) -> bool {
+    m.iter().any(|m| match gain {
+        Gain::Satisfaction => matches!(
+            m,
+            Mechanic::ServiceRecovery { .. } | Mechanic::CrisisCommunication { .. }
+        ),
+        Gain::Repair => matches!(m, Mechanic::EquipmentRepair { urgent: true }),
+    })
+}
+
+/// Prvi krug sa situacijom s likom čiji odgovor ocjene `q` nosi dobit `gain` (za `q` = 5 to je najbolji odgovor);
+/// vraća situaciju i indeks tog odgovora. Student šuti u prethodnim krugovima, pa je nalaz isti u svakoj igri istog
+/// sjemena.
+fn first_gainful(g: &mut Game, q: u8, gain: Gain) -> (Sit, u8) {
+    while let Some(r) = g.current_round() {
+        let found = g
+            .situations_of_hotel(me(), r)
+            .unwrap()
+            .iter()
+            .find_map(|t| {
+                let free = g.ai_entry_for(me(), &t.code).is_some_and(|a| a.free_text);
+                let i = t
+                    .answers
+                    .iter()
+                    .position(|a| a.quality == q && gives(gain, &a.mechanics))?;
+                let best = t.answers.iter().map(|a| a.quality).max() == Some(q);
+                (free && (q < 5 || best) && t.answers.len() >= 2)
+                    .then(|| (t.code.clone(), u8::try_from(i).unwrap()))
+            });
+        if let Some((code, i)) = found {
+            let s = sits(g, r).into_iter().find(|s| s.code == code).unwrap();
+            return (s, i);
+        }
+        close_and_resolve(g);
+    }
+    panic!("nema situacije s likom i traženom dobiti za ocjenu {q}");
+}
+
+/// Klik na odgovor ocjene `q` (prve takve situacije) uz ključ `bp`: obračun hotela, zadovoljstvo i rezultat situacije.
+fn click_gain(rule: Option<AnswerRule>, bp: u16, q: u8) -> (HotelResolution, i32, SituationResult) {
+    let mut g = gain_game(rule, bp);
+    let (s, i) = first_gainful(&mut g, q, Gain::Satisfaction);
+    click(&mut g, &s, i);
+    let res = close_and_resolve(&mut g);
+    let r = result_of(&res, &s);
+    (res, satisfaction(&g), r)
+}
+
+#[test] // 1b-1
+fn click_loses_part_of_gain() {
+    let (full, sat_full, rf) = click_gain(None, 10_000, 5);
+    let (half, sat_half, rh) = click_gain(None, 5_000, 5);
+    let (none, sat_none, rn) = click_gain(None, 0, 5);
+    // Ocjena je ista (klik q 5 vrijedi 4), snižava se samo učinak.
+    for r in [&rf, &rh, &rn] {
+        assert_eq!((r.quality, r.capped), (CLICK_MAX_QUALITY, true));
+    }
+    assert!(
+        sat_none < sat_half && sat_half < sat_full,
+        "dobit zadovoljstva klika: 0 % {sat_none} < 50 % {sat_half} < 100 % {sat_full}"
+    );
+    assert!(
+        half.progress_hundredths <= full.progress_hundredths
+            && none.progress_hundredths <= half.progress_hundredths,
+        "napredak ne raste kad klik gubi dobit"
+    );
+}
+
+#[test] // 1b-2
+fn click_on_a_weaker_answer_also_loses_gain() {
+    // Klik na odgovor ocjene 3 nije „ograničen" (capped: false) i nema dobiti zadovoljstva, ali je klik pa gubi dobit
+    // stanja prostora (hitni popravak): „klik nosi 75 %" vrijedi za svaki klik, ne samo za najbolji.
+    let run = |bp: u16| {
+        let mut g = gain_game(None, bp);
+        let (s, i) = first_gainful(&mut g, 3, Gain::Repair);
+        let before = rooms_condition(&g);
+        click(&mut g, &s, i);
+        let res = close_and_resolve(&mut g);
+        (result_of(&res, &s), rooms_condition(&g) - before)
+    };
+    let ((rf, d_full), (rh, d_half)) = (run(10_000), run(5_000));
+    assert_eq!((rf.quality, rf.capped), (3, false));
+    assert_eq!((rh.quality, rh.capped), (3, false));
+    assert!(d_half < d_full, "stanje prostora: {d_half} < {d_full}");
+}
+
+#[test] // 1b-3
+fn copied_answer_loses_gain_like_click() {
+    let run = |bp: u16| {
+        let mut g = gain_game(None, bp);
+        let (s, i) = first_gainful(&mut g, 5, Gain::Satisfaction);
+        let v = judge(&mut g, &s, &shout(&s.labels[usize::from(i)]), 5, 0);
+        assert_eq!((v.copied, v.quality), (Some(i), CLICK_MAX_QUALITY), "{bp}");
+        let res = close_and_resolve(&mut g);
+        (result_of(&res, &s), satisfaction(&g))
+    };
+    let ((rf, sat_full), (rh, sat_half)) = (run(10_000), run(5_000));
+    assert_eq!((rf.quality, rf.capped, rf.free_text), (4, true, true));
+    assert_eq!((rh.quality, rh.capped, rh.free_text), (4, true, true));
+    assert!(sat_half < sat_full, "{sat_half} < {sat_full}");
+}
+
+#[test] // 1b-4
+fn own_words_best_keeps_full_gain() {
+    let run = |bp: u16| {
+        let mut g = gain_game(None, bp);
+        let (s, i) = first_gainful(&mut g, 5, Gain::Satisfaction);
+        let v = judge(&mut g, &s, "Odgovaram gostu svojim riječima.", 5, i);
+        assert_eq!((v.quality, v.copied), (5, None), "{bp}");
+        let res = close_and_resolve(&mut g);
+        (res, satisfaction(&g))
+    };
+    let ((full, sat_full), (part, sat_part)) = (run(10_000), run(5_000));
+    assert_eq!(sat_part, sat_full, "vlastiti odgovor nije klik");
+    assert_eq!(part, full, "cijeli obračun je isti");
+}
+
+#[test] // 1b-5
+fn classic_click_keeps_full_gain() {
+    let classic = Some(AnswerRule::Classic);
+    let (full, sat_full, rf) = click_gain(classic, 10_000, 5);
+    let (part, sat_part, rp) = click_gain(classic, 5_000, 5);
+    assert_eq!((rp.quality, rp.capped), (5, false));
+    assert_eq!(rp, rf);
+    assert_eq!(
+        sat_part, sat_full,
+        "Classic: klik nije ograničen ni umanjen"
+    );
+    assert_eq!(part, full);
+}
+
+#[test] // 1b-5 (situacija bez lika: klik se smije, nije ni ograničen ni umanjen)
+fn click_without_character_keeps_full_gain() {
+    let run = |bp: u16| {
+        let mut g = gain_game(None, bp);
+        let s = loop {
+            let r = g.current_round().expect("situacija bez lika u sezoni");
+            if let Some(s) = sits(&g, r).into_iter().find(|s| !s.free && s.best_q() == 5) {
+                break s;
+            }
+            close_and_resolve(&mut g);
+        };
+        click(&mut g, &s, s.best());
+        let res = close_and_resolve(&mut g);
+        (res, satisfaction(&g))
+    };
+    assert_eq!(run(5_000), run(10_000));
+}
+
+#[test] // 1b-6
+fn robot_click_keeps_full_gain() {
+    // Roboti klikaju, ali nisu student: isti sezonski tijek uz 50 % i uz 100 % daje iste obračune robota.
+    let play = |bp: u16| {
+        let mut g = gain_game(None, bp);
+        let mut robots = Vec::new();
+        while let Some(r) = g.current_round() {
+            close_and_resolve(&mut g);
+            for h in &g.resolved[&r].hotels {
+                if matches!(
+                    g.hotel(h.hotel_id).unwrap().setup.controller,
+                    Controller::Robot { .. }
+                ) {
+                    robots.push((r, h.clone()));
+                }
+            }
+        }
+        robots
+    };
+    let (full, part) = (play(10_000), play(5_000));
+    assert!(
+        full.iter()
+            .any(|(_, h)| h.situations.iter().any(|s| s.answer.is_some())),
+        "roboti su kliknuli barem jedan odgovor"
+    );
+    assert_eq!(part, full, "roboti uvijek nose punu dobit");
+}
+
+#[test] // 1b-9 (činjenica za mentora kaže i „manji učinak"; `mentor.v4` se ne mijenja)
+fn capped_fact_mentions_smaller_effect() {
+    assert!(CAPPED_FACT.contains("4/5"), "{CAPPED_FACT}");
+    assert!(CAPPED_FACT.contains("manji učinak"), "{CAPPED_FACT}");
 }

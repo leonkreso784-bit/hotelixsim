@@ -2,15 +2,16 @@
 //! nevažne, obrnute ili presudne; robot pritom ne igra nikakvu ulogu. Ravnalo težine (Leon 15.10., opcija 1) je
 //! konstanta u kodu, izmjerena jednom; ovdje se samo čita preko `plan_ruler`.
 //! PRAVILO-b: lanac ima četiri koraka (najbolji > klik najbolji > srednji > prepušteno > šutnja); težina se i dalje
-//! mjeri na vlastitom odgovoru (`best_vs_silent`), klik (`click_vs_silent`) se samo ispisuje.
+//! mjeri na vlastitom odgovoru (`best_vs_silent`); L1-13 dio 1b dodaje branu „B3 klik": težina klika
+//! (`click_vs_silent`) najviše 75 % težine vlastitog najboljeg.
 //!
 //! Izvještaj se uzima iz pravog `run_v2` (3 sjemena), pa se putovi prepišu "čistim" brojkama; tako test mjeri samo
 //! brane, a ne igru. Svaki test gleda samo poruke koje počinju s "B3".
 mod common;
 
 use balance::v2::{
-    ORDER_DEBT, ORDER_DEBT_FLOOR, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, failures_v2,
-    plan_ruler, render_v2, robot_measures_v2, run_v2,
+    CLICK_WEIGHT_MAX_BP, ORDER_DEBT, ORDER_DEBT_FLOOR, OptionsV2, PathReport, ReportV2,
+    WEIGHT_BAND_BP, failures_v2, plan_ruler, render_v2, robot_measures_v2, run_v2,
 };
 use common::content_v2;
 use sim_hotel_v2::{PeriodKind, Profile};
@@ -44,7 +45,8 @@ fn clean(kind: PeriodKind) -> ReportV2 {
     for row in &mut paths_mut(&mut r).rows {
         let ruler = plan_ruler(kind, row.profile);
         row.best_vs_silent = [-50, 100, ruler / 3];
-        row.click_vs_silent = ruler / 4;
+        // Klik nosi 16,7 % uz 25 % vlastitog: omjer 66,7 % (brana najviše 75 %).
+        row.click_vs_silent = ruler / 5;
         row.steps = [100; 4];
     }
     r
@@ -306,16 +308,172 @@ fn print_keeps_only_the_ruler_weight_line() {
     );
 }
 
-/// Težina se mjeri na vlastitom odgovoru (`best_vs_silent`, ADR-047 t. 3); klik se samo ispisuje, ma kakav bio.
+/// Težina klika prema težini vlastitog najboljeg (L1-13 dio 1b, Leon 18.10.): brana najviše 75,0 %. Zrcalo formule
+/// `|Δ| / (|Δ| + ravnalo)` u bp (`share_bp` nije izvezen), samo za računanje rubova u testu.
+fn share(delta: i32, ruler: i32) -> i32 {
+    let d = i64::from(delta).abs();
+    i32::try_from(d * 10_000 / (d + i64::from(ruler).abs())).unwrap()
+}
+
+/// Najveća Δ klika čija je težina još najviše 75 % težine najboljeg s Δ = ravnalo (50,0 %): težina klika ≤ 37,5 %.
+fn edge_click(ruler: i32) -> i32 {
+    let best = share(ruler, ruler);
+    assert_eq!(best, 5_000);
+    let c = (0..=10 * ruler)
+        .take_while(|&c| {
+            i64::from(share(c, ruler)) * 10_000 <= i64::from(CLICK_WEIGHT_MAX_BP) * 5_000
+        })
+        .last()
+        .unwrap();
+    assert!(i64::from(share(c + 1, ruler)) * 10_000 > i64::from(CLICK_WEIGHT_MAX_BP) * 5_000);
+    c
+}
+
+#[test]
+fn click_weight_limit_is_three_quarters() {
+    assert_eq!(CLICK_WEIGHT_MAX_BP, 7_500);
+}
+
+#[test]
+fn click_weight_gate_fails_above_three_quarters() {
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        // Doslovna poruka iz kartice: klik jednako težak kao vlastiti najbolji = 100,0 % (profil A je prvi redak).
+        let mut r = clean(kind);
+        let row = &mut paths_mut(&mut r).rows[0];
+        row.click_vs_silent = row.best_vs_silent[2];
+        let p = row.profile.code();
+        assert_eq!(
+            b3(&r),
+            vec![format!(
+                "B3 klik: {p} klik najbolji nosi 100,0 % težine vlastitog najboljeg (cilj najviše 75,0 %)"
+            )],
+            "{kind:?}"
+        );
+        // 80 % težine: pada samo taj profil i samo brana klika.
+        let mut r = clean(kind);
+        let row = &mut paths_mut(&mut r).rows[1];
+        let ruler = plan_ruler(kind, row.profile);
+        row.best_vs_silent[2] = ruler;
+        row.click_vs_silent = (0..=10 * ruler)
+            .find(|&c| i64::from(share(c, ruler)) * 10_000 >= 8_000 * 5_000)
+            .unwrap();
+        let p = row.profile.code();
+        let f = b3(&r);
+        assert_eq!(f.len(), 1, "{kind:?}: {f:?}");
+        assert!(
+            has(
+                &f,
+                &[
+                    "B3 klik",
+                    p,
+                    "težine vlastitog najboljeg",
+                    "(cilj najviše 75,0 %)"
+                ]
+            ),
+            "{kind:?}: {f:?}"
+        );
+    }
+}
+
+#[test]
+fn click_weight_gate_passes_at_three_quarters() {
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        // Točno na rubu (težina klika = 75 % težine najboljeg, cjelobrojno) prolazi, korak iznad pada.
+        let mut r = clean(kind);
+        for row in &mut paths_mut(&mut r).rows {
+            let ruler = plan_ruler(kind, row.profile);
+            row.best_vs_silent[2] = ruler;
+            row.click_vs_silent = edge_click(ruler);
+        }
+        assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?}: rub prolazi");
+        for row in &mut paths_mut(&mut r).rows {
+            row.click_vs_silent += 1;
+        }
+        let f = b3(&r);
+        assert_eq!(
+            f.len(),
+            3,
+            "{kind:?}: korak iznad ruba pada na sva tri profila: {f:?}"
+        );
+        assert!(f.iter().all(|x| x.starts_with("B3 klik")), "{f:?}");
+    }
+}
+
+#[test]
+fn click_gate_needs_positive_best() {
+    // Uz Δ najboljeg ≤ 0 pada samo „B3 odgovori"; omjer težina nema smisla pa brane klika nema.
+    for best in [0, -100] {
+        for kind in [PeriodKind::Week, PeriodKind::Month] {
+            let mut r = clean(kind);
+            let row = &mut paths_mut(&mut r).rows[0];
+            row.best_vs_silent[2] = best;
+            row.click_vs_silent = 9 * plan_ruler(kind, row.profile);
+            let f = b3(&r);
+            assert!(
+                has(&f, &["B3 odgovori", "na kraju sezone"]),
+                "{kind:?} {best}: {f:?}"
+            );
+            assert!(!has(&f, &["B3 klik"]), "{kind:?} {best}: {f:?}");
+        }
+    }
+}
+
+#[test]
+fn click_gate_is_not_a_robot_measure() {
+    let mut r = clean(PeriodKind::Week);
+    for row in &mut paths_mut(&mut r).rows {
+        row.click_vs_silent = row.best_vs_silent[2];
+    }
+    assert!(!b3(&r).is_empty());
+    assert!(!robot_measures_v2(&r).iter().any(|x| x.contains("B3")));
+}
+
+#[test]
+fn print_has_click_to_own_ratio_lines() {
+    let mut r = report(PeriodKind::Week);
+    // A: klik = najbolji (100,0 %); B: klik bez težine (0,0 %); C: klik = najbolji (100,0 %).
+    for (row, click_equals_best) in paths_mut(&mut r).rows.iter_mut().zip([true, false, true]) {
+        row.best_vs_silent[2] = plan_ruler(PeriodKind::Week, row.profile) / 3;
+        row.click_vs_silent = if click_equals_best {
+            row.best_vs_silent[2]
+        } else {
+            0
+        };
+    }
+    let text = render_v2(&r);
+    assert!(
+        !text.contains("samo ispis, nije brana"),
+        "klik je od sada brana: {text}"
+    );
+    let lines: Vec<&str> = text.lines().collect();
+    let at = lines
+        .iter()
+        .position(|l| {
+            *l == "  klik prema vlastitom (težina klika / težina najboljeg; brana najviše 75,0 %):"
+        })
+        .unwrap_or_else(|| panic!("nema retka omjera klika: {text}"));
+    assert_eq!(
+        &lines[at + 1..at + 4],
+        ["    A 100,0 %", "    B 0,0 %", "    C 100,0 %"],
+        "{text}"
+    );
+    // Redak težine klika (stari ispis) ostaje, bez „nije brana".
+    assert!(text.contains("klik najbolji prema rasponu plana"), "{text}");
+}
+
+/// Težina klika ima svoju branu, a pojas težine i dalje nosi vlastiti najbolji (`best_vs_silent`): klik u pojasu
+/// ne spašava vlastiti izvan pojasa, a klik izvan pojasa (ispod 5 % ili iznad 50 %) sam po sebi nije kršenje pojasa.
 #[test]
 fn weight_band_stays_on_own_words_best() {
     for kind in [PeriodKind::Week, PeriodKind::Month] {
-        for click in [-5_000, -1, 0, 1, 9 * 1_000, 100_000] {
+        // Klik do tri četvrtine vlastitog (clean: 16,7 % uz 25 %) i svi manji (čak i nula) ne diraju ni pojas ni brane.
+        for click in [Some(-1), Some(0), Some(1), None] {
             let mut r = clean(kind);
             for row in &mut paths_mut(&mut r).rows {
-                row.click_vs_silent = click;
+                // `None` = kao u `clean`: ravnalo / 5 profila.
+                row.click_vs_silent = click.unwrap_or(plan_ruler(kind, row.profile) / 5);
             }
-            assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?} klik {click}");
+            assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?} klik {click:?}");
             assert!(
                 !robot_measures_v2(&r).iter().any(|x| x.contains("B3")),
                 "{kind:?}: klik nije mjera robota"
@@ -328,5 +486,9 @@ fn weight_band_stays_on_own_words_best() {
         row.click_vs_silent = plan_ruler(kind, row.profile) / 4;
         let p = row.profile.code();
         assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
+        assert!(
+            !has(&b3(&r), &["B3 klik"]),
+            "{kind:?}: klik je lakši od vlastitog"
+        );
     }
 }

@@ -56,13 +56,29 @@ fn test_meta() -> AiMeta {
 /// Igra s jednim ljudskim hotelom u utoru balansa, zadani broj situacija, bez plana (→ zadani plan). Igrač igra
 /// put `path` kroz naredbe igre i odigra sezonu do kraja.
 fn human_game(seed: u64, kind: PeriodKind, profile: Profile, path: AnswerPath) -> Game {
+    human_game_from(
+        &Snapshot::read_v2(&repo_dir()).unwrap(),
+        seed,
+        kind,
+        profile,
+        path,
+    )
+}
+
+/// Isto kao `human_game`, ali iz zadanog snimka sadržaja (npr. s drugim `economy.click_gain_bp`).
+fn human_game_from(
+    snap: &Snapshot,
+    seed: u64,
+    kind: PeriodKind,
+    profile: Profile,
+    path: AnswerPath,
+) -> Game {
     let guest = GuestId(Uuid::from_u128(99));
     let ids = [1_u128, 2, 3, 4].map(|n| HotelId(Uuid::from_u128(n)));
-    let snap = Snapshot::read_v2(&repo_dir()).unwrap();
     let events = new_game_with(
         GameId(Uuid::from_u128(1)),
         seed,
-        &snap,
+        snap,
         guest,
         ids,
         GameSettings {
@@ -252,6 +268,51 @@ fn offered_choice_only_for_best_and_middle() {
         seen += 1;
     }
     assert!(seen > 0, "nema sidara s barem dva odgovora");
+}
+
+/// Snimak v2 sadržaja s ključem `economy.click_gain_bp` (L1-13 dio 1b).
+fn snap_with_click_gain(bp: u16) -> Snapshot {
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    v["v2"]["economy"]["click_gain_bp"] = bp.into();
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// L1-13 dio 1b: igra i balans istom zastavicom klika (`RoundSituation.click`). U igri je klik svaki odabir
+/// ponuđenog odgovora u situaciji s likom (`click_capped`), pa to vrijedi i za put „srednji" (RAZILAŽENJE s karticom,
+/// koja kaže samo `ClickBest`: bez toga bi `answer_paths_in_game_match_balance` pao čim ključ u repou bude < 10 000).
+/// Uz `click_gain_bp` 5 000 putovi klika, srednjeg i vlastitog odgovora daju iste situacije, pokazatelje i napredak u
+/// igri i u balansu; klik najbolji nosi manji napredak nego uz 10 000 (zastavica stvarno djeluje u oba), srednji
+/// ne veći, a vlastiti odgovor isti.
+#[test]
+fn click_gain_in_game_matches_balance() {
+    let snap = snap_with_click_gain(5_000);
+    let full = snap_with_click_gain(10_000).build().unwrap();
+    let content = snap.build().unwrap();
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for profile in Profile::ALL {
+            for path in [AnswerPath::ClickBest, AnswerPath::Middle, AnswerPath::Best] {
+                let at = format!("{kind:?} {} {path:?}", profile.code());
+                let g = human_game_from(&snap, 42, kind, profile, path);
+                let s = path_season_v2(&content, profile, path, 42, kind).unwrap();
+                assert_eq!(
+                    game_trace(&g),
+                    season_trace(&s, &content.situations),
+                    "{at}"
+                );
+                let s_full = path_season_v2(&full, profile, path, 42, kind).unwrap();
+                match path {
+                    AnswerPath::ClickBest => assert!(
+                        s.progress_pts < s_full.progress_pts,
+                        "{at}: klik uz 50 % dobiti {} < uz 100 % {}",
+                        s.progress_pts,
+                        s_full.progress_pts
+                    ),
+                    AnswerPath::Middle => assert!(s.progress_pts <= s_full.progress_pts, "{at}"),
+                    _ => assert_eq!(s.progress_pts, s_full.progress_pts, "{at}: nije klik"),
+                }
+            }
+        }
+    }
 }
 
 /// Review Focus 2: igra s čovjekom (utor HOTEL_SLOT, bez plana → zadani plan) koji igra put `path` daje iste
