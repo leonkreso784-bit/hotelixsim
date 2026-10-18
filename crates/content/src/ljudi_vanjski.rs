@@ -16,7 +16,7 @@ pub(crate) const DOB_VANJSKOG: RangeInclusive<u8> = 20..=80;
 pub(crate) const USTANOVA_ZNAKOVA: RangeInclusive<usize> = 2..=60;
 /// Službe su u mirovini najkasnije s 65 godina 🟨.
 pub(crate) const SLUZBE_DOB_NAJVISE: u8 = 65;
-/// Inspektori i djelatnik hitne: studij i staž, najmanje 25 godina 🟨.
+/// Inspektori, djelatnik hitne i liječnik: studij i staž, najmanje 25 godina 🟨.
 pub(crate) const STRUCNI_DOB_NAJMANJE: u8 = 25;
 
 fn strucna(u: UlogaVanjskog) -> bool {
@@ -28,6 +28,7 @@ fn strucna(u: UlogaVanjskog) -> bool {
             | InspektorRada
             | InspektorPorezni
             | DjelatnikHitne
+            | Lijecnik
     )
 }
 

@@ -94,7 +94,7 @@ pub fn zabranjeno_json() -> Value {
     })
 }
 
-pub const ULOGE_VANJSKIH: [&str; 14] = [
+pub const ULOGE_VANJSKIH: [&str; 15] = [
     "inspektor_sanitarni",
     "inspektor_turisticki",
     "inspektor_rada",
@@ -102,6 +102,7 @@ pub const ULOGE_VANJSKIH: [&str; 14] = [
     "policajac",
     "vatrogasac",
     "djelatnik_hitne",
+    "lijecnik",
     "novinar",
     "dobavljac",
     "organizator_dogadanja",
@@ -145,10 +146,10 @@ pub fn raspodjele_json() -> Value {
             "rod_po_ulozi": Value::Object(rod)
         },
         "vanjski": {
-            "uloga": {"dobavljac": 1400, "poslovni_klijent": 1400, "zastupnik_agencije": 1100,
+            "uloga": {"dobavljac": 1300, "poslovni_klijent": 1300, "zastupnik_agencije": 1000,
                       "organizator_dogadanja": 700, "susjed": 700, "novinar": 600,
                       "inspektor_sanitarni": 600, "policajac": 600, "vatrogasac": 500,
-                      "djelatnik_hitne": 500, "lokalna_uprava": 550, "inspektor_turisticki": 450,
+                      "djelatnik_hitne": 400, "lijecnik": 400, "lokalna_uprava": 550, "inspektor_turisticki": 450,
                       "inspektor_rada": 450, "inspektor_porezni": 450},
             "dob": {"20-29": 1000, "30-44": 4000, "45-59": 4000, "60-80": 1000},
             "rod_po_ulozi": Value::Object(rod_vanjskih)

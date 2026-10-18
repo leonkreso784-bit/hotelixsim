@@ -27,12 +27,18 @@ const ZAPECACENO: [(&str, &str); 4] = [
     ),
 ];
 
-/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku; K3: serija-002 radnika i gostiju, uzorak 10 + 10).
+/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku; K3: serija-002 radnika i gostiju, uzorak 10 + 10;
+/// K4: serija-003 radnika i gostiju; K5: serija-004 radnika i gostiju, vanjski serija-002).
 const OTVORENO: &[&str] = &[
     "gosti/serija-002.json",
+    "gosti/serija-003.json",
+    "gosti/serija-004.json",
     "radnici/serija-002.json",
+    "radnici/serija-003.json",
+    "radnici/serija-004.json",
     "vanjski/serija-000.json",
     "vanjski/serija-001.json",
+    "vanjski/serija-002.json",
 ];
 
 fn lf_hash(bytes: &[u8]) -> String {

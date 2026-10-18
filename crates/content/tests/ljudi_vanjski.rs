@@ -281,3 +281,101 @@ fn prekretnica_samo_vanjski_nije_prazna() {
         "banka s vanjskim ne smije biti prazna: {r:#?}"
     );
 }
+
+// ------------------------------------------------------------------------------------------------ K5-L: uloga lijecnik
+
+/// Valjan liječnik izvan hitne: služba (HR, lokalno), stručna uloga.
+fn lijecnik() -> Value {
+    s(vanjski(), "uloga", json!("lijecnik"))
+}
+
+#[test]
+fn lijecnik_lokalno_dob_40_prolazi() {
+    ok(v(s(lijecnik(), "dob", json!(40))));
+}
+
+#[test]
+fn lijecnik_je_lokalna_sluzba_iz_hrvatske() {
+    // Mjesto ostaje iz `lokalno` (kao `lokalne_uloge_iz_hrvatske`); mjesto izvan kataloga je `lijecnik_mjesto_iz_kataloga`.
+    let z = s(
+        s(lijecnik(), "zemlja", json!("AT")),
+        "jezici",
+        json!([["de", 4]]),
+    );
+    jedina_greska(v(z), "zemlja: uloga lijecnik traži HR, ima AT");
+}
+
+#[test]
+fn lijecnik_mjesto_iz_kataloga() {
+    let z = s(lijecnik(), "mjesto", json!("Osijek"));
+    jedina_greska(v(z), "mjesto: 'Osijek' nije u mjesta.json → lokalno");
+}
+
+#[test]
+fn lijecnik_najvise_65() {
+    jedina_greska(
+        v(s(lijecnik(), "dob", json!(70))),
+        "dob: 70, uloga lijecnik najviše 65",
+    );
+}
+
+#[test]
+fn lijecnik_najmanje_25() {
+    jedina_greska(
+        v(s(lijecnik(), "dob", json!(24))),
+        "dob: 24, uloga lijecnik najmanje 25",
+    );
+}
+
+#[test]
+fn raspodjele_traze_lijecnika() {
+    let mut r = raspodjele_json();
+    r["vanjski"]["uloga"]
+        .as_object_mut()
+        .unwrap()
+        .remove("lijecnik");
+    r["vanjski"]["uloga"]["dobavljac"] = json!(1700);
+    let okvir = okvir_iz(mjesta_json(), zabranjeno_json(), r);
+    jedina_greska(
+        okvir.provjeri(),
+        "raspodjele.vanjski.uloga: nema uloge lijecnik",
+    );
+
+    let mut r = raspodjele_json();
+    r["vanjski"]["rod_po_ulozi"]
+        .as_object_mut()
+        .unwrap()
+        .remove("lijecnik");
+    let okvir = okvir_iz(mjesta_json(), zabranjeno_json(), r);
+    jedina_greska(
+        okvir.provjeri(),
+        "raspodjele.vanjski.rod_po_ulozi: nema uloge lijecnik",
+    );
+}
+
+#[test]
+fn repo_raspodjele_imaju_lijecnika() {
+    let tekst = std::fs::read_to_string(content::repo_dir().join("v2/ljudi/raspodjele.json"))
+        .expect("raspodjele.json se čita");
+    let r: Value = serde_json::from_str(&tekst).unwrap();
+    let uloga = &r["vanjski"]["uloga"];
+    assert_eq!(uloga["lijecnik"], 400);
+    assert_eq!(uloga["djelatnik_hitne"], 400);
+    assert_eq!(uloga["dobavljac"], 1300);
+    assert_eq!(uloga["poslovni_klijent"], 1300);
+    assert_eq!(uloga["zastupnik_agencije"], 1000);
+    let zbroj: u64 = uloga
+        .as_object()
+        .unwrap()
+        .values()
+        .map(|x| x.as_u64().unwrap())
+        .sum();
+    assert_eq!(zbroj, 10_000);
+    let rod = &r["vanjski"]["rod_po_ulozi"]["lijecnik"];
+    assert_eq!(rod["z_bp"], 6500);
+    assert!(
+        !rod["izvor"].as_str().unwrap_or("").trim().is_empty(),
+        "izvor je obvezan"
+    );
+    assert_eq!(rod["potvrdeno"], false);
+}
