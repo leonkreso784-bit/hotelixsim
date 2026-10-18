@@ -67,3 +67,9 @@ pilot. Brojke klika su iz dijagnoze `.superpowers/sdd/2026-10-14-popravak-temelj
 20. **Boja hitne `#C8102E` i tamnoplava `#1F2F4D`** (policija, vatrogasci) uzete su iz prijedloga kartice. Leon ih potvrđuje pri pregledu reda
     „Službe" na `/likovi` (kartica §10 t. 3). Šutnja na kvaru daje −1,04, a ne točno −1, jer nosi i privremeni popravak s faktorom kruga
     (L1-13-1 M2; tablica je u `l113-1-provjere/tablica-kvar.txt`). Cijena: jedna boja u `CLOTHES`.
+
+**Dopuna 18.10. (banka ljudi, izvor: pitanja pisaca K5 i bilješke sesije banke 9b).** Uz t. 1: 15 liječnika spojeno je u `model-v2/sloj1`
+(19160c9), banka ima 530 ljudi ([BANKA_LJUDI](../../architecture/BANKA_LJUDI.md)). Uz t. 15: rod u ulogama vanjskih (sanitarni inspektor,
+susjed) popravlja se miješano, a ne samo dodavanjem žena. Uz t. 16: „ostale" zemlje se ne pune Ukrajinom. Pravila i ciljevi uloge `lijecnik`
+(služba iz Hrvatske, dob 25–65, cilj 4 %, rod ž 65 % procjena) pretpostavke su voditelja banke, s 🟨 u [§1.5 i §2.4](../../architecture/BANKA_LJUDI/02-koliko.md);
+dva otvorena pitanja (talijanski kod lokalnih vanjskih, liječnici u idućim serijama) su u [BANKA_LJUDI §6](../../architecture/BANKA_LJUDI/06-pitanja.md) t. 17–18.

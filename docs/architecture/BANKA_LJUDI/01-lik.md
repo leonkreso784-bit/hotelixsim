@@ -121,6 +121,7 @@ Hotel s njom pregovara, surađuje ili joj odgovara (inspektor, policajac, dobavl
 | `policajac` | policajac ili policajka | — (spominje se u P-NESTALA-STVAR, P-PIJANI-GOST, P-DIJETE-IZGUBLJENO) | policijska postaja |
 | `vatrogasac` | vatrogasac ili vatrogaskinja | — (spominje se u P-DIZALO) | javna vatrogasna postrojba |
 | 🟨 `djelatnik_hitne` | liječnik ili medicinski tehničar hitne pomoći | — (spominje se u P-GOST-POZLILO) | ispostava hitne medicinske pomoći |
+| 🟨 `lijecnik` | liječnik izvan hitne: turistička ambulanta, dežurni liječnik kojeg hotel zove gostu, obiteljska medicina, privatna ordinacija | — (nema predloška; P-GOST-POZLILO spominje hitnu) | dom zdravlja, turistička ambulanta, ordinacija obiteljske medicine, privatna ordinacija |
 | `novinar` | novinar, autor putopisnog bloga | P-NOVINAR (ž) | putopisni časopis |
 | `dobavljac` | dobavljač robe ili usluge | P-DOBAVLJAC (m), P-PRAONICA (m) | dobavljač hrane za ugostitelje |
 | `organizator_dogadanja` | organizator vjenčanja i događanja | P-VJENCANJE (ž) | agencija za vjenčanja |
@@ -133,7 +134,9 @@ Policija, vatrogasci i inspekcija su Leonove; sanitarna inspekcija i sedam uloga
 🟨 Inspekcija je razdijeljena po vrsti (četiri uloge), jer svaka dolazi zbog drugog odjela i druge pogreške; hitna i
 grad/turistička zajednica su prijedlog. Policija, vatrogasci i hitna danas nemaju **ulogu** u predlošku, nego se spominju samo
 u rubrikama i odgovorima; da postanu likovi, predložak dobiva novu ulogu (sadržaj situacija, ne banka; pitanje 14).
-**Službe** su četiri inspekcije, policajac, vatrogasac, djelatnik hitne i lokalna uprava; **tržišne** uloge su novinar,
+**Liječnik** (`lijecnik`, Leon 18.10., [ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 1) je 15. uloga: liječnik izvan hitne nosi bijelu kutu i
+stetoskop, a liječnik **hitne** ostaje `djelatnik_hitne` u odori hitne (IZGLED-c).
+**Službe** su četiri inspekcije, policajac, vatrogasac, djelatnik hitne, liječnik i lokalna uprava; **tržišne** uloge su novinar,
 organizator, zastupnik agencije i poslovni klijent; dobavljač i susjed su lokalni, ali nisu službe.
 
 ### Polja zapisa
@@ -143,8 +146,8 @@ organizator, zastupnik agencije i poslovni klijent; dobavljač i susjed su lokal
 | `id` | tekst | `V-` + 5 znamenki | da | kao kod radnika i gosta |
 | `ime`, `prezime` | tekst | kao kod radnika | da | ne iz `names.json` (§3.7) |
 | `rod` | kod | `z` · `m` | da | predložak bira rod uloge („Došao si"), banka ga mora imati |
-| `dob` | broj | 🟨 20–80 | da | službe najviše 65 (mirovina), inspektori i djelatnik hitne najmanje 25 (studij i staž) 🟨 |
-| `uloga` | kod | 14 kodova iz tablice | da | jedini filtar izbora uz rod (§4.4) |
+| `dob` | broj | 🟨 20–80 | da | službe najviše 65 (mirovina), inspektori, djelatnik hitne i liječnik najmanje 25 (studij i staž) 🟨 |
+| `uloga` | kod | 15 kodova iz tablice | da | jedini filtar izbora uz rod (§4.4) |
 | `ustanova` | tekst | 🟨 2–60 znakova, malim slovima osim prvog | ne | **generička** vrsta ustanove ili tvrtke, nikad vlastito ime (§3.7) |
 | `zemlja` | kod | ISO 3166 iz `mjesta.json` | da | 🟨 dodano: službe, dobavljač, susjed → `HR`; strani samo u tržišnim ulogama |
 | `mjesto` | tekst | službe i susjed: katalog `lokalno`; ostali iz HR: `lokalno` ili `regija`; strani: slobodno | da | gdje osoba radi ili živi |

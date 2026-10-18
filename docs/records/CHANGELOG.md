@@ -34,6 +34,7 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
   Napomena uz odgovore sad kaže „najviše 4 od 5 i manji učinak odluke". Balans: nova brana „B3 klik" (≤ 75 % na situacijama s likom), a put „srednji" računa se kao klik
   ([ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 4–7, 17).
 - Banka ljudi (ee0f673, na GitHubu): 280 ljudi (radnici 110, gosti 110, vanjski 60), serije 000 i 001 zapečaćene. Igra banku još ne čita.
+- Banka ljudi K4+K5 (19160c9, na GitHubu): +250 ljudi (K4: 50 radnika + 50 gostiju; K5: 50 + 50 + 50 vanjskih, od toga 15 liječnika) i nova uloga vanjskog `lijecnik` (15. uloga); ukupno 530 (radnici 210, gosti 210, vanjski 110). Igra banku još ne čita.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.

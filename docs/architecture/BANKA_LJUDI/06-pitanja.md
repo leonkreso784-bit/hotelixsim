@@ -30,7 +30,7 @@ preporuku; [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovo
 12. ✅ **da, ali rijetko.** **Smije li isti vanjski lik doći u dva hotela iste razredne igre?** Preporuka: **da, ali rijetko** — vanjski se ne
     preotimaju, a jedan sanitarni inspektor u stvarnosti pokriva cijelo mjesto; izbor ga izbjegava dok ima slobodnih, uz
     M3 = 600 (§2.4). Druga mogućnost: nitko dvaput u razredu (M3 ~800, više posla agentu VANJSKI).
-13. ✅ **svih 14.** **Koje uloge?** Preporuka: **svih 14** iz §1.5 (policija, vatrogasci, sanitarna inspekcija i sedam uloga koje igra već ima
+13. ✅ **svih 14** (od 18.10. 15, uz `lijecnik`, [ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 1). **Koje uloge?** Preporuka: **svih 14** iz §1.5 (policija, vatrogasci, sanitarna inspekcija i sedam uloga koje igra već ima
     + četiri vrste inspekcije, hitna i grad/turistička zajednica). Druga mogućnost: samo 9 koje igra ima uz policiju i
     vatrogasce, a ostale kad zatrebaju situacijama.
 14. ✅ **nova uloga u postojećim predlošcima, nakon popravka temelja.** **Policija, vatrogasci i hitna kao likovi u situacijama:** danas ih spominju samo odgovori (P-DIJETE-IZGUBLJENO, P-DIZALO,
@@ -55,3 +55,17 @@ preporuku; [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovo
 | C9 | ok | pitanja 12–13 gore |
 | C10 | ok | pitanja 14–16 gore i 13 pretpostavki vanjskih (službe iz Hrvatske, dob 20–80, službe do 65, inspektori i hitna od 25, ton iz predloška) |
 | C11 | ok | izgled lika: tri pretpostavke ostaju; Leon pogleda 10–20 lica kad IZGLED bude spojen |
+
+## Odluke 18.10. (anketa, pitanja pisaca K5)
+
+Zapisane su u [ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 1 i 15–16 (s Dopunom 18.10.):
+nova uloga `lijecnik` (§1.5), tehničarka R-00239 postaje muškarac (rod po statistici), Albanka R-00212 odgovara, rod sanitarnog
+inspektora i susjeda popravlja se miješano (i muškarci i žene), a „ostale" zemlje stranih radnika dolaze s MUP-ova popisa dozvola
+(ne Ukrajina).
+
+**Otvoreno za Leona:**
+
+17. **Talijanski kod lokalnih vanjskih** (pitanje pisaca K5, bez odgovora u anketi): koliko vanjskih s Kvarnera i iz Istre govori
+    talijanski — po tablici radnika (§2.2) ili više, kao Istrani kod radnika (C8)?
+18. **Liječnici u idućim serijama:** 15 liječnika je iznad cilja od 4 % (§2.4); dodaju li se novi tek kad udio padne (pretpostavka sesije
+    banke) ili uz svaku seriju po nekoliko?

@@ -74,7 +74,7 @@ zemlji (čovjek).
 - **Imena ne iz `names.json`.** Puno ime ne smije biti među 40 partnerskih imena (ni među ostalih 80): dok igra ne čita banku
   (K5), ista osoba bi se pojavila dvaput. Ovo stroj već provjerava za radnike i goste (J2) i proširuje se na vanjske.
 - **Službe su iz Hrvatske i s Kvarnera.** Službe, dobavljač i susjed imaju `zemlja: HR` i `mjesto` iz kataloga `lokalno`;
-  dob službi najviše 65, inspektora i djelatnika hitne najmanje 25.
+  dob službi najviše 65, inspektora, djelatnika hitne i liječnika najmanje 25 (`lijecnik` je služba, 🟨 18.10.).
 - **Bez stereotipa i u službama.** Opis ne kaže da je inspektor „strog" ili policajac „grub" (ton daje predložak, §1.5); rod
   po ulozi slijedi stvarni omjer, ali tekst nikad ne veže ulogu uz rod („kao žena u vatrogascima…" nije dopušteno).
   Strani vanjski su samo u tržišnim ulogama, što je činjenica tržišta, ne osobina zemlje.

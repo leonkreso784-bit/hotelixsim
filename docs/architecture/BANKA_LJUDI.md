@@ -25,7 +25,7 @@ predložak (`types`, npr. „umirovljenica na godišnjem odmoru"), a ne ime.
 | 3 · pravila kvalitete: jedinstvenost, dosljednost, bez stereotipa, rod i padeži, zabranjeno, tko provjerava, **vanjski** (§3.7) | [03-pravila.md](./BANKA_LJUDI/03-pravila.md) |
 | 4 · gdje živi i kako se koristi: datoteke, izbor po sjemenu, verzije i pečati, **vanjski** (§4.4) | [04-gdje-zivi.md](./BANKA_LJUDI/04-gdje-zivi.md) |
 | 5 · postupak: koraci K0–K5 i **K2v**, agenti i datoteke, „serija gotova", kada se staje, **tri agenta** (§5.5), **paralelna sesija banke** (§5.6) | [05-postupak.md](./BANKA_LJUDI/05-postupak.md) |
-| 6 · pitanja za Leona (1–11 odgovorena 14.10., ADR-042 t. 8; 12–16 o vanjskima odgovorena 17.10.) i odluke C1–C11 od 17.10. | [06-pitanja.md](./BANKA_LJUDI/06-pitanja.md) |
+| 6 · pitanja za Leona (1–11 odgovorena 14.10., ADR-042 t. 8; 12–16 o vanjskima odgovorena 17.10.), odluke C1–C11 od 17.10., odluke 18.10. i otvorena 17–18 | [06-pitanja.md](./BANKA_LJUDI/06-pitanja.md) |
 | 7 · 🟨 nacrt rizika: likovi nalik poznatim osobama (C3, Leon 17.10.), tri varijante s cijenom, pitanja | [07-poznate-osobe-rizik.md](./BANKA_LJUDI/07-poznate-osobe-rizik.md) |
 
 ## Sažetak
@@ -37,5 +37,7 @@ predložak (`types`, npr. „umirovljenica na godišnjem odmoru"), a ne ime.
   (banka usporedo s popravkom, rod po Eurostatu, zemlje po MUP-u, uloga smije ovisiti o podrijetlu); Leonove odluke 16.10.
   (sesija 7) o vanjskima, trima agentima i sesiji banke zapisane su u §1.5; odluke 17.10. (pečat, podvrste radnika, C2–C11,
   paralelna sesija) u ADR-056 i §6. Likovi nalik poznatim osobama (C3) **čekaju Leona** (§7); dok ne odluči, banka ih ne dodaje.
+- **Stanje 18.10.** (spojeno u `model-v2/sloj1` 19160c9): **530 ljudi** — radnici 210 i gosti 210 (serije 000 i 001 ZAPEČAĆENE,
+  002–004 OTVORENE), vanjski 110 (serije 000–002 OTVORENE, među njima 15 liječnika); 15 uloga vanjskih (§1.5).
 - **Gdje se vidi:** samo u repou (`content/hotel/v2/ljudi/`, `crates/content`); igra banku još ne čita (K5). Pregled za Leona:
   `pregled-svi.html` u ledgeru banke.

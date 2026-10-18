@@ -67,7 +67,7 @@ dok ima slobodnih (§4.4), a banka je dovoljno velika da se to rijetko dogodi.
 
 | prekretnica | vanjskih | zašto |
 |---|---|---|
-| **M1** 🟨 | 150 | igra za vježbu: 4 hotela × 17 = 68, uz 14 uloga × 2 roda = 28 malih bazena (~5 po bazenu) |
+| **M1** 🟨 | 150 | igra za vježbu: 4 hotela × 17 = 68, uz 15 uloga × 2 roda = 30 malih bazena (~5 po bazenu) |
 | **M2** 🟨 | 400 | razred od ~20 hotela × ~15 = 300 + zaliha |
 | **M3** 🟨 | 600 | 30 hotela × ~15 = 450 + ~30 % zalihe, jer su bazeni (uloga, rod) mali |
 
@@ -78,8 +78,8 @@ bazene po ulozi i rodu).
 
 | dimenzija | cilj (udio banke) | izvor ili pretpostavka |
 |---|---|---|
-| **uloga** | dobavljač 14 · poslovni klijent 14 · zastupnik agencije 11 · organizator 7 · susjed 7 · novinar 6 · sanitarni inspektor 6 · policajac 6 · vatrogasac 5 · djelatnik hitne 5 · lokalna uprava 5,5 · turistički, rada i porezni inspektor po 4,5 (%) | 🟨 težina = zbroj `max_per_season` predložaka po ulozi (dobavljač 4, klijent 4, agencija 3…), nove uloge ~1 po sezoni |
-| **rod po ulozi** | stvarni omjer, kao radnici (ADR-052 t. 3) | 🟨 isti izvor: Eurostat LFS Hrvatska, ISCO-08 × spol (inspektori 3257, 3352, 3359; policija 5412; vatrogasci 5411; hitna 2211, 3258; novinari 2642; događanja 3332; agencije 4221; lokalna uprava 2422); do mjerenja prijedlog s `"potvrdeno": false`, susjed 50 : 50 |
+| **uloga** | dobavljač 13 · poslovni klijent 13 · zastupnik agencije 10 · organizator 7 · susjed 7 · novinar 6 · sanitarni inspektor 6 · policajac 6 · vatrogasac 5 · lokalna uprava 5,5 · turistički, rada i porezni inspektor po 4,5 · djelatnik hitne 4 · liječnik 4 (%) | 🟨 težina = zbroj `max_per_season` predložaka po ulozi (dobavljač 4, klijent 4, agencija 3…), nove uloge ~1 po sezoni. 🟨 18.10. (voditelj banke, uz ulogu `lijecnik`): liječnik 4 % (400 bp), a po 1 bod manje hitna (5 → 4), dobavljač, poslovni klijent i agencija; zbroj ostaje 100 % |
+| **rod po ulozi** | stvarni omjer, kao radnici (ADR-052 t. 3) | 🟨 isti izvor: Eurostat LFS Hrvatska, ISCO-08 × spol (inspektori 3257, 3352, 3359; policija 5412; vatrogasci 5411; hitna 2211, 3258; novinari 2642; događanja 3332; agencije 4221; lokalna uprava 2422); do mjerenja prijedlog s `"potvrdeno": false`, susjed 50 : 50; liječnik (2211) 🟨 ž 65 % PROCJENA (`"potvrdeno": false`) |
 | **dob** | 20–29: 10 · 30–44: 40 · 45–59: 40 · 60–80: 10 (%) | [PROC]; službe su rijetko vrlo mlade, susjed i klijent mogu biti stariji |
 | **zemlja** | službe, dobavljač, susjed: 100 % HR; u tržišnim ulogama ~30 % stranih (≈ 11 % banke) | 🟨; strane zemlje po raspodjeli gostiju (§2.3) bez HR — agencije i novinari dolaze s tržišta gostiju |
 | **jezici** | iz HR: `["hr", 4]` svi, drugi jezici po tablici radnika (§2.2); strani: materinji 4, hrvatski 0–2 | 🟨; AI lik ionako govori hrvatski (kao gost) |
@@ -87,3 +87,7 @@ bazene po ulozi i rodu).
 **Bazeni koje predlošci traže.** Predložak bira ulogu i rod, pa banka za svaki par koji predlošci danas koriste (inspektor m,
 novinarka ž, dobavljač m, organizatorica ž, zastupnica ž, poslovni klijent ž i m, susjed m) na M1 ima **najmanje 5 zapisa**
 🟨, bez obzira na omjer roda u ulozi. To provjerava izvještaj prekretnice (K4), ne svaka serija.
+
+**Liječnici iznad cilja** 🟨 (18.10.): Leon je tražio 10–20 liječnika ([ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md)
+t. 1), pa serija `vanjski/serija-002` ima 15 (13,6 % od 110 vanjskih, cilj 4 %). Iduće serije ne dodaju liječnike dok udio ne
+padne prema cilju.

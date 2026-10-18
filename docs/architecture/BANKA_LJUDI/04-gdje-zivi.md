@@ -56,7 +56,7 @@ jedan prolaz agenta. Zaglavlje datoteke: `{"format": 1, "vrsta": "radnici", "ser
 - **Datoteke:** `content/hotel/v2/ljudi/vanjski/serija-NNN.json`, zaglavlje `"vrsta": "vanjski"`, ID-jevi `V-…` po istom
   pravilu raspona; ciljevi u `raspodjele.json` pod novim ključem **`vanjski`** (`uloga`, `dob`, `rod_po_ulozi`); `mjesta.json`
   i `zabranjeno.json` su zajednički. Brana pečata (`ljudi_sealed.rs`) gleda i mapu `vanjski/`.
-- **Rust (K2v):** tip `Vanjski` (polja §1.5, `deny_unknown_fields`), enum `UlogaVanjskog` (14 kodova), `Vrsta::Vanjski`,
+- **Rust (K2v):** tip `Vanjski` (polja §1.5, `deny_unknown_fields`), enum `UlogaVanjskog` (15 kodova; `lijecnik` od 18.10.), `Vrsta::Vanjski`,
   `Banka.vanjski`, `RaspodjeleVanjskih`; pravila u novom modulu `ljudi_vanjski.rs` (da `ljudi_check.rs` ostane ispod 600
   redaka). Igra banku i dalje ne čita.
 - **Kako igra bira (K5, 🟨):** predložak ostaje u formatu `"from": "partner"`; uloga predloška dobiva neobvezno polje s kodom
