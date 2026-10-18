@@ -145,6 +145,11 @@ fn drawn_department_gets_the_urgent_repair() {
 #[test]
 fn condition_of_moves_the_repair_to_that_space() {
     let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    // L1-13-1b: klik umanjuje popravak (`click_gain_bp`); ovaj test mjeri samo odjel popravka, pa je dobit puna.
+    v["v2"]["economy"]
+        .as_object_mut()
+        .unwrap()
+        .remove("click_gain_bp");
     let i = v["v2"]["situation_templates"]["templates"]
         .as_array()
         .unwrap()

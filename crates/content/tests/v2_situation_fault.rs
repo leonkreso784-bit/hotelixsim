@@ -266,6 +266,7 @@ fn equipment_bp(c: &Content, p: &Period, o: SituationOutcome, fault: bool) -> i3
         outcome: o,
         space: None,
         fault,
+        click: false,
     };
     situation_effect(&s, p, v2, category)
         .unwrap()

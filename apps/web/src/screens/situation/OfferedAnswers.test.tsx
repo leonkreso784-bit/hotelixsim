@@ -19,7 +19,9 @@ describe("napomena o pravilu klika", () => {
     );
     renderApp(api, "/situacije/S1");
     expect(await screen.findByText(/Klikom dobivaš najviše 4 od 5/)).toBeTruthy();
-    expect(screen.getByText(/Za punih 5 odgovori gostu svojim riječima/)).toBeTruthy();
+    // L1-13-1b: klik gubi i dio učinka, pa napomena to kaže prije klika.
+    expect(screen.getByText(/manji učinak/)).toBeTruthy();
+    expect(screen.getByText(/Za punih 5 i puni učinak odgovori gostu svojim riječima/)).toBeTruthy();
   });
 
   it("uz click_capped: false napomene nema", async () => {

@@ -31,6 +31,7 @@ fn repair(id: &str, urgent: bool, space: Option<&str>) -> RoundSituation {
         },
         space: space.map(code),
         fault: false,
+        click: false,
     }
 }
 

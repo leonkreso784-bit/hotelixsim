@@ -38,9 +38,10 @@ pub use resolve::{
 };
 pub use robots::robot_plan;
 pub use season::{
-    Responder, RoundHotel, RoundItem, SeasonResult, SeasonSituations, TemplateDraw, anchor_of,
-    collective_for_round, draw_for_round, draw_for_round_with, group_month, run_robot_season,
-    run_season, run_season_from, run_season_responding, run_season_with, situations_for,
+    Answered, Responder, RoundHotel, RoundItem, SeasonResult, SeasonSituations, TemplateDraw,
+    anchor_of, collective_for_round, draw_for_round, draw_for_round_with, group_month,
+    run_robot_season, run_season, run_season_from, run_season_responding, run_season_with,
+    situations_for,
 };
 pub use sim_hotel::{
     CatalogError, Category, Cause, Effects, GroupBlock, GuestOutcome, Index, IndexSet, Line,

@@ -19,7 +19,7 @@ pub const COPY_MATCH_BP: u32 = 7_000;
 /// Obrazloženje presude za zalijepljene odgovore (vidi ga student i mentor).
 pub const PASTED_RATIONALE: &str = "Zalijepio si ponuđene odgovore, a to nije tvoja odluka. Napiši svojim riječima što ćeš učiniti.";
 /// Činjenica za mentora kad je ocjena klika ili prepisanog odgovora ograničena.
-pub const CAPPED_FACT: &str = "Ocjena je ograničena na 4/5 jer je student kliknuo (ili prepisao) ponuđeni odgovor, a u ovoj situaciji je mogao odgovoriti svojim riječima; za 5/5 treba vlastiti odgovor.";
+pub const CAPPED_FACT: &str = "Ocjena je ograničena na 4/5 i odluka dobiva manji učinak jer je student kliknuo (ili prepisao) ponuđeni odgovor, a u ovoj situaciji je mogao odgovoriti svojim riječima; za 5/5 i puni učinak treba vlastiti odgovor.";
 /// Činjenica za mentora kad je student zalijepio ponuđene odgovore.
 pub const PASTED_FACT: &str = "Student je zalijepio ponuđene odgovore umjesto da napiše vlastitu odluku, pa je dobio srednju ocjenu 3/5 bez učinka odgovora.";
 

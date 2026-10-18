@@ -13,6 +13,11 @@ use sim_hotel_v2::department::DeptCode;
 
 fn snap(keys: bool) -> Snapshot {
     let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    // L1-13-1b: test mjeri samo kvar i popravak; klik (`click_gain_bp`) ovdje je puna dobit kao prije.
+    v["v2"]["economy"]
+        .as_object_mut()
+        .unwrap()
+        .remove("click_gain_bp");
     if keys {
         v["v2"]["economy"]["fault_condition_pts"] = json!(100);
         v["v2"]["economy"]["fault_fixed_condition_pts"] = json!(200);

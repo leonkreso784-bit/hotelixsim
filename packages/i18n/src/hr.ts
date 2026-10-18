@@ -253,7 +253,8 @@ export const hr = {
   "answers.cancel": "Odustani",
   "answers.missed": "Mjesec je zatvoren bez odgovora.",
   "answers.missed.week": "Tjedan je zatvoren bez odgovora.",
-  "answers.clickCap": "Klikom dobivaš najviše 4 od 5. Za punih 5 odgovori gostu svojim riječima.",
+  "answers.clickCap":
+    "Klikom dobivaš najviše 4 od 5 i manji učinak odluke. Za punih 5 i puni učinak odgovori gostu svojim riječima.",
   "response.title": "Tvoj odgovor",
   "response.label": "Tvoj odgovor svojim riječima",
   "response.placeholder": "Napiši što radiš i zašto…",

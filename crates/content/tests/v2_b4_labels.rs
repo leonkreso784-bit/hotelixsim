@@ -144,6 +144,10 @@ fn anchors_labels_within_ratio() {
 fn only_labels_and_listed_conditions_change() {
     fn skeleton(v: &Value) -> String {
         let mut v = v.clone();
+        // L1-13-1b: ključ `economy.click_gain_bp` je jedina dopuštena promjena gospodarstva (kalibracija klika).
+        if let Some(e) = v["v2"]["economy"].as_object_mut() {
+            e.remove("click_gain_bp");
+        }
         for a in v["situations"]
             .as_array_mut()
             .unwrap()

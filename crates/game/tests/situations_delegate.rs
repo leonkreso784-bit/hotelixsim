@@ -316,6 +316,8 @@ fn recomputed(g: &Game, r: RoundKey, delegated: &BTreeSet<String>) -> game::dto:
                 outcome: if no_penalty { reward_only(o) } else { o },
                 space: instance.and_then(|i| i.drawn.department.clone()),
                 fault: instance.is_some_and(|i| i.space_fault),
+                click: h.answers.contains_key(&(r, t.code.clone()))
+                    && g.click_capped(me(), &t.code),
             }
         })
         .collect();
