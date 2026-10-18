@@ -15,7 +15,7 @@
       "ustanova": "sanitarna inspekcija",
       "zemlja": "HR",
       "mjesto": "Crikvenica",
-      "jezici": [["hr", 4], ["it", 2], ["de", 2]],
+      "jezici": [["hr", 4], ["en", 2], ["it", 2], ["de", 2]],
       "opis": "Diplomirani je inženjer prehrambene tehnologije i nakon nekoliko godina u kontroli kvalitete mljekare prešao je u sanitarnu inspekciju, gdje radi dvadeset šest godina."
     },
     {
@@ -93,7 +93,7 @@
       "ustanova": "inspekcija rada",
       "zemlja": "HR",
       "mjesto": "Matulji",
-      "jezici": [["hr", 4], ["de", 2], ["en", 1]],
+      "jezici": [["hr", 4], ["de", 2], ["en", 2]],
       "opis": "Inspektorica rada je dvadeset dvije godine, a prije toga vodila je kadrovsku službu u brodogradilištu. Nadzire ugovore, radno vrijeme i evidenciju prekovremenih sati."
     },
     {
@@ -223,7 +223,7 @@
       "ustanova": "javna vatrogasna postrojba",
       "zemlja": "HR",
       "mjesto": "Bakar",
-      "jezici": [["hr", 4], ["it", 2], ["en", 1]],
+      "jezici": [["hr", 4], ["it", 2], ["en", 2]],
       "opis": "U profesionalnoj postrojbi radi dvadeset pet godina i vodi smjenu od osam ljudi. Zanat je izučio kao bravar u metalskoj radionici."
     },
     {
@@ -261,7 +261,7 @@
       "uloga": "novinar",
       "zemlja": "DE",
       "mjesto": "Hamburg",
-      "jezici": [["de", 4], ["en", 3], ["fr", 2], ["hr", 1]],
+      "jezici": [["de", 4], ["en", 3], ["fr", 2], ["hr", 2]],
       "opis": "Kao slobodni novinar dvadeset pet godina piše o putovanjima i hotelima. Hrvatsku obalu poznaje iz obiteljskih ljetovanja u osamdesetima."
     },
     {
@@ -298,7 +298,7 @@
       "ustanova": "obiteljska tvrtka",
       "zemlja": "HR",
       "mjesto": "Pazin",
-      "jezici": [["hr", 4], ["it", 3], ["de", 2]],
+      "jezici": [["hr", 4], ["en", 2], ["it", 3], ["de", 2]],
       "opis": "Tvrtku je osnovao početkom devedesetih i danas je vodi sa sinom. S hotelima i restoranima radi više od trideset godina."
     },
     {
@@ -337,7 +337,7 @@
       "ustanova": "srednja tvrtka",
       "zemlja": "HR",
       "mjesto": "Poreč",
-      "jezici": [["hr", 4], ["it", 3], ["de", 3]],
+      "jezici": [["hr", 4], ["en", 2], ["it", 3], ["de", 3]],
       "opis": "Suvlasnik je tvrtke koja radi s hotelima u Istri i na Kvarneru. Prije dvadeset godina počeo je kao vozač dostave u istoj tvrtki."
     },
     {
@@ -389,7 +389,7 @@
       "ustanova": "agencija za vjenčanja",
       "zemlja": "IT",
       "mjesto": "Treviso",
-      "jezici": [["it", 4], ["en", 3], ["de", 2], ["hr", 1]],
+      "jezici": [["it", 4], ["en", 3], ["de", 2], ["hr", 2]],
       "opis": "Vjenčanja za talijanske i austrijske parove organizira dvanaest godina, većinom na obali i među vinogradima. Kvarner i Istru uvrstila je u ponudu prije pet godina."
     },
     {
@@ -427,7 +427,7 @@
       "uloga": "zastupnik_agencije",
       "zemlja": "DE",
       "mjesto": "Köln",
-      "jezici": [["de", 4], ["en", 3], ["es", 2]],
+      "jezici": [["de", 4], ["hr", 2], ["en", 3], ["es", 2]],
       "opis": "Devet godina radi u prodaji smještaja za njemačko tržište i ugovara kapacitete s hotelima na Jadranu. Počela je na recepciji u Austriji."
     },
     {
@@ -489,7 +489,7 @@
       "ustanova": "tehnička tvrtka",
       "zemlja": "AT",
       "mjesto": "Linz",
-      "jezici": [["de", 4], ["en", 3], ["hr", 1]],
+      "jezici": [["de", 4], ["en", 3], ["hr", 2]],
       "opis": "Dvadeset godina vodi montažne ekipe na projektima u srednjoj i jugoistočnoj Europi. Smještaj za radnike na terenu ugovara sam."
     },
     {
@@ -501,7 +501,7 @@
       "uloga": "poslovni_klijent",
       "zemlja": "HU",
       "mjesto": "Győr",
-      "jezici": [["hu", 4], ["en", 3], ["de", 3]],
+      "jezici": [["hu", 4], ["hr", 2], ["en", 3], ["de", 3]],
       "opis": "Inženjer je i dvanaest godina vodi projekte tvrtke izvan Mađarske. Na svakom projektu brine i o smještaju ekipe."
     },
     {
@@ -589,7 +589,7 @@
       "uloga": "susjed",
       "zemlja": "HR",
       "mjesto": "Mošćenička Draga",
-      "jezici": [["hr", 4], ["it", 3], ["de", 1]],
+      "jezici": [["hr", 4], ["en", 2], ["it", 3], ["de", 1]],
       "opis": "Umirovljeni je pomorac, a u mjesnom odboru aktivan je posljednjih dvanaest godina. Ljeti s kćeri iznajmljuje dva apartmana."
     },
     {
@@ -601,7 +601,7 @@
       "uloga": "susjed",
       "zemlja": "HR",
       "mjesto": "Njivice",
-      "jezici": [["hr", 4], ["de", 3], ["it", 2]],
+      "jezici": [["hr", 4], ["en", 2], ["de", 3], ["it", 2]],
       "opis": "Cijeli život živi u istoj kući, koju je s braćom pretvorio u obiteljske apartmane. Zaposlen je kao vozač autobusa."
     },
     {
@@ -613,7 +613,7 @@
       "uloga": "susjed",
       "zemlja": "HR",
       "mjesto": "Baška",
-      "jezici": [["hr", 4], ["de", 2], ["it", 2]],
+      "jezici": [["hr", 4], ["en", 2], ["de", 2], ["it", 2]],
       "opis": "Do mirovine je trideset godina bila učiteljica razredne nastave. Danas sudjeluje u radu mjesnog odbora i iznajmljuje sobe u obiteljskoj kući."
     },
     {

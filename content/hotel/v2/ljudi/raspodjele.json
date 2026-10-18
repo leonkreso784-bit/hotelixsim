@@ -28,20 +28,23 @@
       "inozemstvo": 2500
     },
     "zemlje_inozemstvo": {
-      "BA": 1900,
+      "BA": 2000,
       "NP": 2100,
       "RS": 1400,
       "PH": 1300,
       "IN": 900,
       "MK": 650,
-      "XK": 300,
-      "UZ": 250,
+      "XK": 350,
+      "UZ": 300,
       "BD": 150,
       "ME": 100,
-      "AL": 100,
-      "ostalo": 850
+      "AL": 200,
+      "EG": 250,
+      "TR": 150,
+      "ID": 50,
+      "ostalo": 100
     },
-    "zemlje_izvor": "MUP RH, izdane dozvole za boravak i rad, stanje 31.12.2025. (170.723; turizam i ugostiteljstvo 52.858 = 31 %); MUP ne objavljuje djelatnost × državljanstvo, pa su udjeli PROCJENA iz ukupnih dozvola po državljanstvu, korigirani prema turizmu (Nepal, Filipini više; Uzbekistan, Bangladeš, Kosovo manje; Egipat u ostalo). Izmjereno 17.10.2026.",
+    "zemlje_izvor": "MUP RH (dozvole za boravak i rad 2025.: 170.723, turizam 52.858; sij.–ruj. 2026.: 124.023) i Eurostat migr_resvalid (važeće dozvole za rad u HR 31.12.2025.: 106.749, po državljanstvu); presjek djelatnost × državljanstvo ne postoji, pa su udjeli PROCJENA korigirana prema turizmu. EG, TR, ID dodani iz izvora (Leon 18.10.); ostalo samo za postojeće zapise. Izmjereno 18.10.2026.",
     "jezici": {
       "en": [1000, 2000, 3500, 3000, 500],
       "de": [4500, 2000, 2000, 1200, 300],

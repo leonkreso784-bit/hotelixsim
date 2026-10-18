@@ -87,7 +87,7 @@ fn lokalne_uloge_iz_hrvatske() {
             json!("AT"),
         ),
         "jezici",
-        json!([["de", 4]]),
+        json!([["de", 4], ["hr", 2], ["en", 2]]),
     );
     jedina_greska(v(z), "zemlja: uloga policajac traži HR, ima AT");
 }
@@ -107,7 +107,7 @@ fn trzisna_uloga_smije_biti_strana() {
     let z = s(
         s(s(novinar(), "zemlja", json!("AT")), "mjesto", json!("Graz")),
         "jezici",
-        json!([["de", 4]]),
+        json!([["de", 4], ["hr", 2], ["en", 2]]),
     );
     ok(v(z));
 }
@@ -130,11 +130,43 @@ fn inspektor_najmanje_25() {
 
 #[test]
 fn vanjski_materinji_na_cetiri() {
-    let z = s(vanjski(), "jezici", json!([["hr", 3]]));
+    let z = s(vanjski(), "jezici", json!([["hr", 3], ["en", 2]]));
     jedina_greska(
         v(z),
         "jezici: materinji jezik zemlje HR mora biti na razini 4",
     );
+}
+
+/// K6-Z (Leon 18.10.): svaki vanjski zna hrvatski i engleski barem na razini 2 (tržišna uloga iz Njemačke, de 4).
+fn novinar_iz_de(jezici: Value) -> Value {
+    let z = s(novinar(), "zemlja", json!("DE"));
+    s(z, "jezici", jezici)
+}
+
+#[test]
+fn vanjski_trazi_hrvatski_barem_2() {
+    let poruka = "jezici: vanjski traži hrvatski barem 2";
+    jedina_greska(v(novinar_iz_de(json!([["de", 4], ["en", 2]]))), poruka);
+    jedina_greska(
+        v(novinar_iz_de(json!([["de", 4], ["hr", 1], ["en", 2]]))),
+        poruka,
+    );
+}
+
+#[test]
+fn vanjski_trazi_engleski_barem_2() {
+    let poruka = "jezici: vanjski traži engleski barem 2";
+    jedina_greska(v(novinar_iz_de(json!([["de", 4], ["hr", 2]]))), poruka);
+    jedina_greska(
+        v(novinar_iz_de(json!([["de", 4], ["hr", 2], ["en", 1]]))),
+        poruka,
+    );
+}
+
+#[test]
+fn vanjski_s_hrvatskim_i_engleskim_2_prolazi() {
+    ok(v(novinar_iz_de(json!([["de", 4], ["hr", 2], ["en", 2]]))));
+    ok(v(novinar_iz_de(json!([["de", 4], ["hr", 3], ["en", 4]]))));
 }
 
 // ------------------------------------------------------------------------------------------------ VT: ustanova i opis
@@ -300,7 +332,7 @@ fn lijecnik_je_lokalna_sluzba_iz_hrvatske() {
     let z = s(
         s(lijecnik(), "zemlja", json!("AT")),
         "jezici",
-        json!([["de", 4]]),
+        json!([["de", 4], ["hr", 2], ["en", 2]]),
     );
     jedina_greska(v(z), "zemlja: uloga lijecnik traži HR, ima AT");
 }

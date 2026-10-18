@@ -123,31 +123,36 @@
       "naziv": "Nepal",
       "materinji": ["ne"],
       "razumije_hr": false,
-      "azija": true
+      "azija": true,
+      "daleka": true
     },
     "IN": {
       "naziv": "Indija",
       "materinji": ["hi", "bn", "ml", "ta", "te", "pa", "mr", "gu"],
       "razumije_hr": false,
-      "azija": true
+      "azija": true,
+      "daleka": true
     },
     "PH": {
       "naziv": "Filipini",
       "materinji": ["tl"],
       "razumije_hr": false,
-      "azija": true
+      "azija": true,
+      "daleka": true
     },
     "BD": {
       "naziv": "Bangladeš",
       "materinji": ["bn"],
       "razumije_hr": false,
-      "azija": true
+      "azija": true,
+      "daleka": true
     },
     "UZ": {
       "naziv": "Uzbekistan",
       "materinji": ["uz"],
       "razumije_hr": false,
-      "azija": true
+      "azija": true,
+      "daleka": true
     },
     "AT": {
       "naziv": "Austrija",
@@ -253,6 +258,26 @@
       "naziv": "Rumunjska",
       "materinji": ["ro"],
       "razumije_hr": false
+    },
+    "EG": {
+      "naziv": "Egipat",
+      "materinji": ["ar"],
+      "razumije_hr": false,
+      "daleka": true
+    },
+    "TR": {
+      "naziv": "Turska",
+      "materinji": ["tr"],
+      "razumije_hr": false,
+      "azija": true,
+      "daleka": true
+    },
+    "ID": {
+      "naziv": "Indonezija",
+      "materinji": ["id"],
+      "razumije_hr": false,
+      "azija": true,
+      "daleka": true
     }
   },
   "jezici": [
@@ -288,6 +313,9 @@
     "mr",
     "gu",
     "tl",
-    "uz"
+    "uz",
+    "ar",
+    "tr",
+    "id"
   ]
 }
