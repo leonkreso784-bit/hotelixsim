@@ -151,7 +151,7 @@ organizator, zastupnik agencije i poslovni klijent; dobavljač i susjed su lokal
 | `ustanova` | tekst | 🟨 2–60 znakova, malim slovima osim prvog | ne | **generička** vrsta ustanove ili tvrtke, nikad vlastito ime (§3.7) |
 | `zemlja` | kod | ISO 3166 iz `mjesta.json` | da | 🟨 dodano: službe, dobavljač, susjed → `HR`; strani samo u tržišnim ulogama |
 | `mjesto` | tekst | službe i susjed: katalog `lokalno`; ostali iz HR: `lokalno` ili `regija`; strani: slobodno | da | gdje osoba radi ili živi |
-| `jezici` | popis (jezik, razina) | kao kod radnika | da | materinji 4; iz HR: `["hr", 4]` |
+| `jezici` | popis (jezik, razina) | kao kod radnika | da | materinji 4; iz HR: `["hr", 4]`; svaki vanjski `hr` ≥ 2 i `en` ≥ 2 (Leon 18.10., §3.7) |
 | `opis` | tekst | 40–220 znakova, najviše 2 rečenice | ne | činjenice službe i posla („dvanaest godina u sanitarnoj inspekciji"), ne ponašanje |
 
 **Što vanjski NEMA:** `razina` i `godine_iskustva` (ne rade u hotelu, jezgra iz njih ništa ne računa), `podrijetlo` (zemlja

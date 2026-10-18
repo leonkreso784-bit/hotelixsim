@@ -8,7 +8,7 @@ Dio indeksa [BANKA_LJUDI.md](../BANKA_LJUDI.md).
 content/hotel/v2/ljudi/
 ├── banka.json              popis verzija: verzija N = koje su serije zapečaćene + otisak; piše samo glavna sesija
 ├── raspodjele.json         ciljevi iz §2 kao podatak (stroj uspoređuje banku s njima)
-├── mjesta.json             mjesta za lokalno i regiju; zemlje za inozemstvo
+├── mjesta.json             mjesta za lokalno i regiju; zemlje za inozemstvo (`materinji`, `razumije_hr`, `azija`, `daleka` §3.2)
 ├── zabranjeno.json         zabranjena imena, hoteli i riječi u opisu
 ├── povuceni.json           ID-jevi povučeni od verzije N (zapis se nikad ne briše)
 ├── radnici/serija-000.json … (piše samo agent RADNICI)

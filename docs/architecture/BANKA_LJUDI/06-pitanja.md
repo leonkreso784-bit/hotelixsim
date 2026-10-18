@@ -63,9 +63,14 @@ nova uloga `lijecnik` (§1.5), tehničarka R-00239 postaje muškarac (rod po sta
 inspektora i susjeda popravlja se miješano (i muškarci i žene), a „ostale" zemlje stranih radnika dolaze s MUP-ova popisa dozvola
 (ne Ukrajina).
 
-**Otvoreno za Leona:**
+**Pitanja 17–18 (odgovorena 18.10., anketa uz K6):**
 
-17. **Talijanski kod lokalnih vanjskih** (pitanje pisaca K5, bez odgovora u anketi): koliko vanjskih s Kvarnera i iz Istre govori
-    talijanski — po tablici radnika (§2.2) ili više, kao Istrani kod radnika (C8)?
-18. **Liječnici u idućim serijama:** 15 liječnika je iznad cilja od 4 % (§2.4); dodaju li se novi tek kad udio padne (pretpostavka sesije
-    banke) ili uz svaku seriju po nekoliko?
+17. ✅ **svi vanjski hr i en ≥ 2.** **Talijanski kod lokalnih vanjskih:** koliko vanjskih s Kvarnera i iz Istre govori
+    talijanski — po tablici radnika (§2.2) ili više, kao Istrani kod radnika (C8)? Leon: *„nije toliko bitno… pusti da vanjski
+    svi znaju pričat eng i hrv"* → pravilo stroja §3.7.
+18. ✅ **pauza.** **Liječnici u idućim serijama:** 15 liječnika je iznad cilja od 4 % (§2.4); novi se ne dodaju dok udio ne padne
+    prema 4 % (~375 vanjskih).
+
+**K6 (18.10.):** tehničarka R-00239 zamijenjena je muškim tehničarem Dariom Benazićem (07a46b5). Leon: *„bitniji su gosti i radnici
+nego vanjski likovi"*, pa je K6 = radnici i gosti serija-005 i 006 (200), a vanjski serija-003 je odgođena. Treće zemlje EG, TR, ID
+(§2.2) i polje `daleka` (§3.2) su 🟨 pretpostavke sesije banke.

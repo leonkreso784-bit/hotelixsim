@@ -39,7 +39,7 @@ Zaliha nije ukras: filtri dijele banku na male bazene („umirovljenica" = 1 500
 | **dob** | 18–24: 22 % · 25–34: 30 % · 35–49: 32 % · 50–65: 16 % | [PROC]; najmanje 10 % početnika starijih od 35 (promjena zanimanja), da „početnik" ne znači „mlad" |
 | **rod** | ukupno ž 55 % · m 45 %; **u svakoj ulozi najmanje 25 % svakog roda** | [PROC]; stvarni omjer u domaćinstvu je jače ženski — pitanje 5 |
 | **podrijetlo** | lokalno 50 % · regija 25 % · inozemstvo 25 % | [PROC]; lokalno = Kvarner i Istra, regija = ostatak Hrvatske; inozemstvo puni agenciju (pitanje 2) |
-| **zemlje (inozemstvo)** | BiH, Srbija, Sj. Makedonija, Nepal, Indija, Filipini, ostalo [PROC] | najčešće zemlje izdanih dozvola za rad u turizmu — **izvor treba potvrditi** (MUP, uz L2b-1) |
+| **zemlje (inozemstvo)** | NP 21 · BA 20 · RS 14 · PH 13 · IN 9 · MK 6,5 · XK 3,5 · UZ 3 · EG 2,5 · AL 2 · BD 1,5 · TR 1,5 · ME 1 · ID 0,5 · ostalo 1 (%) | MUP RH (dozvole za boravak i rad 2025.) i Eurostat `migr_resvalid` (važeće dozvole za rad 31.12.2025.); presjek djelatnost × državljanstvo ne postoji, pa su udjeli PROCJENA korigirana prema turizmu (`raspodjele.json`, `zemlje_izvor`). 🟨 18.10. (sesija banke, uz Leonovu odluku „ne Ukrajina", [ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 16): **EG, TR, ID** kao treće zemlje (ID uz sporazum o zapošljavanju u ugostiteljstvu 2026.); „ostalo" samo za postojeća 2 UA i 1 RO |
 | **jezici (drugi)** | engleski: 0–4 = 10/20/35/30/5 % · njemački: 45/20/20/12/3 % · talijanski: 70/15/10/4/1 % | [PROC]; recepcioner ima engleski ≥ 2; isti udjeli za svako podrijetlo osim materinjeg jezika |
 
 ## 2.3 Raspodjele gostiju
@@ -82,12 +82,12 @@ bazene po ulozi i rodu).
 | **rod po ulozi** | stvarni omjer, kao radnici (ADR-052 t. 3) | 🟨 isti izvor: Eurostat LFS Hrvatska, ISCO-08 × spol (inspektori 3257, 3352, 3359; policija 5412; vatrogasci 5411; hitna 2211, 3258; novinari 2642; događanja 3332; agencije 4221; lokalna uprava 2422); do mjerenja prijedlog s `"potvrdeno": false`, susjed 50 : 50; liječnik (2211) 🟨 ž 65 % PROCJENA (`"potvrdeno": false`) |
 | **dob** | 20–29: 10 · 30–44: 40 · 45–59: 40 · 60–80: 10 (%) | [PROC]; službe su rijetko vrlo mlade, susjed i klijent mogu biti stariji |
 | **zemlja** | službe, dobavljač, susjed: 100 % HR; u tržišnim ulogama ~30 % stranih (≈ 11 % banke) | 🟨; strane zemlje po raspodjeli gostiju (§2.3) bez HR — agencije i novinari dolaze s tržišta gostiju |
-| **jezici** | iz HR: `["hr", 4]` svi, drugi jezici po tablici radnika (§2.2); strani: materinji 4, hrvatski 0–2 | 🟨; AI lik ionako govori hrvatski (kao gost) |
+| **jezici** | iz HR: `["hr", 4]` svi, drugi jezici po tablici radnika (§2.2); strani: materinji 4, hrvatski 2; **svaki vanjski `hr` ≥ 2 i `en` ≥ 2** | 🟨; AI lik ionako govori hrvatski (kao gost). Leon 18.10.: talijanski kod vanjskih *„nije toliko bitno… pusti da vanjski svi znaju pričat eng i hrv"* (§3.7) |
 
 **Bazeni koje predlošci traže.** Predložak bira ulogu i rod, pa banka za svaki par koji predlošci danas koriste (inspektor m,
 novinarka ž, dobavljač m, organizatorica ž, zastupnica ž, poslovni klijent ž i m, susjed m) na M1 ima **najmanje 5 zapisa**
 🟨, bez obzira na omjer roda u ulozi. To provjerava izvještaj prekretnice (K4), ne svaka serija.
 
 **Liječnici iznad cilja** 🟨 (18.10.): Leon je tražio 10–20 liječnika ([ADR-060](../../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md)
-t. 1), pa serija `vanjski/serija-002` ima 15 (13,6 % od 110 vanjskih, cilj 4 %). Iduće serije ne dodaju liječnike dok udio ne
-padne prema cilju.
+t. 1), pa serija `vanjski/serija-002` ima 15 (13,6 % od 110 vanjskih, cilj 4 %). Leon 18.10. (anketa): liječnici su u idućim serijama
+vanjskih **na pauzi** dok udio ne padne prema 4 % (~375 vanjskih).

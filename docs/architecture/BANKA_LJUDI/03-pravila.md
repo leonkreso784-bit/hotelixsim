@@ -13,6 +13,9 @@ Dio indeksa [BANKA_LJUDI.md](../BANKA_LJUDI.md).
 `godine_iskustva` ≤ `dob` − 16; razina prema iskustvu: početnik 0–2, iskusan 3–9, stručnjak ≥ 8 godina [PROC];
 `lokalno`/`regija` ↔ `HR`; `mjesto` iz kataloga mjesta za lokalno i regiju; materinji jezik zemlje na razini 4; jezik
 najviše jednom; ime i prezime pristaju rodu i zemlji (slovačko žensko prezime na `-ová` — ovo provjerava čovjek).
+Radnik iz **daleke** zemlje govori hrvatski najviše na razini 1 (Leon 16.10., ADR-052). 🟨 Od 18.10. pravilo nosi polje zemlje
+`daleka` u `mjesta.json` (NP, IN, PH, BD, UZ, EG, TR, ID), a ne `azija`, jer Egipat nije Azija; `azija` ostaje zemljopis
+(test „radnik iz Azije u svakoj seriji").
 
 ## 3.3 Bez stereotipa (ADR-028, MODEL_V2 §2 t. 9)
 - Podrijetlo određuje **samo** jezike, rok i naknadu agencije, dozvolu i smještaj. Razina, dob i rod moraju imati **istu
@@ -75,6 +78,7 @@ zemlji (čovjek).
   (K5), ista osoba bi se pojavila dvaput. Ovo stroj već provjerava za radnike i goste (J2) i proširuje se na vanjske.
 - **Službe su iz Hrvatske i s Kvarnera.** Službe, dobavljač i susjed imaju `zemlja: HR` i `mjesto` iz kataloga `lokalno`;
   dob službi najviše 65, inspektora, djelatnika hitne i liječnika najmanje 25 (`lijecnik` je služba, 🟨 18.10.).
+- **Svaki vanjski govori hrvatski i engleski** barem na razini 2 (Leon 18.10.; stroj `ljudi_vanjski.rs`, 30 zapisa dopunjeno).
 - **Bez stereotipa i u službama.** Opis ne kaže da je inspektor „strog" ili policajac „grub" (ton daje predložak, §1.5); rod
   po ulozi slijedi stvarni omjer, ali tekst nikad ne veže ulogu uz rod („kao žena u vatrogascima…" nije dopušteno).
   Strani vanjski su samo u tržišnim ulogama, što je činjenica tržišta, ne osobina zemlje.

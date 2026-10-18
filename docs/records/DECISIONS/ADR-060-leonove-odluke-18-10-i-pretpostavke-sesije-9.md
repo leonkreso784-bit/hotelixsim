@@ -73,3 +73,10 @@ pilot. Brojke klika su iz dijagnoze `.superpowers/sdd/2026-10-14-popravak-temelj
 susjed) popravlja se miješano, a ne samo dodavanjem žena. Uz t. 16: „ostale" zemlje se ne pune Ukrajinom. Pravila i ciljevi uloge `lijecnik`
 (služba iz Hrvatske, dob 25–65, cilj 4 %, rod ž 65 % procjena) pretpostavke su voditelja banke, s 🟨 u [§1.5 i §2.4](../../architecture/BANKA_LJUDI/02-koliko.md);
 dva otvorena pitanja (talijanski kod lokalnih vanjskih, liječnici u idućim serijama) su u [BANKA_LJUDI §6](../../architecture/BANKA_LJUDI/06-pitanja.md) t. 17–18.
+
+**Dopuna 18.10. (K6, izvor: Leonove ankete i bilješke sesije banke 10b; spojeno ead0daf, banka 730 ljudi).** Uz t. 15: R-00239 je sada
+muški tehničar Dario Benazić (07a46b5). Uz t. 16 (otvoreno): talijanski kod vanjskih Leon smatra nebitnim (*„pusti da vanjski svi znaju pričat
+eng i hrv"*), pa stroj traži **svaki vanjski `hr` ≥ 2 i `en` ≥ 2**; liječnici su u idućim serijama na **pauzi** dok udio ne padne prema 4 %.
+Leon (tekstom): *„bitniji su gosti i radnici nego vanjski likovi"*, pa je K6 dao radnike i goste serija-005 i 006, a vanjski serija-003 čeka.
+Treće zemlje **EG, TR, ID** i polje zemlje **`daleka`** pretpostavke su sesije banke, s 🟨 u [BANKA_LJUDI §2.2](../../architecture/BANKA_LJUDI/02-koliko.md)
+i [§3.2](../../architecture/BANKA_LJUDI/03-pravila.md); ovaj ADR ne dobiva novu 🟨 točku. Rupa 011–050 u seriji-000 ostaje otvorena.
