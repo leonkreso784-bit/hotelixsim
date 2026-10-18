@@ -139,13 +139,13 @@ fn repo_banka_prolazi() {
     let banka = Banka::read(&dir).expect("banka se čita");
     ok(banka.provjeri(&okvir));
     // K1b: 10 + 10 u seriji-000; K2: još 50 + 50 u seriji-001; K3: još 50 + 50 u seriji-002; K4: još 50 + 50 u seriji-003;
-    // K5: još 50 + 50 u seriji-004 (ukupno 210 + 210).
+    // K5: još 50 + 50 u seriji-004; K6: još 100 + 100 u serijama 005 i 006 (ukupno 310 + 310).
     let radnika: usize = banka.radnici.iter().map(|(_, s)| s.zapisi.len()).sum();
     let gostiju: usize = banka.gosti.iter().map(|(_, s)| s.zapisi.len()).sum();
     // K2v-b: 10 vanjskih u seriji-000; K2v-50: još 50 u seriji-001; K5: još 50 u seriji-002
     // (ukupno 110).
     let vanjskih: usize = banka.vanjski.iter().map(|(_, s)| s.zapisi.len()).sum();
-    assert_eq!((radnika, gostiju, vanjskih), (210, 210, 110));
+    assert_eq!((radnika, gostiju, vanjskih), (310, 310, 110));
 }
 
 // ------------------------------------------------------------------------------------------ K2: pouke pregleda K1a/K1b
