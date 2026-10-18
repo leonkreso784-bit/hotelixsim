@@ -577,9 +577,9 @@
     },
     {
       "id": "R-00239",
-      "ime": "Vanesa",
+      "ime": "Dario",
       "prezime": "Benazić",
-      "rod": "z",
+      "rod": "m",
       "dob": 34,
       "uloga": "tehnicar",
       "razina": "iskusan",
@@ -588,7 +588,7 @@
       "zemlja": "HR",
       "mjesto": "Pula",
       "jezici": [["hr", 4], ["en", 2], ["it", 1]],
-      "opis": "Šest godina radi kao elektroinstalaterka u brodogradilištu u Puli, najviše na rasvjeti i razvodnim ormarima brodova. Zimi je dvaput mijenjala instalacije u kampu kraj Medulina."
+      "opis": "Šest godina radi kao elektroinstalater u brodogradilištu u Puli, najviše na rasvjeti i razvodnim ormarima brodova. Zimi je dvaput mijenjao instalacije u kampu kraj Medulina."
     },
     {
       "id": "R-00240",
