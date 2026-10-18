@@ -86,6 +86,8 @@ pub struct RoundSituation {
     /// Kvar prostora (L1-13-1, A1): situacija skida `economy.fault_condition_pts` s prostora `space`
     /// (`TemplateSet::space_fault`); sidra i situacije izvana nisu kvar.
     pub fault: bool,
+    /// Klik (L1-13-1b): ponuđen odgovor (ili prepisan) gdje se smije pisati; dobit × `economy.click_gain_bp`.
+    pub click: bool,
 }
 
 /// Najmanja ocjena odgovora uz hitni popravak da se kvar prostora „popravi“ (Leon 18.10.: zadovoljan gost = 4 ili 5).
@@ -98,6 +100,7 @@ impl From<SituationOutcome> for RoundSituation {
             outcome,
             space: None,
             fault: false,
+            click: false,
         }
     }
 }

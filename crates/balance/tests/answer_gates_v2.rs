@@ -2,8 +2,9 @@
 //! nevažne, obrnute ili presudne; robot pritom ne igra nikakvu ulogu. Ravnalo težine (Leon 15.10., opcija 1) je
 //! konstanta u kodu, izmjerena jednom; ovdje se samo čita preko `plan_ruler`.
 //! PRAVILO-b: lanac ima četiri koraka (najbolji > klik najbolji > srednji > prepušteno > šutnja); težina se i dalje
-//! mjeri na vlastitom odgovoru (`best_vs_silent`); L1-13 dio 1b dodaje branu „B3 klik": težina klika
-//! (`click_vs_silent`) najviše 75 % težine vlastitog najboljeg.
+//! mjeri na vlastitom odgovoru (`best_vs_silent`); L1-13 dio 1b dodaje branu „B3 klik": omjer Δ klika
+//! i vlastitog najboljeg na situacijama s likom (`click_vs_mute` / `best_vs_mute`, M1 Leon 18.10.) najviše 75 %; ukupna
+//! težina klika (`click_vs_silent`) samo se ispisuje.
 //!
 //! Izvještaj se uzima iz pravog `run_v2` (3 sjemena), pa se putovi prepišu "čistim" brojkama; tako test mjeri samo
 //! brane, a ne igru. Svaki test gleda samo poruke koje počinju s "B3".
@@ -47,6 +48,9 @@ fn clean(kind: PeriodKind) -> ReportV2 {
         row.best_vs_silent = [-50, 100, ruler / 3];
         // Klik nosi 16,7 % uz 25 % vlastitog: omjer 66,7 % (brana najviše 75 %).
         row.click_vs_silent = ruler / 5;
+        // Isto na situacijama s likom (Δ prema šutnji tamo): omjer 66,7 %, brana najviše 75 % (M1, Leon 18.10.).
+        row.best_vs_mute = ruler / 3;
+        row.click_vs_mute = ruler / 5;
         row.steps = [100; 4];
     }
     r
@@ -308,24 +312,12 @@ fn print_keeps_only_the_ruler_weight_line() {
     );
 }
 
-/// Težina klika prema težini vlastitog najboljeg (L1-13 dio 1b, Leon 18.10.): brana najviše 75,0 %. Zrcalo formule
-/// `|Δ| / (|Δ| + ravnalo)` u bp (`share_bp` nije izvezen), samo za računanje rubova u testu.
-fn share(delta: i32, ruler: i32) -> i32 {
-    let d = i64::from(delta).abs();
-    i32::try_from(d * 10_000 / (d + i64::from(ruler).abs())).unwrap()
-}
-
-/// Najveća Δ klika čija je težina još najviše 75 % težine najboljeg s Δ = ravnalo (50,0 %): težina klika ≤ 37,5 %.
-fn edge_click(ruler: i32) -> i32 {
-    let best = share(ruler, ruler);
-    assert_eq!(best, 5_000);
-    let c = (0..=10 * ruler)
-        .take_while(|&c| {
-            i64::from(share(c, ruler)) * 10_000 <= i64::from(CLICK_WEIGHT_MAX_BP) * 5_000
-        })
-        .last()
-        .unwrap();
-    assert!(i64::from(share(c + 1, ruler)) * 10_000 > i64::from(CLICK_WEIGHT_MAX_BP) * 5_000);
+/// Brana klika (L1-13 dio 1b, Leon 18.10., M1): na situacijama s likom Δ klika (prema šutnji tamo) najviše 75 % Δ
+/// vlastitog najboljeg (`click_vs_mute` / `best_vs_mute`), cjelobrojno. Najveća Δ klika koja još prolazi uz dani najbolji.
+fn edge_click(best: i32) -> i32 {
+    let c = best * CLICK_WEIGHT_MAX_BP / 10_000;
+    assert!(i64::from(c) * 10_000 <= i64::from(CLICK_WEIGHT_MAX_BP) * i64::from(best));
+    assert!(i64::from(c + 1) * 10_000 > i64::from(CLICK_WEIGHT_MAX_BP) * i64::from(best));
     c
 }
 
@@ -340,7 +332,7 @@ fn click_weight_gate_fails_above_three_quarters() {
         // Doslovna poruka iz kartice: klik jednako težak kao vlastiti najbolji = 100,0 % (profil A je prvi redak).
         let mut r = clean(kind);
         let row = &mut paths_mut(&mut r).rows[0];
-        row.click_vs_silent = row.best_vs_silent[2];
+        row.click_vs_mute = row.best_vs_mute;
         let p = row.profile.code();
         assert_eq!(
             b3(&r),
@@ -352,11 +344,8 @@ fn click_weight_gate_fails_above_three_quarters() {
         // 80 % težine: pada samo taj profil i samo brana klika.
         let mut r = clean(kind);
         let row = &mut paths_mut(&mut r).rows[1];
-        let ruler = plan_ruler(kind, row.profile);
-        row.best_vs_silent[2] = ruler;
-        row.click_vs_silent = (0..=10 * ruler)
-            .find(|&c| i64::from(share(c, ruler)) * 10_000 >= 8_000 * 5_000)
-            .unwrap();
+        row.best_vs_mute = 1_000;
+        row.click_vs_mute = 800;
         let p = row.profile.code();
         let f = b3(&r);
         assert_eq!(f.len(), 1, "{kind:?}: {f:?}");
@@ -381,13 +370,12 @@ fn click_weight_gate_passes_at_three_quarters() {
         // Točno na rubu (težina klika = 75 % težine najboljeg, cjelobrojno) prolazi, korak iznad pada.
         let mut r = clean(kind);
         for row in &mut paths_mut(&mut r).rows {
-            let ruler = plan_ruler(kind, row.profile);
-            row.best_vs_silent[2] = ruler;
-            row.click_vs_silent = edge_click(ruler);
+            row.best_vs_mute = plan_ruler(kind, row.profile);
+            row.click_vs_mute = edge_click(row.best_vs_mute);
         }
         assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?}: rub prolazi");
         for row in &mut paths_mut(&mut r).rows {
-            row.click_vs_silent += 1;
+            row.click_vs_mute += 1;
         }
         let f = b3(&r);
         assert_eq!(
@@ -407,7 +395,8 @@ fn click_gate_needs_positive_best() {
             let mut r = clean(kind);
             let row = &mut paths_mut(&mut r).rows[0];
             row.best_vs_silent[2] = best;
-            row.click_vs_silent = 9 * plan_ruler(kind, row.profile);
+            row.best_vs_mute = best;
+            row.click_vs_mute = 9 * plan_ruler(kind, row.profile);
             let f = b3(&r);
             assert!(
                 has(&f, &["B3 odgovori", "na kraju sezone"]),
@@ -422,7 +411,7 @@ fn click_gate_needs_positive_best() {
 fn click_gate_is_not_a_robot_measure() {
     let mut r = clean(PeriodKind::Week);
     for row in &mut paths_mut(&mut r).rows {
-        row.click_vs_silent = row.best_vs_silent[2];
+        row.click_vs_mute = row.best_vs_mute;
     }
     assert!(!b3(&r).is_empty());
     assert!(!robot_measures_v2(&r).iter().any(|x| x.contains("B3")));
@@ -449,12 +438,35 @@ fn print_has_click_to_own_ratio_lines() {
     let at = lines
         .iter()
         .position(|l| {
-            *l == "  klik prema vlastitom (težina klika / težina najboljeg; brana najviše 75,0 %):"
+            *l == "  klik prema vlastitom, cijeli put (težina klika / težina najboljeg; samo ispis):"
         })
         .unwrap_or_else(|| panic!("nema retka omjera klika: {text}"));
     assert_eq!(
         &lines[at + 1..at + 4],
         ["    A 100,0 %", "    B 0,0 %", "    C 100,0 %"],
+        "{text}"
+    );
+    // Brana klika ima svoj redak: omjer Δ na situacijama s likom (A 50,0 %, B 100,0 %, C 0,0 %).
+    for (row, (best, click)) in
+        paths_mut(&mut r)
+            .rows
+            .iter_mut()
+            .zip([(200, 100), (200, 200), (200, 0)])
+    {
+        row.best_vs_mute = best;
+        row.click_vs_mute = click;
+    }
+    let text = render_v2(&r);
+    let lines: Vec<&str> = text.lines().collect();
+    let at = lines
+        .iter()
+        .position(|l| {
+            *l == "  klik prema vlastitom na situacijama s likom (Δ prema šutnji tamo; brana najviše 75,0 %):"
+        })
+        .unwrap_or_else(|| panic!("nema retka brane klika: {text}"));
+    assert_eq!(
+        &lines[at + 1..at + 4],
+        ["    A 50,0 %", "    B 100,0 %", "    C 0,0 %"],
         "{text}"
     );
     // Redak težine klika (stari ispis) ostaje, bez „nije brana".
@@ -472,6 +484,7 @@ fn weight_band_stays_on_own_words_best() {
             for row in &mut paths_mut(&mut r).rows {
                 // `None` = kao u `clean`: ravnalo / 5 profila.
                 row.click_vs_silent = click.unwrap_or(plan_ruler(kind, row.profile) / 5);
+                row.click_vs_mute = row.click_vs_silent;
             }
             assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?} klik {click:?}");
             assert!(

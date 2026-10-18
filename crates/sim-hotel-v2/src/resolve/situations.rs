@@ -25,6 +25,8 @@ pub struct SituationEffect {
 /// broj hitnih popravaka × `economy.repair_urgent_condition_pts` bez faktora (popravak je fizički, ADR-042 t. 1).
 /// Kvar prostora (`s.fault`, L1-13-1): −`economy.fault_condition_pts`, a uz hitni popravak u odgovoru i ocjenu
 /// od `FAULT_FIXED_MIN_QUALITY` naviše još +`economy.fault_fixed_condition_pts` (jednom po situaciji); oboje bez faktora.
+/// Klik (`s.click`, L1-13-1b): zatim se pozitivni dijelovi zadovoljstva, morala, ocjene i opreme (i noćenja grupa, najmanje 1)
+/// množe s `economy.click_gain_bp / 10 000`; kvar se skida tek poslije, pun (fizički).
 /// Situacija bez odjela i neraspoređeni odjel djeluju na Smještaj; nepoznat odjel je greška kataloga.
 pub fn situation_effect(
     s: &RoundSituation,
@@ -51,10 +53,26 @@ pub fn situation_effect(
         w(cat.economy.repair_urgent_condition_pts),
     )?;
     let mut equipment = c::add(w(scaled(e.equipment_pts, coeffs)?), repair)?;
-    if s.fault {
-        if urgent > 0 && s.outcome.quality >= FAULT_FIXED_MIN_QUALITY {
-            equipment = c::add(equipment, w(cat.economy.fault_fixed_condition_pts))?;
+    if s.fault && urgent > 0 && s.outcome.quality >= FAULT_FIXED_MIN_QUALITY {
+        equipment = c::add(equipment, w(cat.economy.fault_fixed_condition_pts))?;
+    }
+    if s.click {
+        // Klik (L1-13-1b): samo DOBIT se umanjuje; trošak, povišice i negativni dijelovi ostaju puni.
+        let bp = cat.economy.click_gain_bp;
+        e.satisfaction_pts = click_gain(e.satisfaction_pts, bp)?;
+        e.morale_pts = click_gain(e.morale_pts, bp)?;
+        e.rating = click_gain(e.rating, bp)?;
+        equipment = if equipment > 0 {
+            c::div_round(c::mul(equipment, w(bp))?, 10_000)?
+        } else {
+            equipment
+        };
+        for g in &mut e.groups {
+            let nights = c::div_round(c::mul(w(g.room_nights), w(bp))?, 10_000)?;
+            g.room_nights = u32::try_from(nights.max(1)).map_err(|_| c::CalcError::Overflow)?;
         }
+    }
+    if s.fault {
         equipment = c::sub(equipment, w(cat.economy.fault_condition_pts))?;
     }
     e.equipment_pts = c::narrow(equipment)?;
@@ -134,6 +152,14 @@ fn scaled(pts: i32, coeffs: &PeriodCoefficients) -> Result<i32, ResolveError> {
         c::mul(w(pts), w(coeffs.situation_effect_bp))?,
         10_000,
     )?)?)
+}
+
+/// Klik: pozitivan dio × `click_gain_bp / 10 000` (zaokruženo); nula i negativni dijelovi ostaju.
+fn click_gain(pts: i32, bp: u16) -> Result<i32, ResolveError> {
+    if pts <= 0_i32 {
+        return Ok(pts);
+    }
+    Ok(c::narrow(c::div_round(c::mul(w(pts), w(bp))?, 10_000)?)?)
 }
 
 /// Granica zbroja kruga (±`bound`) za jedno polje: višak se skida od zadnje situacije prema prvoj, samo sa

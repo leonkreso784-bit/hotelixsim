@@ -39,11 +39,12 @@ impl Game {
             let no_penalty = self.no_penalty(h, m, &t.code);
             let space = self.space(h, m, &t.code);
             let fault = self.fault(h, m, &t.code);
-            let mut push = |o: SituationOutcome| {
+            let mut push = |o: SituationOutcome, click: bool| {
                 outcomes.push(RoundSituation {
                     outcome: model.situation_outcome(o, no_penalty),
                     space: space.clone(),
                     fault,
+                    click,
                 })
             };
             if let Some(&i) = h.answers.get(&key) {
@@ -65,11 +66,15 @@ impl Game {
                     delegated: false,
                     capped: quality < a.quality,
                 });
-                push(SituationOutcome {
-                    code: t.code.clone(),
-                    mechanics: a.mechanics.clone(),
-                    quality,
-                });
+                // L1-13-1b: klik gdje se smije pisati nosi samo dio dobiti (`economy.click_gain_bp`).
+                push(
+                    SituationOutcome {
+                        code: t.code.clone(),
+                        mechanics: a.mechanics.clone(),
+                        quality,
+                    },
+                    self.click_capped(h.setup.hotel_id, &t.code),
+                );
             } else if let Some(fr) = h.responses.get(&key) {
                 // Slobodan odgovor: mehanike najbližeg ponuđenog odgovora, kvaliteta iz presude. Neutralna
                 // presuda (`None`) nosi mehanike `unanswered`: uz `Classic` kvaliteta je 3 (učinak `(q − 3)` je 0),
@@ -108,7 +113,11 @@ impl Game {
                     mechanics,
                     quality: v.quality,
                 };
-                push(o);
+                // Prepisan ponuđeni odgovor gdje se smije pisati nosi isto što i klik.
+                push(
+                    o,
+                    v.copied.is_some() && self.click_capped(h.setup.hotel_id, &t.code),
+                );
             } else if h.delegated.contains(&key) {
                 // Prepuštena voditelju: mehanike `unanswered` (isti trošak i smjer) uz kvalitetu 2, bez AI-ja.
                 let o = SituationOutcome {
@@ -124,7 +133,7 @@ impl Game {
                     delegated: true,
                     capped: false,
                 });
-                push(o);
+                push(o, false);
             } else {
                 let o = SituationOutcome::unanswered(t);
                 results.push(SituationResult {
@@ -135,7 +144,7 @@ impl Game {
                     delegated: false,
                     capped: false,
                 });
-                push(o);
+                push(o, false);
             }
         }
         Ok((results, outcomes))

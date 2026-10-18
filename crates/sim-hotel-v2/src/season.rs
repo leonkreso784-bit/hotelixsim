@@ -315,9 +315,26 @@ pub struct RoundItem<'a> {
     pub drawn: Option<&'a DrawnSituation>,
 }
 
-/// Ishodi kruga, jedan po stavci i istim redom; „samo nagradu" (S-4) primjenjuje jezgra.
+/// Odgovor na jednu situaciju: ishod i je li bio klik (L1-13-1b: ponuđen odgovor gdje se smije pisati, dobit × `click_gain_bp`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Answered {
+    pub outcome: SituationOutcome,
+    pub click: bool,
+}
+
+impl From<SituationOutcome> for Answered {
+    /// Ishod bez klika (vlastiti odgovor, šutnja, roboti).
+    fn from(outcome: SituationOutcome) -> Self {
+        Answered {
+            outcome,
+            click: false,
+        }
+    }
+}
+
+/// Odgovori kruga, jedan po stavci i istim redom; „samo nagradu" (S-4) primjenjuje jezgra.
 pub type Responder<'r> =
-    dyn FnMut(&Period, &[RoundItem]) -> Result<Vec<SituationOutcome>, ResolveError> + 'r;
+    dyn FnMut(&Period, &[RoundItem]) -> Result<Vec<Answered>, ResolveError> + 'r;
 
 /// Sezona s vlastitim planerom i izborom odgovora; situacije iz `source`.
 pub fn run_season_from(
@@ -336,7 +353,7 @@ pub fn run_season_from(
                 let t = item.template;
                 let i = chooser(t)?;
                 let answer = t.answers.get(i).ok_or(ResolveError::BadChoice)?;
-                Ok(SituationOutcome::from_answer(&t.code, answer))
+                Ok(SituationOutcome::from_answer(&t.code, answer).into())
             })
             .collect()
     };
@@ -418,15 +435,20 @@ pub fn run_season_responding(
             .into_iter()
             .zip(&items)
             .enumerate()
-            .map(|(k, (o, item))| {
+            .map(|(k, (a, item))| {
                 let meta = k.checked_sub(anchors_len).and_then(|j| instances.get(j));
                 let no_penalty = meta.is_some_and(|m| m.no_penalty);
                 let own = item.drawn.and_then(|d| d.department.clone());
                 let space = meta.and_then(|m| m.condition_of.clone()).or(own);
                 RoundSituation {
-                    outcome: if no_penalty { reward_only(o) } else { o },
+                    outcome: if no_penalty {
+                        reward_only(a.outcome)
+                    } else {
+                        a.outcome
+                    },
                     space,
                     fault: meta.is_some_and(|m| m.fault),
+                    click: a.click,
                 }
             })
             .collect();

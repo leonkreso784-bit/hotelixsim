@@ -35,7 +35,7 @@ fn repo_click_gain_is_measured_and_below_full() {
         .expect("click_gain_bp je u content/hotel/v2/economy.json");
     let bp = key.as_u64().expect("broj");
     assert!(
-        (1_000..10_000).contains(&bp) && bp % 1_000 == 0,
+        (1_000..10_000).contains(&bp) && bp.is_multiple_of(1_000),
         "izmjereno u koracima od 1 000, ispod 10 000: {bp}"
     );
     assert_eq!(u64::from(gain(&build(&v).unwrap())), bp);

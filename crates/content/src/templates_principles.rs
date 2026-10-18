@@ -325,6 +325,7 @@ fn silence_dominates(
                         outcome: o,
                         space: department.clone(),
                         fault: false,
+                        click: false,
                     };
                     Ok(situation_effect(&s, &p, v2, category)
                         .map_err(|e| bad(format!("{e:?}")))?

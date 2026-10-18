@@ -6,7 +6,7 @@
 use std::cmp::Reverse;
 
 use sim_hotel_v2::{
-    Catalog, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError, RoundItem,
+    Answered, Catalog, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError, RoundItem,
     SeasonResult, SeasonSituations, SituationOutcome, SituationTemplate, progress_pts,
     run_season_responding,
 };
@@ -87,7 +87,7 @@ fn respond(
     path: AnswerPath,
     items: &[RoundItem],
     writable: &dyn Fn(&RoundItem) -> bool,
-) -> Result<Vec<SituationOutcome>, ResolveError> {
+) -> Result<Vec<Answered>, ResolveError> {
     match path {
         AnswerPath::Best | AnswerPath::ClickBest | AnswerPath::Middle => items
             .iter()
@@ -100,12 +100,16 @@ fn respond(
                 if path == AnswerPath::ClickBest && writable(item) {
                     o.quality = o.quality.min(CLICK_MAX_QUALITY);
                 }
-                Ok(o)
+                // L1-13-1b: u igri je svaki odabir ponuđenog odgovora gdje se smije pisati klik (i „srednji"),
+                // pa nosi samo dio dobiti.
+                let click =
+                    matches!(path, AnswerPath::ClickBest | AnswerPath::Middle) && writable(item);
+                Ok(Answered { outcome: o, click })
             })
             .collect(),
         AnswerPath::Silent | AnswerPath::NoSituations => Ok(items
             .iter()
-            .map(|i| SituationOutcome::unanswered(i.template))
+            .map(|i| SituationOutcome::unanswered(i.template).into())
             .collect()),
         AnswerPath::Delegated => {
             let mut order: Vec<usize> = (0..items.len()).collect();
@@ -130,7 +134,7 @@ fn respond(
                 *out.get_mut(k).ok_or(ResolveError::BadChoice)? = Some(o);
             }
             out.into_iter()
-                .map(|o| o.ok_or(ResolveError::BadChoice))
+                .map(|o| o.map(Answered::from).ok_or(ResolveError::BadChoice))
                 .collect()
         }
     }
@@ -169,6 +173,40 @@ pub(crate) fn play(
     )
 }
 
+/// Pomoćni put za branu klika (Leon 18.10., M1): šutnja SAMO na situacijama gdje se smije pisati (ostale se rješavaju
+/// kao u putu „najbolji", tamo je klik jedini odgovor i isti je kao vlastiti). Nije u `AnswerPath::ALL` i ne ispisuje se
+/// kao put; služi kao osnovica Δ za situacije s likom (klik − šutnja tamo, najbolji − šutnja tamo).
+fn play_mute(
+    sits: &Situations,
+    cat: &Catalog,
+    refs: &RefTable,
+    (profile, seed): (Profile, u64),
+    kind: PeriodKind,
+) -> Result<SeasonResult, ResolveError> {
+    let mut planner =
+        |s: &sim_hotel_v2::HotelState, p: &Period| Ok(PeriodPlan::default_for(s, p, cat)?);
+    let mut responder = |_: &Period, items: &[RoundItem]| {
+        let mut out = Vec::with_capacity(items.len());
+        for item in items {
+            let path = if sits.writable(item) {
+                AnswerPath::Silent
+            } else {
+                AnswerPath::Best
+            };
+            out.extend(respond(path, std::slice::from_ref(item), &|_| false)?);
+        }
+        Ok(out)
+    };
+    sits.responding(
+        (profile, seed),
+        kind,
+        cat,
+        refs,
+        &mut planner,
+        &mut responder,
+    )
+}
+
 /// Jedan profil: medijani po putovima i razlike po sjemenu (stotinke).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathRow {
@@ -177,8 +215,13 @@ pub struct PathRow {
     pub end: [i32; 6],
     /// Medijan razlike po sjemenu najbolji − šutnja: nakon 1 kruga, nakon `horizon(kind)`, kraj sezone.
     pub best_vs_silent: [i32; 3],
-    /// Medijan razlike po sjemenu klik najbolji − šutnja na kraju sezone (samo se ispisuje, nije brana).
+    /// Medijan razlike po sjemenu klik najbolji − šutnja na kraju sezone, cijeli put (samo ispis).
     pub click_vs_silent: i32,
+    /// Δ na situacijama s likom (osnovica: šutnja samo tamo, ostalo kao „najbolji"), medijan razlike po sjemenu na
+    /// kraju sezone: najbolji − šutnja tamo. Osnova brane „B3 klik".
+    pub best_vs_mute: i32,
+    /// Isto za klik najbolji − šutnja tamo (brana „B3 klik": najviše `CLICK_WEIGHT_MAX_BP` od `best_vs_mute`).
+    pub click_vs_mute: i32,
     /// Medijan razlike po sjemenu na kraju: najbolji − klik najbolji, klik najbolji − srednji, srednji − prepušteno,
     /// prepušteno − šutnja.
     pub steps: [i32; 4],
@@ -221,7 +264,9 @@ pub(crate) fn path_report(
         let mut end: [Vec<i32>; 6] = Default::default();
         let mut at_one: [Vec<i32>; 6] = Default::default();
         let mut at_h: [Vec<i32>; 6] = Default::default();
+        let mut mute: Vec<i32> = Vec::new();
         for seed in 0..seeds {
+            mute.push(play_mute(sits, cat, &refs, (profile, seed), kind)?.progress_pts);
             for (k, path) in AnswerPath::ALL.into_iter().enumerate() {
                 let r = play(sits, cat, &refs, (profile, path, seed), kind)?;
                 if let Some(v) = end.get_mut(k) {
@@ -250,6 +295,8 @@ pub(crate) fn path_report(
             end: medians,
             best_vs_silent: [diff(&at_one, 0, 4), diff(&at_h, 0, 4), diff(&end, 0, 4)],
             click_vs_silent: diff(&end, 1, 4),
+            best_vs_mute: median_of_diffs(end.first().map_or(&[][..], Vec::as_slice), &mute),
+            click_vs_mute: median_of_diffs(end.get(1).map_or(&[][..], Vec::as_slice), &mute),
             steps: [
                 diff(&end, 0, 1),
                 diff(&end, 1, 2),
@@ -267,6 +314,11 @@ pub(crate) fn path_report(
 
 /// Granice težine situacija (🟨 do kalibracije L1-13, ADR-042 t. 15 ih sužava na 15–25 %), bp.
 pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
+
+/// Brana klika (L1-13 dio 1b, Leon 18.10., M1): na situacijama gdje se smije pisati klik nosi najviše ovoliki dio (bp)
+/// Δ vlastitog najboljeg (oboje prema šutnji tamo), tjedno i mjesečno na svakom profilu; cilj 70–75 %, nema donje brane.
+/// Ukupni omjer težina cijelog puta samo se ispisuje (situacije bez lika su klik = vlastiti).
+pub const CLICK_WEIGHT_MAX_BP: i32 = 7_500;
 
 /// Strop duga (stotinke boda): dugovani korak smije biti nula ili negativan do ove vrijednosti. Stanje 15.10.2026:
 /// najgore −14 (mjesečno srednji − prepušteno −14/−11/−10), Leonova odluka. Smije samo rasti prema 0; L1-13 briše dug.
@@ -332,6 +384,17 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
                 ));
             }
         }
+        // Brana klika (M1): omjer Δ na situacijama s likom (prema šutnji tamo), samo uz pozitivnu Δ najboljeg tamo.
+        if row.best_vs_mute > 0 {
+            let (click, best) = (row.click_vs_mute, row.best_vs_mute);
+            if i64::from(click) * 10_000 > i64::from(CLICK_WEIGHT_MAX_BP) * i64::from(best) {
+                f.push(format!(
+                    "B3 klik: {p} klik najbolji nosi {} težine vlastitog najboljeg (cilj najviše {})",
+                    pct(click_to_best_bp(click, best)),
+                    pct(CLICK_WEIGHT_MAX_BP)
+                ));
+            }
+        }
         for (i, (step, (a, b))) in row.steps.iter().zip(STEP_NAMES).enumerate() {
             let forgiven = *step >= ORDER_DEBT_FLOOR && ORDER_DEBT.contains(&(r.kind, i));
             if *step <= 0 && !forgiven {
@@ -354,6 +417,17 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
             ));
         }
     }
+}
+
+/// Težina klika kao dio težine vlastitog najboljeg, bp (`best` > 0).
+fn click_to_best_bp(click: i32, best: i32) -> i32 {
+    i32::try_from(
+        i64::from(click)
+            .saturating_mul(10_000)
+            .checked_div(i64::from(best))
+            .unwrap_or(0),
+    )
+    .unwrap_or(i32::MAX)
 }
 
 /// Ispis bloka B3: isti plan i sjeme, mijenja se samo odgovor.
@@ -390,8 +464,10 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
             ))
         ));
     }
-    s.push_str("  težina klika (klik najbolji − šutnja na kraju sezone kao dio raspona plana; samo ispis, nije brana):
-");
+    s.push_str(
+        "  težina klika (klik najbolji − šutnja na kraju sezone kao dio raspona plana):
+",
+    );
     for r in &paths.rows {
         s.push_str(&format!(
             "    {} klik najbolji prema rasponu plana (Brižni − Štediša bez situacija) {}
@@ -401,6 +477,33 @@ pub(crate) fn push_answer_paths(s: &mut String, paths: &PathReport) {
                 r.click_vs_silent,
                 plan_ruler(paths.kind, r.profile)
             ))
+        ));
+    }
+    s.push_str(
+        "  klik prema vlastitom, cijeli put (težina klika / težina najboljeg; samo ispis):
+",
+    );
+    for r in &paths.rows {
+        let ruler = plan_ruler(paths.kind, r.profile);
+        let best = share_bp(r.best_vs_silent[2], ruler);
+        s.push_str(&format!(
+            "    {} {}
+",
+            r.profile.code(),
+            pct(click_to_best_bp(share_bp(r.click_vs_silent, ruler), best))
+        ));
+    }
+    s.push_str(&format!(
+        "  klik prema vlastitom na situacijama s likom (Δ prema šutnji tamo; brana najviše {}):
+",
+        pct(CLICK_WEIGHT_MAX_BP)
+    ));
+    for r in &paths.rows {
+        s.push_str(&format!(
+            "    {} {}
+",
+            r.profile.code(),
+            pct(click_to_best_bp(r.click_vs_mute, r.best_vs_mute))
         ));
     }
 }

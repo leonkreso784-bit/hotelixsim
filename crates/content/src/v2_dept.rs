@@ -242,6 +242,14 @@ pub(crate) struct EconomyDto {
     /// Bodovi koje hitni popravak uz dobru ocjenu vraća kvaru prostora; bez ključa 0.
     #[serde(default, skip_serializing_if = "none_or_zero")]
     fault_fixed_condition_pts: Option<i32>,
+    /// Klik (L1-13-1b): dio dobiti koji klik zadržava (bp); bez ključa i uz 10 000 se ne zapisuje (isti zapis i otisak).
+    #[serde(default, skip_serializing_if = "none_or_full")]
+    click_gain_bp: Option<u16>,
+}
+
+/// Klik bez umanjenja (nema ključa ili 10 000) se ne zapisuje.
+fn none_or_full(v: &Option<u16>) -> bool {
+    matches!(v, None | Some(10_000))
 }
 
 /// Ključ koji se ne zapisuje kad ga nema ili je 0 (isti zapis i otisak kao prije, stari snimci).
@@ -512,6 +520,7 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
         fault_condition_pts: (e.fault_condition_pts != 0).then_some(e.fault_condition_pts),
         fault_fixed_condition_pts: (e.fault_fixed_condition_pts != 0)
             .then_some(e.fault_fixed_condition_pts),
+        click_gain_bp: (e.click_gain_bp != 10_000).then_some(e.click_gain_bp),
     }
 }
 
@@ -564,5 +573,6 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
         repair_urgent_condition_pts: e.repair_urgent_condition_pts.unwrap_or(0),
         fault_condition_pts: e.fault_condition_pts.unwrap_or(0),
         fault_fixed_condition_pts: e.fault_fixed_condition_pts.unwrap_or(0),
+        click_gain_bp: e.click_gain_bp.unwrap_or(10_000),
     })
 }

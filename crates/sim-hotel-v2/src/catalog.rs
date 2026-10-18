@@ -52,6 +52,9 @@ pub struct EconomyV2 {
     /// Bodovi stanja prostora koje hitni popravak uz ocjenu >= `FAULT_FIXED_MIN_QUALITY` vraća kvaru prostora,
     /// jednom po situaciji, bez faktora kruga; 0 = isključeno.
     pub fault_fixed_condition_pts: i32,
+    /// Klik (L1-13 dio 1b): dio svake DOBITI situacije koji klik na ponuđeni odgovor (ili prepisan odgovor) gdje se
+    /// smije pisati zadržava, u bp; trošak ostaje pun. 10 000 = bez umanjenja (stari snimak).
+    pub click_gain_bp: u16,
 }
 
 /// Uvjeti grupnih rezervacija (J-3): grupa je odluka s cijenom, ne čisti dobitak. Sve 0 = v1 ponašanje.
@@ -411,6 +414,11 @@ impl Catalog {
                 return Err(CatalogError::OutOfRange(format!("v2.economy.{field}")));
             }
         }
+        if self.economy.click_gain_bp > 10_000 {
+            return Err(CatalogError::OutOfRange(
+                "v2.economy.click_gain_bp".to_string(),
+            ));
+        }
         self.validate_leases()
     }
 
@@ -703,6 +711,7 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             repair_urgent_condition_pts: 0,
             fault_condition_pts: 0,
             fault_fixed_condition_pts: 0,
+            click_gain_bp: 10_000,
         },
     }
 }
