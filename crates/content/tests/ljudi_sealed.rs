@@ -27,10 +27,13 @@ const ZAPECACENO: [(&str, &str); 4] = [
     ),
 ];
 
-/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku; K3: serija-002 radnika i gostiju, uzorak 10 + 10).
+/// Serije koje postoje, ali još nisu pečaćene (Leonov pregled u tijeku; K3: serija-002 radnika i gostiju, uzorak 10 + 10;
+/// K4: serija-003 radnika i gostiju).
 const OTVORENO: &[&str] = &[
     "gosti/serija-002.json",
+    "gosti/serija-003.json",
     "radnici/serija-002.json",
+    "radnici/serija-003.json",
     "vanjski/serija-000.json",
     "vanjski/serija-001.json",
 ];
