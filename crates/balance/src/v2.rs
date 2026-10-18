@@ -26,9 +26,9 @@ use crate::{
 
 pub use crate::v2_answers::{
     AnswerPath, CLICK_MAX_QUALITY, CLICK_WEIGHT_MAX_BP, DELEGATED_QUALITY, MANDATORY_SITUATIONS,
-    ORDER_DEBT, ORDER_DEBT_FLOOR, PathReport, PathRow, WEIGHT_BAND_BP, horizon, offered_choice,
-    plan_ruler,
+    PathReport, PathRow, WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
 };
+pub use crate::v2_faults::{FaultReport, FaultRow};
 pub use crate::v2_situations::{HOTEL_SLOT, writable_v2};
 
 pub struct OptionsV2 {
@@ -86,6 +86,10 @@ pub struct SituationReport {
     pub group_limit: Option<u8>,
     /// Putovi odgovora na zadanom planu (B3a), za isti broj situacija kao ostatak izvještaja.
     pub paths: PathReport,
+    /// Kvarovi prostora uz tri razine održavanja (L1-13-4, A2), samo ispis.
+    pub faults: FaultReport,
+    /// Ključ sadržaja: dodatna mjesta iznad `low` pune samo situacije s gostima (brana „J-3 gosti").
+    pub guest_extra_slots: bool,
 }
 
 type RefTables = Vec<(Category, RefTable)>;
@@ -609,6 +613,8 @@ pub fn run_v2(content: &content::Content, opts: &OptionsV2) -> Result<ReportV2, 
             group_limit: sits.group_limit(),
             shares: shares(&sits, kind, cat, &owned, opts.seeds)?,
             paths: path_report(&sits, kind, cat, &owned, opts.seeds)?,
+            faults: crate::v2_faults::fault_report(&sits, kind, cat, &owned, opts.seeds)?,
+            guest_extra_slots: sits.guest_extra_slots(),
         })
     } else {
         None
@@ -772,6 +778,12 @@ fn situation_model_failures(f: &mut Vec<String>, sr: &SituationReport) {
             sr.group_limit.unwrap_or(u8::MAX)
         ));
     }
+    if sr.guest_extra_slots && sr.draws.non_guest_extra > 0 {
+        f.push(format!(
+            "J-3 gosti: {} negostinjskih situacija iznad low − (sidra + kolektivna + veća) (cilj 0)",
+            sr.draws.non_guest_extra
+        ));
+    }
     let (min, max) = count_band(sr.counts);
     if sr.draws.rounds > 0 && (sr.draws.min < min || sr.draws.max > max) {
         f.push(format!(
@@ -917,6 +929,7 @@ pub fn render_v2(r: &ReportV2) -> String {
     if let Some(sr) = &r.situations {
         push_situations(&mut s, sr);
         push_answer_paths(&mut s, &sr.paths);
+        crate::v2_faults::push_faults(&mut s, &sr.faults);
     }
     s.push_str(&format!(
         "== Ponovljivost (§11.5): {} ==\n",

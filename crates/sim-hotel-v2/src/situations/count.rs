@@ -71,11 +71,21 @@ impl SituationCounts {
         (self.low, self.mid, self.high)
     }
 
-    /// Broj za očekivanu popunjenost: < 75 % → `low`, 75–89 % → `mid`, ≥ 90 % → `high`.
-    pub fn for_occupancy(self, occupancy_bp: u16) -> u8 {
+    /// Razina očekivane popunjenosti: 0 niska (< 75 %), 1 srednja (75–89 %), 2 visoka (≥ 90 %). Ne ovisi o broju
+    /// situacija (balans po njoj broji gostinjske i ostale, L1-13-3).
+    pub fn level(occupancy_bp: u16) -> usize {
         match occupancy_bp {
-            0..7_500 => self.low,
-            7_500..9_000 => self.mid,
+            0..7_500 => 0,
+            7_500..9_000 => 1,
+            _ => 2,
+        }
+    }
+
+    /// Broj za očekivanu popunjenost: < 75 % → `low`, 75–89 % → `mid`, ≥ 90 % → `high` (razina iz `level`).
+    pub fn for_occupancy(self, occupancy_bp: u16) -> u8 {
+        match Self::level(occupancy_bp) {
+            0 => self.low,
+            1 => self.mid,
             _ => self.high,
         }
     }

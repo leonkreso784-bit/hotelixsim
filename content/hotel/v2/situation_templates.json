@@ -4,6 +4,7 @@
   "groups_per_month": 1,
   "min_gap_weeks": 4,
   "opportunity_every_weeks": 3,
+  "guest_extra_slots": true,
   "templates": [
     {
       "code": "P-KLIMA",
@@ -76,6 +77,7 @@
         }
       ],
       "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
@@ -151,7 +153,7 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
       "effect_band": { "cost_night_pct": [0, 1500], "raise_pct": [0, 25] }
     },
     {
@@ -368,6 +370,7 @@
       ],
       "unanswered": [
         { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
       "effect_band": { "cost_night_pct": [0, 1700] }
@@ -539,7 +542,7 @@
           ]
         },
         {
-          "label": "Prihvatiti sve kako organizatorica traži, s rooftopom cijelu večer, glazbom do 1 sat i 10 % popusta na sobe",
+          "label": "Prihvatiti sve kako organizatorica traži: rooftop cijelu večer, glazbu do 1 sat, 10 % popusta i piće svatovima na račun hotela",
           "criteria": [],
           "mechanics": [
             {
@@ -550,7 +553,7 @@
               "discount_bp": 1000,
               "month": "sep"
             },
-            { "type": "ServiceRecovery", "compensation": 0 }
+            { "type": "ServiceRecovery", "compensation": "pice_gostima" }
           ]
         },
         {
@@ -637,7 +640,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
       "effect_band": { "cost_night_pct": [0, 300] }
     },
     {
@@ -682,9 +685,9 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
-          "label": "Ispričati se, odmah mu naći mjesto u hladu, a uz bazen istaknuti da se ručnik bez gosta sklanja nakon sat vremena",
+          "label": "Ispričati se uz piće na račun hotela, naći mu mjesto u hladu, a uz bazen istaknuti da se ručnik bez gosta sklanja nakon sat vremena",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pice" }]
         },
         {
           "label": "Osoblju naložiti da odmah i bez najave skloni ručnike s praznih ležaljki, a gostu dati jednu od njih",
@@ -868,7 +871,7 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
       "effect_band": { "cost_night_pct": [0, 1000], "raise_pct": [0, 10] }
     },
     {
@@ -923,7 +926,7 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 5, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
       "effect_band": { "cost_night_pct": [0, 0], "raise_pct": [0, 5] }
     },
     {
@@ -982,6 +985,7 @@
         }
       ],
       "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "ServiceRecovery", "compensation": 0 },
         { "type": "EquipmentRepair", "urgent": false }
       ],
@@ -1050,7 +1054,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "boravak" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": "sve" }],
       "effect_band": { "cost_night_pct": [0, 1500] }
     },
     {
@@ -1108,7 +1112,7 @@
           ]
         },
         {
-          "label": "Prihvatiti sve kako organizator traži, uz 20 % popusta, jer veliki kongres hotelu donosi ugled",
+          "label": "Prihvatiti sve kako organizator traži, uz 20 % popusta i kavu za sudionike na račun hotela, jer kongres donosi ugled",
           "criteria": [5],
           "mechanics": [
             {
@@ -1119,7 +1123,7 @@
               "discount_bp": 2000,
               "month": "sep"
             },
-            { "type": "ServiceRecovery", "compensation": 0 }
+            { "type": "ServiceRecovery", "compensation": "priprema" }
           ]
         },
         {
@@ -1280,7 +1284,8 @@
       ],
       "unanswered": [
         { "type": "ServiceRecovery", "compensation": 0 },
-        { "type": "CrisisCommunication", "backup": 0 }
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }
       ],
       "effect_band": { "cost_night_pct": [0, 600] }
     },
@@ -1354,6 +1359,7 @@
         }
       ],
       "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
         { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
         { "type": "CrisisCommunication", "backup": 0 }
       ],
@@ -1629,7 +1635,7 @@
           "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
         }
       ],
-      "unanswered": [{ "type": "CrisisCommunication", "backup": 0 }],
+      "unanswered": [{ "type": "CrisisCommunication", "backup": 0 }, { "type": "CrisisCommunication", "backup": 0 }],
       "effect_band": { "cost_night_pct": [0, 500] }
     },
     {
@@ -1834,9 +1840,9 @@
           "mechanics": [{ "type": "CrisisCommunication", "backup": "tecaj" }]
         },
         {
-          "label": "Odmah zvati hitnu, gosta zakloniti od pogleda, a uz suprugu ostaviti nekoga tko joj pomaže oko bolnice",
+          "label": "Odmah zvati hitnu, gosta zakloniti od pogleda, a supruzi platiti taksi i smještaj kraj bolnice",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "tecaj" }]
         },
         {
           "label": "Zvati hitnu i nastaviti posluživati ostale goste, a poslije zapisati što se dogodilo",
@@ -1952,9 +1958,9 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
         },
         {
-          "label": "Ljubazno objasniti pravilo, nazvati pansion za pse u blizini i dogovoriti da večeras primi psa",
+          "label": "Ljubazno objasniti pravilo, nazvati pansion za pse u blizini, dogovoriti da večeras primi psa i platiti taksi do njega",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pansion" }]
         },
         {
           "label": "Iznimno pustiti psa u sobu jer je kasno, a sobu poslije očistiti kao i svaku drugu",
@@ -2115,9 +2121,9 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
-          "label": "Ispričati se, odmah poslati zaposlenika da zatraži tišinu i gošći ponuditi drugu sobu ako buka ne prestane",
+          "label": "Ispričati se, odmah poslati zaposlenika da zatraži tišinu i gošći bez doplate ponuditi bolju sobu ako buka ne prestane",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "dorucak" }]
         },
         {
           "label": "Gošću odmah premjestiti u mirniju sobu na drugom katu, a sa susjedima ne ulaziti u raspravu",
@@ -2176,9 +2182,9 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
         },
         {
-          "label": "Zahvaliti joj osobno i pred timom, pitati je što bi hotel mogao bolje i odgovoriti gostu",
+          "label": "Zahvaliti joj osobno i pred timom, darovati joj bon za večeru, pitati je što bi hotel mogao bolje i odgovoriti gostu",
           "criteria": [1, 2, 4, 5],
-          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
         },
         {
           "label": "Zahvaliti gostu na pismu, odgovoriti mu na recenziju i pismo proslijediti njezinoj voditeljici",
@@ -2329,7 +2335,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "popust" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
       "effect_band": { "cost_night_pct": [0, 150] }
     },
     {
@@ -2398,7 +2404,7 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
       "effect_band": { "cost_night_pct": [0, 800] }
     },
     {
@@ -2897,7 +2903,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
       "effect_band": { "cost_night_pct": [0, 150] }
     },
     {
@@ -2957,7 +2963,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
       "effect_band": { "cost_night_pct": [0, 300] }
     },
     {
@@ -3016,7 +3022,7 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
       "effect_band": { "cost_night_pct": [0, 100] }
     },
     {
@@ -3054,9 +3060,9 @@
           "mechanics": [{ "type": "CrisisCommunication", "backup": "vjezba" }]
         },
         {
-          "label": "Svim zaposlenicima dati opis djeteta, uz gošću ostaviti nekoga, a policiju zvati ako dijete nije nađeno za nekoliko minuta",
+          "label": "Svim zaposlenicima dati opis djeteta, pozvati plaćenu zaštitarsku službu, uz gošću ostaviti nekoga, a policiju zvati ako dijete nije nađeno za nekoliko minuta",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
+          "mechanics": [{ "type": "CrisisCommunication", "backup": "vjezba" }]
         },
         {
           "label": "Preko razglasa u restoranu pozvati dijete imenom, provjeriti sobu obitelji na katu, a poslije osoblju napisati postupak za takve slučajeve",
@@ -3109,9 +3115,9 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "bon" }]
         },
         {
-          "label": "Gostu se ispričati, odmah provjeriti stavke i ispraviti račun, a red prepustiti drugom kolegi",
+          "label": "Gostu se ispričati, odmah provjeriti stavke i ispraviti račun, počastiti ga pićem u baru, a red prepustiti drugom kolegi",
           "criteria": [1, 2, 3],
-          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "bon" }]
         },
         {
           "label": "Odmah ispraviti račun, a gostu objasniti da je greška nastala pri unosu stavki iz minibara",
@@ -3295,9 +3301,9 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "dodatak" }]
         },
         {
-          "label": "Saslušati oboje, prednost dati onome tko je prvi pitao, a drugome dati kraću smjenu da stigne na slavlje",
+          "label": "Saslušati oboje, prednost dati onome tko je prvi pitao, a drugome kraću smjenu i kolegi koji ga mijenja platiti prekovremeno",
           "criteria": [1, 2, 4],
-          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "dodatak" }]
         },
         {
           "label": "Odbiti oba zahtjeva jer je vrhunac sezone, a oboma slobodan vikend ponuditi u rujnu, kad je mirnije",
@@ -3459,9 +3465,9 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "pjenusac" }]
         },
         {
-          "label": "Dogovoriti lijep stol i točno vrijeme, odrediti konobara koji donosi prsten i desert, a sve držati u tajnosti",
+          "label": "Dogovoriti lijep stol i točno vrijeme, odrediti konobara koji donosi prsten i desert na račun hotela, a sve držati u tajnosti",
           "criteria": [1, 2, 4],
-          "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
+          "mechanics": [{ "type": "ServiceRecovery", "compensation": "pjenusac" }]
         },
         {
           "label": "Reći gostu da je sutra restoran gotovo pun i da posebne pripreme nisu moguće, a za dvoje mu dati stol u lobby baru",

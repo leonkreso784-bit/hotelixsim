@@ -83,7 +83,7 @@ pub fn offered_choice(path: AnswerPath, t: &SituationTemplate) -> Option<usize> 
 
 /// Ishodi kruga za put. Prepušteno: poredak kao u igri (sidra redom, pa primjerci po važnosti silazno, stabilno);
 /// prvih `MANDATORY_SITUATIONS` je obvezno (šutnja), ostale idu voditelju.
-fn respond(
+pub(crate) fn respond(
     path: AnswerPath,
     items: &[RoundItem],
     writable: &dyn Fn(&RoundItem) -> bool,
@@ -312,24 +312,13 @@ pub(crate) fn path_report(
     })
 }
 
-/// Granice težine situacija (🟨 do kalibracije L1-13, ADR-042 t. 15 ih sužava na 15–25 %), bp.
-pub const WEIGHT_BAND_BP: (i32, i32) = (500, 5_000);
+/// Granice težine situacija: vlastiti najbolji nosi 15–25 % raspona plana (Leon A3 „20 %", L1-13-4; ADR-042 t. 15), bp.
+pub const WEIGHT_BAND_BP: (i32, i32) = (1_500, 2_500);
 
 /// Brana klika (L1-13 dio 1b, Leon 18.10., M1): na situacijama gdje se smije pisati klik nosi najviše ovoliki dio (bp)
 /// Δ vlastitog najboljeg (oboje prema šutnji tamo), tjedno i mjesečno na svakom profilu; cilj 70–75 %, nema donje brane.
 /// Ukupni omjer težina cijelog puta samo se ispisuje (situacije bez lika su klik = vlastiti).
 pub const CLICK_WEIGHT_MAX_BP: i32 = 7_500;
-
-/// Strop duga (stotinke boda): dugovani korak smije biti nula ili negativan do ove vrijednosti. Stanje 15.10.2026:
-/// najgore −14 (mjesečno srednji − prepušteno −14/−11/−10), Leonova odluka. Smije samo rasti prema 0; L1-13 briše dug.
-pub const ORDER_DEBT_FLOOR: i32 = -25;
-
-/// Zapisani dug redoslijeda (kao `templates_principles_debt.rs`): koraci lanca koji smiju biti 0 ili negativni
-/// do `ORDER_DEBT_FLOOR` u danoj vrsti kruga. Korak 0 = najbolji − klik najbolji, 1 = klik najbolji − srednji,
-/// 2 = srednji − prepušteno, 3 = prepušteno − šutnja. Popis smije samo padati; kad korak postane pozitivan na svim profilima, brana
-/// „B3 dug" traži da ga se makne. Prazan od B1a (15.10.2026): uz bonus hitnog popravka mjesečni korak srednji −
-/// prepušteno je pozitivan na svim profilima (odluka voditelja).
-pub const ORDER_DEBT: &[(PeriodKind, usize)] = &[];
 
 /// Ravnalo težine, stotinke boda: Brižni − Štediša bez situacija (planovi robota; medijan
 /// `Situations.shares.without` Caring − Saver po profilu), 1000 sjemena, 15.10.2026, commit 76271d1.
@@ -395,26 +384,13 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
                 ));
             }
         }
-        for (i, (step, (a, b))) in row.steps.iter().zip(STEP_NAMES).enumerate() {
-            let forgiven = *step >= ORDER_DEBT_FLOOR && ORDER_DEBT.contains(&(r.kind, i));
-            if *step <= 0 && !forgiven {
+        for (step, (a, b)) in row.steps.iter().zip(STEP_NAMES) {
+            if *step <= 0 {
                 f.push(format!(
                     "B3 redoslijed: {p} {a} prema {b} {} na kraju sezone (cilj više od 0)",
                     hundredths(*step)
                 ));
             }
-        }
-    }
-    for &(kind, i) in ORDER_DEBT {
-        let paid = !r.rows.is_empty()
-            && r.rows
-                .iter()
-                .all(|row| row.steps.get(i).is_some_and(|s| *s > 0));
-        if kind == r.kind && paid {
-            let (a, b) = STEP_NAMES.get(i).copied().unwrap_or(("?", "?"));
-            f.push(format!(
-                "B3 dug: korak {a} prema {b} je pozitivan na svim profilima, makni ga iz ORDER_DEBT (L1-13)"
-            ));
         }
     }
 }
