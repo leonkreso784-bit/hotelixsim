@@ -194,14 +194,91 @@ fn prazna_banka_nije_prekretnica() {
 
 #[test]
 fn azija_je_oznacena_u_mjesta_json() {
-    // K1b pregled M7: pravilo „Azija hrvatski 0–1" čita zastavicu `azija` iz mjesta.json.
+    // K1b pregled M7: zemljopisna zastavica `azija` (test „ima radnika iz Azije"); K6-Z: TR i ID jesu, EG nije.
     let okvir = Okvir::read(&repo_dir()).expect("okvir se čita");
     let z = &okvir.mjesta.zemlje;
     let azija = |k: &str| z.get(k).unwrap_or_else(|| panic!("nema {k}")).azija;
-    for k in ["NP", "IN", "PH", "BD"] {
+    for k in ["NP", "IN", "PH", "BD", "UZ", "TR", "ID"] {
         assert!(azija(k), "mjesta.zemlje.{k}.azija mora biti true");
     }
-    for k in ["HR", "BA", "RS", "ME", "MK", "AT", "DE"] {
+    for k in ["HR", "BA", "RS", "ME", "MK", "AT", "DE", "EG"] {
         assert!(!azija(k), "mjesta.zemlje.{k}.azija mora biti false");
+    }
+}
+
+const DALEKE: [&str; 8] = ["NP", "IN", "PH", "BD", "UZ", "EG", "TR", "ID"];
+
+#[test]
+fn daleka_je_oznacena_u_mjesta_json() {
+    // K6-Z: pravilo „hrvatski ≤ 1" čita `daleka` (daleka zemlja, neslavenski jezik, nedavni dolazak), ne `azija`.
+    let okvir = Okvir::read(&repo_dir()).expect("okvir se čita");
+    for (k, zemlja) in &okvir.mjesta.zemlje {
+        let ocekivano = DALEKE.contains(&k.as_str());
+        assert_eq!(
+            zemlja.daleka, ocekivano,
+            "mjesta.zemlje.{k}.daleka mora biti {ocekivano}"
+        );
+    }
+    for k in DALEKE {
+        assert!(okvir.mjesta.zemlje.contains_key(k), "nema {k}");
+    }
+}
+
+#[test]
+fn mup_zemlje_k6_u_okviru() {
+    // K6-Z (Leon 18.10., ruling): EG, TR, ID s MUP-ova popisa zamjenjuju Ukrajinu u „ostalo".
+    let okvir = Okvir::read(&repo_dir()).expect("okvir se čita");
+    let z = &okvir.mjesta.zemlje;
+    let ocekivano = [
+        ("EG", "Egipat", "ar", false),
+        ("TR", "Turska", "tr", true),
+        ("ID", "Indonezija", "id", true),
+    ];
+    for (kod, naziv, jezik, azija) in ocekivano {
+        let m = z.get(kod).unwrap_or_else(|| panic!("nema {kod}"));
+        assert_eq!(m.naziv, naziv, "{kod}: naziv");
+        assert_eq!(m.materinji, vec![jezik.to_string()], "{kod}: materinji");
+        assert!(!m.razumije_hr, "{kod}: razumije_hr mora biti false");
+        assert_eq!(m.azija, azija, "{kod}: azija");
+        assert!(m.daleka, "{kod}: daleka mora biti true");
+        assert!(
+            okvir.mjesta.jezici.iter().any(|j| j == jezik),
+            "mjesta.jezici nema {jezik}"
+        );
+    }
+    let r = &okvir.raspodjele.radnici;
+    let mapa: std::collections::BTreeMap<String, u32> = [
+        ("BA", 2000),
+        ("NP", 2100),
+        ("RS", 1400),
+        ("PH", 1300),
+        ("IN", 900),
+        ("MK", 650),
+        ("XK", 350),
+        ("UZ", 300),
+        ("BD", 150),
+        ("ME", 100),
+        ("AL", 200),
+        ("EG", 250),
+        ("TR", 150),
+        ("ID", 50),
+        ("ostalo", 100),
+    ]
+    .into_iter()
+    .map(|(k, v)| (k.to_string(), v))
+    .collect();
+    assert_eq!(r.zemlje_inozemstvo, mapa, "zemlje_inozemstvo");
+    for k in ["UA", "RO"] {
+        assert!(
+            !r.zemlje_inozemstvo.contains_key(k),
+            "zemlje_inozemstvo ne smije imati {k}"
+        );
+    }
+    for rijec in ["MUP", "Eurostat", "2025"] {
+        assert!(
+            r.zemlje_izvor.contains(rijec),
+            "zemlje_izvor mora sadržavati {rijec:?}: {}",
+            r.zemlje_izvor
+        );
     }
 }

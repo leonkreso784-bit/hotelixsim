@@ -355,10 +355,10 @@ fn ime_ima_slovo() {
     ok(r1(s(radnik(), "prezime", json!("O'Brien-Šarić"))));
 }
 
-/// Okvir u kojem je Nepal označen kao azijska zemlja (`azija: true`); BA i ostale ostaju bez oznake.
+/// Okvir u kojem je Nepal označen kao daleka zemlja (`daleka: true`, K6-Z); BA i ostale ostaju bez oznake.
 fn okvir_s_azijom() -> content::ljudi::Okvir {
     let mut m = mjesta_json();
-    m["zemlje"]["NP"]["azija"] = json!(true);
+    m["zemlje"]["NP"]["daleka"] = json!(true);
     okvir_iz(m, zabranjeno_json(), raspodjele_json())
 }
 
@@ -377,8 +377,8 @@ fn provjeri_u_aziji(v: Value) -> Result<(), ContentError> {
 }
 
 #[test]
-fn azija_hrvatski_najvise_jedan() {
-    // Leon 16.10. (ADR-052, K1b pregled M7): radnik iz Azije ima hrvatski 0–1; stroj to čuva i u K2+.
+fn daleka_hrvatski_najvise_jedan() {
+    // Leon 16.10. (ADR-052, K1b pregled M7): radnik iz Azije ima hrvatski 0–1; K6-Z: pravilo čita `daleka`.
     jedina_greska(
         provjeri_u_aziji(nepalac(json!([["ne", 4], ["hr", 4], ["en", 3]]))),
         "radnici/serija-000.json R-00001: jezici: zemlja NP u Aziji, hrvatski najviše na razini 1 (Leon 16.10., ADR-052)",
@@ -400,6 +400,32 @@ fn azija_hrvatski_najvise_jedan() {
     let ba = s(ba, "jezici", json!([["hr", 4], ["en", 3]]));
     let (r, g) = banka(vec![ba], vec![]);
     ok(provjeri_s(&okvir_s_azijom(), r, g));
+}
+
+#[test]
+fn pravilo_cita_daleka_a_ne_azija() {
+    // K6-Z: azija bez daleka -> hr 3 prolazi; daleka bez azije (kao EG) -> hr 2 pada.
+    let mut m = mjesta_json();
+    m["zemlje"]["NP"]["azija"] = json!(true);
+    let samo_azija = okvir_iz(m, zabranjeno_json(), raspodjele_json());
+    let (r, g) = banka(
+        vec![nepalac(json!([["ne", 4], ["hr", 3], ["en", 3]]))],
+        vec![],
+    );
+    ok(provjeri_s(&samo_azija, r, g));
+
+    let mut m = mjesta_json();
+    m["zemlje"]["NP"]["daleka"] = json!(true);
+    m["zemlje"]["NP"]["azija"] = json!(false);
+    let samo_daleka = okvir_iz(m, zabranjeno_json(), raspodjele_json());
+    let (r, g) = banka(
+        vec![nepalac(json!([["ne", 4], ["hr", 2], ["en", 3]]))],
+        vec![],
+    );
+    jedina_greska(
+        provjeri_s(&samo_daleka, r, g),
+        "jezici: zemlja NP u Aziji, hrvatski najviše na razini 1",
+    );
 }
 
 // ------------------------------------------------------------------------------------------ K2: S6 „unutar uloge"
