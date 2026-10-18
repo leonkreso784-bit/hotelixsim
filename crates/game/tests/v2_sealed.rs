@@ -2,8 +2,9 @@
 //! Promjena obračuna bez dizanja verzije ruši test 1; nova verzija traži novi pečat (`seal_v2_digest`), stari ostaju.
 //! Od B2a otisak pokriva i broj situacija iz postavki igre (`GameCreated.situation_counts`, I3).
 //! Od L1-13 dio 4 (2.6.0) slučajevi `*-l113` igraju zamrznuti snimak s ključevima dijela 4 zapisanima u testu
-//! (`L113_KEYS`: kvar −1 / popravak +2, stari ključ hitnog popravka 0, klik 85 %, razine 1,5 / 1,0 / 0,6, dodatna
-//! mjesta samo gostima), pa je obračun novih mehanika zapečaćen, a zamrznuti snimak se ne mijenja.
+//! (`L113_KEYS`: kvar i popravak u bodovima situacije 2 857 / 5 714 — uz mjesečni faktor 350 zamrznutog snimka −1 / +2,
+//! tjedno uz 325 ≈ −0,93 / +1,86 (Leon 18.10. K1) —, stari ključ hitnog popravka 0, klik 85 %, razine 1,5 / 1,0 / 0,6,
+//! dodatna mjesta samo gostima), pa je obračun novih mehanika zapečaćen, a zamrznuti snimak se ne mijenja.
 mod common;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -193,11 +194,12 @@ fn frozen_value() -> Value {
 }
 
 /// Ključevi L1-13 dijela 4 za slučajeve `*-l113`, ZAPISANI U TESTU (ne čitaju se iz repoa, pa kalibracija repoa ne
-/// mijenja pečat): kvar −1 i popravak uz ocjenu ≥ 4 +2 (Leon A1), stari ključ hitnog popravka 0, klik zadržava 85 %
-/// dobiti (1b), faktori razina 1,5 / 1,0 / 0,6 (početak kartice), dodatna mjesta samo situacijama s gostima (A7).
+/// mijenja pečat): kvar i popravak uz ocjenu ≥ 3 u bodovima situacije (Leon 18.10. K1 i L1: × faktor kruga i razine;
+/// 100 × 10 000 / 350 ≈ 2 857 i 5 714), stari ključ hitnog popravka 0, klik zadržava 85 % dobiti (1b), faktori razina
+/// 1,5 / 1,0 / 0,6 (početak kartice), dodatna mjesta samo situacijama s gostima (A7).
 const L113_KEYS: &str = r#"{
-    "fault_condition_pts": 100,
-    "fault_fixed_condition_pts": 200,
+    "fault_condition_pts": 2857,
+    "fault_fixed_condition_pts": 5714,
     "repair_urgent_condition_pts": 0,
     "click_gain_bp": 8500,
     "significance_bp": { "key": 15000, "important": 10000, "everyday": 6000 },

@@ -35,8 +35,14 @@ fn settings(rule: Option<AnswerRule>) -> GameSettings {
     }
 }
 
+/// Repo uz faktor kruga zapisan u testu (325 tjedno, 350 mjesečno, kao na c1ef169): testovi mjere pravilo odgovora, a
+/// ne kalibraciju (L1-13 dio 4 spušta tjedni faktor na ~110, pa razlika ocjene 4 i 5 kod klika nestaje u zaokruživanju).
 fn v2_snap() -> Snapshot {
-    Snapshot::read_v2(&repo_dir()).unwrap()
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    for (kind, bp) in [("week", 325), ("month", 350)] {
+        v["v2"]["periods"][kind]["situation_effect_bp"] = serde_json::json!(bp);
+    }
+    Snapshot::from_value(&v).unwrap()
 }
 
 fn new_game_rule(seed: u64, rule: Option<AnswerRule>) -> Game {

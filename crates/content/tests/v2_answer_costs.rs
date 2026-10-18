@@ -7,6 +7,9 @@
 //!
 //! Karakterizacija (izmjereno na c1ef169, prije dijela 4): trošak samo u najboljem imalo je točno 11 predložaka
 //! (`ONLY_BEST_PAID_C1EF169`).
+//!
+//! Runda 2 (Leon 18.10., četvrta anketa): **P-POHVALA je izuzeta** — ostaje „samo najbolji nosi nagradu" (Leon 12.10.,
+//! `v2_templates.rs::praise_is_reward_only_and_offered_answers_never_lower_morale`), pa A4 vrijedi za 10 predložaka.
 
 use std::collections::BTreeMap;
 
@@ -32,6 +35,9 @@ const ONLY_BEST_PAID_C1EF169: [&str; 11] = [
     "P-SLOBODNI-DANI",
     "P-VJENCANJE",
 ];
+
+/// Iznimke od A4 (Leon 18.10.): predlošci u kojima samo najbolji odgovor smije nositi novac.
+const A4_EXEMPT: [&str; 1] = ["P-POHVALA"];
 
 fn repo_value() -> Value {
     Snapshot::read_v2(&repo_dir()).unwrap().to_value()
@@ -162,11 +168,17 @@ fn weaker_answers_free(codes: &[&str]) -> Content {
 fn weaker_answer_costs_where_only_best_did() {
     let c = build(&repo_value());
     let open = only_best_pays(&c);
-    assert!(
-        open.is_empty(),
-        "A4: trošak samo u najboljem odgovoru (dodaj trošak barem jednom slabijem): {open:?}"
+    assert_eq!(
+        open,
+        A4_EXEMPT.to_vec(),
+        "A4: trošak samo u najboljem odgovoru smije ostati samo iznimkama (dodaj trošak barem jednom slabijem)"
     );
-    for code in ONLY_BEST_PAID_C1EF169 {
+    let a4: Vec<&str> = ONLY_BEST_PAID_C1EF169
+        .into_iter()
+        .filter(|c| !A4_EXEMPT.contains(c))
+        .collect();
+    assert_eq!(a4.len(), 10, "A4 dira 10 predložaka (11 bez P-POHVALE)");
+    for code in a4 {
         let t = c
             .situation_templates
             .as_ref()
@@ -179,6 +191,31 @@ fn weaker_answer_costs_where_only_best_did() {
             pays(&c, t),
             (true, true),
             "{code}: najbolji i barem jedan slabiji odgovor troše novac"
+        );
+    }
+}
+
+/// Iznimka P-POHVALA (Leon 18.10.): i dalje samo najbolji odgovor nosi nagradu (novac), nijedan slabiji.
+#[test]
+fn praise_stays_only_best_paid() {
+    let c = build(&repo_value());
+    for code in A4_EXEMPT {
+        let t = c
+            .situation_templates
+            .as_ref()
+            .unwrap()
+            .templates
+            .iter()
+            .find(|t| t.code == code)
+            .unwrap_or_else(|| panic!("{code} nije u sadržaju"));
+        assert_eq!(
+            pays(&c, t),
+            (true, false),
+            "{code}: samo najbolji nosi nagradu"
+        );
+        assert!(
+            ONLY_BEST_PAID_C1EF169.contains(&code),
+            "{code}: iznimka je s popisa A4"
         );
     }
 }

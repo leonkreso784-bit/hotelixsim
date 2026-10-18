@@ -1,9 +1,10 @@
 //! L1-13 dio 2 (Leon 18.10. t. 2): tri razine značaja situacije iz `weight` primjerka (4 ključna, 3 važna, 1–2
 //! svakodnevna). Bodovi situacije (zadovoljstvo, moral, ocjena, privremeni popravak) dobivaju još faktor razine
 //! `economy.significance_bp.{key,important,everyday}`, u JEDNOM računu s faktorom kruga:
-//! `bod × situation_effect_bp × significance_bp / 10^8`, jedno zaokruživanje. TROŠKOVI, povišice, noćenja grupe,
-//! hitni popravak (fizički) i kvar prostora (i bonus njegova popravka) se NE množe. Klik (dio 1b) djeluje poslije.
-//! Bez ključa (sva tri 10 000) obračun je bajt-isti današnjem. Razina je `RoundSituation.significance`.
+//! `bod × situation_effect_bp × significance_bp / 10^8`, jedno zaokruživanje. TROŠKOVI, povišice, noćenja grupe i
+//! stari ključ hitnog popravka (fizički) se NE množe. Kvar prostora i bonus njegova popravka se od Leonove odluke 18.10.
+//! (četvrta anketa, K1: „slabe kao ostali bodovi situacije") MNOŽE istim faktorom kruga i razine. Klik (dio 1b) djeluje
+//! poslije. Bez ključa (sva tri 10 000) obračun je bajt-isti današnjem. Razina je `RoundSituation.significance`.
 
 mod common;
 
@@ -280,26 +281,45 @@ fn significance_does_not_scale_urgent_repair_groups_or_costs() {
     }
 }
 
-#[test] // 2 (kvar prostora i bonus njegova popravka su fizički: razina ih ne dira)
-fn significance_does_not_scale_fault_or_fix_bonus() {
+#[test] // 2 (K1, Leon 18.10. četvrta anketa: kvar i bonus popravka slabe kao ostali bodovi — i faktorom razine)
+fn significance_scales_fault_and_fix_bonus() {
     let mut c = cat(PART4, 5_000, 0);
     c.economy.fault_condition_pts = 100;
     c.economy.fault_fixed_condition_pts = 200;
+    // Faktor kruga 0,5 × razina 1,5 / 1,0 / 0,6: kvar −75 / −50 / −30, bonus +150 / +100 / +60.
+    let want = [
+        (Significance::Key, -75, 150),
+        (Significance::Important, -50, 100),
+        (Significance::Everyday, -30, 60),
+    ];
     for p in periods() {
-        for level in LEVELS {
+        for (level, lose, gain) in want {
             let silent = sit(level, true, false, vec![], 1);
             assert_eq!(
                 effect(&c, &p, &silent).effects.equipment_pts,
-                -100,
+                lose,
                 "{p:?} {level:?}: kvar bez odgovora"
             );
-            let fixed = sit(level, true, false, vec![urgent()], 5);
-            assert_eq!(
-                effect(&c, &p, &fixed).effects.equipment_pts,
-                100,
-                "{p:?} {level:?}: −100 + 200"
-            );
+            for q in [5, 3] {
+                let fixed = sit(level, true, false, vec![urgent()], q);
+                assert_eq!(
+                    effect(&c, &p, &fixed).effects.equipment_pts,
+                    gain + lose,
+                    "{p:?} {level:?} q {q}: bonus + kvar"
+                );
+            }
         }
+    }
+    // Jedno zaokruživanje (kao bodovi): 3 × 5 000 × 15 000 / 10^8 = 2,25 → 2; u dva koraka bilo bi 3.
+    let mut c = cat(PART4, 5_000, 0);
+    c.economy.fault_condition_pts = 3;
+    for p in periods() {
+        let silent = sit(Significance::Key, true, false, vec![], 1);
+        assert_eq!(
+            effect(&c, &p, &silent).effects.equipment_pts,
+            -2,
+            "{p:?}: jedno zaokruživanje"
+        );
     }
 }
 

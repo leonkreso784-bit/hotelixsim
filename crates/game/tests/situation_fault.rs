@@ -1,6 +1,8 @@
 //! L1-13 dio 1 (A1): igra primjenjuje kvar prostora iz izvučenog predloška (`DrawnInstance.space_fault`,
-//! `Game::fault`). Isto sjeme, dvije igre: s ključevima kvara u snimku (−1 / +2) i bez njih (repo, isključeno). Do
-//! prvog kruga s kvarom prostora moga hotela stanja su ista, pa razlika stanja nakon tog kruga je samo pravilo kvara.
+//! `Game::fault`). Isto sjeme, dvije igre: s ključevima kvara u snimku i bez njih (isključeno). Do prvog kruga s
+//! kvarom prostora moga hotela stanja su ista, pa razlika stanja nakon tog kruga je samo pravilo kvara. Runda 2 (Leon
+//! 18.10., K1 i L1): učinak je ključ × faktor kruga × faktor razine primjerka (jedno zaokruživanje), a bonus popravka
+//! dobiva hitni odgovor ocjene >= 3.
 mod common;
 
 use common::{GUEST, apply_ev, hotel_ids};
@@ -10,6 +12,7 @@ use serde_json::json;
 use sim_hotel::Mechanic;
 use sim_hotel_v2::PeriodKind;
 use sim_hotel_v2::department::DeptCode;
+use sim_hotel_v2::situations::Significance;
 
 fn snap(keys: bool) -> Snapshot {
     let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
@@ -19,8 +22,9 @@ fn snap(keys: bool) -> Snapshot {
         .unwrap()
         .remove("click_gain_bp");
     if keys {
-        v["v2"]["economy"]["fault_condition_pts"] = json!(100);
-        v["v2"]["economy"]["fault_fixed_condition_pts"] = json!(200);
+        // Ključevi u bodovima situacije (K1), veliki da učinak uz tjedni faktor bude vidljiv.
+        v["v2"]["economy"]["fault_condition_pts"] = json!(FAULT_KEY);
+        v["v2"]["economy"]["fault_fixed_condition_pts"] = json!(FIXED_KEY);
     } else {
         // Od L1-13 dijela 4 repo nosi ključeve kvara: igra „bez" ih briše (stari snimak).
         let e = v["v2"]["economy"].as_object_mut().unwrap();
@@ -28,6 +32,36 @@ fn snap(keys: bool) -> Snapshot {
         e.remove("fault_fixed_condition_pts");
     }
     Snapshot::from_value(&v).unwrap()
+}
+
+const FAULT_KEY: i64 = 5_000;
+const FIXED_KEY: i64 = 10_000;
+
+/// Najbliži cijeli broj `key × f × sig / 10^8`, polovina od nule (kao `c::div_round`): jedno zaokruživanje.
+fn scaled(key: i64, f: i64, sig: i64) -> i32 {
+    let n = key * f * sig;
+    let d = 100_000_000_i64;
+    let q = (2 * n.abs() + d) / (2 * d);
+    i32::try_from(if n < 0 { -q } else { q }).unwrap()
+}
+
+/// (kvar, bonus) u bp za primjerak `code` kruga `r`: ključ × tjedni faktor kruga × faktor razine iz `weight` primjerka.
+fn fault_and_fix(g: &Game, r: RoundKey, code: &str) -> (i32, i32) {
+    let me = hotel_ids()[0];
+    let h = g.hotels.iter().find(|h| h.setup.hotel_id == me).unwrap();
+    let i = h.drawn[&r]
+        .iter()
+        .find(|i| i.situation.code == code)
+        .unwrap();
+    let cat = g.content.v2.as_ref().unwrap();
+    let f = i64::from(cat.coeffs(PeriodKind::Week).unwrap().situation_effect_bp);
+    let s = &cat.economy.significance_bp;
+    let sig = i64::from(match Significance::from_weight(i.drawn.weight) {
+        Significance::Key => s.key,
+        Significance::Important => s.important,
+        Significance::Everyday => s.everyday,
+    });
+    (scaled(FAULT_KEY, f, sig), scaled(FIXED_KEY, f, sig))
 }
 
 fn close_and_resolve(g: &mut Game, r: RoundKey) {
@@ -117,7 +151,12 @@ fn game_applies_fault_from_drawn_template() {
         "sjeme {seed}, krug {r:?}, {code}: kvar spušta stanje točno jednog prostora: {d:?}"
     );
     let (dept, delta) = &d[0];
-    assert_eq!(*delta, -100, "sjeme {seed}, {code}, {dept:?}: 100 bp niže");
+    let (lose, _) = fault_and_fix(&with, r, &code);
+    assert!(lose > 0, "sjeme {seed}, {code}: kvar je vidljiv");
+    assert_eq!(
+        *delta, -lose,
+        "sjeme {seed}, {code}, {dept:?}: ključ × faktor kruga × razina niže"
+    );
     // Dovoljno daleko od donje granice da stiskanje na 0 ne skriva razliku.
     let was = before.iter().find(|(x, _)| x == dept).unwrap().1;
     assert!(
@@ -126,7 +165,7 @@ fn game_applies_fault_from_drawn_template() {
     );
 }
 
-#[test] // 10 (odgovor: hitan popravak uz ocjenu >= 4 diže +200, ispod 4 ostaje bez bonusa)
+#[test] // 10 (odgovor: hitan popravak uz ocjenu >= 3 (L1) dobiva bonus, ispod 3 ostaje bez bonusa)
 fn game_applies_fix_bonus_only_for_good_urgent_answers() {
     let me = hotel_ids()[0];
     let mut checked = (false, false);
@@ -142,7 +181,7 @@ fn game_applies_fix_bonus_only_for_good_urgent_answers() {
             .unwrap();
         let urgent = |q_ok: bool| {
             sit.answers.iter().position(|a| {
-                (a.quality >= 4) == q_ok
+                (a.quality >= 3) == q_ok
                     && a.mechanics
                         .iter()
                         .any(|m| matches!(m, Mechanic::EquipmentRepair { urgent: true }))
@@ -159,11 +198,12 @@ fn game_applies_fix_bonus_only_for_good_urgent_answers() {
                 close_and_resolve(g, r);
             }
             let d = diff(&a, &b);
-            let expected = if good { 100 } else { -100 };
+            let (lose, gain) = fault_and_fix(&with, r, &code);
+            let expected = if good { gain - lose } else { -lose };
             assert_eq!(
                 d.iter().map(|(_, x)| *x).sum::<i32>(),
                 expected,
-                "sjeme {seed}, {code}, odgovor {i} (dobar: {good}): −100 uz bonus +200 → +100, bez njega −100: {d:?}"
+                "sjeme {seed}, {code}, odgovor {i} (dobar: {good}): −kvar uz bonus, bez njega −kvar: {d:?}"
             );
             if good {
                 checked.0 = true;
@@ -177,6 +217,6 @@ fn game_applies_fix_bonus_only_for_good_urgent_answers() {
     }
     assert!(
         checked.0,
-        "nijedno sjeme 1..=60 nema kvar s hitnim odgovorom ocjene >= 4"
+        "nijedno sjeme 1..=60 nema kvar s hitnim odgovorom ocjene >= 3"
     );
 }

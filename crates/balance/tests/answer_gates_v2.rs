@@ -6,27 +6,45 @@
 //! i vlastitog najboljeg na situacijama s likom (`click_vs_mute` / `best_vs_mute`, M1 Leon 18.10.) najviše 75 %; ukupna
 //! težina klika (`click_vs_silent`) samo se ispisuje.
 //!
+//! L1-13 dio 4, runda 2 (Leon 18.10., četvrta anketa, K4): pojas težine „situacije ~20 %" je PROSJEK tri hotela
+//! (A, B, C) u 15–25 % (`WEIGHT_BAND_BP`; zbroj tri udjela 4 500–7 500 bp, bez zaokruživanja prosjeka), a svaki hotel
+//! posebno 10–35 % (`WEIGHT_HOTEL_BAND_BP`), tjedno i mjesečno. Poruke: po hotelu `B3 težina: {p} situacije nose X
+//! (cilj 10,0 %–35,0 %)`, za prosjek `B3 težina: prosjek A, B, C situacije nose X (cilj 15,0 %–25,0 %)`; prosjek se
+//! računa samo kad su sve tri Δ > 0 (inače već pada „B3 odgovori").
+//!
 //! Izvještaj se uzima iz pravog `run_v2` (3 sjemena), pa se putovi prepišu "čistim" brojkama; tako test mjeri samo
 //! brane, a ne igru. Svaki test gleda samo poruke koje počinju s "B3".
 mod common;
 
+use std::sync::OnceLock;
+
 use balance::v2::{
-    CLICK_WEIGHT_MAX_BP, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, failures_v2, plan_ruler,
-    render_v2, robot_measures_v2, run_v2,
+    CLICK_WEIGHT_MAX_BP, OptionsV2, PathReport, ReportV2, WEIGHT_BAND_BP, WEIGHT_HOTEL_BAND_BP,
+    failures_v2, plan_ruler, render_v2, robot_measures_v2, run_v2,
 };
 use common::content_v2;
 use sim_hotel_v2::{PeriodKind, Profile};
 
+/// Izvještaj pravog `run_v2` (3 sjemena), izračunan jednom po vrsti kruga (deterministički; testovi dobivaju kopiju).
 fn report(kind: PeriodKind) -> ReportV2 {
-    run_v2(
-        &content_v2(),
-        &OptionsV2 {
-            seeds: 3,
-            kind,
-            situations: None,
-        },
-    )
-    .unwrap()
+    static WEEK: OnceLock<ReportV2> = OnceLock::new();
+    static MONTH: OnceLock<ReportV2> = OnceLock::new();
+    let cell = match kind {
+        PeriodKind::Week => &WEEK,
+        PeriodKind::Month => &MONTH,
+    };
+    cell.get_or_init(|| {
+        run_v2(
+            &content_v2(),
+            &OptionsV2 {
+                seeds: 3,
+                kind,
+                situations: None,
+            },
+        )
+        .unwrap()
+    })
+    .clone()
 }
 
 fn paths_mut(r: &mut ReportV2) -> &mut PathReport {
@@ -81,6 +99,7 @@ fn ruler_is_pinned_and_changes_only_by_leons_decision() {
         );
     }
     assert_eq!(WEIGHT_BAND_BP, (1_500, 2_500));
+    assert_eq!(WEIGHT_HOTEL_BAND_BP, (1_000, 3_500));
 }
 
 #[test]
@@ -267,12 +286,13 @@ fn weight_gate_fails() {
             "{kind:?}: {f:?}"
         );
         assert!(!has(&f, &["B3 odgovori"]), "{kind:?}: {f:?}");
-        // Nevažne: Δ = 1 stotinka (manje od 5 %).
+        // Nevažne: Δ = 1 stotinka (manje od 10 %).
         let mut r = clean(kind);
         paths_mut(&mut r).rows[1].best_vs_silent[2] = 1;
         let p = paths_mut(&mut r).rows[1].profile.code();
         assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
-        // Gornji rub pojasa prolazi: Δ = ravnalo / 3 je 25 % (cjelobrojno ne više), korak iznad pada.
+        // Gornji rub prosjeka prolazi: Δ = ravnalo / 3 je 25 % na svakom hotelu (cjelobrojno ne više); korak iznad na
+        // sva tri hotela pada samo na prosjeku (svaki hotel je i dalje u 10–35 %).
         let mut r = clean(kind);
         for row in &mut paths_mut(&mut r).rows {
             row.best_vs_silent[2] = plan_ruler(kind, row.profile) / 3;
@@ -288,65 +308,184 @@ fn weight_gate_fails() {
         let f = b3(&r);
         assert_eq!(
             f.len(),
-            3,
-            "{kind:?}: korak iznad 25 % pada na sva tri profila: {f:?}"
+            1,
+            "{kind:?}: korak iznad 25 % pada na prosjeku: {f:?}"
         );
-        assert!(f.iter().all(|x| x.starts_with("B3 težina")), "{f:?}");
+        assert!(f[0].starts_with(AVERAGE), "{f:?}");
     }
 }
 
-/// Najmanja Δ (stotinke) koja uz ravnalo `ruler` nosi barem 15 %: `share_bp` = Δ · 10 000 / (Δ + ravnalo), dolje;
-/// Δ · 8 500 ≥ ravnalo · 1 500 ⇔ Δ ≥ 3 · ravnalo / 17.
-fn lower_edge(ruler: i32) -> i32 {
-    (3 * ruler + 16) / 17
+const AVERAGE: &str = "B3 težina: prosjek A, B, C situacije nose ";
+const AVERAGE_GOAL: &str = " (cilj 15,0 %–25,0 %)";
+const HOTEL_GOAL: &str = " (cilj 10,0 %–35,0 %)";
+
+/// Udio situacija (bp) kao `share_bp` u balansu: Δ · 10 000 / (Δ + ravnalo), dolje (Δ > 0).
+fn share(delta: i32, ruler: i32) -> i32 {
+    i32::try_from(i64::from(delta) * 10_000 / (i64::from(delta) + i64::from(ruler))).unwrap()
 }
 
-/// Rub pojasa: Δ na rubu iz ravnala, Δ korak izvan ruba, ime ruba.
-type Edge = (fn(i32) -> i32, fn(i32) -> i32, &'static str);
+/// Najmanja Δ (stotinke) s udjelom barem `bp` uz ravnalo `ruler`.
+fn delta_for(bp: i32, ruler: i32) -> i32 {
+    (1..).find(|&d| share(d, ruler) >= bp).unwrap()
+}
 
-/// L1-13 dio 4 (test čuvara 1, Leon A3 „20 %"): pojas težine je 15–25 %; oba ruba prolaze, korak izvan pada,
-/// tjedno i mjesečno na svakom profilu, i poruka kaže novi pojas.
+/// Ravnalo hotela `k` (redom A, B, C kao u izvještaju).
+fn ruler_of(kind: PeriodKind, k: usize) -> i32 {
+    plan_ruler(kind, Profile::ALL[k])
+}
+
+/// Izvještaj u kojem hotel `k` ima Δ `delta`, a druga dva udio `others` bp (najmanja Δ s tim udjelom); vraća i zbroj
+/// udjela druga dva.
+fn with_shares(kind: PeriodKind, k: usize, delta: i32, others: i32) -> (ReportV2, i32) {
+    let mut r = clean(kind);
+    let mut rest = 0;
+    for (i, row) in paths_mut(&mut r).rows.iter_mut().enumerate() {
+        assert_eq!(row.profile, Profile::ALL[i], "redovi su redom A, B, C");
+        let ruler = plan_ruler(kind, row.profile);
+        if i == k {
+            row.best_vs_silent[2] = delta;
+        } else {
+            row.best_vs_silent[2] = delta_for(others, ruler);
+            rest += share(row.best_vs_silent[2], ruler);
+        }
+    }
+    (r, rest)
+}
+
+/// L1-13 dio 4 (runda 2, Leon 18.10. K4): pojas „situacije ~20 %" je prosjek tri hotela u 15–25 % (zbroj udjela
+/// 4 500–7 500 bp); oba ruba prolaze, korak izvan pada samo porukom prosjeka, tjedno i mjesečno, za svaki hotel.
 #[test]
-fn weight_band_is_fifteen_to_twenty_five() {
+fn weight_band_is_average_of_three_hotels_fifteen_to_twenty_five() {
     assert_eq!(WEIGHT_BAND_BP, (1_500, 2_500));
     for kind in [PeriodKind::Week, PeriodKind::Month] {
-        // (rub, korak izvan ruba): gornji ravnalo / 3 (najveća Δ s težinom ≤ 25,0 % za svih šest ravnala), donji
-        // `lower_edge`.
-        let edges: [Edge; 2] = [
-            (|r| r / 3, |r| r / 3 + 1, "25 %"),
-            (lower_edge, |r| lower_edge(r) - 1, "15 %"),
-        ];
-        for (edge, outside, name) in edges {
+        // Stvarni slučaj (dijagnoza 18.10., mjesečno): jedan hotel 31 %, druga dva 18 % i 16 % — prosjek 21,7 % prolazi.
+        for k in 0..3 {
             let mut r = clean(kind);
-            for row in &mut paths_mut(&mut r).rows {
-                row.best_vs_silent[2] = edge(plan_ruler(kind, row.profile));
+            for (i, row) in paths_mut(&mut r).rows.iter_mut().enumerate() {
+                let bp = [3_100, 1_800, 1_600][(i + 3 - k) % 3];
+                row.best_vs_silent[2] = delta_for(bp, plan_ruler(kind, row.profile));
             }
-            assert_eq!(b3(&r), Vec::<String>::new(), "{kind:?}: rub {name} prolazi");
-            for k in 0..3 {
-                let mut r = clean(kind);
-                let row = &mut paths_mut(&mut r).rows[k];
-                row.best_vs_silent[2] = outside(plan_ruler(kind, row.profile));
-                let p = row.profile.code();
-                let f = b3(&r);
-                assert_eq!(
-                    f.len(),
-                    1,
-                    "{kind:?} {p}: korak izvan ruba {name} pada: {f:?}"
-                );
+            assert_eq!(
+                b3(&r),
+                Vec::<String>::new(),
+                "{kind:?}: hotel {k} 31 %, prosjek ~22 %"
+            );
+        }
+        for k in 0..3 {
+            let ruler = ruler_of(kind, k);
+            // Gornji rub: druga dva po 22 %, hotel k najveća Δ uz zbroj ≤ 7 500 (tada sam ~31 %, ispod 35 %).
+            let (_, rest) = with_shares(kind, k, 1, 2_200);
+            let top = (1..)
+                .take_while(|&d| rest + share(d, ruler) <= 7_500)
+                .last()
+                .unwrap();
+            assert!(
+                share(top + 1, ruler) <= 3_500,
+                "rub prosjeka ne smije dirati rub hotela"
+            );
+            let (r, _) = with_shares(kind, k, top, 2_200);
+            assert_eq!(
+                b3(&r),
+                Vec::<String>::new(),
+                "{kind:?} hotel {k}: prosjek 25 % prolazi"
+            );
+            let (r, _) = with_shares(kind, k, top + 1, 2_200);
+            let f = b3(&r);
+            assert_eq!(
+                f.len(),
+                1,
+                "{kind:?} hotel {k}: prosjek iznad 25 % pada: {f:?}"
+            );
+            assert!(
+                f[0].starts_with(AVERAGE) && f[0].ends_with(AVERAGE_GOAL),
+                "{kind:?} hotel {k}: {f:?}"
+            );
+            // Donji rub: druga dva po 12 %, hotel k najmanja Δ uz zbroj ≥ 4 500 (tada sam ~21 %, iznad 10 %).
+            let (_, rest) = with_shares(kind, k, 1, 1_200);
+            let low = (1..).find(|&d| rest + share(d, ruler) >= 4_500).unwrap();
+            assert!(
+                share(low - 1, ruler) >= 1_000,
+                "rub prosjeka ne smije dirati rub hotela"
+            );
+            let (r, _) = with_shares(kind, k, low, 1_200);
+            assert_eq!(
+                b3(&r),
+                Vec::<String>::new(),
+                "{kind:?} hotel {k}: prosjek 15 % prolazi"
+            );
+            let (r, _) = with_shares(kind, k, low - 1, 1_200);
+            let f = b3(&r);
+            assert_eq!(
+                f.len(),
+                1,
+                "{kind:?} hotel {k}: prosjek ispod 15 % pada: {f:?}"
+            );
+            assert!(
+                f[0].starts_with(AVERAGE) && f[0].ends_with(AVERAGE_GOAL),
+                "{kind:?} hotel {k}: {f:?}"
+            );
+        }
+    }
+}
+
+/// L1-13 dio 4 (runda 2, Leon 18.10. K4): svaki hotel posebno nosi 10–35 %; oba ruba prolaze, korak izvan pada porukom
+/// tog hotela (prosjek je pritom u pojasu), tjedno i mjesečno.
+#[test]
+fn weight_band_each_hotel_ten_to_thirty_five() {
+    assert_eq!(WEIGHT_HOTEL_BAND_BP, (1_000, 3_500));
+    for kind in [PeriodKind::Week, PeriodKind::Month] {
+        for k in 0..3 {
+            let (ruler, p) = (ruler_of(kind, k), Profile::ALL[k].code());
+            // Gornji rub 35 %: najveća Δ s udjelom ≤ 3 500; druga dva po 15 % (zbroj ~6 500, prosjek u pojasu).
+            let top = delta_for(3_501, ruler) - 1;
+            // Donji rub 10 %: najmanja Δ s udjelom ≥ 1 000; druga dva po 25 % (zbroj ~6 000).
+            let low = delta_for(1_000, ruler);
+            for (delta, others, ok) in [
+                (top, 1_500, true),
+                (top + 1, 1_500, false),
+                (low, 2_500, true),
+                (low - 1, 2_500, false),
+            ] {
+                let (r, rest) = with_shares(kind, k, delta, others);
                 assert!(
-                    f[0].starts_with(&format!("B3 težina: {p} situacije nose "))
-                        && f[0].ends_with(" (cilj 15,0 %–25,0 %)"),
-                    "{kind:?} {p}: {f:?}"
+                    (4_500..=7_500).contains(&(rest + share(delta, ruler))),
+                    "{kind:?} {p} Δ {delta}: prosjek u pojasu"
                 );
+                let f = b3(&r);
+                if ok {
+                    assert_eq!(
+                        f,
+                        Vec::<String>::new(),
+                        "{kind:?} {p} Δ {delta}: rub prolazi"
+                    );
+                } else {
+                    assert_eq!(f.len(), 1, "{kind:?} {p} Δ {delta}: izvan ruba pada: {f:?}");
+                    assert!(
+                        f[0].starts_with(&format!("B3 težina: {p} situacije nose "))
+                            && f[0].ends_with(HOTEL_GOAL),
+                        "{kind:?} {p}: {f:?}"
+                    );
+                }
             }
         }
-        // Stari pojas 5–50 % više ne vrijedi: 10 % (Δ = ravnalo / 9) i 40 % (Δ = ravnalo · 2 / 3) padaju.
-        for delta in [|r: i32| r / 9, |r: i32| r * 2 / 3] {
-            let mut r = clean(kind);
-            let row = &mut paths_mut(&mut r).rows[0];
-            row.best_vs_silent[2] = delta(plan_ruler(kind, row.profile));
-            let p = row.profile.code();
-            assert!(has(&b3(&r), &["B3 težina", p]), "{kind:?}: {:?}", b3(&r));
+        // Stari pojas po hotelu 15–25 % više ne vrijedi: hotel na 12 % ili 30 % uz ostale na 20 % prolazi.
+        for bp in [1_200, 3_000] {
+            let (r, _) = with_shares(kind, 0, delta_for(bp, ruler_of(kind, 0)), 2_000);
+            assert_eq!(
+                b3(&r),
+                Vec::<String>::new(),
+                "{kind:?}: hotel A {bp} bp uz ostale 20 %"
+            );
+        }
+        // Stari pojas 5–50 %: hotel na 6 % ili 45 % pada i kad je prosjek u pojasu.
+        for (bp, others) in [(600, 2_400), (4_500, 1_400)] {
+            let (r, _) = with_shares(kind, 0, delta_for(bp, ruler_of(kind, 0)), others);
+            let p = Profile::A.code();
+            assert!(
+                has(&b3(&r), &["B3 težina", p, HOTEL_GOAL.trim()]),
+                "{kind:?}: hotel A {bp} bp: {:?}",
+                b3(&r)
+            );
         }
     }
 }

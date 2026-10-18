@@ -251,35 +251,53 @@ fn silence_never_better_has_no_debt() {
     Snapshot::read_v2_checked(&repo_dir()).expect("repo se učitava s provjerom načela");
 }
 
-/// Sadržaj u kojem P-DOTRAJALO ima ključeve kvara po volji, faktor kruga tjedno 1 bp (bodovi kruga → 0, kao
-/// `week_off`), stari ključ hitnog popravka 0 i sva tri odgovora osim najboljeg kvalitete 4 (četiri kriterija):
-/// najlošiji su tada odgovori s hitnim popravkom (i jedan s privremenim, jednak šutnji), pa samo +2 popravka uz
-/// ocjenu ≥ 4 odvaja odgovor od šutnje.
-fn fault_case(v: &mut Value, fault: i32, fixed: i32) {
-    v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(1);
-    v["v2"]["periods"]["month"]["situation_effect_bp"] = json!(1);
+/// Sadržaj u kojem P-DOTRAJALO ima ključeve kvara po volji, faktor kruga 2 bp tjedno i mjesečno (ostali bodovi kruga
+/// → 0: 400 × 2 / 10 000 = 0,08), neutralne faktore razina, stari ključ hitnog popravka 0 i sva tri odgovora osim
+/// najboljeg kvalitete `q` (`q` kriterija). Uz K1 (Leon 18.10.) kvar i bonus imaju isti faktor kruga, pa ključevi
+/// 5 000 / 10 000 daju točno −1 / +2 bp (Leonovi −1 / +2 u stotinki): najlošiji su odgovori s hitnim popravkom (i jedan
+/// s privremenim, jednak šutnji), pa samo bonus popravka uz ocjenu ≥ 3 (L1) odvaja odgovor od šutnje.
+fn fault_case(v: &mut Value, fault: i32, fixed: i32, q: usize) {
+    v["v2"]["periods"]["week"]["situation_effect_bp"] = json!(2);
+    v["v2"]["periods"]["month"]["situation_effect_bp"] = json!(2);
     let e = &mut v["v2"]["economy"];
     e["repair_urgent_condition_pts"] = json!(0);
+    e["significance_bp"] = json!({"key": 10_000, "important": 10_000, "everyday": 10_000});
     e["fault_condition_pts"] = json!(fault);
     e["fault_fixed_condition_pts"] = json!(fixed);
+    let criteria: Vec<usize> = (1..=q).collect();
     for i in 1..4 {
-        tpl(v, "P-DOTRAJALO")["answers"][i]["criteria"] = json!([1, 2, 3, 4]);
+        tpl(v, "P-DOTRAJALO")["answers"][i]["criteria"] = json!(criteria);
     }
 }
 
 /// Pregled L1-13 dio 1 (M3): provjera načela šutnje računa i pravilo kvara prostora (`fault` iz predloška), ne
-/// `fault: false`. P-DOTRAJALO je kvar prostora; uz ključeve kvara (−1 / +2) hitni popravak ocjene 4 diže stanje
-/// za +1 neto, šutnja ga spušta za −1, pa šutnja nije bolja. Bez ključeva (0 / 0) šutnja je jeftinija uz iste bodove
-/// i krši načelo: provjera je osjetljiva na kvar.
+/// `fault: false`. P-DOTRAJALO je kvar prostora; uz ključeve kvara hitni popravak ocjene 4 (i od L1 ocjene 3) diže
+/// stanje za +1 neto, šutnja ga spušta za −1, pa šutnja nije bolja. Bez ključeva (0 / 0) šutnja je jeftinija uz iste
+/// bodove i krši načelo: provjera je osjetljiva na kvar. Uz ocjenu 2 nema bonusa: odgovor s hitnim popravkom gubi
+/// isto stanje kao šutnja i plaća popravak, pa šutnja krši.
 #[test]
 fn silence_check_counts_the_space_fault() {
+    for q in [4, 3] {
+        assert!(
+            hit(|v| fault_case(v, 0, 0, q), SilenceNotBetter, "P-DOTRAJALO"),
+            "q {q}: bez ključeva kvara šutnja je jeftinija uz iste bodove"
+        );
+        assert!(
+            !hit(
+                |v| fault_case(v, 5_000, 10_000, q),
+                SilenceNotBetter,
+                "P-DOTRAJALO"
+            ),
+            "q {q}: uz kvar (−1) i popravak ocjene ≥ 3 (+2) odgovor drži stanje više od šutnje: provjera mora računati kvar (K1, L1)"
+        );
+    }
     assert!(
-        hit(|v| fault_case(v, 0, 0), SilenceNotBetter, "P-DOTRAJALO"),
-        "bez ključeva kvara šutnja je jeftinija uz iste bodove"
-    );
-    assert!(
-        !hit(|v| fault_case(v, 100, 200), SilenceNotBetter, "P-DOTRAJALO"),
-        "uz kvar (−1) i popravak ocjene ≥ 4 (+2) odgovor drži stanje više od šutnje: provjera mora računati kvar"
+        hit(
+            |v| fault_case(v, 5_000, 10_000, 2),
+            SilenceNotBetter,
+            "P-DOTRAJALO"
+        ),
+        "q 2: bez bonusa (L1: ocjena 1–2 ostavlja −1) šutnja je jeftinija uz isto stanje"
     );
 }
 
