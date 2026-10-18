@@ -229,7 +229,6 @@ pub struct LevelCounts {
     pub rounds: u64,
 }
 
-
 impl DrawStats {
     /// Dodaj jednu sezonu.
     pub(crate) fn add(

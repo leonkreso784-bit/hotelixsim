@@ -326,7 +326,9 @@ fn silence_dominates(
                         space: department.clone(),
                         fault: spec.space_fault,
                         click: false,
-                        significance: sim_hotel_v2::situations::Significance::from_weight(spec.weight),
+                        significance: sim_hotel_v2::situations::Significance::from_weight(
+                            spec.weight,
+                        ),
                     };
                     Ok(situation_effect(&s, &p, v2, category)
                         .map_err(|e| bad(format!("{e:?}")))?

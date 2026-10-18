@@ -22,8 +22,8 @@
   "ffe_reserve_bp": 400,
   "finance_index": "gop_after_investment",
   "deferred_wear_bp": 12500,
-  "fault_condition_pts": 100,
-  "fault_fixed_condition_pts": 200,
+  "fault_condition_pts": 3077,
+  "fault_fixed_condition_pts": 6154,
   "significance_bp": { "key": 15000, "important": 10000, "everyday": 6000 },
   "click_gain_bp": 8500,
   "groups": {

@@ -46,11 +46,11 @@ pub struct EconomyV2 {
     /// Bodovi stanja prostora odjela situacije po hitnom popravku (ADR-042 t. 1; 1000 = +10), bez faktora kruga;
     /// 0 = hitan popravak je samo trošak (v1).
     pub repair_urgent_condition_pts: i32,
-    /// Kvar prostora (L1-13 dio 1, A1): bodovi stanja prostora koje kvar skida u krugu u kojem se pojavio (i uz
-    /// šutnju), bez faktora kruga; 0 = pravilo isključeno (stari snimak).
+    /// Kvar prostora (L1-13 dio 1, A1): bodovi situacije koje kvar skida sa stanja prostora u krugu u kojem se pojavio
+    /// (i uz šutnju), s faktorom kruga i razine (Leon 18.10., K1); 0 = pravilo isključeno (stari snimak).
     pub fault_condition_pts: i32,
-    /// Bodovi stanja prostora koje hitni popravak uz ocjenu >= `FAULT_FIXED_MIN_QUALITY` vraća kvaru prostora,
-    /// jednom po situaciji, bez faktora kruga; 0 = isključeno.
+    /// Bodovi situacije koje hitni popravak uz ocjenu >= `FAULT_FIXED_MIN_QUALITY` vraća kvaru prostora, jednom po
+    /// situaciji, s faktorom kruga i razine (K1); 0 = isključeno.
     pub fault_fixed_condition_pts: i32,
     /// Klik (L1-13 dio 1b): dio svake DOBITI situacije koji klik na ponuđeni odgovor (ili prepisan odgovor) gdje se
     /// smije pisati zadržava, u bp; trošak ostaje pun. 10 000 = bez umanjenja (stari snimak).

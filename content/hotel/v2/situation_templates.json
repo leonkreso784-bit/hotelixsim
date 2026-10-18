@@ -153,7 +153,10 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 1500], "raise_pct": [0, 25] }
     },
     {
@@ -640,7 +643,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "tri_noci" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 300] }
     },
     {
@@ -871,7 +877,10 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 1000], "raise_pct": [0, 10] }
     },
     {
@@ -926,7 +935,10 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 5, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 0], "raise_pct": [0, 5] }
     },
     {
@@ -1054,7 +1066,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "boravak" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": "sve" }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "CrisisCommunication", "backup": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 1500] }
     },
     {
@@ -1635,7 +1650,10 @@
           "mechanics": [{ "type": "CrisisCommunication", "backup": 0 }]
         }
       ],
-      "unanswered": [{ "type": "CrisisCommunication", "backup": 0 }, { "type": "CrisisCommunication", "backup": 0 }],
+      "unanswered": [
+        { "type": "CrisisCommunication", "backup": 0 },
+        { "type": "CrisisCommunication", "backup": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 500] }
     },
     {
@@ -2182,9 +2200,9 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
         },
         {
-          "label": "Zahvaliti joj osobno i pred timom, darovati joj bon za večeru, pitati je što bi hotel mogao bolje i odgovoriti gostu",
+          "label": "Zahvaliti joj osobno i pred timom, pitati je što bi hotel mogao bolje i odgovoriti gostu",
           "criteria": [1, 2, 4, 5],
-          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": "bonus" }]
+          "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         },
         {
           "label": "Zahvaliti gostu na pismu, odgovoriti mu na recenziju i pismo proslijediti njezinoj voditeljici",
@@ -2335,7 +2353,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": "popust" }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 150] }
     },
     {
@@ -2404,7 +2425,10 @@
           "mechanics": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }]
         }
       ],
-      "unanswered": [{ "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }, { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }],
+      "unanswered": [
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 },
+        { "type": "StaffRetention", "raise_one_pct": 0, "bonus": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 800] }
     },
     {
@@ -2903,7 +2927,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 150] }
     },
     {
@@ -2963,7 +2990,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 300] }
     },
     {
@@ -3022,7 +3052,10 @@
           "mechanics": [{ "type": "ServiceRecovery", "compensation": 0 }]
         }
       ],
-      "unanswered": [{ "type": "ServiceRecovery", "compensation": 0 }, { "type": "ServiceRecovery", "compensation": 0 }],
+      "unanswered": [
+        { "type": "ServiceRecovery", "compensation": 0 },
+        { "type": "ServiceRecovery", "compensation": 0 }
+      ],
       "effect_band": { "cost_night_pct": [0, 100] }
     },
     {

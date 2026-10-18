@@ -119,8 +119,8 @@ impl Significance {
     }
 }
 
-/// Najmanja ocjena odgovora uz hitni popravak da se kvar prostora „popravi“ (Leon 18.10.: zadovoljan gost = 4 ili 5).
-pub const FAULT_FIXED_MIN_QUALITY: u8 = 4;
+/// Najmanja ocjena odgovora uz hitni popravak da se kvar prostora „popravi“ (Leon 18.10., L1: zadovoljan gost = 3, 4 ili 5).
+pub const FAULT_FIXED_MIN_QUALITY: u8 = 3;
 
 impl From<SituationOutcome> for RoundSituation {
     /// Ishod bez odjela (sidro, cijeli hotel): učinak na prostor ide u Smještaj.

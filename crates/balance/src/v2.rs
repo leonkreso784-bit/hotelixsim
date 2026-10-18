@@ -26,7 +26,7 @@ use crate::{
 
 pub use crate::v2_answers::{
     AnswerPath, CLICK_MAX_QUALITY, CLICK_WEIGHT_MAX_BP, DELEGATED_QUALITY, MANDATORY_SITUATIONS,
-    PathReport, PathRow, WEIGHT_BAND_BP, horizon, offered_choice, plan_ruler,
+    PathReport, PathRow, WEIGHT_BAND_BP, WEIGHT_HOTEL_BAND_BP, horizon, offered_choice, plan_ruler,
 };
 pub use crate::v2_faults::{FaultReport, FaultRow};
 pub use crate::v2_situations::{HOTEL_SLOT, writable_v2};

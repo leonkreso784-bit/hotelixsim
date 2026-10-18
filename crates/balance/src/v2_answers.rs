@@ -312,8 +312,11 @@ pub(crate) fn path_report(
     })
 }
 
-/// Granice težine situacija: vlastiti najbolji nosi 15–25 % raspona plana (Leon A3 „20 %", L1-13-4; ADR-042 t. 15), bp.
+/// Granice težine situacija za PROSJEK A, B, C: vlastiti najbolji nosi 15–25 % raspona plana (Leon A3 „20 %", 18.10. K4;
+/// ADR-042 t. 15), bp. Prosjek se provjerava samo kad su sve tri Δ > 0.
 pub const WEIGHT_BAND_BP: (i32, i32) = (1_500, 2_500);
+/// Granice težine za SVAKI hotel (Leon 18.10., K4): 10–35 % raspona plana, bp.
+pub const WEIGHT_HOTEL_BAND_BP: (i32, i32) = (1_000, 3_500);
 
 /// Brana klika (L1-13 dio 1b, Leon 18.10., M1): na situacijama gdje se smije pisati klik nosi najviše ovoliki dio (bp)
 /// Δ vlastitog najboljeg (oboje prema šutnji tamo), tjedno i mjesečno na svakom profilu; cilj 70–75 %, nema donje brane.
@@ -345,7 +348,9 @@ const STEP_NAMES: [(&str, &str); 4] = [
 
 /// Brane modela za situacije na zadanom planu (B3b). Ne ovise o robotima: samo putovi odgovora i ravnalo.
 pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
-    let (lo, hi) = WEIGHT_BAND_BP;
+    let (lo, hi) = WEIGHT_HOTEL_BAND_BP;
+    let mut sum = 0_i32;
+    let mut all = true;
     for row in &r.rows {
         let p = row.profile.code();
         let [_, at_h, end] = row.best_vs_silent;
@@ -357,6 +362,7 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
             ));
         }
         if end <= 0 {
+            all = false;
             f.push(format!(
                 "B3 odgovori: {p} najbolji odgovori prema šutnji {} na kraju sezone (cilj više od 0)",
                 hundredths(end)
@@ -364,6 +370,7 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
         } else {
             // Δ ≤ 0 je već pala gore; `share_bp` uzima apsolutnu vrijednost pa obrnuta težina ne smije do pojasa.
             let bp = share_bp(end, plan_ruler(r.kind, row.profile));
+            sum += bp;
             if !(lo..=hi).contains(&bp) {
                 f.push(format!(
                     "B3 težina: {p} situacije nose {} (cilj {}–{})",
@@ -392,6 +399,15 @@ pub(crate) fn answer_path_failures(f: &mut Vec<String>, r: &PathReport) {
                 ));
             }
         }
+    }
+    let (alo, ahi) = WEIGHT_BAND_BP;
+    if all && r.rows.len() == 3 && !(3 * alo..=3 * ahi).contains(&sum) {
+        f.push(format!(
+            "B3 težina: prosjek A, B, C situacije nose {} (cilj {}–{})",
+            pct(sum / 3),
+            pct(alo),
+            pct(ahi)
+        ));
     }
 }
 
