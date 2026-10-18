@@ -5,6 +5,17 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-19 — sesija 10
+
+**B22. Radno stablo dijagnoze nastalo je unutar glavnog repoa** (L1-13-4, `git -C hotelixsim worktree add ../hotelixsim-l113-4d …`).
+*Uzrok:* uz `git -C <repo>` relativni put u `worktree add` računa se prema `<repo>`, a ne prema mapi iz koje je naredba pokrenuta.
+*Pouka:* `worktree add` uvijek s **apsolutnim putem** (`C:/Users/leonk/Documents/hotelixsim-<ime>`), pa `git worktree list` odmah nakon.
+*Stanje:* stablo premješteno `git worktree move`, mapa kopije uklonjena, glavni repo čist.
+
+**B23. `cargo deny` crven nakon spajanja L1-13-3, a kod je ispravan** (`nakon-l113-3`, EXIT 1).
+*Uzrok:* `cargo deny` pri pokretanju dohvaća bazu ranjivosti (advisory-db) s GitHuba; mreža je pala („Could not resolve host github.com").
+*Pouka:* crveni `deny` prvo pogledaj u izlazu: greška mreže ili dohvata nije pad koda, nego se naredba ponovi. *Stanje:* ponovljeno (`deny-2`) EXIT 0.
+
 ## 2026-10-18 — sesija 9
 
 **B17. Commit popravka nije napravljen, a spajanje je otišlo bez njega** (IZGLED-c, voditeljev popravak reda „Službe" a833ec9).

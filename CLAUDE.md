@@ -20,8 +20,8 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059 i ADR-060 t. 17–20; Leonove odluke: ADR-056, 057 (17.10.),
-  ADR-060 (18.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
+  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20 i ADR-061 t. 6–12; Leonove odluke: ADR-056, 057 (17.10.),
+  ADR-060 i ADR-061 (18.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
   ([ADR-033](docs/records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) Dopuna 14.10.).
@@ -35,21 +35,22 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
   [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
   **Faza A gotova** (na GitHubu). **Faza B** (sve na GitHubu, `model-v2/sloj1`): B1–B4, PRAVILO-a/b/c, IZGLED (a+b) i IZGLED-c (uniforme vanjskih),
-  **L1-13** dijelovi 1 (kvar prostora, iza ključa) i 1b (klik zadrži 85 % dobiti) i banka ljudi (280). `CORE_VERSION` 2.5.0. Leonove odluke za L1-13:
-  [ADR-056](docs/records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md) i [ADR-060](docs/records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md).
-  **Sljedeće:** L1-13 dio 2 (značaj; stablo `../hotelixsim-l113-2` očistiti, novi čuvar), dio 3 (gosti), dio 4 (kalibracija, tablice Leonu prije spajanja, 2.6.0;
-  [task-14](docs/plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md)). Kraj faze B: Leonov OK za sloj1 → `main`, pa **deploy pilota** (odobren,
-  ADR-060 t. 12: prije objave prijedlog €/mj i zaštita AI troška).
+  **L1-13** dijelovi 1 (kvar), 1b (klik 85 % dobiti), 2 (razina značaja) i 3 (mjesta za goste) — svi iza ključeva, isključeni — i banka ljudi (730).
+  `CORE_VERSION` 2.5.0. Leonove odluke za L1-13: [ADR-056](docs/records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md),
+  [ADR-060](docs/records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) i [ADR-061](docs/records/DECISIONS/ADR-061-leonove-odluke-18-19-10-i-pretpostavke-sesije-10.md).
+  **Sljedeće:** L1-13 dio 4 (kalibracija; [task-14](docs/plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md)) je **izgrađen i pregledan (Approved), NIJE spojen**:
+  575ef92 u `../hotelixsim-l113-4`, uključuje sve ključeve, 2.6.0. Spaja se tek uz Leonov OK na dvije tablice (`l113-4-a2-tablica.md`, `l113-4-prije-poslije.md`).
+  Kraj faze B: Leonov OK za sloj1 → `main`, pa **deploy pilota** (odobren, ADR-060 t. 12: prije objave prijedlog €/mj i zaštita AI troška).
   **Banka ljudi:** radi **paralelna sesija** ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`);
-  glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE" (18.10.: 106ede1, 530 ljudi).
-  **Pozor:** tjedna težina B blizu granice 50 % (uz uključen kvar 54,6 %) — svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno prije spajanja.
+  glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE".
+  **Pozor:** uz dio 4 najmanji korak lanca je 0,04 — svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno prije spajanja.
   **Svako radno stablo svoj `CARGO_TARGET_DIR=…/hotelixsim/target/<stablo>`** (B12), briše se odmah nakon spajanja; **jedan Rust slot po sesiji** (najviše 2 cargo
   ukupno); **disk: ispod 50 GB ne gradi** (B16). Lažno crveno pod opterećenjem (vitest timeout, 0xC0000142) samo se ponovi (B15).
   Stare probne v2 igre daju 409 (jezgra 2.5.0). Gradnja (prevođenje) samo na punjaču. Roboti su samo za demo (Leon 13.10.).
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
+- **Čeka Leona:** dvije tablice dijela 4 L1-13 (uz „tjedno u 1. krugu šutnja vodi", ADR-045 Dopuna 19.10.); nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
   ([nacrt rizika](docs/architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)); ADR-058 t. 10, 13, 19, 20, 🟨 ADR-059 i ADR-060 t. 17–20; uzorci banke;
   pregled lica i uniformi na `/likovi`; slijepi pregled tekstova B4a–c; ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); 5 pitanja [plana platforme](docs/plan/2026-11-platforma.md) §7;
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".

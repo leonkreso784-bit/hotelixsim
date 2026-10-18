@@ -4,6 +4,32 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-19 (10) — Sesija 10 (18.–19.10.): banka 730 ljudi, L1-13 dijelovi 2 i 3 spojeni, dio 4 izgrađen i čeka Leonov OK
+
+- **Banka ljudi spojena dvaput:** K4+K5 (19160c9, 530 ljudi, uloga `lijecnik` ×15) i K6 (ead0daf, 730 ljudi: radnici 310, gosti 310, vanjski 110;
+  prvi radnici iz Egipta, Turske i Indonezije, vanjski govore hr i en). CI nakon oba spajanja sav EXIT 0, a balans v2 bajt-isti s prethodnom osnovicom.
+  Bilješke sesija banke 9b i 10b prenesene su u docs (dc34c30, a56b53f). Sesija banke 10b je završila (stablo ljudi ea08847, samo `scripts/`, nije SPREMNO).
+- **L1-13 dio 2, značaj** (fb3a563): stablo prekinutog čuvara je očišćeno, a novi čuvar napisao je 41 test. Razina se izvodi iz `weight`
+  (ključna / važna / svakodnevna), a student je vidi kao tekst na kartici i uz naslov situacije. U repou su sve razine 1,0, pa su brojke i pečat isti
+  (`CORE_VERSION` 2.5.0). Pregled opus: Approved, 5 Minor.
+- **L1-13 dio 3, gosti** (c1ef169): ključ `guest_extra_slots` (isključen u repou). Mjesta kruga iznad „niske" pune samo situacije s gostima.
+  Balans dobiva redak J-3 po popunjenosti. Rađen je usporedo s pregledom dijela 2, na drugim datotekama. Pregled opus: Approved, 5 Minor;
+  kontrolirani test 3 (isti krug, različit broj mjesta) proglašen je prihvatljivim.
+- **L1-13 dio 4, kalibracija — izgrađen, NIJE spojen** (575ef92 na `popravak/l113-4-kalibracija`). Tok: čuvar (ff41ba8) → graditelj BLOCKED
+  (ni faktor 0 ne spušta tjednu težinu B na 25 %; lanac srednji < prepušteno) → dijagnoza opus u zasebnom stablu (`l113-4-dijagnoza.md`) →
+  Leonova četvrta anketa (4/4 preporučene) → čuvar runda 2 (465cb18) → novi graditelj runda 2. Brojke: faktor kruga tjedno 110, mjesečno 325,
+  klik 85 %, razine 1,5 / 1,0 / 0,6, kvar i popravak 3 077 / 6 154, sve uključeno, `CORE_VERSION` 2.6.0. Situacije nose oko petinu igre
+  (tjedno prosjek 20,7 %, mjesečno 21,6 %), klik 63–73 % vlastitog. Pregled opus: **Approved**, 0 Critical/Important, 6 Minor; balans je ponovio sam (bajt-isti).
+  Spaja se tek uz Leonov OK na dvije tablice (`l113-4-a2-tablica.md`, `l113-4-prije-poslije.md`).
+- **Leonove odluke** (četvrta anketa 18.10.) i pretpostavke 🟨 → [ADR-061](DECISIONS/ADR-061-leonove-odluke-18-19-10-i-pretpostavke-sesije-10.md);
+  dopuna [ADR-045](DECISIONS/ADR-045-trosak-odmah-ugled-kasnije-tjedni-krug.md) (u prvom tjednu šutnja je sada u medijanu bolja od najboljeg odgovora).
+- **Pouke:** `git -C <repo> worktree add <relativni put>` napravio je stablo unutar glavnog repoa (B22); `cargo deny` pada bez mreže (B23).
+  Leon je predložio BRZU GRADNJU (manje testnih binarnih, `rust-lld`, sccache…), ali to još nije odlučeno ([BACKLOG](BACKLOG.md)).
+- **Gdje se vidi:** GitHub, `model-v2/sloj1` a56b53f + docs-commit ovog kraja; svako spajanje je pushano, GitHub CI zelen (39141923114 … 39152845046).
+  Dio 4 je samo lokalno, u stablu `../hotelixsim-l113-4`. Izvještaj: `.superpowers/sdd/2026-10-14-popravak-temelja/kraj-19-10-10.md`.
+
+---
+
 ## 2026-10-18 (9) — Sesija 9 (17.–18.10.): PRAVILO-c, IZGLED-c, L1-13 dijelovi 1 i 1b i banka (280 ljudi) spojeni i objavljeni
 
 - **CI nakon PRAVILO-b dovršen:** ponovljeni `cargo test --workspace` (s bazom) i `corepack pnpm test` oba EXIT 0. Osnovica za dalje je `nakon-pravilo-b/`.
@@ -18,7 +44,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
   branu od 75 %). Dijagnoza opusa pokazala je zašto: situacije bez lika nose 39 % / 70 % Δ, a trošak klik smanjuje. Leon je zatim odlučio
   M1: brana mjeri samo situacije s likom. Pregled opus tražio je 8500 umjesto neodobrenih 9000 i presudio 5 izmjena testova čuvara (B18).
 - **Banka ljudi spojena** (ee0f673, 280 ljudi: radnici 110, gosti 110, vanjski 60; pečat 000/001). Paralelna sesija banke 9b zatim je napravila
-  K4 i K5 i ulogu `lijecnik` (530 ljudi, grana 106ede1 „SPREMNO ZA SPAJANJE", još nije spojena).
+  K4 i K5 i ulogu `lijecnik` (530 ljudi, grana 106ede1 „SPREMNO ZA SPAJANJE"; spojena u sesiji 10 kao 19160c9, a K6 kao ead0daf, 730 ljudi).
 - **Leonove odluke** (pet anketa i tekst): uniforme, klik ~75 % gdje se piše, razine značaja, „zadovoljan gost" ≥ 4, kvar = 9 predložaka, „s gostima" 27/55,
   **pilot odobren na kraju faze B**, a bez podrške fakulteta nema cijelog proizvoda do studenog → [ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md)
   (i pretpostavke 🟨 t. 17–20). Leon dao „ok za sve" za push `model-v2/sloj1`.

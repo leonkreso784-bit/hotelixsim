@@ -36,6 +36,11 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
 - Banka ljudi (ee0f673, na GitHubu): 280 ljudi (radnici 110, gosti 110, vanjski 60), serije 000 i 001 zapečaćene. Igra banku još ne čita.
 - Banka ljudi K4+K5 (19160c9, na GitHubu): +250 ljudi (K4: 50 radnika + 50 gostiju; K5: 50 + 50 + 50 vanjskih, od toga 15 liječnika) i nova uloga vanjskog `lijecnik` (15. uloga); ukupno 530 (radnici 210, gosti 210, vanjski 110). Igra banku još ne čita.
 - Banka ljudi K6 (ead0daf, na GitHubu): +200 ljudi (radnici i gosti serija-005 i 006, OTVORENE); ukupno 730 (radnici 310, gosti 310, vanjski 110). Prvi radnici iz Egipta, Turske i Indonezije, polje zemlje `daleka`, svi vanjski govore hrvatski i engleski (≥ 2), R-00239 je muški tehničar. Commiti 07a46b5, 40ac15e, a906bf7, 58be486, 7648455. Igra banku još ne čita.
+- L1-13 dio 2 (fb3a563, na GitHubu): **student vidi razinu značaja situacije** kao tekst („ključna", „važna", „svakodnevna") na kartici popisa
+  i uz naslov situacije. Razina se izvodi iz `weight` (4 / 3 / 1–2); sidra i v1 nemaju oznaku. Bodovi po razini idu kroz ključ
+  `economy.significance_bp`, a u repou su sve razine 1,0, pa su brojke, balans i pečat isti (`CORE_VERSION` 2.5.0). API: `SituationBody.significance`.
+- L1-13 dio 3 (c1ef169, na GitHubu): ključ `guest_extra_slots` (u repou isključen) — kad je hotel puniji, mjesta kruga iznad „niske" pune samo
+  situacije s gostima (27 od 55). Student to još ne osjeti; uključuje se u dijelu 4. Balans ima novi redak J-3 po popunjenosti kruga.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.

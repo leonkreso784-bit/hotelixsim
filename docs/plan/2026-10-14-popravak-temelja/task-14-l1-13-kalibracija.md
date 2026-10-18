@@ -181,3 +181,11 @@ učinak **situacije** na stanje prostora (redak `explain.rs:220`, uzrok situacij
 Dijagnoza (`.superpowers/…/l113-1b-dijagnoza.md`): situacije bez lika nose 39 % (tjedno B) / 70 % (mjesečno B) Δ i u njima su klik i vlastiti
 odgovor isti, pa ukupni omjer ne može pasti na 75 %. **Odluka:** brana „B3 klik" mjeri **omjer Δ samo na situacijama s likom** (≤ 75 %);
 `click_gain_bp` ≈ 8 500–8 800 (najveći koji drži sva 6 stupaca). Ukupno u igri klik i dalje nosi ~90 % težine vlastitog — zapisati u ADR na `/kraj`.
+
+## Leonova odluka 18.10. (četvrta anketa, sesija 10) — odblokiranje dijela 4
+Izvor: `.superpowers/sdd/2026-10-14-popravak-temelja/l113-4-dijagnoza.md` (graditelj BLOCKED: hotel B je od početka zapušten, ~15 kvarova po sezoni bez obzira na održavanje; lanac srednji < prepušteno).
+1. **Kvar i popravak slabe kao ostali bodovi situacije** (množe se faktorom kruga `situation_effect_bp`): tjedno ≈ −0,34 / +0,68, mjesečno ostaje −1 / +2 (K1). Mijenja A1 (bez faktora).
+2. **„Zadovoljan gost" = ocjena 3, 4 ili 5** uz hitni popravak → +2 (L1). Mijenja odluku 18.10. (bilo ≥ 4).
+3. **Pojas „situacije ~20 %" = prosjek tri hotela 15–25 %, svaki hotel 10–35 %** (K4), tjedno i mjesečno.
+4. **P-POHVALA ostaje „samo najbolji nosi nagradu"** (iznimka od A4); **šutnja na P-NOVINAR gubi ugled, ne novac** (test S-4 → „šutnja nije bolja od lošeg odgovora").
+Izmjereno (bez faktora razine; ponoviti s njim): tjedno K1+L1 uz f 105–115 sve brane prolaze (f 110: 20,8 / 24,0 / 20,0 %, klik ≤ 72 %); mjesečno f 350 uz L1 sve osim B 31,3 % (K4 to prima).
