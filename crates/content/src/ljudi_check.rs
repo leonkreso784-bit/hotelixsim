@@ -446,7 +446,7 @@ pub(crate) fn osoba(p: &mut Popis, o: &Okvir, z: &Zabrane, x: &Osoba, dob: &Rang
         }
     }
     if let Some(zm) = zemlja {
-        if zm.azija && razina_jezika(x.jezici, "hr") > 1 && x.vrsta_radnik {
+        if zm.daleka && razina_jezika(x.jezici, "hr") > 1 && x.vrsta_radnik {
             let poruka = format!(
                 "jezici: zemlja {} u Aziji, hrvatski najviše na razini 1 (Leon 16.10., ADR-052)",
                 x.zemlja
@@ -472,7 +472,7 @@ pub(crate) fn osoba(p: &mut Popis, o: &Okvir, z: &Zabrane, x: &Osoba, dob: &Rang
     }
 }
 
-fn razina_jezika(jezici: &[(String, u8)], kod: &str) -> u8 {
+pub(crate) fn razina_jezika(jezici: &[(String, u8)], kod: &str) -> u8 {
     jezici
         .iter()
         .filter(|(k, _)| k == kod)

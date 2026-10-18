@@ -6,7 +6,8 @@ use std::ops::RangeInclusive;
 
 use crate::ljudi::{Banka, Odstupanje, Okvir, Raspodjele, Rod, UlogaVanjskog, Vanjski};
 use crate::ljudi_check::{
-    BP_UKUPNO, MJESTO_ZNAKOVA, Osoba, Popis, Zabrane, naziv, nazivi_u_tekstu, osoba, znakovi_teksta,
+    BP_UKUPNO, MJESTO_ZNAKOVA, Osoba, Popis, Zabrane, naziv, nazivi_u_tekstu, osoba, razina_jezika,
+    znakovi_teksta,
 };
 use crate::ljudi_check_okvir::{potpuno, razredi, zbroj};
 use crate::ljudi_raspodjele::{bp, dobni_razred, kodovi, udjeli};
@@ -61,6 +62,11 @@ pub(crate) fn vanjski(p: &mut Popis, o: &Okvir, z: &Zabrane, put: &str, v: &Vanj
         let d = v.dob;
         let poruka = format!("dob: {d}, uloga {kod} najmanje {STRUCNI_DOB_NAJMANJE}");
         p.dodaj(put, id, poruka);
+    }
+    for (kod, naziv) in [("hr", "hrvatski"), ("en", "engleski")] {
+        if razina_jezika(&v.jezici, kod) < 2 {
+            p.dodaj(put, id, format!("jezici: vanjski traži {naziv} barem 2"));
+        }
     }
     mjesto(p, o, put, v);
     if let Some(ustanova) = &v.ustanova {

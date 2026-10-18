@@ -344,9 +344,12 @@ pub struct Zemlja {
     pub materinji: Vec<String>,
     /// BA, RS, ME: radnik razumije hrvatski na razini 4 (ADR-042 t. 8, odgovor 11).
     pub razumije_hr: bool,
-    /// Zemlja u Aziji: radnik smije imati hrvatski najviše na razini 1 (Leon 16.10., ADR-052). Bez polja = `false`.
+    /// Zemljopis: zemlja u Aziji (test „ima radnika iz Azije"). Bez polja = `false`.
     #[serde(default)]
     pub azija: bool,
+    /// Daleka zemlja, neslavenski jezik, nedavni dolazak: radnik hrvatski najviše na razini 1 (K6-Z, Leon 18.10.).
+    #[serde(default)]
+    pub daleka: bool,
 }
 
 /// `zabranjeno.json` (§3.5). Usporedba je po cijelim riječima, bez velikih slova i dijakritika.
