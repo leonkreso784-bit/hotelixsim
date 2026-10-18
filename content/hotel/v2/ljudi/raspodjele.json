@@ -97,16 +97,17 @@
   },
   "vanjski": {
     "uloga": {
-      "dobavljac": 1400,
-      "poslovni_klijent": 1400,
-      "zastupnik_agencije": 1100,
+      "dobavljac": 1300,
+      "poslovni_klijent": 1300,
+      "zastupnik_agencije": 1000,
       "organizator_dogadanja": 700,
       "susjed": 700,
       "novinar": 600,
       "inspektor_sanitarni": 600,
       "policajac": 600,
       "vatrogasac": 500,
-      "djelatnik_hitne": 500,
+      "djelatnik_hitne": 400,
+      "lijecnik": 400,
       "lokalna_uprava": 550,
       "inspektor_turisticki": 450,
       "inspektor_rada": 450,
@@ -152,6 +153,11 @@
       "djelatnik_hitne": {
         "z_bp": 6500,
         "izvor": "PROCJENA (17.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke (manje ne postoji za HR) nema ulogu zasebno; skupine 22 = 74 % i 32 = 86 %; hitna ima više muških tehničara.",
+        "potvrdeno": false
+      },
+      "lijecnik": {
+        "z_bp": 6500,
+        "izvor": "PROCJENA (18.10.2026.): Eurostat LFS lfsa_egai2d, Hrvatska 2025, ISCO-08 na 2 znamenke nema liječnike zasebno; skupina 22 = 74 % (zdravstveni stručnjaci s medicinskim sestrama); liječnici su manji, miješaniji dio.",
         "potvrdeno": false
       },
       "novinar": {

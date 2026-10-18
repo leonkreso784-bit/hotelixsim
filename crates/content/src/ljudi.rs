@@ -94,6 +94,7 @@ pub enum UlogaVanjskog {
     Policajac,
     Vatrogasac,
     DjelatnikHitne,
+    Lijecnik,
     Novinar,
     Dobavljac,
     OrganizatorDogadanja,
@@ -186,7 +187,7 @@ impl Segment {
 }
 
 impl UlogaVanjskog {
-    pub const SVE: [UlogaVanjskog; 14] = [
+    pub const SVE: [UlogaVanjskog; 15] = [
         UlogaVanjskog::InspektorSanitarni,
         UlogaVanjskog::InspektorTuristicki,
         UlogaVanjskog::InspektorRada,
@@ -194,6 +195,7 @@ impl UlogaVanjskog {
         UlogaVanjskog::Policajac,
         UlogaVanjskog::Vatrogasac,
         UlogaVanjskog::DjelatnikHitne,
+        UlogaVanjskog::Lijecnik,
         UlogaVanjskog::Novinar,
         UlogaVanjskog::Dobavljac,
         UlogaVanjskog::OrganizatorDogadanja,
@@ -211,6 +213,7 @@ impl UlogaVanjskog {
             UlogaVanjskog::Policajac => "policajac",
             UlogaVanjskog::Vatrogasac => "vatrogasac",
             UlogaVanjskog::DjelatnikHitne => "djelatnik_hitne",
+            UlogaVanjskog::Lijecnik => "lijecnik",
             UlogaVanjskog::Novinar => "novinar",
             UlogaVanjskog::Dobavljac => "dobavljac",
             UlogaVanjskog::OrganizatorDogadanja => "organizator_dogadanja",
@@ -220,7 +223,7 @@ impl UlogaVanjskog {
             UlogaVanjskog::LokalnaUprava => "lokalna_uprava",
         }
     }
-    /// Službe: četiri inspektora, policajac, vatrogasac, djelatnik hitne, lokalna uprava.
+    /// Službe: četiri inspektora, policajac, vatrogasac, djelatnik hitne, liječnik, lokalna uprava.
     pub fn sluzba(self) -> bool {
         !matches!(
             self,
