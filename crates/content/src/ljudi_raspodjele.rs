@@ -12,7 +12,7 @@ use crate::ljudi_check::{PREKRETNICA_BP, STEREOTIP_BP, STEREOTIP_MIN_SKUPINA};
 use crate::ljudi_tekst::razred;
 
 /// Udio u baznim bodovima, zaokružen na najbliži.
-fn bp(c: usize, n: usize) -> u32 {
+pub(crate) fn bp(c: usize, n: usize) -> u32 {
     if n == 0 {
         return 0;
     }
@@ -32,7 +32,7 @@ fn gosti(b: &Banka) -> Vec<&Gost> {
 }
 
 /// Ključ dobnog razreda iz ciljeva (`"18-24"` …) kojem dob pripada.
-fn dobni_razred(dob: u8, razredi: &BTreeMap<String, u32>) -> String {
+pub(crate) fn dobni_razred(dob: u8, razredi: &BTreeMap<String, u32>) -> String {
     razredi
         .keys()
         .find(|k| razred(k).is_some_and(|(a, b)| (a..=b).contains(&dob)))
@@ -217,12 +217,16 @@ pub fn izvjestaj(b: &Banka, r: &Raspodjele) -> Vec<Odstupanje> {
         let vs: Vec<String> = gos.iter().map(|x| x.rod.kod().into()).collect();
         udjeli(&mut out, "gosti: rod", &rod, vs);
     }
+    crate::ljudi_vanjski::izvjestaj(&mut out, b, r);
     out
 }
 
 /// Na pečaćenju prekretnice (K4) svaka vrijednost iz izvještaja smije odstupati od cilja najviše `PREKRETNICA_BP`.
 pub fn provjeri_prekretnicu(b: &Banka, r: &Raspodjele) -> Result<(), ContentError> {
-    if radnici(b).is_empty() && gosti(b).is_empty() {
+    if radnici(b).is_empty()
+        && gosti(b).is_empty()
+        && b.vanjski.iter().all(|(_, s)| s.zapisi.is_empty())
+    {
         return Err(ContentError::Invalid("prekretnica: banka je prazna".into()));
     }
     let retci: Vec<String> = izvjestaj(b, r)
@@ -242,7 +246,10 @@ pub fn provjeri_prekretnicu(b: &Banka, r: &Raspodjele) -> Result<(), ContentErro
     }
 }
 
-fn kodovi<K: Copy>(m: &BTreeMap<K, u32>, kod: fn(K) -> &'static str) -> BTreeMap<String, u32> {
+pub(crate) fn kodovi<K: Copy>(
+    m: &BTreeMap<K, u32>,
+    kod: fn(K) -> &'static str,
+) -> BTreeMap<String, u32> {
     m.iter().map(|(k, v)| (kod(*k).to_string(), *v)).collect()
 }
 
@@ -264,7 +271,7 @@ fn razina_jezika(jezici: &[(String, u8)], jezik: &str) -> String {
 }
 
 /// Udio svake vrijednosti među `vrijednosti` prema cilju; ključevi su unija ciljeva i stvarnih vrijednosti.
-fn udjeli(
+pub(crate) fn udjeli(
     out: &mut Vec<Odstupanje>,
     dimenzija: &str,
     cilj: &BTreeMap<String, u32>,

@@ -10,34 +10,21 @@ use crate::ljudi_tekst::{bez_dijakritika, kljuc_imena, rijeci};
 
 /// Jedinstvenost punog imena (radnici, gosti i partneri), zabranjene osobe i učestalost imena i prezimena.
 pub(crate) fn imena(p: &mut Popis, b: &Banka, o: &Okvir, z: &Zabrane) {
-    let radnici: Vec<(&str, &str, &str, &str)> = b
-        .radnici
-        .iter()
-        .flat_map(|(put, s)| {
-            s.zapisi.iter().map(move |r| {
-                (
-                    put.as_str(),
-                    r.id.as_str(),
-                    r.ime.as_str(),
-                    r.prezime.as_str(),
-                )
-            })
-        })
-        .collect();
-    let gosti: Vec<(&str, &str, &str, &str)> = b
-        .gosti
-        .iter()
-        .flat_map(|(put, s)| {
-            s.zapisi.iter().map(move |g| {
-                (
-                    put.as_str(),
-                    g.id.as_str(),
-                    g.ime.as_str(),
-                    g.prezime.as_str(),
-                )
-            })
-        })
-        .collect();
+    let radnici = popis(
+        b.radnici
+            .iter()
+            .map(|(p, s)| (p, s.zapisi.iter().map(|r| (&r.id, &r.ime, &r.prezime)))),
+    );
+    let gosti = popis(
+        b.gosti
+            .iter()
+            .map(|(p, s)| (p, s.zapisi.iter().map(|g| (&g.id, &g.ime, &g.prezime)))),
+    );
+    let vanjski = popis(
+        b.vanjski
+            .iter()
+            .map(|(p, s)| (p, s.zapisi.iter().map(|v| (&v.id, &v.ime, &v.prezime)))),
+    );
 
     let mut zauzeto: BTreeMap<String, String> = o
         .partneri
@@ -45,7 +32,7 @@ pub(crate) fn imena(p: &mut Popis, b: &Banka, o: &Okvir, z: &Zabrane) {
         .map(|ime| (rijeci(ime).join(" "), "partner".to_string()))
         .collect();
     let zabranjene: BTreeSet<String> = z.osobe.iter().map(|(r, _)| r.join(" ")).collect();
-    for &(put, id, ime, prezime) in radnici.iter().chain(&gosti) {
+    for &(put, id, ime, prezime) in radnici.iter().chain(&gosti).chain(&vanjski) {
         let kljuc = kljuc_imena(ime, prezime);
         let prikaz = bez_dijakritika(&format!("{ime} {prezime}"));
         if zabranjene.contains(&kljuc) {
@@ -66,7 +53,11 @@ pub(crate) fn imena(p: &mut Popis, b: &Banka, o: &Okvir, z: &Zabrane) {
         }
     }
 
-    for (zapisi, rijec) in [(&radnici, "radnika"), (&gosti, "gostiju")] {
+    for (zapisi, rijec) in [
+        (&radnici, "radnika"),
+        (&gosti, "gostiju"),
+        (&vanjski, "vanjskih"),
+    ] {
         let n = zapisi.len();
         let imena: Vec<_> = zapisi
             .iter()
@@ -79,6 +70,21 @@ pub(crate) fn imena(p: &mut Popis, b: &Banka, o: &Okvir, z: &Zabrane) {
         ucestalost(p, &imena, "ime", n, UCESTALOST_IME_BP, rijec);
         ucestalost(p, &prezimena, "prezime", n, UCESTALOST_PREZIME_BP, rijec);
     }
+}
+
+type Zapis<'a> = (&'a str, &'a str, &'a str, &'a str);
+
+/// Zapisi jedne vrste kao (put serije, id, ime, prezime).
+fn popis<'a, I, J>(serije: I) -> Vec<Zapis<'a>>
+where
+    I: Iterator<Item = (&'a String, J)>,
+    J: Iterator<Item = (&'a String, &'a String, &'a String)>,
+{
+    serije
+        .flat_map(|(put, z)| {
+            z.map(move |(id, ime, pr)| (put.as_str(), id.as_str(), ime.as_str(), pr.as_str()))
+        })
+        .collect()
 }
 
 /// Jedno ime (ili prezime) najviše `bp` vrste, a uvijek barem jednom; redak ide zapisu koji prvi prijeđe granicu.

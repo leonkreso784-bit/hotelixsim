@@ -188,10 +188,11 @@ pub(crate) fn provjeri_okvir(o: &Okvir) -> Result<(), ContentError> {
     zbroj(&mut p, "gosti.dob", g.dob.values());
     zbroj(&mut p, "gosti.rod", g.rod.values());
     razredi(&mut p, "gosti.dob", &g.dob, &DOB_GOSTA);
+    crate::ljudi_vanjski::okvir(&mut p, o);
     p.rezultat()
 }
 
-fn zbroj<'a>(p: &mut Popis, ime: &str, v: impl Iterator<Item = &'a u32>) {
+pub(crate) fn zbroj<'a>(p: &mut Popis, ime: &str, v: impl Iterator<Item = &'a u32>) {
     let s: u64 = v.map(|x| u64::from(*x)).sum();
     if s != BP_UKUPNO {
         p.dodaj(
@@ -202,7 +203,7 @@ fn zbroj<'a>(p: &mut Popis, ime: &str, v: impl Iterator<Item = &'a u32>) {
     }
 }
 
-fn potpuno<K: Ord + Copy, V>(
+pub(crate) fn potpuno<K: Ord + Copy, V>(
     p: &mut Popis,
     ime: &str,
     m: &BTreeMap<K, V>,
@@ -220,7 +221,12 @@ fn potpuno<K: Ord + Copy, V>(
 }
 
 /// Dobni razredi pokrivaju cijeli raspon vrste, bez rupa i preklapanja.
-fn razredi(p: &mut Popis, ime: &str, m: &BTreeMap<String, u32>, raspon: &RangeInclusive<u8>) {
+pub(crate) fn razredi(
+    p: &mut Popis,
+    ime: &str,
+    m: &BTreeMap<String, u32>,
+    raspon: &RangeInclusive<u8>,
+) {
     let mut r = Vec::new();
     for k in m.keys() {
         match razred(k) {

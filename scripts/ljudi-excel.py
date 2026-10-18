@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """Excel pregled banke ljudi: listovi Radnici, Gosti, Vanjski. Pokretanje (PowerShell, ne Git Bash):
   $env:PYTHONIOENCODING='utf-8'; py -3 scripts/ljudi-excel.py [korijen-ljudi] [izlaz.xlsx]
-Zadano: content/hotel/v2/ljudi i .superpowers/sdd/banka-ljudi-k1/banka-ljudi.xlsx (situation_templates.json i names.json
-se traže u roditeljskoj mapi korijena)."""
+Zadano: content/hotel/v2/ljudi i .superpowers/sdd/banka-ljudi-k1/banka-ljudi.xlsx; list Vanjski čita vanjski/serija-*.json."""
 import json
 import os
 import sys
@@ -13,7 +12,6 @@ from openpyxl.utils import get_column_letter
 
 root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else "content/hotel/v2/ljudi")
 out = os.path.abspath(sys.argv[2] if len(sys.argv) > 2 else ".superpowers/sdd/banka-ljudi-k1/banka-ljudi.xlsx")
-v2 = os.path.dirname(root)
 
 
 def load(path):
@@ -75,19 +73,14 @@ sheet(wb, "Gosti",
       ["id", "serija", "ime", "prezime", "rod", "dob", "zemlja", "mjesto", "segment", "zanimanje", "jezici", "opis",
        "Odluka", "Napomena"], gos, {11})
 
-pred = load(os.path.join(v2, "situation_templates.json"))["templates"]
-imena = load(os.path.join(v2, "names.json"))["partner"]
-van = []
-for t in pred:
-    for kljuc, r in t.get("roles", {}).items():
-        if r.get("from") == "partner":
-            opis = r.get("title") or "; ".join(r.get("types", []))
-            van.append(["uloga", t["code"], kljuc, r.get("gender", ""), opis])
-for rod in ("f", "m"):
-    for ime in imena.get(rod, []):
-        van.append(["ime", "", "", rod, ime])
-sheet(wb, "Vanjski", ["vrsta retka", "predložak", "ključ uloge", "rod", "opis / ime"], van, {4},
-      uvod="Vrsta 'vanjski' u banci se tek gradi (nacrt u izradi); ovo su današnje uloge i imena iz igre")
+van = [
+    [z["id"], s, z["ime"], z["prezime"], z["rod"], z["dob"], z["uloga"], z.get("ustanova", ""), z["zemlja"],
+     z["mjesto"], jez(z), z.get("opis", ""), "", ""]
+    for s, z in serije("vanjski")
+]
+sheet(wb, "Vanjski",
+      ["id", "serija", "ime", "prezime", "rod", "dob", "uloga", "ustanova", "zemlja", "mjesto", "jezici", "opis",
+       "Odluka", "Napomena"], van, {11})
 
 os.makedirs(os.path.dirname(out), exist_ok=True)
 wb.save(out)

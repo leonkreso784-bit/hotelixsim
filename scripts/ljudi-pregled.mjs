@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pregled banke ljudi za Leona: iz svih serija (content/hotel/v2/ljudi/{radnici,gosti}/serija-*.json) gradi jednu HTML
+// Pregled banke ljudi za Leona: iz svih serija (content/hotel/v2/ljudi/{radnici,gosti,vanjski}/serija-*.json) gradi jednu HTML
 // stranicu s filtrima i sažetkom raspodjela. Nema ovisnosti. Upotreba:
 //   node scripts/ljudi-pregled.mjs [izlaz.html] [korijen-sadržaja] [--avatari <avatari.mjs>]
 // Zadano: .superpowers/sdd/banka-ljudi-k1/pregled-svi.html i content/hotel/v2/ljudi.
@@ -56,7 +56,10 @@ const radnici = serije("radnici").flatMap((s) =>
 const gosti = serije("gosti").flatMap((s) =>
   s.zapisi.map((z) => ({ ...z, vrsta: "gost", serija: s.serija })),
 );
-const svi = [...radnici, ...gosti];
+const vanjski = serije("vanjski").flatMap((s) =>
+  s.zapisi.map((z) => ({ ...z, vrsta: "vanjski", serija: s.serija })),
+);
+const svi = [...radnici, ...gosti, ...vanjski];
 
 const esc = (s) =>
   String(s ?? "").replace(
@@ -101,7 +104,9 @@ const redak = (z) => {
     z.dob,
     z.vrsta === "radnik"
       ? `${z.uloga} · ${z.razina} · ${z.godine_iskustva} g.`
-      : `${z.segment ?? ""}${z.zanimanje ? " · " + z.zanimanje : ""}`,
+      : z.vrsta === "vanjski"
+        ? `${z.uloga}${z.ustanova ? " · " + z.ustanova : ""}`
+        : `${z.segment ?? ""}${z.zanimanje ? " · " + z.zanimanje : ""}`,
     z.vrsta === "radnik" ? `${z.podrijetlo} · ${z.zemlja}` : z.zemlja,
     z.mjesto,
     jezici(z.jezici),
@@ -149,7 +154,7 @@ table.mini td { padding:2px 8px; border:0; }
 <body>
 <main>
 <h1>Banka ljudi — svi zapisi</h1>
-<p class="muted">Radnika: ${radnici.length} · gostiju: ${gosti.length} · serije: ${[...new Set(svi.map((z) => z.serija))].join(", ")}. Klik na naslov stupca sortira. Izvor: <code>${esc(root)}</code>.</p>
+<p class="muted">Radnika: ${radnici.length} · gostiju: ${gosti.length} · vanjskih: ${vanjski.length} · serije: ${[...new Set(svi.map((z) => z.serija))].join(", ")}. Klik na naslov stupca sortira. Izvor: <code>${esc(root)}</code>.</p>
 <div class="sazetci">
 ${sazetak("Radnici po ulozi", radnici, (z) => z.uloga)}
 ${sazetak("Radnici po razini", radnici, (z) => z.razina)}
@@ -161,9 +166,13 @@ ${sazetak("Gosti po zemlji", gosti, (z) => z.zemlja)}
 ${sazetak("Gosti po segmentu", gosti, (z) => z.segment ?? "—")}
 ${sazetak("Gosti po dobi", gosti, (z) => dobRazred(z.dob))}
 ${sazetak("Gosti po rodu", gosti, (z) => (z.rod === "z" ? "ž" : "m"))}
+${sazetak("Vanjski po ulozi", vanjski, (z) => z.uloga)}
+${sazetak("Vanjski po zemlji", vanjski, (z) => z.zemlja)}
+${sazetak("Vanjski po dobi", vanjski, (z) => dobRazred(z.dob))}
+${sazetak("Vanjski po rodu", vanjski, (z) => (z.rod === "z" ? "ž" : "m"))}
 </div>
 <div class="filtri">
-  <select id="f-vrsta"><option value="">vrsta: sve</option><option value="radnik">radnici</option><option value="gost">gosti</option></select>
+  <select id="f-vrsta"><option value="">vrsta: sve</option><option value="radnik">radnici</option><option value="gost">gosti</option><option value="vanjski">vanjski</option></select>
   <select id="f-serija"><option value="">serija: sve</option>${opcije(svi, (z) => String(z.serija))}</select>
   <select id="f-uloga"><option value="">uloga / segment: sve</option>${opcije(svi, (z) => z.uloga ?? z.segment ?? "")}</select>
   <select id="f-zemlja"><option value="">zemlja: sve</option>${opcije(svi, (z) => z.zemlja)}</select>
@@ -173,7 +182,7 @@ ${sazetak("Gosti po rodu", gosti, (z) => (z.rod === "z" ? "ž" : "m"))}
   <span>prikazano: <span class="broj" id="broj">${svi.length}</span></span>
 </div>
 <table id="t">
-<thead><tr>${svgFor ? "<th>lik</th>" : ""}<th>ID</th><th>vrsta</th><th>serija</th><th>ime</th><th>rod</th><th>dob</th><th>uloga · razina · iskustvo / segment · zanimanje</th><th>podrijetlo · zemlja</th><th>mjesto</th><th>jezici</th><th>opis</th></tr></thead>
+<thead><tr>${svgFor ? "<th>lik</th>" : ""}<th>ID</th><th>vrsta</th><th>serija</th><th>ime</th><th>rod</th><th>dob</th><th>uloga · razina · iskustvo / segment · zanimanje / uloga · ustanova (vanjski)</th><th>podrijetlo · zemlja</th><th>mjesto</th><th>jezici</th><th>opis</th></tr></thead>
 <tbody>
 ${svi.map(redak).join("\n")}
 </tbody>
@@ -223,4 +232,6 @@ ${svi.map(redak).join("\n")}
 
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, html, "utf8");
-console.log(`pregled: ${out} (radnika ${radnici.length}, gostiju ${gosti.length})`);
+console.log(
+  `pregled: ${out} (radnika ${radnici.length}, gostiju ${gosti.length}, vanjskih ${vanjski.length})`,
+);
