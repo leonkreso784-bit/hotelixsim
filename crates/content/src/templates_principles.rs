@@ -324,6 +324,7 @@ fn silence_dominates(
                     let s = RoundSituation {
                         outcome: o,
                         space: department.clone(),
+                        fault: false,
                     };
                     Ok(situation_effect(&s, &p, v2, category)
                         .map_err(|e| bad(format!("{e:?}")))?

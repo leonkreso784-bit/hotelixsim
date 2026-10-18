@@ -30,6 +30,7 @@ fn repair(id: &str, urgent: bool, space: Option<&str>) -> RoundSituation {
             quality: 3,
         },
         space: space.map(code),
+        fault: false,
     }
 }
 

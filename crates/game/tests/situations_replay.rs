@@ -134,6 +134,7 @@ fn recomputed(g: &Game, hotel: HotelId, r: RoundKey) -> MonthReportDto {
             RoundSituation {
                 outcome: if no_penalty { reward_only(o) } else { o },
                 space: instance.and_then(|i| i.drawn.department.clone()),
+                fault: instance.is_some_and(|i| i.space_fault),
             }
         })
         .collect();

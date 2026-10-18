@@ -83,7 +83,13 @@ pub fn reward_only(mut o: SituationOutcome) -> SituationOutcome {
 pub struct RoundSituation {
     pub outcome: SituationOutcome,
     pub space: Option<DeptCode>,
+    /// Kvar prostora (L1-13-1, A1): situacija skida `economy.fault_condition_pts` s prostora `space`
+    /// (`TemplateSet::space_fault`); sidra i situacije izvana nisu kvar.
+    pub fault: bool,
 }
+
+/// Najmanja ocjena odgovora uz hitni popravak da se kvar prostora „popravi“ (Leon 18.10.: zadovoljan gost = 4 ili 5).
+pub const FAULT_FIXED_MIN_QUALITY: u8 = 4;
 
 impl From<SituationOutcome> for RoundSituation {
     /// Ishod bez odjela (sidro, cijeli hotel): učinak na prostor ide u Smještaj.
@@ -91,6 +97,7 @@ impl From<SituationOutcome> for RoundSituation {
         RoundSituation {
             outcome,
             space: None,
+            fault: false,
         }
     }
 }

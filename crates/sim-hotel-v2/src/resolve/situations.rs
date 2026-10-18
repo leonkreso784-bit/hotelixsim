@@ -10,7 +10,7 @@ use super::{ResolveError, w};
 use crate::calendar::{Period, prorate};
 use crate::catalog::{Catalog, PeriodCoefficients};
 use crate::department::DeptCode;
-use crate::situations::RoundSituation;
+use crate::situations::{FAULT_FIXED_MIN_QUALITY, RoundSituation};
 
 /// Učinak jedne situacije u krugu: `effects` kao u obračunu (bodovi s faktorom kruga, troškovi i povišice puni) i
 /// odjel čiji prostor mijenja (`effects.equipment_pts`).
@@ -23,6 +23,8 @@ pub struct SituationEffect {
 /// Učinak jedne situacije u krugu `p`, isti račun kao obračun (bez granice zbroja kruga). Bodovi imaju faktor kruga,
 /// troškovi su puni. `effects.equipment_pts` = promjena stanja prostora `space` = privremeni popravak s faktorom +
 /// broj hitnih popravaka × `economy.repair_urgent_condition_pts` bez faktora (popravak je fizički, ADR-042 t. 1).
+/// Kvar prostora (`s.fault`, L1-13-1): −`economy.fault_condition_pts`, a uz hitni popravak u odgovoru i ocjenu
+/// od `FAULT_FIXED_MIN_QUALITY` naviše još +`economy.fault_fixed_condition_pts` (jednom po situaciji); oboje bez faktora.
 /// Situacija bez odjela i neraspoređeni odjel djeluju na Smještaj; nepoznat odjel je greška kataloga.
 pub fn situation_effect(
     s: &RoundSituation,
@@ -48,7 +50,14 @@ pub fn situation_effect(
         i128::try_from(urgent).map_err(|_| c::CalcError::Overflow)?,
         w(cat.economy.repair_urgent_condition_pts),
     )?;
-    e.equipment_pts = c::narrow(c::add(w(scaled(e.equipment_pts, coeffs)?), repair)?)?;
+    let mut equipment = c::add(w(scaled(e.equipment_pts, coeffs)?), repair)?;
+    if s.fault {
+        if urgent > 0 && s.outcome.quality >= FAULT_FIXED_MIN_QUALITY {
+            equipment = c::add(equipment, w(cat.economy.fault_fixed_condition_pts))?;
+        }
+        equipment = c::sub(equipment, w(cat.economy.fault_condition_pts))?;
+    }
+    e.equipment_pts = c::narrow(equipment)?;
     let space = match &s.space {
         Some(d) if !cat.dept(d)?.class.is_undistributed() => d.clone(),
         _ => DeptCode::rooms(),

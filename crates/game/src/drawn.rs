@@ -27,6 +27,8 @@ pub struct DrawnInstance {
     /// Podaci za AI sloj iz popunjenog primjerka (lik, rubrika, kriteriji); lik ima samo predložak s likom.
     pub ai: content::SituationAi,
     pub no_penalty: bool,
+    /// Kvar prostora njegova predloška (L1-13-1, `SituationTemplates::space_fault`).
+    pub space_fault: bool,
     /// Opis situacije s popunjenim mjestima (`content::Instance::description`).
     pub description: String,
 }
@@ -229,6 +231,7 @@ impl Game {
                     situation: filled.situation,
                     ai: filled.ai,
                     no_penalty: tpl.no_penalty(&i.template),
+                    space_fault: tpl.space_fault(&i.template),
                     description: filled.description,
                 });
             }
@@ -409,6 +412,15 @@ impl Game {
                 .as_ref()
                 .is_some_and(|t| t.no_penalty(code)),
         }
+    }
+
+    /// Kvar prostora (L1-13-1): primjerak iz dnevnika nosi oznaku od svog predloška; šifra koja nije izvučeni primjerak
+    /// (sidra S1–S4) nije kvar.
+    pub(crate) fn fault(&self, h: &HotelRecord, r: RoundKey, code: &str) -> bool {
+        h.drawn
+            .get(&r)
+            .and_then(|l| l.iter().find(|i| i.situation.code == code))
+            .is_some_and(|i| i.space_fault)
     }
 
     /// Prostor situacije u obračunu (ADR-042 t. 1): `condition_of` predloška primjerka, inače odjel primjerka iz

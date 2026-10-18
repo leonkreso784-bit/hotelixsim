@@ -37,6 +37,13 @@ impl TemplateSet {
             .any(|t| t.code == code && t.no_penalty)
     }
 
+    /// Je li predložak `code` kvar prostora (`SituationSpec::space_fault`); nepoznat predložak nije.
+    pub fn space_fault(&self, code: &str) -> bool {
+        self.templates
+            .iter()
+            .any(|t| t.code == code && t.space_fault)
+    }
+
     /// Prostor koji predložak `code` gleda i popravlja umjesto svog odjela (`SituationSpec::condition_of`).
     pub fn condition_of(&self, code: &str) -> Option<DeptCode> {
         self.templates
@@ -77,6 +84,9 @@ pub struct SituationSpec {
     pub no_penalty: bool,
     /// Prostor čije stanje čita `when.dept_condition_pts` (i pojačanja) i kamo ide popravak; `None` = odjel predloška.
     pub condition_of: Option<DeptCode>,
+    /// Kvar prostora (L1-13-1, A1): vrsta `kvar` ili hitni/privremeni popravak u odgovoru, bez vanjskog uzroka;
+    /// primjerak skida `economy.fault_condition_pts` s prostora (`RoundSituation.fault`).
+    pub space_fault: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

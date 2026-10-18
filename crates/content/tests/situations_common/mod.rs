@@ -65,6 +65,7 @@ pub fn general(code: &str, kind: Kind, repeat: Repeat) -> SituationSpec {
         group_month: None,
         no_penalty: false,
         condition_of: None,
+        space_fault: false,
     }
 }
 
