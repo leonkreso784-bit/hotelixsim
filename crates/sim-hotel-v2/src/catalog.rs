@@ -55,6 +55,16 @@ pub struct EconomyV2 {
     /// Klik (L1-13 dio 1b): dio svake DOBITI situacije koji klik na ponuđeni odgovor (ili prepisan odgovor) gdje se
     /// smije pisati zadržava, u bp; trošak ostaje pun. 10 000 = bez umanjenja (stari snimak).
     pub click_gain_bp: u16,
+    /// Značaj situacije (L1-13-2): faktor bodova po razini, bp; 10 000 = neutralno (stari snimak).
+    pub significance_bp: SignificanceBp,
+}
+
+/// Faktori bodova situacije po razini značaja (1 000..=30 000 bp).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SignificanceBp {
+    pub key: u16,
+    pub important: u16,
+    pub everyday: u16,
 }
 
 /// Uvjeti grupnih rezervacija (J-3): grupa je odluka s cijenom, ne čisti dobitak. Sve 0 = v1 ponašanje.
@@ -419,6 +429,17 @@ impl Catalog {
                 "v2.economy.click_gain_bp".to_string(),
             ));
         }
+        for (f, v) in [
+            ("key", self.economy.significance_bp.key),
+            ("important", self.economy.significance_bp.important),
+            ("everyday", self.economy.significance_bp.everyday),
+        ] {
+            if !(1_000..=30_000).contains(&v) {
+                return Err(CatalogError::OutOfRange(format!(
+                    "v2.economy.significance_bp.{f}"
+                )));
+            }
+        }
         self.validate_leases()
     }
 
@@ -712,6 +733,11 @@ pub fn degenerate(base: &sim_hotel::Catalog) -> Catalog {
             fault_condition_pts: 0,
             fault_fixed_condition_pts: 0,
             click_gain_bp: 10_000,
+            significance_bp: SignificanceBp {
+                key: 10_000,
+                important: 10_000,
+                everyday: 10_000,
+            },
         },
     }
 }

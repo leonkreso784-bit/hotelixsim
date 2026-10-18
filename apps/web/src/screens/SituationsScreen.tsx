@@ -72,6 +72,7 @@ export function SituationsScreen({ me }: { me: HotelBody }) {
                         </span>
                       )}
                       <span className="flex flex-wrap gap-2">
+                        {s.significance && <Badge>{t(`situation.significance.${s.significance}`)}</Badge>}
                         {showMandatory(s) && <Badge>{t("situation.mandatory")}</Badge>}
                         <Badge tone={st.tone}>{st.text}</Badge>
                       </span>

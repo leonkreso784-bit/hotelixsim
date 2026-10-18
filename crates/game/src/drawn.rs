@@ -414,6 +414,22 @@ impl Game {
         }
     }
 
+    /// Značaj (L1-13-2): razina iz `weight` izvučenog primjerka; sidra (S1–S4) su važna.
+    pub(crate) fn significance(
+        &self,
+        h: &HotelRecord,
+        r: RoundKey,
+        code: &str,
+    ) -> sim_hotel_v2::situations::Significance {
+        use sim_hotel_v2::situations::Significance;
+        h.drawn
+            .get(&r)
+            .and_then(|l| l.iter().find(|i| i.situation.code == code))
+            .map_or(Significance::Important, |i| {
+                Significance::from_weight(i.drawn.weight)
+            })
+    }
+
     /// Kvar prostora (L1-13-1): primjerak iz dnevnika nosi oznaku od svog predloška; šifra koja nije izvučeni primjerak
     /// (sidra S1–S4) nije kvar.
     pub(crate) fn fault(&self, h: &HotelRecord, r: RoundKey, code: &str) -> bool {

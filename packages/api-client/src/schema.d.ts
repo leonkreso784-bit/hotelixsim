@@ -1529,6 +1529,11 @@ export interface components {
             /** Format: int64 */
             training_cents: number;
         };
+        /**
+         * @description Razina značaja situacije.
+         * @enum {string}
+         */
+        SignificanceBody: "kljucna" | "vazna" | "svakodnevna";
         /** @description Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze. */
         SituationBody: {
             /** @description Oznake ponuđenih odgovora; indeks u popisu je broj odgovora. */
@@ -1555,6 +1560,7 @@ export interface components {
             response: components["schemas"]["ResponseBody"] | null;
             /** @description Uloge primjerka; lik je među njima. */
             roles: components["schemas"]["RoleBody"][];
+            significance: components["schemas"]["SignificanceBody"] | null;
             title: string;
             /**
              * Format: int32

@@ -34,6 +34,9 @@ pub struct SituationBody {
     /// Važnost primjerka 1–5 (popis je po važnosti silazno, sidra prva); `null` za sidra.
     #[schema(required = true)]
     pub weight: Option<u8>,
+    /// Značaj primjerka (`kljucna` / `vazna` / `svakodnevna`); `null` za sidra i v1.
+    #[schema(required = true)]
+    pub significance: Option<SignificanceBody>,
     /// Opis situacije; `null` za sidra.
     #[schema(required = true)]
     pub description: Option<String>,
@@ -132,6 +135,15 @@ impl From<app::CharacterLook> for CharacterLookBody {
             uniform: l.uniform.map(UniformBody::from),
         }
     }
+}
+
+/// Razina značaja situacije.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SignificanceBody {
+    Kljucna,
+    Vazna,
+    Svakodnevna,
 }
 
 /// Vrsta situacije iz predloška.
@@ -277,6 +289,15 @@ impl TryFrom<&app::SituationsView> for SituationsBody {
                     department: i.department.clone(),
                     kind: i.kind.map(SituationKindBody::from),
                     weight: i.weight,
+                    significance: i.significance.map(|s| match s {
+                        sim_hotel_v2::situations::Significance::Key => SignificanceBody::Kljucna,
+                        sim_hotel_v2::situations::Significance::Important => {
+                            SignificanceBody::Vazna
+                        }
+                        sim_hotel_v2::situations::Significance::Everyday => {
+                            SignificanceBody::Svakodnevna
+                        }
+                    }),
                     description: i.description.clone(),
                     roles: i
                         .roles

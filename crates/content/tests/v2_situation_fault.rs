@@ -267,6 +267,7 @@ fn equipment_bp(c: &Content, p: &Period, o: SituationOutcome, fault: bool) -> i3
         space: None,
         fault,
         click: false,
+        significance: sim_hotel_v2::situations::Significance::Important,
     };
     situation_effect(&s, p, v2, category)
         .unwrap()

@@ -21,6 +21,7 @@ export function instance(
     department,
     kind: "complaint",
     weight: 3,
+    significance: "vazna",
     description: null,
     roles: [],
     mandatory: false,

@@ -86,6 +86,7 @@ export function SituationScreen({ me, code }: { me: HotelBody; code: string }) {
   const title = (
     <>
       <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{s.title}</h1>
+      {s.significance && <Badge>{t(`situation.significance.${s.significance}`)}</Badge>}
       {showMandatory(s) && (
         <div className="space-y-1">
           <Badge>{t("situation.mandatory")}</Badge>

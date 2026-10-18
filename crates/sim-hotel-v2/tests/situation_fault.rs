@@ -41,6 +41,7 @@ fn sit(fault: bool, space: Option<&str>, mechanics: Vec<Mechanic>, q: u8) -> Rou
         space: space.map(code),
         fault,
         click: false,
+        significance: sim_hotel_v2::situations::Significance::Important,
     }
 }
 

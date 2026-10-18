@@ -39,9 +39,14 @@ pub fn situation_effect(
     // t05 (29. 6. – 5. 7.) obračunava srpanjske situacije sa srpnjem (`GroupInPast`). Krug bez 1. dana mjeseca
     // nosi mjesec početka (u mjesečnom krugu je to uvijek isti mjesec, kao u v1).
     let mut e = effects(&s.outcome, p.situation_month(), &cat.base, category)?;
-    e.satisfaction_pts = scaled(e.satisfaction_pts, coeffs)?;
-    e.morale_pts = scaled(e.morale_pts, coeffs)?;
-    e.rating = scaled(e.rating, coeffs)?;
+    let sig = match s.significance {
+        crate::situations::Significance::Key => cat.economy.significance_bp.key,
+        crate::situations::Significance::Important => cat.economy.significance_bp.important,
+        crate::situations::Significance::Everyday => cat.economy.significance_bp.everyday,
+    };
+    e.satisfaction_pts = scaled(e.satisfaction_pts, coeffs, sig)?;
+    e.morale_pts = scaled(e.morale_pts, coeffs, sig)?;
+    e.rating = scaled(e.rating, coeffs, sig)?;
     let urgent = s
         .outcome
         .mechanics
@@ -52,7 +57,7 @@ pub fn situation_effect(
         i128::try_from(urgent).map_err(|_| c::CalcError::Overflow)?,
         w(cat.economy.repair_urgent_condition_pts),
     )?;
-    let mut equipment = c::add(w(scaled(e.equipment_pts, coeffs)?), repair)?;
+    let mut equipment = c::add(w(scaled(e.equipment_pts, coeffs, sig)?), repair)?;
     if s.fault && urgent > 0 && s.outcome.quality >= FAULT_FIXED_MIN_QUALITY {
         equipment = c::add(equipment, w(cat.economy.fault_fixed_condition_pts))?;
     }
@@ -147,10 +152,10 @@ pub(super) fn situation_effects(
 }
 
 /// Bodovi situacije uz faktor kruga (`situation_effect_bp`), zaokruženo na cijeli bod.
-fn scaled(pts: i32, coeffs: &PeriodCoefficients) -> Result<i32, ResolveError> {
+fn scaled(pts: i32, coeffs: &PeriodCoefficients, sig: u16) -> Result<i32, ResolveError> {
     Ok(c::narrow(c::div_round(
-        c::mul(w(pts), w(coeffs.situation_effect_bp))?,
-        10_000,
+        c::mul(c::mul(w(pts), w(coeffs.situation_effect_bp))?, w(sig))?,
+        100_000_000,
     )?)?)
 }
 

@@ -49,3 +49,11 @@ describe("hr: tekst prema studentu bez roda (UI_PRAVILA §3.3)", () => {
     expect(t("problem.chat_limit")).toBe("Poruke za ovaj razgovor su potrošene.");
   });
 });
+
+describe("hr: razine značaja situacije (L1-13 dio 2)", () => {
+  it("tri oznake, tekst uz naslov", () => {
+    expect(t("situation.significance.kljucna")).toBe("Ključna");
+    expect(t("situation.significance.vazna")).toBe("Važna");
+    expect(t("situation.significance.svakodnevna")).toBe("Svakodnevna");
+  });
+});

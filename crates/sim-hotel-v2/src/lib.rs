@@ -27,7 +27,7 @@ pub mod usali;
 pub use calendar::{MonthPart, Period, PeriodKind, season_periods};
 pub use catalog::{
     BuildingSpec, Catalog, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, GroupTerms,
-    PeriodCoefficients, ProfileV2, degenerate,
+    PeriodCoefficients, ProfileV2, SignificanceBp, degenerate,
 };
 pub use department::{BuildingOutcome, StaffingNorm};
 pub use indices::{RefTable, period_indices, start_indices};

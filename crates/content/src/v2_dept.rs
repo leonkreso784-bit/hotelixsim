@@ -10,6 +10,7 @@ use sim_hotel_v2::department::{
 };
 use sim_hotel_v2::{
     BuildingSpec, DeptStart, EconomyV2, FinanceBasis, FixedChargeSpec, ProfileV2, RenewalSpec,
+    SignificanceBp,
 };
 
 use crate::ContentError;
@@ -245,6 +246,21 @@ pub(crate) struct EconomyDto {
     /// Klik (L1-13-1b): dio dobiti koji klik zadržava (bp); bez ključa i uz 10 000 se ne zapisuje (isti zapis i otisak).
     #[serde(default, skip_serializing_if = "none_or_full")]
     click_gain_bp: Option<u16>,
+    #[serde(default, skip_serializing_if = "neutral_levels")]
+    significance_bp: Option<SignificanceBpDto>,
+}
+
+fn neutral_levels(v: &Option<SignificanceBpDto>) -> bool {
+    v.as_ref()
+        .is_none_or(|s| s.key == 10_000 && s.important == 10_000 && s.everyday == 10_000)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SignificanceBpDto {
+    key: u16,
+    important: u16,
+    everyday: u16,
 }
 
 /// Klik bez umanjenja (nema ključa ili 10 000) se ne zapisuje.
@@ -521,6 +537,17 @@ pub(crate) fn economy_to_dto(e: &EconomyV2) -> EconomyDto {
         fault_fixed_condition_pts: (e.fault_fixed_condition_pts != 0)
             .then_some(e.fault_fixed_condition_pts),
         click_gain_bp: (e.click_gain_bp != 10_000).then_some(e.click_gain_bp),
+        significance_bp: (e.significance_bp
+            != (SignificanceBp {
+                key: 10_000,
+                important: 10_000,
+                everyday: 10_000,
+            }))
+        .then_some(SignificanceBpDto {
+            key: e.significance_bp.key,
+            important: e.significance_bp.important,
+            everyday: e.significance_bp.everyday,
+        }),
     }
 }
 
@@ -574,5 +601,17 @@ pub(crate) fn build_economy(e: &EconomyDto) -> Result<EconomyV2, ContentError> {
         fault_condition_pts: e.fault_condition_pts.unwrap_or(0),
         fault_fixed_condition_pts: e.fault_fixed_condition_pts.unwrap_or(0),
         click_gain_bp: e.click_gain_bp.unwrap_or(10_000),
+        significance_bp: e.significance_bp.as_ref().map_or(
+            SignificanceBp {
+                key: 10_000,
+                important: 10_000,
+                everyday: 10_000,
+            },
+            |s| SignificanceBp {
+                key: s.key,
+                important: s.important,
+                everyday: s.everyday,
+            },
+        ),
     })
 }

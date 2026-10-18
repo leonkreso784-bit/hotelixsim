@@ -449,6 +449,11 @@ pub fn run_season_responding(
                     space,
                     fault: meta.is_some_and(|m| m.fault),
                     click: a.click,
+                    significance: item
+                        .drawn
+                        .map_or(crate::situations::Significance::Important, |d| {
+                            crate::situations::Significance::from_weight(d.weight)
+                        }),
                 }
             })
             .collect();

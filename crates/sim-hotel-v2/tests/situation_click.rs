@@ -44,6 +44,7 @@ fn sit(click: bool, fault: bool, mechanics: Vec<Mechanic>, q: u8) -> RoundSituat
         space: None,
         fault,
         click,
+        significance: sim_hotel_v2::situations::Significance::Important,
     }
 }
 
