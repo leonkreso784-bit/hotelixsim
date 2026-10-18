@@ -128,6 +128,7 @@ pub(crate) fn build_templates(
                 opportunity_every_weeks: file
                     .opportunity_every_weeks
                     .unwrap_or(crate::templates::DEFAULT_OPPORTUNITY_EVERY_WEEKS),
+                guest_extra_slots: file.guest_extra_slots.unwrap_or(false),
             }))
         }
         _ => Err(ContentError::Invalid(

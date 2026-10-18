@@ -25,6 +25,7 @@ impl SituationTemplates {
             min_gap_weeks: self.min_gap_weeks,
             opportunity_every_weeks: self.opportunity_every_weeks,
             counts: None,
+            guest_extra_slots: self.guest_extra_slots,
             names: core::NamePool {
                 guest: names(&self.names.guest),
                 staff: names(&self.names.staff),

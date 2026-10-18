@@ -223,16 +223,10 @@ fn august_distinct(cat: &Catalog, set: &TemplateSet, r: &RoundStart) -> usize {
     for t in set.templates.iter().filter(|t| t.major.is_none()) {
         let mut one = t.clone();
         one.repeat = free;
-        let alone = TemplateSet {
-            major: set.major,
-            templates: vec![one],
-            names: set.names.clone(),
-            group_limit: None,
-            groups_per_month: None,
-            min_gap_weeks: set.min_gap_weeks,
-            opportunity_every_weeks: set.opportunity_every_weeks,
-            counts: set.counts,
-        };
+        let mut alone = set.clone();
+        alone.templates = vec![one];
+        alone.group_limit = None;
+        alone.groups_per_month = None;
         if draw(cat, &alone, r, &[], 0, &[])
             .iter()
             .any(|d| d.template == t.code)

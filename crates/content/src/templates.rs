@@ -22,6 +22,8 @@ pub struct SituationTemplates {
     pub min_gap_weeks: u8,
     /// `TemplateFile::opportunity_every_weeks` (izostavljeno = `DEFAULT_OPPORTUNITY_EVERY_WEEKS`).
     pub opportunity_every_weeks: u8,
+    /// `TemplateFile::guest_extra_slots` (izostavljeno = isključeno).
+    pub guest_extra_slots: bool,
 }
 
 /// Najmanji razmak između dvije pojave istog predloška u tjednima, kad ga datoteka ne navodi (stari snimci).
@@ -51,6 +53,9 @@ pub struct TemplateFile {
     /// `DEFAULT_OPPORTUNITY_EVERY_WEEKS`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub opportunity_every_weeks: Option<u8>,
+    /// Dodatna mjesta iznad najmanjeg broja situacija samo za situacije s gostima (L1-13-3); izostavljeno = isključeno.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guest_extra_slots: Option<bool>,
 }
 
 /// Kad dolazi „veća situacija" (Leon 13.10.): prosjek pet pokazatelja (0–100) na početku kruga je barem

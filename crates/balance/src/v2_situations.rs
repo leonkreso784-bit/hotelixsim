@@ -4,7 +4,9 @@
 
 use std::collections::BTreeMap;
 
-use sim_hotel_v2::situations::{DrawnSituation, SituationCounts, TemplateSet};
+use sim_hotel_v2::situations::{
+    DrawnSituation, SituationCounts, TemplateSet, expected_occupancy_bp,
+};
 use sim_hotel_v2::{
     Catalog, CatalogError, Cause, Period, PeriodKind, PeriodPlan, Profile, RefTable, ResolveError,
     Responder, RoundItem, SeasonResult, SeasonSituations, SituationTemplate, Strategy,
@@ -80,6 +82,15 @@ impl<'a> Situations<'a> {
 
     pub(crate) fn group_limit(&self) -> Option<u8> {
         self.set.as_ref().and_then(|s| s.group_limit)
+    }
+
+    /// Je li predložak `code` situacija s gostima (`SituationSpec::guest_related`).
+    fn template_guest_related(&self, code: &str) -> bool {
+        self.set.as_ref().is_some_and(|s| {
+            s.templates
+                .iter()
+                .any(|t| t.code == code && t.guest_related())
+        })
     }
 
     /// Nudi li primjerak predloška `code` grupu.
@@ -183,11 +194,34 @@ pub struct DrawStats {
     pub groups_max: u64,
     /// Broj sezona po broju ponuda grupe (sidra uključena).
     pub groups_seasons: BTreeMap<u64, u64>,
+    /// Po razini očekivane popunjenosti kruga (niska, srednja, visoka): izvučeni gostinjski, ostali i krugovi.
+    pub by_level: [LevelCounts; 3],
+}
+
+/// Zbroj izvučenih primjeraka (bez sidara) i broj krugova jedne razine popunjenosti (L1-13-3).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct LevelCounts {
+    pub guest: u64,
+    pub other: u64,
+    pub rounds: u64,
+}
+
+/// Razina očekivane popunjenosti kruga: 0 niska, 1 srednja, 2 visoka (pragovi `SituationCounts::for_occupancy`).
+fn occupancy_level(bp: u16) -> usize {
+    let at = SituationCounts::WEEK
+        .for_occupancy(bp)
+        .saturating_sub(SituationCounts::MIN);
+    usize::from(at).min(2)
 }
 
 impl DrawStats {
     /// Dodaj jednu sezonu.
-    pub(crate) fn add(&mut self, r: &SeasonResult, sits: &Situations) {
+    pub(crate) fn add(
+        &mut self,
+        r: &SeasonResult,
+        sits: &Situations,
+        cat: &Catalog,
+    ) -> Result<(), ResolveError> {
         let fixed = sits.fixed();
         let mut groups: u64 = 0;
         for ((report, _), drawn) in r.periods.iter().zip(&r.drawn) {
@@ -225,7 +259,16 @@ impl DrawStats {
             if sum(Var::Morale).abs() >= ROUND_BOUND_PTS {
                 self.bound_morale = self.bound_morale.saturating_add(1);
             }
+            let level =
+                occupancy_level(expected_occupancy_bp(&report.before, &report.period, cat)?);
+            let lv = &mut self.by_level[level];
+            lv.rounds = lv.rounds.saturating_add(1);
             for s in drawn {
+                if sits.template_guest_related(&s.template) {
+                    lv.guest = lv.guest.saturating_add(1);
+                } else {
+                    lv.other = lv.other.saturating_add(1);
+                }
                 let e = self.templates.entry(s.template.clone()).or_default();
                 *e = e.saturating_add(1);
             }
@@ -233,6 +276,14 @@ impl DrawStats {
         self.groups_max = self.groups_max.max(groups);
         let e = self.groups_seasons.entry(groups).or_default();
         *e = e.saturating_add(1);
+        Ok(())
+    }
+
+    /// Prosjek izvučenih po krugu (stotinke) za razinu: (gostinjskih, ostalih).
+    pub fn level_average(&self, level: usize) -> (u64, u64) {
+        let l = self.by_level.get(level).copied().unwrap_or_default();
+        let avg = |n: u64| n.saturating_mul(100).checked_div(l.rounds).unwrap_or(0);
+        (avg(l.guest), avg(l.other))
     }
 
     /// Predložak s najviše pojava i njegov udio u svim pojavama (bp).
@@ -242,6 +293,27 @@ impl DrawStats {
         let bp = n.saturating_mul(10_000).checked_div(all).unwrap_or(0);
         Some((code.clone(), i32::try_from(bp).unwrap_or(i32::MAX)))
     }
+}
+
+/// Redak bloka J-3: prosjek izvučenih gostinjskih i ostalih situacija po krugu za svaku razinu očekivane popunjenosti.
+pub(crate) fn levels_line(d: &DrawStats) -> String {
+    let part = |name: &str, level: usize| {
+        let (g, o) = d.level_average(level);
+        format!(
+            "{name} {}.{:02} gostinjskih + {}.{:02} ostalih",
+            g / 100,
+            g % 100,
+            o / 100,
+            o % 100
+        )
+    };
+    format!(
+        "  po popunjenosti (prosjek po krugu): {}; {}; {}
+",
+        part("niska", 0),
+        part("srednja", 1),
+        part("visoka", 2)
+    )
 }
 
 /// Udio situacija u napretku jedne strategije na jednom profilu.

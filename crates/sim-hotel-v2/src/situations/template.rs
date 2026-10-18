@@ -27,6 +27,10 @@ pub struct TemplateSet {
     /// Broj situacija po krugu, postavka igre; `None` = `SituationCounts::default_for` vrste kruga. Sadržaj ga ne
     /// puni (igra ga postavlja iz `GameCreated`).
     pub counts: Option<SituationCounts>,
+    /// Dodatna mjesta iznad `low` (L1-13-3): kad je uključeno, mjesta kruga iznad najmanjeg broja
+    /// (`SituationCounts::levels().0`) pune samo situacije s gostima (`SituationSpec::guest_related`).
+    /// Isključeno = izvlačenje kao prije.
+    pub guest_extra_slots: bool,
 }
 
 impl TemplateSet {
@@ -87,6 +91,14 @@ pub struct SituationSpec {
     /// Kvar prostora (L1-13-1, A1): vrsta `kvar` ili hitni/privremeni popravak u odgovoru, bez vanjskog uzroka;
     /// primjerak skida `economy.fault_condition_pts` s prostora (`RoundSituation.fault`).
     pub space_fault: bool,
+}
+
+impl SituationSpec {
+    /// Situacija s gostima: odjel koji gosti vide ili bilo koja uloga iz izvora `Guest`.
+    pub fn guest_related(&self) -> bool {
+        self.department == DeptTarget::GuestFacing
+            || self.roles.values().any(|r| r.source == RoleSource::Guest)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
