@@ -1,5 +1,8 @@
 # Sljedeća sesija — CI nakon PRAVILO-b, dovršetak PRAVILO-c, banka, uniforme vanjskih, L1-13
 
+> ⚠️ **Sesija 9 završila 18.10. BEZ `/kraj` dokumentacije** (Leon gasi računalo). Ovaj dokument je ZASTARIO — vjeruj ledgeru
+> `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` (zadnji zapis „KRAJ SESIJE 9 BEZ /kraj"). Sesija 10 prvo piše dokumentaciju sesije 9, pa L1-13 dio 2.
+
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
 Spojeni su IZGLED (a+b) 872ff46 i PRAVILO-b ee6de80 u `model-v2/sloj1` (17.10.; PRAVILO-a 9a275d8 je na GitHubu). **Ništa od 17.10. nije pushano**:
