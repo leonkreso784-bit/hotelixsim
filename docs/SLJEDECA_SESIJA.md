@@ -12,6 +12,7 @@ Sesija 9 spojila je i objavila PRAVILO-c, IZGLED-c, L1-13 dijelove 1 i 1b i bank
 ```text
 Nastavljamo (sesija 10). Ledgeri: .superpowers/sdd/2026-10-14-popravak-temelja/progress.md i .superpowers/sdd/banka-ljudi-k1/progress.md. Prvo pročitaj upute-izvodacima.md (§5, §4a i §2).
 Push model-v2/sloj1 smiješ bez pitanja (moj „ok za sve"); spajanje u main samo uz moj OK. Laptop je na punjaču.
+Usporedo radi PARALELNA SESIJA BANKE (sesija 10b, prompt .superpowers/sdd/banka-ljudi-k1/PROMPT-PARALELNA-SESIJA.md, stablo ../hotelixsim-ljudi): ona ima jedan Rust slot, ova jedan (najviše 2 cargo ukupno); banku spajaš ti kad njezin ledger kaže „SPREMNO ZA SPAJANJE", a nakon spajanja njezina grana ide na novi vrh sloj1 (to radi ona). Ne diraj njezino stablo.
 Redoslijed:
 1) `df -h /c` (ispod 50 GB ne gradi) i `bash scripts/baza.sh status`; `tasklist | grep -i cargo` (jedan Rust slot po sesiji).
 2) Ledger banke: piše li „SPREMNO ZA SPAJANJE: 106ede1"? Ako da, spoji banku (530 ljudi, uloga lijecnik) + CI + push, pa prenesi njezin za-dokumentaciju.md (odjeljak „Paralelna sesija banke 9b") u docs.
