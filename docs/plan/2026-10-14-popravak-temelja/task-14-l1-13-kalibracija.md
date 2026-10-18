@@ -176,3 +176,8 @@ učinak **situacije** na stanje prostora (redak `explain.rs:220`, uzrok situacij
    (stanje odjela, novac, gosti), ne samo ocjenu. Nova **brana** u balansu: težina klika ≤ ~75 % težine vlastitog najboljeg, tjedno i mjesečno. → dio 1b.
 2. **Razine značaja (B2):** **ključna / važna / svakodnevna**, izvedeno iz `weight` (4 / 3 / 1–2). → dio 2.
 3. **„Zadovoljan gost":** ocjena odgovora **4 ili 5** uz hitni popravak → +2 (neto +1); ocjena 1–3 ostavlja −1. → dio 1.
+
+## Leonova odluka 18.10. (treća anketa) — klik 75 % samo gdje se piše
+Dijagnoza (`.superpowers/…/l113-1b-dijagnoza.md`): situacije bez lika nose 39 % (tjedno B) / 70 % (mjesečno B) Δ i u njima su klik i vlastiti
+odgovor isti, pa ukupni omjer ne može pasti na 75 %. **Odluka:** brana „B3 klik" mjeri **omjer Δ samo na situacijama s likom** (≤ 75 %);
+`click_gain_bp` ≈ 8 500–8 800 (najveći koji drži sva 6 stupaca). Ukupno u igri klik i dalje nosi ~90 % težine vlastitog — zapisati u ADR na `/kraj`.
