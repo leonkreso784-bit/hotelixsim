@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Gradi samostalan ES modul `svgFor(ime, hint) => string` (SVG avatara) za scripts/ljudi-pregled.mjs --avatari.
-// Izvor su avatar izvori iz stabla izgleda (look.ts s hintom), react/vite dolaze iz apps/web. Bez novih ovisnosti u repou.
+// Izvor su avatar izvori ovog stabla (look.ts: lookFor s hintom i odorom), react/vite dolaze iz apps/web. Bez novih ovisnosti u repou.
 //   node scripts/ljudi-avatari-build.mjs <izlaz.mjs> [stablo-izgleda] [apps-web]
-// Zadano: stablo-izgleda = ../hotelixsim-izgled, apps-web = apps/web. Vite se uvozi iz apps-web/node_modules.
+// Zadano: stablo-izgleda = . (ovo stablo; staro ../hotelixsim-izgled je spojeno), apps-web = apps/web. Vite se uvozi iz apps-web/node_modules.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const out = resolve(process.argv[2] ?? "avatari.mjs");
-const izgled = resolve(process.argv[3] ?? "../hotelixsim-izgled");
+const izgled = resolve(process.argv[3] ?? ".");
 const web = resolve(process.argv[4] ?? "apps/web");
 const av = join(izgled, "apps/web/src/avatar").replaceAll("\\", "/");
 const nm = join(web, "node_modules").replaceAll("\\", "/");
