@@ -4815,6 +4815,15 @@
           }
         }
       },
+      "SignificanceBody": {
+        "type": "string",
+        "description": "Razina značaja situacije.",
+        "enum": [
+          "kljucna",
+          "vazna",
+          "svakodnevna"
+        ]
+      },
       "SituationBody": {
         "type": "object",
         "description": "Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze.",
@@ -4830,6 +4839,7 @@
           "department",
           "kind",
           "weight",
+          "significance",
           "description",
           "roles",
           "mandatory",
@@ -4929,6 +4939,17 @@
               "$ref": "#/components/schemas/RoleBody"
             },
             "description": "Uloge primjerka; lik je među njima."
+          },
+          "significance": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignificanceBody",
+                "description": "Značaj primjerka (`kljucna` / `vazna` / `svakodnevna`); `null` za sidra i v1."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "title": {
             "type": "string"

@@ -88,6 +88,35 @@ pub struct RoundSituation {
     pub fault: bool,
     /// Klik (L1-13-1b): ponuđen odgovor (ili prepisan) gdje se smije pisati; dobit × `economy.click_gain_bp`.
     pub click: bool,
+    /// Značaj (L1-13-2): razina iz `weight` izvučenog primjerka (sidra: važna); množi bodove situacije.
+    pub significance: Significance,
+}
+
+/// Tri razine značaja situacije: ključna (weight 4), važna (3), svakodnevna (1–2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Significance {
+    Key,
+    Important,
+    Everyday,
+}
+
+impl Significance {
+    /// Razina iz `weight` predloška.
+    pub fn from_weight(w: u8) -> Self {
+        match w {
+            4 => Significance::Key,
+            3 => Significance::Important,
+            _ => Significance::Everyday,
+        }
+    }
+    /// Riječ kakvu govori API.
+    pub fn code(self) -> &'static str {
+        match self {
+            Significance::Key => "kljucna",
+            Significance::Important => "vazna",
+            Significance::Everyday => "svakodnevna",
+        }
+    }
 }
 
 /// Najmanja ocjena odgovora uz hitni popravak da se kvar prostora „popravi“ (Leon 18.10.: zadovoljan gost = 4 ili 5).
@@ -101,6 +130,7 @@ impl From<SituationOutcome> for RoundSituation {
             space: None,
             fault: false,
             click: false,
+            significance: Significance::Important,
         }
     }
 }

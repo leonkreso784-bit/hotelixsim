@@ -61,6 +61,8 @@ pub struct SituationItem {
     /// Vrsta i važnost primjerka; sidra i v1 ih nemaju 🟨.
     pub kind: Option<SituationKind>,
     pub weight: Option<u8>,
+    /// Značaj primjerka iz `weight`; sidra i v1 ga nemaju.
+    pub significance: Option<sim_hotel_v2::situations::Significance>,
     /// Opis s popunjenim mjestima; sidra i v1 ga nemaju.
     pub description: Option<String>,
     /// Uloge primjerka (ključ, ime, rečenica uloge); lik je među njima.
@@ -361,6 +363,9 @@ async fn situations_in_month(
                 department: card.department,
                 kind: card.kind,
                 weight: card.weight,
+                significance: card
+                    .weight
+                    .map(sim_hotel_v2::situations::Significance::from_weight),
                 description: card.description,
                 roles: card.roles,
                 mandatory: g.situation_mandatory(hotel, &t.code)?,
