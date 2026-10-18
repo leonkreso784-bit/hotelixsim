@@ -296,12 +296,9 @@ fn lijecnik_lokalno_dob_40_prolazi() {
 
 #[test]
 fn lijecnik_je_lokalna_sluzba_iz_hrvatske() {
+    // Mjesto ostaje iz `lokalno` (kao `lokalne_uloge_iz_hrvatske`); mjesto izvan kataloga je `lijecnik_mjesto_iz_kataloga`.
     let z = s(
-        s(
-            s(lijecnik(), "zemlja", json!("AT")),
-            "mjesto",
-            json!("Graz"),
-        ),
+        s(lijecnik(), "zemlja", json!("AT")),
         "jezici",
         json!([["de", 4]]),
     );
