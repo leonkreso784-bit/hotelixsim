@@ -1154,7 +1154,7 @@ pub struct TextBody {
 #[derive(Deserialize, ToSchema)]
 #[serde(deny_unknown_fields)]
 pub struct AnswerBody {
-    /// Broj odgovora (indeks u `answers`).
+    /// Prikazni broj odgovora (indeks u `answers` kako ga je poslao GET; izmiješan po hotelu).
     pub answer: u8,
 }
 

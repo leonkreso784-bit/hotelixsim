@@ -342,11 +342,20 @@ async fn situations_in_month(
             let ai = g.ai_entry_for(hotel, &t.code);
             let key = (month, t.code.clone());
             let card = g.situation_card(hotel, month, &t.code)?;
+            let order = g.display_order(hotel, &t.code)?;
+            let chosen = match record.answers.get(&key) {
+                Some(&o) => Some(g.shown_position(hotel, &t.code, o)?),
+                None => None,
+            };
             Ok(SituationItem {
                 code: t.code.clone(),
                 title: t.title.clone(),
-                answers: t.answers.iter().map(|a| a.label.clone()).collect(),
-                chosen: record.answers.get(&key).copied(),
+                answers: order
+                    .iter()
+                    .filter_map(|&o| t.answers.get(usize::from(o)))
+                    .map(|a| a.label.clone())
+                    .collect(),
+                chosen,
                 free_text: ai.is_some_and(|a| a.free_text),
                 click_capped: g.click_capped(hotel, &t.code),
                 character: ai

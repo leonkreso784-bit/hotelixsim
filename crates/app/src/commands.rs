@@ -63,7 +63,9 @@ pub async fn answer(
             Box::new(move |raw: &[RawEvent]| {
                 let g = fold_raw(raw)?;
                 require_owner(&g, guest, hotel)?;
-                let ev = g.choose_answer(hotel, &code, choice)?;
+                // Student šalje prikazni položaj; događaj pamti izvorni broj (L1-13b dio 1).
+                let original = g.original_answer(hotel, &code, choice)?;
+                let ev = g.choose_answer(hotel, &code, original)?;
                 Ok(Decision {
                     events: vec![new_event(&Actor::Guest(guest), &ev)],
                     ..Decision::default()

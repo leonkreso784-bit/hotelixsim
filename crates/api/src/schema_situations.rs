@@ -13,8 +13,9 @@ use crate::schema::{MonthCode, calendar_month};
 pub struct SituationBody {
     pub code: String,
     pub title: String,
-    /// Oznake ponuđenih odgovora; indeks u popisu je broj odgovora.
+    /// Oznake ponuđenih odgovora, izmiješane po hotelu (stalan redoslijed); indeks u popisu je prikazni broj odgovora.
     pub answers: Vec<String>,
+    /// Prikazni položaj izabranog odgovora (isti broj kao indeks u `answers`).
     #[schema(required = true)]
     pub chosen: Option<u8>,
     /// Student smije odgovoriti svojim riječima i razgovarati s likom.
