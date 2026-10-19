@@ -57,7 +57,7 @@ da će biti da."* Standard „gotovo" zato nije „radi na Leonovu računalu" ne
 računalo**. Igra bogata sadržajem bez prijave i hostinga nije produkcija.
 
 **🟨 Redoslijed (prijedlog voditelja, Leon ga nije izričito potvrdio):**
-1. **L1-13 → L1-13b → L1-14 → L1-15** (kraj popravka temelja, faza B).
+1. **L1-13 ✅ → L1-13b ✅ → L1-14 → L1-15** (kraj popravka temelja, faza B), zatim priprema i deploy pilota (Railway, [ADR-062](../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9).
 2. **PLATFORMA do najmanje igrive razredne igre:** prijava i pristup (računi, profesorovi vlastiti podaci za prijavu), hosting
    s **izmjerenim** troškom (uz AI trošak po igri, AI-M), oporavak od pada na pravoj bazi (kopije i proba vraćanja), profesorovo
    sučelje u najmanjem obliku (otvori krug, vidi hotele, vidi razgovore), GDPR i brisanje. Cigle: [platforma.md](./ROADMAP/platforma.md)

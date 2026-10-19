@@ -189,3 +189,7 @@ Izvor: `.superpowers/sdd/2026-10-14-popravak-temelja/l113-4-dijagnoza.md` (gradi
 3. **Pojas „situacije ~20 %" = prosjek tri hotela 15–25 %, svaki hotel 10–35 %** (K4), tjedno i mjesečno.
 4. **P-POHVALA ostaje „samo najbolji nosi nagradu"** (iznimka od A4); **šutnja na P-NOVINAR gubi ugled, ne novac** (test S-4 → „šutnja nije bolja od lošeg odgovora").
 Izmjereno (bez faktora razine; ponoviti s njim): tjedno K1+L1 uz f 105–115 sve brane prolaze (f 110: 20,8 / 24,0 / 20,0 %, klik ≤ 72 %); mjesečno f 350 uz L1 sve osim B 31,3 % (K4 to prima).
+
+## Stanje 19.10. (sesija 11): spojeno
+Leon je u prvoj anketi 19.10. dao OK na obje tablice (sve preporučene; [ADR-062](../../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 1–4).
+Dio 4 spojen kao e4ec659 (`CORE_VERSION` 2.6.0), pushan, GitHub CI zelen. Svi dijelovi L1-13 (1, 1b, 2, 3, 4) su gotovi.

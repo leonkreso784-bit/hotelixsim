@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-062"></a>[ADR-062](DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) | Leonove odluke 19.10. i pretpostavke sesije 11: dio 4 spojen, L1-13b prije pilota, održavanje po hotelu, pilot na Railwayu | ✅ Leonove odluke 19.10. | 2026-10-19 |
 | <a id="adr-061"></a>[ADR-061](DECISIONS/ADR-061-leonove-odluke-18-19-10-i-pretpostavke-sesije-10.md) | Leonove odluke 18.–19.10. i pretpostavke sesije 10: kvar slabi kao situacija, pojas 15–25 %, šutnja novinaru gubi ugled | ✅ Leonove odluke 18.10. | 2026-10-19 |
 | <a id="adr-060"></a>[ADR-060](DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) | Leonove odluke 18.10. i pretpostavke sesije 9: uniforme, klik 75 % gdje se piše, pilot prije proizvoda | ✅ Leonove odluke 18.10., 🟨 t. 17–20 ČEKA LEONOV PREGLED | 2026-10-18 |
 | <a id="adr-059"></a>[ADR-059](DECISIONS/ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) | Pretpostavke sesije 8: PRAVILO-b u balansu, IZGLED pri spajanju, PRAVILO-c, jedan Rust slot | 🟨 ČEKA LEONOV PREGLED | 2026-10-17 |

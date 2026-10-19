@@ -4,6 +4,31 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-19 (11) — Sesija 11: L1-13 dio 4 i cijela L1-13b spojeni i objavljeni (`CORE_VERSION` 2.6.0), prijedlog hostinga pilota
+
+- **L1-13 dio 4, kalibracija, spojen** (575ef92 → e4ec659, `--no-ff`) uz Leonov OK u prvoj anketi (4/4 preporučene: tri svakodnevna kvara nose 0,6,
+  održavanje B ostaje, P-GOST-POZLILO ostaje negostinjska, spoji i pushaj). `CORE_VERSION` 2.6.0. CI nakon spajanja: 22× EXIT 0 (sqlx je prvo pao jer
+  se baza ugasila uz prekid sesije, [BUGS](BUGS.md) B24), a balans v2 je bajt-isti s ispisom graditelja. Nova osnovica `nakon-l113-4/`. Stabla
+  `l113-4` i `l113-4d` s granama i `target/` obrisana. GitHub CI 39238997360 zelen.
+- **L1-13b, cijela prije pilota, u valovima** (Leon, druga anketa): kartica [task-15](../plan/2026-10-14-popravak-temelja/task-15-l1-13b-valovi.md)
+  (ebf28d9) nakon tri analize samo čitanjem. Val 1 usporedo u tri stabla, val 2 nakon dijela 1. Spojeno redom:
+  **dio 2** jedan gumb „Spremi plan" (13db069; pregled: I1 i I2 popravljeni, Approved), **dio 3** opis Smještaja (4be1db4; graditelj opus ispravno
+  BLOCKED na P-DOTRAJALO, čuvar r2 veže pragove uz sadržaj, Approved), **dio 4** pojačano održavanje +5 (bdbdebe; Approved, 4 Minor),
+  **dio 1** izmiješani odgovori (7556d80; Approved, runda 2: zlatni test pravila, 409 za zatvoren krug, opisi).
+- **Provjereno:** cijeli CI nakon L1-13b (`nakon-l113b/`, nova osnovica) 22× EXIT 0 + `deny-2` EXIT 0 ([BUGS](BUGS.md) B23); balans v2 bajt-isti s
+  ispisom dijela 4, v1 bajt-isti. Zadani plan se nigdje ne mijenja (brane težine, klika i lanca iste). GitHub CI 39259381476 zelen.
+- **Održavanje po hotelu** (tablica dijela 4, 1000 sezona): hotel A i dalje štedi (odgođeno najbolje), B i C ulažu (pojačano najbolje; B se okrenuo).
+  Šest operativnih odjela je dosta, parking i lokal dodaju 0,02–0,05.
+- **Prijedlog hostinga pilota** (opus, samo čitanje i web): Railway Hobby ~5–7 €/mj, AI za 40 studenata ~15–30 € po sezoni, ~20–27 h posla prije
+  objave. Nađeno: kolačić gosta traje 7 dana bez obnove (student gubi hotel), a `POST /v1/demo` je otvoren svima. Leon (četvrta anketa): Railway Hobby,
+  jedna lozinka za stranicu, stropovi AI 5 $/dan i 30 $/mj, 40 $/mj u konzoli, 3 igre po gostu.
+- **Odluke i pretpostavke** → [ADR-062](DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) (i Dopuna ADR-042 t. 10).
+- **Banka 11b se ugasila** nakon slanja četiri pisca K7. Ostala su četiri nacrta po 50 ljudi (radnici i gosti 007 i 008), bez izvještaja pisaca:
+  sačuvani u `.superpowers/sdd/banka-ljudi-k1/nacrti/k7-sesija-11b/`. Banka u repou ostaje **730**; stablo ljudi e56aa1d čisto.
+- **Gdje se vidi:** GitHub, `model-v2/sloj1` 7556d80 + docs-commit ovog kraja. Izvještaj: `.superpowers/sdd/2026-10-14-popravak-temelja/kraj-19-10-11.md`.
+
+---
+
 ## 2026-10-19 (10) — Sesija 10 (18.–19.10.): banka 730 ljudi, L1-13 dijelovi 2 i 3 spojeni, dio 4 izgrađen i čeka Leonov OK
 
 - **Banka ljudi spojena dvaput:** K4+K5 (19160c9, 530 ljudi, uloga `lijecnik` ×15) i K6 (ead0daf, 730 ljudi: radnici 310, gosti 310, vanjski 110;

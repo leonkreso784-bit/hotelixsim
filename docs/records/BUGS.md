@@ -5,6 +5,18 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-19 — sesija 11
+
+**B24. CI nakon spajanja L1-13-4 crven na `sqlx` i testovima, a kod je ispravan** (`nakon-l113-4`: `sqlx-migrate`, `sqlx-prepare`, `test`).
+*Uzrok:* baza se ugasila uz prekid i ponovno pokretanje sesije (Claude Code), usred rada; greške su `os error 10061` (veza odbijena) i `PoolTimedOut`.
+*Pouka:* takav crveni izlaz prvo provjeri s `bash scripts/baza.sh status` (pa `start`) i ponovi korak; baza se može ugasiti i usred sesije, ne samo
+nakon restarta računala (B10 niže). *Stanje:* `sqlx-migrate-2`, `sqlx-prepare-2`, `test-2` EXIT 0.
+
+**B25. Paket za pregled nije mogao izuzeti Leonovu lokalnu datoteku** (`review-package` iz vještine superpowers, L1-13b).
+*Uzrok:* skripta prima samo `PLAN BASE HEAD` i ne prosljeđuje git pathspec `-- ':(exclude)docs/architecture/PLATFORMA/03-prijava.md'`.
+*Pouka:* kad paket mora nešto izuzeti, napravi ga ručno: `git diff BASE HEAD -- . ':(exclude)…' > <ime>-review-package.diff`.
+*Stanje:* paketi L1-13b napravljeni ručno.
+
 ## 2026-10-19 — sesija 10
 
 **B22. Radno stablo dijagnoze nastalo je unutar glavnog repoa** (L1-13-4, `git -C hotelixsim worktree add ../hotelixsim-l113-4d …`).

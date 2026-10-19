@@ -87,3 +87,8 @@ nacionalnosti iz ADR-028.
     situacija. Leon: „neka budu 20 posto … gradimo igraću platformu koja mora biti ista za sve". Cilj kalibracije (L1-13) je
     **~20 %**; 🟨 brana 15–25 %. Vrijedi i za t. 14 (profesorov broj situacija mijenja učinak jedne situacije tako da udio
     ostane ~20 %). Kalibracija se radi na grani `model-v2/sloj1-l111` prije nego uđe u sloj1.
+
+**Dopuna 19.10. (t. 10, L1-13b dio 1, 7556d80; izvor [ADR-062](ADR-062-leonove-odluke-19-10-sesija-11.md) t. 10–11).** Izvedba odstupa od
+rečenice „web šalje izvorni broj": miješanje živi u `game` + `app`, API vraća odgovore izmiješanim redom, a klik, `chosen` i dnevnik nose
+**prikazni** položaj; izvorni broj ostaje u događajima, obračunu, balansu i ulazu AI suca, studentu se ne vidi. Pravilo
+`answer_order(sjeme, slot, šifra, n)` (oznaka `game:answer-order`) mijenja se samo uz dizanje verzije (zlatni test). v1 ostaje nepromiješan. 🟨

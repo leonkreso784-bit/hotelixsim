@@ -41,6 +41,13 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
   `economy.significance_bp`, a u repou su sve razine 1,0, pa su brojke, balans i pečat isti (`CORE_VERSION` 2.5.0). API: `SituationBody.significance`.
 - L1-13 dio 3 (c1ef169, na GitHubu): ključ `guest_extra_slots` (u repou isključen) — kad je hotel puniji, mjesta kruga iznad „niske" pune samo
   situacije s gostima (27 od 55). Student to još ne osjeti; uključuje se u dijelu 4. Balans ima novi redak J-3 po popunjenosti kruga.
+- L1-13 dio 4, kalibracija (e4ec659, na GitHubu, `CORE_VERSION` 2.6.0): situacije nose oko **petine** napretka sezone (tjedno prosjek 20,7 %,
+  mjesečno 21,6 %), a klik na ponuđeni odgovor 63–73 % vlastitog. Kvar prostora mjesečno skida 1 bod stanja, a hitni popravak uz ocjenu 3–5
+  vraća 2 (tjedno manje, kao ostali bodovi situacije). Stare probne v2 igre daju 409 ([ADR-061](DECISIONS/ADR-061-leonove-odluke-18-19-10-i-pretpostavke-sesije-10.md)).
+- L1-13b (13db069, 4be1db4, bdbdebe, 7556d80, na GitHubu; [ADR-062](DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md)): **ponuđeni odgovori su
+  izmiješani** po hotelu (isti hotel uvijek vidi isti red, kolege drugačiji); **jedan gumb „Spremi plan"** na Planu i na stranici odjela sprema
+  plan i sve odjele odjednom; stranica Smještaja ima **opis** koji kvarovi ovise o stanju prostora i od kojeg praga; **pojačano održavanje** diže
+  stanje 5 bodova mjesečno iznad trošenja u šest operativnih odjela, uz istu cijenu.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.

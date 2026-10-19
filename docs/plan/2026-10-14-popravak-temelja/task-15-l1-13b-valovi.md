@@ -71,3 +71,9 @@ sukob pri spajanju). Ubrzanje prema radu redom oko 1,5× (granica od dva Rust pr
 
 **Nalaz uz dio 4:** uz istu cijenu pojačano dobiva oko +1 napretka — u hotelu B tjedno bi se „odgođeno bolje od pojačanog" vjerojatno
 okrenulo, u A ne (razlika 3,2). Stavka u [BACKLOG](../../records/BACKLOG.md) ostaje dok se ne izmjeri.
+
+## Stanje 19.10. (kraj sesije 11): svi dijelovi spojeni
+Spojeno redom 2 → 3 → 4 → 1, svaki `--no-ff` i pregledan (Approved): **dio 2** jedan gumb 13db069, **dio 3** opis Smještaja 4be1db4, **dio 4**
+održavanje +5 bdbdebe (tablica: A štedi, B i C ulažu; šest odjela), **dio 1** miješanje 7556d80. Cijeli CI `nakon-l113b/` zelen, balans bajt-isti
+s ispisom dijela 4; pushano, GitHub CI zelen. Pretpostavke 🟨 1–3 i nove su u [ADR-062](../../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md)
+(t. 10–17); odgođeni minori u [BACKLOG](../../records/BACKLOG.md). Sljedeće: L1-14.
