@@ -79,9 +79,9 @@ fn maintenance_numbers_match_the_table() {
     }
     assert_eq!(level("parking", Maintenance::Intensive), (150_000, 300));
     assert_eq!(level("retail_lease", Maintenance::Intensive), (80_000, 200));
-    // Bar uz bazen (O7) troši 4,5 boda mjesečno; pojačano ostaje kao prije (O11).
+    // Bar uz bazen (O7) troši 4,5 boda mjesečno; pojačano: ista cijena, 9,5 boda (neto +5, L1-13b-4, Leon 19.10.).
     assert_eq!(c.dept(&code("pool_bar")).unwrap().wear_pts_per_month, 450);
-    assert_eq!(level("pool_bar", Maintenance::Intensive), (300_000, 600));
+    assert_eq!(level("pool_bar", Maintenance::Intensive), (300_000, 950));
 }
 
 /// Najmovi (korak b′, Leonova anketa 13.10. (3)): parking je 5 % osjećaja sobe, lokal ima popust na najamninu ispod
