@@ -284,9 +284,8 @@ impl Memory {
 }
 
 impl SystemStatus for Memory {
-    fn events_count(&self) -> BoxFut<'_, Result<i64, StatusError>> {
-        let n: usize = self.lock().events.values().map(Vec::len).sum();
-        ready(Ok(i64::try_from(n).unwrap_or(i64::MAX)))
+    fn ping(&self) -> BoxFut<'_, Result<(), StatusError>> {
+        ready(Ok(()))
     }
 }
 

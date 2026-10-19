@@ -5,12 +5,16 @@ mod demo;
 mod departments;
 mod explanation;
 mod games;
+mod gate;
 mod health;
 mod hotels;
 mod kpi;
 pub mod problem;
 pub mod schema;
 mod schema_situations;
+mod web;
+
+use std::path::PathBuf;
 
 use axum::Router;
 use axum::http::StatusCode;
@@ -63,18 +67,51 @@ async fn unknown_route() -> Problem {
     Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownRoute)
 }
 
-/// Lokalni način: kolačić bez `Secure` (http).
+/// Postavke usmjerivača. Zadano = lokalni način: bez `Secure`, bez vrata, bez weba.
+#[derive(Clone, Debug, Default)]
+pub struct RouterConfig {
+    /// Kolačić gosta dobiva atribut `Secure` (produkcija, HTTPS).
+    pub secure_cookie: bool,
+    /// Lozinka stranice (Basic Auth, samo lozinka); `None` ili prazno = bez vrata.
+    pub site_password: Option<String>,
+    /// Mapa izgrađenog weba (`apps/web/dist`); `None` = poslužuje se samo API.
+    pub web_dir: Option<PathBuf>,
+}
+
+/// Lokalni način: kolačić bez `Secure` (http), bez vrata, bez weba.
 pub fn router(state: AppState) -> Router {
-    router_with_secure_cookie(state, false)
+    router_with_config(state, RouterConfig::default())
 }
 
 /// `secure = true` u produkciji (HTTPS): kolačić gosta dobiva atribut `Secure`.
 pub fn router_with_secure_cookie(state: AppState, secure: bool) -> Router {
+    router_with_config(
+        state,
+        RouterConfig {
+            secure_cookie: secure,
+            ..RouterConfig::default()
+        },
+    )
+}
+
+pub fn router_with_config(state: AppState, cfg: RouterConfig) -> Router {
     let (router, _) = parts().split_for_parts();
-    router
-        .fallback(unknown_route)
-        .layer(axum::Extension(auth::CookieMode { secure }))
-        .with_state(state)
+    let router = match &cfg.web_dir {
+        Some(dir) => router.fallback(web::fallback(dir)),
+        None => router.fallback(unknown_route),
+    };
+    let router = router
+        .layer(axum::Extension(auth::CookieMode {
+            secure: cfg.secure_cookie,
+        }))
+        .with_state(state);
+    match gate::Gate::new(cfg.site_password.as_deref()) {
+        Some(g) => router.layer(axum::middleware::from_fn_with_state(
+            g,
+            gate::require_password,
+        )),
+        None => router,
+    }
 }
 
 pub fn openapi() -> utoipa::openapi::OpenApi {

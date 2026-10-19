@@ -40,12 +40,16 @@ impl Store {
 }
 
 impl SystemStatus for Store {
-    fn events_count(&self) -> BoxFut<'_, Result<i64, StatusError>> {
+    fn ping(&self) -> BoxFut<'_, Result<(), StatusError>> {
         Box::pin(async move {
-            self.count_events().await.map_err(|e| {
-                tracing::warn!(error = %e, "provjera zdravlja: upit na bazu nije uspio");
-                StatusError(e.to_string())
-            })
+            sqlx::query("SELECT 1")
+                .execute(&self.pool)
+                .await
+                .map(|_| ())
+                .map_err(|e| {
+                    tracing::warn!(error = %e, "provjera zdravlja: upit na bazu nije uspio");
+                    StatusError(e.to_string())
+                })
         })
     }
 }
