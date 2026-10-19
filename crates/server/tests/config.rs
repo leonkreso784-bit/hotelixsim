@@ -20,7 +20,7 @@ fn missing(r: Result<Settings, ConfigError>) -> Vec<&'static str> {
     }
 }
 
-const FULL_PRODUCTION: [(&str, &str); 5] = [
+const FULL_PRODUCTION: [(&str, &str); 7] = [
     ("HOTELIXSIM_PRODUKCIJA", "1"),
     (
         "DATABASE_URL",
@@ -29,6 +29,8 @@ const FULL_PRODUCTION: [(&str, &str); 5] = [
     ("HOTELIXSIM_LOZINKA", "tajna123"),
     ("HOTELIXSIM_WEB", "/app/web"),
     ("HOTELIXSIM_ADDR", "0.0.0.0:8080"),
+    ("HOTELIXSIM_AI_STROP_DAN_USD", "5"),
+    ("HOTELIXSIM_AI_STROP_MJESEC_USD", "30"),
 ];
 
 #[test]
@@ -85,7 +87,13 @@ fn full_production_is_accepted() {
 
 #[test]
 fn production_refuses_start_for_each_missing_required_variable() {
-    for gone in ["HOTELIXSIM_LOZINKA", "HOTELIXSIM_WEB", "DATABASE_URL"] {
+    for gone in [
+        "HOTELIXSIM_LOZINKA",
+        "HOTELIXSIM_WEB",
+        "DATABASE_URL",
+        "HOTELIXSIM_AI_STROP_DAN_USD",
+        "HOTELIXSIM_AI_STROP_MJESEC_USD",
+    ] {
         let pairs: Vec<(&str, &str)> = FULL_PRODUCTION
             .iter()
             .copied()
@@ -105,7 +113,13 @@ fn production_treats_blank_required_as_missing_and_reports_all_at_once() {
     v.sort_unstable();
     assert_eq!(
         v,
-        vec!["DATABASE_URL", "HOTELIXSIM_LOZINKA", "HOTELIXSIM_WEB"]
+        vec![
+            "DATABASE_URL",
+            "HOTELIXSIM_AI_STROP_DAN_USD",
+            "HOTELIXSIM_AI_STROP_MJESEC_USD",
+            "HOTELIXSIM_LOZINKA",
+            "HOTELIXSIM_WEB"
+        ]
     );
 }
 
@@ -113,7 +127,13 @@ fn production_treats_blank_required_as_missing_and_reports_all_at_once() {
 fn error_text_names_the_variable() {
     let e = Settings::from_lookup(lookup(&[("HOTELIXSIM_PRODUKCIJA", "1")])).unwrap_err();
     let text = e.to_string();
-    for var in ["DATABASE_URL", "HOTELIXSIM_LOZINKA", "HOTELIXSIM_WEB"] {
+    for var in [
+        "DATABASE_URL",
+        "HOTELIXSIM_LOZINKA",
+        "HOTELIXSIM_WEB",
+        "HOTELIXSIM_AI_STROP_DAN_USD",
+        "HOTELIXSIM_AI_STROP_MJESEC_USD",
+    ] {
         assert!(text.contains(var), "{text}");
     }
 }

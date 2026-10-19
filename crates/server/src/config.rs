@@ -11,6 +11,14 @@ const WEB: &str = "HOTELIXSIM_WEB";
 const DATABASE_URL: &str = "DATABASE_URL";
 const ADDR: &str = "HOTELIXSIM_ADDR";
 const CONTENT: &str = "HOTELIXSIM_CONTENT";
+const MODEL_VARS: [&str; 3] = [
+    "HOTELIXSIM_AI_MODEL_PRESUDA",
+    "HOTELIXSIM_AI_MODEL_LIK",
+    "HOTELIXSIM_AI_MODEL_MENTOR",
+];
+const CAP_DAY: &str = "HOTELIXSIM_AI_STROP_DAN_USD";
+const CAP_MONTH: &str = "HOTELIXSIM_AI_STROP_MJESEC_USD";
+const API_KEY: &str = "ANTHROPIC_API_KEY";
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
 #[derive(Clone)]
@@ -21,6 +29,10 @@ pub struct Settings {
     pub database_url: Option<String>,
     pub site_password: Option<String>,
     pub web_dir: Option<PathBuf>,
+    /// Dnevni i mjesečni strop troška AI-ja u dolarima (UTC); u produkciji su oba obavezna.
+    pub ai_cap_day_usd: Option<f64>,
+    pub ai_cap_month_usd: Option<f64>,
+    pub anthropic_api_key: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -31,6 +43,11 @@ pub enum ConfigError {
     Invalid { var: &'static str, value: String },
     /// Adresa nije lokalna, a lozinke stranice nema: stranica i AI bili bi otvoreni svima.
     OpenWithoutPassword { addr: String },
+    /// Adresa nije lokalna i AI ključ je postavljen, a nedostaje strop troška: AI bi trošio bez granice.
+    OpenWithoutAiCap {
+        addr: String,
+        missing: Vec<&'static str>,
+    },
 }
 
 impl fmt::Display for ConfigError {
@@ -52,6 +69,11 @@ impl fmt::Display for ConfigError {
                 f,
                 "adresa {addr} nije lokalna, a {PASSWORD} nije postavljena: stranica bi bila otvorena svima                  (postavi lozinku ili slušaj na 127.0.0.1)"
             ),
+            ConfigError::OpenWithoutAiCap { addr, missing } => write!(
+                f,
+                "adresa {addr} nije lokalna, a AI ključ je postavljen: strop troška je obavezan, nedostaje {}",
+                missing.join(", ")
+            ),
         }
     }
 }
@@ -68,6 +90,12 @@ impl fmt::Debug for Settings {
             .field("database_url", &self.database_url.as_ref().map(|_| "***"))
             .field("site_password", &self.site_password.as_ref().map(|_| "***"))
             .field("web_dir", &self.web_dir)
+            .field("ai_cap_day_usd", &self.ai_cap_day_usd)
+            .field("ai_cap_month_usd", &self.ai_cap_month_usd)
+            .field(
+                "anthropic_api_key",
+                &self.anthropic_api_key.as_ref().map(|_| "***"),
+            )
             .finish()
     }
 }
@@ -101,6 +129,8 @@ impl Settings {
                 value: "razmak ili novi redak na početku ili kraju lozinke".to_owned(),
             });
         }
+        let ai_cap_day_usd = parse_cap(CAP_DAY, get(CAP_DAY))?;
+        let ai_cap_month_usd = parse_cap(CAP_MONTH, get(CAP_MONTH))?;
         let settings = Settings {
             production,
             addr: get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned()),
@@ -108,6 +138,9 @@ impl Settings {
             database_url: get(DATABASE_URL),
             site_password,
             web_dir: get(WEB).map(PathBuf::from),
+            ai_cap_day_usd,
+            ai_cap_month_usd,
+            anthropic_api_key: get(API_KEY),
         };
         if production {
             let mut missing = Vec::new();
@@ -120,6 +153,12 @@ impl Settings {
             if settings.database_url.is_none() {
                 missing.push(DATABASE_URL);
             }
+            if settings.ai_cap_day_usd.is_none() {
+                missing.push(CAP_DAY);
+            }
+            if settings.ai_cap_month_usd.is_none() {
+                missing.push(CAP_MONTH);
+            }
             if !missing.is_empty() {
                 return Err(ConfigError::Missing(missing));
             }
@@ -130,6 +169,39 @@ impl Settings {
                 addr: settings.addr,
             });
         }
+        let public = !is_local_addr(&settings.addr);
+        // isto kao lozinka: strop ne ovisi o zastavici. Javna adresa s ključem bez oba stropa troši AI bez granice.
+        if public && settings.anthropic_api_key.is_some() {
+            let mut missing = Vec::new();
+            if settings.ai_cap_day_usd.is_none() {
+                missing.push(CAP_DAY);
+            }
+            if settings.ai_cap_month_usd.is_none() {
+                missing.push(CAP_MONTH);
+            }
+            if !missing.is_empty() {
+                return Err(ConfigError::OpenWithoutAiCap {
+                    addr: settings.addr,
+                    missing,
+                });
+            }
+        }
+        // model izvan tablice cijena bio bi procijenjen po najskupljem cjeniku: na javnoj adresi i u produkciji to odbijamo
+        if production || public {
+            for var in MODEL_VARS {
+                if let Some(m) = get(var)
+                    && !app::spend::is_priced(m.trim())
+                {
+                    return Err(ConfigError::Invalid {
+                        var,
+                        value: format!(
+                            "model {:?} nije u tablici cijena (app::spend::PRICES): dodaj cijenu prije uporabe",
+                            m.trim()
+                        ),
+                    });
+                }
+            }
+        }
         Ok(settings)
     }
 
@@ -139,6 +211,18 @@ impl Settings {
             site_password: self.site_password.clone(),
             web_dir: self.web_dir.clone(),
         }
+    }
+}
+
+/// Strop u dolarima: decimalni broj s točkom, konačan i >= 0; inače `Invalid`.
+fn parse_cap(var: &'static str, raw: Option<String>) -> Result<Option<f64>, ConfigError> {
+    let Some(raw) = raw else { return Ok(None) };
+    match raw.trim().parse::<f64>() {
+        Ok(v) if v.is_finite() && v >= 0.0 => Ok(Some(v)),
+        _ => Err(ConfigError::Invalid {
+            var,
+            value: format!("{raw:?} nije iznos u dolarima (npr. 5 ili 30.5)"),
+        }),
     }
 }
 

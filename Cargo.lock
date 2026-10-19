@@ -77,6 +77,8 @@ dependencies = [
  "sim-hotel-v2",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

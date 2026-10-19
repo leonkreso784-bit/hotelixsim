@@ -6,8 +6,10 @@ pub mod prompts;
 pub mod request;
 pub mod response;
 
+use app::spend::UsageSink;
 use app::{AiError, AiOut, AiPort, BoxFut};
 use game::{AiMeta, AssessInput, CharacterInput, DebriefInput, SeasonDebriefInput, VerdictDraft};
+use std::sync::Arc;
 use std::time::Duration;
 
 pub use app::DisabledAi as Disabled;
@@ -51,11 +53,51 @@ impl Models {
     }
 }
 
+fn http_client(timeout: Duration) -> reqwest::Client {
+    reqwest::Client::builder()
+        .timeout(timeout)
+        .build()
+        .expect("reqwest klijent se mora izgraditi")
+}
+
+/// Zahtjev u letu: ako završi bez odgovora (istek vremena, prekid pri gašenju), Anthropic je možda ipak generirao
+/// i naplatio odgovor. Tada brojaču ide PROCJENA najgoreg slučaja: `max_tokens` × cijena izlaza modela, ulaz 0 (🟨).
+/// Odgovor s HTTP greškom i greška spajanja (zahtjev nije stigao) se ne broje: čuvar se tada razoružava.
+struct InFlight {
+    sink: Option<Arc<dyn UsageSink>>,
+    model: String,
+    max_tokens: u32,
+}
+
+impl InFlight {
+    fn disarm(&mut self) {
+        self.sink = None;
+    }
+}
+
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        let Some(sink) = self.sink.take() else { return };
+        let usage = app::spend::ApiUsage {
+            model: std::mem::take(&mut self.model),
+            tokens: app::spend::TokenUsage {
+                output: self.max_tokens,
+                ..Default::default()
+            },
+        };
+        if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            handle.spawn(async move { sink.record(usage).await });
+        }
+    }
+}
+
 pub struct Anthropic {
     http: reqwest::Client,
     key: String,
     models: Models,
     base_url: String,
+    /// Prima potrošnju svakog odgovora 2xx prije tumačenja (strop troška, pilot dio 3).
+    usage_sink: Option<Arc<dyn UsageSink>>,
 }
 
 impl std::fmt::Debug for Anthropic {
@@ -69,16 +111,34 @@ impl std::fmt::Debug for Anthropic {
 
 impl Anthropic {
     pub fn new(key: String, models: Models) -> Anthropic {
-        let http = reqwest::Client::builder()
-            .timeout(TIMEOUT)
-            .build()
-            .expect("reqwest klijent se mora izgraditi");
         Anthropic {
-            http,
+            http: http_client(TIMEOUT),
             key,
             models,
             base_url: "https://api.anthropic.com".into(),
+            usage_sink: None,
         }
+    }
+
+    /// Druga adresa umjesto api.anthropic.com (probni poslužitelj u testovima).
+    #[must_use]
+    pub fn with_base_url(mut self, url: String) -> Anthropic {
+        self.base_url = url;
+        self
+    }
+
+    /// Kraće ili dulje vremensko ograničenje zahtjeva (testovi).
+    #[must_use]
+    pub fn with_timeout(mut self, timeout: Duration) -> Anthropic {
+        self.http = http_client(timeout);
+        self
+    }
+
+    /// Brojač troška: dobiva potrošnju svakog odgovora 2xx, i odrezanog i neparsabilnog.
+    #[must_use]
+    pub fn with_usage_sink(mut self, sink: Arc<dyn UsageSink>) -> Anthropic {
+        self.usage_sink = Some(sink);
+        self
     }
 
     async fn post(&self, body: serde_json::Value) -> Result<Reply, AiError> {
@@ -91,16 +151,41 @@ impl Anthropic {
         if let Some(beta) = request::beta_header(&body) {
             req = req.header("anthropic-beta", beta);
         }
-        let resp = req
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| AiError::Unavailable(format!("mreža: {}", e.without_url())))?;
+        let mut in_flight = InFlight {
+            sink: self.usage_sink.clone(),
+            model: body["model"].as_str().unwrap_or_default().to_owned(),
+            max_tokens: body["max_tokens"]
+                .as_u64()
+                .and_then(|v| u32::try_from(v).ok())
+                .unwrap_or(0),
+        };
+        let resp = match req.json(&body).send().await {
+            Ok(r) => r,
+            Err(e) => {
+                if !e.is_timeout() {
+                    in_flight.disarm();
+                }
+                return Err(AiError::Unavailable(format!("mreža: {}", e.without_url())));
+            }
+        };
         let status = resp.status().as_u16();
+        if !(200..300).contains(&status) {
+            in_flight.disarm();
+        }
         let text = resp
             .text()
             .await
             .map_err(|e| AiError::Unavailable(format!("čitanje odgovora: {}", e.without_url())))?;
+        in_flight.disarm();
+        if (200..300).contains(&status)
+            && let Some(sink) = &self.usage_sink
+            && let Some(mut usage) = response::parse_usage(&text)
+        {
+            if usage.model.is_empty() {
+                usage.model = body["model"].as_str().unwrap_or_default().to_owned();
+            }
+            sink.record(usage).await;
+        }
         response::parse_reply(status, &text)
     }
 }

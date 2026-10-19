@@ -7,6 +7,7 @@ pub mod jobs;
 pub mod look;
 pub mod memory;
 pub mod ports;
+pub mod spend;
 pub mod talk;
 pub mod views;
 

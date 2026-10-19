@@ -1,6 +1,7 @@
 //! Čitanje odgovora Messages API-ja; sve što nije uredan tekst je `AiError`.
 
 use app::AiError;
+use app::spend::{ApiUsage, TokenUsage};
 use game::VerdictDraft;
 use serde::Deserialize;
 
@@ -10,6 +11,8 @@ pub struct Reply {
     pub model: String,
     pub input_tokens: u32,
     pub output_tokens: u32,
+    pub cache_creation_input_tokens: u32,
+    pub cache_read_input_tokens: u32,
 }
 
 #[derive(Deserialize)]
@@ -30,6 +33,33 @@ struct Usage {
     input_tokens: u32,
     #[serde(default)]
     output_tokens: u32,
+    #[serde(default)]
+    cache_creation_input_tokens: u32,
+    #[serde(default)]
+    cache_read_input_tokens: u32,
+}
+
+#[derive(Deserialize)]
+struct UsageOnly {
+    #[serde(default)]
+    model: String,
+    usage: Option<Usage>,
+}
+
+/// Potrošnja iz tijela odgovora, neovisno o `stop_reason` (odrezan, odbijen i neparsabilan odgovor također koštaju).
+/// `None` za tijelo koje nije JSON ili nema `usage`. Model je `""` ako ga tijelo nema.
+pub fn parse_usage(body: &str) -> Option<ApiUsage> {
+    let b: UsageOnly = serde_json::from_str(body).ok()?;
+    let u = b.usage?;
+    Some(ApiUsage {
+        model: b.model,
+        tokens: TokenUsage {
+            input: u.input_tokens,
+            output: u.output_tokens,
+            cache_write: u.cache_creation_input_tokens,
+            cache_read: u.cache_read_input_tokens,
+        },
+    })
 }
 
 #[derive(Deserialize)]
@@ -76,6 +106,8 @@ pub fn parse_reply(status: u16, body: &str) -> Result<Reply, AiError> {
         model: b.model,
         input_tokens: b.usage.input_tokens,
         output_tokens: b.usage.output_tokens,
+        cache_creation_input_tokens: b.usage.cache_creation_input_tokens,
+        cache_read_input_tokens: b.usage.cache_read_input_tokens,
     })
 }
 
