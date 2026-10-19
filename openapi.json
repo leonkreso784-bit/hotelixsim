@@ -49,6 +49,16 @@
               }
             }
           },
+          "409": {
+            "description": "Gost je dosegnuo najveći broj igara",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Postavke nisu dopuštene ili tijelo nije ispravno",
             "content": {
@@ -3887,6 +3897,7 @@
           "situation_mandatory",
           "not_free_text",
           "chat_limit",
+          "game_limit",
           "awaiting_reply",
           "bad_text",
           "price_not_whole_euro",

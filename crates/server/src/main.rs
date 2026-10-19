@@ -98,6 +98,7 @@ fn deps(
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
         snapshot_v2: Arc::new(snapshot_v2),
+        max_games_per_guest: settings.games_per_guest,
     }
 }
 
@@ -212,6 +213,7 @@ async fn serve() -> anyhow::Result<()> {
         production = settings.production,
         lozinka = settings.site_password.is_some(),
         web = settings.web_dir.is_some(),
+        igara_po_gostu = ?settings.games_per_guest,
         "HotelixSim API sluša na http://{addr}"
     );
     shutdown::serve_until(listener, app, async move {

@@ -20,6 +20,7 @@ fn deps(pool: PgPool) -> app::Deps {
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(Snapshot::read(&repo_dir()).unwrap()),
         snapshot_v2: Arc::new(Snapshot::read_v2(&repo_dir()).unwrap()),
+        max_games_per_guest: None,
     }
 }
 

@@ -153,6 +153,7 @@ fn openapi_documents_contract() {
         "price_not_whole_euro",
         "not_free_text",
         "chat_limit",
+        "game_limit",
         "awaiting_reply",
         "bad_text",
         "unknown_department",
@@ -165,7 +166,7 @@ fn openapi_documents_contract() {
     ] {
         assert!(codes.contains(&json!(c)), "{c}");
     }
-    assert_eq!(codes.len(), 37);
+    assert_eq!(codes.len(), 38);
     let schemas = &doc["components"]["schemas"];
     assert!(schemas["FeedItemBody"]["oneOf"].is_array());
     assert_eq!(

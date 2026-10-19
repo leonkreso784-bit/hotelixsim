@@ -19,6 +19,8 @@ const MODEL_VARS: [&str; 3] = [
 const CAP_DAY: &str = "HOTELIXSIM_AI_STROP_DAN_USD";
 const CAP_MONTH: &str = "HOTELIXSIM_AI_STROP_MJESEC_USD";
 const API_KEY: &str = "ANTHROPIC_API_KEY";
+const GAMES_PER_GUEST: &str = "HOTELIXSIM_IGARA_PO_GOSTU";
+const PILOT_GAMES_PER_GUEST: u32 = 3;
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
 #[derive(Clone)]
@@ -33,6 +35,8 @@ pub struct Settings {
     pub ai_cap_day_usd: Option<f64>,
     pub ai_cap_month_usd: Option<f64>,
     pub anthropic_api_key: Option<String>,
+    /// Najveći broj igara po gostu. Zadano 3 u produkciji I na nelokalnoj adresi (zaboravljena zastavica ne gasi zaštitu), lokalno bez granice.
+    pub games_per_guest: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -96,6 +100,7 @@ impl fmt::Debug for Settings {
                 "anthropic_api_key",
                 &self.anthropic_api_key.as_ref().map(|_| "***"),
             )
+            .field("games_per_guest", &self.games_per_guest)
             .finish()
     }
 }
@@ -131,9 +136,22 @@ impl Settings {
         }
         let ai_cap_day_usd = parse_cap(CAP_DAY, get(CAP_DAY))?;
         let ai_cap_month_usd = parse_cap(CAP_MONTH, get(CAP_MONTH))?;
+        let addr = get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned());
+        let games_per_guest = match get(GAMES_PER_GUEST) {
+            Some(v) => match v.trim().parse::<u32>() {
+                Ok(n) if n >= 1 => Some(n),
+                _ => {
+                    return Err(ConfigError::Invalid {
+                        var: GAMES_PER_GUEST,
+                        value: v,
+                    });
+                }
+            },
+            None => (production || !is_local_addr(&addr)).then_some(PILOT_GAMES_PER_GUEST),
+        };
         let settings = Settings {
             production,
-            addr: get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned()),
+            addr,
             content_dir: get(CONTENT).map(PathBuf::from),
             database_url: get(DATABASE_URL),
             site_password,
@@ -141,6 +159,7 @@ impl Settings {
             ai_cap_day_usd,
             ai_cap_month_usd,
             anthropic_api_key: get(API_KEY),
+            games_per_guest,
         };
         if production {
             let mut missing = Vec::new();

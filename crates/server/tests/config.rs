@@ -182,3 +182,46 @@ fn settings_debug_never_prints_the_password() {
     let text = format!("{s:?}");
     assert!(!text.contains("tajna123"), "lozinka u Debug ispisu: {text}");
 }
+
+// --- Pilot, dio 4: najviše igara po gostu (ADR-062 t. 9) ---
+// 🟨 odluka čuvara: u produkciji zadano 3; lokalno bez granice (None) dok varijabla nije postavljena, da razvoj i
+// automatski testovi ne udaraju o granicu. Vrijednost mora biti cijeli broj ≥ 1; sve ostalo (i 0) je Invalid.
+
+#[test]
+fn games_per_guest_defaults_to_three_in_production_and_unlimited_locally() {
+    let prod = Settings::from_lookup(lookup(&FULL_PRODUCTION)).unwrap();
+    assert_eq!(prod.games_per_guest, Some(3));
+    let local = Settings::from_lookup(lookup(&[])).unwrap();
+    assert_eq!(local.games_per_guest, None);
+}
+
+#[test]
+fn games_per_guest_is_read_from_the_variable_in_both_modes() {
+    let mut pairs = FULL_PRODUCTION.to_vec();
+    pairs.push(("HOTELIXSIM_IGARA_PO_GOSTU", "5"));
+    assert_eq!(
+        Settings::from_lookup(lookup(&pairs))
+            .unwrap()
+            .games_per_guest,
+        Some(5)
+    );
+    let local = Settings::from_lookup(lookup(&[("HOTELIXSIM_IGARA_PO_GOSTU", "2")])).unwrap();
+    assert_eq!(local.games_per_guest, Some(2));
+    let blank = Settings::from_lookup(lookup(&[("HOTELIXSIM_IGARA_PO_GOSTU", "  ")])).unwrap();
+    assert_eq!(blank.games_per_guest, None, "prazno = nepostavljeno");
+}
+
+#[test]
+fn games_per_guest_rejects_nonsense_naming_the_variable() {
+    for bad in ["0", "-1", "tri", "3.5", "3 igre"] {
+        match Settings::from_lookup(lookup(&[("HOTELIXSIM_IGARA_PO_GOSTU", bad)])) {
+            Err(ConfigError::Invalid { var, value }) => {
+                assert_eq!(var, "HOTELIXSIM_IGARA_PO_GOSTU", "{bad}");
+                assert_eq!(value, bad);
+            }
+            other => panic!("{bad}: očekivano Invalid, dobiveno {other:?}"),
+        }
+    }
+    let e = Settings::from_lookup(lookup(&[("HOTELIXSIM_IGARA_PO_GOSTU", "tri")])).unwrap_err();
+    assert!(e.to_string().contains("HOTELIXSIM_IGARA_PO_GOSTU"), "{e}");
+}

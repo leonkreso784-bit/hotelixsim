@@ -124,6 +124,8 @@ pub trait Guests: Send + Sync {
         token_hash: String,
     ) -> BoxFut<'_, Result<Option<GuestId>, StoreError>>;
     fn game_of_hotel(&self, hotel: HotelId) -> BoxFut<'_, Result<Option<GameId>, StoreError>>;
+    /// Koliko je igara gost stvorio (`games.created_by`).
+    fn count_games_created_by(&self, guest: GuestId) -> BoxFut<'_, Result<u32, StoreError>>;
     /// Hotel gosta u njegovoj zadnjoj igri.
     fn latest_hotel_of(
         &self,

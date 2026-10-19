@@ -1169,7 +1169,7 @@ export interface components {
          * @description Stabilni kodovi grešaka; ekran ih prevodi (ARHITEKTURA §11).
          * @enum {string}
          */
-        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "situation_mandatory" | "not_free_text" | "chat_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "renewal_unavailable" | "renewal_locked" | "renewal_out_of_range" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
+        ProblemCode: "guest_required" | "not_in_game" | "not_your_hotel" | "unknown_game" | "unknown_hotel" | "unknown_month" | "unknown_situation" | "unknown_answer" | "unknown_profile" | "unknown_department" | "round_not_open" | "already_answered" | "situation_mandatory" | "not_free_text" | "chat_limit" | "game_limit" | "awaiting_reply" | "bad_text" | "price_not_whole_euro" | "price_out_of_range" | "marketing_out_of_range" | "seasonal_out_of_range" | "seasonal_step_too_big" | "wage_out_of_range" | "renovation_twice" | "game_outdated" | "invalid_settings" | "department_plan_invalid" | "renewal_unavailable" | "renewal_locked" | "renewal_out_of_range" | "no_resolved_round" | "season_not_over" | "model_v1" | "storage_unavailable" | "internal" | "unknown_route" | "invalid_body";
         /** @enum {string} */
         ProfileCode: "A" | "B" | "C";
         /** @description Ono što vidi svatko u igri: ocjena i pet indeksa, nikad stvarne brojke. */
@@ -1646,6 +1646,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemoBody"];
+                };
+            };
+            /** @description Gost je dosegnuo najveći broj igara */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Postavke nisu dopuštene ili tijelo nije ispravno */

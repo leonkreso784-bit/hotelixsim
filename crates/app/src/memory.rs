@@ -210,6 +210,7 @@ pub fn deps_with_ai(snapshot: content::Snapshot, ai: Arc<dyn AiPort>) -> (Deps, 
         snapshot_v2: Arc::new(
             content::Snapshot::read_v2(&content::repo_dir()).expect("sadržaj v2 u repou"),
         ),
+        max_games_per_guest: None,
     };
     (d, m)
 }
@@ -374,6 +375,16 @@ impl Guests for Memory {
 
     fn game_of_hotel(&self, hotel: HotelId) -> BoxFut<'_, Result<Option<GameId>, StoreError>> {
         ready(Ok(self.lock().hotels.get(&hotel).map(|(g, _)| *g)))
+    }
+
+    fn count_games_created_by(&self, guest: GuestId) -> BoxFut<'_, Result<u32, StoreError>> {
+        let n = self
+            .lock()
+            .games
+            .iter()
+            .filter(|(_, by)| *by == guest)
+            .count();
+        ready(Ok(u32::try_from(n).unwrap_or(u32::MAX)))
     }
 
     fn latest_hotel_of(

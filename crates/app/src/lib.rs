@@ -37,6 +37,8 @@ pub struct Deps {
     pub snapshot: Arc<content::Snapshot>,
     /// Pravila modela v2 (`Snapshot::read_v2`); nova igra iz `NewGameSettings { model: V2, .. }` ide iz njih.
     pub snapshot_v2: Arc<content::Snapshot>,
+    /// Najveći broj igara koje gost smije stvoriti (`None` = bez granice; pilot: 3).
+    pub max_games_per_guest: Option<u32>,
 }
 
 pub type BoxFut<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
