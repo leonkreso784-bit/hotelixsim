@@ -1,0 +1,26 @@
+# Tajne i lokalno stanje
+.env
+.env.*
+!.env.example
+
+# Gradi se u slici
+target/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Ne treba slici
+.git/
+.github/
+.superpowers/
+.playwright-mcp/
+.vscode/
+.claude/
+docs/
+scripts/
+LEONOV-PREGLED-SVA-PITANJA.md
+*.md
+!prompts/*.md
+__pycache__/
+.venv/
