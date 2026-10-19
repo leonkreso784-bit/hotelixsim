@@ -392,7 +392,7 @@ export interface components {
         AnswerBody: {
             /**
              * Format: int32
-             * @description Broj odgovora (indeks u `answers`).
+             * @description Prikazni broj odgovora (indeks u `answers` kako ga je poslao GET; izmiješan po hotelu).
              */
             answer: number;
         };
@@ -711,7 +711,10 @@ export interface components {
             /** Format: int64 */
             seq: number;
         } | {
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Prikazni položaj odgovora (kao u popisu situacija; v1 demo: položaj u sadržaju), nikad izvorni broj v2.
+             */
             answer: number;
             by: components["schemas"]["ActorKind"];
             /** @enum {string} */
@@ -1536,10 +1539,13 @@ export interface components {
         SignificanceBody: "kljucna" | "vazna" | "svakodnevna";
         /** @description Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze. */
         SituationBody: {
-            /** @description Oznake ponuđenih odgovora; indeks u popisu je broj odgovora. */
+            /** @description Oznake ponuđenih odgovora, izmiješane po hotelu (v2; stalan redoslijed, v1 demo ostaje nepromiješan); indeks u popisu je prikazni broj odgovora. */
             answers: string[];
             character: components["schemas"]["CharacterBody"] | null;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Prikazni položaj izabranog odgovora (isti broj kao indeks u `answers`).
+             */
             chosen: number | null;
             /** @description Klik na ponuđeni odgovor daje najviše 4 od 5 (v2, lik i vlastiti odgovor); web to kaže prije klika. */
             click_capped: boolean;

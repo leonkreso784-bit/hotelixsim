@@ -101,6 +101,14 @@ fn debug(e: impl std::fmt::Debug) -> GameError {
 }
 
 impl Model {
+    /// Redoslijed ponuđenih odgovora koji vidi student (L1-13b dio 1): v1 (zamrznuti demo) identitet, v2 izmiješan.
+    pub(crate) fn display_order(self, seed: u64, slot: u8, code: &str, n: usize) -> Vec<u8> {
+        match self {
+            Model::V1 => (0..n).map(|i| u8::try_from(i).unwrap_or(u8::MAX)).collect(),
+            Model::V2 => crate::answer_order::answer_order(seed, slot, code, n),
+        }
+    }
+
     pub fn of(content: &Content, snapshot_model: content::Model) -> Model {
         match (snapshot_model, &content.v2) {
             (content::Model::V2, Some(_)) => Model::V2,

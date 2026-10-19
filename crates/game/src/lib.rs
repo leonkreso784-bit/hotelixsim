@@ -3,6 +3,7 @@
 
 pub mod actor;
 mod ai_input;
+mod answer_order;
 pub mod command;
 pub mod costs;
 mod debrief_v2;
@@ -35,6 +36,7 @@ pub use ai_input::{
     AssessInput, CharacterCard, CharacterInput, DebriefInput, DebriefSituation, DeferredWearFact,
     DepartmentDepartures, OfferedForJudge, RenewalFact, RentCutFact,
 };
+pub use answer_order::answer_order;
 pub use command::MANDATORY_SITUATIONS;
 pub use departments::{
     DepartmentDetail, DepartmentView, DepartmentsView, PlScope, PlView, department_margin_bp,

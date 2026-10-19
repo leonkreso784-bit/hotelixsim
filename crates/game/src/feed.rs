@@ -98,12 +98,14 @@ impl Game {
                 }),
                 GameEvent::AnswerChosen(a) if a.hotel_id == hotel => {
                     let (title, label) = self.answer_texts(hotel, &a.situation, a.answer)?;
+                    // Student vidi prikazni položaj, nikad izvorni broj iz sadržaja (L1-13b dio 1).
+                    let shown = self.shown_position(hotel, &a.situation, a.answer)?;
                     out.push(FeedItem::AnswerChosen {
                         seq,
                         round: a.month,
                         situation: a.situation.clone(),
                         title,
-                        answer: a.answer,
+                        answer: shown,
                         label,
                         by: r.actor.clone(),
                     });
