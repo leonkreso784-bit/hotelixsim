@@ -128,7 +128,7 @@ pet scenarija „što student vidi" je zeleno; Leon odigra mjesečnu v2 igru sa 
 | L1-13 · 2 | [Tri razine značaja](2026-10-14-popravak-temelja/task-14-2-znacaj.md) (B2): ključna / važna / svakodnevna iz `weight`, faktor bodova, oznaka na ekranu | L1-13 · 1b | — |
 | L1-13 · 3 | [Situacije s gostima i popunjenost](2026-10-14-popravak-temelja/task-14-3-gosti.md) (A7): mjesta iznad niske razine samo gostima | L1-13 · 2 | — |
 | L1-13 · 4 | [Kalibracija i 2.6.0](2026-10-14-popravak-temelja/task-14-4-kalibracija.md) (A2, A3, A4, A8): pojas 15–25 %, čestoća kvarova, dug 0, pečat | L1-13 · 3 | tablica A2 |
-| L1-13b | Ostatak ADR-042: održavanje +5, jedno spremanje, izmiješani odgovori, izgled lika po rodu (rod u `RoleFill`), opis Smještaja | L1-13 | — (odlučeno) |
+| L1-13b | [Ostatak ADR-042 u valovima](2026-10-14-popravak-temelja/task-15-l1-13b-valovi.md) (Leon 19.10.: cijela prije pilota): izmiješani odgovori, jedan gumb „Spremi plan", opis Smještaja, održavanje +5 (izgled lika je već IZGLED) · 🟨 [PROC] 11–17 h | L1-13 | gdje gumb, što je opis Smještaja, anketa održavanja |
 | L1-14 | Igriva verzija: Leon igra tjednu i mjesečnu sezonu | L1-13b | popis izmjena |
 | L1-15 | `sloj1` → `main` | L1-14 | **izričit OK za push** |
 
