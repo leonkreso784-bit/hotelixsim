@@ -223,3 +223,23 @@ async fn guests_and_hotels_lookup(pool: PgPool) {
         "zadnja igra po games.seq"
     );
 }
+
+#[sqlx::test]
+async fn counts_games_created_by_each_guest(pool: PgPool) {
+    let s = Store::from_pool(pool);
+    let (_, guest, _) = game(&s, 1).await;
+    let (_, other, _) = game(&s, 10).await;
+    assert_eq!(s.count_games_created_by(guest).await.unwrap(), 1);
+    for n in [5_u128, 7] {
+        let (g, h) = (GameId(Uuid::from_u128(n)), HotelId(Uuid::from_u128(n + 1)));
+        s.create_game(new_game(g, guest, h)).await.unwrap();
+    }
+    assert_eq!(s.count_games_created_by(guest).await.unwrap(), 3);
+    assert_eq!(
+        s.count_games_created_by(other).await.unwrap(),
+        1,
+        "brojač je po gostu"
+    );
+    let nobody = GuestId(Uuid::from_u128(999_999));
+    assert_eq!(s.count_games_created_by(nobody).await.unwrap(), 0);
+}

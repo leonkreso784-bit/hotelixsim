@@ -142,6 +142,22 @@ describe("početni ekran: izbor tjedne ili mjesečne igre", () => {
   });
 });
 
+describe("početni ekran: najviše 3 igre po gostu (ADR-062 t. 9)", () => {
+  it("kad API vrati game_limit, ekran kaže da je broj igara dosegnut i da se postojeća igra može nastaviti", async () => {
+    const api = startApi().on("POST", "/v1/demo", () => problem(409, "game_limit"));
+    renderApp(api, "/");
+    const start = await screen.findByRole("button", { name: "Započni igru" });
+    fireEvent.click(start);
+    const message = await screen.findByText(/broj igara/i);
+    expect(message.textContent).toMatch(/nastavi/i);
+    expect(message.textContent).not.toBe("Nešto nije u redu. Pokušaj ponovno.");
+    expect(api.posts("/v1/demo")).toHaveLength(1);
+    // greška nije kraj ekrana: gumb je opet aktivan, a igra se nije otvorila
+    await waitFor(() => expect((start as HTMLButtonElement).disabled).toBe(false));
+    expect(screen.queryByRole("heading", { name: /Moj hotel/ })).toBeNull();
+  });
+});
+
 describe("Nova igra iz igre", () => {
   function seasonOverApi() {
     return startApi()

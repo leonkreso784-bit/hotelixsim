@@ -48,6 +48,12 @@ describe("hr: tekst prema studentu bez roda (UI_PRAVILA §3.3)", () => {
     expect(t("chat.limit")).toBe("Poruke za ovaj razgovor su potrošene. Sad odgovori.");
     expect(t("problem.chat_limit")).toBe("Poruke za ovaj razgovor su potrošene.");
   });
+  it("granica igara po gostu (pilot, dio 4) ima vlastitu poruku: dosegnut broj igara i nastavak postojeće", () => {
+    const text = t("problem.game_limit");
+    expect(text).toMatch(/broj igara/i);
+    expect(text).toMatch(/nastavi/i);
+    expect(text).not.toBe(t("error.generic"));
+  });
 });
 
 describe("hr: razine značaja situacije (L1-13 dio 2)", () => {
