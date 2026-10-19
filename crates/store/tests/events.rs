@@ -9,6 +9,19 @@ fn db_code(e: sqlx::Error) -> String {
 }
 
 #[sqlx::test]
+async fn health_ping_is_ok_on_live_database(pool: PgPool) {
+    use app::SystemStatus;
+    Store::from_pool(pool).ping().await.expect("SELECT 1");
+}
+
+#[sqlx::test]
+async fn health_ping_fails_when_pool_is_closed(pool: PgPool) {
+    use app::SystemStatus;
+    pool.close().await;
+    assert!(Store::from_pool(pool).ping().await.is_err());
+}
+
+#[sqlx::test]
 async fn fresh_database_has_no_events(pool: PgPool) {
     assert_eq!(Store::from_pool(pool).count_events().await.unwrap(), 0);
 }

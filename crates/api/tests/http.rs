@@ -11,10 +11,11 @@ use http_body_util::BodyExt;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
-struct Fake(Result<i64, String>);
+/// Zdravlje je samo „je li baza živa" (`SELECT 1`): `Ok(())` = živa, `Err` = pala.
+struct Fake(Result<(), String>);
 
 impl SystemStatus for Fake {
-    fn events_count(&self) -> BoxFut<'_, Result<i64, StatusError>> {
+    fn ping(&self) -> BoxFut<'_, Result<(), StatusError>> {
         let r = self.0.clone().map_err(StatusError);
         Box::pin(async move { r })
     }
@@ -37,22 +38,26 @@ async fn get(status: Fake, uri: &str) -> (StatusCode, Option<String>, Value) {
 }
 
 #[tokio::test]
-async fn health_ok_reports_event_count() {
-    let (code, _, body) = get(Fake(Ok(0)), "/v1/health").await;
+async fn health_ok_reports_only_database_state_not_event_count() {
+    let (code, _, body) = get(Fake(Ok(())), "/v1/health").await;
     assert_eq!(code, StatusCode::OK);
-    assert_eq!(body, json!({"database": "ok", "events": 0}));
+    assert_eq!(body, json!({"database": "ok"}));
+    assert!(
+        body.get("events").is_none(),
+        "zdravlje ne odaje broj događaja"
+    );
 }
 
 #[tokio::test]
 async fn health_with_broken_database_is_503_not_panic() {
     let (code, _, body) = get(Fake(Err("veza odbijena".into())), "/v1/health").await;
     assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
-    assert_eq!(body, json!({"database": "error", "events": null}));
+    assert_eq!(body, json!({"database": "error"}));
 }
 
 #[tokio::test]
 async fn profile_c_indices_are_fifty_in_fixed_order() {
-    let (code, _, body) = get(Fake(Ok(0)), "/v1/demo/profiles/C/indices").await;
+    let (code, _, body) = get(Fake(Ok(())), "/v1/demo/profiles/C/indices").await;
     assert_eq!(code, StatusCode::OK);
     assert_eq!(
         body,
@@ -69,7 +74,7 @@ async fn profile_c_indices_are_fifty_in_fixed_order() {
 #[tokio::test]
 async fn unknown_profile_is_404_problem_json() {
     for uri in ["/v1/demo/profiles/D/indices", "/v1/demo/profiles/a/indices"] {
-        let (code, ctype, body) = get(Fake(Ok(0)), uri).await;
+        let (code, ctype, body) = get(Fake(Ok(())), uri).await;
         assert_eq!(code, StatusCode::NOT_FOUND, "{uri}");
         assert_eq!(ctype.as_deref(), Some("application/problem+json"), "{uri}");
         assert_eq!(body["code"], "unknown_profile", "{uri}");
@@ -126,12 +131,16 @@ fn openapi_documents_contract() {
     }
     let not_found = &doc["paths"]["/v1/hotels/{hotel_id}"]["get"]["responses"]["404"]["content"];
     assert!(not_found["application/problem+json"].is_object());
-    let required = doc["components"]["schemas"]["HealthBody"]["required"]
-        .as_array()
-        .unwrap();
+    let health = &doc["components"]["schemas"]["HealthBody"];
     assert!(
-        required.contains(&json!("events")),
-        "events je obavezan (može biti null)"
+        health["properties"].get("events").is_none(),
+        "HealthBody ne odaje broj događaja"
+    );
+    assert!(
+        health["required"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("database"))
     );
     let codes = doc["components"]["schemas"]["ProblemCode"]["enum"]
         .as_array()
