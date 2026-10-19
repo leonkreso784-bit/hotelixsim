@@ -2,7 +2,7 @@
 //! Redoslijed provjera: igra postoji (`fold_raw`), pravo (`member_hotel`/`require_owner`), pravilo igre.
 use game::RoundKey;
 use game::dto::PlanDto;
-use game::{Actor, GameEvent, GameId, HotelId};
+use game::{Actor, GameError, GameEvent, GameId, HotelId};
 
 use crate::demo::{fold_raw, load_game, new_event};
 use crate::jobs::{RESOLVE_KIND, ResolvePayload, resolve_key};
@@ -64,7 +64,11 @@ pub async fn answer(
                 let g = fold_raw(raw)?;
                 require_owner(&g, guest, hotel)?;
                 // Student šalje prikazni položaj; događaj pamti izvorni broj (L1-13b dio 1).
-                let original = g.original_answer(hotel, &code, choice)?;
+                // Izvan raspona prosljeđujemo prikazni broj: `choose_answer` prvo provjeri krug (409), pa raspon (422), kao prije.
+                let original = match g.original_answer(hotel, &code, choice) {
+                    Err(GameError::UnknownAnswer) => choice,
+                    other => other?,
+                };
                 let ev = g.choose_answer(hotel, &code, original)?;
                 Ok(Decision {
                     events: vec![new_event(&Actor::Guest(guest), &ev)],

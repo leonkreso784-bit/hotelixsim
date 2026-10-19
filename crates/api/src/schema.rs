@@ -1,6 +1,5 @@
 //! Oblici JSON-a koje API vidi (OpenAPI). Zrcale `game::view` i `game::dto` polje za polje;
-//! jezgra nema serde ni utoipa pa se pretvara ovdje. Polje `Option` u odgovoru je uvijek `required`
-//! (TS tip `T | null`, ne `T?`).
+//! jezgra nema serde ni utoipa pa se pretvara ovdje. `Option` u odgovoru je uvijek `required` (TS `T | null`).
 
 use axum::http::StatusCode;
 use game::command::PlanLimits;
@@ -1309,6 +1308,7 @@ pub enum FeedItemBody {
         round: String,
         situation: String,
         title: String,
+        /// Prikazni položaj odgovora (kao u popisu situacija; v1 demo: položaj u sadržaju), nikad izvorni broj v2.
         answer: u8,
         label: String,
         by: ActorKind,

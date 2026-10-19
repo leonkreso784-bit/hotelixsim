@@ -711,7 +711,10 @@ export interface components {
             /** Format: int64 */
             seq: number;
         } | {
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Prikazni položaj odgovora (kao u popisu situacija; v1 demo: položaj u sadržaju), nikad izvorni broj v2.
+             */
             answer: number;
             by: components["schemas"]["ActorKind"];
             /** @enum {string} */
@@ -1536,7 +1539,7 @@ export interface components {
         SignificanceBody: "kljucna" | "vazna" | "svakodnevna";
         /** @description Ponuđeni odgovor je samo oznaka; kvaliteta i mehanika nikad ne izlaze. */
         SituationBody: {
-            /** @description Oznake ponuđenih odgovora, izmiješane po hotelu (stalan redoslijed); indeks u popisu je prikazni broj odgovora. */
+            /** @description Oznake ponuđenih odgovora, izmiješane po hotelu (v2; stalan redoslijed, v1 demo ostaje nepromiješan); indeks u popisu je prikazni broj odgovora. */
             answers: string[];
             character: components["schemas"]["CharacterBody"] | null;
             /**

@@ -344,7 +344,10 @@ async fn situations_in_month(
             let card = g.situation_card(hotel, month, &t.code)?;
             let order = g.display_order(hotel, &t.code)?;
             let chosen = match record.answers.get(&key) {
-                Some(&o) => Some(g.shown_position(hotel, &t.code, o)?),
+                Some(&o) => order
+                    .iter()
+                    .position(|&x| x == o)
+                    .and_then(|p| u8::try_from(p).ok()),
                 None => None,
             };
             Ok(SituationItem {

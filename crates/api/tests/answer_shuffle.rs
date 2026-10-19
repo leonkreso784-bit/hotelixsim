@@ -335,6 +335,14 @@ async fn displayed_number_outside_range_is_unknown_answer() {
 }
 
 #[tokio::test]
+async fn closed_round_with_number_out_of_range_is_409_not_422() {
+    let s = Student::v2("month").await;
+    let code = s.items().await[0]["code"].as_str().unwrap().to_owned();
+    s.close("jun").await;
+    assert_problem(&s.answer(&code, 200).await, 409, "round_not_open");
+}
+
+#[tokio::test]
 async fn frozen_v1_demo_keeps_content_order() {
     let c = Snapshot::read(&repo_dir()).unwrap().build().unwrap();
     let s = Student::start(None).await;

@@ -8,6 +8,8 @@
 //! - izvedeno iz `Rng::derive(seed, [label("game:answer-order"), slot, label(code)])` i Fisher–Yatesa; ne troši
 //!   tokove igre. Pravilo se ne mijenja bez dizanja verzije (inače bi klik usred kruga zapisao drugi odgovor).
 
+mod common;
+
 use std::collections::BTreeSet;
 
 use game::answer_order;
@@ -134,5 +136,53 @@ fn order_is_not_the_identity_in_general() {
     assert!(
         non_identity >= 25,
         "premalo izmiješanih: {non_identity} od 30"
+    );
+}
+
+/// ZLATNE VRIJEDNOSTI pravila miješanja. Ako ovaj test padne, netko je promijenio oznaku `game:answer-order`,
+/// algoritam ili redoslijed izvoda. To smije samo uz dizanje verzije pravila i prijelaz za otvorene igre i kartice
+/// (klik između GET-a i POST-a, preko deploya, inače zapiše drugi odgovor od kliknutoga). Ne "popravljaj" brojke.
+#[test]
+fn golden_permutations_pin_the_shuffle_rule() {
+    let cases: [(u64, u8, &str, usize, &[u8]); 5] = [
+        (42, 1, "P-KLIMA.t03", 5, &[0, 1, 3, 4, 2]),
+        (42, 2, "P-KLIMA.t03", 5, &[0, 2, 1, 3, 4]),
+        (7, 1, "S1", 4, &[0, 1, 3, 2]),
+        (u64::MAX, 3, "P-KLIMA.t12", 6, &[0, 2, 1, 4, 5, 3]),
+        (0, 1, "P-KLIMA.t01", 3, &[2, 0, 1]),
+    ];
+    for (seed, slot, code, n, want) in cases {
+        assert_eq!(
+            answer_order(seed, slot, code, n),
+            want,
+            "{seed} {slot} {code} {n}"
+        );
+    }
+}
+
+/// `Game::display_order` mora koristiti sjeme igre i slot SVOG hotela (ne uvijek slot 1).
+#[test]
+fn game_display_order_uses_seed_and_the_slot_of_the_hotel() {
+    let snap = content::Snapshot::read_v2(&content::repo_dir()).unwrap();
+    let g = common::v2_game_from(&snap, 42, sim_hotel_v2::PeriodKind::Month);
+    let round = g.current_round().unwrap();
+    let mut differs = false;
+    for h in common::hotel_ids() {
+        let slot = g.hotel(h).unwrap().setup.slot;
+        for t in g.situations_of_hotel(h, round).unwrap() {
+            let n = t.answers.len();
+            let shown = g.display_order(h, &t.code).unwrap();
+            assert_eq!(
+                shown,
+                answer_order(42, slot, &t.code, n),
+                "{h:?} {}",
+                t.code
+            );
+            differs |= shown != answer_order(42, 1, &t.code, n);
+        }
+    }
+    assert!(
+        differs,
+        "bar jedan hotel s drugim slotom mora imati drugi redoslijed"
     );
 }
