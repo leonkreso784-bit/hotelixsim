@@ -71,7 +71,8 @@ describe("plan mjeseca", () => {
       json(200, body as object),
     );
     renderApp(api, "/plan");
-    const button = await screen.findByRole("button", { name: "Spremi plan" });
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    const button = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(button);
     fireEvent.click(button);
     expect(await screen.findByText("Plan za lipanj je spremljen.")).toBeTruthy();
@@ -128,6 +129,7 @@ describe("plan tjedna", () => {
         ),
       ),
     ).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
     const button = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(button);
     fireEvent.click(button);
@@ -192,14 +194,16 @@ describe("plan tjedna: greške", () => {
   it("krug nije otvoren i prevelik pomak sezonskih radnika govore o tjednu, a v1 ostaje kao prije", async () => {
     const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => problem(409, "round_not_open"));
     renderApp(api, "/plan");
-    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(await screen.findByText("Tjedan nije otvoren — sad se ne može mijenjati.")).toBeTruthy();
     cleanup();
     const api2 = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () =>
       problem(422, "seasonal_step_too_big"),
     );
     renderApp(api2, "/plan");
-    fireEvent.click(await screen.findByRole("button", { name: "Spremi plan" }));
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(
       await screen.findByText("Broj sezonskih radnika možeš mijenjati samo malo odjednom; smanji promjenu."),
     ).toBeTruthy();
@@ -293,7 +297,8 @@ describe("plan: nespremljene izmjene (I1)", () => {
   it("dok se sprema, gumb ostaje u redu tipkovnice (aria-disabled, M-6)", async () => {
     const api = v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => new Promise<Response>(() => {}));
     renderApp(api, "/plan");
-    const button = await screen.findByRole("button", { name: "Spremi plan" });
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    const button = screen.getByRole("button", { name: "Spremi plan" });
     button.focus();
     fireEvent.click(button);
     await waitFor(() => expect(button.getAttribute("aria-disabled")).toBe("true"));
@@ -328,7 +333,8 @@ describe("plan: krug zatvoren izvana (UI krug 3, M-2)", () => {
       })
       .on("GET", "/v1/me/hotel", () => json(200, !closedOutside ? v2PlanHotel() : nextOpen ? week2 : noPlan));
     renderApp(api, "/plan");
-    const button = await screen.findByRole("button", { name: "Spremi plan" });
+    fireEvent.change(await screen.findByLabelText("Cijena sobe po noći (€)"), { target: { value: "140" } });
+    const button = screen.getByRole("button", { name: "Spremi plan" });
     closedOutside = true;
     fireEvent.click(button);
     expect(await screen.findByText("Plan se mijenja dok je tjedan otvoren.")).toBeTruthy();

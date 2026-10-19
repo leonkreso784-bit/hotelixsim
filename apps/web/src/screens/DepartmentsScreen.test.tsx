@@ -417,11 +417,12 @@ describe("Odjeli", () => {
     expect(screen.queryByText("Trošak zadnjeg tjedna")).toBeNull();
   });
 
-  it("Restoran (ne zatvara se): uvod ne spominje otvaranje; gumb spremanja je u stupcu odluka", async () => {
+  it("Restoran (ne zatvara se): uvod ne spominje otvaranje; stari gumb odjela više ne postoji, a „Spremi plan“ je jedan", async () => {
     renderApp(v2Api(), "/odjeli/restaurant");
     expect(
       await screen.findByText(/^Odredi koliko sezonskih radnika ima, razinu cijena i održavanje\./),
     ).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Spremi odluke odjela" }).className).toMatch(/md:max-w-md/);
+    expect(screen.queryByRole("button", { name: "Spremi odluke odjela" })).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Spremi plan" })).toHaveLength(1);
   });
 });
