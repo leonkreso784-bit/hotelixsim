@@ -11,7 +11,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 300000, "equipment_pts": 0 },
       "regular": { "cost_cents": 1500000, "equipment_pts": 300 },
-      "intensive": { "cost_cents": 3000000, "equipment_pts": 800 }
+      "intensive": { "cost_cents": 3000000, "equipment_pts": 900 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
@@ -45,7 +45,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 50000, "equipment_pts": 0 },
       "regular": { "cost_cents": 400000, "equipment_pts": 225 },
-      "intensive": { "cost_cents": 800000, "equipment_pts": 600 }
+      "intensive": { "cost_cents": 800000, "equipment_pts": 800 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
@@ -78,7 +78,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 20000, "equipment_pts": 0 },
       "regular": { "cost_cents": 150000, "equipment_pts": 188 },
-      "intensive": { "cost_cents": 300000, "equipment_pts": 500 }
+      "intensive": { "cost_cents": 300000, "equipment_pts": 750 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
@@ -111,7 +111,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },
       "regular": { "cost_cents": 200000, "equipment_pts": 263 },
-      "intensive": { "cost_cents": 400000, "equipment_pts": 700 }
+      "intensive": { "cost_cents": 400000, "equipment_pts": 850 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
@@ -144,7 +144,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 20000, "equipment_pts": 0 },
       "regular": { "cost_cents": 150000, "equipment_pts": 338 },
-      "intensive": { "cost_cents": 300000, "equipment_pts": 600 }
+      "intensive": { "cost_cents": 300000, "equipment_pts": 950 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,
@@ -177,7 +177,7 @@
     "maintenance": {
       "deferred": { "cost_cents": 30000, "equipment_pts": 0 },
       "regular": { "cost_cents": 250000, "equipment_pts": 188 },
-      "intensive": { "cost_cents": 500000, "equipment_pts": 500 }
+      "intensive": { "cost_cents": 500000, "equipment_pts": 750 }
     },
     "fixed_monthly_cents": 0,
     "per_occupied_room_cents": 0,

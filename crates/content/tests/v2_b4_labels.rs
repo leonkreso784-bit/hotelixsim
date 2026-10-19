@@ -214,6 +214,18 @@ fn only_labels_and_listed_conditions_change() {
         if let Some(t) = v["v2"]["situation_templates"].as_object_mut() {
             t.remove("guest_extra_slots");
         }
+        // L1-13b dio 4 (ADR-042 t. 2): bodove pojačanog održavanja šest odjela vrati na staru vrijednost (kostur isti);
+        // cijene, ostale razine i ostali odjeli ostaju pod otiskom.
+        for (d, old) in [
+            ("rooms", 800),
+            ("restaurant", 600),
+            ("lobby_bar", 500),
+            ("rooftop_bar", 700),
+            ("pool_bar", 600),
+            ("spa", 500),
+        ] {
+            v["v2"]["departments"][d]["maintenance"]["intensive"]["equipment_pts"] = old.into();
+        }
         for a in v["situations"]
             .as_array_mut()
             .unwrap()
