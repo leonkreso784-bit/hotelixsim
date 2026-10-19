@@ -4,7 +4,7 @@
     "satisfaction_step_bp": 5000,
     "rating_step_bp": 2500,
     "seasonal_step": 10,
-    "situation_effect_bp": 350,
+    "situation_effect_bp": 325,
     "situation_round_bound_pts": 800
   },
   "week": {
@@ -12,7 +12,7 @@
     "satisfaction_step_bp": 1400,
     "rating_step_bp": 1000,
     "seasonal_step": 3,
-    "situation_effect_bp": 325,
+    "situation_effect_bp": 110,
     "situation_round_bound_pts": 800
   }
 }

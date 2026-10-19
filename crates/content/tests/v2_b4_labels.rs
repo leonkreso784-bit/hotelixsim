@@ -12,8 +12,10 @@ use serde_json::{Value, json};
 const LABEL_RATIO_PCT: usize = 150;
 
 /// Otisak kostura (sve osim oznaka i dopuštenih uvjeta) izračunat iz neizmijenjenih datoteka stanja cc4a0f2; nepromijenjen i u B4c (8d134a4): dopuštena polja B4c u neizmijenjenom stanju ne postoje, pa ih brisanje ne mijenja.
+/// L1-13 dio 4: kostur bez i njegovih dopuštenih polja, izračunat na c1ef169 (tada je stari otisak
+/// `sha256:2ad7856323ecb07968086435e417d53291855a1ee84db31c185957de74f9c773` prolazio, pa novi čuva istu provjeru B4).
 const SKELETON_SHA: &str =
-    "sha256:2ad7856323ecb07968086435e417d53291855a1ee84db31c185957de74f9c773";
+    "sha256:4c89c4829e89f4d02f3cfbe654c8905fd283ee4013a6ba16d7871842cceb1571";
 
 /// Šifre porcije B4a (kartica, „Šifre porcija").
 const B4A: [&str; 15] = [
@@ -140,13 +142,77 @@ fn anchors_labels_within_ratio() {
     }
 }
 
-#[test] // T2, karakterizacijski (zelen od početka)
+/// L1-13 dio 4 (A2): devet kvarova prostora kojima kalibracija mijenja čestoću.
+const L113_FAULTS: [&str; 9] = [
+    "P-KLIMA",
+    "P-DOTRAJALO",
+    "P-BOJLER",
+    "P-BAZEN-PUMPA",
+    "P-LOBBY-KAVA",
+    "P-DIZALO",
+    "P-PRAONICA",
+    "P-BRAVE",
+    "P-CURENJE-VODE",
+];
+/// L1-13 dio 4 (A4): trošak samo u najboljem odgovoru na c1ef169 (`v2_answer_costs.rs`).
+const L113_A4: [&str; 11] = [
+    "P-BUCNA-SOBA",
+    "P-DIJETE-IZGUBLJENO",
+    "P-GOST-POZLILO",
+    "P-KONGRES",
+    "P-LEZALJKE",
+    "P-LJUBIMAC",
+    "P-POHVALA",
+    "P-PROSIDBA",
+    "P-RACUN-GRESKA",
+    "P-SLOBODNI-DANI",
+    "P-VJENCANJE",
+];
+/// L1-13 dio 4 (A8): dug „šutnja nije bolja" na c1ef169 (`templates_principles_debt.rs`).
+const L113_A8: [&str; 16] = [
+    "P-KLIMA",
+    "P-POVISICA",
+    "P-BOJLER",
+    "P-ROOFTOP-BUKA",
+    "P-SPA-TECAJ",
+    "P-LOBBY-SUKOB",
+    "P-LOBBY-KAVA",
+    "P-NOVINAR",
+    "P-VAL-RECENZIJA",
+    "P-KRIZA-OSOBLJA",
+    "P-ALERGIJA",
+    "P-OVERBOOKING",
+    "P-BOLOVANJE",
+    "P-PRAONICA",
+    "P-PARKING-STETA",
+    "P-UCJENA-RECENZIJOM",
+];
+
+#[test] // T2, karakterizacijski (zelen od početka); od L1-13 dijela 4 dopušta i njegove izmjene sadržaja
 fn only_labels_and_listed_conditions_change() {
     fn skeleton(v: &Value) -> String {
         let mut v = v.clone();
-        // L1-13-1b: ključ `economy.click_gain_bp` je jedina dopuštena promjena gospodarstva (kalibracija klika).
+        // L1-13-1b: ključ `economy.click_gain_bp` (kalibracija klika); L1-13 dio 4: ključevi kvara, stari ključ
+        // hitnog popravka i faktori razina. Druga promjena gospodarstva nije dopuštena.
         if let Some(e) = v["v2"]["economy"].as_object_mut() {
-            e.remove("click_gain_bp");
+            for k in [
+                "click_gain_bp",
+                "fault_condition_pts",
+                "fault_fixed_condition_pts",
+                "repair_urgent_condition_pts",
+                "significance_bp",
+            ] {
+                e.remove(k);
+            }
+        }
+        // L1-13 dio 4 (A3): faktor kruga; ključ dodatnih mjesta za goste (A7).
+        for kind in ["week", "month"] {
+            if let Some(p) = v["v2"]["periods"][kind].as_object_mut() {
+                p.remove("situation_effect_bp");
+            }
+        }
+        if let Some(t) = v["v2"]["situation_templates"].as_object_mut() {
+            t.remove("guest_extra_slots");
         }
         for a in v["situations"]
             .as_array_mut()
@@ -178,6 +244,27 @@ fn only_labels_and_listed_conditions_change() {
                     }
                 }
             }
+            // L1-13 dio 4: čestoća devet kvarova prostora (A2: `chance`, `when.dept_condition_pts`), trošak slabijeg
+            // odgovora (A4: mehanike odgovora i `params`), gora šutnja (A8: `unanswered` i `params`).
+            if L113_FAULTS.contains(&code.as_str()) {
+                o.remove("chance");
+                if let Some(w) = o.get_mut("when").and_then(Value::as_object_mut) {
+                    w.remove("dept_condition_pts");
+                    if w.is_empty() {
+                        o.remove("when");
+                    }
+                }
+            }
+            if L113_A4.contains(&code.as_str()) {
+                o.remove("params");
+                for a in o["answers"].as_array_mut().unwrap() {
+                    a.as_object_mut().unwrap().remove("mechanics");
+                }
+            }
+            if L113_A8.contains(&code.as_str()) {
+                o.remove("params");
+                o.remove("unanswered");
+            }
             // B4c: `condition_of` samo uz ova tri kvara, `external_cause` samo uz P-INSPEKCIJU
             if matches!(code.as_str(), "P-BRAVE" | "P-CURENJE-VODE" | "P-DIZALO") {
                 o.remove("condition_of");
@@ -191,7 +278,7 @@ fn only_labels_and_listed_conditions_change() {
     assert_eq!(
         skeleton(&v2_value()),
         SKELETON_SHA,
-        "B4 smije mijenjati samo oznake i uvjete kvarova: `when.dept_condition_pts` na P-KLIMA, P-PRAONICA, P-BRAVE, P-CURENJE-VODE, P-DIZALO; `condition_of` na zadnja tri; `external_cause` na P-INSPEKCIJI"
+        "B4 smije mijenjati samo oznake i uvjete kvarova: `when.dept_condition_pts` na P-KLIMA, P-PRAONICA, P-BRAVE, P-CURENJE-VODE, P-DIZALO; `condition_of` na zadnja tri; `external_cause` na P-INSPEKCIJI; L1-13 dio 4 samo ključeve gospodarstva, faktor kruga, guest_extra_slots, čestoću devet kvarova (A2), mehanike i params 11 predložaka (A4) i unanswered i params 16 predložaka (A8)"
     );
 }
 

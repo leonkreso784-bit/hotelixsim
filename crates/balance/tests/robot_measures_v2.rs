@@ -91,6 +91,11 @@ fn in_band_robot_measures_print_all_clear() {
     for p in &mut r.profile_medians {
         p.1 = 0;
     }
+    // Pravednost §11.3 gleda i medijane po strategiji (profil koji pobjeđuje pod svim strategijama): i njih u pojas,
+    // inače test ovisi o kalibraciji (L1-13 dio 4: uz slabiji kvar hotel B pobjeđuje pod svim robotima).
+    for m in &mut r.medians {
+        m.2 = 0;
+    }
     for w in &mut r.week_vs_month {
         w.3 = w.2;
     }

@@ -80,6 +80,26 @@ impl<'a> Situations<'a> {
         self.set.is_some()
     }
 
+    /// Pune li dodatna mjesta iznad `low` samo situacije s gostima (ključ sadržaja, L1-13-3).
+    pub(crate) fn guest_extra_slots(&self) -> bool {
+        self.set.as_ref().is_some_and(|s| s.guest_extra_slots)
+    }
+
+    /// Niska razina broja situacija u krugu (postavka ili zadano za vrstu kruga).
+    pub(crate) fn low(&self, kind: PeriodKind) -> u8 {
+        self.set
+            .as_ref()
+            .and_then(|s| s.counts)
+            .unwrap_or_else(|| SituationCounts::default_for(kind))
+            .levels()
+            .0
+    }
+
+    /// Je li predložak `code` kvar prostora (`TemplateSet::space_fault`, L1-13-1).
+    pub(crate) fn space_fault(&self, code: &str) -> bool {
+        self.set.as_ref().is_some_and(|s| s.space_fault(code))
+    }
+
     pub(crate) fn group_limit(&self) -> Option<u8> {
         self.set.as_ref().and_then(|s| s.group_limit)
     }
@@ -196,6 +216,9 @@ pub struct DrawStats {
     pub groups_seasons: BTreeMap<u64, u64>,
     /// Po razini očekivane popunjenosti kruga (niska, srednja, visoka): izvučeni gostinjski, ostali i krugovi.
     pub by_level: [LevelCounts; 3],
+    /// Zbroj po krugovima: obične izvučene situacije (ne sidro, ne kolektivna, ne veća) bez gostiju iznad
+    /// `max(0, low − (sidra + kolektivna + veća))`; broji se uvijek, brana samo uz `guest_extra_slots` (L1-13-4).
+    pub non_guest_extra: u64,
 }
 
 /// Zbroj izvučenih primjeraka (bez sidara) i broj krugova jedne razine popunjenosti (L1-13-3).
@@ -204,14 +227,6 @@ pub struct LevelCounts {
     pub guest: u64,
     pub other: u64,
     pub rounds: u64,
-}
-
-/// Razina očekivane popunjenosti kruga: 0 niska, 1 srednja, 2 visoka (pragovi `SituationCounts::for_occupancy`).
-fn occupancy_level(bp: u16) -> usize {
-    let at = SituationCounts::WEEK
-        .for_occupancy(bp)
-        .saturating_sub(SituationCounts::MIN);
-    usize::from(at).min(2)
 }
 
 impl DrawStats {
@@ -260,7 +275,23 @@ impl DrawStats {
                 self.bound_morale = self.bound_morale.saturating_add(1);
             }
             let level =
-                occupancy_level(expected_occupancy_bp(&report.before, &report.period, cat)?);
+                SituationCounts::level(expected_occupancy_bp(&report.before, &report.period, cat)?);
+            // Mjesta prije običnih (kao `draw`): sidra, kolektivna (utor 0) i veća situacija.
+            let pre = here.len().saturating_add(
+                drawn
+                    .iter()
+                    .filter(|s| s.slot == 0 || s.major.is_some())
+                    .count(),
+            );
+            let free = usize::from(sits.low(report.period.kind)).saturating_sub(pre);
+            let ordinary_other = drawn
+                .iter()
+                .filter(|s| s.slot != 0 && s.major.is_none())
+                .filter(|s| !sits.template_guest_related(&s.template))
+                .count();
+            self.non_guest_extra = self
+                .non_guest_extra
+                .saturating_add(u64::try_from(ordinary_other.saturating_sub(free)).unwrap_or(0));
             let lv = &mut self.by_level[level];
             lv.rounds = lv.rounds.saturating_add(1);
             for s in drawn {

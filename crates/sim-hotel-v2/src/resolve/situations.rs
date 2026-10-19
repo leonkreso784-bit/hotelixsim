@@ -24,9 +24,10 @@ pub struct SituationEffect {
 /// troškovi su puni. `effects.equipment_pts` = promjena stanja prostora `space` = privremeni popravak s faktorom +
 /// broj hitnih popravaka × `economy.repair_urgent_condition_pts` bez faktora (popravak je fizički, ADR-042 t. 1).
 /// Kvar prostora (`s.fault`, L1-13-1): −`economy.fault_condition_pts`, a uz hitni popravak u odgovoru i ocjenu
-/// od `FAULT_FIXED_MIN_QUALITY` naviše još +`economy.fault_fixed_condition_pts` (jednom po situaciji); oboje bez faktora.
+/// od `FAULT_FIXED_MIN_QUALITY` naviše još +`economy.fault_fixed_condition_pts` (jednom po situaciji). Oba ključa su
+/// bodovi situacije (Leon 18.10., K1): množe se faktorom kruga i razine kao ostali bodovi, svaki zaokružen za sebe.
 /// Klik (`s.click`, L1-13-1b): zatim se pozitivni dijelovi zadovoljstva, morala, ocjene i opreme (i noćenja grupa, najmanje 1)
-/// množe s `economy.click_gain_bp / 10 000`; kvar se skida tek poslije, pun (fizički).
+/// množe s `economy.click_gain_bp / 10 000`; kvar se skida tek poslije, bez umanjenja klikom.
 /// Situacija bez odjela i neraspoređeni odjel djeluju na Smještaj; nepoznat odjel je greška kataloga.
 pub fn situation_effect(
     s: &RoundSituation,
@@ -59,7 +60,10 @@ pub fn situation_effect(
     )?;
     let mut equipment = c::add(w(scaled(e.equipment_pts, coeffs, sig)?), repair)?;
     if s.fault && urgent > 0 && s.outcome.quality >= FAULT_FIXED_MIN_QUALITY {
-        equipment = c::add(equipment, w(cat.economy.fault_fixed_condition_pts))?;
+        equipment = c::add(
+            equipment,
+            w(scaled(cat.economy.fault_fixed_condition_pts, coeffs, sig)?),
+        )?;
     }
     if s.click {
         // Klik (L1-13-1b): samo DOBIT se umanjuje; trošak, povišice i negativni dijelovi ostaju puni.
@@ -78,7 +82,10 @@ pub fn situation_effect(
         }
     }
     if s.fault {
-        equipment = c::sub(equipment, w(cat.economy.fault_condition_pts))?;
+        equipment = c::sub(
+            equipment,
+            w(scaled(cat.economy.fault_condition_pts, coeffs, sig)?),
+        )?;
     }
     e.equipment_pts = c::narrow(equipment)?;
     let space = match &s.space {

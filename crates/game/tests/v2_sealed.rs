@@ -1,6 +1,10 @@
 //! Zapečaćeni otisak v2 (A3): igre nad zamrznutim snimkom pravila daju otisak vezan uz `sim_hotel_v2::CORE_VERSION`.
 //! Promjena obračuna bez dizanja verzije ruši test 1; nova verzija traži novi pečat (`seal_v2_digest`), stari ostaju.
 //! Od B2a otisak pokriva i broj situacija iz postavki igre (`GameCreated.situation_counts`, I3).
+//! Od L1-13 dio 4 (2.6.0) slučajevi `*-l113` igraju zamrznuti snimak s ključevima dijela 4 zapisanima u testu
+//! (`L113_KEYS`: kvar i popravak u bodovima situacije 2 857 / 5 714 — uz mjesečni faktor 350 zamrznutog snimka −1 / +2,
+//! tjedno uz 325 ≈ −0,93 / +1,86 (Leon 18.10. K1) —, stari ključ hitnog popravka 0, klik 85 %, razine 1,5 / 1,0 / 0,6,
+//! dodatna mjesta samo gostima), pa je obračun novih mehanika zapečaćen, a zamrznuti snimak se ne mijenja.
 mod common;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -35,8 +39,10 @@ struct Case {
     situations: Option<(u8, u8, u8)>,
     /// Pravilo ocjene vlastitog odgovora (ADR-047); `None` = zadano za nove v2 igre (`OwnWords`).
     rule: Option<AnswerRule>,
+    /// Zamrznuti snimak s ključevima L1-13 dijela 4 (`with_l113_keys`); `false` = snimak kakav jest.
+    l113: bool,
 }
-const CASES: [Case; 11] = [
+const CASES: [Case; 14] = [
     Case {
         name: "t7-odgovara",
         seed: 7,
@@ -44,6 +50,7 @@ const CASES: [Case; 11] = [
         human: Human::Answers,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "m7-odgovara",
@@ -52,6 +59,7 @@ const CASES: [Case; 11] = [
         human: Human::Answers,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "t42-sutnja",
@@ -60,6 +68,7 @@ const CASES: [Case; 11] = [
         human: Human::Silent,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "m42-sutnja",
@@ -68,6 +77,7 @@ const CASES: [Case; 11] = [
         human: Human::Silent,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "t2026-odgovara",
@@ -76,6 +86,7 @@ const CASES: [Case; 11] = [
         human: Human::Answers,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "m2026-sutnja",
@@ -84,6 +95,7 @@ const CASES: [Case; 11] = [
         human: Human::Silent,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "t7-broj-578",
@@ -92,6 +104,7 @@ const CASES: [Case; 11] = [
         human: Human::Answers,
         situations: Some((5, 7, 8)),
         rule: None,
+        l113: false,
     },
     Case {
         name: "m42-broj-333",
@@ -100,6 +113,7 @@ const CASES: [Case; 11] = [
         human: Human::Silent,
         situations: Some((3, 3, 3)),
         rule: None,
+        l113: false,
     },
     Case {
         name: "t42-slobodni",
@@ -108,6 +122,7 @@ const CASES: [Case; 11] = [
         human: Human::FreeAnswer,
         situations: None,
         rule: None,
+        l113: false,
     },
     Case {
         name: "m42-plan",
@@ -116,6 +131,7 @@ const CASES: [Case; 11] = [
         human: Human::Plans,
         situations: None,
         rule: None,
+        l113: false,
     },
     // Isti slučaj kao `m7-odgovara`, ali uz staro pravilo: otisak mora razlikovati pravilo ocjene.
     Case {
@@ -125,6 +141,36 @@ const CASES: [Case; 11] = [
         human: Human::Answers,
         situations: None,
         rule: Some(AnswerRule::Classic),
+        l113: false,
+    },
+    // L1-13 dio 4: iste igre kao `t7-odgovara`, `m7-odgovara` (izričito `OwnWords`: klik nosi `click_gain_bp`) i
+    // `t42-sutnja`, ali nad snimkom s ključevima dijela 4.
+    Case {
+        name: "t7-odgovara-l113",
+        seed: 7,
+        kind: PeriodKind::Week,
+        human: Human::Answers,
+        situations: None,
+        rule: None,
+        l113: true,
+    },
+    Case {
+        name: "m7-klik-l113",
+        seed: 7,
+        kind: PeriodKind::Month,
+        human: Human::Answers,
+        situations: None,
+        rule: Some(AnswerRule::OwnWords),
+        l113: true,
+    },
+    Case {
+        name: "t42-sutnja-l113",
+        seed: 42,
+        kind: PeriodKind::Week,
+        human: Human::Silent,
+        situations: None,
+        rule: None,
+        l113: true,
     },
 ];
 #[derive(Serialize, Deserialize)]
@@ -145,6 +191,49 @@ fn golden() -> Golden {
 }
 fn frozen_value() -> Value {
     serde_json::from_str(&read("v2-snapshot.json")).unwrap()
+}
+
+/// Ključevi L1-13 dijela 4 za slučajeve `*-l113`, ZAPISANI U TESTU (ne čitaju se iz repoa, pa kalibracija repoa ne
+/// mijenja pečat): kvar i popravak uz ocjenu ≥ 3 u bodovima situacije (Leon 18.10. K1 i L1: × faktor kruga i razine;
+/// 100 × 10 000 / 350 ≈ 2 857 i 5 714), stari ključ hitnog popravka 0, klik zadržava 85 % dobiti (1b), faktori razina
+/// 1,5 / 1,0 / 0,6 (početak kartice), dodatna mjesta samo situacijama s gostima (A7).
+const L113_KEYS: &str = r#"{
+    "fault_condition_pts": 2857,
+    "fault_fixed_condition_pts": 5714,
+    "repair_urgent_condition_pts": 0,
+    "click_gain_bp": 8500,
+    "significance_bp": { "key": 15000, "important": 10000, "everyday": 6000 },
+    "guest_extra_slots": true
+}"#;
+
+/// Snimak `snap` s ključevima `keys` (podskup `L113_KEYS`): `guest_extra_slots` ide u predloške, ostalo u `economy`.
+fn with_keys(snap: &Snapshot, keys: &[&str]) -> Snapshot {
+    let all: Value = serde_json::from_str(L113_KEYS).unwrap();
+    let mut v = snap.to_value();
+    for k in keys {
+        let x = all
+            .get(*k)
+            .unwrap_or_else(|| panic!("nema ključa {k}"))
+            .clone();
+        if *k == "guest_extra_slots" {
+            v["v2"]["situation_templates"][*k] = x;
+        } else {
+            v["v2"]["economy"][*k] = x;
+        }
+    }
+    Snapshot::from_value(&v).unwrap()
+}
+
+/// Svi ključevi dijela 4.
+fn with_l113_keys(snap: &Snapshot) -> Snapshot {
+    let all: Value = serde_json::from_str(L113_KEYS).unwrap();
+    let keys: Vec<&str> = all
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect();
+    with_keys(snap, &keys)
 }
 
 /// Slobodni odgovor na svaku situaciju moga hotela koja ima lika, s presudom (3 od 5 kriterija, najbliži odgovor 0).
@@ -187,6 +276,10 @@ fn own_plan(g: &mut Game, r: RoundKey) {
 /// Cijela sezona: roboti igraju sami; igrač šuti ili odgovara redom (n-ta situacija sezone dobiva odgovor n mod broj
 /// odgovora), a svaku drugu situaciju koju smije prepušta voditelju.
 fn play(snap: &Snapshot, c: &Case) -> Game {
+    if c.l113 {
+        let keyed = with_l113_keys(snap);
+        return play(&keyed, &Case { l113: false, ..*c });
+    }
     let settings = GameSettings {
         kind: c.kind,
         situations: c.situations.map(|(low, mid, high)| {
@@ -312,8 +405,23 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
     let me = common::hotel_ids()[0];
     let (mut answered, mut delegated, mut silent) = (0, 0, 0);
     let mut capped = 0;
+    // L1-13 dio 4: slučajevi s ključevima moraju igrati kvar prostora moga hotela i klik (odabir ponuđenog odgovora
+    // gdje se smije pisati, `OwnWords`), inače nove mehanike nisu zapečaćene.
+    let (mut l113_faults, mut l113_clicks) = (0, 0);
     for c in &CASES {
         let g = play(&snap, c);
+        if c.l113 {
+            let h = g.hotels.iter().find(|h| h.setup.hotel_id == me).unwrap();
+            l113_faults += h.drawn.values().flatten().filter(|i| i.space_fault).count();
+            l113_clicks += g
+                .history
+                .iter()
+                .filter(|r| {
+                    matches!(&r.event, GameEvent::AnswerChosen(a)
+                        if a.hotel_id == me && g.click_capped(me, &a.situation))
+                })
+                .count();
+        }
         let profiles: BTreeSet<&str> = g.hotels.iter().map(|h| h.setup.profile.as_str()).collect();
         assert_eq!(profiles, BTreeSet::from(["A", "B", "C"]), "{}", c.name);
         for r in &g.history {
@@ -348,6 +456,15 @@ fn digest_cases_cover_rounds_profiles_and_answer_paths() {
     assert!(
         capped > 0,
         "nijedan slučaj pečata nema ograničen klik (capped)"
+    );
+    assert!(
+        l113_faults > 0 && l113_clicks > 0,
+        "slučajevi *-l113: kvarova prostora {l113_faults}, klikova {l113_clicks} (oboje više od 0)"
+    );
+    assert_eq!(
+        CASES.iter().filter(|c| c.l113).count(),
+        3,
+        "tri slučaja s ključevima dijela 4"
     );
     assert!(
         CASES.iter().any(|c| c.kind == PeriodKind::Week)
@@ -446,6 +563,7 @@ fn digest_reacts_to_answer_rule() {
         human: Human::Answers,
         situations: None,
         rule,
+        l113: false,
     };
     let (own, classic) = (
         case(Some(AnswerRule::OwnWords)),
@@ -474,6 +592,7 @@ fn digest_reacts_to_situation_counts() {
         human: Human::Silent,
         situations,
         rule: None,
+        l113: false,
     };
     let (own, default) = (case(Some((3, 3, 3))), case(None));
     assert_ne!(
@@ -481,6 +600,49 @@ fn digest_reacts_to_situation_counts() {
         digest(&play(&snap, &default)),
         "3/3/3 i zadani broj moraju dati različit otisak"
     );
+}
+
+#[test] // 6 (L1-13 dio 4): otisak reagira na ključeve dijela 4, svaki zasebno, nad zamrznutim snimkom
+fn digest_reacts_to_l113_keys() {
+    let snap = Snapshot::from_value(&frozen_value()).unwrap();
+    let case = |name: &str| CASES.iter().find(|c| c.name == name).unwrap();
+    // Svaki slučaj *-l113 daje drukčiji otisak od iste igre bez ključeva.
+    for (keyed, plain) in [
+        ("t7-odgovara-l113", "t7-odgovara"),
+        ("m7-klik-l113", "m7-odgovara"),
+        ("t42-sutnja-l113", "t42-sutnja"),
+    ] {
+        let (k, p) = (case(keyed), case(plain));
+        assert!(k.l113 && !p.l113, "{keyed}");
+        assert_eq!(
+            (k.seed, k.kind, k.situations),
+            (p.seed, p.kind, p.situations),
+            "{keyed} je ista igra kao {plain}"
+        );
+        assert_ne!(
+            digest(&play(&snap, k)),
+            digest(&play(&snap, p)),
+            "{keyed}: ključevi dijela 4 moraju promijeniti otisak"
+        );
+    }
+    // Svaki ključ sam: kvar (s popravkom), razine, dodatna mjesta, klik.
+    let plain = Case {
+        l113: false,
+        ..*case("m7-klik-l113")
+    };
+    let base = digest(&play(&snap, &plain));
+    for keys in [
+        &["fault_condition_pts", "fault_fixed_condition_pts"][..],
+        &["significance_bp"][..],
+        &["guest_extra_slots"][..],
+        &["click_gain_bp"][..],
+    ] {
+        assert_ne!(
+            digest(&play(&with_keys(&snap, keys), &plain)),
+            base,
+            "{keys:?}: ključ mora promijeniti otisak"
+        );
+    }
 }
 
 #[test]

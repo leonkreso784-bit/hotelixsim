@@ -1,8 +1,8 @@
 //! L1-13 dio 1b (Leon 18.10. t. 1): klik na ponuđeni odgovor (ili prepisan odgovor) gdje se smije pisati nosi samo
 //! `economy.click_gain_bp` od svake DOBITI situacije (zadovoljstvo, moral, ocjena, stanje prostora, noćenja grupe);
 //! TROŠKOVI, povišice i svi negativni dijelovi ostaju puni. Redoslijed (kartica, koraci 3–5): bodovi × faktor kruga,
-//! hitni popravak i bonus kvara, tek onda klik na pozitivne dijelove, pa kvar (−`fault_condition_pts`, fizički, bez
-//! klika). Zaokruživanje je na najbliži cijeli broj (kao `scaled`); uz 10 000 klik je identitet (stari snimak).
+//! hitni popravak i bonus kvara, tek onda klik na pozitivne dijelove, pa kvar (−`fault_condition_pts` × faktor kruga i
+//! razine od Leonove odluke 18.10. K1, bez klika). Ovdje je faktor kruga 10 000, pa su kvar i bonus −100 / +200. Zaokruživanje je na najbliži cijeli broj (kao `scaled`); uz 10 000 klik je identitet (stari snimak).
 //! Klik je `RoundSituation.click`.
 
 mod common;
@@ -231,10 +231,19 @@ fn click_scales_fault_fix_bonus() {
                 "{p:?} klik {bp} stari ključ {old}"
             );
         }
-        // Slab odgovor (ocjena 3) ne dobiva bonus pa ostaje samo puni kvar, klik ili ne.
+        // L1 (Leon 18.10.): ocjena 3 već dobiva bonus (klik ga umanjuje); slab odgovor (ocjena 2) ne dobiva bonus
+        // pa ostaje samo puni kvar, klik ili ne.
         let c = fault_cat(7_500, 0);
-        for click in [false, true] {
+        for (click, want) in [(false, 100), (true, 50)] {
             let s = sit(click, true, vec![urgent()], 3);
+            assert_eq!(
+                effect(&c, &p, &s).effects.equipment_pts,
+                want,
+                "q 3 klik {click}"
+            );
+        }
+        for click in [false, true] {
+            let s = sit(click, true, vec![urgent()], 2);
             assert_eq!(effect(&c, &p, &s).effects.equipment_pts, -100, "{click}");
         }
     }

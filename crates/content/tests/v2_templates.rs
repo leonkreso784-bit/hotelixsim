@@ -760,17 +760,27 @@ fn july_instance(c: &Content, code: &str) -> sim_hotel::SituationTemplate {
     tpl.instance(&d, &cat.base, category).unwrap()
 }
 
-/// Leon (S-4, P-NOVINAR): loš odgovor i neodgovoreno daju isti ukupni učinak (−4 zadovoljstva), a ne loš odgovor
-/// dvostruko više (prije: oporavak −4 + kriza −6, granica −8).
+/// Leon (S-4, P-NOVINAR): loš odgovor nije kažnjen više od neodgovorenog (prije: oporavak −4 + kriza −6, granica −8).
+/// Runda 2 (Leon 18.10., četvrta anketa, A8): šutnja na novinarku gubi UGLED, ne novac — šutnja nije bolja od lošeg
+/// odgovora: u svakom bodu (zadovoljstvo, moral, ocjena, oprema) šutnja ≤ loš odgovor, u ugledu (zadovoljstvo ili
+/// ocjena) strogo niže, a šutnja ne troši ništa (posjet koji se nije dogodio hotel ne plaća).
 #[test]
-fn poor_answer_to_journalist_costs_the_same_as_silence() {
+fn poor_answer_to_journalist_is_not_worse_than_silence() {
     use sim_hotel::{SituationOutcome, effects};
     let c = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     let t = july_instance(&c, "P-NOVINAR");
     let cat = &c.v2.as_ref().unwrap().base;
     let category = cat.profile(sim_hotel::Profile::C).unwrap().category;
     let silent = effects(&SituationOutcome::unanswered(&t), t.month, cat, category).unwrap();
-    assert_eq!(silent.satisfaction_pts, -400);
+    assert_eq!(
+        (silent.cost_cents, silent.extra_wage_cents),
+        (0, 0),
+        "šutnja gubi ugled, ne novac"
+    );
+    assert!(
+        silent.groups.is_empty(),
+        "šutnja ne donosi ni ne traži boravak"
+    );
     let poor: Vec<_> = t.answers.iter().filter(|a| a.quality == 1).collect();
     assert_eq!(poor.len(), 2);
     for a in poor {
@@ -781,15 +791,17 @@ fn poor_answer_to_journalist_costs_the_same_as_silence() {
             category,
         )
         .unwrap();
-        assert_eq!(
-            (e.satisfaction_pts, e.morale_pts, e.rating, e.equipment_pts),
-            (
-                silent.satisfaction_pts,
-                silent.morale_pts,
-                silent.rating,
-                silent.equipment_pts
-            ),
-            "'{}'",
+        let points =
+            |x: &sim_hotel::Effects| (x.satisfaction_pts, x.morale_pts, x.rating, x.equipment_pts);
+        let (s, w) = (points(&silent), points(&e));
+        assert!(
+            s.0 <= w.0 && s.1 <= w.1 && s.2 <= w.2 && s.3 <= w.3,
+            "'{}': šutnja nije bolja od lošeg odgovora u bodovima: šutnja {s:?}, odgovor {w:?}",
+            a.label
+        );
+        assert!(
+            s.0 < w.0 || s.2 < w.2,
+            "'{}': šutnja gubi ugled (zadovoljstvo ili ocjenu) više od lošeg odgovora: šutnja {s:?}, odgovor {w:?}",
             a.label
         );
     }

@@ -324,9 +324,11 @@ fn silence_dominates(
                     let s = RoundSituation {
                         outcome: o,
                         space: department.clone(),
-                        fault: false,
+                        fault: spec.space_fault,
                         click: false,
-                        significance: sim_hotel_v2::situations::Significance::Important,
+                        significance: sim_hotel_v2::situations::Significance::from_weight(
+                            spec.weight,
+                        ),
                     };
                     Ok(situation_effect(&s, &p, v2, category)
                         .map_err(|e| bad(format!("{e:?}")))?

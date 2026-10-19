@@ -154,8 +154,15 @@ fn j3_keys_are_read_from_content_and_absent_keys_keep_old_rules() {
     let s = Snapshot::read_v2(&repo_dir()).unwrap();
     let c = s.build().unwrap();
     let v2 = c.v2.unwrap();
-    for (k, effect) in [(PeriodKind::Week, 325), (PeriodKind::Month, 350)] {
+    // Faktor kruga kalibrira L1-13 dio 4 (A3; Leon 18.10. četvrta anketa: tjedno ~110, mjesečno 350): test čita broj
+    // iz `periods.json` (ključ se čita iz sadržaja), a granica kruga ostaje Leonovih 800.
+    let raw: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(repo_dir().join("v2/periods.json")).unwrap())
+            .unwrap();
+    for (k, name) in [(PeriodKind::Week, "week"), (PeriodKind::Month, "month")] {
         let p = v2.coeffs(k).unwrap();
+        let effect = u16::try_from(raw[name]["situation_effect_bp"].as_u64().unwrap()).unwrap();
+        assert!(effect > 0, "{name}: ključ u periods.json");
         assert_eq!(
             (p.situation_effect_bp, p.situation_round_bound_pts),
             (effect, Some(800))

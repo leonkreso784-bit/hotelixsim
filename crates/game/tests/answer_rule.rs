@@ -35,8 +35,14 @@ fn settings(rule: Option<AnswerRule>) -> GameSettings {
     }
 }
 
+/// Repo uz faktor kruga zapisan u testu (325 tjedno, 350 mjesečno, kao na c1ef169): testovi mjere pravilo odgovora, a
+/// ne kalibraciju (L1-13 dio 4 spušta tjedni faktor na ~110, pa razlika ocjene 4 i 5 kod klika nestaje u zaokruživanju).
 fn v2_snap() -> Snapshot {
-    Snapshot::read_v2(&repo_dir()).unwrap()
+    let mut v = Snapshot::read_v2(&repo_dir()).unwrap().to_value();
+    for (kind, bp) in [("week", 325), ("month", 350)] {
+        v["v2"]["periods"][kind]["situation_effect_bp"] = serde_json::json!(bp);
+    }
+    Snapshot::from_value(&v).unwrap()
 }
 
 fn new_game_rule(seed: u64, rule: Option<AnswerRule>) -> Game {
@@ -742,8 +748,13 @@ fn click_loses_part_of_gain() {
 fn click_on_a_weaker_answer_also_loses_gain() {
     // Klik na odgovor ocjene 3 nije „ograničen" (capped: false) i nema dobiti zadovoljstva, ali je klik pa gubi dobit
     // stanja prostora (hitni popravak): „klik nosi 75 %" vrijedi za svaki klik, ne samo za najbolji.
+    // Dobit stanja prostora ovdje daje stari ključ hitnog popravka (repo od L1-13 dijela 4 ima 0): snimak ga nosi
+    // izričito, kao stara igra.
     let run = |bp: u16| {
-        let mut g = gain_game(None, bp);
+        let mut v = snap_gain(bp).to_value();
+        v["v2"]["economy"]["repair_urgent_condition_pts"] = json!(100);
+        let snap = Snapshot::from_value(&v).unwrap();
+        let mut g = common::v2_game_with(&snap, SEED, settings(None));
         let (s, i) = first_gainful(&mut g, 3, Gain::Repair);
         let before = rooms_condition(&g);
         click(&mut g, &s, i);
