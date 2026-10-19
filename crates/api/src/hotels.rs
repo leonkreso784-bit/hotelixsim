@@ -1,12 +1,15 @@
 //! Čitanje hotela po ulozi: vlastiti (sa stvarnim brojkama) i tuđi (ocjena i pet indeksa).
 
+use axum::Extension;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
+use axum::http::header;
 use axum::response::Json;
+use axum::response::{IntoResponse, Response};
 
 use crate::AppState;
-use crate::auth::Token;
+use crate::auth::{CookieMode, Token, set_cookie};
 use crate::problem::{Problem, ProblemCode};
 use crate::schema::{
     AnswerBody, ConversationBody, FeedBody, FeedItemBody, HotelBody, PlanBody, SituationsBody,
@@ -18,7 +21,8 @@ use crate::schema::{
     get,
     path = "/v1/me/hotel",
     responses(
-        (status = 200, description = "Moj hotel", body = HotelBody),
+        (status = 200, description = "Moj hotel; poznatom gostu ponovo šalje isti kolačić s punim trajanjem (klizni rok)", body = HotelBody,
+            headers(("Set-Cookie" = String, description = "Obnovljeni kolačić gosta"))),
         (status = 401, description = "Potreban je gost", body = Problem, content_type = "application/problem+json"),
         (status = 403, description = "Nisi u ovoj igri", body = Problem, content_type = "application/problem+json"),
         (status = 404, description = "Gost još nema igru", body = Problem, content_type = "application/problem+json")
@@ -26,11 +30,18 @@ use crate::schema::{
 )]
 pub async fn me_hotel(
     State(s): State<AppState>,
+    Extension(mode): Extension<CookieMode>,
     Token(t): Token,
-) -> Result<Json<HotelBody>, Problem> {
+) -> Result<Response, Problem> {
     let caller = app::caller(&s.deps, t.as_deref()).await?;
     let v = app::my_hotel(&s.deps, &caller).await?;
-    Ok(Json(HotelBody::try_from(&v)?))
+    let mut res = Json(HotelBody::try_from(&v)?).into_response();
+    // Klizni rok: uspio poziv znači da je token poznat; isti token, puno trajanje.
+    if let Some(tok) = t {
+        res.headers_mut()
+            .insert(header::SET_COOKIE, set_cookie(&tok, mode));
+    }
+    Ok(res)
 }
 
 /// Hotel u igri u kojoj sudjeluješ; tuđi hotel bez stvarnih brojki.
