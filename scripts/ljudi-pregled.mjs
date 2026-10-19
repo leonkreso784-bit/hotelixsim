@@ -4,10 +4,10 @@
 //   node scripts/ljudi-pregled.mjs [izlaz.html] [korijen-sadržaja] [--avatari <avatari.mjs>]
 // Zadano: .superpowers/sdd/banka-ljudi-k1/pregled-svi.html i content/hotel/v2/ljudi.
 // Avatari (neobavezno): bundle gradi `node scripts/ljudi-avatari-build.mjs <avatari.mjs>` (vite iz apps/web, izvori iz
-// ../hotelixsim-izgled). Bez --avatari stranica radi kao prije, samo bez stupca "lik".
+// ovog stabla: apps/web/src/avatar s uniformama IZGLED-c). Bez --avatari stranica radi kao prije, samo bez stupca "lik".
 // 🟨 Privremena pravila hinta za avatar (K5 daje točna): gender = rod (z→f, m→m); age_group: dob < 30 young, 30–54 adult,
 // ≥ 55 senior; origin: radnik lokalno/regija → regional, inozemstvo → foreign; gost zemlja ∈ {HR,BA,RS,ME,MK,SI} → regional,
-// inače foreign. Sjeme imena = `${ime} ${prezime}`.
+// inače foreign; uniform = odora iz uloge vanjskog (policajac, vatrogasac, djelatnik_hitne, lijecnik). Sjeme imena = `${ime} ${prezime}`.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,6 +19,7 @@ if (ai >= 0) argv.splice(ai, 2);
 const out = resolve(argv[0] ?? ".superpowers/sdd/banka-ljudi-k1/pregled-svi.html");
 const root = resolve(argv[1] ?? "content/hotel/v2/ljudi");
 const svgFor = avatariPut ? (await import(pathToFileURL(avatariPut).href)).svgFor : null;
+const ODORA = { policajac: "police", vatrogasac: "fire", djelatnik_hitne: "ems", lijecnik: "doctor" };
 const REGIJA = new Set(["HR", "BA", "RS", "ME", "MK", "SI"]);
 function hint(z) {
   const origin =
@@ -33,6 +34,8 @@ function hint(z) {
     gender: z.rod === "z" ? "f" : "m",
     age_group: z.dob < 30 ? "young" : z.dob < 55 ? "adult" : "senior",
     origin,
+    // Odora iz ključa uloge vanjskog — isti rječnik kao crates/app/src/look.rs UNIFORM_ROLES.
+    uniform: ODORA[z.uloga] ?? null,
   };
 }
 let avatarBr = 0;
