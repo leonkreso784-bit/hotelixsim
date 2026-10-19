@@ -49,6 +49,7 @@ pub async fn profile_indices(Path(profile): Path<String>) -> Result<Json<Indices
     responses(
         (status = 201, description = "Igra stvorena", body = DemoBody,
          headers(("set-cookie" = String, description = "hotelixsim_guest (HttpOnly), samo za novog gosta"))),
+        (status = 409, description = "Gost je dosegnuo najveći broj igara", body = Problem, content_type = "application/problem+json"),
         (status = 422, description = "Postavke nisu dopuštene ili tijelo nije ispravno", body = Problem, content_type = "application/problem+json"),
         (status = 503, description = "Baza nije dostupna", body = Problem, content_type = "application/problem+json")
     )

@@ -24,6 +24,7 @@ pub enum ProblemCode {
     SituationMandatory,
     NotFreeText,
     ChatLimit,
+    GameLimit,
     AwaitingReply,
     BadText,
     PriceNotWholeEuro,
@@ -69,6 +70,7 @@ impl From<app::ErrorCode> for ProblemCode {
             E::SituationMandatory => Self::SituationMandatory,
             E::NotFreeText => Self::NotFreeText,
             E::ChatLimit => Self::ChatLimit,
+            E::GameLimit => Self::GameLimit,
             E::AwaitingReply => Self::AwaitingReply,
             E::BadText => Self::BadText,
             E::PriceNotWholeEuro => Self::PriceNotWholeEuro,
@@ -115,6 +117,7 @@ impl ProblemCode {
             }
             Self::NotFreeText => "Situacija nema slobodni odgovor",
             Self::ChatLimit => "Iskorištene su sve poruke u razgovoru",
+            Self::GameLimit => "Dosegnut je najveći broj igara",
             Self::AwaitingReply => "Lik još nije odgovorio",
             Self::BadText => "Tekst je prazan ili predug",
             Self::PriceNotWholeEuro => "Cijena mora biti cijeli euro",

@@ -22,6 +22,8 @@ pub enum ErrorCode {
     SituationMandatory,
     NotFreeText,
     ChatLimit,
+    /// Gost je stvorio najveći dopušteni broj igara (pilot).
+    GameLimit,
     AwaitingReply,
     BadText,
     PriceNotWholeEuro,
@@ -57,7 +59,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorCode {
-    pub const ALL: [ErrorCode; 36] = [
+    pub const ALL: [ErrorCode; 37] = [
         ErrorCode::GuestRequired,
         ErrorCode::NotInGame,
         ErrorCode::NotYourHotel,
@@ -73,6 +75,7 @@ impl ErrorCode {
         ErrorCode::SituationMandatory,
         ErrorCode::NotFreeText,
         ErrorCode::ChatLimit,
+        ErrorCode::GameLimit,
         ErrorCode::AwaitingReply,
         ErrorCode::BadText,
         ErrorCode::PriceNotWholeEuro,
@@ -103,8 +106,10 @@ impl ErrorCode {
             NotInGame | NotYourHotel => ErrorKind::Forbidden,
             UnknownGame | UnknownHotel | UnknownMonth | UnknownSituation | UnknownProfile
             | UnknownDepartment => ErrorKind::NotFound,
-            RoundNotOpen | AlreadyAnswered | SituationMandatory | ChatLimit | AwaitingReply
-            | GameOutdated | WrongModel | NoResolvedRound | SeasonNotOver => ErrorKind::Conflict,
+            RoundNotOpen | AlreadyAnswered | SituationMandatory | ChatLimit | GameLimit
+            | AwaitingReply | GameOutdated | WrongModel | NoResolvedRound | SeasonNotOver => {
+                ErrorKind::Conflict
+            }
             UnknownAnswer
             | NotFreeText
             | BadText
@@ -145,6 +150,7 @@ impl ErrorCode {
             SituationMandatory => "situation_mandatory",
             NotFreeText => "not_free_text",
             ChatLimit => "chat_limit",
+            GameLimit => "game_limit",
             AwaitingReply => "awaiting_reply",
             BadText => "bad_text",
             PriceNotWholeEuro => "price_not_whole_euro",

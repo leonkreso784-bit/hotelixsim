@@ -57,6 +57,7 @@ export const hr = {
   "problem.situation_mandatory": "Ovu situaciju rješavaš ti — prve tri situacije su obvezne.",
   "problem.not_free_text": "Ova situacija nema odgovor svojim riječima.",
   "problem.chat_limit": "Poruke za ovaj razgovor su potrošene.",
+  "problem.game_limit": "Dosegnut je najveći broj igara. Nastavi igru koju već imaš.",
   "problem.awaiting_reply": "Pričekaj da lik odgovori.",
   "problem.bad_text": "Tekst je prazan ili predug (najviše 2000 znakova).",
   "problem.price_not_whole_euro": "Cijena mora biti u cijelim eurima.",

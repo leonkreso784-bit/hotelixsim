@@ -11,6 +11,8 @@ const WEB: &str = "HOTELIXSIM_WEB";
 const DATABASE_URL: &str = "DATABASE_URL";
 const ADDR: &str = "HOTELIXSIM_ADDR";
 const CONTENT: &str = "HOTELIXSIM_CONTENT";
+const GAMES_PER_GUEST: &str = "HOTELIXSIM_IGARA_PO_GOSTU";
+const PILOT_GAMES_PER_GUEST: u32 = 3;
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
 #[derive(Clone)]
@@ -21,6 +23,8 @@ pub struct Settings {
     pub database_url: Option<String>,
     pub site_password: Option<String>,
     pub web_dir: Option<PathBuf>,
+    /// Najveći broj igara po gostu. Zadano 3 u produkciji I na nelokalnoj adresi (zaboravljena zastavica ne gasi zaštitu), lokalno bez granice.
+    pub games_per_guest: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -68,6 +72,7 @@ impl fmt::Debug for Settings {
             .field("database_url", &self.database_url.as_ref().map(|_| "***"))
             .field("site_password", &self.site_password.as_ref().map(|_| "***"))
             .field("web_dir", &self.web_dir)
+            .field("games_per_guest", &self.games_per_guest)
             .finish()
     }
 }
@@ -101,13 +106,27 @@ impl Settings {
                 value: "razmak ili novi redak na početku ili kraju lozinke".to_owned(),
             });
         }
+        let addr = get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned());
+        let games_per_guest = match get(GAMES_PER_GUEST) {
+            Some(v) => match v.trim().parse::<u32>() {
+                Ok(n) if n >= 1 => Some(n),
+                _ => {
+                    return Err(ConfigError::Invalid {
+                        var: GAMES_PER_GUEST,
+                        value: v,
+                    });
+                }
+            },
+            None => (production || !is_local_addr(&addr)).then_some(PILOT_GAMES_PER_GUEST),
+        };
         let settings = Settings {
             production,
-            addr: get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned()),
+            addr,
             content_dir: get(CONTENT).map(PathBuf::from),
             database_url: get(DATABASE_URL),
             site_password,
             web_dir: get(WEB).map(PathBuf::from),
+            games_per_guest,
         };
         if production {
             let mut missing = Vec::new();

@@ -41,6 +41,17 @@ impl Guests for Store {
         })
     }
 
+    fn count_games_created_by(&self, guest: GuestId) -> BoxFut<'_, Result<u32, StoreError>> {
+        Box::pin(async move {
+            let n: i64 = sqlx::query_scalar("SELECT count(*) FROM games WHERE created_by = $1")
+                .bind(guest.0)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(store_err)?;
+            Ok(u32::try_from(n).unwrap_or(u32::MAX))
+        })
+    }
+
     fn latest_hotel_of(
         &self,
         guest: GuestId,

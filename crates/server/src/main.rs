@@ -71,6 +71,7 @@ fn deps(
     store: store::Store,
     snapshot: content::Snapshot,
     snapshot_v2: content::Snapshot,
+    max_games_per_guest: Option<u32>,
 ) -> app::Deps {
     let s = Arc::new(store);
     app::Deps {
@@ -82,6 +83,7 @@ fn deps(
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
         snapshot_v2: Arc::new(snapshot_v2),
+        max_games_per_guest,
     }
 }
 
@@ -183,7 +185,7 @@ async fn serve() -> anyhow::Result<()> {
     let (snapshot, snapshot_v2) = content_snapshots(settings.content_dir.as_deref())?;
     let ruleset = snapshot.fingerprint();
     let store = store::Store::connect_lazy(database_url)?;
-    let deps = deps(store, snapshot, snapshot_v2);
+    let deps = deps(store, snapshot, snapshot_v2, settings.games_per_guest);
     let (stop, stopped) = tokio::sync::watch::channel(false);
     let mut worker = spawn_worker(deps.clone(), stopped);
     let app = api::router_with_config(api::AppState { deps }, settings.router_config());
@@ -196,6 +198,7 @@ async fn serve() -> anyhow::Result<()> {
         production = settings.production,
         lozinka = settings.site_password.is_some(),
         web = settings.web_dir.is_some(),
+        igara_po_gostu = ?settings.games_per_guest,
         "HotelixSim API sluša na http://{addr}"
     );
     shutdown::serve_until(listener, app, async move {

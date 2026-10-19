@@ -65,7 +65,15 @@ pub async fn start_demo(
     settings: NewGameSettings,
 ) -> Result<DemoStarted, AppError> {
     let (guest, new_guest) = match caller(deps, token).await?.guest {
-        Some(g) => (g, None),
+        Some(g) => {
+            // Granica samo za prepoznatog gosta, prije svakog upisa; novi gost je uvijek ispod granice.
+            if let Some(max) = deps.max_games_per_guest
+                && deps.guests.count_games_created_by(g).await? >= max
+            {
+                return Err(AppError::new(ErrorCode::GameLimit));
+            }
+            (g, None)
+        }
         None => (
             GuestId(deps.ids.uuid()),
             Some(deps.ids.uuid().simple().to_string()),
