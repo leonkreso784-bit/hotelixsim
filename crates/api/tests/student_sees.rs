@@ -9,7 +9,8 @@ use api::{AppState, router};
 use app::memory::{FakeAi, deps_with_ai};
 use axum::Router;
 use common::{Resp, assert_problem, call, cookie_value, run_worker};
-use content::{Snapshot, repo_dir};
+use content::{Content, Snapshot, repo_dir};
+use game::answer_order;
 use serde_json::{Value, json};
 
 struct Student {
@@ -99,6 +100,35 @@ fn items(s: &Value) -> Vec<Value> {
     s["items"].as_array().unwrap().clone()
 }
 
+/// Prikazni položaj NAJBOLJEG odgovora (L1-13b-1, ADR-042 t. 10): izvorni broj najboljeg traži se u sadržaju (prvi s
+/// najvišom kvalitetom), a ekran pokazuje izmiješano: `answer_order(sjeme 42, slot 1, šifra, n)[položaj] = izvorni broj`.
+fn best_position(c: &Content, code: &str, n: usize) -> usize {
+    let template = code.split('.').next().unwrap();
+    let quals: Vec<u8> = match c
+        .situation_templates
+        .as_ref()
+        .and_then(|s| s.templates.iter().find(|t| t.code == template))
+    {
+        Some(t) => t.answers.iter().map(|a| a.quality()).collect(),
+        None => c
+            .situations
+            .iter()
+            .find(|s| s.code == code)
+            .unwrap_or_else(|| panic!("nema {code} u sadržaju"))
+            .answers
+            .iter()
+            .map(|a| a.quality)
+            .collect(),
+    };
+    assert_eq!(quals.len(), n, "{code}: broj odgovora na ekranu");
+    let q = *quals.iter().max().unwrap();
+    let best = quals.iter().position(|&x| x == q).unwrap();
+    answer_order(42, 1, code, n)
+        .iter()
+        .position(|&o| usize::from(o) == best)
+        .unwrap()
+}
+
 async fn round_effect(kind: &str, round: &str, next: &str, compare_next: bool) {
     let (a, b) = (Student::v2(kind).await, Student::v2(kind).await); // a odgovara na sve, b ni na jednu
     let s = a.situations().await;
@@ -114,11 +144,14 @@ async fn round_effect(kind: &str, round: &str, next: &str, compare_next: bool) {
         s["items"],
         "isto sjeme, iste situacije"
     );
+    let content = Snapshot::read_v2(&repo_dir()).unwrap().build().unwrap();
     let mut chosen = Vec::new();
     for it in &list {
         let code = it["code"].as_str().unwrap();
+        // Najbolji odgovor je na izmiješanom položaju, ne na 0.
+        let pos = best_position(&content, code, it["answers"].as_array().unwrap().len());
         let r = a
-            .post(&a.sit(code, "answer"), Some(json!({ "answer": 0 })))
+            .post(&a.sit(code, "answer"), Some(json!({ "answer": pos })))
             .await;
         assert_eq!(r.status, 200, "{code}: {:?}", r.body);
         let shown = items(&r.body)
@@ -126,13 +159,13 @@ async fn round_effect(kind: &str, round: &str, next: &str, compare_next: bool) {
             .find(|i| i["code"] == code)
             .unwrap();
         assert_eq!(
-            shown["chosen"], 0,
+            shown["chosen"], pos,
             "{code}: ekran pokazuje izabrani odgovor"
         );
         chosen.push((
             code.to_owned(),
             it["title"].as_str().unwrap().to_owned(),
-            it["answers"][0].clone(),
+            it["answers"][pos].clone(),
         ));
     }
     assert_eq!(a.situations().await["unanswered"], 0);
