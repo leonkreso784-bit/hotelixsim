@@ -640,6 +640,8 @@ export const hr = {
   "dept.costNone": "Nema obračuna",
   "dept.space": "Prostor",
   "dept.space.note": "Stanje prostora mjeri se od 0 do 100 bodova.",
+  "dept.rooms.about":
+    "Stanje prostora Smještaja pokazuje kako su održane sobe i instalacije u zgradi, i o njemu ovise kvarovi klime, bojlera, dizala, praonice i brava, curenje vode i dotrajala soba. Svaki od tih kvarova može doći tek kad stanje padne ispod svog praga (dizalo, brave i curenje vode ispod 80, klima, bojler i praonica ispod 65, dotrajala soba ispod 55 bodova), a pri još nižem stanju klima, bojler i dotrajala soba dolaze češće. Prostor se stalno troši: odgođeno održavanje ubrzava trošenje, redovno ga samo usporava, a pojačano održavanje i obnova opreme podižu stanje. Kvar spušta stanje, a hitan popravak uz dobro ocijenjen odgovor vraća više nego što je kvar uzeo.",
   "dept.wear": "trošenje {n}",
   "dept.loadWear": "preopterećenje {n}",
   "dept.upkeep": "održavanje {n}",

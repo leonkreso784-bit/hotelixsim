@@ -15,6 +15,7 @@ import { DepartmentHistory } from "./DepartmentHistory";
 import { DepartmentInsights } from "./DepartmentInsights";
 import { FOCUS, isLease, isService, leaseWithoutPeople } from "./helpers";
 import { DeptIcon } from "./icons";
+import { ROOMS_ABOUT_KEY } from "./roomsAboutKey";
 import { ScoreCard } from "./ScoreCard";
 import { ServiceCosts } from "./ServiceCard";
 import { deptScore } from "./score";
@@ -96,6 +97,8 @@ export function DepartmentDetail({
         <h1 className="min-w-0 text-3xl font-extrabold tracking-tight">{dept.name}</h1>
         {!dept.open && <Badge tone="muted">{t("dept.closed")}</Badge>}
       </div>
+      {/* L1-13b-3: o stanju Smještaja ovise kvarovi prostora (ADR-042 t. 7). */}
+      {dept.class === "rooms" && <p className="text-sm text-muted">{t(ROOMS_ABOUT_KEY)}</p>}
       {score && <ScoreCard score={score} />}
       {!service && <DepartmentInsights dept={dept} weekly={weekly} />}
       {!service && (
