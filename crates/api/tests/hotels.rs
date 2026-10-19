@@ -11,7 +11,7 @@ async fn demo_sets_httponly_cookie_once() {
         "HttpOnly",
         "SameSite=Lax",
         "Path=/",
-        "Max-Age=604800",
+        "Max-Age=10368000",
     ] {
         assert!(c.contains(part), "{c}");
     }
@@ -28,6 +28,66 @@ async fn demo_sets_httponly_cookie_once() {
         "postojeći gost ne dobiva novi kolačić"
     );
     assert_ne!(again.body["game_id"], r.body["game_id"]);
+}
+
+#[tokio::test]
+async fn demo_cookie_is_secure_only_in_production_mode() {
+    let (_, d, _) = app();
+    let plain = call(&app().0, "POST", "/v1/demo", None, None).await;
+    let c = plain.set_cookie.unwrap();
+    assert!(!c.contains("Secure"), "lokalno (http) bez Secure: {c}");
+    let secure = api::router_with_secure_cookie(api::AppState { deps: d }, true);
+    let c = call(&secure, "POST", "/v1/demo", None, None)
+        .await
+        .set_cookie
+        .unwrap();
+    for part in [
+        "Secure",
+        "HttpOnly",
+        "SameSite=Lax",
+        "Path=/",
+        "Max-Age=10368000",
+    ] {
+        assert!(c.contains(part), "{c}");
+    }
+}
+
+#[tokio::test]
+async fn me_hotel_renews_cookie_for_known_guest() {
+    let (app, _, _) = app();
+    let (tok, _, _) = demo(&app).await;
+    let r = call(&app, "GET", "/v1/me/hotel", Some(&tok), None).await;
+    assert_eq!(r.status.as_u16(), 200);
+    let c = r.set_cookie.expect("klizni rok: obnova pri otvaranju igre");
+    assert_eq!(cookie_value(&c), tok, "isti token");
+    for part in ["HttpOnly", "SameSite=Lax", "Path=/", "Max-Age=10368000"] {
+        assert!(c.contains(part), "{c}");
+    }
+    assert!(!c.contains("Secure"), "{c}");
+}
+
+#[tokio::test]
+async fn me_hotel_renewal_keeps_secure_in_production_mode() {
+    let (_, d, _) = app();
+    let secure = api::router_with_secure_cookie(api::AppState { deps: d }, true);
+    let (tok, _, _) = demo(&secure).await;
+    let r = call(&secure, "GET", "/v1/me/hotel", Some(&tok), None).await;
+    let c = r.set_cookie.expect("obnova");
+    assert!(
+        c.contains("Secure") && c.contains("Max-Age=10368000"),
+        "{c}"
+    );
+}
+
+#[tokio::test]
+async fn me_hotel_does_not_renew_cookie_for_unknown_or_broken_token() {
+    let (app, _, _) = app();
+    let unknown = "0".repeat(32);
+    for t in [Some(unknown.as_str()), Some("nije-token"), None] {
+        let r = call(&app, "GET", "/v1/me/hotel", t, None).await;
+        assert!(r.status.is_client_error(), "{t:?}: {}", r.status);
+        assert_eq!(r.set_cookie, None, "{t:?}: nema obnove bez poznatog gosta");
+    }
 }
 
 #[tokio::test]
