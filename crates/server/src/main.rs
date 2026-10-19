@@ -50,24 +50,40 @@ fn content_snapshots(
     ))
 }
 
-/// AI iz okoline: bez ključa igra radi na rezervama (neutralne presude, kratki odgovori likova).
-fn ai_port() -> Arc<dyn app::AiPort> {
-    match std::env::var("ANTHROPIC_API_KEY") {
-        Ok(k) if !k.trim().is_empty() => {
-            let models = ai::Models::from_env();
-            tracing::info!(presuda = %models.judge, lik = %models.character, mentor = %models.mentor, "AI uključen");
-            Arc::new(ai::Anthropic::new(k, models))
-        }
-        _ => {
-            tracing::warn!(
-                "ANTHROPIC_API_KEY nije postavljen: AI je isključen, igra radi na rezervama"
-            );
-            Arc::new(app::DisabledAi)
-        }
+/// AI iz postavki: bez ključa igra radi na rezervama (neutralne presude, kratki odgovori likova). Kad su stropovi
+/// postavljeni, `Anthropic` javlja potrošnju svakog odgovora brojaču (knjiga u bazi), a `CappedAi` pred njim
+/// vraća `Disabled` kad je dnevni ili mjesečni strop (UTC) dosegnut.
+fn ai_port(settings: &Settings, store: Arc<store::Store>) -> Arc<dyn app::AiPort> {
+    let Some(key) = settings.anthropic_api_key.clone() else {
+        tracing::warn!(
+            "ANTHROPIC_API_KEY nije postavljen: AI je isključen, igra radi na rezervama"
+        );
+        return Arc::new(app::DisabledAi);
+    };
+    let models = ai::Models::from_env();
+    let caps = app::spend::Caps::from_usd(settings.ai_cap_day_usd, settings.ai_cap_month_usd);
+    tracing::info!(
+        presuda = %models.judge, lik = %models.character, mentor = %models.mentor,
+        strop_dan_usd = ?settings.ai_cap_day_usd, strop_mjesec_usd = ?settings.ai_cap_month_usd,
+        "AI uključen"
+    );
+    let clock: Arc<dyn app::spend::Clock> = Arc::new(app::spend::SystemClock);
+    let client = ai::Anthropic::new(key, models);
+    if !caps.any() {
+        return Arc::new(client);
     }
+    let ledger: Arc<dyn app::spend::SpendLedger> = store;
+    let sink = Arc::new(app::spend::Metered::new(ledger.clone(), clock.clone()));
+    Arc::new(app::spend::CappedAi::new(
+        Arc::new(client.with_usage_sink(sink)),
+        ledger,
+        clock,
+        caps,
+    ))
 }
 
 fn deps(
+    settings: &Settings,
     store: store::Store,
     snapshot: content::Snapshot,
     snapshot_v2: content::Snapshot,
@@ -77,8 +93,8 @@ fn deps(
         status: s.clone(),
         log: s.clone(),
         guests: s.clone(),
-        jobs: s,
-        ai: ai_port(),
+        jobs: s.clone(),
+        ai: ai_port(settings, s),
         ids: Arc::new(app::RandomIds),
         snapshot: Arc::new(snapshot),
         snapshot_v2: Arc::new(snapshot_v2),
@@ -183,7 +199,7 @@ async fn serve() -> anyhow::Result<()> {
     let (snapshot, snapshot_v2) = content_snapshots(settings.content_dir.as_deref())?;
     let ruleset = snapshot.fingerprint();
     let store = store::Store::connect_lazy(database_url)?;
-    let deps = deps(store, snapshot, snapshot_v2);
+    let deps = deps(&settings, store, snapshot, snapshot_v2);
     let (stop, stopped) = tokio::sync::watch::channel(false);
     let mut worker = spawn_worker(deps.clone(), stopped);
     let app = api::router_with_config(api::AppState { deps }, settings.router_config());

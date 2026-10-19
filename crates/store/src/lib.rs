@@ -3,6 +3,7 @@
 mod guests;
 mod jobs;
 mod log;
+mod spend;
 
 use std::time::Duration;
 

@@ -6,8 +6,10 @@ pub mod prompts;
 pub mod request;
 pub mod response;
 
+use app::spend::UsageSink;
 use app::{AiError, AiOut, AiPort, BoxFut};
 use game::{AiMeta, AssessInput, CharacterInput, DebriefInput, SeasonDebriefInput, VerdictDraft};
+use std::sync::Arc;
 use std::time::Duration;
 
 pub use app::DisabledAi as Disabled;
@@ -56,6 +58,8 @@ pub struct Anthropic {
     key: String,
     models: Models,
     base_url: String,
+    /// Prima potrošnju svakog odgovora 2xx prije tumačenja (strop troška, pilot dio 3).
+    usage_sink: Option<Arc<dyn UsageSink>>,
 }
 
 impl std::fmt::Debug for Anthropic {
@@ -78,7 +82,22 @@ impl Anthropic {
             key,
             models,
             base_url: "https://api.anthropic.com".into(),
+            usage_sink: None,
         }
+    }
+
+    /// Druga adresa umjesto api.anthropic.com (probni poslužitelj u testovima).
+    #[must_use]
+    pub fn with_base_url(mut self, url: String) -> Anthropic {
+        self.base_url = url;
+        self
+    }
+
+    /// Brojač troška: dobiva potrošnju svakog odgovora 2xx, i odrezanog i neparsabilnog.
+    #[must_use]
+    pub fn with_usage_sink(mut self, sink: Arc<dyn UsageSink>) -> Anthropic {
+        self.usage_sink = Some(sink);
+        self
     }
 
     async fn post(&self, body: serde_json::Value) -> Result<Reply, AiError> {
@@ -101,6 +120,15 @@ impl Anthropic {
             .text()
             .await
             .map_err(|e| AiError::Unavailable(format!("čitanje odgovora: {}", e.without_url())))?;
+        if (200..300).contains(&status)
+            && let Some(sink) = &self.usage_sink
+            && let Some(mut usage) = response::parse_usage(&text)
+        {
+            if usage.model.is_empty() {
+                usage.model = body["model"].as_str().unwrap_or_default().to_owned();
+            }
+            sink.record(usage).await;
+        }
         response::parse_reply(status, &text)
     }
 }
