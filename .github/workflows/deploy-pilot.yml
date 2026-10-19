@@ -1,0 +1,42 @@
+name: Deploy pilot
+
+# Samo ručno pokretanje. Okolina "pilot" u GitHubu ima obaveznog odobravatelja (Leon): bez njegovog odobrenja posao ne kreće.
+# Sve tajne i adrese dolaze iz secrets.* / vars.* (vidi pilot-6-report.md); ništa nije tvrdo u datoteci.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-pilot
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment: pilot
+    timeout-minutes: 45
+    env:
+      # Projektni token Railwaya (Project Settings -> Tokens), vezan uz jednu okolinu.
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with: { node-version: 24, package-manager-cache: false }
+      # Railway sam gradi sliku iz Dockerfilea; migracije se pokreću u CMD slike (server migrate && server serve).
+      - name: Isporuka na Railway
+        run: npx --yes @railway/cli@5.70.0 up --ci --service "${{ vars.RAILWAY_SERVICE }}"
+      - name: Čekanje da /v1/health vrati 200
+        env:
+          PILOT_URL: ${{ vars.PILOT_URL }}
+        run: |
+          test -n "$PILOT_URL" || { echo "vars.PILOT_URL nije postavljen"; exit 1; }
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${PILOT_URL%/}/v1/health" || true)
+            echo "pokušaj $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "health nije vratio 200 u 10 minuta"
+          exit 1
