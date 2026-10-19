@@ -158,6 +158,7 @@ describe("Odluke odjela na ekranu odjela", () => {
     }));
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
+    fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
     fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(await within(bar).findByText("1 sezonski radnik")).toBeTruthy();
     expect(within(bar).getByText("90 %")).toBeTruthy();

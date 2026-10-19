@@ -3,7 +3,7 @@
 // polja koja nije dirao prate plan poslužitelja. Ključ nosi hotel i krug, pa izmjene starog kruga ne prelaze u novi (ekran
 // kaže da nisu prenesene i briše ih). Spremište je `sessionStorage` (samo ova kartica preglednika); memorija stranice je
 // uvijek najnovija (i kad spremište odbije upis ili brisanje), spremište služi da izmjene prežive osvježavanje.
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 const PREFIX = "hotelixsim:nacrt:";
 /** Najnovije stanje ključa u ovoj stranici; `null` znači obrisano (i kad spremište brisanje odbije). */
@@ -26,8 +26,29 @@ function load(key: string): string | null {
   }
 }
 
+/** Broj promjena nacrta u ovoj stranici: ekrani koji čitaju nacrte (gumb „Spremi plan“, obrasci) se ponovno crtaju. */
+let version = 0;
+const listeners = new Set<() => void>();
+
+function notify() {
+  version += 1;
+  for (const l of [...listeners]) l();
+}
+
+/** Ponovno crtanje kad se bilo koji nacrt promijeni (i s drugog ekrana). */
+export function useDraftsVersion(): number {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => version,
+  );
+}
+
 function save(key: string, value: string | null) {
   memory.set(key, value);
+  notify();
   try {
     const s = storage();
     if (!s) return;
@@ -79,6 +100,7 @@ export function writeDraft<T extends object>(key: string, changes: Partial<T> | 
 /** Za testove: briše sve nacrte (memoriju i spremište). */
 export function clearDrafts() {
   memory.clear();
+  notify();
   try {
     const s = storage();
     if (!s) return;
@@ -86,6 +108,13 @@ export function clearDrafts() {
   } catch {
     // Nema spremišta: memorija je već prazna.
   }
+}
+
+/** Nakon spremanja briše samo poslane izmjene: ono što je upisano dok je zahtjev trajao ostaje. */
+export function settleDraft<T extends object>(key: string, sent: Partial<T>) {
+  const next: Partial<T> = { ...readDraft<T>(key) };
+  for (const k of Object.keys(sent) as (keyof T)[]) if (next[k] === sent[k]) delete next[k];
+  writeDraft(key, next);
 }
 
 /** Nacrti hotela za krug: ima li ga plan i koji ga odjeli imaju (za potvrdu zatvaranja i sažetak u planu). */
@@ -111,24 +140,15 @@ function staleKeys(scope: "plan" | "dept", hotelId: string, round: string): stri
  * ono što je upisano dok je zahtjev trajao ostaje. Kad se ključ promijeni (novi krug), vrijede izmjene novog ključa.
  */
 export function useDraft<T extends object>(key: string, base: T) {
-  const [entry, setEntry] = useState(() => ({ key, changes: readDraft<T>(key) }));
-  const changes = entry.key === key ? entry.changes : readDraft<T>(key);
-  const store = (next: Partial<T>) => {
-    writeDraft(key, next);
-    setEntry({ key, changes: next });
-  };
+  useDraftsVersion();
   return {
-    changes,
+    changes: readDraft<T>(key),
     update(patch: Partial<T>) {
       const next: Partial<T> = { ...readDraft<T>(key), ...patch };
       for (const k of Object.keys(next) as (keyof T)[]) if (next[k] === base[k]) delete next[k];
-      store(next);
+      writeDraft(key, next);
     },
-    settle(sent: Partial<T>) {
-      const next: Partial<T> = { ...readDraft<T>(key) };
-      for (const k of Object.keys(sent) as (keyof T)[]) if (next[k] === sent[k]) delete next[k];
-      store(next);
-    },
+    settle: (sent: Partial<T>) => settleDraft(key, sent),
   };
 }
 

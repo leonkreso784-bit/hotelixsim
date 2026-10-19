@@ -1,8 +1,11 @@
 // Odluke odjela za otvoreni krug (samo v2). Granice i ukupni korak sezonskih radnika dolaze od poslužitelja. Kad krug
-// nije otvoren, odluke su samo za čitanje. Ako se dok je ekran otvoren otvori novi krug, rečenica to kaže.
+// nije otvoren, odluke su samo za čitanje. Ako se dok je ekran otvoren otvori novi krug, rečenica to kaže. Odluke sprema
+// jedini gumb „Spremi plan“ (traka ispod), zajedno s ostalim odjelima i planom hotela.
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
 import { useRoundChanged, useStaleDrafts } from "../../drafts";
 import { RoundNotice } from "../plan/RoundNotice";
+import { SavePlanBar } from "../plan/SavePlanBar";
+import { roundChanged, usePlanSave } from "../plan/usePlanSave";
 import { DecisionsEditor } from "./DecisionsEditor";
 import { DecisionsReadOnly } from "./DecisionsReadOnly";
 
@@ -12,6 +15,7 @@ export function DepartmentDecisions({
   planState,
   weekly,
   cashCents,
+  roundLabel,
 }: {
   hotelId: string;
   dept: DepartmentBody;
@@ -20,7 +24,10 @@ export function DepartmentDecisions({
   weekly: boolean;
   /** Blagajna sada (moj hotel), za blagajnu nakon plaćanja obnove. */
   cashCents: number;
+  /** Naziv otvorenog kruga za potvrdu spremanja. */
+  roundLabel: string;
 }) {
+  const saver = usePlanSave(hotelId, planState);
   const newRound = useRoundChanged(planState?.round ?? null);
   const stale = useStaleDrafts("dept", hotelId, planState?.round ?? null);
   const plans = planState?.plan.departments ?? null;
@@ -31,7 +38,7 @@ export function DepartmentDecisions({
   if (!plans || !entry || !limits) return null;
   return (
     <>
-      <RoundNotice show={newRound || stale} weekly={weekly} />
+      <RoundNotice show={newRound || stale || roundChanged(saver.save.error)} weekly={weekly} />
       <DecisionsEditor
         // Po krugu i odjelu: stanje spremanja i greške ne prelaze s odjela na odjel (minor pregleda 7).
         key={`${planState.round}:${dept.code}`}
@@ -42,10 +49,16 @@ export function DepartmentDecisions({
         entry={entry}
         limits={limits}
         stepTotal={planState.limits.seasonal_step_total ?? 0}
-        seasonalMax={planState.limits.seasonal_max}
         weekly={weekly}
         state={planState}
         cashCents={cashCents}
+      />
+      <SavePlanBar
+        saver={saver}
+        round={roundLabel}
+        only={dept.code}
+        seasonalMax={planState.limits.seasonal_max}
+        weekly={weekly}
       />
     </>
   );
