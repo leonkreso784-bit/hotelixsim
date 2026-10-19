@@ -14,11 +14,12 @@ interface Template {
   kind: string;
   department: string;
   condition_of?: string;
+  when?: { dept_condition_pts?: { below?: number } };
+  chance?: { boost?: { when?: { dept_condition_pts?: unknown } }[] };
 }
 
 // Sirovi tekst sadržaja (Vite `?raw`; web nema Node tipove).
-const raw = rawContent;
-const templates = (JSON.parse(raw) as { templates: Template[] }).templates;
+const templates = (JSON.parse(rawContent) as { templates: Template[] }).templates;
 
 /** Šifra predloška → ključna riječ u tekstu (kad je kvar vezan uz Smještaj tekst je MORA sadržavati, inače NE SMIJE). */
 const KEYWORD: Record<string, RegExp> = {
@@ -53,11 +54,9 @@ function spaces(tpl: Template): string[] {
   return tpl.department === "hotel" ? [] : [tpl.department];
 }
 
+/** Parsiran predložak, ne sirovi tekst: predložak ne može tiho ispasti iz popisa zbog razmaka u JSON-u. */
 function conditionBound(tpl: Template): boolean {
-  const start = raw.indexOf(`"code": "${tpl.code}"`);
-  const next = raw.indexOf(`"code": "`, start + 1);
-  const block = raw.slice(start, next === -1 ? undefined : next);
-  return /"dept_condition\w*"/.test(block) || tpl.condition_of !== undefined;
+  return tpl.condition_of !== undefined || JSON.stringify(tpl).includes('"dept_condition');
 }
 
 const bound = templates.filter((tpl) => spaces(tpl).length > 0 && conditionBound(tpl));
@@ -70,7 +69,7 @@ function text(): string {
 
 describe("Opis Smještaja ↔ sadržaj kvarova", () => {
   it("sadržaj ima kvarove vezane uz Smještaj (čuvar izvođenja nije prazan)", () => {
-    expect(roomsBound.length).toBeGreaterThanOrEqual(5);
+    expect(roomsBound.length).toBeGreaterThanOrEqual(7);
   });
 
   it("svaka šifra iz sadržaja ima ključnu riječ u tablici (nova šifra = pregledaj tekst)", () => {
@@ -90,5 +89,61 @@ describe("Opis Smještaja ↔ sadržaj kvarova", () => {
     expect(body).not.toBe("");
     const wrong = otherBound.filter((tpl) => KEYWORD[tpl.code]?.test(body)).map((tpl) => tpl.code);
     expect(wrong).toEqual([]);
+  });
+
+  /** Prag (bodovi) iz kojeg jezgra pušta predložak: `when.dept_condition_pts.below` / 100. */
+  function threshold(tpl: Template): number {
+    const below = tpl.when?.dept_condition_pts?.below;
+    if (typeof below !== "number") throw new Error(`${tpl.code}: nema when.dept_condition_pts.below`);
+    return below / 100;
+  }
+
+  it('pragovi u tekstu ("… ispod N") odgovaraju pragovima kvarova iz sadržaja i obrnuto', () => {
+    const body = text();
+    expect(body).not.toBe("");
+    const found = [...body.matchAll(/ispod (\d+)/g)];
+    const byCode = new Map<string, number>();
+    for (const m of found) {
+      // Odsječak prije „ispod N": od prethodnog „ispod N", točke, dvotočke ili zagrade.
+      const before = body.slice(0, m.index);
+      const prev = found.filter((f) => (f.index ?? 0) < (m.index ?? 0)).at(-1);
+      const start = Math.max(
+        prev ? (prev.index ?? 0) + prev[0].length : 0,
+        before.lastIndexOf("."),
+        before.lastIndexOf(":"),
+        before.lastIndexOf("("),
+      );
+      const segment = body.slice(start, m.index);
+      for (const tpl of roomsBound) if (KEYWORD[tpl.code]?.test(segment)) byCode.set(tpl.code, Number(m[1]));
+    }
+    const wrong = roomsBound
+      .filter((tpl) => byCode.get(tpl.code) !== threshold(tpl))
+      .map(
+        (tpl) =>
+          `${tpl.code}: u tekstu ${byCode.get(tpl.code) ?? "nema praga"}, u sadržaju ${threshold(tpl)}`,
+      );
+    expect(wrong).toEqual([]);
+    // Obrnuto: svaki prag spomenut u tekstu postoji u sadržaju kvarova Smještaja.
+    const real = new Set(roomsBound.map(threshold));
+    expect([...new Set(found.map((m) => Number(m[1])))].filter((n) => !real.has(n))).toEqual([]);
+  });
+
+  it("popis „češće pri nižem stanju” u tekstu = kvarovi Smještaja s chance.boost po stanju", () => {
+    const body = text();
+    const at = body.indexOf("češće");
+    expect(at).toBeGreaterThan(-1);
+    const before = body.slice(0, at);
+    const lastBelow = [...before.matchAll(/ispod \d+/g)].at(-1);
+    const start = Math.max(
+      before.lastIndexOf(". "),
+      lastBelow ? (lastBelow.index ?? 0) + lastBelow[0].length : 0,
+    );
+    const clause = body.slice(start, at);
+    const mentioned = roomsBound.filter((tpl) => KEYWORD[tpl.code]?.test(clause)).map((tpl) => tpl.code);
+    const boosted = roomsBound
+      .filter((tpl) => tpl.chance?.boost?.some((b) => b.when?.dept_condition_pts !== undefined))
+      .map((tpl) => tpl.code);
+    expect(boosted.length).toBeGreaterThan(0);
+    expect([...mentioned].sort()).toEqual([...boosted].sort());
   });
 });
