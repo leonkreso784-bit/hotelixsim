@@ -82,12 +82,27 @@ pub struct SeasonDebriefPayload {
 /// Jedan korak radnika: preuzmi posao, obradi ga, a grešku zapiši u red (ponovni pokušaj ili `failed`).
 /// `true` = obradio posao, `false` = red je prazan.
 pub async fn run_next_job(deps: &Deps) -> Result<bool, AppError> {
+    run_next_job_until(deps, std::future::pending()).await
+}
+
+/// Kao `run_next_job`, ali se posao u radu prekida čim `cancel` završi: tada se VRAĆA u red bez potrošenog
+/// pokušaja (`defer(.., 0)`), pa ga nova instanca preuzme odmah, a ne tek kad istekne zakup (`LEASE_SECS`).
+/// Služi uredno gašenju poslužitelja (deploy usred presude).
+pub async fn run_next_job_until(
+    deps: &Deps,
+    cancel: impl std::future::Future<Output = ()>,
+) -> Result<bool, AppError> {
     let Some(job) = deps.jobs.claim(LEASE_SECS).await? else {
         return Ok(false);
     };
-    match run_job(deps, &job).await {
-        Ok(()) => Ok(true),
-        Err(e) => {
+    match race(run_job(deps, &job), cancel).await {
+        None => {
+            // prekinuti posao nije dovršen: vrati ga u red; ako je u međuvremenu već zatvoren, defer ne radi ništa
+            deps.jobs.defer(job.claim(), 0).await?;
+            Ok(true)
+        }
+        Some(Ok(())) => Ok(true),
+        Some(Err(e)) => {
             // izvornu grešku posla ne smije progutati greška zapisivanja u red
             if let Err(f) = deps.jobs.fail(job.claim(), format!("{e}")).await {
                 return Err(AppError {
@@ -98,6 +113,25 @@ pub async fn run_next_job(deps: &Deps) -> Result<bool, AppError> {
             Err(e)
         }
     }
+}
+
+/// `Some(rezultat)` ako `work` završi prvi, `None` ako prvi završi `cancel` (tada se `work` odbacuje).
+async fn race<T>(
+    work: impl std::future::Future<Output = T>,
+    cancel: impl std::future::Future<Output = ()>,
+) -> Option<T> {
+    let mut work = Box::pin(work);
+    let mut cancel = Box::pin(cancel);
+    std::future::poll_fn(|cx| {
+        if let std::task::Poll::Ready(v) = work.as_mut().poll(cx) {
+            return std::task::Poll::Ready(Some(v));
+        }
+        if cancel.as_mut().poll(cx).is_ready() {
+            return std::task::Poll::Ready(None);
+        }
+        std::task::Poll::Pending
+    })
+    .await
 }
 
 async fn run_job(deps: &Deps, job: &Job) -> Result<(), AppError> {

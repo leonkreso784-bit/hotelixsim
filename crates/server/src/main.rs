@@ -132,7 +132,16 @@ fn spawn_worker(
     tokio::spawn(async move {
         while !*stop.borrow() {
             let d = deps.clone();
-            let pause = match tick(async move { app::run_next_job(&d).await }).await {
+            let mut gasenje = stop.clone();
+            let job = async move {
+                app::run_next_job_until(&d, async move {
+                    // gašenje: posao u radu dobiva JOB_GRACE da završi, pa se vraća u red
+                    let _ = gasenje.wait_for(|v| *v).await;
+                    tokio::time::sleep(JOB_GRACE).await;
+                })
+                .await
+            };
+            let pause = match tick(job).await {
                 Tick::Worked => continue,
                 Tick::Idle => std::time::Duration::from_millis(250),
                 Tick::Failed => std::time::Duration::from_secs(1),
@@ -145,8 +154,12 @@ fn spawn_worker(
     })
 }
 
-/// Koliko se čeka da radnik dovrši posao u radu prije `abort()`.
-const WORKER_GRACE: std::time::Duration = std::time::Duration::from_secs(10);
+/// Koliko posao u radu smije dovršiti nakon signala za gašenje; zatim se vraća u red (`defer`) da ga nova
+/// instanca preuzme odmah. Railway šalje SIGKILL nakon `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` (zadano 0 do 3 s,
+/// podesivo), pa je to najbolji pokušaj; u dijelu 9 postaviti varijablu na 30 s.
+const JOB_GRACE: std::time::Duration = std::time::Duration::from_secs(8);
+/// Koliko `serve` čeka da se radnik ugasi nakon `JOB_GRACE` (zapis u red) prije `abort()`.
+const WORKER_EXIT: std::time::Duration = std::time::Duration::from_secs(5);
 
 async fn serve() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
@@ -185,18 +198,19 @@ async fn serve() -> anyhow::Result<()> {
         web = settings.web_dir.is_some(),
         "HotelixSim API sluša na http://{addr}"
     );
-    shutdown::serve_until(listener, app, async {
+    shutdown::serve_until(listener, app, async move {
         shutdown::signal().await;
+        // radnik prestaje preuzimati poslove ODMAH, usporedo s pražnjenjem HTTP veza
+        stop.send_replace(true);
         tracing::info!("signal za gašenje: završavam zahtjeve u tijeku");
     })
     .await?;
-    let _ = stop.send(true);
-    if tokio::time::timeout(WORKER_GRACE, &mut worker)
+    if tokio::time::timeout(JOB_GRACE + WORKER_EXIT, &mut worker)
         .await
         .is_err()
     {
         tracing::warn!(
-            "radnik se nije ugasio u roku: prekidam (posao se preuzima nakon isteka zakupa)"
+            "radnik se nije ugasio u roku: prekidam (posao u radu se preuzima nakon isteka zakupa)"
         );
         worker.abort();
     }

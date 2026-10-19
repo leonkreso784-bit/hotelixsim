@@ -5,6 +5,8 @@ use axum::extract::{Request, State};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD;
 use sha2::{Digest, Sha256};
 
 /// Putanja koja ostaje otvorena (ping i provjera Railwaya).
@@ -71,33 +73,10 @@ fn password_from_basic(header: &str) -> Option<String> {
     if !scheme.eq_ignore_ascii_case("basic") {
         return None;
     }
-    let bytes = base64_decode(rest.trim())?;
+    let bytes = STANDARD.decode(rest.trim()).ok()?;
     let text = String::from_utf8(bytes).ok()?;
     let (_, password) = text.split_once(':')?;
     Some(password.to_owned())
-}
-
-fn base64_decode(s: &str) -> Option<Vec<u8>> {
-    let s = s.trim_end_matches('=');
-    let mut out = Vec::with_capacity(s.len() * 3 / 4);
-    let (mut acc, mut bits) = (0u32, 0u32);
-    for c in s.bytes() {
-        let v = match c {
-            b'A'..=b'Z' => c - b'A',
-            b'a'..=b'z' => c - b'a' + 26,
-            b'0'..=b'9' => c - b'0' + 52,
-            b'+' => 62,
-            b'/' => 63,
-            _ => return None,
-        };
-        acc = ((acc << 6) | u32::from(v)) & 0xff_ffff;
-        bits += 6;
-        if bits >= 8 {
-            bits -= 8;
-            out.push(u8::try_from((acc >> bits) & 0xff).ok()?);
-        }
-    }
-    Some(out)
 }
 
 #[cfg(test)]

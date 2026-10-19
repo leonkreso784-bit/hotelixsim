@@ -45,6 +45,7 @@ version = "0.1.0"
 dependencies = [
  "app",
  "axum",
+ "base64 0.22.1",
  "content",
  "game",
  "http-body-util",

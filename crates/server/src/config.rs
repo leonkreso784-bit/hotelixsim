@@ -27,8 +27,10 @@ pub struct Settings {
 pub enum ConfigError {
     /// Obavezne varijable (u produkciji) koje nedostaju ili su prazne.
     Missing(Vec<&'static str>),
-    /// Varijabla s vrijednošću koja se ne razumije.
+    /// Varijabla s vrijednošću koja se ne razumije (`value` nikad ne sadrži lozinku).
     Invalid { var: &'static str, value: String },
+    /// Adresa nije lokalna, a lozinke stranice nema: stranica i AI bili bi otvoreni svima.
+    OpenWithoutPassword { addr: String },
 }
 
 impl fmt::Display for ConfigError {
@@ -39,9 +41,16 @@ impl fmt::Display for ConfigError {
                 "produkcijski način ({PRODUCTION}) traži varijable koje nedostaju: {}",
                 vars.join(", ")
             ),
-            ConfigError::Invalid { var, value } => write!(
+            ConfigError::Invalid { var, value } if *var == PRODUCTION => write!(
                 f,
                 "varijabla {var} ima neispravnu vrijednost {value:?} (dopušteno: 1, true, 0, false)"
+            ),
+            ConfigError::Invalid { var, value } => {
+                write!(f, "varijabla {var} je neispravna: {value}")
+            }
+            ConfigError::OpenWithoutPassword { addr } => write!(
+                f,
+                "adresa {addr} nije lokalna, a {PASSWORD} nije postavljena: stranica bi bila otvorena svima                  (postavi lozinku ili slušaj na 127.0.0.1)"
             ),
         }
     }
@@ -84,12 +93,20 @@ impl Settings {
                 }
             },
         };
+        let site_password = get(PASSWORD);
+        if site_password.as_ref().is_some_and(|p| p.trim() != p) {
+            // zalijepljena lozinka s razmakom ili novim retkom: studenti ne bi mogli ući, a nitko ne bi vidio zašto
+            return Err(ConfigError::Invalid {
+                var: PASSWORD,
+                value: "razmak ili novi redak na početku ili kraju lozinke".to_owned(),
+            });
+        }
         let settings = Settings {
             production,
             addr: get(ADDR).unwrap_or_else(|| DEFAULT_ADDR.to_owned()),
             content_dir: get(CONTENT).map(PathBuf::from),
             database_url: get(DATABASE_URL),
-            site_password: get(PASSWORD),
+            site_password,
             web_dir: get(WEB).map(PathBuf::from),
         };
         if production {
@@ -107,6 +124,12 @@ impl Settings {
                 return Err(ConfigError::Missing(missing));
             }
         }
+        // neovisno o HOTELIXSIM_PRODUKCIJA: prazna ili pogrešna zastavica ne smije otvoriti javnu adresu bez vrata
+        if settings.site_password.is_none() && !is_local_addr(&settings.addr) {
+            return Err(ConfigError::OpenWithoutPassword {
+                addr: settings.addr,
+            });
+        }
         Ok(settings)
     }
 
@@ -117,4 +140,16 @@ impl Settings {
             web_dir: self.web_dir.clone(),
         }
     }
+}
+
+/// `127.0.0.1:port`, `[::1]:port`, `localhost:port` (i ostale loopback adrese) su lokalne.
+fn is_local_addr(addr: &str) -> bool {
+    let host = match addr.strip_prefix('[') {
+        Some(rest) => rest.split_once(']').map_or(rest, |(h, _)| h),
+        None => addr.rsplit_once(':').map_or(addr, |(h, _)| h),
+    };
+    host.eq_ignore_ascii_case("localhost")
+        || host
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| ip.is_loopback())
 }
