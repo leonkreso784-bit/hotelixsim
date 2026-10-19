@@ -400,10 +400,13 @@ describe("nespremljene izmjene i svjež plan", () => {
     const card = rest.closest("section") as HTMLElement;
     const retry = await within(card).findByRole("button", { name: "Ponovno učitaj odjele" });
     expect(retry.className).toMatch(/lg:hidden/);
+    // Izmjena odjela (nacrt; broj radnika se bez popisa ne može mijenjati): spremanje čeka popis odjela dok ga nema (aria-disabled, ne disabled).
+    fireEvent.click(within(rest).getByRole("radio", { name: "odgođeno" }));
+    expect(screen.getByRole("button", { name: "Spremi plan" }).getAttribute("aria-disabled")).toBe("true");
     failing = false;
     fireEvent.click(retry);
     await waitFor(() =>
-      expect((screen.getByRole("button", { name: "Spremi plan" }) as HTMLButtonElement).disabled).toBe(false),
+      expect(screen.getByRole("button", { name: "Spremi plan" }).getAttribute("aria-disabled")).toBe("false"),
     );
     expect(within(card).queryByRole("button", { name: "Ponovno učitaj odjele" })).toBeNull();
   });

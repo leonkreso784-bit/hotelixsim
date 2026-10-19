@@ -7,7 +7,7 @@ import type { HotelBody, PlanBody } from "../api/types";
 import { draftKey, readDraft } from "../drafts";
 import { navigate } from "../router";
 import { json, problem } from "../test/fakeApi";
-import { HOTEL_ID, v2Api, v2PlanHotel } from "../test/fixtures";
+import { departmentsBody, HOTEL_ID, v2Api, v2PlanHotel } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
 
 afterEach(() => {
@@ -182,6 +182,77 @@ describe("jedan gumb Spremi plan", () => {
     expect(await screen.findByText(/previše sezonskih radnika/)).toBeTruthy();
     expect(api.posts(PUT)).toHaveLength(0);
     expect(readDraft(draftKey("dept", HOTEL_ID, "t01", "restaurant"))).toMatchObject({ seasonal_target: 4 });
+  });
+});
+
+describe("jedan gumb Spremi plan: runda 2", () => {
+  const NEW_ROUND =
+    "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.";
+
+  it("409 round_changed s objedinjenim nacrtima: bez PUT-a, rečenica o novom tjednu, nacrt odjela nije tiho izgubljen", async () => {
+    let reads = 0;
+    const next = v2PlanHotel();
+    if (next.private?.plan) next.private.plan.round = "t02";
+    const api = v2Api().on("GET", "/v1/me/hotel", () => {
+      reads += 1;
+      return json(200, reads <= 2 ? v2PlanHotel() : next);
+    });
+    renderApp(api, "/plan");
+    await screen.findByLabelText(PRICE);
+    await editEverywhere();
+    // Dohvat prije spremanja već vidi novi krug.
+    reads = 2;
+    fireEvent.click(screen.getByRole("button", SAVE));
+    expect(await screen.findByText(NEW_ROUND)).toBeTruthy();
+    expect(api.calls.filter((c) => c.method === "PUT")).toHaveLength(0);
+    expect(screen.queryByRole("alert")).toBeNull();
+    // Nacrt odjela ostaje dok ga student ne vidi; na ekranu odjela stoji ista rečenica, pa se tek tada briše.
+    expect(readDraft(draftKey("dept", HOTEL_ID, "t01", "lobby_bar"))).toMatchObject({ seasonal_target: 4 });
+    act(() => navigate("/odjeli/lobby_bar"));
+    expect(await screen.findByText(NEW_ROUND)).toBeTruthy();
+  });
+
+  it("popis odjela se ne učita a postoje nacrti odjela: poruka i „Ponovno učitaj odjele“ uz gumb, ne tiho neaktivan", async () => {
+    let failing = true;
+    const api = storingApi().on("GET", "/v1/hotels/:hotel/departments", () =>
+      failing ? problem(500, "internal") : json(200, departmentsBody()),
+    );
+    renderApp(api, "/odjeli/lobby_bar");
+    // Bez popisa odjela broj radnika se ne može mijenjati, pa je nacrt izmjena održavanja.
+    fireEvent.click(within(await group("Lobby bar")).getByRole("radio", { name: "odgođeno" }));
+    act(() => navigate("/plan"));
+    await screen.findByLabelText(PRICE);
+    expect(screen.getByRole("button", SAVE).getAttribute("aria-disabled")).toBe("true");
+    const retry = await screen.findAllByRole("button", { name: "Ponovno učitaj odjele" });
+    failing = false;
+    fireEvent.click(retry[retry.length - 1] as HTMLElement);
+    await waitFor(() => expect(screen.getByRole("button", SAVE).getAttribute("aria-disabled")).toBe("false"));
+    expect(screen.queryByRole("button", { name: "Ponovno učitaj odjele" })).toBeNull();
+  });
+
+  it("na stranici odjela traka kaže što se još sprema (plan hotela i drugi odjeli)", async () => {
+    renderApp(storingApi(), "/plan");
+    fireEvent.change(await screen.findByLabelText(PRICE), { target: { value: "150" } });
+    act(() => navigate("/odjeli/lobby_bar"));
+    fireEvent.click(
+      within(await group("Lobby bar")).getByRole("button", { name: "Zaposli sezonskog radnika" }),
+    );
+    expect(screen.queryByText(/^Sprema se i:/)).toBeTruthy();
+    expect(screen.getByText("Sprema se i: plan hotela.")).toBeTruthy();
+    act(() => navigate("/odjeli/restaurant"));
+    await group("Restoran");
+    expect(screen.getByText("Sprema se i: plan hotela, Lobby bar.")).toBeTruthy();
+  });
+
+  it("odlazak s ekrana prije odgovora: nacrti se ipak brišu (zatvaranje kruga ne upozorava lažno)", async () => {
+    const api = storingApi();
+    renderApp(api, "/plan");
+    fireEvent.change(await screen.findByLabelText(PRICE), { target: { value: "150" } });
+    fireEvent.click(screen.getByRole("button", SAVE));
+    act(() => navigate("/"));
+    await waitFor(() => expect(readDraft(draftKey("plan", HOTEL_ID, "t01"))).toEqual({}));
+    fireEvent.click(await screen.findByRole("button", { name: "Zatvori tjedan" }));
+    expect(screen.queryByRole("link", { name: "Otvori plan" })).toBeNull();
   });
 });
 

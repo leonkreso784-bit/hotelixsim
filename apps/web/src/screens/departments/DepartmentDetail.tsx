@@ -88,6 +88,12 @@ export function DepartmentDetail({
   const service = isService(dept.class);
   const empty = service ? dept.service_last === null : dept.last === null;
   const score = deptScore(dept);
+  const open = planState && game ? roundInfo(game, planState.round) : null;
+  const roundLabel = !planState
+    ? ""
+    : open
+      ? roundPhrase(open)
+      : roundWithoutGame(planState.round, planState.month);
   return (
     <div className="space-y-3">
       {back}
@@ -105,11 +111,7 @@ export function DepartmentDetail({
           planState={planState}
           weekly={weekly}
           cashCents={cashCents}
-          roundLabel={(() => {
-            if (!planState) return "";
-            const info = game ? roundInfo(game, planState.round) : null;
-            return info ? roundPhrase(info) : roundWithoutGame(planState.round, planState.month);
-          })()}
+          roundLabel={roundLabel}
         />
       )}
       {service && empty && (

@@ -26,6 +26,14 @@ export function SavePlanBar({
   submit?: boolean;
 }) {
   const { save, problem } = saver;
+  // Stranica odjela: gumb sprema i sve ostalo s nacrtom, pa traka kaže što još ide (plan hotela, drugi odjeli).
+  const names = new Map((saver.list.data?.departments ?? []).map((d) => [d.code, d.name]));
+  const also = only
+    ? [
+        ...(saver.hotelDirty ? [t("plan.alsoSaving.hotel")] : []),
+        ...saver.dirtyDepts.filter((c) => c !== only).map((c) => names.get(c) ?? c),
+      ]
+    : [];
   return (
     <div className="space-y-3">
       {problem === "invalid" && <ErrorText>{t("plan.invalid")}</ErrorText>}
@@ -36,6 +44,17 @@ export function SavePlanBar({
       {problem === "error" && !roundChanged(save.error) && (
         <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
       )}
+      {saver.listFailed && (
+        <div className="space-y-2">
+          <ErrorText>{problemMessage(saver.list.error, weekly)}</ErrorText>
+          <Button variant="secondary" onClick={() => void saver.list.refetch()}>
+            {t("dept.decide.retry")}
+          </Button>
+        </div>
+      )}
+      {also.length > 0 && (
+        <p className="text-sm text-muted">{t("plan.alsoSaving", { parts: also.join(", ") })}</p>
+      )}
       {saver.done && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
       {(only ? saver.dirtyDepts.includes(only) : saver.dirty) && (
         <p className="text-sm font-semibold">{t("plan.unsaved")}</p>
@@ -43,6 +62,7 @@ export function SavePlanBar({
       <Button
         type={submit ? "submit" : "button"}
         aria-disabled={!saver.enabled}
+        className={only ? "md:max-w-md" : undefined}
         onClick={submit ? undefined : saver.run}
       >
         {t("plan.save")}

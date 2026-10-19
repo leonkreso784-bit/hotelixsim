@@ -424,5 +424,7 @@ describe("Odjeli", () => {
     ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Spremi odluke odjela" })).toBeNull();
     expect(screen.getAllByRole("button", { name: "Spremi plan" })).toHaveLength(1);
+    // Raspored na računalu (M-3): gumb je u istom uskom stupcu kao odluke.
+    expect(screen.getByRole("button", { name: "Spremi plan" }).className).toMatch(/md:max-w-md/);
   });
 });

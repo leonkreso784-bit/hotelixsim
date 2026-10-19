@@ -352,6 +352,8 @@ export const hr = {
   "plan.renovation.thin": "Pozor: nakon obnove u blagajni ostaje manje od jednog tjedna plaća ({payroll}).",
   "plan.invalid": "Upiši brojeve u dopuštenom rasponu.",
   "plan.unsaved": "Izmjene još nisu spremljene.",
+  "plan.alsoSaving": "Sprema se i: {parts}.",
+  "plan.alsoSaving.hotel": "plan hotela",
   "close.unsaved":
     "Plan ili odluke odjela imaju nespremljene izmjene: mjesec se obračunava bez njih. Spremi ih prije zatvaranja.",
   "close.unsaved.week":

@@ -83,8 +83,8 @@ export function usePlanSave(hotelId: string, state: PlanStateBody | null) {
     const hotel = touchedOnly(all, Object.keys(planChanges) as (keyof Draft)[]);
     const sentPlan = { ...planChanges };
     const sentDepts = depts.map((d) => ({ ...d, mine: { ...d.mine } }));
-    save.mutate(
-      {
+    save
+      .mutateAsync({
         round: state.round,
         patch: (cur) => {
           const next: PlanBody = { ...cur, ...hotel };
@@ -102,17 +102,19 @@ export function usePlanSave(hotelId: string, state: PlanStateBody | null) {
             maintenance: departments.rooms?.maintenance ?? next.maintenance,
           };
         },
-      },
-      {
-        onSuccess: () => {
-          settleDraft<Draft>(planKey, sentPlan);
-          for (const d of sentDepts) settleDraft<Entry>(draftKey("dept", hotelId, round, d.code), d.mine);
-        },
-        onSettled: () => {
-          inFlight.current = false;
-        },
-      },
-    );
+      })
+      .then(() => {
+        // Promise, ne opcije mutate: nacrti se brišu i kad se ekran napusti prije odgovora (inače bi zatvaranje
+        // kruga lažno upozorilo na nespremljeno).
+        settleDraft<Draft>(planKey, sentPlan);
+        for (const d of sentDepts) settleDraft<Entry>(draftKey("dept", hotelId, round, d.code), d.mine);
+      })
+      .catch(() => {
+        // Greška je u `save.error` i prikazuje se u traci; nacrti ostaju.
+      })
+      .finally(() => {
+        inFlight.current = false;
+      });
   }
 
   const shown = attempt?.sig === sig ? attempt.problem : null;
@@ -122,6 +124,10 @@ export function usePlanSave(hotelId: string, state: PlanStateBody | null) {
     run,
     dirty,
     dirtyDepts: depts.map((d) => d.code),
+    hotelDirty: saved !== null && differs(saved, planChanges),
+    list,
+    /** Popis odjela nije stigao a postoje nacrti odjela: spremanje čeka, pa traka kaže zašto. */
+    listFailed: waitingForList && list.isError,
     enabled,
     problem,
     done: save.isSuccess && !dirty,
