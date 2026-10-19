@@ -103,3 +103,10 @@ Baza (`bash scripts/baza.sh start`), API i sučelje kao u koracima 3 i 4 gore; z
 Gradnja koristi spremljene podatke iz `.sqlx/` (`SQLX_OFFLINE=true` u `.env`), pa ne treba živu bazu. Nakon promjene SQL upita (baza mora raditi): `cargo sqlx prepare --workspace` i commitaj `.sqlx/`; alat se instalira jednom: `cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres --locked`.
 Nakon promjene API-ja: `corepack pnpm gen:api` i commitaj `openapi.json` i `schema.d.ts`.
 Mjerilo AI-ja (DEMO §11 t. 7): u `content/hotel/mjerilo/*.json` upiši `leon_quality`, pa `set -a; source .env; set +a; cargo run -p ai --bin mjerilo -- S1 S2`.
+
+### Kopije baze pilota
+
+`PILOT_DATABASE_URL` (adresa baze pilota s lozinkom) postavi samo u terminalu — **nikad u git** ni u `.env.example`.
+- `bash scripts/pilot-kopija.sh kopija` — `pg_dump -Fc` u `Documents/hotelixsim-kopije/pilot/<datum-vrijeme>.dump` (`pg_dump` mora biti ≥ verzija poslužitelja).
+- `bash scripts/pilot-kopija.sh proba <datoteka.dump>` — vraća u zasebnu bazu `hotelixsim_proba_kopije` (klaster 5433), ispiše broj redaka `games` i `events`, pa je obriše.
+- `bash scripts/pilot-kopija.sh usporedi` — isti brojevi iz pilota; moraju se poklapati (kopija ≤ izvor ako se igra).
