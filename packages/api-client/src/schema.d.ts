@@ -2788,9 +2788,11 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Moj hotel */
+            /** @description Moj hotel; poznatom gostu ponovo šalje isti kolačić s punim trajanjem (klizni rok) */
             200: {
                 headers: {
+                    /** @description Obnovljeni kolačić gosta */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {

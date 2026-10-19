@@ -28,10 +28,19 @@ fn read(h: &HeaderMap) -> Option<String> {
         .filter(|v| v.len() == 32 && v.bytes().all(|b| b.is_ascii_hexdigit()))
 }
 
-/// `Secure` dolazi s HTTPS-om prije Railwaya (BACKLOG); lokalno je http.
-pub fn set_cookie(token: &str) -> HeaderValue {
+/// Trajanje kolačića: 120 dana (Leonova odluka 19.10.), jedina konstanta; klizni rok je u `me_hotel`.
+pub const COOKIE_MAX_AGE_SECS: u32 = 120 * 24 * 60 * 60;
+
+/// Je li kolačić `Secure` (samo iza HTTPS-a, produkcija); lokalno je http pa je isključen.
+#[derive(Clone, Copy, Debug)]
+pub struct CookieMode {
+    pub secure: bool,
+}
+
+pub fn set_cookie(token: &str, mode: CookieMode) -> HeaderValue {
+    let secure = if mode.secure { "; Secure" } else { "" };
     HeaderValue::from_str(&format!(
-        "{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800"
+        "{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={COOKIE_MAX_AGE_SECS}{secure}"
     ))
     .expect("token je heksadecimalan")
 }

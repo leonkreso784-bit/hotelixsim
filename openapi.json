@@ -1476,7 +1476,15 @@
         "operationId": "me_hotel",
         "responses": {
           "200": {
-            "description": "Moj hotel",
+            "description": "Moj hotel; poznatom gostu ponovo šalje isti kolačić s punim trajanjem (klizni rok)",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Obnovljeni kolačić gosta"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {

@@ -1,3 +1,4 @@
+use axum::Extension;
 use axum::body::Bytes;
 use axum::extract::{Path, State};
 use axum::http::{StatusCode, header};
@@ -6,7 +7,7 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use crate::AppState;
-use crate::auth::{Token, set_cookie};
+use crate::auth::{CookieMode, Token, set_cookie};
 use crate::problem::{Problem, ProblemCode};
 use crate::schema::{DemoBody, IndexEntry, NewGameBody, ProfileCode, entries};
 
@@ -54,6 +55,7 @@ pub async fn profile_indices(Path(profile): Path<String>) -> Result<Json<Indices
 )]
 pub async fn start(
     State(s): State<AppState>,
+    Extension(mode): Extension<CookieMode>,
     Token(t): Token,
     body: Bytes,
 ) -> Result<Response, Problem> {
@@ -72,7 +74,7 @@ pub async fn start(
     let mut res = (StatusCode::CREATED, Json(body)).into_response();
     if let Some(tok) = d.new_token {
         res.headers_mut()
-            .insert(header::SET_COOKIE, set_cookie(&tok));
+            .insert(header::SET_COOKIE, set_cookie(&tok, mode));
     }
     Ok(res)
 }

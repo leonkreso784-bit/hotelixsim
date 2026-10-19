@@ -63,9 +63,18 @@ async fn unknown_route() -> Problem {
     Problem::new(StatusCode::NOT_FOUND, ProblemCode::UnknownRoute)
 }
 
+/// Lokalni način: kolačić bez `Secure` (http).
 pub fn router(state: AppState) -> Router {
+    router_with_secure_cookie(state, false)
+}
+
+/// `secure = true` u produkciji (HTTPS): kolačić gosta dobiva atribut `Secure`.
+pub fn router_with_secure_cookie(state: AppState, secure: bool) -> Router {
     let (router, _) = parts().split_for_parts();
-    router.fallback(unknown_route).with_state(state)
+    router
+        .fallback(unknown_route)
+        .layer(axum::Extension(auth::CookieMode { secure }))
+        .with_state(state)
 }
 
 pub fn openapi() -> utoipa::openapi::OpenApi {
