@@ -43,40 +43,53 @@ pub struct ModelPrice {
     pub long: Option<(u32, Price)>,
 }
 
-/// Cijene iz https://platform.claude.com/docs/en/about-claude/pricing (pročitano 19.10.2026.); upis predmemorije = 5 min.
-/// 🟨 Prag dugog Haiku cjenika: zbroj ulaz + upis + čitanje > 100 000 (sigurnija strana).
-pub const PRICES: &[ModelPrice] = &[
+const fn price(input: u64, cache_write: u64, cache_read: u64, output: u64) -> Price {
+    Price {
+        input,
+        cache_write,
+        cache_read,
+        output,
+    }
+}
+
+const fn model(model_prefix: &'static str, price: Price) -> ModelPrice {
     ModelPrice {
-        model_prefix: "claude-sonnet-5-5",
-        price: Price {
-            input: 2_000,
-            cache_write: 2_500,
-            cache_read: 100,
-            output: 10_000,
-        },
+        model_prefix,
+        price,
         long: None,
-    },
+    }
+}
+
+/// Cijene iz https://platform.claude.com/docs/en/about-claude/pricing (pročitano 19.10.2026., sve trenutne modele
+/// osim ukinutih: Opus 4/4.1, Sonnet 4, Haiku 3.5); upis predmemorije = 5 min. Model se traži po NAJDULJEM prefiksu
+/// (`claude-sonnet-5` ne guta `claude-sonnet-5-5`; sufiks s datumom je dopušten). Redoslijed redaka nije bitan.
+/// Za model izvan tablice vrijedi po komponentama najskuplji redak (`dearest`).
+/// Prag dugog Haiku cjenika: prompt = ulaz + upis + čitanje > 100 000 (izvor: "counts all of its input tokens,
+/// including cache reads and cache writes").
+pub const PRICES: &[ModelPrice] = &[
+    model("claude-fable-5-1", price(10_000, 12_500, 250, 50_000)),
+    model("claude-fable-5", price(10_000, 12_500, 1_000, 50_000)),
+    model("claude-mythos-5-1", price(10_000, 12_500, 250, 50_000)),
+    model("claude-mythos-5", price(10_000, 12_500, 1_000, 50_000)),
+    model("claude-opus-5-5", price(4_000, 5_000, 200, 20_000)),
+    model("claude-opus-5", price(5_000, 6_250, 500, 25_000)),
+    model("claude-opus-4-8", price(5_000, 6_250, 500, 25_000)),
+    model("claude-opus-4-7", price(5_000, 6_250, 500, 25_000)),
+    model("claude-opus-4-6", price(5_000, 6_250, 500, 25_000)),
+    model("claude-opus-4-5", price(5_000, 6_250, 500, 25_000)),
+    model("claude-sonnet-5-5", price(2_000, 2_500, 100, 10_000)),
+    model("claude-sonnet-5", price(2_000, 2_500, 200, 10_000)),
+    model("claude-sonnet-4-6", price(3_000, 3_750, 300, 15_000)),
+    model("claude-sonnet-4-5", price(3_000, 3_750, 300, 15_000)),
     ModelPrice {
         model_prefix: "claude-haiku-5-5",
-        price: Price {
-            input: 100,
-            cache_write: 125,
-            cache_read: 10,
-            output: 500,
-        },
-        long: Some((
-            100_000,
-            Price {
-                input: 500,
-                cache_write: 625,
-                cache_read: 50,
-                output: 2_500,
-            },
-        )),
+        price: price(100, 125, 10, 500),
+        long: Some((100_000, price(500, 625, 50, 2_500))),
     },
+    model("claude-haiku-4-5", price(1_000, 1_250, 100, 5_000)),
 ];
 
-/// Po komponentama najskuplja cijena iz tablice: za nepoznati model nikad ne podcijenimo.
+/// Po komponentama najskuplja cijena iz CIJELE tablice: za nepoznati model nikad ne podcijenimo.
 fn dearest() -> Price {
     let mut all = PRICES
         .iter()
@@ -90,8 +103,20 @@ fn dearest() -> Price {
     })
 }
 
+fn find_price(model: &str) -> Option<&'static ModelPrice> {
+    PRICES
+        .iter()
+        .filter(|p| model.starts_with(p.model_prefix))
+        .max_by_key(|p| p.model_prefix.len())
+}
+
+/// Je li model u tablici cijena (poslužitelj u produkciji odbija start s nepoznatim modelom).
+pub fn is_priced(model: &str) -> bool {
+    find_price(model).is_some()
+}
+
 fn price_of(model: &str, t: &TokenUsage) -> Price {
-    match PRICES.iter().find(|p| model.starts_with(p.model_prefix)) {
+    match find_price(model) {
         Some(p) => {
             let prompt = u64::from(t.input) + u64::from(t.cache_write) + u64::from(t.cache_read);
             match p.long {
@@ -272,7 +297,11 @@ pub struct CappedAi {
     caps: Caps,
     warned_day: AtomicI64,
     warned_month: AtomicI64,
+    warned_ledger: AtomicI64,
 }
+
+/// Najviše jedno upozorenje o nečitljivoj knjizi u toliko sekundi (inače poplava pri svakoj poruci).
+const LEDGER_WARN_EVERY: i64 = 60;
 
 impl CappedAi {
     pub fn new(
@@ -288,13 +317,28 @@ impl CappedAi {
             caps,
             warned_day: AtomicI64::new(i64::MIN),
             warned_month: AtomicI64::new(i64::MIN),
+            warned_ledger: AtomicI64::new(i64::MIN),
         }
     }
 
+    fn ledger_down(&self, e: &LedgerError, now: i64) -> AiError {
+        let last = self.warned_ledger.load(Ordering::SeqCst);
+        if last == i64::MIN || now.saturating_sub(last) >= LEDGER_WARN_EVERY {
+            self.warned_ledger.store(now, Ordering::SeqCst);
+            tracing::warn!(error = %e, "knjiga troška AI-ja nije čitljiva: AI je isključen dok se ne popravi (strop se ne može provjeriti)");
+        }
+        AiError::Disabled
+    }
+
     async fn gate(&self) -> Result<(), AiError> {
-        let today = Day::from_unix(self.clock.now_unix());
+        let now = self.clock.now_unix();
+        let today = Day::from_unix(now);
         if let Some(cap) = self.caps.day_nano_usd {
-            let spent = self.ledger.spent_on_day(today).await.map_err(ledger_down)?;
+            let spent = self
+                .ledger
+                .spent_on_day(today)
+                .await
+                .map_err(|e| self.ledger_down(&e, now))?;
             if spent >= cap {
                 let key = today.start_unix();
                 if self.warned_day.swap(key, Ordering::SeqCst) != key {
@@ -312,7 +356,7 @@ impl CappedAi {
                 .ledger
                 .spent_in_month(today.year, today.month)
                 .await
-                .map_err(ledger_down)?;
+                .map_err(|e| self.ledger_down(&e, now))?;
             if spent >= cap {
                 let key = i64::from(today.year) * 12 + i64::from(today.month);
                 if self.warned_month.swap(key, Ordering::SeqCst) != key {
@@ -331,11 +375,6 @@ impl CappedAi {
 
 fn usd(nano: u64) -> f64 {
     nano as f64 / NANO_PER_USD as f64
-}
-
-fn ledger_down(e: LedgerError) -> AiError {
-    tracing::warn!(error = %e, "knjiga troška AI-ja nije čitljiva: AI je isključen dok se ne popravi (strop se ne može provjeriti)");
-    AiError::Disabled
 }
 
 impl AiPort for CappedAi {

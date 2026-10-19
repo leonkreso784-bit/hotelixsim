@@ -134,3 +134,86 @@ fn caps_may_be_printed_in_debug() {
     let text = format!("{s:?}");
     assert!(text.contains("ai_cap_day_usd"), "{text}");
 }
+
+// ---------- runda 2: I1 (javna adresa s ključem traži stropove bez obzira na zastavicu) i I2 (model izvan tablice) ----------
+
+const PUBLIC: [(&str, &str); 4] = [
+    ("HOTELIXSIM_ADDR", "0.0.0.0:8080"),
+    ("HOTELIXSIM_LOZINKA", "tajna123"),
+    ("DATABASE_URL", "postgres://u:p@h:5432/d"),
+    ("ANTHROPIC_API_KEY", "sk-ant-x"),
+];
+
+fn public_with(extra: &[(&'static str, &'static str)]) -> Result<Settings, ConfigError> {
+    let mut pairs = PUBLIC.to_vec();
+    pairs.extend_from_slice(extra);
+    Settings::from_lookup(lookup(&pairs))
+}
+
+#[test]
+fn public_address_with_key_and_no_flag_requires_both_caps() {
+    match public_with(&[]) {
+        Err(ConfigError::OpenWithoutAiCap { addr, missing }) => {
+            assert_eq!(addr, "0.0.0.0:8080");
+            assert_eq!(missing, vec![DAY, MONTH]);
+        }
+        other => panic!("očekivano OpenWithoutAiCap, dobiveno {other:?}"),
+    }
+    match public_with(&[(DAY, "5")]) {
+        Err(ConfigError::OpenWithoutAiCap { missing, .. }) => assert_eq!(missing, vec![MONTH]),
+        other => panic!("{other:?}"),
+    }
+    let e = public_with(&[(MONTH, "30")]).unwrap_err();
+    assert!(e.to_string().contains(DAY), "{e}");
+    assert!(public_with(&[(DAY, "5"), (MONTH, "30")]).is_ok());
+}
+
+#[test]
+fn public_address_without_key_or_local_address_with_key_needs_no_caps() {
+    let no_key: Vec<_> = PUBLIC
+        .iter()
+        .copied()
+        .filter(|(k, _)| *k != "ANTHROPIC_API_KEY")
+        .collect();
+    assert!(Settings::from_lookup(lookup(&no_key)).is_ok());
+    let s = Settings::from_lookup(lookup(&[("ANTHROPIC_API_KEY", "sk-ant-x")])).unwrap();
+    assert_eq!(s.ai_cap_day_usd, None);
+}
+
+#[test]
+fn unpriced_model_is_refused_in_production_and_on_public_address() {
+    let var = "HOTELIXSIM_AI_MODEL_PRESUDA";
+    for bad in ["claude-opus-9-9", "gpt-x"] {
+        match public_with(&[(DAY, "5"), (MONTH, "30"), (var, bad)]) {
+            Err(ConfigError::Invalid { var: v, value }) => {
+                assert_eq!(v, var);
+                assert!(
+                    value.contains(bad) && value.contains("tablici cijena"),
+                    "{value}"
+                );
+            }
+            other => panic!("{bad}: {other:?}"),
+        }
+        match production_with(&[
+            (DAY, "5"),
+            (MONTH, "30"),
+            ("HOTELIXSIM_AI_MODEL_MENTOR", bad),
+        ]) {
+            Err(ConfigError::Invalid { var: v, .. }) => {
+                assert_eq!(v, "HOTELIXSIM_AI_MODEL_MENTOR");
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+    assert!(public_with(&[(DAY, "5"), (MONTH, "30"), (var, "claude-opus-5-5")]).is_ok());
+    assert!(
+        public_with(&[
+            (DAY, "5"),
+            (MONTH, "30"),
+            ("HOTELIXSIM_AI_MODEL_LIK", "claude-sonnet-5")
+        ])
+        .is_ok()
+    );
+    // lokalno se nepoznat model dopušta (razvoj; brojač ga ionako računa po najskupljem)
+    assert!(Settings::from_lookup(lookup(&[(var, "claude-opus-9-9")])).is_ok());
+}

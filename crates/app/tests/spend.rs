@@ -119,9 +119,10 @@ fn haiku_prompts_over_100k_tokens_use_the_long_context_prices() {
 #[test]
 fn unknown_model_is_priced_at_the_most_expensive_known_price() {
     let u = usage(1_000, 500, 10_000, 20_000);
-    let sonnet = cost_nano_usd(SONNET, &u);
-    for unknown in ["claude-opus-5-5", "", "nesto-drugo", "gpt-x"] {
-        assert_eq!(cost_nano_usd(unknown, &u), sonnet, "{unknown:?}");
+    // runda 2 (I2): nepoznat model = po komponentama najskuplji iz cijele tablice (danas Fable), ne Sonnet
+    let dearest = 180_000_000;
+    for unknown in ["claude-novi-model-9", "", "nesto-drugo", "gpt-x"] {
+        assert_eq!(cost_nano_usd(unknown, &u), dearest, "{unknown:?}");
     }
     // i po komponentama: nepoznat model nikad nije jeftiniji od ijednog poznatog u tablici
     assert!(
@@ -364,7 +365,7 @@ async fn metered_records_cost_from_the_price_table_stamped_with_the_clock() {
     .await;
     clock.set(NOV_1_START);
     m.record(ApiUsage {
-        model: "claude-opus-5-5".into(),
+        model: "claude-novi-model-9".into(),
         tokens: tokens.clone(),
     })
     .await;
@@ -376,7 +377,7 @@ async fn metered_records_cost_from_the_price_table_stamped_with_the_clock() {
     assert_eq!(e[0].cost_nano_usd, 1_800_000);
     assert_eq!(e[1].at_unix, NOV_1_START);
     assert_eq!(
-        e[1].cost_nano_usd, 34_000_000,
+        e[1].cost_nano_usd, 180_000_000,
         "nepoznat model = najskuplji"
     );
 }

@@ -11,6 +11,11 @@ const WEB: &str = "HOTELIXSIM_WEB";
 const DATABASE_URL: &str = "DATABASE_URL";
 const ADDR: &str = "HOTELIXSIM_ADDR";
 const CONTENT: &str = "HOTELIXSIM_CONTENT";
+const MODEL_VARS: [&str; 3] = [
+    "HOTELIXSIM_AI_MODEL_PRESUDA",
+    "HOTELIXSIM_AI_MODEL_LIK",
+    "HOTELIXSIM_AI_MODEL_MENTOR",
+];
 const CAP_DAY: &str = "HOTELIXSIM_AI_STROP_DAN_USD";
 const CAP_MONTH: &str = "HOTELIXSIM_AI_STROP_MJESEC_USD";
 const API_KEY: &str = "ANTHROPIC_API_KEY";
@@ -38,6 +43,11 @@ pub enum ConfigError {
     Invalid { var: &'static str, value: String },
     /// Adresa nije lokalna, a lozinke stranice nema: stranica i AI bili bi otvoreni svima.
     OpenWithoutPassword { addr: String },
+    /// Adresa nije lokalna i AI ključ je postavljen, a nedostaje strop troška: AI bi trošio bez granice.
+    OpenWithoutAiCap {
+        addr: String,
+        missing: Vec<&'static str>,
+    },
 }
 
 impl fmt::Display for ConfigError {
@@ -58,6 +68,11 @@ impl fmt::Display for ConfigError {
             ConfigError::OpenWithoutPassword { addr } => write!(
                 f,
                 "adresa {addr} nije lokalna, a {PASSWORD} nije postavljena: stranica bi bila otvorena svima                  (postavi lozinku ili slušaj na 127.0.0.1)"
+            ),
+            ConfigError::OpenWithoutAiCap { addr, missing } => write!(
+                f,
+                "adresa {addr} nije lokalna, a AI ključ je postavljen: strop troška je obavezan, nedostaje {}",
+                missing.join(", ")
             ),
         }
     }
@@ -153,6 +168,39 @@ impl Settings {
             return Err(ConfigError::OpenWithoutPassword {
                 addr: settings.addr,
             });
+        }
+        let public = !is_local_addr(&settings.addr);
+        // isto kao lozinka: strop ne ovisi o zastavici. Javna adresa s ključem bez oba stropa troši AI bez granice.
+        if public && settings.anthropic_api_key.is_some() {
+            let mut missing = Vec::new();
+            if settings.ai_cap_day_usd.is_none() {
+                missing.push(CAP_DAY);
+            }
+            if settings.ai_cap_month_usd.is_none() {
+                missing.push(CAP_MONTH);
+            }
+            if !missing.is_empty() {
+                return Err(ConfigError::OpenWithoutAiCap {
+                    addr: settings.addr,
+                    missing,
+                });
+            }
+        }
+        // model izvan tablice cijena bio bi procijenjen po najskupljem cjeniku: na javnoj adresi i u produkciji to odbijamo
+        if production || public {
+            for var in MODEL_VARS {
+                if let Some(m) = get(var)
+                    && !app::spend::is_priced(m.trim())
+                {
+                    return Err(ConfigError::Invalid {
+                        var,
+                        value: format!(
+                            "model {:?} nije u tablici cijena (app::spend::PRICES): dodaj cijenu prije uporabe",
+                            m.trim()
+                        ),
+                    });
+                }
+            }
         }
         Ok(settings)
     }
