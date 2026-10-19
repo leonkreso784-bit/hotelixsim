@@ -131,7 +131,7 @@ pet scenarija „što student vidi" je zeleno; Leon odigra mjesečnu v2 igru sa 
 | L1-13b ✅ 19.10. (dio 2 13db069, 3 4be1db4, 4 bdbdebe, 1 7556d80; [ADR-062](../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md)) | [Ostatak ADR-042 u valovima](2026-10-14-popravak-temelja/task-15-l1-13b-valovi.md) (Leon 19.10.: cijela prije pilota): izmiješani odgovori, jedan gumb „Spremi plan", opis Smještaja, održavanje +5 (izgled lika je već IZGLED) · 🟨 [PROC] 11–17 h | L1-13 | gdje gumb, što je opis Smještaja, anketa održavanja |
 | L1-14 (sljedeće, sesija 12) | Igriva verzija: Leon igra tjednu i mjesečnu sezonu lokalno (izmiješani odgovori, „Spremi plan", opis Smještaja, održavanje +5) | L1-13b | popis izmjena |
 | L1-15 | `sloj1` → `main` (popravci iz Leonove igre, pa spajanje) | L1-14 | **izričit OK za push** |
-| Pilot | Priprema pilota (kartica piše sesija 12): kolačić 7 → 120 dana prvo, jedna lozinka, AI strop i 3 igre po gostu, Rust poslužuje web, Dockerfile, CI deploy, kopije; Railway Hobby ([ADR-062](../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9) · ~20–27 h | L1-15 | plan prije gradnje; **deploy samo uz izričit OK** |
+| Pilot | [Priprema pilota](2026-10-14-popravak-temelja/task-16-priprema-pilota.md): kolačić 7 → 120 dana prvo, jedna lozinka, AI strop i 3 igre po gostu, Rust poslužuje web, Dockerfile, CI deploy, kopije; Railway Hobby ([ADR-062](../records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9) · ~20–27 h | L1-15 | plan prije gradnje; **deploy samo uz izričit OK** |
 
 ## Faza C — igra za semestar i razred (~50–90 h) · obris
 
