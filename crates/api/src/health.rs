@@ -16,12 +16,9 @@ pub enum DatabaseState {
 #[derive(Serialize, ToSchema)]
 pub struct HealthBody {
     pub database: DatabaseState,
-    /// Broj događaja u dnevniku; `null` kad baza nije dostupna.
-    #[schema(required = true)]
-    pub events: Option<i64>,
 }
 
-/// Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku.
+/// Zdravlje sustava: je li baza dostupna (`SELECT 1`). Bez brojki: otvoreno je bez lozinke.
 #[utoipa::path(
     get,
     path = "/v1/health",
@@ -36,11 +33,5 @@ pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
         app::DbState::Ok => (StatusCode::OK, DatabaseState::Ok),
         app::DbState::Error => (StatusCode::SERVICE_UNAVAILABLE, DatabaseState::Error),
     };
-    (
-        code,
-        Json(HealthBody {
-            database,
-            events: h.events,
-        }),
-    )
+    (code, Json(HealthBody { database }))
 }

@@ -116,7 +116,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku. */
+        /** Zdravlje sustava: je li baza dostupna (`SELECT 1`). Bez brojki: otvoreno je bez lozinke. */
         get: operations["health"];
         put?: never;
         post?: never;
@@ -840,11 +840,6 @@ export interface components {
         GenderBody: "f" | "m";
         HealthBody: {
             database: components["schemas"]["DatabaseState"];
-            /**
-             * Format: int64
-             * @description Broj događaja u dnevniku; `null` kad baza nije dostupna.
-             */
-            events: number | null;
         };
         HotelBody: {
             game_id: string;

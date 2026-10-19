@@ -385,7 +385,7 @@
     },
     "/v1/health": {
       "get": {
-        "summary": "Zdravlje sustava: je li baza dostupna i koliko je događaja u dnevniku.",
+        "summary": "Zdravlje sustava: je li baza dostupna (`SELECT 1`). Bez brojki: otvoreno je bez lozinke.",
         "operationId": "health",
         "responses": {
           "200": {
@@ -2914,20 +2914,11 @@
       "HealthBody": {
         "type": "object",
         "required": [
-          "database",
-          "events"
+          "database"
         ],
         "properties": {
           "database": {
             "$ref": "#/components/schemas/DatabaseState"
-          },
-          "events": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Broj događaja u dnevniku; `null` kad baza nije dostupna."
           }
         }
       },

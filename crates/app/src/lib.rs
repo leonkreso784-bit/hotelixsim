@@ -46,7 +46,8 @@ pub struct StatusError(pub String);
 
 /// Port prema pohrani za provjeru zdravlja sustava.
 pub trait SystemStatus: Send + Sync {
-    fn events_count(&self) -> BoxFut<'_, Result<i64, StatusError>>;
+    /// Je li pohrana živa (`SELECT 1`); ne broji ništa i ne dira tablice.
+    fn ping(&self) -> BoxFut<'_, Result<(), StatusError>>;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,18 +59,15 @@ pub enum DbState {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Health {
     pub database: DbState,
-    pub events: Option<i64>,
 }
 
 pub async fn check_health(status: &dyn SystemStatus) -> Health {
-    match status.events_count().await {
-        Ok(n) => Health {
+    match status.ping().await {
+        Ok(()) => Health {
             database: DbState::Ok,
-            events: Some(n),
         },
         Err(_) => Health {
             database: DbState::Error,
-            events: None,
         },
     }
 }
@@ -78,35 +76,33 @@ pub async fn check_health(status: &dyn SystemStatus) -> Health {
 mod tests {
     use super::*;
 
-    struct Fake(Result<i64, String>);
+    struct Fake(Result<(), String>);
 
     impl SystemStatus for Fake {
-        fn events_count(&self) -> BoxFut<'_, Result<i64, StatusError>> {
+        fn ping(&self) -> BoxFut<'_, Result<(), StatusError>> {
             let r = self.0.clone().map_err(StatusError);
             Box::pin(async move { r })
         }
     }
 
     #[tokio::test]
-    async fn healthy_database_reports_count() {
-        let h = check_health(&Fake(Ok(3))).await;
+    async fn healthy_database_reports_ok() {
+        let h = check_health(&Fake(Ok(()))).await;
         assert_eq!(
             h,
             Health {
-                database: DbState::Ok,
-                events: Some(3)
+                database: DbState::Ok
             }
         );
     }
 
     #[tokio::test]
-    async fn broken_database_reports_error_without_count() {
+    async fn broken_database_reports_error() {
         let h = check_health(&Fake(Err("veza odbijena".into()))).await;
         assert_eq!(
             h,
             Health {
-                database: DbState::Error,
-                events: None
+                database: DbState::Error
             }
         );
     }
