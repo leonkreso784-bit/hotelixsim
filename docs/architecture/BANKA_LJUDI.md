@@ -27,6 +27,7 @@ predložak (`types`, npr. „umirovljenica na godišnjem odmoru"), a ne ime.
 | 5 · postupak: koraci K0–K5 i **K2v**, agenti i datoteke, „serija gotova", kada se staje, **tri agenta** (§5.5), **paralelna sesija banke** (§5.6) | [05-postupak.md](./BANKA_LJUDI/05-postupak.md) |
 | 6 · pitanja za Leona (1–11 odgovorena 14.10., ADR-042 t. 8; 12–16 o vanjskima odgovorena 17.10.), odluke C1–C11 od 17.10., odluke 18.10. (K5 i K6; pitanja 17–18 odgovorena) | [06-pitanja.md](./BANKA_LJUDI/06-pitanja.md) |
 | 7 · 🟨 nacrt rizika: likovi nalik poznatim osobama (C3, Leon 17.10.), tri varijante s cijenom, pitanja | [07-poznate-osobe-rizik.md](./BANKA_LJUDI/07-poznate-osobe-rizik.md) |
+| 8 · 🟨 nacrt: generator ljudi (Leon 19.10.) — četiri načina (u igri iz dijelova, AI u igri, hibrid, alat za banku) s cijenom, recenzije R-A/R-B, pitanja | [08-generator-ljudi.md](./BANKA_LJUDI/08-generator-ljudi.md) |
 
 ## Sažetak
 
