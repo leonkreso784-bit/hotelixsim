@@ -13,6 +13,8 @@ afterEach(() => {
 });
 
 const PUT = `/v1/hotels/${HOTEL_ID}/plans/t01`;
+/** Potvrda jedinog gumba „Spremi plan“ (isti tekst na Planu i na stranici odjela). */
+const SAVED = /^Plan za .+ je spremljen\.$/;
 
 /** v2 igra u kojoj PUT plana vraća poslano tijelo (poslužitelj vraća spremljeni plan). */
 const echoApi = () =>
@@ -127,7 +129,7 @@ describe("Odluke odjela na ekranu odjela", () => {
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
     fireEvent.click(within(bar).getByRole("checkbox", { name: "Otvoren" }));
-    const save = screen.getByRole("button", { name: "Spremi odluke odjela" });
+    const save = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(save);
     fireEvent.click(save);
     await waitFor(() => expect(api.posts(PUT)).toHaveLength(1));
@@ -143,7 +145,7 @@ describe("Odluke odjela na ekranu odjela", () => {
       seasonal_target: 21,
       maintenance: "regular",
     });
-    expect(await screen.findByText("Odluke odjela su spremljene.")).toBeTruthy();
+    expect(await screen.findByText(SAVED)).toBeTruthy();
   });
 
   it("odgovor poslužitelja (spremljeni plan) osvježava prikaz", async () => {
@@ -156,7 +158,8 @@ describe("Odluke odjela na ekranu odjela", () => {
     }));
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(await within(bar).findByText("1 sezonski radnik")).toBeTruthy();
     expect(within(bar).getByText("90 %")).toBeTruthy();
     expect((within(bar).getByRole("radio", { name: "odgođeno" }) as HTMLInputElement).checked).toBe(true);
@@ -226,7 +229,7 @@ describe("Odluke odjela na ekranu odjela", () => {
     const plus = within(rest).getByRole("button", { name: "Zaposli sezonskog radnika" });
     fireEvent.click(plus);
     fireEvent.click(plus);
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(
       await screen.findByText(
         "Odjeli zajedno imaju previše sezonskih radnika: hotel smije imati najviše 24 sezonska radnika. Smanji ih u nekom odjelu.",
@@ -248,7 +251,7 @@ describe("Odluke odjela na ekranu odjela", () => {
     expect(within(rest).getByText("120 %")).toBeTruthy();
     expect(up.getAttribute("aria-disabled")).toBe("true");
     fireEvent.click(within(rest).getByRole("radio", { name: "pojačano" }));
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     await waitFor(() => expect(api.posts(PUT)).toHaveLength(1));
     const body = api.posts(PUT)[0]?.body as PlanBody;
     expect(body.departments?.restaurant).toMatchObject({ price_level_pct: 120, maintenance: "intensive" });
@@ -259,8 +262,10 @@ describe("Odluke odjela na ekranu odjela", () => {
       v2Api().on("PUT", "/v1/hotels/:hotel/plans/:month", () => problem(422, "department_plan_invalid")),
       "/odjeli/restaurant",
     );
-    await decisions("Restoran");
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(
+      within(await decisions("Restoran")).getByRole("button", { name: "Zaposli sezonskog radnika" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect((await screen.findByRole("alert")).textContent).toContain("Postavke odjela nisu dopuštene");
   });
 
@@ -272,8 +277,10 @@ describe("Odluke odjela na ekranu odjela", () => {
       return json(200, reads === 1 ? v2PlanHotel() : closed);
     });
     renderApp(api, "/odjeli/restaurant");
-    await decisions("Restoran");
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(
+      within(await decisions("Restoran")).getByRole("button", { name: "Zaposli sezonskog radnika" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(await screen.findByText("Tjedan nije otvoren — sad se ne može mijenjati.")).toBeTruthy();
     expect(api.posts(PUT)).toHaveLength(0);
   });
@@ -282,7 +289,7 @@ describe("Odluke odjela na ekranu odjela", () => {
     const closed = closedHotel();
     renderApp(echoApi().on("GET", "/v1/me/hotel", closed), "/odjeli/lobby_bar");
     expect(await screen.findByText("Odluke odjela mijenjaju se dok je tjedan otvoren.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Spremi odluke odjela" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Spremi plan" })).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.getByText("3 sezonska radnika")).toBeTruthy();
     // Razina cijena zadnjeg obračunatog tjedna (M6).
@@ -290,14 +297,14 @@ describe("Odluke odjela na ekranu odjela", () => {
     expect(within(price).getByText("100 %")).toBeTruthy();
   });
 
-  it("„Spremi odluke odjela“ čeka popis odjela (sadašnji broj ljudi ostalih odjela)", async () => {
+  it("„Spremi plan“ čeka popis odjela (sadašnji broj ljudi ostalih odjela)", async () => {
     renderApp(
       echoApi().on("GET", "/v1/hotels/:hotel/departments", () => new Promise<Response>(() => {})),
       "/odjeli/restaurant",
     );
     await decisions("Restoran");
     // aria-disabled, ne disabled: fokus ostaje na gumbu (M-6); klik ne šalje ništa.
-    const save = screen.getByRole("button", { name: "Spremi odluke odjela" });
+    const save = screen.getByRole("button", { name: "Spremi plan" });
     expect(save.getAttribute("aria-disabled")).toBe("true");
     expect(save.hasAttribute("disabled")).toBe(false);
   });
@@ -331,8 +338,8 @@ describe("nespremljene izmjene i svjež plan", () => {
     bar = await decisions("Lobby bar");
     expect(within(bar).getByText("4 sezonska radnika")).toBeTruthy();
     expect(screen.getByText("Izmjene još nisu spremljene.")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
-    expect(await screen.findByText("Odluke odjela su spremljene.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
+    expect(await screen.findByText(SAVED)).toBeTruthy();
     expect(screen.queryByText("Izmjene još nisu spremljene.")).toBeNull();
   });
 
@@ -351,7 +358,7 @@ describe("nespremljene izmjene i svjež plan", () => {
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
     fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     await waitFor(() => expect(api.posts(PUT)).toHaveLength(1));
     const body = api.posts(PUT)[0]?.body as PlanBody;
     expect(body.departments?.lobby_bar).toEqual({
@@ -373,7 +380,7 @@ describe("nespremljene izmjene i svjež plan", () => {
     renderApp(api, "/odjeli/lobby_bar");
     const bar = await decisions("Lobby bar");
     fireEvent.click(within(bar).getByRole("button", { name: "Zaposli sezonskog radnika" }));
-    fireEvent.click(screen.getByRole("button", { name: "Spremi odluke odjela" }));
+    fireEvent.click(screen.getByRole("button", { name: "Spremi plan" }));
     expect(
       await screen.findByText(
         "Otvoren je novi tjedan. Odluke sada vrijede za njega; nespremljene izmjene prošlog tjedna nisu prenesene.",
@@ -393,12 +400,13 @@ describe("nespremljene izmjene i svjež plan", () => {
     const card = rest.closest("section") as HTMLElement;
     const retry = await within(card).findByRole("button", { name: "Ponovno učitaj odjele" });
     expect(retry.className).toMatch(/lg:hidden/);
+    // Izmjena odjela (nacrt; broj radnika se bez popisa ne može mijenjati): spremanje čeka popis odjela dok ga nema (aria-disabled, ne disabled).
+    fireEvent.click(within(rest).getByRole("radio", { name: "odgođeno" }));
+    expect(screen.getByRole("button", { name: "Spremi plan" }).getAttribute("aria-disabled")).toBe("true");
     failing = false;
     fireEvent.click(retry);
     await waitFor(() =>
-      expect(
-        (screen.getByRole("button", { name: "Spremi odluke odjela" }) as HTMLButtonElement).disabled,
-      ).toBe(false),
+      expect(screen.getByRole("button", { name: "Spremi plan" }).getAttribute("aria-disabled")).toBe("false"),
     );
     expect(within(card).queryByRole("button", { name: "Ponovno učitaj odjele" })).toBeNull();
   });

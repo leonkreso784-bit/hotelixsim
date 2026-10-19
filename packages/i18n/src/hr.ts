@@ -352,6 +352,8 @@ export const hr = {
   "plan.renovation.thin": "Pozor: nakon obnove u blagajni ostaje manje od jednog tjedna plaća ({payroll}).",
   "plan.invalid": "Upiši brojeve u dopuštenom rasponu.",
   "plan.unsaved": "Izmjene još nisu spremljene.",
+  "plan.alsoSaving": "Sprema se i: {parts}.",
+  "plan.alsoSaving.hotel": "plan hotela",
   "close.unsaved":
     "Plan ili odluke odjela imaju nespremljene izmjene: mjesec se obračunava bez njih. Spremi ih prije zatvaranja.",
   "close.unsaved.week":
@@ -752,8 +754,6 @@ export const hr = {
   "plan.dept.noUpkeep": "O održavanju ovog prostora brine zakupac.",
   "dept.decide.intro.lease":
     "Najam ima ugovoreni prihod i nema svojih gostiju ni sezonskih radnika: ovdje se odlučuje o održavanju prostora.",
-  "dept.decide.save": "Spremi odluke odjela",
-  "dept.decide.saved": "Odluke odjela su spremljene.",
   "dept.decide.closed": "Odluke odjela mijenjaju se dok je mjesec otvoren.",
   "dept.decide.closed.week": "Odluke odjela mijenjaju se dok je tjedan otvoren.",
   "dept.decide.yes": "da",

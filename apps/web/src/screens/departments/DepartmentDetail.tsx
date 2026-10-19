@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { ApiError, problemMessage } from "../../api/errors";
 import { useDepartment } from "../../api/queries";
 import type { GameBody, PlanStateBody } from "../../api/types";
-import { roundTitle, tw } from "../../format";
+import { roundPhrase, roundTitle, roundWithoutGame, tw } from "../../format";
 import { roundInfo } from "../../game";
 import { Link } from "../../router";
 import { Badge, Button, Card, ErrorText, StatusText } from "../../ui/primitives";
@@ -88,6 +88,12 @@ export function DepartmentDetail({
   const service = isService(dept.class);
   const empty = service ? dept.service_last === null : dept.last === null;
   const score = deptScore(dept);
+  const open = planState && game ? roundInfo(game, planState.round) : null;
+  const roundLabel = !planState
+    ? ""
+    : open
+      ? roundPhrase(open)
+      : roundWithoutGame(planState.round, planState.month);
   return (
     <div className="space-y-3">
       {back}
@@ -105,6 +111,7 @@ export function DepartmentDetail({
           planState={planState}
           weekly={weekly}
           cashCents={cashCents}
+          roundLabel={roundLabel}
         />
       )}
       {service && empty && (

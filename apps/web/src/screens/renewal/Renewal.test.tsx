@@ -187,10 +187,10 @@ describe("Obnova opreme u odjelu", () => {
     renderApp(a, "/odjeli/restaurant");
     await restaurant();
     more(8);
-    const save = screen.getByRole("button", { name: "Spremi odluke odjela" });
+    const save = screen.getByRole("button", { name: "Spremi plan" });
     fireEvent.click(save);
     fireEvent.click(save);
-    expect(await screen.findByText("Odluke odjela su spremljene.")).toBeTruthy();
+    expect(await screen.findByText(/^Plan za .+ je spremljen\.$/)).toBeTruthy();
     const puts = a.posts(`/v1/hotels/${HOTEL_ID}/plans/t01`);
     expect(puts).toHaveLength(1);
     const body = puts[0]?.body as { departments: Record<string, { renewal_cents: number }> };

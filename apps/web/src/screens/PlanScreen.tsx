@@ -3,34 +3,32 @@
 // sažetak promjena po odjelima i (v2 s obnovom) zgrada s obnovom iznosom. Nespremljene izmjene čuva nacrt (`useDraft`): odlazak u odjel i povratak ih ne briše.
 import { t } from "@hotelixsim/i18n";
 import { useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useEffect, useRef, useState } from "react";
-import { ApiError, problemMessage } from "../api/errors";
-import { keys, useGame, useSavePlan } from "../api/queries";
+import { type FormEvent, useEffect } from "react";
+import { keys, useGame } from "../api/queries";
 import type { HotelBody } from "../api/types";
-import { differs, draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
+import { draftKey, useDraft, useRoundChanged, useStaleDrafts } from "../drafts";
 import { roundPhrase, roundWithoutGame, tw } from "../format";
 import { isWeekly, roundInfo } from "../game";
 import { GameError } from "../ui/GameError";
-import { Button, Card, ErrorText, StatusText } from "../ui/primitives";
+import { Card, StatusText } from "../ui/primitives";
 import { BuildingRenewal } from "./plan/BuildingRenewal";
 import { Choice } from "./plan/Choice";
 import { maintenanceOptions } from "./plan/costs";
 import { DepartmentSummary } from "./plan/DepartmentSummary";
 import { NumberField } from "./plan/fields";
-import { type Draft, hotelPatch, toDraft, touchedOnly } from "./plan/hotelDraft";
+import { type Draft, toDraft } from "./plan/hotelDraft";
 import { MoreDecisions } from "./plan/MoreDecisions";
 import { RoundNotice } from "./plan/RoundNotice";
+import { SavePlanBar } from "./plan/SavePlanBar";
+import { roundChanged, usePlanSave } from "./plan/usePlanSave";
 import { BUILDING, planPayNow } from "./renewal/renewal";
-
-const roundChanged = (e: unknown) => e instanceof ApiError && e.code === "round_changed";
 
 export function PlanScreen({ me }: { me: HotelBody }) {
   const state = me.private?.plan ?? null;
-  const save = useSavePlan(me.hotel.hotel_id);
+  const saver = usePlanSave(me.hotel.hotel_id, state);
   const gameQuery = useGame(me.game_id);
   const game = gameQuery.data;
   const weekly = game ? isWeekly(game) : false;
-  const inFlight = useRef(false);
   const saved = state ? toDraft(state.plan) : null;
   const changes = useDraft<Draft>(
     draftKey("plan", me.hotel.hotel_id, state?.round ?? "-"),
@@ -38,7 +36,6 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   );
   const newRound = useRoundChanged(state?.round ?? null);
   const stale = useStaleDrafts("plan", me.hotel.hotel_id, state?.round ?? null);
-  const [invalid, setInvalid] = useState(false);
   // Plana nema, a spremljena igra još kaže da je krug otvoren: krug je zatvoren izvana (druga kartica, profesor).
   // Ponovni dohvat igre vidi „closing“, ispituje do novog kruga i tada osvježi moj hotel (UI krug 3, M-2).
   const qc = useQueryClient();
@@ -64,30 +61,11 @@ export function PlanScreen({ me }: { me: HotelBody }) {
   const cash = me.private?.now.cash_cents ?? 0;
   const set = (patch: Partial<Draft>) => {
     changes.update(patch);
-    setInvalid(false);
-    save.reset();
   };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!state || save.isPending || inFlight.current) return;
-    const all = hotelPatch(draft, l, v2);
-    if (!all) {
-      setInvalid(true);
-      return;
-    }
-    inFlight.current = true;
-    const sent = changes.changes;
-    const hotel = touchedOnly(all, Object.keys(sent) as (keyof Draft)[]);
-    save.mutate(
-      { round: state.round, patch: (cur) => ({ ...cur, ...hotel }) },
-      {
-        onSuccess: () => changes.settle(sent),
-        onSettled: () => {
-          inFlight.current = false;
-        },
-      },
-    );
+    saver.run();
   }
 
   const info = game ? roundInfo(game, state.round) : null;
@@ -98,7 +76,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
       <p className="text-sm text-muted">
         {weekly ? t("plan.for.week", { round }) : t("plan.for", { month: round })}
       </p>
-      <RoundNotice show={newRound || stale || roundChanged(save.error)} weekly={weekly} />
+      <RoundNotice show={newRound || stale || roundChanged(saver.save.error)} weekly={weekly} />
       <Card className="space-y-4">
         <NumberField
           id="plan-price"
@@ -161,16 +139,7 @@ export function PlanScreen({ me }: { me: HotelBody }) {
         renovation={!(buildingRenewal && !l.renovation_available)}
         set={set}
       />
-      {invalid && <ErrorText>{t("plan.invalid")}</ErrorText>}
-      {save.isError && !roundChanged(save.error) && (
-        <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
-      )}
-      {save.isSuccess && <StatusText>{t("plan.saved", { month: round })}</StatusText>}
-      {differs(saved, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
-      {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
-      <Button type="submit" aria-disabled={save.isPending}>
-        {t("plan.save")}
-      </Button>
+      <SavePlanBar saver={saver} round={round} seasonalMax={l.seasonal_max} weekly={weekly} submit />
     </form>
   );
 }

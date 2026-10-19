@@ -1,15 +1,13 @@
 // Uređivanje odluka odjela u otvorenom krugu: otvoren/zatvoren, sezonski radnici, razina cijena, održavanje i obnova
 // opreme, svaka s cijenom i učinkom. Nespremljene izmjene čuva nacrt (`useDraft`, preživi odlazak u plan i natrag) i to
-// su samo dirana polja: „Spremi odluke odjela“ šalje svježe dohvaćen plan kruga s izmjenama preko odjela
-// (`useSavePlan`), pa polja koja student nije dirao ostaju kakva su na poslužitelju.
+// su samo dirana polja; sprema ih jedini gumb „Spremi plan“ (`plan/SavePlanBar`) zajedno s ostalim odjelima i hotelom.
 import { t } from "@hotelixsim/i18n";
-import { useRef, useState } from "react";
-import { ApiError, problemMessage } from "../../api/errors";
-import { useDepartments, useSavePlan } from "../../api/queries";
+import { problemMessage } from "../../api/errors";
+import { useDepartments } from "../../api/queries";
 import type { DepartmentBody, PlanStateBody } from "../../api/types";
-import { differs, draftKey, useDraft } from "../../drafts";
+import { draftKey, useDraft } from "../../drafts";
 import { formatCount, formatEuros, tw } from "../../format";
-import { Button, Card, ErrorText, StatusText } from "../../ui/primitives";
+import { Button, Card, ErrorText } from "../../ui/primitives";
 import { RenewalLocked, RenewalPicker } from "../renewal/RenewalPicker";
 import { planPayNow } from "../renewal/renewal";
 import { anyDecision, decisionsIntro } from "./decisionsIntro";
@@ -18,11 +16,6 @@ import { PriceLevel, Upkeep } from "./Levers";
 import { OpenToggle } from "./OpenToggle";
 import { Stepper } from "./Stepper";
 import { type DeptPlans, stepLeftForOthers } from "./step";
-
-/** Ukupno sezonskih radnika u planu (poslužitelj ga drži unutar `seasonal_max` hotela). */
-function seasonalTotal(plans: DeptPlans): number {
-  return Object.values(plans).reduce((sum, d) => sum + d.seasonal_target, 0);
-}
 
 type DeptLimits = NonNullable<PlanStateBody["limits"]["departments"]>[string];
 type Entry = DeptPlans[string];
@@ -35,7 +28,6 @@ export function DecisionsEditor(props: {
   entry: Entry;
   limits: DeptLimits;
   stepTotal: number;
-  seasonalMax: number;
   weekly: boolean;
   /** Plan otvorenog kruga: rate obnove ostalih odjela i zgrade za blagajnu nakon plaćanja. */
   state: PlanStateBody;
@@ -44,11 +36,8 @@ export function DecisionsEditor(props: {
   const { dept, plans, entry, limits: l, weekly } = props;
   const code = dept.code;
   const list = useDepartments(props.hotelId);
-  const save = useSavePlan(props.hotelId);
-  const inFlight = useRef(false);
   const changes = useDraft<Entry>(draftKey("dept", props.hotelId, props.round, code), entry);
   const draft: Entry = { ...entry, ...changes.changes };
-  const [tooMany, setTooMany] = useState(false);
 
   // Sadašnji broj sezonskih radnika po odjelu: korak troši pomak od njega (Σ |cilj − sada|, kao poslužitelj).
   const now: Record<string, number> = Object.fromEntries(
@@ -82,42 +71,7 @@ export function DecisionsEditor(props: {
 
   const set = (patch: Partial<Entry>) => {
     changes.update(patch);
-    setTooMany(false);
-    save.reset();
   };
-
-  function onSave() {
-    if (save.isPending || inFlight.current || !list.isSuccess) return;
-    if (seasonalTotal({ ...plans, [code]: draft }) > props.seasonalMax) {
-      setTooMany(true);
-      return;
-    }
-    inFlight.current = true;
-    const mine = changes.changes;
-    const sent = { ...mine };
-    save.mutate(
-      {
-        round: props.round,
-        patch: (cur) => {
-          const fresh = cur.departments?.[code] ?? entry;
-          const departments = { ...(cur.departments ?? {}), [code]: { ...fresh, ...mine } };
-          // Ukupni sezonski radnici i održavanje Smještaja izvode se iz odjela, kao na poslužitelju.
-          return {
-            ...cur,
-            departments,
-            seasonal_target: seasonalTotal(departments),
-            maintenance: departments.rooms?.maintenance ?? cur.maintenance,
-          };
-        },
-      },
-      {
-        onSuccess: () => changes.settle(sent),
-        onSettled: () => {
-          inFlight.current = false;
-        },
-      },
-    );
-  }
 
   if (!anyDecision(offered))
     return (
@@ -221,21 +175,6 @@ export function DecisionsEditor(props: {
           </Button>
         </div>
       )}
-      {tooMany && (
-        <ErrorText>
-          {t("plan.dept.tooMany", { n: formatCount(props.seasonalMax, "seasonalWorker") })}
-        </ErrorText>
-      )}
-      {/* Novi krug javlja rečenica iznad odluka (DepartmentDecisions), ne greška. */}
-      {save.isError && !(save.error instanceof ApiError && save.error.code === "round_changed") && (
-        <ErrorText>{problemMessage(save.error, weekly)}</ErrorText>
-      )}
-      {save.isSuccess && <StatusText>{t("dept.decide.saved")}</StatusText>}
-      {differs(entry, changes.changes) && <p className="text-sm font-semibold">{t("plan.unsaved")}</p>}
-      {/* aria-disabled, ne disabled: fokus tipkovnice ostaje na gumbu dok traje spremanje (M-6). */}
-      <Button aria-disabled={save.isPending || !list.isSuccess} className="md:max-w-md" onClick={onSave}>
-        {t("dept.decide.save")}
-      </Button>
     </Card>
   );
 }
