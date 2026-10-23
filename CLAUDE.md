@@ -51,7 +51,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**, **plan = jedna datoteka ≤ 1000** (bez mape),
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** opseg pilota (ADR-065 t. 8); video (pjesma MP3, tempo glasa A/B, izgovor); pilot tekst privatnosti (s profesorima); 🟨 ADR-063, 064, 065; zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
+- **Čeka Leona:** opseg pilota (ADR-065 t. 8); novi video u Higgsfieldu (kasnije); pilot tekst privatnosti (s profesorima); 🟨 ADR-063, 064, 065; zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
   ([nacrt rizika](docs/architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)); ADR-058 t. 10, 13, 19, 20, 🟨 ADR-059 i ADR-060 t. 17–20; uzorci banke;
   pregled lica i uniformi na `/likovi`; slijepi pregled tekstova B4a–c; ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); 5 pitanja [plana platforme](docs/plan/2026-11-platforma.md) §7;
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".

@@ -50,8 +50,7 @@ Na kraju /kraj (check:docs, test:docs i lint EXIT 0).
 
 ## Otvoreno za Leona
 
-- **Video:** pjesma u MP3 (Leon dostavlja), tempo glasa A (+8 %/+2 Hz) ili B (+12 %/+4 Hz), izgovor „Hoteliks Sim" (`hotelixsim-video/proba-glas/`);
-  zatim render s glazbom i „5/5" na udarcu. Tekst za Leonovo pričanje po slijedu kadrova je u razgovoru sesije 13.
+- **Video:** stari Remotion video se ostavlja; **novi video u Higgsfieldu** s motion graphics dizajnom i montažom glasova (Leon 24.10.) — kasnije, ne u sesiji 14.
 - **Pretpostavke 🟨:** [ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md) t. 2–7, [ADR-063](./records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) t. 7–19,
   [ADR-062](./records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 10–18, ADR-061 t. 7–12, ADR-060 t. 17–20, ADR-059, ADR-058 t. 10, 13, 19, 20.
 - **Pilot:** Railway upozorenje 7 $ / strop 15 $, tko pokreće tjedni `pg_dump`, tekst privatnosti i kontakt.
