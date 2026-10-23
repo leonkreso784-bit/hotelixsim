@@ -348,10 +348,15 @@ test("9) X.md uz mapu X/ ima granicu indeksa (200)", () => {
 
 test("9) prijelazna iznimka je izuzeta od granice", () => {
   const r = run({
-    "docs/README.md": `${BASE["docs/README.md"]}- [S](plan/2026-10-10-v2-sloj1.md)\n`,
-    "docs/plan/2026-10-10-v2-sloj1.md": `# Sloj 1\n\n**Status:** ⏸️ PAUZIRAN\n${RED(400)}`,
+    "docs/README.md": `${BASE["docs/README.md"]}- [M](architecture/MODEL_V2.md)\n`,
+    "docs/architecture/MODEL_V2.md": `# Model\n${RED(400)}`,
   });
   assert.equal(r.code, 0, r.out);
+  // ista veličina bez iznimke pada (živi dokument, 300): test dokazuje iznimku, ne granicu
+  assertFails(
+    { "docs/README.md": `${BASE["docs/README.md"]}- [V](architecture/VIZIJA.md)\n`, "docs/architecture/VIZIJA.md": `# V\n${RED(400)}` },
+    "docs/architecture/VIZIJA.md",
+  );
 });
 
 // Pravi indeks ADR-a za fixture: isti kod koji ga generira (scripts/adr.mjs).
