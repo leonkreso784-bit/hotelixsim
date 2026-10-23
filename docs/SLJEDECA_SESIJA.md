@@ -1,57 +1,49 @@
-# Sljedeća sesija — PLAN: jedan plan za L1-15, pilot i fazu C, pa gradnja punom snagom
+# Sljedeća sesija — Leonovi odgovori na plan, pa gradnja vala 0 (testovi)
 
 > Predaja. Prepisuje se na svakom `/kraj`; povijest je u [PROGRESS.md](./records/PROGRESS.md), indeks u [README.md](./README.md).
 
-Sesija 13 (20.–23.10.): video za profesora v2 (izvan repoa), igra provjerena za prezentaciju 20.10., zapisi sesije 12
-([ADR-063](./records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) pilot) i **novo pravilo za planove**
-([ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)): plan je **jedna datoteka do 1000 redaka**, `docs/plan/` ima 5 datoteka.
-GitHub `model-v2/sloj1` = vrh sesije 13 (pushano 24.10., CI zelen na 61a7fbb); `main` = 9b6f047 (sloj1 → main uz Leonov OK). Ledger: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`.
+Sesija 14 (24.10.): Leon izabrao **opseg pilota (a)** — profesorov tempo kao **grupa igara** (svaki student svoja igra, profesor sam
+napravi grupu na stranici i dobije **profesorski kod**; [ADR-066](./records/DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md)).
+Napisani su **jedan plan** [Pilot s profesorom](./plan/2026-10-24-pilot-s-profesorom.md) (🟨 čeka OK), dizajn [AI_TEMELJ](./architecture/AI_TEMELJ.md)
+(neovisno pregledan) i dokument za fakultet [TROSKOVI_I_AI](./architecture/TROSKOVI_I_AI.md) (§8 za prezentaciju: cijena, Mistral,
+putovi do besplatnog AI-ja). Plan popravka temelja je u [arhivi](./archive/2026-10-14-popravak-temelja.md). Ništa nije gradeno ni pushano.
+GitHub `model-v2/sloj1` = `main` = b973b84; lokalno 1 commit sesije 14 (samo docs). Ledger: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` („SESIJA 14").
 
 ## Prompt za početak (Leon zalijepi nakon `/clear` + `/newsession`)
 
 ```text
-Nastavljamo (sesija 14) — PLAN pa gradnja. Pročitaj docs/SLJEDECA_SESIJA.md, ADR-064 (plan = jedna datoteka ≤ 1000 r.), ADR-065 (moje odluke 24.10.), dno ledgera .superpowers/sdd/2026-10-14-popravak-temelja/progress.md („SESIJA 13") i podloge-plana-24-10.md u istoj mapi.
-Laptop je na punjaču. Push, spajanje u main i deploy samo uz moj izričit OK.
+Nastavljamo (sesija 15) — odgovori na plan pa gradnja. Pročitaj docs/SLJEDECA_SESIJA.md, plan docs/plan/2026-10-24-pilot-s-profesorom.md (odjeljci „Pregled", „Pitanja za Leona", „Global Constraints", „Tokovi", VAL 0), ADR-066 i dno ledgera .superpowers/sdd/2026-10-14-popravak-temelja/progress.md („SESIJA 14").
+Laptop je na punjaču. Push, spajanje u main, živi AI test i deploy samo uz moj izričit OK.
 SURADNJA: ListAgents → svoje ime u .superpowers/sdd/SESIJE.md. Banka K8 čeka.
 1) `df -h /c`, `bash scripts/baza.sh status` (ako ne radi: start), `tasklist | grep -i cargo`.
-2) Prvo me pitaj OPSEG PILOTA (ADR-065 t. 8): (a) pilot s profesorovim tempom (profesor napravi igru, krug po vremenu ili gumbom, student automatski ili sam „dalje") ili (b) kratki pilot bez profesora pa tempo odmah iza. Analiza prije prijedloga (paralelni read-only agenti; ROADMAP kolosijek PLATFORMA, plan 2026-11-platforma, ADR-037).
-2b) AI TEMELJ (ADR-065 t. 12–14): brainstorming kreativnog AI sloja koji podnosi opterećenje i jeftin je (ai-temelj-ideje-24-10.md, temelj-opterecenja-24-10.md, ai-trosak-istrazivanje-24-10.md) → dizajn dokument u docs/architecture/ → neovisni pregled → cigle u plan. Uz to dokument za fakultet TROSKOVI_I_AI.md (ADR-065 t. 15: trošak po studentu i razredu, razine, stropovi, tko plaća, pružatelji i GDPR) — brojke iz mjerenja.
-3) Napiši JEDAN plan u docs/plan/ (jedna datoteka) po mom odgovoru: VAL 0 = TESTOVI (ADR-065 t. 11, revizija-testova-24-10.md: opterećenje 40 studenata, AI trošak po igri, web tokovi, dim nakon deploya, slabi testovi), pa L1-15 (presuda 8000 + iskočni prozor; mentor „niže plaće"; mentor bez obećanja povrata ulaganja; celijakija rečenicom), zaštita pilota (više AI radnika, poruka i gumb „Nova igra" za zastarjelu igru), profesorov tempo ako (a), lokal kao mehanika i generator događaja (gdje u redoslijedu), pilot dio 9, faza C poslije. Sati i valovi. Pokaži mi plan prije gradnje; plan popravka temelja tada u arhivu.
-4) Nakon mog OK: gradnja (kratke grane, čuvar testova prije graditelja).
+2) Postavi mi pitanja iz plana („Pitanja za Leona" 1, 2, 3, 8 kao anketa, preporuka prva; 4–7 i 9 tekstom, numerirano). Moje odgovore zapiši u ADR-066 (✅) i plan; plan dobiva status 🟩 AKTIVAN.
+3) Na moje „kreni": novi ledger .superpowers/sdd/2026-10-24-pilot-s-profesorom/progress.md, pa VAL 0 — Task 0.1 RED-T i 0.2 AI-T (dva Rust toka) ∥ 0.3 WEB-T ∥ 0.4 SKRIPTE, sve u jednoj poruci, svaki tok svoje stablo ../hotelixsim-<tok> i svoj target/<tok>; 0.5 VRATA kad se oslobodi Rust slot. Čuvar testova prije graditelja, pregled prije spajanja, spajanje isti dan, lint + CI prije pusha.
+4) Kraj vala 0: pokaži mi osnovicu troška (R4) i ispis opterećenja s jednim radnikom (R1) — prije vala 1.
 Na kraju /kraj (check:docs, test:docs i lint EXIT 0).
 ```
 
 ## Cilj sesije
 
-1. **Odluka o opsegu pilota** ([ADR-065](./records/DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md) t. 1 i 8): profesor vodi tempo igre
-   (krug po vremenu ili gumbom; student automatski ili sam „dalje") — u pilotu ili odmah iza njega.
-2. **Jedan plan** (≤ 1000 r.) s redoslijedom: **val 0 testovi** (ADR-065 t. 11; revizija `revizija-testova-24-10.md`), L1-15 (~8–14 h), zaštita pilota (~4–5 h: više AI radnika, izlaz iz zastarjele igre),
-   profesorov tempo (ako je u pilotu), lokal kao mehanika i generator događaja (ADR-065 t. 2 i 6), pilot dio 9 (~2,5–4 h + Leon ~1,5 h);
-   faza C poslije pilota (~50–80 h: C6 → C1 → C2 → razred → C3, C5). Podloge s datotekama i satima: `podloge-plana-24-10.md`.
-3. **Gradnja** tek nakon Leonova OK na plan. Dio 8 (privatnost) čeka profesore.
-
-## Način rada (Leon 24.10.: „strukturno i pametno, dobrom kvalitetnom brzinom, s dosta agenata")
-
-- Plan se dijeli u **tokove po vlasništvu datoteka** (npr. AI/presuda · mentor · web · sadržaj · radnici/red), svaki tok svoje stablo
-  `../hotelixsim-<tok>` i svoj `target/<tok>`. U svakom valu **odjednom** pokreni sve neovisne tokove u jednoj poruci.
-- Istodobno najviše **2 agenta koji prevode Rust**; uz njih bez ograničenja web, sadržaj i docs graditelji te read-only čuvari i pregledi.
-- Kvaliteta se ne reže: čuvar testova prije graditelja, pregled prije spajanja, spajanje isti dan, **lint + CI prije pusha**.
-- Glavna sesija samo orkestrira (nalozi, presude, spajanje) i čuva kontekst; izlazi agenata idu u datoteke ledgera.
+1. **Leonovi odgovori** na pitanja plana (situacije u grupi a/b, živi AI testovi, Playwright, migracije 0006–0008, mjerilo, lokal, mentor na Haiku,
+   pretpostavke ADR-066 t. 4–13 i AI_TEMELJ §10) → ADR-066 ✅, plan 🟩.
+2. **Val 0 = testovi** (~40 h rada, ~14 h zidno): opterećenje reda poslova (mora pasti s jednim radnikom), trošak po igri (osnovica za
+   TROSKOVI_I_AI §3), lažni AI, web tokovi, provjera nakon deploya, vrata.
+3. Ako ostane vremena: val 1 (AI temelj I + L1-15 presuda + „Nova igra" za zastarjelu igru).
 
 ## Upozorenja
 
-- **Lint prije svakog commita** (`corepack pnpm lint`; crveno samo pod `.superpowers/` = B19). Sesija 13 je pushala neformatiran test → CI crven.
-- **Plan se ne razdvaja u mapu** — brana pada na podmapu u `docs/plan/` (pravilo 13). Gotove kartice sele u `docs/archive/<plan>-kartice/`.
-- **Osnovica balansa `nakon-pilot-4/`** (= nakon-l113b brojke). Rub lanca 0,04: svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno.
-- **Lokalni API** nakon pusha uvijek ponovo izgraditi i `migrate` (B30); zdravlje bez `events` = novi kod.
-- **Pilot:** jezgra se zamrzava za trajanje pilota; slika se ne dijeli dok proba ne pokaže 401 bez lozinke.
-- Disk 50 GB, svako stablo svoj `CARGO_TARGET_DIR`, jedan Rust slot po sesiji; omotači `cargo run … serve` ne broje se (B26).
+- **Lint prije svakog commita** (`corepack pnpm lint`; crveno samo pod `.superpowers/` = B19).
+- **Mentor kruga je najveća stavka troška** — cilj ≤ 0,25 $ po igri traži mentora na Haikuu (Leonov slijepi pregled u valu 3).
+- **Anthropicov API obrađuje u SAD-u** (30 dana, bez učenja); EU = Bedrock Frankfurt (+10 %). Mistral nije besplatan put.
+- Testovi koji opisuju budući temelj (R1 s trakama) stoje `#[ignore = "zelen nakon AI-2"]` — čuvar za val 1, ne „lažno zeleno".
+- Osnovica balansa `nakon-pilot-4/`; rub lanca 0,04: svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno.
+- Disk 50 GB (24.10.: 82 GB slobodno), svako stablo svoj `CARGO_TARGET_DIR`, najviše 2 Rust toka; omotači `cargo run … serve` ne broje se (B26).
+- `grep -r` po cijelom repou zapinje na `target/` — koristi `git grep` ili Grep alat.
 - Leonova necommitana `docs/architecture/PLATFORMA/03-prijava.md` — ne diraj i ne commitaj.
 
 ## Otvoreno za Leona
 
-- **Video:** stari Remotion video se ostavlja; **novi video u Higgsfieldu** s motion graphics dizajnom i montažom glasova (Leon 24.10.) — kasnije, ne u sesiji 14.
-- **Pretpostavke 🟨:** [ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md) t. 2–7, [ADR-063](./records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) t. 7–19,
-  [ADR-062](./records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 10–18, ADR-061 t. 7–12, ADR-060 t. 17–20, ADR-059, ADR-058 t. 10, 13, 19, 20.
-- **Pilot:** Railway upozorenje 7 $ / strop 15 $, tko pokreće tjedni `pg_dump`, tekst privatnosti i kontakt.
+- Pitanja plana 1–9 (gore). **Prezentacija fakultetu:** TROSKOVI_I_AI §8 (točke za slajdove i 3 pitanja fakultetu; brojke su procjena do testa troška).
+- Pilot: Railway upozorenje 7 $ / strop 15 $, tko pokreće tjedni `pg_dump`, tekst privatnosti (dio 8 čeka profesore).
+- Video u Higgsfieldu (kasnije). Pretpostavke 🟨: ADR-066 t. 4–13, ADR-064 t. 2–7, ADR-063 t. 7–19, ADR-062 t. 10–18, ADR-061 t. 7–12, ADR-060 t. 17–20, ADR-059, ADR-058.
 - Nalaz E4 (5 pitanja), nacrt rizika C3, uzorci banke, slijepi pregled tekstova B4a–c, ocjene 40 odgovora za mjerilo.

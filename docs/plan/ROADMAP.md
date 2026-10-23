@@ -75,7 +75,7 @@ studentu ili nasumce, tek s razredom). Sati: 🟨 [PROC], procjenu daje kartica.
 
 ## Gdje smo
 
-Aktivan plan: [Popravak temelja](./2026-10-14-popravak-temelja.md) (14.10., [ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md):
+Aktivan plan: [Pilot s profesorom](./2026-10-24-pilot-s-profesorom.md) (24.10., [ADR-066](../records/DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md): testovi, AI temelj, grupa igara, L1-15, pilot). Prethodni: [Popravak temelja](../archive/2026-10-14-popravak-temelja.md) (14.10., u arhivi; [ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md):
 faze A → B → C, samo popravak dok nije gotov; preuzima ostatak ZAVRŠETKA SLOJA 1). [Sloj 1](../archive/2026-10-10-v2-sloj1.md) je pauziran.
 Nakon popravka: TEMELJ RADA i SPREMNO ZA INTERNET, pa RAZRED (🟨 17.10.: platforma do najmanje igrive razredne igre prije novih mehanika igre, odjeljak iznad).
 Otvorena pitanja za Leona žive na jednom mjestu: [BACKLOG.md](../records/BACKLOG.md) → „Otvoreno za Leona".

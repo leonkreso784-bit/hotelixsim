@@ -1,7 +1,7 @@
 # ADR-063 — Pilot: jedna adresa, lozinka, stropovi AI-ja, tri igre po gostu
 **Datum:** 2026-10-19 · **Status:** ✅ **Leonove odluke 19.10.** (t. 1–4, anketa sesije 12; t. 5–6 iz ADR-062 t. 9), 🟨 t. 7–19 ČEKA LEONOV PREGLED ·
 **Vezano:** [ADR-004](ADR-004-sve-se-gradi-i-pokazuje-lokalno.md), [ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12–14,
-[ADR-062](ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9 i 18, [kartica pilota](../../plan/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu) (task-16, dio 10)
+[ADR-062](ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9 i 18, [kartica pilota](../../archive/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu) (task-16, dio 10)
 
 **Izvori.** Kartica task-16 (10 dijelova), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` („SESIJA 12"), izvještaji
 `pilot-{1..7}-report.md`, pregledi `pilot-2-review.md` i `pilot-3-review.md`, prijedlog `pilot-hosting-prijedlog.md` (isti direktorij).

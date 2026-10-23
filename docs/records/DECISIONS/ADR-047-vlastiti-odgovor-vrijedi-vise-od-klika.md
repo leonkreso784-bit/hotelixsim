@@ -1,6 +1,6 @@
 # ADR-047 — Vlastiti odgovor vrijedi više od klika na najbolji ponuđeni (opcija A)
 **Datum:** 2026-10-15 · **Status:** ✅ **Leonova odluka 15.10.** (načelo; anketa nacrta s četiri odgovora) ·
-**Vezano:** [BODOVANJE_VLASTITOG_ODGOVORA.md](../../architecture/BODOVANJE_VLASTITOG_ODGOVORA.md), [plan popravka](../../plan/2026-10-14-popravak-temelja.md) (cigla PRAVILO)
+**Vezano:** [BODOVANJE_VLASTITOG_ODGOVORA.md](../../architecture/BODOVANJE_VLASTITOG_ODGOVORA.md), [plan popravka](../../archive/2026-10-14-popravak-temelja.md) (cigla PRAVILO)
 
 **Leon:** *„kada student daje svoj vlastiti odgovor on može biti bodovan više; ukoliko student ne priča s gostom, ne odgovori svojim
 riječima nego samo izabere najbolje rješenje, ne dobije maksimalan broj bodova."*

@@ -79,7 +79,7 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 ## Odgođeni nalazi — [prije Railwaya]
 
 - [pilot] **Priprema pilota: ostaju dijelovi 8 i 9** ([ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md); dijelovi 1–7 spojeni,
-  [kartica](../plan/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu)): dio 8 tekst privatnosti (čeka Leona, „Otvoreno za Leona"), dio 9 postava
+  [kartica](../archive/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu)): dio 8 tekst privatnosti (čeka Leona, „Otvoreno za Leona"), dio 9 postava
   na Railwayu nakon L1-15 s obaveznim stavkama ADR-063 §C. **Za trajanje pilota jezgra se zamrzava** (promjena `CORE_VERSION` daje 409 postojećim igrama).
 - [pilot] **Odgođeni minori pregleda Pilot-2** (`pilot-2-review.md`): M4 otvoreno zdravlje troši vezu iz poola (10 veza, 3 s); M6 nema kompresije
   (`ServeDir::precompressed_br/gzip`); M8 `serve_until` bez gornjeg roka pražnjenja HTTP-a (bitno tek uz SSE); R2-M1 kod sadržaja s točkom u SPA putu

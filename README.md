@@ -31,7 +31,7 @@ Projekt nastaje za nastavu na studiju Hospitality Managementa (FMTU Opatija). Au
 - **Novi model igre** (odjeli, račun dobiti, tjedni ili mjesečni krug, situacije iz predložaka, obnova, kraj sezone)
   je u grani [`model-v2/sloj1`](https://github.com/leonkreso784-bit/hotelixsim/tree/model-v2/sloj1). Ondje je i
   [revizija temelja](https://github.com/leonkreso784-bit/hotelixsim/blob/model-v2/sloj1/docs/architecture/REVIZIJA_TEMELJA.md)
-  s [planom popravka](https://github.com/leonkreso784-bit/hotelixsim/blob/model-v2/sloj1/docs/plan/2026-10-14-popravak-temelja.md),
+  s [planom popravka](https://github.com/leonkreso784-bit/hotelixsim/blob/model-v2/sloj1/docs/archive/2026-10-14-popravak-temelja.md),
   koji je trenutno u tijeku.
 - **Sljedeće:** razred u jednoj igri, likovi s vlastitim osobinama, profesorov pregled; studentski pilot planiran je za
   ljetni semestar 2027.

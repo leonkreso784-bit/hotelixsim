@@ -1,6 +1,6 @@
 # ADR-053 — Pretpostavke 16.10. (B4): sastojak samo u najboljem, oznake iz sadržaja, graditelji tekstova opus
 **Datum:** 2026-10-16 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 1–5 F1; t. 6 riješio ADR-054 t. 1) · **Vezano:** [ADR-051](ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md),
-[ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), [plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B1b, B4a–c)
+[ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md), [plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B1b, B4a–c)
 
 Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
 1. **Test T4b „sastojak samo u najboljem":** popis riječi-korijena (sutra, provjer, ubuduće, potvrd, plan, tjed…) koje smiju stajati

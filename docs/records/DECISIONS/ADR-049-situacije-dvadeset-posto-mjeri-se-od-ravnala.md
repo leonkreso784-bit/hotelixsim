@@ -1,7 +1,7 @@
 # ADR-049 — „Situacije ~20 %" mjeri se od ravnala; redoslijed odgovora mjesečno dobiva zapisani dug
 **Datum:** 2026-10-15 · **Status:** ✅ **Leonova odluka 15.10.** (anketa B3, nakon brojki B3a; ishod B3b i B1a dopisan isti dan) ·
 **Vezano:** [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 15, [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B3a, B3b, L1-13)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B3a, B3b, L1-13)
 
 **Pitanje:** „situacije nose ~20 % napretka" — 20 % od čega? Leon je odabrao prvu ponuđenu opciju.
 

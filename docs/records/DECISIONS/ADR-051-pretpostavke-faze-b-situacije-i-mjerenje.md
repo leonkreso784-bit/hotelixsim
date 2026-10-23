@@ -1,7 +1,7 @@
 # ADR-051 — Pretpostavke faze B (B2a–B1a): broj situacija, mjerenje težine, prostor odjela
 **Datum:** 2026-10-15 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 1, 4–13 F1; t. 2–3 A7, izmjena dolje) · **Vezano:** [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 1, 12–14,
 [ADR-049](ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md), [ADR-050](ADR-050-popravak-podize-odjel-iznos-u-l1-13.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B2a, B2b, B3a, B3b, B1a)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B2a, B2b, B3a, B3b, B1a)
 
 Pretpostavke koje je voditelj donio bez pitanja (ADR-005) dok su se gradile cigle B2a–B1a. Svaka ima cijenu ako je krivo.
 

@@ -1,7 +1,7 @@
 # Popravak temelja — gotove kartice (arhiva)
 
 **Status:** 📦 ARHIVA (23.10.2026., [ADR-064](../records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)) — kartice faza A i B koje su gotove.
-Živi plan s otvorenim radom: [2026-10-14-popravak-temelja.md](../plan/2026-10-14-popravak-temelja.md). Kartice su prepisane bez izmjene sadržaja,
+Živi plan s otvorenim radom: [2026-10-14-popravak-temelja.md](../archive/2026-10-14-popravak-temelja.md). Kartice su prepisane bez izmjene sadržaja,
 redom, u dijelove do 1000 redaka.
 
 | dio | kartice |

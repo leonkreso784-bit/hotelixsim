@@ -1,7 +1,7 @@
 # ADR-050 — Popravak u situaciji diže stanje svog odjela; iznos „mehanizam sad, iznos u L1-13"
 **Datum:** 2026-10-15 · **Status:** ✅ **Leonova odluka 15.10.** (anketa B1a; izmjena 17.10. dolje, ADR-056 A1) · **Vezano:** [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 1,
 [ADR-046](ADR-046-leonove-odluke-15-10-za-fazu-b.md) t. 1, [ADR-049](ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B1a, L1-13)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B1a, L1-13)
 
 **Što se dogodilo:** B1a je gradila mehanizam s bonusom +10 bez faktora kruga; balans je pao (BLOCKED): „B3 težina" tjedno A/B/C
 54,0 / 72,4 / 58,7 % i mjesečno B 65,8 % (granica 50 %, cilj ~20 %). Uzrok: 12 predložaka ima hitni popravak (10 i u srednjem

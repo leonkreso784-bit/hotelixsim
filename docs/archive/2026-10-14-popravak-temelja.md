@@ -1,7 +1,6 @@
 # Popravak temelja — faze A, B i C — plan izgradnje
 
-**Status:** 🟩 AKTIVAN · **Područje:** igra · **Otvoren:** 2026-10-14 · **Grana:** integracijska `model-v2/sloj1`;
-svaka cigla na kratkoj grani `popravak/<cigla>` u radnom stablu `../hotelixsim-<cigla>`, spaja se isti dan.
+**Status:** 📦 **ARHIVIRAN 24.10.2026.** — faze A i B gotove; otvoreno (L1-15, Pilot dijelovi 8–10, faza C) preuzeo je [plan Pilot s profesorom](../plan/2026-10-24-pilot-s-profesorom.md) · **Područje:** igra · **Otvoren:** 2026-10-14
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -145,7 +144,7 @@ pet scenarija „što student vidi" je zeleno; Leon odigra mjesečnu v2 igru sa 
 | C6 | Razdvojiti `api/src/schema.rs` i `game/src/mentor.rs` (preduvjet dva kolosijeka, dug `check:kod` pada) | 06 #6 |
 
 Profesorov pregled i ispravka presude, obračun po hotelu, prijava i osobe **nisu popravak**: to su planirane faze
-(PROFESOR, RAZRED U JEZGRI, RAZRED, LJUDI) iz [ROADMAP-a](./ROADMAP.md) i kreću nakon faze C.
+(PROFESOR, RAZRED U JEZGRI, RAZRED, LJUDI) iz [ROADMAP-a](../plan/ROADMAP.md) i kreću nakon faze C.
 
 ## Ukupno
 
@@ -237,7 +236,7 @@ provjeravatelj **opus** za dijelove 2 i 3 (ulaz i novac), ostali sonnet · **Pre
    i tada uključuje `Secure`. Time zaboravljena varijabla ne otvara stranicu svima. Cijena ~0,5 h; zatvara BACKLOG „Typed config".
 3. **Gdje se broji trošak:** (A) zbroj `meta` iz `events` po `recorded_at` — bez migracije, ali promaši odrezane odgovore (do 5 × ~0,16 $ po
    presudi) i upis u predmemoriju; (B) **preporuka:** brojač vidi svaki odgovor Anthropica (i odrezan) i upisuje u vlastitu tablicu; točan,
-   preživi restart, ~1–2 h više. Migracija bi bila `0005`, a plan platforme tim brojem zove F1-2 ([plan platforme](./2026-11-platforma.md)
+   preživi restart, ~1–2 h više. Migracija bi bila `0005`, a plan platforme tim brojem zove F1-2 ([plan platforme](../plan/2026-11-platforma.md)
    faza 2, red 1) — platforma tada prima sljedeći broj.
 4. **Dan za dnevni strop:** UTC (jednostavno; u Hrvatskoj se dan otvara u 1 ili 2 h noću).
 5. **Što student vidi kad je strop dosegnut:** ništa posebno, igra radi na rezervama (neutralna presuda, kratak odgovor lika, mentor iz brojki).

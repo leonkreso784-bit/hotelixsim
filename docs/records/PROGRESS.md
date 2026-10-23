@@ -4,6 +4,18 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-24 (14) — Sesija 14: opseg pilota, AI temelj, troškovi za fakultet, jedan plan
+
+- **Opseg pilota (Leon, anketa):** (a) profesorov tempo ide u pilot kao **grupa igara**; profesor sam napravi grupu na stranici i dobije
+  profesorski kod ([ADR-066](DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md)). Analiza: tempo ne dira jezgru (~25–34 h).
+- **AI temelj** ([AI_TEMELJ](../architecture/AI_TEMELJ.md), neovisno pregledan): razredni prefiks u predmemoriji, rok na svakom poslu i
+  radnici po trakama, sudac u dva koraka s kontrolorom u sjeni, kanta troška po grupi.
+- **Za fakultet** ([TROSKOVI_I_AI](../architecture/TROSKOVI_I_AI.md)): trošak po studentu i razredu (procjena), GDPR po pružatelju, Mistral,
+  putovi do besplatnog AI-ja (Srce, krediti preko profesora, AWS Research, Erasmus+); nalaz: mentor kruga je najveća stavka.
+- **Plan** [Pilot s profesorom](../plan/2026-10-24-pilot-s-profesorom.md) (🟨 čeka OK): val 0 testovi → AI temelj → grupa → generator → isporuka;
+  stari plan popravka temelja u [arhivi](../archive/2026-10-14-popravak-temelja.md). Provjereno: check:docs 0, test:docs 91/0. Ništa nije pushano.
+- **Slijedi (sesija 15):** Leonovi odgovori na pitanja plana 1–9 → „kreni" → val 0.
+
 ## 2026-10-20…23 (13) — Sesija 13: video za profesora, igra spremna za prezentaciju, zapisi sesije 12
 
 - **Video za profesora v2** (izvan repoa, `Documents/hotelixsim-video`): novi tekst glasa (živ, priča; „ocjenjuje **profesor ili AI**"; scena 7
@@ -28,7 +40,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ## 2026-10-19 (12) — Sesija 12: priprema pilota (dijelovi 1–7) spojena, banka 930 ljudi, L1-14 započet, `sloj1` i `main` na GitHubu
 
-- **Kartica pilota** [task-16](../plan/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu) (opus, 10 dijelova, valovi 1–5; 367078a). Leonova anketa
+- **Kartica pilota** [task-16](../archive/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu) (opus, 10 dijelova, valovi 1–5; 367078a). Leonova anketa
   (4/4 preporučene): kolačić 120 dana s obnovom, `*.up.railway.app`, bez granice po IP-u, gradnja odmah usporedo s L1-14.
 - **Spojeno u valovima** (svaki dio svoje stablo i `target/pilot-N`, tok čuvar → graditelj → pregled): dio 7 kopije (6c3acfd), dio 1 kolačić (fd09174),
   dio 5 Dockerfile, dio 6 CI `docker` + `deploy-pilot.yml`, dio 2 vrata (c7ee9f8; pregled opus: Changes requested 4 Important → runda 2 Approved),
@@ -173,7 +185,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 - **Banka ljudi K1a spojen** (adf5a4d): modul `ljudi` u `crates/content`, okviri `content/hotel/v2/ljudi/`, 42 testa; igra netaknuta, balansi bajt-isti. Pregled sonnet: Approved.
 - **K1b** (de2dc35 čuvar, 440fc0c + 9c75d41 graditelj): serija-000 = 10 radnika + 10 gostiju; serije OTVORENE do Leonova pregleda (`pregled-20.md` i `pregled-20.html`).
   Pregled: gradovi u dva oblika i "tiskar" popravljeni; **rod po ulozi ide Leonu**.
-- **Kartica PRAVILO** napisana (224 r.; podjela a/b/c, `CORE_VERSION` 2.5.0) → [plan](../plan/2026-10-14-popravak-temelja.md); pretpostavke u [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md).
+- **Kartica PRAVILO** napisana (224 r.; podjela a/b/c, `CORE_VERSION` 2.5.0) → [plan](../archive/2026-10-14-popravak-temelja.md); pretpostavke u [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md).
 - **Novo: kvar B13** (Leon igrajući): zalijepljeni svi ponuđeni odgovori često daju 5; prepoznavanje u kodu, ne u AI-ju → [BUGS](BUGS.md), pravilo anketom u idućoj sesiji.
 - **Pouka B12:** zajednički `CARGO_TARGET_DIR` među stablima daje zastarjelu biblioteku (lažno zeleno moguće) → svako stablo svoj target ([AGENTI](../workflow/AGENTI.md) t. 6).
 - **Leonov smjer:** "faza C i dalje razvoj likova, u sučelju odmah njihov izgled" → nacrt i anketa o redoslijedu na početku iduće sesije ([SLJEDECA_SESIJA](../SLJEDECA_SESIJA.md)).

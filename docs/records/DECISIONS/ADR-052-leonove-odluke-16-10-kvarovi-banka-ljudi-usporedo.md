@@ -1,7 +1,7 @@
 # ADR-052 — Leonove odluke 16.10.: uvjet kvara klime i praonice, banka ljudi usporedo, tri odgovora za K1
 **Datum:** 2026-10-16 · **Status:** ✅ **Leonove odluke 16.10.** · **Vezano:** [ADR-043](ADR-043-popravak-temelja-ne-gradnja-ispocetka.md),
 [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8, [BANKA_LJUDI](../../architecture/BANKA_LJUDI.md) §5.1,
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B4a)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B4a)
 
 **1. Uvjet kvara P-KLIMA i P-PRAONICA** (anketa B4a): kvar se može dogoditi samo kad je stanje Smještaja **ispod 65**
 (`dept_condition_pts` below 6500), kao kod bojlera. P-KLIMA zadržava pojačanje ispod 50. Mjereno: B3 težina tjedno A 42,8 → 41,9 %,

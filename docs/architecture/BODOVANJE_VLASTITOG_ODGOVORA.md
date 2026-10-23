@@ -3,7 +3,7 @@
 > **Status:** ✅ odlučeno 15.10.: opcija A ([ADR-047](../records/DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md)); nacrt (2026-10-15), anketa §6 odgovorena. Povod, Leon 15.10.: *„kada student
 > daje svoj vlastiti odgovor on može biti bodovan više; ukoliko student ne priča s gostom, ne odgovori svojim riječima
 > nego samo izabere najbolje rješenje, ne dobije maksimalan broj bodova — to trebamo riješiti."* Mjesto u planu:
-> cigla **PRAVILO** u [planu popravka](../plan/2026-10-14-popravak-temelja.md) (Faza B). Odluka je u ADR-u.
+> cigla **PRAVILO** u [planu popravka](../archive/2026-10-14-popravak-temelja.md) (Faza B). Odluka je u ADR-u.
 
 ## 1. Problem u dvije rečenice
 Danas klik na najbolji ponuđeni odgovor donosi isto što i najbolji odgovor napisan vlastitim riječima, ocjenu 5 od 5,

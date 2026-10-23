@@ -1,6 +1,6 @@
 # ADR-045 — Trošak odmah, ugled kasnije: brojke tjednog kruga se ne mijenjaju
 **Datum:** 2026-10-15 · **Status:** ✅ **Leonova odluka 15.10.** (anketa: „Igra ostaje, objasni") · **Vezano:** [ADR-043](ADR-043-popravak-temelja-ne-gradnja-ispocetka.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (A6, B3, C), [BACKLOG](../BACKLOG.md)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (A6, B3, C), [BACKLOG](../BACKLOG.md)
 
 **Kontekst.** Čuvar A6 („što student vidi") pao je na tjednoj v2 igri: u prvom tjednu (t01, sjeme 42) odgovor 0 na sve situacije
 daje napredak 341, a šutnja 360. Dijagnoza (klasa B, vrijeme, ne kvar): trošak odgovora pada odmah u F (−91; 890 € prema 160 € šutnje,

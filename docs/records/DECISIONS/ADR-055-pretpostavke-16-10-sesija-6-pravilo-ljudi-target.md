@@ -1,7 +1,7 @@
 # ADR-055 — Pretpostavke 16.10. (sesija 6): kartica PRAVILO, voditelj kao čuvar, banka ljudi, target po stablu
 **Datum:** 2026-10-16 · **Status:** ✅ **Potvrdio Leon 17.10., osim t. 6 🟨** (t. 1 A5 i A6; t. 2, 4, 5 F1; t. 3 C1, C2, C6) · **Vezano:** [ADR-053](ADR-053-pretpostavke-16-10-oznake-testovi-b4.md),
 [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md), [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md),
-[ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8, [plan popravka](../../plan/2026-10-14-popravak-temelja.md)
+[ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8, [plan popravka](../../archive/2026-10-14-popravak-temelja.md)
 
 Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
 1. **Kartica PRAVILO** ([task-12](../../archive/2026-10-14-popravak-temelja-kartice/dio-4.md#task-pravilo-vlastiti-odgovor-vrijedi-više-od-klika-klik-najviše-4-vlastite-riječi-do-5), 224 r.): postavka `AnswerRule { Classic, OwnWords }`,

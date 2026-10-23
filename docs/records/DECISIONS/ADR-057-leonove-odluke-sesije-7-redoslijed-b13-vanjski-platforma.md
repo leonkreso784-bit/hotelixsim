@@ -3,7 +3,7 @@
 **Vezano:** [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 2–3, [ADR-043](ADR-043-popravak-temelja-ne-gradnja-ispocetka.md) t. 2,
 [ADR-004](ADR-004-sve-se-gradi-i-pokazuje-lokalno.md), [ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md) t. 2,
 [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md), [ADR-058](ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md)
 
 Odluke iz sesije 7 koje su čekale ADR na `/kraj` (izvor: ledger popravka temelja i ledger banke ljudi). Pretpostavke izvođača iz istih cigli su u ADR-058.
 

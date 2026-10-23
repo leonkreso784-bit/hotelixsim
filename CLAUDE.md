@@ -31,16 +31,17 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   cigle, prekretnice P1–P4 (verzija za profesore ~siječanj, studentski pilot ljetni semestar); razred po
   [ADR-037](docs/records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md), rad po
   [ADR-038](docs/records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) (čuvar testova prije graditelja; staje se na kraju faze).
-- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **POPRAVAK TEMELJA** — samo to dok nije gotovo
-  ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md), [revizija](docs/architecture/REVIZIJA_TEMELJA.md),
-  [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
+- **Sljedeće** ([SLJEDECA_SESIJA.md](docs/SLJEDECA_SESIJA.md)): **PILOT S PROFESOROM** — [plan](docs/plan/2026-10-24-pilot-s-profesorom.md)
+  (🟨 čeka Leonov OK; [ADR-066](docs/records/DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md), [AI_TEMELJ](docs/architecture/AI_TEMELJ.md),
+  [TROSKOVI_I_AI](docs/architecture/TROSKOVI_I_AI.md)); popravak temelja ([ADR-043](docs/records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md)) je u
+  [arhivi](docs/archive/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`.
   **Faza A gotova** (na GitHubu). **Faza B** (sve na GitHubu, `model-v2/sloj1`): B1–B4, PRAVILO-a/b/c, IZGLED (a+b) i IZGLED-c (uniforme vanjskih),
   **L1-13** (kalibracija, svi dijelovi; situacije ~20 % napretka), **L1-13b** (izmiješani odgovori, jedan gumb „Spremi plan", opis Smještaja,
   pojačano održavanje +5), banka ljudi (**930**) i **pilot dijelovi 1–7** (kolačić 120 dana, lozinka, stropovi AI 5 $/dan · 30 $/mj, 3 igre po gostu,
   Docker, CI deploy, kopije; [ADR-063](docs/records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)). `main` = `sloj1` = 9b6f047
   (Leon pushao 19.10.). `CORE_VERSION` **2.6.0**. Osnovica balansa `nakon-pilot-4/`. L1-14 Leon odigrao (`l114-popis-izmjena.md`).
-  **Sljedeće (sesija 14):** Leon bira opseg pilota (profesor vodi tempo igre, [ADR-065](docs/records/DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md)) → **JEDAN PLAN**
-  (jedna datoteka ≤ 1000 r., ADR-064): L1-15, zaštita pilota, lokal, generator događaja, pilot dio 9, faza C → Leon vidi plan → gradnja; deploy samo uz izričit OK.
+  **Sesija 14 (24.10.):** opseg pilota (a) — profesorov tempo kao grupa igara, profesorski kod (ADR-066); plan napisan (val 0 testovi → AI temelj →
+  grupa → generator → isporuka). **Sesija 15:** Leon odgovara na pitanja plana 1–9 → „kreni" → val 0; deploy samo uz izričit OK.
   Za trajanje pilota jezgra se zamrzava.
   **Banka ljudi:** radi **paralelna sesija** ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`);
   glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE".

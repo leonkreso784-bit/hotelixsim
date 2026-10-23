@@ -1,7 +1,7 @@
 # ADR-054 — Leonove odluke 16.10. (sesija 6): prag 80 za tri kvara, kopiranje odgovora, smjer iduće sesije
 **Datum:** 2026-10-16 · **Status:** ✅ **Leonove odluke 16.10.** · **Vezano:** [ADR-052](ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md) t. 1,
 [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md), [ADR-046](ADR-046-leonove-odluke-15-10-za-fazu-b.md) t. 5,
-[ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 11, [plan popravka](../../plan/2026-10-14-popravak-temelja.md) (B4c, PRAVILO)
+[ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 11, [plan popravka](../../archive/2026-10-14-popravak-temelja.md) (B4c, PRAVILO)
 
 **1. Uvjet kvarova P-BRAVE, P-CURENJE-VODE i P-DIZALO = Smještaj ispod 80** (`condition_of: rooms`, `below 8000`; anketa, preporuka voditelja).
 Rješava otvoreno pitanje iz ADR-052 t. 1. Razlog: hotel A počinje sa Smještajem 75, a dobro održan nikad ne padne ispod; P-BRAVE i P-CURENJE-VODE

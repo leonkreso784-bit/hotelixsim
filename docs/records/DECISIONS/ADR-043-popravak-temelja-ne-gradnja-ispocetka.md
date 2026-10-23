@@ -14,7 +14,7 @@ odvojene grane (B6, B8, B9). Uz to načela igre nisu zapisana kao provjere (B1, 
 **Odluka.**
 1. **Popravak, ne gradnja ispočetka.** Jezgra, baza, red poslova, AI sloj i web se ne prepisuju.
 2. **Samo popravak dok nije gotov.** Nove značajke (RAZRED, LJUDI, banka ljudi K1, voditelji) čekaju kraj popravka.
-   Plan: [2026-10-14-popravak-temelja.md](../../plan/2026-10-14-popravak-temelja.md).
+   Plan: [2026-10-14-popravak-temelja.md](../../archive/2026-10-14-popravak-temelja.md).
 3. **Redoslijed A → B → C.** A učvršćuje (brane koje mjere pravu stvar, kratke grane), B mijenja v1 kalup ondje gdje već
    puca, C priprema igru za semestar i razred. **Kalibracija balansa radi se jednom, na kraju faze B** (L1-13), a ne
    odmah na grani situacija, kako se ne bi kalibriralo dvaput.

@@ -1,7 +1,7 @@
 # ADR-046 — Leonove odluke 15.10. za fazu B (popravak +10, duljina odgovora, sidra, P-INSPEKCIJA, redoslijed)
 **Datum:** 2026-10-15 · **Status:** ✅ **Leonova odluka 15.10.** (ankete za kartice B1 i B4; redoslijed: *„moze super svida mi se ideja"*) ·
 **Vezano:** [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md), [ADR-043](ADR-043-popravak-temelja-ne-gradnja-ispocetka.md),
-[plan popravka](../../plan/2026-10-14-popravak-temelja.md) (kartice B1–B4)
+[plan popravka](../../archive/2026-10-14-popravak-temelja.md) (kartice B1–B4)
 
 **Odluka:**
 1. **Hitni popravak popravlja prostor odjela (+10) i uz ocjenu 1** (B1a): „popravak je popravak, ocjena mjeri postupak s gostom".

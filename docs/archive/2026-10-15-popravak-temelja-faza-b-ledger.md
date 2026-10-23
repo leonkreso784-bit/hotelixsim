@@ -1,4 +1,4 @@
-# SDD ledger — plan: docs/plan/2026-10-14-popravak-temelja.md
+# SDD ledger — plan: docs/archive/2026-10-14-popravak-temelja.md
 
 > Snimka na kraju sesije 4 (15.10.2026.): faza A i faza B do B1a (spojeno 39e5f25). Faza B se nastavlja (B1b…) u živom ledgeru `.superpowers/sdd/…` (gitignoriran).
 

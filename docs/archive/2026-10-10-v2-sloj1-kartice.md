@@ -1,7 +1,7 @@
 # Sloj 1 (put B) — kartice taskova (arhiva)
 
 **Status:** 📦 ARHIVA (23.10.2026., [ADR-064](../records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)) — 22 taska pauziranog plana Sloja 1; ostatak je preuzeo
-[plan popravka temelja](../plan/2026-10-14-popravak-temelja.md). Pregled plana: [2026-10-10-v2-sloj1.md](./2026-10-10-v2-sloj1.md).
+[plan popravka temelja](../archive/2026-10-14-popravak-temelja.md). Pregled plana: [2026-10-10-v2-sloj1.md](./2026-10-10-v2-sloj1.md).
 
 | dio | kartice |
 |---|---|
