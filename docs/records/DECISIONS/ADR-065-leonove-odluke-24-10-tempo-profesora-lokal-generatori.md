@@ -1,5 +1,5 @@
 # ADR-065 — Leonove odluke 24.10.: profesor vodi tempo igre, lokal kao mehanika, mentor bez obećanja, generatori
-**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6, 11–14), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
+**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6, 11–15), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
 **Vezano:** [ADR-037](ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) (razred, profesor otvara krug), [ADR-063](ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) (pilot),
 [ADR-064](ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), [generator ljudi](../../architecture/BANKA_LJUDI/08-generator-ljudi.md), [BACKLOG](../BACKLOG.md) (L14-2, L14-4, pitanja iz voditeljeve igre)
 
@@ -51,3 +51,9 @@
     potvrđeno testom opterećenja i mjerenjem troška. Sjeme ideja (zajednički prefiks upita za cijeli razred, raspored po roku,
     pravedni red po studentu, ljestvica kvalitete pod pritiskom, ocjena u dva koraka, budžet kao resurs, više pružatelja):
     `.superpowers/sdd/2026-10-14-popravak-temelja/ai-temelj-ideje-24-10.md`; nacrt opterećenja: `temelj-opterecenja-24-10.md`.
+15. **Troškovi i AI pružatelji dobro definirani — JAKO bitno za fakultet** (Leon 24.10.). Sesija 14 piše dokument za fakultet
+    (`docs/architecture/TROSKOVI_I_AI.md`, nacrt 🟨): trošak po studentu, po razredu i po semestru (AI po ulozi: lik, presuda,
+    mentor; hosting; kopije), razine 40 / 200 / 1 000 / 5 000 studenata, načini potrošnje i nadzor (stropovi po danu, mjesecu i
+    razredu, što se događa kad se strop dosegne), tko plaća, i za svakog pružatelja: gdje se podaci obrađuju, uči li na njima,
+    ugovor o obradi (DPA), GDPR. Brojke iz mjerenja (test troška po igri, živi test kvalitete), ne iz procjene; izvori s datumom.
+    Podloga: `ai-trosak-istrazivanje-24-10.md`, `temelj-opterecenja-24-10.md` (dodatak razina).
