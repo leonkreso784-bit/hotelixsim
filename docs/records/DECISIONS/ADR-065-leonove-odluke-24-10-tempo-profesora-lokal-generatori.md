@@ -1,5 +1,5 @@
 # ADR-065 — Leonove odluke 24.10.: profesor vodi tempo igre, lokal kao mehanika, mentor bez obećanja, generatori
-**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
+**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6, 11), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
 **Vezano:** [ADR-037](ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) (razred, profesor otvara krug), [ADR-063](ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) (pilot),
 [ADR-064](ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), [generator ljudi](../../architecture/BANKA_LJUDI/08-generator-ljudi.md), [BACKLOG](../BACKLOG.md) (L14-2, L14-4, pitanja iz voditeljeve igre)
 
@@ -32,3 +32,9 @@
    poslije pilota — ovisi o t. 8.
 10. 🟨 Generator ljudi, pitanja §8.6 t. 2–5: po preporuci (recenzent smije biti lik iz generatora; ime iz dijelova uz popis
     zabranjenih javnih osoba; generator u igri nakon pilota, alat D odmah; K8 čeka) dok Leon ne kaže drukčije.
+
+## C — Testovi (Leon 24.10.)
+11. **Rupe u testovima su prioritet:** „te sve testove treba srediti i napisati da bude puno bolje, ovo je velika rupa".
+    Prvi val sesije 14 (prije L1-15) je kvaliteta testova: test opterećenja (40 istodobnih zatvaranja kruga, red AI poslova),
+    mjerenje AI troška po igri, web tokovi studenta, test nakon deploya (dim), slabi postojeći testovi. Popis s mjestima i satima:
+    `.superpowers/sdd/2026-10-14-popravak-temelja/revizija-testova-24-10.md` (revizija 24.10.).

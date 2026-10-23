@@ -15,7 +15,7 @@ Laptop je na punjaču. Push, spajanje u main i deploy samo uz moj izričit OK.
 SURADNJA: ListAgents → svoje ime u .superpowers/sdd/SESIJE.md. Banka K8 čeka.
 1) `df -h /c`, `bash scripts/baza.sh status` (ako ne radi: start), `tasklist | grep -i cargo`.
 2) Prvo me pitaj OPSEG PILOTA (ADR-065 t. 8): (a) pilot s profesorovim tempom (profesor napravi igru, krug po vremenu ili gumbom, student automatski ili sam „dalje") ili (b) kratki pilot bez profesora pa tempo odmah iza. Analiza prije prijedloga (paralelni read-only agenti; ROADMAP kolosijek PLATFORMA, plan 2026-11-platforma, ADR-037).
-3) Napiši JEDAN plan u docs/plan/ (jedna datoteka) po mom odgovoru: L1-15 (presuda 8000 + iskočni prozor; mentor „niže plaće"; mentor bez obećanja povrata ulaganja; celijakija rečenicom), zaštita pilota (više AI radnika, poruka i gumb „Nova igra" za zastarjelu igru), profesorov tempo ako (a), lokal kao mehanika i generator događaja (gdje u redoslijedu), pilot dio 9, faza C poslije. Sati i valovi. Pokaži mi plan prije gradnje; plan popravka temelja tada u arhivu.
+3) Napiši JEDAN plan u docs/plan/ (jedna datoteka) po mom odgovoru: VAL 0 = TESTOVI (ADR-065 t. 11, revizija-testova-24-10.md: opterećenje 40 studenata, AI trošak po igri, web tokovi, dim nakon deploya, slabi testovi), pa L1-15 (presuda 8000 + iskočni prozor; mentor „niže plaće"; mentor bez obećanja povrata ulaganja; celijakija rečenicom), zaštita pilota (više AI radnika, poruka i gumb „Nova igra" za zastarjelu igru), profesorov tempo ako (a), lokal kao mehanika i generator događaja (gdje u redoslijedu), pilot dio 9, faza C poslije. Sati i valovi. Pokaži mi plan prije gradnje; plan popravka temelja tada u arhivu.
 4) Nakon mog OK: gradnja (kratke grane, čuvar testova prije graditelja).
 Na kraju /kraj (check:docs, test:docs i lint EXIT 0).
 ```
@@ -24,7 +24,7 @@ Na kraju /kraj (check:docs, test:docs i lint EXIT 0).
 
 1. **Odluka o opsegu pilota** ([ADR-065](./records/DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md) t. 1 i 8): profesor vodi tempo igre
    (krug po vremenu ili gumbom; student automatski ili sam „dalje") — u pilotu ili odmah iza njega.
-2. **Jedan plan** (≤ 1000 r.) s redoslijedom: L1-15 (~8–14 h), zaštita pilota (~4–5 h: više AI radnika, izlaz iz zastarjele igre),
+2. **Jedan plan** (≤ 1000 r.) s redoslijedom: **val 0 testovi** (ADR-065 t. 11; revizija `revizija-testova-24-10.md`), L1-15 (~8–14 h), zaštita pilota (~4–5 h: više AI radnika, izlaz iz zastarjele igre),
    profesorov tempo (ako je u pilotu), lokal kao mehanika i generator događaja (ADR-065 t. 2 i 6), pilot dio 9 (~2,5–4 h + Leon ~1,5 h);
    faza C poslije pilota (~50–80 h: C6 → C1 → C2 → razred → C3, C5). Podloge s datotekama i satima: `podloge-plana-24-10.md`.
 3. **Gradnja** tek nakon Leonova OK na plan. Dio 8 (privatnost) čeka profesore.
