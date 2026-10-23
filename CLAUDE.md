@@ -20,8 +20,8 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20, ADR-061 t. 7–12 i ADR-062 t. 10–18; Leonove odluke:
-  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.) i ADR-062 (19.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
+  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20, ADR-061 t. 7–12, ADR-062 t. 10–18, ADR-063 t. 7–19 i ADR-064 t. 2–7; Leonove odluke:
+  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.), ADR-062, ADR-063 (19.10.) i ADR-064 (23.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
   ([ADR-033](docs/records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) Dopuna 14.10.).
@@ -36,10 +36,11 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   [plan](docs/plan/2026-10-14-popravak-temelja.md), ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`).
   **Faza A gotova** (na GitHubu). **Faza B** (sve na GitHubu, `model-v2/sloj1`): B1–B4, PRAVILO-a/b/c, IZGLED (a+b) i IZGLED-c (uniforme vanjskih),
   **L1-13** (kalibracija, svi dijelovi; situacije ~20 % napretka), **L1-13b** (izmiješani odgovori, jedan gumb „Spremi plan", opis Smještaja,
-  pojačano održavanje +5) i banka ljudi (**730**; +200 u nacrtima K7, nepregledano). `CORE_VERSION` **2.6.0**. Odluke: ADR-056, ADR-060, ADR-061,
-  [ADR-062](docs/records/DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md). Osnovica balansa `nakon-l113b/`.
-  **Sljedeće:** **L1-14** (Leon igra tjednu i mjesečnu sezonu) → **L1-15** (popravci, Leonov OK za sloj1 → `main`) → **priprema pilota**
-  (Railway Hobby, jedna lozinka, stropovi AI; ADR-062 t. 9; prvo kolačić 7 → 120 dana; plan Leon vidi prije gradnje) → deploy samo uz izričit OK.
+  pojačano održavanje +5), banka ljudi (**930**) i **pilot dijelovi 1–7** (kolačić 120 dana, lozinka, stropovi AI 5 $/dan · 30 $/mj, 3 igre po gostu,
+  Docker, CI deploy, kopije; [ADR-063](docs/records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)). `main` = `sloj1` = 9b6f047
+  (Leon pushao 19.10.). `CORE_VERSION` **2.6.0**. Osnovica balansa `nakon-pilot-4/`. L1-14 Leon odigrao (`l114-popis-izmjena.md`).
+  **Sljedeće (sesija 14): JEDAN PLAN** (jedna datoteka ≤ 1000 r., [ADR-064](docs/records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md))
+  za L1-15 popravke, pilot dio 8 (tekst privatnosti, Leon) i 9 (Railway) i fazu C → Leon vidi plan → gradnja; deploy samo uz izričit OK.
   Za trajanje pilota jezgra se zamrzava.
   **Banka ljudi:** radi **paralelna sesija** ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`);
   glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE".
@@ -48,9 +49,9 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   ukupno); **disk: ispod 50 GB ne gradi** (B16). Lažno crveno pod opterećenjem (vitest timeout, 0xC0000142) samo se ponovi (B15).
   Stare probne v2 igre daju 409 (jezgra 2.6.0). Baza se može ugasiti uz prekid sesije (B24). Gradnja (prevođenje) samo na punjaču. Roboti su samo za demo (Leon 13.10.).
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
-- **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**,
+- **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**, **plan = jedna datoteka ≤ 1000** (bez mape),
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** L1-14 igra; 🟨 ADR-062 t. 10–18 (kolačić 120 dana i domena); zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
+- **Čeka Leona:** video (pjesma MP3, tempo glasa A/B, izgovor); generator ljudi (BANKA_LJUDI §8, 5 pitanja); pilot tekst privatnosti; 🟨 ADR-063, ADR-064; zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
   ([nacrt rizika](docs/architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)); ADR-058 t. 10, 13, 19, 20, 🟨 ADR-059 i ADR-060 t. 17–20; uzorci banke;
   pregled lica i uniformi na `/likovi`; slijepi pregled tekstova B4a–c; ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); 5 pitanja [plana platforme](docs/plan/2026-11-platforma.md) §7;
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".

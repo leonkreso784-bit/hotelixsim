@@ -1,11 +1,11 @@
 # ADR-029 — Sloj 1: pretpostavke plana
 **Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10.** (P6, P13, P18 A13; P5, P7–P12, P14–P17 i Brižni F1; P1–P4 su Leonove odluke iz ADR-028) ·
-**Vezano:** [ADR-028](ADR-028-leonove-odluke-za-put-b-ljudi.md), [plan Sloja 1](../../plan/2026-10-10-v2-sloj1.md),
+**Vezano:** [ADR-028](ADR-028-leonove-odluke-za-put-b-ljudi.md), [plan Sloja 1](../../archive/2026-10-10-v2-sloj1.md),
 [MODEL_V2.md](../../architecture/MODEL_V2.md) §4, §6, §8, [ADR-031](ADR-031-sloj-1-tjedni-krug-u-jezgri.md),
 [ADR-032](ADR-032-sloj-1-odjeli-u-obracunu-i.md), [ADR-033](ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md),
 [ADR-034](ADR-034-zadani-model-igre-je-v2-tjedna.md)
 
-**Kontekst.** Plan [2026-10-10-v2-sloj1](../../plan/2026-10-10-v2-sloj1.md) gradi model v2 (odjeli po USALI-ju, račun
+**Kontekst.** Plan [2026-10-10-v2-sloj1](../../archive/2026-10-10-v2-sloj1.md) gradi model v2 (odjeli po USALI-ju, račun
 dobiti s budžetom, tjedni i mjesečni krugovi) iznad zamrznutog v1. P1–P4 su Leonove odluke ✅ iz
 [ADR-028](ADR-028-leonove-odluke-za-put-b-ljudi.md) (odgovori 3, 4, 5 i 9) i ovdje se samo navode; P5–P18 su
 pretpostavke 🟨 s cijenom ako Leon odluči drukčije. Dokaz kraj-do-kraja: `crates/api/tests/e2e_v2.rs`

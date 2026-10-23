@@ -8,10 +8,9 @@
 
 1. **Brainstorming** (`superpowers:brainstorming`) — što i zašto; arhitektura kroz dokument i raspravu, ne kroz anketu.
 2. **Plan** (`superpowers:writing-plans`) u `docs/plan/`, zaglavlje `**Status:** 🟩 AKTIVAN` i `**Područje:** igra|platforma|kvaliteta|dokumentacija` (bez retka = `igra`; `kod` = stari naziv). Najviše jedan aktivni plan **po području**;
-   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan unutar granice živog dokumenta ([tablica](../README.md#granice-veličine)) smije biti jedna datoteka. Veći se **prije
-   aktivacije** razdvaja u pregled + mapu taskova: prvo `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa
-   `corepack pnpm docs:plan <plan.md>`. Pregled razdvojenog plana ima granicu indeksa iz iste tablice, pa
-   velik plan treba pisati tako da pregled stane, inače se ne može aktivirati.
+   dugoročni smjer je u [ROADMAP-u](../plan/ROADMAP.md). Plan je **jedna datoteka do 1000 redaka** ([tablica](../README.md#granice-veličine),
+   [ADR-064](../records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)): taskovi su odjeljci `### Task …`, ne zasebne datoteke, a brana pada na podmapu u
+   `docs/plan/`. Kad plan naraste, gotove kartice sele u `docs/archive/<plan>-kartice/` (dijelovi do 1000 redaka), a u planu ostaje redak s poveznicom.
 3. **Cigla** (komad od ~2–8 h) u planu faze ima **karticu**: što se radi, koje datoteke smije dirati, dokaz, veličina.
    Svaki korak radi **svjež agent** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 3):
    1. **voditelj** (glavna sesija) otvara granu s integracijske grane, daje karticu, vodi ledger i spaja isti dan kad
@@ -49,15 +48,15 @@ Orkestrator vodi ledger u `.superpowers/sdd/<plan>/` (**gitignoriran**): spec i 
 odluku koju je donio umjesto Leona (s cijenom ako je kriva), „Preflight scan" (tablica parova taskova: što jedan
 proizvodi, što drugi troši, nalaz) i stanje po tasku. Primjer oblika: [ledger kostura](../archive/2026-10-04-kostur-ledger.md).
 Na kraju plana ga `/kraj` kopira u `docs/archive/<datum>-<ime>-ledger.md`, jer git ledger ne vidi. Ledger se zove po
-pregledu plana (`<datum>-<ime>`), i kad je plan razdvojen.
+planu (`<datum>-<ime>`).
 
 - **Ledger je stanje, ne dnevnik:** na vrhu `progress.md` je jedna tablica „cigla | stanje | grana | commit | sljedeći
   korak" koju voditelj prepisuje; povijest ide ispod jednog naslova „Povijest" i ne čita se na početku sesije.
 - **Kopija na kraju faze:** `git bundle create ../hotelixsim-kopije/<datum>/hotelixsim-sve-grane.bundle --all` i
   `tar -czf …/superpowers.tar.gz .superpowers` ([ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md) t. 6).
-- **Brief = task datoteka.** Izvođač dobiva putanju task datoteke (`docs/plan/<datum>-<ime>/task-NN-….md`) i pregleda.
+- **Brief = odjeljak plana.** Izvođač dobiva putanju plana i naslov taska (`docs/plan/<datum>-<ime>.md`, „### Task …"), ne cijeli plan u poruci.
   Ako je potreban `task-brief`, uvijek s trećim argumentom, inače radni prostor dobije ime taska:
-  `task-brief <mapa>/task-NN-x.md N "$(sdd-workspace <pregled>.md)/task-N-brief.md"`
+  `task-brief <plan>.md N "$(sdd-workspace <plan>.md)/task-N-brief.md"`
 - **Jedna sesija, dva kolosijeka.** Igra i platforma ne dijele datoteke (vlasništvo nad datotekama sprječava sudar,
   ne tema), a svako područje ima najviše jedan aktivan plan. Zasebna sesija dokumentacije otpada: dokumentaciju piše
   čuvar dokumentacije unutar cigle.
@@ -84,7 +83,7 @@ Svaki korak dobiva **novog** agenta; nastavak samo za mali popravak. Izlazi idu 
 - **Jedan pisac po datoteci**: svaki agent dobiva popis datoteka koje smije dirati i ništa drugo. Eksperimenti nad
   kodom idu u worktree.
 - **Vlasništvo datoteka među kolosijecima** ([ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 1;
-  izvor: [platforma.md](../plan/ROADMAP/platforma.md)). Tko piše datoteku, odlučuje kolosijek, ne tema:
+  izvor: [platforma.md](../plan/ROADMAP.md#roadmap--kolosijek-platforma)). Tko piše datoteku, odlučuje kolosijek, ne tema:
 
   | kolosijek | datoteke |
   |---|---|

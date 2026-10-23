@@ -5,7 +5,7 @@
 
 > **Što je ovo.** PLAN (redoslijed, sati, ovisnosti, tko što radi), ne arhitektura. Arhitektura je u
 > [PLATFORMA.md](../architecture/PLATFORMA.md) (nacrt za raspravu), a sadržaj svake cigle (što se radi, dokaz) u
-> [ROADMAP/platforma.md](./ROADMAP/platforma.md). Ovdje se cigle navode samo po oznaci, da činjenica živi na jednom mjestu.
+> [ROADMAP/platforma.md](./ROADMAP.md#roadmap--kolosijek-platforma). Ovdje se cigle navode samo po oznaci, da činjenica živi na jednom mjestu.
 > **Zašto sada:** Leon je 16.10. (sesija 7) prihvatio da **platforma kreće u studenom čak i ako faza C nije gotova**, jer P3
 > ovisi o platformi više nego o predmemoriji (C4). To mijenja [ADR-043](../records/DECISIONS/ADR-043-popravak-temelja-ne-gradnja-ispocetka.md)
 > t. 2 („samo popravak dok nije gotov") za kolosijek PLATFORMA; ADR se piše na `/kraj`. Sati su [PROC].
@@ -24,7 +24,7 @@ a on otvara krugove i vidi tko je gdje i kako mu ide** ([ROADMAP](./ROADMAP.md):
 | vidjeti razred uživo, otvoriti studenta (samo čitanje), račun dobiti svih hotela, presude za pregled | F2-1…F2-6 |
 | znati da AI trošak ima granicu i da se podaci ne gube | F0-9, RZ-4, F0-13 |
 
-**Smije čekati P4** (linije reza iz [ROADMAP-a](./ROADMAP.md) i [ROADMAP/platforma](./ROADMAP/platforma.md)): vlastite
+**Smije čekati P4** (linije reza iz [ROADMAP-a](./ROADMAP.md) i [ROADMAP/platforma](./ROADMAP.md#roadmap--kolosijek-platforma)): vlastite
 situacije profesora (F2b, ~40 h), ispravak presude (F2-7), izvoz CSV (F2-10), uklanjanje studenta (F2-11), vlastita domena
 (F0-S3), staging i tok isporuke (F0-S4), kopije izvan Railwaya (F0-S5), GDPR brisanje i rokovi (G-2…G-9), paralelni radnici
 kao zasebna PILOT cigla (vidi C2 niže), proba 30 studenata (G-8), AAI@EduHr u kodu (F5).
@@ -33,12 +33,12 @@ kao zasebna PILOT cigla (vidi C2 niže), proba 30 studenata (G-8), AAI@EduHr u k
 
 | ovisnost | gdje | preduvjet za P3? | što se gradi prije nje |
 |---|---|---|---|
-| **RAZRED U JEZGRI**: F1-7 N hotela, F1-9 vrata kruga, F1-10 obračun po hotelu, M-1, F1-18 ([ADR-037](../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md), [igra.md](./ROADMAP/igra.md)) | IGRA, ~45 h, nakon L1-15 | **DA**, kritični put | sve SPREMNO ZA INTERNET; računi i prijava (F1-2…4, ID-1…3), razred i kod (F1-5, F1-6), web kod i čekaonica (F1-14), AI granica (RZ-4), G-1. **Računi i prijava ne ovise o razredu u jezgri.** |
+| **RAZRED U JEZGRI**: F1-7 N hotela, F1-9 vrata kruga, F1-10 obračun po hotelu, M-1, F1-18 ([ADR-037](../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md), [igra.md](./ROADMAP.md#roadmap--kolosijek-igra)) | IGRA, ~45 h, nakon L1-15 | **DA**, kritični put | sve SPREMNO ZA INTERNET; računi i prijava (F1-2…4, ID-1…3), razred i kod (F1-5, F1-6), web kod i čekaonica (F1-14), AI granica (RZ-4), G-1. **Računi i prijava ne ovise o razredu u jezgri.** |
 | **C1** stara igra se čita nakon promjene jezgre (REVIZIJA #6) | IGRA, faza C | **DA, 🟨** ako proba traje dulje od jednog sata: svaki deploy s novom jezgrom inače daje 409 cijelom razredu. Zakrpa: zamrznuti verziju za trajanje probe (cijena: nijedan popravak igre tijekom probe) | sve osim izlaska na internet s pravim razredom |
 | **C2** više radnika poslova, zaseban red za lika (REVIZIJA #9) | IGRA, faza C; isto što i **F0-8** (PILOT) | **DA** za razred od 20–30: s jednim radnikom presude ne stignu u 120 s i postaju neutralne. Prijedlog 🟨: F0-8 se spaja u C2 i seli prije P3 | sve do F1-17 (e2e s tri studenta radi i s jednim radnikom) |
 | **C4** predmemorija složene igre | IGRA, faza C; isto što i **F0-10** | **DA**, ali je ionako cigla platforme. Prijedlog 🟨: **C4 = F0-10, jedna cigla, kolosijek PLATFORMA** (dira `app`, ne jezgru); preduvjet za F1-10 | — |
 | **C5** pravila iz weba u API (ocjena odjela, „Obvezna", kodovi problema) | IGRA, faza C | **NE** općenito; **DA** za F2-3/F2-5 ako profesorov ekran pokazuje ocjene odjela, inače se pravilo kopira treći put | F2-1, F2-2, F2-4, F2-6 |
-| **C6** razdvojiti `api/src/schema.rs` (1770 redaka) i mentor (= K0-4, K0-5 iz [kvaliteta.md](./ROADMAP/kvaliteta.md)) | IGRA/kvaliteta | **DA**: preduvjet da dva kolosijeka ne dijele datoteku | F0-1…F0-6, F0-13 (diraju `server` i `store`, ne `api/schema.rs`) |
+| **C6** razdvojiti `api/src/schema.rs` (1770 redaka) i mentor (= K0-4, K0-5 iz [kvaliteta.md](./ROADMAP.md#roadmap--kolosijek-kvaliteta)) | IGRA/kvaliteta | **DA**: preduvjet da dva kolosijeka ne dijele datoteku | F0-1…F0-6, F0-13 (diraju `server` i `store`, ne `api/schema.rs`) |
 | **C3** `presuda.v4`, mjerilo AI-ja | IGRA, faza C | NE (F2-6 čita presude kakve jesu) | sve |
 | **P9-1** račun dobiti za profesora (izvor brojki) | IGRA, ~6 h, nakon L1-15 | DA za F2-3 | F2-1, F2-2 |
 | **L2a-12** vidljivi tuđi radnici | IGRA, LJUDI | NE: F1-12 se dijeli na **F1-12a** (ljestvica, ocjene, cijene; bez radnika) za P3 i **F1-12b** (radnici kolega) kad LJUDI sleti | F1-12a |
@@ -104,7 +104,7 @@ Redovi 8, 9 i 11 su samo web i ne broje se u dva Rust agenta: idu kad igra vrti 
 
 ### Faza 3 · RAZRED s jezgrom (tj. 6–8: 7.–20.12. i 4.–10.1.; 57 h)
 
-**Gotovo kad:** uvjet faze RAZRED iz [ROADMAP/platforma](./ROADMAP/platforma.md): profesor pritisne „Pokreni", otvara krugove
+**Gotovo kad:** uvjet faze RAZRED iz [ROADMAP/platforma](./ROADMAP.md#roadmap--kolosijek-platforma): profesor pritisne „Pokreni", otvara krugove
 ručno ili po rasporedu, student zatvara svoj hotel i vidi kolege, neaktivni hotel rok sam prenese; e2e s profesorom i tri
 studenta zelen. **Počinje tek kad su F1-7, F1-9 i F1-10 spojeni** (IGRA).
 
@@ -265,7 +265,7 @@ izbornik situacija. On može stavljati svoje situacije i pisati ih, može vidjet
 zaposlenikom… i na temelju toga davati ocjene, može isključiti AI mentora ili ga uključiti. Bira kada otvara novi tjedan ili
 mjesec… trebat će nam nekoliko sesija da inženjerski postavimo temelje profesorova sučelja."* Anketa: „branša" = **odjel
 hotela** (recepcija, restoran, wellness, održavanje). Uz to: situacije pripremljene unaprijed uz profesorov izbor (ne u hodu),
-ritam bira profesor. → cigla **PR-1** u [ROADMAP/platforma](./ROADMAP/platforma.md) (najprije nacrt s raspravom, ADR-006);
+ritam bira profesor. → cigla **PR-1** u [ROADMAP/platforma](./ROADMAP.md#roadmap--kolosijek-platforma) (najprije nacrt s raspravom, ADR-006);
 vlastite situacije (pitanje 6) Leon želi, ali time nije rekao P3 ili P4.
 
 ### 7b. Što je Leon rekao 18.10.2026. ([ADR-060](../records/DECISIONS/ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12–14)

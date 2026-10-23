@@ -1,6 +1,6 @@
 # PLATFORMA §8 · Faze, temelj ili zakrpa, pitanja
 
-Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Faze i cigle žive u [ROADMAP/platforma](../../plan/ROADMAP/platforma.md)
+Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Faze i cigle žive u [ROADMAP/platforma](../../plan/ROADMAP.md#roadmap--kolosijek-platforma)
 (sati [PROC]); ovdje je samo što ulazi u koju fazu i zašto tim redom. Prijašnje oznake F0–F5 iz nacrta od 12.10. zamijenjene
 su imenima faza iz [ROADMAP](../../plan/ROADMAP.md).
 
@@ -9,7 +9,7 @@ su imenima faza iz [ROADMAP](../../plan/ROADMAP.md).
 | faza (ROADMAP) | sadržaj iz ovog dokumenta | cigle | sati [PROC] | prekretnica |
 |---|---|---|---|---|
 | **SPREMNO ZA INTERNET** | 6.4 (postavke, slika, poslužitelj servira web, SIGTERM, `Secure`, ograničenja, kopije, Sentry, `ai_usage` + granice, predmemorija folda), 6.5, mjerenje kašnjenja; izlazak na Railway Hobby tek uz Leonov OK | F0-1…14, F0-S1, S2 | 48 | P2 (dio P3) |
-| **RAZRED** | 2.3 (tablice), 2.4 (CRUD, vrata kruga, raspored, neaktivni), 3 (računi, kod igre), obavijesti, AI granica po igri; ovisi o fazi RAZRED U JEZGRI u [igra](../../plan/ROADMAP/igra.md) | F1-2…17, ID-1…3, RZ-1…4, AAI-0 | 116 | P2: profesor na internetu stvori igru, studenti uđu kodom |
+| **RAZRED** | 2.3 (tablice), 2.4 (CRUD, vrata kruga, raspored, neaktivni), 3 (računi, kod igre), obavijesti, AI granica po igri; ovisi o fazi RAZRED U JEZGRI u [igra](../../plan/ROADMAP.md#roadmap--kolosijek-igra) | F1-2…17, ID-1…3, RZ-1…4, AAI-0 | 116 | P2: profesor na internetu stvori igru, studenti uđu kodom |
 | **PROFESOR** | 2.5 (projekcija, pregled uživo), pregled presuda, račun dobiti, profesorove vlastite situacije | F2-1…6, F2b-* | 117 | P3 |
 | **PILOT** | 7 (obavijest, rokovi, anonimizacija, DPA-ovi), uloga baze, radnici i trake, domena, kopije izvan Railwaya, ispravak presude, proba 30 studenata | F0-7, 8, 12, 15, S3…S5, F2-7, 10, 11, G-1…9 | 95 | P4 |
 | **poslije** | generator hotela (dio 04), AAI@EduHr i Google/Microsoft (3.2), SSE, sučelje na engleskom (ADR-037 t. 8) | F3, F5, SSE, ENGLESKI | ~105 | — |
@@ -49,7 +49,7 @@ s igrom. Administrativni dio AAI (zahtjev fakultetu) pokreće se **sada**, jer t
 | L10 | sesije umjesto JWT-a | **preporuka, čeka Leonovu potvrdu i ADR** (3.1); tek tada se ispravlja ARHITEKTURA §12 |
 
 Otvorene odluke (D2 lobby, D3 veličina igre, D4, D6, D7 uklonjeni student, D8 imena ili nadimci, D10–D12 profesorove situacije,
-plaća tuđeg radnika) vode se u [ROADMAP/platforma](../../plan/ROADMAP/platforma.md) → „Odluke".
+plaća tuđeg radnika) vode se u [ROADMAP/platforma](../../plan/ROADMAP.md#roadmap--kolosijek-platforma) → „Odluke".
 
 ### Pitanja za fakultet i profesora
 

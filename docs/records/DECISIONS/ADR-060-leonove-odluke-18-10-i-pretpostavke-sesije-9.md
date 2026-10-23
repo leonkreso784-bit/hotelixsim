@@ -2,8 +2,8 @@
 **Datum:** 2026-10-18 · **Status:** ✅ **Leonove odluke 18.10.**, 🟨 t. 17–20 ČEKA LEONOV PREGLED (ankete i tekst, sesija 9) ·
 **Vezano:** [ADR-004](ADR-004-sve-se-gradi-i-pokazuje-lokalno.md), [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md) t. 3,
 [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md), [ADR-057](ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 8,
-[ADR-059](ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 4–5, [kartica IZGLED-c](../../plan/2026-10-14-popravak-temelja/task-13c-izgled-uniforme.md) §11,
-[kartica L1-13](../../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), [plan platforme](../../plan/2026-11-platforma.md)
+[ADR-059](ADR-059-pretpostavke-sesije-8-pravilo-b-izgled-k7-pravilo-c.md) t. 4–5, [kartica IZGLED-c](../../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-izgled-c-uniforma-iz-uloge-vanjskog-lika) §11,
+[kartica L1-13](../../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13-jedna-kalibracija-brojki-kvar-i-popravak-klik-75--značaj-gosti-i-popunjenost-težina-20-), [plan platforme](../../plan/2026-11-platforma.md)
 
 **Izvori.** Leon je 17.–18.10.2026. (sesija 9) odgovorio na pet anketa (IZGLED-c, L1-13 prva, druga i treća, banka K5) i u tekstu odobrio
 pilot. Brojke klika su iz dijagnoze `.superpowers/sdd/2026-10-14-popravak-temelja/l113-1b-dijagnoza.md` i mjerenja `l113-1b-provjere/tablica-klik.txt`

@@ -4,7 +4,7 @@
 [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8, [plan popravka](../../plan/2026-10-14-popravak-temelja.md)
 
 Pretpostavke voditelja bez pitanja (ADR-005); svaka ima cijenu ako je krivo.
-1. **Kartica PRAVILO** ([task-12](../../plan/2026-10-14-popravak-temelja/task-12-pravilo-vlastiti-odgovor.md), 224 r.): postavka `AnswerRule { Classic, OwnWords }`,
+1. **Kartica PRAVILO** ([task-12](../../archive/2026-10-14-popravak-temelja-kartice/dio-4.md#task-pravilo-vlastiti-odgovor-vrijedi-više-od-klika-klik-najviše-4-vlastite-riječi-do-5), 224 r.): postavka `AnswerRule { Classic, OwnWords }`,
    zadano **OwnWords za nove v2 igre**; klik na ponuđeni odgovor najviše 4; prepisani ponuđeni odgovor vrijedi kao klik, **prag 70 % riječi** (skup riječi, obje strane);
    AI ispad → **4 bez troška**; roboti **neograničeni** (paritet A4 i mjere robota isti); prompti isti (`presuda.v3`, `mentor.v4`).
    **`CORE_VERSION` 2.4.0 → 2.5.0** s pečatom A3 (nacrt je tvrdio da se ne diže); Leonove probne v2 igre opet daju 409. Podjela na PRAVILO-a (igra), -b (balans), -c (napomena).

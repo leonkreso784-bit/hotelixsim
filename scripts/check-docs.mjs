@@ -23,6 +23,7 @@
 //   11) poveznica koja cilja DECISIONS.md#adr-… (osim u prijelaznim iznimkama)  → stari način navođenja ADR-a
 //   12) BILO KOJI .md u repozitoriju preko 1200 redaka (TVRDA_GRANICA; bez prijelaznih iznimaka,
 //       izuzeti samo IZUZECI_TVRDE_GRANICE)                                  → nijedan dokument preko 1200
+//   13) docs/plan/ ima podmapu s .md (plan = jedna datoteka do 1000 redaka, ADR-064) → plan se ne rasipa u datoteke
 //   (brojevi prate plan dokumentacije)
 //
 // Pokreni: pnpm check:docs   |   korijen se može zadati: node scripts/check-docs.mjs <dir>
@@ -205,6 +206,16 @@ for (const [podrucje, aktivni] of aktivniPoPodrucju) {
         "\n      -> ispunjen plan ide u docs/archive/, plan koji čeka dobiva `**Status:** ⏸️ PAUZIRAN`",
     );
   }
+}
+
+// ── 13) plan je jedna datoteka (ADR-064, Leon 23.10.) ───────────────
+// Plan do 1000 redaka živi izravno u docs/plan/; taskovi su odjeljci (### Task …), ne datoteke.
+// Gotove kartice idu u docs/archive/ (indeks + dijelovi do 1000 redaka). Svrha: plan se čita na
+// jednom mjestu, a docs/plan/ ostaje kratak popis (povod: 60 datoteka u docs/plan/ 23.10.).
+for (const r of mdFiles.filter((x) => /^docs\/plan\/[^/]+\/.+\.md$/.test(x))) {
+  problems.push(
+    `PLAN U MAPI  ${r}\n      -> plan je jedna datoteka u docs/plan/ (do 1000 redaka); gotove kartice u docs/archive/ (ADR-064)`,
+  );
 }
 
 // ── 4) product/ je DEFINICIJA, ne dnevnik ───────────────────────────

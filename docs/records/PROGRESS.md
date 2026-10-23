@@ -4,13 +4,55 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-20…23 (13) — Sesija 13: video za profesora, igra spremna za prezentaciju, zapisi sesije 12
+
+- **Video za profesora v2** (izvan repoa, `Documents/hotelixsim-video`): novi tekst glasa (živ, priča; „ocjenjuje **profesor ili AI**"; scena 7
+  „grupa studenata", profesor upravlja svime), edge-tts Gabrijela +10 % / +3 Hz (nacrt dok Leon ne izabere), ime fonetski „Hoteliks Sim"; natpisi
+  „Profesor ili AI ocjenjuje." i „CIJELA GRUPA". Render **bez glazbe** (Leon sam dostavlja MP3; nađena 3 CC0 kandidata): 96,1 s →
+  `Desktop/HotelixSim-video-bez-glazbe.mp4`; stari v1 premješten u `hotelixsim-video/out/`. Na Drive ga Leon stavlja ručno (92 MB, MCP ne može).
+- **Prezentacija 20.10.:** lokalni API je radio na starom kodu (26089c3, zdravlje s `events`, [BUGS](BUGS.md) B30) → ugašen, `cargo build -p server`,
+  `migrate` (0005 `ai_spend`), `serve` na 9b6f047 (AI uključen, lokalno bez stropova). Proba u čistom pregledniku: nova tjedna igra, lik odgovara
+  (~9 s), presuda 5/5 za 9 s, zatvaranje tjedna 4 s s mentorom i ljestvicom; „Za profesora" je samo stari model.
+- **Zapisi sesije 12** (ovaj unos, 23.10.): [ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) (pilot, dio 10 kartice),
+  CHANGELOG, BACKLOG (minori Pilot-2/3, L14-1…4, pitanja pilota), BUGS B26–B30.
+- **Plan je jedna datoteka do 1000 redaka** ([ADR-064](DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), Leon 23.10.): `docs/plan/` s 60 na **5 datoteka**
+  (ROADMAP i Leonov pregled spojeni; plan popravka samo s otvorenim L1-15, Pilot, C; gotove kartice i plan Sloja 1 u arhivu, dijelovi ≤ 1000 r.);
+  brana vrsta `plan` = 1000 i pravilo 13 „PLAN U MAPI"; alat `razdvoji-plan` uklonjen; poveznice prepisane (143 sidra provjerena).
+- **Gdje se vidi:** lokalno (commit na `model-v2/sloj1`, push čeka Leonov OK). GitHub `model-v2/sloj1` = `main` 9b6f047.
+
+---
+
+## 2026-10-19 (12) — Sesija 12: priprema pilota (dijelovi 1–7) spojena, banka 930 ljudi, L1-14 započet, `sloj1` i `main` na GitHubu
+
+- **Kartica pilota** [task-16](../plan/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu) (opus, 10 dijelova, valovi 1–5; 367078a). Leonova anketa
+  (4/4 preporučene): kolačić 120 dana s obnovom, `*.up.railway.app`, bez granice po IP-u, gradnja odmah usporedo s L1-14.
+- **Spojeno u valovima** (svaki dio svoje stablo i `target/pilot-N`, tok čuvar → graditelj → pregled): dio 7 kopije (6c3acfd), dio 1 kolačić (fd09174),
+  dio 5 Dockerfile, dio 6 CI `docker` + `deploy-pilot.yml`, dio 2 vrata (c7ee9f8; pregled opus: Changes requested 4 Important → runda 2 Approved),
+  dio 3 strop AI (5c71a5a; opus: 3 Important → runda 2 Approved, sve cijene sa službene stranice), dio 4 tri igre po gostu (d793335; sukobi s dijelom 3
+  riješeni ručno). Svi Rust dijelovi pilota spojeni; ostaju dio 8 (tekst privatnosti, Leon) i 9 (postava, nakon L1-15). Odluke → [ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md).
+- **Sigurnosno pravilo:** slika se ne isporučuje dok dijelovi 2 i 3 nisu spojeni, a proba u dijelu 9 mora pokazati 401 bez lozinke prije dijeljenja adrese.
+- **Provjereno:** cijeli CI nakon dijela 2 i nakon dijela 4 22× EXIT 0 (`cargo test` 1351/0), balans v1, v2 tjedno i mjesečno bajt-isti s
+  `nakon-l113b/`; lint EXIT 1 samo na nacrtima banke u `.superpowers/` (B19). Nova osnovica `nakon-pilot-4/`.
+- **Banka ljudi K7 spojena** (c51d49b): 930 ljudi (radnici 410, gosti 410, vanjski 110), serije 007 i 008 otvorene do Leonova uzorka. Leon tekstom:
+  vanjski su zajednički za sve hotele, malo liječnika je dosta.
+- **L1-14 (Leon igra tjednu sezonu):** L14-1 spora presuda → granica 8000 tokena + iskočni prozor (Leon, radi se u L1-15); L14-2 najam lokala poslije
+  pilota; L14-3 ideja generatora ljudi → nacrt [BANKA_LJUDI §8](../architecture/BANKA_LJUDI/08-generator-ljudi.md) (9b6f047, 5 pitanja); L14-4 stručni
+  pojmovi (celijakija). Mjesečna sezona još nije odigrana. Popis: `.superpowers/sdd/2026-10-14-popravak-temelja/l114-popis-izmjena.md`.
+- **Pouke:** omotači `cargo run … serve` u brojanju slota (B26), zaključan `server.exe` (B27), „sve EXIT 0" po imenima koraka (B28), migracije na svježoj bazi (B29).
+- **Push** (Leon: „želim samo dići puno commita na githubu"): `model-v2/sloj1` 7556d80..9b6f047, CI 39314933953 zelen (rust, web i prva gradnja slike).
+  **Leon sam pushao `main`** 19f7b27..9b6f047 (ff, 429 commitova; spajanje L1-15 time učinjeno prije popravaka iz igre), CI main 39318523973 zelen.
+- **Video za profesora v1** (izvan repoa): 78,7 s na Desktopu; Leon: glas „jako loš", i treba reći da ocjenjuje profesor **ili** AI → sesija 13.
+- **`/kraj` nije odrađen** (kontekst prerastao); zapisi dovršeni u sesiji 13. **Gdje se vidi:** GitHub, `model-v2/sloj1` = `main` 9b6f047.
+
+---
+
 ## 2026-10-19 (11) — Sesija 11: L1-13 dio 4 i cijela L1-13b spojeni i objavljeni (`CORE_VERSION` 2.6.0), prijedlog hostinga pilota
 
 - **L1-13 dio 4, kalibracija, spojen** (575ef92 → e4ec659, `--no-ff`) uz Leonov OK u prvoj anketi (4/4 preporučene: tri svakodnevna kvara nose 0,6,
   održavanje B ostaje, P-GOST-POZLILO ostaje negostinjska, spoji i pushaj). `CORE_VERSION` 2.6.0. CI nakon spajanja: 22× EXIT 0 (sqlx je prvo pao jer
   se baza ugasila uz prekid sesije, [BUGS](BUGS.md) B24), a balans v2 je bajt-isti s ispisom graditelja. Nova osnovica `nakon-l113-4/`. Stabla
   `l113-4` i `l113-4d` s granama i `target/` obrisana. GitHub CI 39238997360 zelen.
-- **L1-13b, cijela prije pilota, u valovima** (Leon, druga anketa): kartica [task-15](../plan/2026-10-14-popravak-temelja/task-15-l1-13b-valovi.md)
+- **L1-13b, cijela prije pilota, u valovima** (Leon, druga anketa): kartica [task-15](../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13b-izmiješani-odgovori-pojačano-održavanje-5-jedan-gumb-spremi-plan-opis-smještaja)
   (ebf28d9) nakon tri analize samo čitanjem. Val 1 usporedo u tri stabla, val 2 nakon dijela 1. Spojeno redom:
   **dio 2** jedan gumb „Spremi plan" (13db069; pregled: I1 i I2 popravljeni, Approved), **dio 3** opis Smještaja (4be1db4; graditelj opus ispravno
   BLOCKED na P-DOTRAJALO, čuvar r2 veže pragove uz sadržaj, Approved), **dio 4** pojačano održavanje +5 (bdbdebe; Approved, 4 Minor),
@@ -86,7 +128,7 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 - **Jutro (samo dokumenti):** Leonovi odgovori na 43 pitanja i razgovor → [ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md),
   [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md), [ADR-058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md) (ec3ba48);
-  kartica [L1-13](../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), BANKA_LJUDI s nacrtom rizika C3 ([07-poznate-osobe-rizik](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)),
+  kartica [L1-13](../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13-jedna-kalibracija-brojki-kvar-i-popravak-klik-75--značaj-gosti-i-popunjenost-težina-20-), BANKA_LJUDI s nacrtom rizika C3 ([07-poznate-osobe-rizik](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)),
   VODITELJ_I_TRZISTE, ROADMAP (ee67b23); ispravak ADR-056 B2 (e71ecc4); sitnice BACKLOG-a (748bcab); dubinska provjera arhitekture E4
   ([PROVJERA_ARHITEKTURE](../architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), e581849: „ok uz uvjete", 7 stavki, 5 pitanja za Leona).
 - **CI nakon PRAVILO-a potvrđen zelen:** `cargo test --workspace` prvi put pao na linkeru (0xC0000142, okolina), ponovljen EXIT 0; balansi bajt-isti.
@@ -136,57 +178,4 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
-## 2026-10-16 (5) — faza B: B1b, B4a, B4b spojeni; B4c napola; banka ljudi K1 započeta
-
-- **Spojeno lokalno u `model-v2/sloj1`** (čuvar testova → graditelj → pregled opus → `--no-ff`): B1b cc4a0f2 (`condition_of`),
-  B4a 6e8ff2e (oznake sidara i 15 predložaka, uvjet kvara klime i praonice), B4b 8d134a4 (22 predloška). Nakon svakog spajanja **cijeli
-  popis iz `ci.yml`**: 24–25 od 24–25 EXIT 0 (cargo test 959 → 968 → 969); v1 i v2 balans bajt-isti kroz B1b i B4b. **Nijedan push danas.**
-- **Pregledi:** B1b čist (dva testa dopisana za pokrivenost). B4a: „za poslije" bilo samo u najboljem u 9 od 19 jedinica → novi test T4b
-  ([ADR-053](DECISIONS/ADR-053-pretpostavke-16-10-oznake-testovi-b4.md)), nakon popravka 0 od 19. B4b: dva sadržajna nesklada s mehanikom
-  (bolovanje, izgubljeno dijete) popravljena u rundi 1; nalaz da samo najbolji troši novac ide u L1-13 ([BACKLOG](BACKLOG.md)).
-- **Leonove odluke:** uvjet kvara klime i praonice = Smještaj ispod 65; banka ljudi usporedo s popravkom; tri odgovora za K1
-  → [ADR-052](DECISIONS/ADR-052-leonove-odluke-16-10-kvarovi-banka-ljudi-usporedo.md). Nova želja o stranim radnicima iz Azije
-  (niža plaća, teža obuka) sukobljava se s MODEL_V2 §5.4 → nacrt prije L2b ([BACKLOG](BACKLOG.md)).
-- **B4c napola:** čuvar 479f6e2; graditelj c69f022 (oznake 18 predložaka, bajt-isti balansi). Commit 2 (uvjeti kvarova) nije napravljen:
-  uz prag 65 na P-BRAVE, P-CURENJE-VODE i P-DIZALO pada brana J-3 i tri testa kapaciteta → anketa Leonu s brojkama prije spajanja.
-- **Banka ljudi K1:** kartica (opus, 247 r.), čuvar K1a 34dd18c (42 testa, grana `sadrzaj/banka-ljudi`); graditelj prekinut s necommitanim kodom
-  u `../hotelixsim-ljudi` (nije provjereno da prevodi).
-- **Gdje se vidi:** lokalno (`model-v2/sloj1` 8d134a4, neobjavljeno). Ledgeri: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`, `.superpowers/sdd/banka-ljudi-k1/progress.md`.
-
-## 2026-10-15 (4) — faza B: B2a, B2b, B3a, B3b, B1a spojeni u sloj1
-
-- **Spojeno lokalno u `model-v2/sloj1`** (svaka cigla: čuvar testova → graditelj → pregled opus → spajanje `--no-ff`): B2a 143f593
-  (broj situacija u postavkama, mjesečno 4/5/6, `CORE_VERSION` 2.3.0; [BUGS](BUGS.md) B3 popravljen), B2b 635e647 (`--situations L,M,H` u balansu),
-  B3a 76271d1 (mjera udjela situacija, pet putova), B3b b94264a (brane B3 u `failures_v2`), B1a 39e5f25 (popravak diže stanje
-  svog odjela, 2.4.0). Nakon svakog spajanja **cijeli popis iz `ci.yml`** (23–24 provjere EXIT 0); v1 balans bajt-isti kroz sve cigle.
-- **Leonove odluke:** anketa B3 („~20 % mjeri se od ravnala", mjesečni dug redoslijeda) → [ADR-049](DECISIONS/ADR-049-situacije-dvadeset-posto-mjeri-se-od-ravnala.md);
-  anketa B1a („mehanizam sad, iznos u L1-13", privremeno +1) → [ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md);
-  pretpostavke voditelja 🟨 → [ADR-051](DECISIONS/ADR-051-pretpostavke-faze-b-situacije-i-mjerenje.md).
-- **Važni nalazi pregleda:** B3a C1 (medijan se računao kao razlika medijana, ne po sjemenu; popravljeno 9f98a5f); B3b: čuvarov test
-  „negativan korak pada" protivio se Leonovoj odluci o dugu → strop −25 umjesto „točno 0"; B1a: bonus +10 bez faktora kruga rušio je
-  težinu (tjedno do 72 %) → Leon: mehanizam sad, iznos u L1-13, privremeno +1; dug redoslijeda time otplaćen.
-- **Smetnje:** `check:api` pada kad drugo stablo istodobno prevodi (zajednički `target`) → nakon spajanja vlastiti `CARGO_TARGET_DIR`
-  ([AGENTI](../workflow/AGENTI.md)); vitest mentor-poll testovi (SeasonScreen) nestabilni pod opterećenjem ([BACKLOG](BACKLOG.md)).
-- **Rizik za dalje:** tjedna težina B 48,9 % uz granicu 50 % — B4 mora izmjeriti `--check` 1000 tjedno i mjesečno prije spajanja.
-- **Gdje se vidi:** lokalno (`model-v2/sloj1` 39e5f25); stare probne v2 igre daju 409 (jezgra 2.4.0). Ledger:
-  [arhiva](../archive/2026-10-15-popravak-temelja-faza-b-ledger.md). Sljedeće B1b → B4a–c → PRAVILO → L1-13.
-
-## 2026-10-15 — Faza A popravka gotova; kartice faze B; novo pravilo bodovanja
-
-- **A4–A6 spojeni u sloj1** (760dbec, 8f931fc, 024160a): A4 pregled i runda popravka (JS provjere i cmp balansa), A5 `lik.v3` i
-  provjera mentora kruga (živi AI test 6/6 uz Leonov OK), A6 pet + t05 scenarija „što student vidi" (probe ugriza vraćene).
-  Cijeli `ci.yml` popis na spojenom sloju: 24/24 EXIT 0, balans bajt-isti kao prije.
-- **Nalaz A6 i Leonova odluka:** tjedni krug, odgovor u t01 gubi od šutnje (trošak odmah, ugled kasnije); Leon: igra ostaje, objasniti
-  ([ADR-045](DECISIONS/ADR-045-trosak-odmah-ugled-kasnije-tjedni-krug.md)).
-- **Završni pregled faze A** (opus): „S popravcima", 6/7 uvjeta; I1–I4 ugrađeni u kartice B. Kopija grana `hotelixsim-kopije/2026-10-15`.
-- **Leon odigrao mjesečnu v2 igru:** „puno bolja je igrica" (7. uvjet ispunjen); želje i opažanje o moralu u [BACKLOG](BACKLOG.md).
-  Push `model-v2/sloj1` 024160a uz njegov OK; GitHub CI success (rust + web).
-- **Kartice faze B** napisane i usklađene s planom (B1a/b, B2a/b, B3a/b, B4a–c); Leonove odluke:
-  [ADR-046](DECISIONS/ADR-046-leonove-odluke-15-10-za-fazu-b.md). Novo pravilo igre, vlastiti odgovor vrijedi više (opcija A):
-  [ADR-047](DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md), nacrt
-  [BODOVANJE_VLASTITOG_ODGOVORA](../architecture/BODOVANJE_VLASTITOG_ODGOVORA.md). 🟨 [ADR-048](DECISIONS/ADR-048-lik-v3-redni-broj-poruke-i-zakljucak.md) (`lik.v3`).
-- **Gdje se vidi:** lokalno i GitHub (`model-v2/sloj1` 024160a); bilješke iz gitignoriranog `za-dokumentaciju.md` prenesene (I4).
-
----
-
-Stariji unosi (14. i 13.10. i ranije): [PROGRESS/2026-10.md](PROGRESS/2026-10.md).
+Stariji unosi (16.10. sesija 5 i ranije): [PROGRESS/2026-10.md](PROGRESS/2026-10.md).

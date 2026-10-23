@@ -1,6 +1,6 @@
 # SDD ledger — plan: docs/plan/2026-10-13-temelj-rada.md
 
-Spec: ADR-038, ADR-037, docs/plan/ROADMAP/kvaliteta.md. Grana model-v2/sloj1 (glavno stablo), BASE plana 82ae466.
+Spec: ADR-038, ADR-037, docs/plan/ROADMAP.md. Grana model-v2/sloj1 (glavno stablo), BASE plana 82ae466.
 Usporedno (drugi plan / ledger 2026-10-10-v2-sloj1): provjeravatelj S-4 u ../hotelixsim-s1-sit, graditelj spajanja KS-3 u ../hotelixsim-s1-obnova (2 Rust agenta).
 
 ## Preflight scan

@@ -2,12 +2,12 @@
 **Datum:** 2026-10-19 · **Status:** ✅ **Leonove odluke 18.10.** (t. 1–5), 🟨 t. 6–12 ČEKA LEONOV PREGLED (četvrta anketa L1-13, sesija 10) ·
 **Vezano:** [ADR-045](ADR-045-trosak-odmah-ugled-kasnije-tjedni-krug.md), [ADR-046](ADR-046-leonove-odluke-15-10-za-fazu-b.md),
 [ADR-054](ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md), [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md),
-[ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 7, 9, 10, 18, [kartica L1-13](../../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md)
+[ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 7, 9, 10, 18, [kartica L1-13](../../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13-jedna-kalibracija-brojki-kvar-i-popravak-klik-75--značaj-gosti-i-popunjenost-težina-20-)
 
 **Izvori.** Graditelj dijela 4 (kalibracija) bio je 18.10. BLOCKED: ni faktor kruga 0 nije spuštao tjednu težinu situacija u hotelu B na 25 %,
 jer kvar prostora (bez faktora) nosi hotelu B ~4,1 boda, a B ima ~15 kvarova po sezoni bez obzira na održavanje; uz to je lanac „srednji >
 prepušteno" bio negativan. Dijagnoza opusa (`.superpowers/sdd/2026-10-14-popravak-temelja/l113-4-dijagnoza.md`) potvrdila je uzrok i dala
-opcije, a Leon je u četvrtoj anketi izabrao sve četiri preporučene (zapis na dnu [kartice L1-13](../../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md)).
+opcije, a Leon je u četvrtoj anketi izabrao sve četiri preporučene (zapis na dnu [kartice L1-13](../../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13-jedna-kalibracija-brojki-kvar-i-popravak-klik-75--značaj-gosti-i-popunjenost-težina-20-)).
 Brojke su iz `l113-4-report.md`, `l113-4-a2-tablica.md`, `l113-4-prije-poslije.md` i pregleda `l113-4-review.md` (1000 sjemena).
 Točke 1–5 su Leonove odluke; 6–12 su pretpostavke voditelja i izvođača ([ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)), svaka s cijenom.
 

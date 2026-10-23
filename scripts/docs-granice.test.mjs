@@ -47,8 +47,13 @@ test("indeks: X.md uz mapu X/ = 200, bez mape = živi 300", () => {
   assert.deepEqual(granicaZa("docs/architecture/ARHITEKTURA.md", false), { vrsta: "zivi", redaka: 300 });
 });
 
+test("plan: datoteka izravno u docs/plan/ = 1000 (ADR-064)", () => {
+  assert.deepEqual(granicaZa("docs/plan/ROADMAP.md", false), { vrsta: "plan", redaka: 1000 });
+  assert.deepEqual(granicaZa("docs/plan/2026-10-14-popravak-temelja.md", false), { vrsta: "plan", redaka: 1000 });
+});
+
 test("živi: sve ostalo pod docs/ = 300", () => {
-  assert.deepEqual(granicaZa("docs/plan/ROADMAP.md", false), { vrsta: "zivi", redaka: 300 });
+  assert.deepEqual(granicaZa("docs/product/VIZIJA.md", false), { vrsta: "zivi", redaka: 300 });
   assert.deepEqual(granicaZa("docs/plan/2026-10-10-x/task-01-y.md", false), { vrsta: "zivi", redaka: 300 });
 });
 
@@ -67,24 +72,20 @@ test("izvan docs/ nema granice (null)", () => {
   assert.equal(granicaZa("crates/x/README.md", false), null);
 });
 
-test("prijelazne iznimke: točno dvije, s razlogom", () => {
-  assert.deepEqual(Object.keys(PRIJELAZNE_IZNIMKE).sort(), [
-    "docs/architecture/MODEL_V2.md",
-    "docs/plan/2026-10-10-v2-sloj1.md",
-  ]);
+test("prijelazne iznimke: točno jedna, s razlogom", () => {
+  assert.deepEqual(Object.keys(PRIJELAZNE_IZNIMKE).sort(), ["docs/architecture/MODEL_V2.md"]);
   for (const razlog of Object.values(PRIJELAZNE_IZNIMKE)) assert.ok(razlog.length > 10);
-  assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1.md"), true);
   assert.equal(jeIznimka("docs/architecture/MODEL_V2.md"), true);
   assert.equal(jeIznimka("docs/plan/ROADMAP.md"), false);
   // razdvojena iznimka: vrijedi i za dijelove u mapi istog imena, ne i za slično ime
-  assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1/task-02-x.md"), true);
-  assert.equal(jeIznimka("docs/plan/2026-10-10-v2-sloj1-b.md"), false);
+  assert.equal(jeIznimka("docs/architecture/MODEL_V2/02-x.md"), true);
+  assert.equal(jeIznimka("docs/architecture/MODEL_V2-b.md"), false);
 });
 
 test("tvrda granica: 1200 redaka, izuzeci samo izrijekom (danas nijedan)", () => {
   assert.equal(TVRDA_GRANICA, 1200);
   assert.deepEqual(Object.keys(IZUZECI_TVRDE_GRANICE), []);
-  assert.equal(jeIzuzetOdTvrde("docs/plan/2026-10-10-v2-sloj1.md"), false);
+  assert.equal(jeIzuzetOdTvrde("docs/architecture/MODEL_V2.md"), false);
 });
 
 test("check-docs --popis: silazno, ❌ uz prekoračenje, exit 0, korijen kao argument", () => {
@@ -95,7 +96,7 @@ test("check-docs --popis: silazno, ❌ uz prekoračenje, exit 0, korijen kao arg
       fs.writeFileSync(path.join(dir, r), "x\n".repeat(redaka));
     };
     piši("docs/README.md", 5);
-    piši("docs/plan/VELIKI.md", 301);
+    piši("docs/product/VELIKI.md", 301);
     piši("docs/plan/MALI.md", 10);
     piši("docs/ARH.md", 50);
     piši("docs/ARH/dio.md", 3); // ARH.md ima mapu istog imena -> indeks 200
@@ -111,7 +112,7 @@ test("check-docs --popis: silazno, ❌ uz prekoračenje, exit 0, korijen kao arg
       const retci = r.stdout.split("\n");
       const poRedu = retci.filter((l) => /docs\//.test(l)).map((l) => l.trim().split(/\s+/).at(3));
       assert.deepEqual(poRedu, [
-        "docs/plan/VELIKI.md",
+        "docs/product/VELIKI.md",
         "docs/ARH.md",
         "docs/plan/MALI.md",
         "docs/README.md",

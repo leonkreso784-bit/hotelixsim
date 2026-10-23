@@ -2,7 +2,7 @@
 **Datum:** 2026-10-19 · **Status:** ✅ **Leonove odluke 19.10.** (t. 1–9, četiri ankete, sesija 11), 🟨 t. 10–18 ČEKA LEONOV PREGLED ·
 **Vezano:** [ADR-042](ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 2, 4, 7, 10, [ADR-045](ADR-045-trosak-odmah-ugled-kasnije-tjedni-krug.md),
 [ADR-060](ADR-060-leonove-odluke-18-10-i-pretpostavke-sesije-9.md) t. 12–14, [ADR-061](ADR-061-leonove-odluke-18-19-10-i-pretpostavke-sesije-10.md),
-[kartica L1-13b](../../plan/2026-10-14-popravak-temelja/task-15-l1-13b-valovi.md)
+[kartica L1-13b](../../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13b-izmiješani-odgovori-pojačano-održavanje-5-jedan-gumb-spremi-plan-opis-smještaja)
 
 **Izvori.** Ledger `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md` („SESIJA 11"), analize `l113b-analiza-*.md`, pregledi
 `l113b-{1,2,3,4}-review.md`, tablica `l113b-4-tablica.md` (1000 sezona) i prijedlog `pilot-hosting-prijedlog.md` (isti direktorij).

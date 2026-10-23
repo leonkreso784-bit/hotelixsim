@@ -1,8 +1,8 @@
 # ADR-059 — Pretpostavke sesije 8: PRAVILO-b u balansu, IZGLED pri spajanju, PRAVILO-c, jedan Rust slot
 **Datum:** 2026-10-17 · **Status:** 🟨 ČEKA LEONOV PREGLED · **Vezano:** [ADR-047](ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md),
 [ADR-055](ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md), [ADR-057](ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md),
-[ADR-058](ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md), [kartica PRAVILO](../../plan/2026-10-14-popravak-temelja/task-12-pravilo-vlastiti-odgovor.md),
-[kartica IZGLED](../../plan/2026-10-14-popravak-temelja/task-13-izgled-lika.md), [BUGS](../BUGS.md) B14–B16
+[ADR-058](ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md), [kartica PRAVILO](../../archive/2026-10-14-popravak-temelja-kartice/dio-4.md#task-pravilo-vlastiti-odgovor-vrijedi-više-od-klika-klik-najviše-4-vlastite-riječi-do-5),
+[kartica IZGLED](../../archive/2026-10-14-popravak-temelja-kartice/dio-4.md#task-izgled-izgled-lika-iz-roda-dobi-i-podrijetla), [BUGS](../BUGS.md) B14–B16
 
 Pretpostavke voditelja i izvođača bez pitanja ([ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)). Što je već u ADR-058 (IZGLED t. 1–8,
 PRAVILO-a t. 14) ovdje se ne ponavlja. Svaka stavka ima cijenu ako je kriva.

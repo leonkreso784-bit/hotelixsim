@@ -26,7 +26,7 @@ odvojene grane (B6, B8, B9). Uz to načela igre nisu zapisana kao provjere (B1, 
    početku popravka i na kraju svake faze. Push na javni GitHub i dalje samo uz Leonov izričit OK.
 
 **Posljedice.**
-- Plan [Sloja 1](../../plan/2026-10-10-v2-sloj1.md) je pauziran: L1-11 postaje cigla A1, L1-13 i L1-13b idu na kraj faze B,
+- Plan [Sloja 1](../../archive/2026-10-10-v2-sloj1.md) je pauziran: L1-11 postaje cigla A1, L1-13 i L1-13b idu na kraj faze B,
   L1-14 i L1-15 zatvaraju fazu B. ROADMAP faze iza ZAVRŠETKA SLOJA 1 pomiču se za trajanje popravka (~125–185 h [PROC]).
 - Svaka faza završava Leonovim igranjem i kopijom; odluke o brojkama koje student osjeti idu kroz anketu.
 

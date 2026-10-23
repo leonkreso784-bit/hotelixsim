@@ -1,7 +1,7 @@
 # PLATFORMA §5 · Igrini slojevi koje je Leon naveo: gdje sjedaju
 
 Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Ovo nije dizajn igre, samo mjesto u arhitekturi. Svaki sloj ide kroz svoj spec,
-balans i Leonove ankete o brojkama. Raspored rada je u kolosijeku IGRA ([ROADMAP/igra](../../plan/ROADMAP/igra.md)).
+balans i Leonove ankete o brojkama. Raspored rada je u kolosijeku IGRA ([ROADMAP/igra](../../plan/ROADMAP.md#roadmap--kolosijek-igra)).
 
 | sloj | gdje u sustavu | što traži od jezgre | ovisi o | veličina [PROC] |
 |---|---|---|---|---|

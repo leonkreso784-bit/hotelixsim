@@ -50,8 +50,8 @@
 6. **Nema ćirilice** u tekstu izvan koda (slovo-dvojnik zna ući kopiranjem).
 7. **Arhiva ne smije biti živa.** Plan u `plan/` ne smije proglasiti plan iz `archive/` aktivnim.
 8. **Podindeks:** `X.md` uz mapu `X/` mora postojati i biti naveden ovdje. Više od jedne razine mapa (`X/Y/…`) je zabranjeno.
-9. **Svaki dokument je unutar granice veličine** (tablica niže). Dva dokumenta s prijelaznom iznimkom (Sloj 1: plan
-   `2026-10-10-v2-sloj1` zajedno s mapom dijelova i `MODEL_V2.md`) izuzeta su od tih granica dok sloj traje.
+9. **Svaki dokument je unutar granice veličine** (tablica niže). Jedan dokument s prijelaznom iznimkom (`MODEL_V2.md`
+   zajedno s mapom dijelova) izuzet je od tih granica dok traje Sloj 1.
 10. **ADR-ovi su jedan po datoteci.** Imena su `ADR-0NN-naziv.md`, brojevi se ne ponavljaju, a popis
     `records/DECISIONS.md` mora biti jednak onome što alat generira. Ako popis zastari, brana pada.
 11. **Ne povezuj se na ADR preko popisa** (`DECISIONS.md#adr-…`): poveznica ide ravno na datoteku ADR-a.
@@ -70,7 +70,8 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 | predaja | `docs/SLJEDECA_SESIJA.md` | 60 | već pravilo `/kraj`, sad i brana |
 | ADR | `docs/records/DECISIONS/*.md` | 120 | jedna odluka; najveći danas 60 (ADR-015) |
 | indeks | `docs/README.md` i svaki `X.md` uz mapu `X/` (izvan arhive) | 200 | indeks vodi, ne objašnjava |
-| živi dokument, plan, task | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu; task od 300 tjera plan da navodi datoteke i potpise umjesto da lijepi cijeli kod |
+| plan | `docs/plan/*.md` (izravno, bez podmapa) | 1000 | plan se čita na jednom mjestu, taskovi su odjeljci; podmapa u `docs/plan/` pada ([ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), Leon 23.10.) |
+| živi dokument | sve ostalo pod `docs/` osim `archive/` | 300 | čita se cijeli u jednom potezu |
 | arhiva | `docs/archive/**` | 1000 | zamrznuto; task veći od toga dijeli se po smislu na dijelove (npr. ekrani Task 4 i 4b) |
 | **tvrda granica** | **svaki `.md` u repozitoriju** | **1200** | Leonovo pravilo (13.10.; s 1000 na 1200 isti dan); vrijedi i za prijelazne iznimke |
 | `CLAUDE.md` | korijen | 12 000 znakova | postojeći budžet |
@@ -80,12 +81,13 @@ Pregled stvarnih veličina uz granice: `node scripts/check-docs.mjs --popis`.
 Dokument `X.md` koji preraste granicu postaje kratak **indeks** (svrha i tablica „§ → datoteka"), a dijelovi idu u
 **mapu `X/`** pokraj njega. Ovaj `README.md` ostaje jedini ulaz: navodi `X.md`, a `X.md` navodi svoje dijelove. Brojevi
 paragrafa (§) ostaju u naslovima dijelova, pa navodi poput „ARHITEKTURA §7.2" i stare poveznice i dalje vrijede.
-Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i ADR-ovi (`records/DECISIONS/`).
+Danas je tako složeno: ARHITEKTURA, DEMO, arhivski planovi i kartice, BANKA_LJUDI, PLATFORMA i ADR-ovi (`records/DECISIONS/`). Plan se **ne** slaže tako (ADR-064).
 
 ### Planovi, područja i ADR-ovi
 
-- **Plan** do 300 redaka smije biti jedna datoteka. Veći je **pregled** `plan/<datum>-<ime>.md` + mapa istog imena sa
-  po jednim taskom u datoteci; razdvaja ga alat (`corepack pnpm docs:plan <plan.md>`, vidi [AGENTI](./workflow/AGENTI.md)).
+- **Plan je jedna datoteka do 1000 redaka**: `plan/<datum>-<ime>.md`, taskovi su odjeljci `### Task …` (ne zasebne datoteke;
+  [ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)). Kad naraste, **gotove kartice** sele u arhivu: `archive/<plan>-kartice.md` (kratak indeks) +
+  `archive/<plan>-kartice/dio-N.md` (redom, svaki do 1000 redaka), a u planu ostaje redak s poveznicom na karticu.
 - **Područje** je `igra`, `platforma`, `kvaliteta` ili `dokumentacija` (bez retka = `igra`; `kod` = stari naziv za `igra`);
   za svako smije biti jedan aktivan plan.
 - **Odluke** žive u `records/DECISIONS/`, jedna datoteka po ADR-u. `records/DECISIONS.md` je **popis koji se generira**
@@ -133,11 +135,10 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 
 | Dokument | Svrha |
 |---|---|
-| [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u mapi `ROADMAP/` |
-| [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md) | 🟩 **aktivan** — popravak temelja po [reviziji](./architecture/REVIZIJA_TEMELJA.md): faza A (brane koje mjere pravu stvar, kratke grane; 7 kartica), B (v2 mehanike po odjelu, jedna kalibracija, L1-13…L1-15), C (igra za semestar) |
-| [2026-10-17-leonov-pregled.md](./plan/2026-10-17-leonov-pregled.md) | 🟩 **aktivan** (područje kvaliteta; nije plan gradnje) — sve što čeka Leonovu riječ kao 43 numerirana pitanja s preporukom (A pravila i brojke, B tekstovi B4, C banka ljudi, D voditelj i tržište, E platforma, F tehničko), redoslijed po tome što koči gradnju; mapa po grupama |
+| [ROADMAP.md](./plan/ROADMAP.md) | 🟩 **živ** — faze projekta (TEMELJI → DEMO → PREZENTACIJA → VERZIJA ZA PROFESORE → PILOT → VIZIJA), put do pilota u dva kolosijeka (IGRA, PLATFORMA) s prekretnicama P1–P4; cigle po kolosijeku u odjeljcima KVALITETA, IGRA, PLATFORMA (jedna datoteka) |
+| [2026-10-14-popravak-temelja.md](./plan/2026-10-14-popravak-temelja.md) | 🟩 **aktivan** — popravak temelja po [reviziji](./architecture/REVIZIJA_TEMELJA.md): faza A i B gotove (kartice u [arhivi](./archive/2026-10-14-popravak-temelja-kartice.md)); otvoreno: L1-15, kartica Pilot (dijelovi 8–10), C (igra za semestar) |
+| [2026-10-17-leonov-pregled.md](./plan/2026-10-17-leonov-pregled.md) | 🟩 **aktivan** (područje kvaliteta; nije plan gradnje) — sve što čeka Leonovu riječ kao 43 numerirana pitanja s preporukom (A pravila i brojke, B tekstovi B4, C banka ljudi, D voditelj i tržište, E platforma, F tehničko), redoslijed po tome što koči gradnju; odjeljci po grupama (jedna datoteka) |
 | [2026-11-platforma.md](./plan/2026-11-platforma.md) | 🟨 **nacrt** (16.10., čeka Leona; područje platforma) — platforma do P3 usporedo s fazom C: četiri faze (SPREMNO ZA INTERNET, RAZRED bez i s jezgrom, PROFESOR), ~205 h, ovisnosti o jezgri, hosting i AI trošak, 6 pitanja |
-| [2026-10-10-v2-sloj1.md](./plan/2026-10-10-v2-sloj1.md) | ⏸️ **pauziran** (14.10., ADR-043; ostatak u planu popravka) — put B, sloj 1: temelj v2 (v1 zamrznut, tjedni ili mjesečni krug), odjeli po USALI-ju, račun dobiti i budžet (22 taska) |
 | [2026-10-10-dokumentacija.md](./plan/2026-10-10-dokumentacija.md) | ⏸️ **pauziran** (čeka spajanje Sloja 1; Taskovi 11–13) — preuređenje dokumentacije: granice veličine, planovi i ADR-ovi po datotekama, ARHITEKTURA/DEMO/MODEL_V2 po temama |
 
 ## `workflow/` — kako radimo
@@ -183,5 +184,8 @@ Danas je tako složeno: ARHITEKTURA, DEMO, pet arhivskih planova, plan Sloja 1 i
 | [2026-10-10-ekrani-ledger.md](./archive/2026-10-10-ekrani-ledger.md) | ✅ Radni ledger koraka 5: presude voditelja 1–26, odgođeni nalazi, završni pregled i val popravaka |
 | [2026-10-13-temelj-rada.md](./archive/2026-10-13-temelj-rada.md) | ✅ Plan „Faza 0 TEMELJ RADA" (K0-2 pravila rada i područja, K0-3 brana `check:kod`, K0-7 arhitektura platforme; K0-1 CI dokazan 14.10.), taskovi u mapi istog imena |
 | [2026-10-13-temelj-rada-ledger.md](./archive/2026-10-13-temelj-rada-ledger.md) | ✅ Radni ledger Faze 0: presude, završni pregled i val popravaka, dokaz K0-1 |
+| [2026-10-10-v2-sloj1.md](./archive/2026-10-10-v2-sloj1.md) | 📦 Plan Sloja 1 (put B; pauziran 14.10., ADR-043; ostatak preuzeo plan popravka) — pregled; arhiviran 23.10. (ADR-064) |
+| [2026-10-10-v2-sloj1-kartice.md](./archive/2026-10-10-v2-sloj1-kartice.md) | 📦 22 kartice taskova Sloja 1 u 6 dijelova do 1000 redaka (prije mapa od 22 datoteke) |
+| [2026-10-14-popravak-temelja-kartice.md](./archive/2026-10-14-popravak-temelja-kartice.md) | 📦 Gotove kartice popravka temelja (faze A i B, L1-13, L1-13b) u 5 dijelova; otvoreni rad ostaje u [planu](./plan/2026-10-14-popravak-temelja.md) |
 | [2026-10-15-popravak-temelja-faza-b-ledger.md](./archive/2026-10-15-popravak-temelja-faza-b-ledger.md) | Radni ledger popravka temelja: faza A i B do B1a (rulingi, ankete, nalazi pregleda, odgođeni minori) |
 | [HOTEL_SIM_2026-08-22.md](./archive/HOTEL_SIM_2026-08-22.md) | Izvorna ideja iz kolovoza (iz Sokrata) — zamijenjena s `product/VIZIJA.md` |

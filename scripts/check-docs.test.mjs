@@ -242,15 +242,25 @@ test("3) kod je stari naziv za igru: kod + igra aktivni padaju; igra + platforma
   assert.equal(r.code, 0, r.out);
 });
 
-test("3) taskovi u docs/plan/X/ ne računaju se kao planovi", () => {
+test("3) i 13) taskovi u docs/plan/X/ nisu planovi, a mapa u docs/plan/ pada (ADR-064)", () => {
   const r = run({
     "docs/plan/PLAN_A.md": "# Plan A\n\n**Status:** u tijeku\n\nTaskovi: task-01.md\n",
     "docs/plan/PLAN_A/task-01.md": "### Task 1: x\n",
-    "docs/plan/PLAN_A/task-02.md": "### Task 2: y\n",
   });
-  assert.equal(r.code, 1, r.out); // task-02 nije u podindeksu, ali nema "VISE AKTIVNIH"
+  assert.equal(r.code, 1, r.out);
   assert.ok(!r.out.includes("VISE AKTIVNIH"), r.out);
-  assert.ok(r.out.includes("NIJE U PODINDEKSU  docs/plan/PLAN_A/task-02.md"), r.out);
+  assert.ok(r.out.includes("PLAN U MAPI  docs/plan/PLAN_A/task-01.md"), r.out);
+});
+
+test("13) plan od 1000 redaka u jednoj datoteci prolazi, 1001 pada", () => {
+  const plan = (n) => `# Plan\n\n**Status:** u tijeku · **Područje:** kvaliteta\n${"x\n".repeat(n - 3)}`;
+  const indeks = `${BASE["docs/README.md"]}- PLAN_B.md\n`;
+  const ok = run({ "docs/README.md": indeks, "docs/plan/PLAN_B.md": plan(1000) });
+  assert.equal(ok.code, 0, ok.out);
+  assertFails(
+    { "docs/README.md": indeks, "docs/plan/PLAN_B.md": plan(1001) },
+    "docs/plan/PLAN_B.md  1001 redaka > granica 1000 (plan)",
+  );
 });
 
 test("7) arhiva proglašena aktivnom u docs/plan/X/*.md također pada", () => {
@@ -306,25 +316,25 @@ test("12) tvrda granica: bilo koji .md preko 1200 pada, i izvan docs/, točno 12
 });
 
 test("12) prijelazna iznimka ne vrijedi za tvrdu granicu (ni za dio u mapi)", () => {
-  const indeks = `${BASE["docs/README.md"]}- [S](plan/2026-10-10-v2-sloj1.md)\n`;
-  const plan = "# Sloj 1\n\n**Status:** ⏸️ PAUZIRAN\n\n- [T1](2026-10-10-v2-sloj1/task-01-a.md)\n";
+  const indeks = `${BASE["docs/README.md"]}- [M](architecture/MODEL_V2.md)\n`;
+  const plan = "# Model\n\n- [T1](MODEL_V2/task-01-a.md)\n";
   assertFails(
-    { "docs/README.md": indeks, "docs/plan/2026-10-10-v2-sloj1.md": `${plan}${RED(1201)}` },
-    "PREKO 1200 REDAKA  docs/plan/2026-10-10-v2-sloj1.md",
+    { "docs/README.md": indeks, "docs/architecture/MODEL_V2.md": `${plan}${RED(1201)}` },
+    "PREKO 1200 REDAKA  docs/architecture/MODEL_V2.md",
   );
   assertFails(
     {
       "docs/README.md": indeks,
-      "docs/plan/2026-10-10-v2-sloj1.md": plan,
-      "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(1201)}`,
+      "docs/architecture/MODEL_V2.md": plan,
+      "docs/architecture/MODEL_V2/task-01-a.md": `# T1\n${RED(1201)}`,
     },
-    "PREKO 1200 REDAKA  docs/plan/2026-10-10-v2-sloj1/task-01-a.md",
+    "PREKO 1200 REDAKA  docs/architecture/MODEL_V2/task-01-a.md",
   );
   // isti dio s 400 redaka: preko granice 300, ali iznimka vrijedi i za mapu
   const r = run({
     "docs/README.md": indeks,
-    "docs/plan/2026-10-10-v2-sloj1.md": plan,
-    "docs/plan/2026-10-10-v2-sloj1/task-01-a.md": `# T1\n${RED(400)}`,
+    "docs/architecture/MODEL_V2.md": plan,
+    "docs/architecture/MODEL_V2/task-01-a.md": `# T1\n${RED(400)}`,
   });
   assert.equal(r.code, 0, r.out);
 });

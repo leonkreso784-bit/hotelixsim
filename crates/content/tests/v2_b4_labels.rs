@@ -1,5 +1,5 @@
 //! Čuvar cigle B4 (prepis oznaka odgovora i uvjeta kvarova), porcije B4a, B4b i B4c. Kartica:
-//! `docs/plan/2026-10-14-popravak-temelja/task-11-b4-prepis-oznaka-i-uvjeta.md`.
+//! `docs/archive/2026-10-14-popravak-temelja-kartice/dio-4.md`.
 //! Porcija B4c: `b4c_batch_labels_have_no_debt` (T3) i `breakdown_conditions_via_condition_of` (T9).
 use content::{
     KNOWN_VIOLATIONS,

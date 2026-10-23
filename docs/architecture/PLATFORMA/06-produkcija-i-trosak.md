@@ -2,7 +2,7 @@
 
 Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Brojke troška su **[PROC]**: iz pretrage 12.10., uglavnom iz izvora trećih strana,
 pa ih treba **provjeriti na službenim stranicama** prije odluke. Cigle su u fazi SPREMNO ZA INTERNET
-([ROADMAP/platforma](../../plan/ROADMAP/platforma.md), F0-*).
+([ROADMAP/platforma](../../plan/ROADMAP.md#roadmap--kolosijek-platforma), F0-*).
 
 ## 6.1 Ključna odluka: jedna adresa
 

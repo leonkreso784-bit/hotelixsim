@@ -6,7 +6,7 @@
 > to slažemo u sustav i koje su mogućnosti; odluke se ne prepisuju. Prepisano 13.10.2026. iz nacrta od 12.10.
 > (grana `model-v2/sloj1`) po ADR-037 i dopunama; što je u nacrtu bilo zastarjelo, zamijenjeno je važećim stanjem.
 > Brojke koje nisu iz koda označene su **[PROC]**, a što treba provjeriti izvan repoa **[PROVJERITI]**.
-> Cigle i faze: [ROADMAP/platforma](../plan/ROADMAP/platforma.md) · igra: [ARHITEKTURA](./ARHITEKTURA.md), [MODEL_V2](./MODEL_V2.md).
+> Cigle i faze: [ROADMAP/platforma](../plan/ROADMAP.md#roadmap--kolosijek-platforma) · igra: [ARHITEKTURA](./ARHITEKTURA.md), [MODEL_V2](./MODEL_V2.md).
 
 ## Dijelovi
 

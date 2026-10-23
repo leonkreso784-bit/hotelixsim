@@ -21,7 +21,7 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
 - PRAVILO-a (`model-v2/sloj1` 9a275d8, na GitHubu, CI zelen; `CORE_VERSION` 2.5.0): vlastiti odgovor vrijedi više od klika — u igri uz pravilo „vlastiti odgovor" klik na ponuđeni odgovor daje najviše 4, prepisani ponuđeni odgovor vrijedi kao klik, a zalijepljena dva ili više ponuđenih odgovora daju neutralnu 3 bez učinka i bez poziva suca (parovi susjednih riječi, 70 %; B13). Mentor zna za ograničeni, prepisani i zalijepljeni odgovor. Igra modela v1 ostaje na klasičnom pravilu; stare probne v2 igre daju 409 ([ADR-047](DECISIONS/ADR-047-vlastiti-odgovor-vrijedi-vise-od-klika.md), [ADR-057](DECISIONS/ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md) t. 2).
 - IZGLED (a+b) (lokalno 872ff46, bez pusha): lik u situaciji i razgovoru dobiva rod, dobnu skupinu i podrijetlo (API `character.look`, `character_look`), a web crta lice iz tih podataka (`lookFor(ime, hint)`): gošća nema bradu, gost nema naušnice, stariji lik ima sijedu kosu. Lik bez podataka (sidra S1–S4, ljestvica) izgleda isto kao prije. Razgovorna tijela API-ja preseljena iz `schema.rs` u `schema_situations.rs` (dug 1770 → 1717 redaka). Balans bajt-isti.
 - PRAVILO-b (lokalno ee6de80, bez pusha): balans v2 ima šesti put „klik najbolji" (najviše 4 gdje situacija ima lika), lanac B3 s četiri koraka (najbolji > klik > srednji > prepušteno > šutnja) i ispis „težina klika" (tjedno A/B/C 38,9 / 45,1 / 37,7 %, mjesečno 24,0 / 32,2 / 19,0 %; samo ispis, nije brana). Stari brojevi balansa isti; igra i `CORE_VERSION` nedirnuti.
-- Dokumenti 17.10. (lokalno, bez pusha): Leonove odluke iz 43 odgovora ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)–[058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md)), kartica [L1-13](../plan/2026-10-14-popravak-temelja/task-14-l1-13-kalibracija.md), nacrt rizika „likovi nalik poznatim osobama" ([BANKA_LJUDI §7](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)) i dubinska provjera arhitekture ([E4](../architecture/PROVJERA_ARHITEKTURE_2026-10-17.md)).
+- Dokumenti 17.10. (lokalno, bez pusha): Leonove odluke iz 43 odgovora ([ADR-056](DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)–[058](DECISIONS/ADR-058-pretpostavke-sesije-7-izgled-vanjski-platforma-k2.md)), kartica [L1-13](../archive/2026-10-14-popravak-temelja-kartice/dio-5.md#task-l1-13-jedna-kalibracija-brojki-kvar-i-popravak-klik-75--značaj-gosti-i-popunjenost-težina-20-), nacrt rizika „likovi nalik poznatim osobama" ([BANKA_LJUDI §7](../architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)) i dubinska provjera arhitekture ([E4](../architecture/PROVJERA_ARHITEKTURE_2026-10-17.md)).
 - PRAVILO-c (`model-v2/sloj1` 8e39085, na GitHubu): uz ponuđene odgovore u situaciji s likom student vidi napomenu da klik daje najviše 4 od 5.
   Presuda kaže je li odgovor prepisan od ponuđenog (vrijedi kao klik) ili zalijepljen (neutralna 3). API: `click_capped`, `copied`, `pasted`. Balans bajt-isti.
 - IZGLED-c (879da8a + 69762f1, na GitHubu): policajac, vatrogasac (s kacigom), djelatnik hitne (crvena odora s plavom zvijezdom života, bez crvenog
@@ -48,13 +48,25 @@ Isporuke (ono što radi), najnovija na vrhu. Format: [Keep a Changelog](https://
   izmiješani** po hotelu (isti hotel uvijek vidi isti red, kolege drugačiji); **jedan gumb „Spremi plan"** na Planu i na stranici odjela sprema
   plan i sve odjele odjednom; stranica Smještaja ima **opis** koji kvarovi ovise o stanju prostora i od kojeg praga; **pojačano održavanje** diže
   stanje 5 bodova mjesečno iznad trošenja u šest operativnih odjela, uz istu cijenu.
+- **Priprema pilota, dijelovi 1–7** (sesija 12, na GitHubu `model-v2/sloj1` = `main` 9b6f047, CI zelen; [ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)):
+  **kolačić gosta traje 120 dana i obnavlja se** pri svakom otvaranju igre (student ne gubi hotel nakon tjedan dana; `Secure` u produkciji);
+  **jedna lozinka za cijelu stranicu** (Basic Auth), Rust sam poslužuje web, tipizirane postavke, start se odbija bez lozinke na javnoj adresi,
+  uredno gašenje (SIGTERM), `/v1/health` bez broja događaja; **strop AI troška** 5 $/dan i 30 $/mj (tablica `ai_spend`, broji se svaki odgovor,
+  iznad stropa igra radi na rezervama); **najviše 3 igre po gostu** (četvrta: 409 `game_limit` i poruka); **Dockerfile** i CI posao `docker`
+  (prva gradnja slike zelena), ručni tok `deploy-pilot.yml` uz okolinu „pilot"; **skripta kopija** `scripts/pilot-kopija.sh` (tjedni `pg_dump`,
+  proba vraćanja). Igra i balans bajt-isti (osnovica `nakon-pilot-4/`). Ostaje: tekst privatnosti (dio 8), postava na Railwayu (dio 9).
+- Banka ljudi K7 (c51d49b, na GitHubu): +200 ljudi (radnici i gosti serija-007 i 008, OTVORENE do Leonova uzorka); ukupno **930** (radnici 410,
+  gosti 410, vanjski 110). Pravilo stereotipa (ćelija uloga × podrijetlo ≥ 40) uključilo se prvi put (sobar/lokalno). Alat pregleda avatara
+  crta odoru iz uloge vanjskog (4cf9bee). Igra banku još ne čita.
+- Nacrt [BANKA_LJUDI §8](../architecture/BANKA_LJUDI/08-generator-ljudi.md) (9b6f047): generator ljudi u igri — četiri načina s cijenom, preporuka
+  hibrid banka + generator, pet pitanja za Leona.
 
 ### Popravljeno
 - `rustls` 0.23.46 (RUSTSEC-2026-0346 i -0347) i na `main`.
 
 ## [Neobjavljeno] — Sloj 1 puta B: odjeli, račun dobiti, tjedni krug, kraj sezone
 
-Plan: [2026-10-10-v2-sloj1.md](../plan/2026-10-10-v2-sloj1.md); pretpostavke [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md)
+Plan: [2026-10-10-v2-sloj1.md](../archive/2026-10-10-v2-sloj1.md); pretpostavke [ADR-029](DECISIONS/ADR-029-sloj-1-pretpostavke-plana.md)
 i ADR-031…036. Dokaz kraj-do-kraja: `crates/api/tests/e2e_v2.rs` (17 tjednih krugova kroz API).
 
 ### Dodano

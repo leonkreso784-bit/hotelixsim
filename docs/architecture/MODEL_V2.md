@@ -350,7 +350,7 @@ To postaje nova provjera balansa.
 Sloj 1 je dodao **mrtvu zonu koraka:** u razdoblju koje nije cijeli mjesec, kad je razmak do cilja ≠ 0 a zaokruženi
 korak 0, korak je ±1 jedinica prema cilju (`resolve::step_toward`); mjesečni krug je nepromijenjen. Tjedni korak
 sezonaca je ±3. Pravila: [ADR-031](../records/DECISIONS/ADR-031-sloj-1-tjedni-krug-u-jezgri.md), tablica „Pravila
-razdoblja" u [planu Sloja 1](../plan/2026-10-10-v2-sloj1.md).
+razdoblja" u [planu Sloja 1](../archive/2026-10-10-v2-sloj1.md).
 
 ### 4.3 Što to znači za igru
 

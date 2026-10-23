@@ -24,7 +24,7 @@ je preko 4000 redaka, arhivirani planovi do 4700, ADR-ovi su bili jedna datoteka
    poveznica (jedna razina dublje). Ledgeri ostaju datoteke.
 7. **Zapisnici** (`PROGRESS`, `CHANGELOG`, `BACKLOG`): kad prijeđu granicu, stariji unosi idu po mjesecima u mapu
    istog imena, indeks ostaje na vrhu. Danas nijedan nije blizu.
-8. **Prijelazne iznimke** dok traje sloj 1: `docs/plan/2026-10-10-v2-sloj1.md` i `docs/architecture/MODEL_V2.md`
+8. **Prijelazne iznimke** dok traje sloj 1: `docs/archive/2026-10-10-v2-sloj1.md` i `docs/architecture/MODEL_V2.md`
    (popis `PRIJELAZNE_IZNIMKE` u `docs-granice.mjs`); prazni se u Tasku 13 plana, a MODEL_V2 se razdvaja u Tasku 11.
 
 **Dopuna 2026-10-13 (Leonova odluka, ne pretpostavka).** *„Nijedan dokument (.md) u repou nema više od 1000 redaka;

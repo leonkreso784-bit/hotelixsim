@@ -63,7 +63,7 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
    relativne putanje poveznica (jedna razina dublje). Ledgeri ostaju datoteke (najveći 239).
 7. **Zapisnici** (`PROGRESS`, `CHANGELOG`, `BACKLOG`) imaju granicu 300; kad je prijeđu, stariji unosi idu u mapu istog
    imena po mjesecima (`PROGRESS/2026-10.md`), indeks ostaje na vrhu. Danas nijedan nije blizu.
-8. **Prijelazne iznimke** (dok traje Sloj 1): `docs/plan/2026-10-10-v2-sloj1.md` i `docs/architecture/MODEL_V2.md` — izuzeti od
+8. **Prijelazne iznimke** (dok traje Sloj 1): `docs/archive/2026-10-10-v2-sloj1.md` i `docs/architecture/MODEL_V2.md` — izuzeti od
    granica i od zabrane starih ADR poveznica; popis `PRIJELAZNE_IZNIMKE` u `docs-granice.mjs`, prazni se u Tasku 13.
 
 ## Protokol paralelnih sesija
@@ -94,7 +94,7 @@ neovisni taskovi paralelno. Poštuj "Protokol paralelnih sesija". Na kraju NE po
 - Hrvatski, bez ćirilice; imena datoteka ASCII (č ć → c, đ → d, š → s, ž → z), mala slova i crtice u slugovima.
 - **Premješta se, ne prepisuje:** nijedna činjenica se ne mijenja; dopušteno je samo razina naslova, putanja poveznice,
   redak `Dio [X.md](../X.md)` i tablica indeksa.
-- Nikad ne diraj: `crates/`, `apps/`, `packages/`, `content/`, `migrations/`, `.github/`, `docs/plan/2026-10-10-v2-sloj1.md`,
+- Nikad ne diraj: `crates/`, `apps/`, `packages/`, `content/`, `migrations/`, `.github/`, `docs/archive/2026-10-10-v2-sloj1.md`,
   `docs/architecture/MODEL_V2.md` (do Taska 11), `docs/SLJEDECA_SESIJA.md`, ništa u `C:/Users/leonk/Documents/hotelixsim/`
   osim Taska 0. Bez `git stash`, bez `git add -A`, bez poziva Anthropic API-ja.
 - Poruka commita u datoteku iz scratchpada, `git commit -F`, hrvatski, s `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -211,7 +211,7 @@ CLI: `razdvoji` (jednokratno: `## ADR-0NN` blokovi → datoteke, naslov `#`), `i
 **Files:** `docs/records/DECISIONS.md` → generiran; Create `docs/records/DECISIONS/ADR-001-…` do `ADR-028-…`; poveznice
 skriptom u svim praćenim `.md` (uklj. `CLAUDE.md`, `README.md`, `.claude/skills/kraj/SKILL.md`, arhivu), osim iznimaka.
 - [ ] `node scripts/adr.mjs razdvoji`, `node scripts/adr.mjs indeks`, `node scripts/adr.mjs poveznice` (svako s `echo EXIT=$?`).
-- [ ] `git grep -n 'DECISIONS.md#adr-' -- '*.md'` → pogoci samo u `docs/plan/2026-10-10-v2-sloj1.md`.
+- [ ] `git grep -n 'DECISIONS.md#adr-' -- '*.md'` → pogoci samo u `docs/archive/2026-10-10-v2-sloj1.md`.
 - [ ] Provjera gubitka: 28 datoteka; `cat` svih tijela bez naslova = blokovi iz `git show HEAD:docs/records/DECISIONS.md`
   (osim `##`→`#` i putanja). `node scripts/adr.mjs indeks --provjeri; echo EXIT=$?` → 0. Commit.
 

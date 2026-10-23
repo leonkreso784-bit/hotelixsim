@@ -16,5 +16,5 @@ ocijenio tri brige iz predaje. Leon je o njima odlučio anketom.
    razlike postoji i bez situacija: Brižni robot u profilu B igra drukčije po tjednima i po mjesecima. Prije spajanja grana
    obnove i situacija u `sloj1` agent pronalazi i popravlja uzrok. Granica se ne podiže.
 
-**Posljedice.** Dvije nove cigle u fazi ZAVRŠETAK SLOJA 1 ([ROADMAP/igra.md](../../plan/ROADMAP/igra.md)): osnovica bruto
+**Posljedice.** Dvije nove cigle u fazi ZAVRŠETAK SLOJA 1 ([ROADMAP/igra.md](../../plan/ROADMAP.md#roadmap--kolosijek-igra)): osnovica bruto
 i dijagnoza tjedan ≈ mjesec. Dijagnoza se radi prije spajanja (L1-10, L1-11). Pitanje m7 nestaje iz „Otvoreno za Leona".

@@ -35,7 +35,7 @@ Posljedice za arhitekturu:
 
 - **Obračun po hotelu i vrata kruga (t. 2).** Hoteli se danas računaju neovisno (svaki iz svog stanja i plana), pa obračun
   po hotelu ne traži zajedničko tržište. Posao reda poslova je zato „obračun hotela H u krugu k", a ne „obračun cijele
-  igre". Izvedba je u jezgri: [ROADMAP/igra](../../plan/ROADMAP/igra.md), faza RAZRED U JEZGRI.
+  igre". Izvedba je u jezgri: [ROADMAP/igra](../../plan/ROADMAP.md#roadmap--kolosijek-igra), faza RAZRED U JEZGRI.
 - **Jedna igra, mnogo pisaca.** Naredbe se serijaliziraju po igri ([ADR-015](../../records/DECISIONS/ADR-015-dnevnik-runde-i-red-poslova-arhitektonske.md) t. 4), pa 30 studenata piše u isti dnevnik.
   Zato je predmemorija složene igre preduvjet (dio 06, cigla F0-10), a opterećenje se dokazuje probom 30 studenata (G-8).
 - **Utjecaj među hotelima samo na prijelazu kruga (ADR-037, posljedice).** Preotimanje radnika (t. 5) i sve buduće veze

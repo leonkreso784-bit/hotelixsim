@@ -13,7 +13,7 @@ Dio indeksa [BANKA_LJUDI.md](../BANKA_LJUDI.md).
 | **K2v-50** | prva serija vanjskih: **50 zapisa** (`vanjski/serija-001.json`) | agent VANJSKI | Leon pregleda svih 50 (kao K2) |
 | **K3** | serije po 50, svaka uz provjeru i izvještaj raspodjela | tri agenta, paralelno (§5.5) | „serija gotova" (§5.3) |
 | **K4** | pečat prekretnice (M1, M2, M3): `banka.json` nova verzija, raspodjela banke ≤ 3 p. b. od cilja | glavna sesija | izvještaj zelen; balans `--check` |
-| **K5** | korištenje u igri: L2a-1/L2a-2 (početni ljudi), L2a-6 (burza), L2b-3 (agencija), R4-1 (recenzije), gosti i vanjski situacija (§4.4) | faze IGRE ([ROADMAP/igra](../../plan/ROADMAP/igra.md)) | po ciglama faza, ne ovdje |
+| **K5** | korištenje u igri: L2a-1/L2a-2 (početni ljudi), L2a-6 (burza), L2b-3 (agencija), R4-1 (recenzije), gosti i vanjski situacija (§4.4) | faze IGRE ([ROADMAP/igra](../../plan/ROADMAP.md#roadmap--kolosijek-igra)) | po ciglama faza, ne ovdje |
 
 ## 5.2 Agenti i datoteke
 - **Agent RADNICI** piše samo `radnici/serija-NNN.json`, **agent GOSTI** samo `gosti/serija-NNN.json`, **agent VANJSKI** samo

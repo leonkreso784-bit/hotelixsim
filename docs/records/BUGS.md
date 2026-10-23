@@ -5,6 +5,34 @@ Ovo je mjesto za **pogreške koje su se dogodile i što smo iz njih naučili**, 
 **stanje**. Popravak koji tek treba napraviti živi u [BACKLOG.md](BACKLOG.md) ili u ADR-u — ovdje je samo poveznica.
 Najnovije na vrhu. Pouka koja postane pravilo rada seli u [AGENTI.md](../workflow/AGENTI.md) ili u branu, a ovdje ostaje poveznica.
 
+## 2026-10-20 — sesija 13
+
+**B30. Za prezentaciju je lokalni API radio na starom kodu** (20.10., nakon pusha 9b6f047; `/v1/health` je još vraćao `events`).
+*Uzrok:* `server.exe` pokrenut ujutro sesije 12 (26089c3) nije ponovo izgrađen nakon spajanja pilota; pull/push ne mijenja proces koji već radi,
+a nova migracija 0005 (`ai_spend`) nije bila primijenjena. *Pouka:* prije prezentacije ili Leonove igre ugasi stari API (`taskkill /PID`, nikad
+`/IM`), `cargo build -p server`, `server migrate`, pa `serve`; provjeri `/v1/health` (nema `events` od Pilot-2) i jednu igru od početka u čistom
+pregledniku. *Stanje:* API ponovo pokrenut na 9b6f047, proba igre prošla (presuda 9 s, zatvaranje tjedna 4 s).
+
+## 2026-10-19 — sesija 12
+
+**B26. Brojanje Rust slota vidjelo je dva `cargo.exe` koji ništa ne grade** (L1-14 i pilot: Leonova igra na `cargo run -p server -- serve`).
+*Uzrok:* `cargo run … serve` drži dva procesa `cargo.exe` (omotači) dok poslužitelj radi; skripta „čekaj dok je `cargo` > 1" čekala bi zauvijek.
+*Pouka:* slot broji samo `cargo.exe` koji grade: `Get-CimInstance Win32_Process` s naredbenim retkom koji **ne** sadrži `serve`; isto u skriptama
+CI-ja nakon spajanja (funkcija `gradnji()`). *Stanje:* `nakon-pilot-2.sh` i `nakon-pilot-4.sh` broje bez `serve`.
+
+**B27. CI glavnog stabla ne može graditi `server.exe` dok ga API drži** (Leonova igra radi iz `target/debug`).
+*Uzrok:* Windows zaključava pokrenuti `.exe`, pa ga `cargo` ne može prepisati i gradnja pada. *Pouka:* dok Leon igra, CI glavnog stabla ide u
+zaseban target (`target/ci-glavno`, poslije `target/pilot-4`), nikad u `target/debug` koji drži API. *Stanje:* primijenjeno u sesiji 12.
+
+**B28. „Sve EXIT 0" graditelja nije uključivalo `cargo test --workspace`** (Pilot-2, pregled opus I1).
+*Uzrok:* u `exit.txt` su i `cargo test` i `corepack pnpm test` bili zapisani kao „test", pa je `test.txt` bio pnpm, a Rust testovi nisu pokrenuti.
+*Pouka:* voditelj provjerava izlaze **po imenima koraka** (`cargo-test`, `pnpm-test`) i broj testova (npr. 1283/0), ne zbroj EXIT kodova.
+*Stanje:* runda 2 pokrenula `cargo test --workspace` (1283/0); od Pilot-3 koraci nose različita imena.
+
+**B29. `sqlx migrate run` u stablu javlja „migration 5 missing"** (Pilot-4, `_sazetak` prvi prolaz).
+*Uzrok:* zajednička baza agenata `hotelixsim_agenti` već je imala migraciju 0005 iz dijela 3, a grana dijela 4 (od c7ee9f8) je nema.
+*Pouka:* migracije grane provjeravaj na **svježoj bazi**; zajednička baza nosi migracije drugih grana. *Stanje:* ponovljeno na svježoj bazi EXIT 0.
+
 ## 2026-10-19 — sesija 11
 
 **B24. CI nakon spajanja L1-13-4 crven na `sqlx` i testovima, a kod je ispravan** (`nakon-l113-4`: `sqlx-migrate`, `sqlx-prepare`, `test`).
@@ -44,6 +72,7 @@ opravdana, slabi li test, što ga sad pokriva. *Stanje:* pregled opus presudio j
 *Uzrok:* `biome` glavnog stabla čita i gitignorirani `.superpowers/`, pa vidi skriptu paralelne sesije. GitHub CI je ne vidi i ostaje zelen.
 *Pouka:* crveni `lint` u CI-ju nakon spajanja prvo provjeri put. Ako je pod `.superpowers/`, nije pad koda, nego se sredi datoteka (ovdje formatiranje).
 *Stanje:* sesija banke formatirala je datoteku 18.10., pa je `nakon-l113-1b` lint EXIT 0. Izuzeće `.superpowers/` u `biome.json` ostaje u [BACKLOG](BACKLOG.md).
+Ponovilo se 19.10. (`nakon-pilot-2`, `nakon-pilot-4`): lint EXIT 1 samo na alatima pisaca u `.superpowers/sdd/banka-ljudi-k1/nacrti/k7-sesija-11b/`, 0 grešaka izvan.
 
 **B20. Objašnjenje graditelja o balansu bilo je tanko** (L1-13-1b BLOCKED: „glavni dio Δ klika je trošak").
 *Uzrok:* graditelj je mjerio samo ishod (omjer po `click_gain_bp`), a ne sastav Δ. Dijagnoza je pokazala suprotno: trošak klik **smanjuje** (−76 / −58),

@@ -52,12 +52,12 @@ Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Odluke o razredu su u [ADR-037](../
    - nema Dockerfilea, kopija baze, nadzora grešaka ni granice AI troška.
 
    Sve su to poznate stavke iz BACKLOG-a `[prije Railwaya]`; razbijene su na cigle u fazi SPREMNO ZA INTERNET
-   ([ROADMAP/platforma](../../plan/ROADMAP/platforma.md)).
+   ([ROADMAP/platforma](../../plan/ROADMAP.md#roadmap--kolosijek-platforma)).
 5. **Ciljano se mijenja jedno mjesto u jezgri, bez prepisivanja.** Igra danas ima uvijek 1 čovjeka i 3 robota
    (`[HotelId; 4]`, `command.rs:42`; `slot BETWEEN 1 AND 4`, `0003:17`), a krug se obračunava za sva četiri hotela
    odjednom (`resolve_round`). Razred traži N studentskih hotela i obračun po hotelu. To je promjena srca igre, pa ide
    u kolosijek IGRA, fazu RAZRED U JEZGRI ([ADR-038](../../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md),
-   [ROADMAP/igra](../../plan/ROADMAP/igra.md)), a ne u platformski kod. Hotel je uz to jedan od tri fiksna profila A/B/C
+   [ROADMAP/igra](../../plan/ROADMAP.md#roadmap--kolosijek-igra)), a ne u platformski kod. Hotel je uz to jedan od tri fiksna profila A/B/C
    (`profile_at`, `command.rs:28-34`; ključ kataloga v2 `BTreeMap<Profile, …>`, `crates/sim-hotel-v2/src/catalog.rs:62`);
    za generirane hotele postaje **opis hotela zapisan u snimak igre** (dio 04).
 6. **„Graditi odmah na produkciju":** sve ide lokalno do profesorova pregleda, uz 0 € novog troška

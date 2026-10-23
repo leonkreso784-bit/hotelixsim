@@ -78,22 +78,23 @@ Nalazi pregleda taskova jezgre koji nisu popravljeni na grani `gradnja/jezgra`; 
 
 ## Odgođeni nalazi — [prije Railwaya]
 
-- [pilot] **Posao prije deploya pilota** (hosting i stropovi odlučeni, [ADR-062](DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) t. 9; ~20–27 h,
-  `.superpowers/sdd/2026-10-14-popravak-temelja/pilot-hosting-prijedlog.md` §4): **kolačić gosta traje 7 dana bez obnove** (`crates/api/src/auth.rs`,
-  student gubi hotel; 🟨 120 dana, t. 18) — prvo; **`POST /v1/demo` otvoren svima** → jedna lozinka (Basic Auth), AI strop (omotač `AiPort`) i 3 igre po gostu;
-  Rust poslužuje web iz `apps/web/dist`; Dockerfile u više faza; CI deploy s Leonom kao odobravateljem; kopije (`pg_dump` + proba vraćanja);
-  `/v1/health` na `SELECT 1`; obavijest o privatnosti. SIGTERM i `Secure` kolačić su stavke niže. **Za trajanje pilota jezgra se zamrzava** (svaka
-  promjena `CORE_VERSION` daje 409 postojećim igrama). Plan pripreme piše sesija 12, Leon ga vidi prije gradnje. Stavke ispod ovog naslova pregledati za taj izlazak.
+- [pilot] **Priprema pilota: ostaju dijelovi 8 i 9** ([ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md); dijelovi 1–7 spojeni,
+  [kartica](../plan/2026-10-14-popravak-temelja.md#task-pilot-priprema-pilota-na-railwayu)): dio 8 tekst privatnosti (čeka Leona, „Otvoreno za Leona"), dio 9 postava
+  na Railwayu nakon L1-15 s obaveznim stavkama ADR-063 §C. **Za trajanje pilota jezgra se zamrzava** (promjena `CORE_VERSION` daje 409 postojećim igrama).
+- [pilot] **Odgođeni minori pregleda Pilot-2** (`pilot-2-review.md`): M4 otvoreno zdravlje troši vezu iz poola (10 veza, 3 s); M6 nema kompresije
+  (`ServeDir::precompressed_br/gzip`); M8 `serve_until` bez gornjeg roka pražnjenja HTTP-a (bitno tek uz SSE); R2-M1 kod sadržaja s točkom u SPA putu
+  daje 404 pri osvježavanju (`web.rs` `has_extension`); R2-M2 `immutable` i na `index.html` pod `/assets/`; R2-M3 nema loga kad se posao vrati u red.
+- [pilot] **Odgođeni minori pregleda Pilot-3** (`pilot-3-review.md`): M6 strop bez gornje granice (`parse_cap` prima `1e18` = bez stropa); M8 `ai_spend`
+  bez čišćenja; R2-M1 prekid točno za vrijeme upisa (~0,2 $ po deployu); R2-M2 procjena pri gašenju iz `Drop`-a može se izgubiti; R2-M3 istek pri
+  **spajanju** broji se kao trošak (treba `connect_timeout` + `is_connect`; siguran smjer); R2-M4 procjena ne broji ulaz; R2-M5 prefiks modela bez
+  granice (budući `claude-sonnet-5-8` pogodio bi redak `claude-sonnet-5`).
 - [prije Railwaya] **Red poslova:** mogući deadlock u expiry `UPDATE` bez reda/`SKIP LOCKED` tek uz više radnika; seq overflow kao `sqlx::Error::Protocol`; dvostruke dev-ovisnosti u `store`. (T7, T8)
 - [prije Railwaya] **Nema testa za `connect_lazy` na nedostupnu bazu (~3 s) ni `migrate` na svježoj bazi.** (Task 4 #3, L55)
 - [prije Railwaya] **sqlx bez TLS značajke** — dodati `tls-rustls` (nikad native-tls/openssl). (Task 4 #4, L56)
-- [prije Railwaya] **`COUNT(*)` u zdravlju** je skup na velikoj tablici. (Final minori, L96)
 - [prije Railwaya] **Greška `ctrl_c` je ignorirana** — server bi se odmah ugasio. (Task 5 #3, L63)
 - [prije Railwaya] **Base URL klijenta/API-ja.** (Final minori, L96)
-- [prije Railwaya] **SIGTERM (graceful shutdown).** (Final minori, L96)
-- [prije Railwaya] **Typed config** umjesto sirovih env varijabli. (Final minori, L96)
 - [prije Railwaya] **CI bez filtra, akcije po tagu a ne po SHA** — CI radi na push i pull_request; `permissions: contents: read` već postoji. (Task 8 #2, L87)
-- [prije Railwaya] Uloga baze bez prava UPDATE/DELETE nad `events` (okidač ostaje); kolačić `Secure` uz HTTPS; `content::repo_dir()` je put iz vremena prevođenja — na Railwayu `HOTELIXSIM_CONTENT`; zaseban način `work`.
+- [prije Railwaya] Uloga baze bez prava UPDATE/DELETE nad `events` (okidač ostaje); `content::repo_dir()` je put iz vremena prevođenja — na Railwayu `HOTELIXSIM_CONTENT`; zaseban način `work`.
 - [prije Railwaya] **`deny.toml` zabranjuje samo `openssl-sys`** — ne native-tls/openssl. (Task 8 #4, L89)
 - [prije Railwaya] **E2E „baza ne radi" dokazan krivom lozinkom, ne ugašenom bazom** — 3 s `acquire_timeout` nije izmjeren. (Task 8 #5, L90)
 
@@ -214,6 +215,19 @@ riješene stavke (F2) su zatvorene. Pretpostavke koje još čekaju: [ADR-058](DE
 - [banka ljudi] **Nalog K7: granice kalupa po seriji** (pouka K6) — gosti „Ujutro pliva u bazenu" ≤ 1, wellness kostur „posao stane → sauna i bazen" ≤ 3, grupe „On/Ona je dogovorio/la" ≤ 2; radnici „prvi put" ≤ 2, „N godina radi…, od toga M vodi" ≤ 1, „Na studiju X u Rijeci" ≤ 1.
 - [banka ljudi] **Alat pisca gostiju** — `provjera.mjs` bez `--bez-pisanja` regenerira nacrt i briše ispravke pregleda (pouka K6); zastavica neka bude zadana.
 - [banka ljudi] **Hint uniforme u alatima pregleda** — `scripts/ljudi-pregled.mjs` i `ljudi-avatari-build.mjs` trebaju `uniform` iz uloge (rječnik = `crates/app/src/look.rs` `UNIFORM_ROLES`) i snop iz stabla s IZGLED-c; izmjena čeka sljedeću točku banke (zasad samo u scratchpadu).
+- [L1-15] **L14-1 presuda na slobodni odgovor traje predugo** (Leonova igra 19.10., 1 od 19 presuda odrezana na `max_tokens` 16 000, 74 s; normalne
+  509–1207 izlaznih tokena) — Leon: **granica 8000 tokena + iskočni prozor s porukom** dok AI ocjenjuje (`crates/ai/src/request.rs`). Radi se u L1-15.
+- [poslije pilota] **L14-2 najam lokala** (`retail_lease`) nema obnove ni dizanja najamnine (fiksno 6000 €/mj); Leon: „kasnije ćemo moći birati ljude
+  kojima rentamo" — zajedno s biranjem zakupaca.
+- [leon] **L14-3 generator ljudi u igri** — nacrt [BANKA_LJUDI §8](../architecture/BANKA_LJUDI/08-generator-ljudi.md) (preporuka C + D), **5 pitanja**;
+  K8 banke ne kreće dok Leon ne odluči i ne kaže „kreni". Nalaz: igra banku danas ne čita (likovi iz `v2/names.json`, 120 imena).
+- [leon] **L14-4 stručni pojmovi u situacijama** (npr. celijakija, P-POSEBNA-PREHRANA, `content/hotel/v2/situation_templates.json:1797`: „i mrvica glutena joj škodi" bez objašnjenja) —
+  kako objasniti: u opisu situacije, pojmovnik uz pojam ili mentor u povratnoj informaciji? L1-15 ili poslije.
+- [leon] **Iz voditeljeve igre (tjedan 1, 19.10.) — idu li u popis L1-15?** (1) mentor kaže „niže plaće" iako plaće nisu mijenjane; (2) najamnina
+  „−1 €" (sitnica zaokruživanja); (3) mentor ne spominje obnovu kad padnu Financije.
+- [leon] **Pilot, dio 8 i 9** ([ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) §D): tekst obavijesti o privatnosti i
+  kontakt; Railway upozorenje 7 $ i tvrdi strop 15 $; tko pokreće tjedni `pg_dump`; Leonov posao (~1 h): Railway račun i DPA, Anthropic radni prostor
+  s ključem i stropom 40 $/mj, GitHub okolina „pilot" i `RAILWAY_TOKEN`, lozinka za profesora, OK za deploy.
 - [L1-14] **Priče hotela A i B i obnova od 150.000 €** (A12) — Leon provjerava pri igranju sezone („prepoznajem li ovaj hotel?").
 - [faza C+] **Sučelje soba** (A1) — svaka soba vidljiva i obnovljiva zasebno; nova mehanika i ekran, 3–5 cigala, ne u L1-13 ([ADR-050](DECISIONS/ADR-050-popravak-podize-odjel-iznos-u-l1-13.md) Izmjena 17.10.).
 - [faza C+] **Mjere potrošnje hotela** (A13) — energija i voda kao pokazatelj u igri (nova mehanika).
@@ -263,7 +277,7 @@ Presuđene pretpostavkama u [ADR-013](DECISIONS/ADR-013-pretpostavke-jezgre-cent
   planove), 1 „docs-lag" (točno). Uz to mjeri tekuće stablo i kad mu se zada druga mapa. Prijedlog: Sokratis za
   HotelixSim pokreće `corepack pnpm check:docs` repoa (jedan izvor pravila) — posao u repou Sokratisa, Leon odlučuje.
 
-- [ci] **Prelazak CI-ja na Ubuntu 26 svjesno, ne usput** — 13.10. slika je pribijena na `ubuntu-24.04` (a `checkout`/`setup-node` na v5) jer `ubuntu-latest` od 19.10. postaje Ubuntu 26; prijeći kao zasebnu ciglu kad se provjeri Postgres servis, `sqlx-cli` i Rust 1.98.1 na novoj slici. (cigla K0-1, [ROADMAP/kvaliteta](../plan/ROADMAP/kvaliteta.md))
+- [ci] **Prelazak CI-ja na Ubuntu 26 svjesno, ne usput** — 13.10. slika je pribijena na `ubuntu-24.04` (a `checkout`/`setup-node` na v5) jer `ubuntu-latest` od 19.10. postaje Ubuntu 26; prijeći kao zasebnu ciglu kad se provjeri Postgres servis, `sqlx-cli` i Rust 1.98.1 na novoj slici. (cigla K0-1, [ROADMAP/kvaliteta](../plan/ROADMAP.md#roadmap--kolosijek-kvaliteta))
 - [ci] **CI prevodi `sqlx-cli` svaki put bez cachea (~5–10 min)** — bitno kad CI dobije mutacijski posao. (Task 8 #1, L86)
 - [ci] **`cargo-deny-action@v2` koristi vlastiti Rust, a repo `rust-toolchain` 1.98.1** — provjeriti na prvom CI-u. (Task 8 #3, L88)
 - [alati] **Brana i alati dokumentacije — sitni nalazi (2026-10-10)** (završni pregled; danas ništa ne puca):

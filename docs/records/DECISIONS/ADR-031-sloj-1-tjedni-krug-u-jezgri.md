@@ -1,6 +1,6 @@
 # ADR-031 — Sloj 1: tjedni krug u jezgri v2
 **Datum:** 2026-10-11 · **Status:** ✅ **Potvrdio Leon 17.10.** (t. 2 i 4 A13, t. 1, 3 i 5 F1) ·
-**Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md) P13, P16, [plan Sloja 1](../../plan/2026-10-10-v2-sloj1.md)
+**Vezano:** [ADR-029](ADR-029-sloj-1-pretpostavke-plana.md) P13, P16, [plan Sloja 1](../../archive/2026-10-10-v2-sloj1.md)
 „Pravila razdoblja", [MODEL_V2.md](../../architecture/MODEL_V2.md) §4
 
 **Kontekst.** Tjedni krug (7 dana, zadnji 10) daje male brojeve: pravila koja su u mjesecu davala cijeli korak u tjednu

@@ -10,9 +10,8 @@ export function brojRedaka(text) {
 }
 
 // Prijelazne iznimke: izuzete od granica (i od zabrane starih ADR poveznica) dok sesija koda
-// piše Sloj 1. Prazni se u Tasku 13 plana dokumentacije.
+// piše Sloj 1. Prazni se u Tasku 13 plana dokumentacije. Plan Sloja 1 otišao je u arhivu 23.10. (ADR-064).
 export const PRIJELAZNE_IZNIMKE = {
-  "docs/plan/2026-10-10-v2-sloj1.md": "sesija koda ga piše dok traje Sloj 1; prazni se u Tasku 13",
   "docs/architecture/MODEL_V2.md": "sesija koda ga piše dok traje Sloj 1; prazni se u Tasku 13",
 };
 
@@ -47,5 +46,7 @@ export function granicaZa(relPath, imaMapuIstogImena) {
   if (relPath === "docs/SLJEDECA_SESIJA.md") return { vrsta: "predaja", redaka: 60 };
   if (relPath.startsWith("docs/records/DECISIONS/")) return { vrsta: "adr", redaka: 120 };
   if (relPath === "docs/README.md" || imaMapuIstogImena) return { vrsta: "indeks", redaka: 200 };
+  // Plan je jedna datoteka izravno u docs/plan/ (ADR-064, Leon 23.10.): taskovi su odjeljci, ne datoteke.
+  if (/^docs\/plan\/[^/]+\.md$/.test(relPath)) return { vrsta: "plan", redaka: 1000 };
   return { vrsta: "zivi", redaka: 300 };
 }

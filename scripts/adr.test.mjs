@@ -209,7 +209,7 @@ test("CLI: razdvoji pa indeks pa poveznice; drugi prolaz ne mijenja ništa; --pr
     "docs/records/DECISIONS.md": STARI,
     "CLAUDE.md": "Vidi [odluku](docs/records/DECISIONS.md#adr-002).\n",
     "docs/product/X.md": "[a](../records/DECISIONS.md#adr-001) i [b](../records/DECISIONS.md#adr-077)\n",
-    "docs/plan/2026-10-10-v2-sloj1.md": "[a](../records/DECISIONS.md#adr-001)\n",
+    "docs/architecture/MODEL_V2.md": "[a](../records/DECISIONS.md#adr-001)\n",
   });
   const pokreni = (...args) =>
     spawnSync(process.execPath, [SCRIPT, ...args, `--korijen=${dir}`], { env: cist(), encoding: "utf8" });
@@ -234,7 +234,7 @@ test("CLI: razdvoji pa indeks pa poveznice; drugi prolaz ne mijenja ništa; --pr
     );
     assert.ok(dva.includes("[ADR-001](ADR-001-zaseban-projekt-bez-sokratova-koda.md)"));
     assert.equal(
-      fs.readFileSync(path.join(dir, "docs/plan/2026-10-10-v2-sloj1.md"), "utf8"),
+      fs.readFileSync(path.join(dir, "docs/architecture/MODEL_V2.md"), "utf8"),
       "[a](../records/DECISIONS.md#adr-001)\n",
       "prijelazna iznimka nedirnuta",
     );

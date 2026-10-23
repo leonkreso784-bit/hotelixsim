@@ -33,9 +33,10 @@ si donio umjesto Leona → ADR sa statusom `🟨 ČEKA LEONOV PREGLED`.
 ## 4 · Plan i backlog
 
 - Ažuriraj aktivni plan u `docs/plan/` (zaglavlje `**Status:** 🟩 AKTIVAN`; najviše jedan po području).
-- Ispunjen plan → `git mv` u `docs/archive/` s pečatom `✅ ISPUNJEN datum` u zaglavlju, **istog dana**. Ako prelazi granicu arhive
-  ([tablica](../../../docs/README.md#granice-veličine)) ili ima taskove, razdvoji ga: `node scripts/razdvoji-plan.mjs <plan.md> --provjeri`, pa `corepack pnpm docs:plan <plan.md>`.
-  Kod razdvojenog plana (pregled + mapa) `git mv` premješta i pregled i mapu.
+- Plan je **jedna datoteka do 1000 redaka** izravno u `docs/plan/` (taskovi su odjeljci `### Task …`, ne datoteke; brana pada na podmapu,
+  [ADR-064](../../../docs/records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)). Kad se približi granici, gotove kartice sele u arhivu (vidi niže).
+- Ispunjen plan → `git mv` u `docs/archive/` s pečatom `✅ ISPUNJEN datum` u zaglavlju, **istog dana**. Gotove kartice aktivnog plana idu u
+  `docs/archive/<plan>-kartice.md` (kratak indeks) + `docs/archive/<plan>-kartice/dio-N.md` (redom, svaki do 1000 redaka); u planu ostaje redak s poveznicom.
 - Ledger subagenata iz `.superpowers/sdd/` (gitignoriran) kopiraj u `docs/archive/<datum>-<ime>-ledger.md`.
 - Novo neriješeno → `docs/records/BACKLOG.md`; riješeno iz backloga → **obriši** redak.
 

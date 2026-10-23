@@ -28,4 +28,4 @@
 - [x] Provjeravatelj (svjež agent) pregleda sva tri commita naspram ovog plana i ADR-038; nalazi idu graditelju (završni pregled
   13.10.: 5 nalaza, popravljeni u `f5871aa`, ponovni pregled čist).
 - [x] Voditelj: plan u `docs/archive/` kad su Taskovi 1–3 gotovi i K0-1 potvrđen u CI-ju (nakon Leonova OK-a za push);
-  K0-4/5/6 ostaju u [ROADMAP/kvaliteta](../../plan/ROADMAP/kvaliteta.md) do spajanja grana; K0-8 je Leonova sjednica.
+  K0-4/5/6 ostaju u [ROADMAP/kvaliteta](../../plan/ROADMAP.md#roadmap--kolosijek-kvaliteta) do spajanja grana; K0-8 je Leonova sjednica.

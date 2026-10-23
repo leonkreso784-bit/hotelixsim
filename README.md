@@ -82,7 +82,7 @@ radi kao zaseban klaster na priključku 5433 i ne dira sistemski servis na 5432)
    `--seeds 100 --check`). Neobavezno `--situations L,M,H` (tri broja od 3 do 8, uzlazno) mijenja broj situacija po krugu za
    vrstu iz `--round`; bez nje izlaz je isti kao prije.
 6. Dokumentacija ([pravila i granice](docs/README.md)): popis ADR-ova
-   nakon novog ADR-a `corepack pnpm docs:adr`; razdvajanje plana `corepack pnpm docs:plan <plan.md>`; veličine svih dokumenata
+   nakon novog ADR-a `corepack pnpm docs:adr`; plan je jedna datoteka do 1000 redaka (ADR-064); veličine svih dokumenata
    uz granice `node scripts/check-docs.mjs --popis`.
 7. Grane: `corepack pnpm grane` pokazuje koliko je koja lokalna grana iza integracijske i je li `STARA` (nespojen rad stariji od 24 h).
 

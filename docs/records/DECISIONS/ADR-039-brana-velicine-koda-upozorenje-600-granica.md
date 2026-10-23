@@ -1,7 +1,7 @@
 # ADR-039 — Brana veličine koda: upozorenje 600, granica 1000, popis duga
 **Datum:** 2026-10-13 · **Status:** ✅ **Potvrdio Leon 17.10.** (F1; pretpostavka voditelja, [ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)) ·
 **Vezano:** [ADR-030](ADR-030-raspored-dokumentacije-granice-velicine-indeks-mapa.md) Dopuna 2, [ADR-038](ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) t. 4,
-[kvaliteta.md](../../plan/ROADMAP/kvaliteta.md) K0-3
+[kvaliteta.md](../../plan/ROADMAP.md#roadmap--kolosijek-kvaliteta) K0-3
 
 **Kontekst.** Leon je za dokumente (`.md`) odlučio: neki smiju preko 1000, ali nijedan preko **1200** (ADR-030 Dopuna 2).
 Za **kod** nije odlučio ništa. Datoteke koda ipak tiho rastu (`schema.rs` 1687, `mentor.rs` 1367, `tests/mentor.rs` 1670), a

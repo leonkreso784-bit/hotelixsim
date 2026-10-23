@@ -1,6 +1,6 @@
 # PLATFORMA §4 · Generirani hoteli
 
-Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Faza: GENERATOR HOTELA u „poslije" ([ROADMAP/platforma](../../plan/ROADMAP/platforma.md),
+Dio indeksa [PLATFORMA.md](../PLATFORMA.md). Faza: GENERATOR HOTELA u „poslije" ([ROADMAP/platforma](../../plan/ROADMAP.md#roadmap--kolosijek-platforma),
 F3-1…8). Ovisnost o razredu: u razrednoj igri ([ADR-037](../../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) t. 1)
 svaki student ima svoj hotel u istoj igri, pa generator puni slotove 1..N.
 

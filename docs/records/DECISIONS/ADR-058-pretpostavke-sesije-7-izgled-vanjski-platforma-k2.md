@@ -1,7 +1,7 @@
 # ADR-058 — Pretpostavke sesije 7 i 8: IZGLED, vanjski, plan platforme, K2, PRAVILO-a, sesija banke, banka hotela
 **Datum:** 2026-10-17 · **Status:** 🟨 ČEKA LEONOV PREGLED (dio je Leon potvrdio 17.10., označeno ✅) ·
 **Vezano:** [ADR-056](ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md), [ADR-057](ADR-057-leonove-odluke-sesije-7-redoslijed-b13-vanjski-platforma.md),
-[kartica IZGLED](../../plan/2026-10-14-popravak-temelja/task-13-izgled-lika.md), [BANKA_LJUDI](../../architecture/BANKA_LJUDI.md),
+[kartica IZGLED](../../archive/2026-10-14-popravak-temelja-kartice/dio-4.md#task-izgled-izgled-lika-iz-roda-dobi-i-podrijetla), [BANKA_LJUDI](../../architecture/BANKA_LJUDI.md),
 [plan platforme](../../plan/2026-11-platforma.md), [SESIJA_BANKE](../../workflow/SESIJA_BANKE.md)
 
 Pretpostavke voditelja i izvođača bez pitanja ([ADR-005](ADR-005-radi-bez-pitanja-pretpostavke-u-dokument.md)). Što je Leon 17.10. već

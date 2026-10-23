@@ -11,13 +11,13 @@ i područja planova.
 **Architecture:** Tri neovisne cigle bez dodira s pravilima igre: (1) pravila rada u `AGENTI.md` i područja planova u
 `check:docs`; (2) nova brana `check:kod` (Node skripta po uzoru na `check:docs`, broji retke istom funkcijom); (3) prijenos
 platformskog nacrta iz ledgera u `docs/architecture/` uz prepis po ADR-037. K0-1 (CI) je gotov u `16c4ac9` (popravak `b495c8d`), dokazan CI-jem 38446984164 na `ubuntu-24.04`.
-K0-4/5/6 (rez `schema.rs` i mentora) idu tek nakon spajanja grana obnove i situacija ([kvaliteta](../plan/ROADMAP/kvaliteta.md)).
+K0-4/5/6 (rez `schema.rs` i mentora) idu tek nakon spajanja grana obnove i situacija ([kvaliteta](../plan/ROADMAP.md#roadmap--kolosijek-kvaliteta)).
 
 **Tech Stack:** Node 24 (ESM, `node:test`), Markdown, GitHub Actions.
 
 **Spec:** [ADR-038](../records/DECISIONS/ADR-038-nacin-rada-dva-kolosijeka-faze-i.md) ·
 [ADR-037](../records/DECISIONS/ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) ·
-[ROADMAP/kvaliteta.md](../plan/ROADMAP/kvaliteta.md) (K0-2, K0-3, K0-7)
+[ROADMAP/kvaliteta.md](../plan/ROADMAP.md#roadmap--kolosijek-kvaliteta) (K0-2, K0-3, K0-7)
 
 ## Global Constraints
 

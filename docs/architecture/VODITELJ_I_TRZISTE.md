@@ -2,7 +2,7 @@
 
 > **Status:** nacrt za raspravu (13.10.); **pet pitanja §3 Leon je odgovorio 17.10.2026.** (✅, [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)). Cigle ostaju u fazi C i LJUDI (L2a-5). Povod: Leonove dvije ideje od 13.10. —
 > *„menadžer odjela bi trebao upravljati odjelom i biti odgovoran za odjel"* i *„graf i uvid u trenutno stanje: koliko
-> turista dolazi, kolika je zainteresiranost"*. Odluke idu u ADR, cigle u [ROADMAP/igra.md](../plan/ROADMAP/igra.md).
+> turista dolazi, kolika je zainteresiranost"*. Odluke idu u ADR, cigle u [ROADMAP/igra.md](../plan/ROADMAP.md#roadmap--kolosijek-igra).
 
 ## 1. Voditelj odjela
 
@@ -76,7 +76,7 @@ poopćenjem postojećeg `ProgressChart` (~4 h, nakon spajanja grane obnove gdje 
 
 ## 3. Pitanja za Leona — odgovorena 17.10. (✅ [ADR-056](../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md))
 
-Pitanja su u [Leonovu pregledu](../plan/2026-10-17-leonov-pregled/04-voditelj-i-platforma.md) bila D1–D5.
+Pitanja su u [Leonovu pregledu](../plan/2026-10-17-leonov-pregled.md#leonov-pregled--d--voditelj-odjela-i-tržište--e--platforma-i-ostalo) bila D1–D5.
 
 | # | pitanje | Leon 17.10. | što vrijedi |
 |---|---|---|---|
@@ -87,4 +87,4 @@ Pitanja su u [Leonovu pregledu](../plan/2026-10-17-leonov-pregled/04-voditelj-i-
 | 5 (D5) | prognoza prije odluke? | *„Odlično, jako je bitno da imamo primjere ponude i potražnje u igri."* | ✅ **samo sezonsko očekivanje** (§2 t. 3); kako cijena mijenja broj gostiju student uči iz rastava nakon kruga |
 
 **Gdje to ide:** voditelj (korak 2, t. 2) je cigla **L2a-5** u fazi LJUDI; kartica „Tržište" (t. 3–5) je cigla faze C ili
-iza nje ([ROADMAP/igra](../plan/ROADMAP/igra.md)). Ništa od ovoga ne ulazi u popravak temelja.
+iza nje ([ROADMAP/igra](../plan/ROADMAP.md#roadmap--kolosijek-igra)). Ništa od ovoga ne ulazi u popravak temelja.

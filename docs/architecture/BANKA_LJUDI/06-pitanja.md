@@ -3,7 +3,7 @@
 Dio indeksa [BANKA_LJUDI.md](../BANKA_LJUDI.md). **Pitanja 1–11 Leon je odgovorio 14.10.** ([ADR-042](../../records/DECISIONS/ADR-042-leonove-odluke-iz-pregleda-14-10.md) t. 8);
 pitanje 10 dopunio je 16.10. (treća vrsta VANJSKI odmah, §1.5). **Pitanja 12–16 Leon je odgovorio 17.10.** (C9, C10: „ok" na
 preporuku; [ADR-056](../../records/DECISIONS/ADR-056-leonove-odluke-17-10-odgovori-na-43-pitanja.md)). Odluke C1–C11 iz
-[Leonova pregleda](../../plan/2026-10-17-leonov-pregled/03-banka-ljudi.md) su na dnu.
+[Leonova pregleda](../../plan/2026-10-17-leonov-pregled.md#leonov-pregled--c--banka-ljudi-i-izgled-likova) su na dnu.
 
 1. **Gosti s imenom i prezimenom ili samo s imenom?** Preporuka: **ime + prezime** — recepcija zna prezime gosta, AI lik
    se predstavlja punim imenom, a recenzija svejedno pokazuje samo ime i zemlju.
