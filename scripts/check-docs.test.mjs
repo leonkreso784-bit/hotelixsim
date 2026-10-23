@@ -354,7 +354,10 @@ test("9) prijelazna iznimka je izuzeta od granice", () => {
   assert.equal(r.code, 0, r.out);
   // ista veličina bez iznimke pada (živi dokument, 300): test dokazuje iznimku, ne granicu
   assertFails(
-    { "docs/README.md": `${BASE["docs/README.md"]}- [V](architecture/VIZIJA.md)\n`, "docs/architecture/VIZIJA.md": `# V\n${RED(400)}` },
+    {
+      "docs/README.md": `${BASE["docs/README.md"]}- [V](architecture/VIZIJA.md)\n`,
+      "docs/architecture/VIZIJA.md": `# V\n${RED(400)}`,
+    },
     "docs/architecture/VIZIJA.md",
   );
 });

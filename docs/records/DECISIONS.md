@@ -6,6 +6,7 @@ Ovaj popis je generiran iz tih datoteka — ne uređuj ručno (`check:docs` pada
 
 | ADR | Naslov | Status | Datum |
 |---|---|---|---|
+| <a id="adr-065"></a>[ADR-065](DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md) | Leonove odluke 24.10.: profesor vodi tempo igre, lokal kao mehanika, mentor bez obećanja, generatori | ✅ Leonove odluke 24.10. | 2026-10-24 |
 | <a id="adr-064"></a>[ADR-064](DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md) | Plan je jedna datoteka do 1000 redaka | ✅ Leonova odluka 23.10. | 2026-10-23 |
 | <a id="adr-063"></a>[ADR-063](DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) | Pilot: jedna adresa, lozinka, stropovi AI-ja, tri igre po gostu | ✅ Leonove odluke 19.10. | 2026-10-19 |
 | <a id="adr-062"></a>[ADR-062](DECISIONS/ADR-062-leonove-odluke-19-10-sesija-11.md) | Leonove odluke 19.10. i pretpostavke sesije 11: dio 4 spojen, L1-13b prije pilota, održavanje po hotelu, pilot na Railwayu | ✅ Leonove odluke 19.10. | 2026-10-19 |

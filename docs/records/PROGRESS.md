@@ -18,7 +18,11 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 - **Plan je jedna datoteka do 1000 redaka** ([ADR-064](DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), Leon 23.10.): `docs/plan/` s 60 na **5 datoteka**
   (ROADMAP i Leonov pregled spojeni; plan popravka samo s otvorenim L1-15, Pilot, C; gotove kartice i plan Sloja 1 u arhivu, dijelovi ≤ 1000 r.);
   brana vrsta `plan` = 1000 i pravilo 13 „PLAN U MAPI"; alat `razdvoji-plan` uklonjen; poveznice prepisane (143 sidra provjerena).
-- **Gdje se vidi:** lokalno (commit na `model-v2/sloj1`, push čeka Leonov OK). GitHub `model-v2/sloj1` = `main` 9b6f047.
+- **CI nakon pusha (488c108) crven:** neformatiran test (lint nije pokrenut prije commita) i nova sigurnosna upozorenja RUSTSEC-2026-0382/0383/0385/0386 →
+  `cargo update` webpki-root-certs 1.0.11, rustls-webpki 0.103.16, ctutils 0.4.5, tokio 1.54.1; `cargo deny` čist, clippy i testovi radnog prostora.
+- **Plan sesije 14:** tri read-only agenta složila podloge (L1-15 ~8–14 h, pilot 8–9, faza C); Leonovi odgovori →
+  [ADR-065](DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md) (profesor vodi tempo, lokal kao mehanika, mentor bez obećanja, generator događaja).
+- **Gdje se vidi:** GitHub `model-v2/sloj1` (Leonov OK za push 23.10.); `main` 9b6f047.
 
 ---
 

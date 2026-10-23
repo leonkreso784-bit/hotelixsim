@@ -21,7 +21,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
   Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20, ADR-061 t. 7–12, ADR-062 t. 10–18, ADR-063 t. 7–19 i ADR-064 t. 2–7; Leonove odluke:
-  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.), ADR-062, ADR-063 (19.10.) i ADR-064 (23.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
+  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.), ADR-062, ADR-063 (19.10.) ADR-064 (23.10.) i ADR-065 (24.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
   ([ADR-033](docs/records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) Dopuna 14.10.).
@@ -39,8 +39,8 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   pojačano održavanje +5), banka ljudi (**930**) i **pilot dijelovi 1–7** (kolačić 120 dana, lozinka, stropovi AI 5 $/dan · 30 $/mj, 3 igre po gostu,
   Docker, CI deploy, kopije; [ADR-063](docs/records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)). `main` = `sloj1` = 9b6f047
   (Leon pushao 19.10.). `CORE_VERSION` **2.6.0**. Osnovica balansa `nakon-pilot-4/`. L1-14 Leon odigrao (`l114-popis-izmjena.md`).
-  **Sljedeće (sesija 14): JEDAN PLAN** (jedna datoteka ≤ 1000 r., [ADR-064](docs/records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md))
-  za L1-15 popravke, pilot dio 8 (tekst privatnosti, Leon) i 9 (Railway) i fazu C → Leon vidi plan → gradnja; deploy samo uz izričit OK.
+  **Sljedeće (sesija 14):** Leon bira opseg pilota (profesor vodi tempo igre, [ADR-065](docs/records/DECISIONS/ADR-065-leonove-odluke-24-10-tempo-profesora-lokal-generatori.md)) → **JEDAN PLAN**
+  (jedna datoteka ≤ 1000 r., ADR-064): L1-15, zaštita pilota, lokal, generator događaja, pilot dio 9, faza C → Leon vidi plan → gradnja; deploy samo uz izričit OK.
   Za trajanje pilota jezgra se zamrzava.
   **Banka ljudi:** radi **paralelna sesija** ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`);
   glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE".
@@ -51,7 +51,7 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   Pogreške i pouke: [BUGS.md](docs/records/BUGS.md). Kopije grana: `Documents/hotelixsim-kopije/<datum>/`.
 - **Dokumentacija:** sesija piše `docs/` sama, po [docs/README.md](docs/README.md); **nijedan `.md` preko 1200 redaka**, **plan = jedna datoteka ≤ 1000** (bez mape),
   kod ≤ 1000 (`check:kod`). Bilješke izvođača idu u `.superpowers/…/za-dokumentaciju.md` i prenose se u `docs/` na `/kraj`.
-- **Čeka Leona:** video (pjesma MP3, tempo glasa A/B, izgovor); generator ljudi (BANKA_LJUDI §8, 5 pitanja); pilot tekst privatnosti; 🟨 ADR-063, ADR-064; zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
+- **Čeka Leona:** opseg pilota (ADR-065 t. 8); video (pjesma MP3, tempo glasa A/B, izgovor); pilot tekst privatnosti (s profesorima); 🟨 ADR-063, 064, 065; zadano održavanje nije najbolje ni u jednom hotelu; nalaz E4 ([provjera arhitekture](docs/architecture/PROVJERA_ARHITEKTURE_2026-10-17.md), 5 pitanja); C3 poznate osobe
   ([nacrt rizika](docs/architecture/BANKA_LJUDI/07-poznate-osobe-rizik.md)); ADR-058 t. 10, 13, 19, 20, 🟨 ADR-059 i ADR-060 t. 17–20; uzorci banke;
   pregled lica i uniformi na `/likovi`; slijepi pregled tekstova B4a–c; ocjene 40 odgovora za mjerilo (`content/hotel/mjerilo/*.json`); 5 pitanja [plana platforme](docs/plan/2026-11-platforma.md) §7;
   [BACKLOG.md](docs/records/BACKLOG.md) → „Otvoreno za Leona".

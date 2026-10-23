@@ -49,7 +49,10 @@ test("indeks: X.md uz mapu X/ = 200, bez mape = živi 300", () => {
 
 test("plan: datoteka izravno u docs/plan/ = 1000 (ADR-064)", () => {
   assert.deepEqual(granicaZa("docs/plan/ROADMAP.md", false), { vrsta: "plan", redaka: 1000 });
-  assert.deepEqual(granicaZa("docs/plan/2026-10-14-popravak-temelja.md", false), { vrsta: "plan", redaka: 1000 });
+  assert.deepEqual(granicaZa("docs/plan/2026-10-14-popravak-temelja.md", false), {
+    vrsta: "plan",
+    redaka: 1000,
+  });
 });
 
 test("živi: sve ostalo pod docs/ = 300", () => {
