@@ -5,7 +5,7 @@
 Sesija 13 (20.–23.10.): video za profesora v2 (izvan repoa), igra provjerena za prezentaciju 20.10., zapisi sesije 12
 ([ADR-063](./records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) pilot) i **novo pravilo za planove**
 ([ADR-064](./records/DECISIONS/ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md)): plan je **jedna datoteka do 1000 redaka**, `docs/plan/` ima 5 datoteka.
-GitHub `model-v2/sloj1` = `main` = 9b6f047; lokalni commit sesije 13 čeka Leonov OK za push. Ledger: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`.
+GitHub `model-v2/sloj1` = vrh sesije 13 (pushano 24.10., CI zelen na 61a7fbb); `main` = 9b6f047 (sloj1 → main uz Leonov OK). Ledger: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`.
 
 ## Prompt za početak (Leon zalijepi nakon `/clear` + `/newsession`)
 
