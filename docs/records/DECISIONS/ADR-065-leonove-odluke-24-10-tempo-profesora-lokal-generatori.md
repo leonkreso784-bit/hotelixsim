@@ -1,5 +1,5 @@
 # ADR-065 — Leonove odluke 24.10.: profesor vodi tempo igre, lokal kao mehanika, mentor bez obećanja, generatori
-**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6, 11), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
+**Datum:** 2026-10-24 · **Status:** ✅ **Leonove odluke 24.10.** (t. 1–6, 11–14), 🟨 t. 7–10 ČEKA LEONOV PREGLED ·
 **Vezano:** [ADR-037](ADR-037-razred-studenti-jedni-protiv-drugih-obracun.md) (razred, profesor otvara krug), [ADR-063](ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md) (pilot),
 [ADR-064](ADR-064-plan-je-jedna-datoteka-do-1000-redaka.md), [generator ljudi](../../architecture/BANKA_LJUDI/08-generator-ljudi.md), [BACKLOG](../BACKLOG.md) (L14-2, L14-4, pitanja iz voditeljeve igre)
 
@@ -38,3 +38,16 @@
     Prvi val sesije 14 (prije L1-15) je kvaliteta testova: test opterećenja (40 istodobnih zatvaranja kruga, red AI poslova),
     mjerenje AI troška po igri, web tokovi studenta, test nakon deploya (dim), slabi postojeći testovi. Popis s mjestima i satima:
     `.superpowers/sdd/2026-10-14-popravak-temelja/revizija-testova-24-10.md` (revizija 24.10.).
+12. **AI mora biti puno jeftiniji** (Leon 24.10.: „treba naći neki jeftini API … besplatni ili po jako niskoj cijeni; izbalansirati
+    s troškom"). Povod: procjena 0,45–0,85 $ po igri, 40 studenata ≈ 34 $ > strop 30 $/mj. Sesija 14 radi istraživanje (cijene i
+    kvaliteta hrvatskog po ulozi: lik, presuda, mentor; predmemorija upita, skupna obrada, jeftiniji modeli i drugi pružatelji,
+    besplatne razine i što one rade s podacima studenata) i mjeri trošak testom (t. 11) prije odluke. Podloga:
+    `.superpowers/sdd/2026-10-14-popravak-temelja/ai-trosak-istrazivanje-24-10.md`.
+13. **Opterećenje ne smije biti problem** (Leon 24.10.: „postaviti temelje da sustavu opterećenje uopće ne predstavlja problem").
+    Temelj, ne zakrpa: više radnika i odvojeni red za lika (C2 u cijelosti, ne samo „N radnika"), mjerenje testom opterećenja s
+    pragom prolaza u CI-ju, i arhitektura koja se širi dodavanjem radnika ili instanci. Ide prije pilota.
+14. **AI temelj mora biti kreativan i izvrstan** (Leon 24.10.: „na jako dobar i kreativan način, da inženjer kaže: wow, ja se ne
+    bih sjetio ovoga"). Sesija 14: brainstorming → dizajn dokument u `docs/architecture/` → neovisni pregled → cigle u plan, sve
+    potvrđeno testom opterećenja i mjerenjem troška. Sjeme ideja (zajednički prefiks upita za cijeli razred, raspored po roku,
+    pravedni red po studentu, ljestvica kvalitete pod pritiskom, ocjena u dva koraka, budžet kao resurs, više pružatelja):
+    `.superpowers/sdd/2026-10-14-popravak-temelja/ai-temelj-ideje-24-10.md`; nacrt opterećenja: `temelj-opterecenja-24-10.md`.
