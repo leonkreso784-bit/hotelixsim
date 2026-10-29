@@ -8,6 +8,8 @@
 Simulacija vođenja hotela za učenje (FMTU Opatija, Hospitality Management): student dobije hotel, rješava situacije
 i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**. Vlasnik: **Leon Kreso**; od 29.10. u timu i Rino Tomić (@rtomic20) i Simon Seifert (@simonseifert) — [TEAM.md](TEAM.md),
 [ADR-067](docs/records/DECISIONS/ADR-067-tim-rino-tomic-i-simon-seifert-simpolis-kao-izvor.md) (Simpolis s RI-HACK-a kao izvor ideja).
+**Pilot:** 1. godina Hospitality Managementa, smjer na engleskom, ljetni semestar 2027.; igra na **hrvatskom i engleskom**
+([ADR-068](docs/records/DECISIONS/ADR-068-dva-jezika-hrvatski-i-engleski-pilot-na-engleskom.md)); izgled po Simpolisu.
 **Zaseban projekt** — ne dira kod Sokrat Studyja ([ADR-001](docs/records/DECISIONS/ADR-001-hotelixsim-je-zaseban-projekt-odvojen-od.md)); Leon mu daje više
 vremena nego Sokratu.
 
