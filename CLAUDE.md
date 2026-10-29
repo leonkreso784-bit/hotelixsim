@@ -6,7 +6,8 @@
 ## Što je projekt
 **HotelixSim** — ⚠️ nikad skraćeno na „Hotelix" (postojeći hotelski softver; [ADR-002](docs/records/DECISIONS/ADR-002-ime-hotelixsim-nikad-skraceno-na-hotelix.md)).
 Simulacija vođenja hotela za učenje (FMTU Opatija, Hospitality Management): student dobije hotel, rješava situacije
-i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**. Vlasnik i jedini autor: **Leon Kreso**.
+i donosi odluke uz AI; ocjenjuje se **napredak u odnosu na početak, ne zarada**. Vlasnik: **Leon Kreso**; od 29.10. u timu i Rino Tomić (@rtomic20) i Simon Seifert (@simonseifert) — [TEAM.md](TEAM.md),
+[ADR-067](docs/records/DECISIONS/ADR-067-tim-rino-tomic-i-simon-seifert-simpolis-kao-izvor.md) (Simpolis s RI-HACK-a kao izvor ideja).
 **Zaseban projekt** — ne dira kod Sokrat Studyja ([ADR-001](docs/records/DECISIONS/ADR-001-hotelixsim-je-zaseban-projekt-odvojen-od.md)); Leon mu daje više
 vremena nego Sokratu.
 

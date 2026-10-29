@@ -4,7 +4,8 @@
 s gostima i zaposlenicima, razgovara s likovima koje glumi AI i donosi poslovne odluke. Ocjenjuje se **koliko je hotel
 unaprijedio u odnosu na početak, a ne koliko je zaradio.**
 
-Projekt nastaje za nastavu na studiju Hospitality Managementa (FMTU Opatija). Autor: **Leon Kreso**.
+Projekt nastaje za nastavu na studiju Hospitality Managementa (FMTU Opatija). Autor: **Leon Kreso**; tim: Rino Tomić i
+Simon Seifert ([TEAM.md](TEAM.md)).
 
 ## Ideja
 
