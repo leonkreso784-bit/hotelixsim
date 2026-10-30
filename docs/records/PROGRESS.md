@@ -4,6 +4,18 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
+## 2026-10-28…30 (15) — Sesija 15: prezentacija za odbor, tim, dva jezika, čišćenje diska
+
+- **Odbor FMTU-a (29.10.):** prezentacija 15 glavnih + 5 rezervnih slajdova i govor (izvan repoa, `Documents/HotelixSim-prezentacija`), demo na radnoj površini
+  („HotelixSim demo.bat"); provjereno: nova igra, AI lik, presuda.
+- **Tim ([ADR-067](DECISIONS/ADR-067-tim-rino-tomic-i-simon-seifert-simpolis-kao-izvor.md)):** Rino Tomić i Simon Seifert ulaze u projekt; pozivi poslani (`rtomic20`, `simonseifert`, Write);
+  [TEAM.md](../../TEAM.md) s ulogama, podjelom po mapama, popisom Simpolisovih ideja i prvim koracima.
+- **Dva jezika ([ADR-068](DECISIONS/ADR-068-dva-jezika-hrvatski-i-engleski-pilot-na-engleskom.md)):** pilot je 1. godina Hospitality Managementa na engleskom smjeru, igra na hr i en.
+  Analize (dva read-only agenta): engleski ~110–200 h, izgled po Simpolisu ~80–130 h student + 32–48 h profesor (iste boje i font već postoje).
+- **Disk:** 47 → 187 GB slobodno (`target/` ~146 GB, npm predmemorija, Rust 1.89, stablo banke). Server za demo spremljen u `AppData/Local/hotelixsim/bin`.
+- **GitHub:** push 30.10. uz Leonov OK, `main` = `sloj1`; deploy nije pokretan. Provjereno: check:docs 0, test:docs 0; lint crven samo pod `.superpowers/` (B19).
+- **Slijedi (sesija 16):** ishod odbora, raspodjela posla, pitanja plana 1–9, jedan plan do ožujka, val 0.
+
 ## 2026-10-24 (14) — Sesija 14: opseg pilota, AI temelj, troškovi za fakultet, jedan plan
 
 - **Opseg pilota (Leon, anketa):** (a) profesorov tempo ide u pilot kao **grupa igara**; profesor sam napravi grupu na stranici i dobije
@@ -176,22 +188,4 @@ Najnoviji unos na vrhu. Svaka sesija: što je napravljeno, što je provjereno, �
 
 ---
 
-## 2026-10-16 (6) — Sesija 6: B4c dovršen, banka ljudi K1a + K1b, kartica PRAVILO
-
-- **B4c spojen** (`model-v2/sloj1` f7ac7cc, CI 24/24): oznake 18 predložaka (najdulja ≤ 1,39× najkraće; dug `LabelLengths` 0 za svih 55) i uvjeti kvarova
-  P-BRAVE, P-CURENJE-VODE, P-DIZALO = Smještaj ispod **80**; P-INSPEKCIJA vanjski događaj; dug `BreakdownCondition` 0. Težina tjedno A 41,9 → 41,6 %,
-  B 48,9 %, C 41,2 %; mjesečno 25,7 / 33,8 / 20,3 %. Pregled opus: Needs fixes → runda 1 (P-ALERGIJA, nadskup u 5 predložaka, jezik) → Approved.
-- **Prag 80 je Leonova odluka** (anketa uz izmjerenih 7 inačica): 50–70 ruše tjednu branu J-3 jer hotel A počinje na 75 → [ADR-054](DECISIONS/ADR-054-leonove-odluke-16-10-prag-80-kopiranje-odgovora.md) t. 1.
-- **Banka ljudi K1a spojen** (adf5a4d): modul `ljudi` u `crates/content`, okviri `content/hotel/v2/ljudi/`, 42 testa; igra netaknuta, balansi bajt-isti. Pregled sonnet: Approved.
-- **K1b** (de2dc35 čuvar, 440fc0c + 9c75d41 graditelj): serija-000 = 10 radnika + 10 gostiju; serije OTVORENE do Leonova pregleda (`pregled-20.md` i `pregled-20.html`).
-  Pregled: gradovi u dva oblika i "tiskar" popravljeni; **rod po ulozi ide Leonu**.
-- **Kartica PRAVILO** napisana (224 r.; podjela a/b/c, `CORE_VERSION` 2.5.0) → [plan](../archive/2026-10-14-popravak-temelja.md); pretpostavke u [ADR-055](DECISIONS/ADR-055-pretpostavke-16-10-sesija-6-pravilo-ljudi-target.md).
-- **Novo: kvar B13** (Leon igrajući): zalijepljeni svi ponuđeni odgovori često daju 5; prepoznavanje u kodu, ne u AI-ju → [BUGS](BUGS.md), pravilo anketom u idućoj sesiji.
-- **Pouka B12:** zajednički `CARGO_TARGET_DIR` među stablima daje zastarjelu biblioteku (lažno zeleno moguće) → svako stablo svoj target ([AGENTI](../workflow/AGENTI.md) t. 6).
-- **Leonov smjer:** "faza C i dalje razvoj likova, u sučelju odmah njihov izgled" → nacrt i anketa o redoslijedu na početku iduće sesije ([SLJEDECA_SESIJA](../SLJEDECA_SESIJA.md)).
-- **Gdje se vidi:** lokalno (`model-v2/sloj1`, **ništa nije pushano**, ~24 commita iza `origin`). Ledgeri: `.superpowers/sdd/2026-10-14-popravak-temelja/progress.md`,
-  `.superpowers/sdd/banka-ljudi-k1/progress.md`; izvještaj `kraj-16-10-6.md`.
-
----
-
-Stariji unosi (16.10. sesija 5 i ranije): [PROGRESS/2026-10.md](PROGRESS/2026-10.md).
+Stariji unosi (16.10. sesija 6 i ranije): [PROGRESS/2026-10.md](PROGRESS/2026-10.md); prvi dio mjeseca: [PROGRESS/2026-10-rani.md](PROGRESS/2026-10-rani.md).

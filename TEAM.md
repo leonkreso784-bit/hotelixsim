@@ -1,7 +1,7 @@
 # Tim HotelixSim
 
 > Za Rina i Simona (i svakoga tko nam se pridruži): tko smo, što se sada događa, što iz Simpolisa prenosimo i kako radimo.
-> Odluka o timu: [ADR-067](docs/records/DECISIONS/ADR-067-tim-rino-tomic-i-simon-seifert-simpolis-kao-izvor.md). Stanje od 29. 10. 2026.
+> Odluka o timu: [ADR-067](docs/records/DECISIONS/ADR-067-tim-rino-tomic-i-simon-seifert-simpolis-kao-izvor.md). Stanje od 30. 10. 2026.
 
 ## Tko smo
 
@@ -34,16 +34,37 @@ Više: [README.md](README.md) (pokretanje), [VIZIJA](docs/product/VIZIJA.md), [A
 
 | kada | što | stanje |
 |---|---|---|
-| **29. 10.** | Leon predstavlja HotelixSim **odboru FMTU-a** (15 min + igra uživo): trošak, podaci studenata, uloga profesora, šest odluka koje tražimo | danas |
-| sljedeće | **Plan „Pilot s profesorom"** ([plan](docs/plan/2026-10-24-pilot-s-profesorom.md), [ADR-066](docs/records/DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md)): profesor na stranici napravi **grupu**, dobije **profesorski kod**, studenti uđu **kodom za ulaz**, profesor vodi tempo | 🟨 čeka Leonov OK na pitanja 1–9 |
+| **29. 10.** | Leon je predstavio HotelixSim **odboru FMTU-a** (15 min + igra uživo): trošak, podaci studenata, uloga profesora, šest odluka koje tražimo | ishod upisujemo kad ga Leon javi |
+| sljedeća sesija | **Plan „Pilot s profesorom"** ([plan](docs/plan/2026-10-24-pilot-s-profesorom.md), [ADR-066](docs/records/DECISIONS/ADR-066-pilot-s-profesorovim-tempom-grupa-igara.md)): profesor na stranici napravi **grupu**, dobije **profesorski kod**, studenti uđu **kodom za ulaz**, profesor vodi tempo | 🟨 čeka Leonov OK na pitanja 1–9 |
 | val 0 → 4 | testovi prije svega → AI temelj (rok, trake, predmemorija) → grupa igara + mentor → sudac u dva koraka, generator događaja → mjerenja i deploy | ~145 h rada |
 | **16. 11.** | prijava u **Startup inkubator Rijeka**; i Simpolisov plan je ciljao isti rok, pa biramo jednu prijavu (pitanje 3) | u pripremi |
 | studeni–prosinac | probni pilot s jednom grupom | plan |
 | siječanj 2027. | verzija za profesore | plan |
-| ožujak 2027. | pilot sa studentima, ljetni semestar | plan |
+| ožujak 2027. | pilot s prvom godinom Hospitality Managementa na engleskom smjeru, ljetni semestar | plan |
 
 **Važno dok traje pilot:** jezgra igre (`crates/sim-hotel*`, `CORE_VERSION` 2.6.0) je **zamrznuta**. Sve novo za pilot
 živi u `app`/`api`/`store`/`web`. Puni raspored: [ROADMAP](docs/plan/ROADMAP.md).
+
+## Cilj i raspodjela posla (🟨 prijedlog, potvrđujemo na prvom sastanku)
+
+**Cilj:** ožujak 2027., pilot za **prvu godinu Hospitality Managementa na engleskom smjeru**. Igra radi na **hrvatskom i engleskom**
+([ADR-068](docs/records/DECISIONS/ADR-068-dva-jezika-hrvatski-i-engleski-pilot-na-engleskom.md)) i izgleda gotovo kao Simpolis, a ostaje na Rustu i svemu što već imamo.
+Posla je oko 400–550 h: plan pilota ~145 h, engleski 110–200 h, izgled i profesorski ekrani 110–180 h.
+
+Podjela je **po mapama**, kao u Simpolisu, da troje ljudi ne dira iste datoteke:
+
+| tko | što | mape | prvi PR |
+|---|---|---|---|
+| **Leon** (uz agente) | testovi i AI temelj (val 0–1), grupa igara i profesorski kod (val 2), Rust tekstovi u kodove, spajanje, deploy | `crates/**`, `content/hotel/**` (brojke), `.github/` | val 0 testovi |
+| **Rino** | Simpolisov izgled: tokeni, sjaj, animacije, shadcn u Vite-u, zatim ekrani redom: ploča, situacija, mjesec s podijem, plan, tokovi, profesor, grad | `apps/web/src/**` | sustav dizajna (bez promjene ponašanja) |
+| **Simon** | engleski: AI upute, prijevod situacija i sučelja, mjerilo suca; prijava u inkubator | `prompts/**`, `content/hotel-en/**`, `packages/i18n/src/en.ts`, `docs/research/` | engleski `lik` i prevedene 3 situacije kao uzorak |
+
+**Dodirne točke, dogovor prije rada:**
+
+- `apps/web/src/api/types.ts` je generiran iz `openapi.json`: mijenja ga samo Leon (promjena API-ja), Rino ga samo koristi.
+- Biranje jezika: Simon piše `en.ts`, Rino spaja izbor jezika i `format.ts`, Leon upisuje jezik u igru.
+- Agenti plana (tok WEB) i Rino dijele `apps/web/src`: dok traje Rinov posao, web cigle plana idu kroz njega ili se dogovaraju po ekranu.
+- Pravila igre i brojke koje student osjeti: prije gradnje ih odlučuje Leon.
 
 ## Što iz Simpolisa prenosimo
 
@@ -100,3 +121,5 @@ vas nema; to preskočite, a pravila rada vrijede za sve.
 3. **Simpolis dalje:** gasimo ga ili ostaje zaseban portfelj? Što od Simpolisova istraživanja (konkurencija, GDPR i AI Act) seli ovamo u `docs/research/`?
 4. **Zaštita grane `main`** (PR obavezan, CI mora proći) — prijedlog uključiti sada kad nas je troje.
 5. **Komunikacija:** gdje dogovaramo dnevno (Discord kao na hackathonu?) i kad je zajednički sastanak.
+6. **Vaše računalo:** [README](README.md#lokalni-razvoj) je pisan za Windows i Git Bash. Tko ima Mac ili Linux, neka javi, jer treba prilagoditi korake za bazu.
+7. **AI ključ:** svatko svoj ključ s vlastitim stropom troška, ne jedan zajednički. Leon ih daje izvan gita i izvan grupnih poruka.

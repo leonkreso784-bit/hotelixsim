@@ -23,8 +23,8 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
 - **Gotovo i na GitHubu:** DEMO koraci 1–5 — cijela igra u pregledniku (mobitel i računalo, [ADR-027](docs/records/DECISIONS/ADR-027-raspored-za-racunalo-prije-demoa.md)),
   AI sloj (lik, presuda `presuda.v3`, mentor), i **sloj 0 puta B**: hotelski pokazatelji (ADR, RevPAR, GOPPAR, točka pokrića)
   ([CHANGELOG](docs/records/CHANGELOG.md)). Modeli: presuda Sonnet, lik Haiku, mentor Sonnet ([ADR-024](docs/records/DECISIONS/ADR-024-modeli-presuda-na-sonnetu-5-5.md)).
-  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20, ADR-061 t. 7–12, ADR-062 t. 10–18, ADR-063 t. 7–19 i ADR-064 t. 2–7; Leonove odluke:
-  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.), ADR-062, ADR-063 (19.10.) ADR-064 (23.10.) i ADR-065 (24.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
+  Pretpostavke 🟨: ADR-003 (nakon E4), ADR-032 t. 9, ADR-055 t. 6, ADR-058, ADR-059, ADR-060 t. 17–20, ADR-061 t. 7–12, ADR-062 t. 10–18, ADR-063 t. 7–19, ADR-064 t. 2–7, ADR-066 t. 4–13, ADR-067 t. 4–9 i ADR-068 t. 3–8; Leonove odluke:
+  ADR-056, 057 (17.10.), ADR-060, ADR-061 (18.10.), ADR-062, ADR-063 (19.10.) ADR-064 (23.10.), ADR-065 (24.10.), ADR-067 i 068 (29.10.) (popis: [DECISIONS.md](docs/records/DECISIONS.md)).
   Balans: `cargo run -q -p balance --release -- --model v2 --round week --seeds 1000 --check [--situations L,M,H]` (i `--round month`; v1:
   `--seeds 100 --check`, kao CI). `--check` ruši samo brane modela; mjere robota se samo ispisuju
   ([ADR-033](docs/records/DECISIONS/ADR-033-sloj-1-balans-i-kalibracija-sadrzaja.md) Dopuna 14.10.).
@@ -41,13 +41,12 @@ imena" za dokumente koji prerastu granicu. Pokretanje i provjere prije commita: 
   **Faza A gotova** (na GitHubu). **Faza B** (sve na GitHubu, `model-v2/sloj1`): B1–B4, PRAVILO-a/b/c, IZGLED (a+b) i IZGLED-c (uniforme vanjskih),
   **L1-13** (kalibracija, svi dijelovi; situacije ~20 % napretka), **L1-13b** (izmiješani odgovori, jedan gumb „Spremi plan", opis Smještaja,
   pojačano održavanje +5), banka ljudi (**930**) i **pilot dijelovi 1–7** (kolačić 120 dana, lozinka, stropovi AI 5 $/dan · 30 $/mj, 3 igre po gostu,
-  Docker, CI deploy, kopije; [ADR-063](docs/records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)). `main` = `sloj1` = 9b6f047
-  (Leon pushao 19.10.). `CORE_VERSION` **2.6.0**. Osnovica balansa `nakon-pilot-4/`. L1-14 Leon odigrao (`l114-popis-izmjena.md`).
+  Docker, CI deploy, kopije; [ADR-063](docs/records/DECISIONS/ADR-063-pilot-jedna-adresa-lozinka-stropovi-ai-tri-igre.md)). `main` = `sloj1`
+  (Leon pushao 30.10.). `CORE_VERSION` **2.6.0**. Osnovica balansa `nakon-pilot-4/`. L1-14 Leon odigrao (`l114-popis-izmjena.md`).
   **Sesija 14 (24.10.):** opseg pilota (a) — profesorov tempo kao grupa igara, profesorski kod (ADR-066); plan napisan (val 0 testovi → AI temelj →
-  grupa → generator → isporuka). **Sesija 15:** Leon odgovara na pitanja plana 1–9 → „kreni" → val 0; deploy samo uz izričit OK.
+  grupa → generator → isporuka). **Sesija 15 (28.–30.10.):** prezentacija odboru, tim, ADR-067/068, disk 187 GB. **Sesija 16:** raspodjela posla ([TEAM.md](TEAM.md)), Leon odgovara na pitanja plana 1–9, jedan novi plan (pilot + engleski + izgled), „kreni" → val 0; deploy samo uz izričit OK.
   Za trajanje pilota jezgra se zamrzava.
-  **Banka ljudi:** radi **paralelna sesija** ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`, stablo `../hotelixsim-ljudi`);
-  glavna sesija spaja kad ledger kaže „SPREMNO ZA SPAJANJE".
+  **Banka ljudi:** 930 spojeno, sesija miruje ([SESIJA_BANKE](docs/workflow/SESIJA_BANKE.md), ledger `.superpowers/sdd/banka-ljudi-k1/progress.md`); stablo `../hotelixsim-ljudi` obrisano 30.10. (novo uz nastavak).
   **Pozor:** najmanji korak lanca je 0,04 — svaka promjena sadržaja vrti `--check` 1000 tjedno i mjesečno prije spajanja.
   **Svako radno stablo svoj `CARGO_TARGET_DIR=…/hotelixsim/target/<stablo>`** (B12), briše se odmah nakon spajanja; **jedan Rust slot po sesiji** (najviše 2 cargo
   ukupno); **disk: ispod 50 GB ne gradi** (B16). Lažno crveno pod opterećenjem (vitest timeout, 0xC0000142) samo se ponovi (B15).
